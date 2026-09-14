@@ -79,7 +79,7 @@ class WebRtcSenderManager(
         videoTrack?.let { peerConnection?.addTrack(it, listOf("ARDAMS")) }
 
         val dims = calcCaptureDimensions()
-        val fps = profile.frameRate.coerceIn(30, 60)
+        val fps = profile.frameRate.coerceIn(30, 45)
         Log.i(TAG, "Iniciando Captura de Pantalla: ${dims.first}x${dims.second} @ ${fps}fps")
         screenCapturer?.startCapture(dims.first, dims.second, fps)
         _connectionState.value = P2PConnectionState.CONNECTING
@@ -88,9 +88,9 @@ class WebRtcSenderManager(
     private fun calcCaptureDimensions(): Pair<Int, Int> {
         val dm = context.resources.displayMetrics
         val maxScreen = maxOf(dm.widthPixels, dm.heightPixels).toFloat().coerceAtLeast(1f)
-        val scale = minOf(1.0f, 1920f / maxScreen)
-        val capW = (((dm.widthPixels * scale).toInt() / 16) * 16).coerceAtLeast(720)
-        val capH = (((dm.heightPixels * scale).toInt() / 16) * 16).coerceAtLeast(720)
+        val scale = minOf(1.0f, 1280f / maxScreen)
+        val capW = (((dm.widthPixels * scale).toInt() / 16) * 16).coerceIn(480, 1280)
+        val capH = (((dm.heightPixels * scale).toInt() / 16) * 16).coerceIn(480, 1280)
         return Pair(capW, capH)
     }
 
@@ -153,9 +153,9 @@ class WebRtcSenderManager(
             peerConnection?.senders?.filter { it.track() is VideoTrack }?.forEach { sender ->
                 val p = sender.parameters
                 p.encodings?.firstOrNull()?.let {
-                    it.minBitrateBps = 2_000_000
-                    it.maxBitrateBps = 15_000_000
-                    it.maxFramerate = 60
+                    it.minBitrateBps = 1_500_000
+                    it.maxBitrateBps = 4_500_000
+                    it.maxFramerate = 45
                 }
                 sender.parameters = p
             }

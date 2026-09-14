@@ -1,4 +1,4 @@
-﻿# 📋 CHANGELOG & CONTROL DE VERSIONES - OmniCast Pro
+# 📋 CHANGELOG & CONTROL DE VERSIONES - OmniCast Pro
 
 Historial sistemático de versiones, control de cambios y validación de regresiones.
 
@@ -33,3 +33,22 @@ Historial sistemático de versiones, control de cambios y validación de regresi
   - Soporte activo de descarte de publicidad en sitios de películas.
 - **Gobernanza:**
   - Repositorio Git inicializado con control estricto de diffs y modularidad quirúrgica (archivos <= 200 líneas).
+
+---
+
+## 📌 [v3.9] - Aislamiento de Popups Pelismart, WebRTC Unificado y YouTube Optimizado
+- **Navegador Web & Pelismart:**
+  - Corrección radical del secuestro de pestaña: eliminación del override nulo de `window.open` que forzaba a los reproductores pirata a redirigir la ventana principal con `window.location.href`.
+  - Intercepción completa de intentos de redirección en `BrowserWebView.kt` redirigiéndolos al `popupWebView` aislado.
+  - La pestaña principal donde se presiona "Play" permanece 100% intacta, permitiendo que el reproductor cargue el stream y OmniCast intercepte el enlace `.m3u8`.
+  - Botón interactivo `[ ✕ Descartar y Volver ]` para cerrar el anuncio publicitario y regresar de inmediato.
+- **Espejo de Pantalla (Screen Mirroring WebRTC):**
+  - Creación de `SignalingClientHolder` (Singleton) para compartir una única conexión WebSocket entre la UI y el servicio de proyección (`ProjectionSession`), eliminando pérdida de paquetes de señalización (`Answer` / ICE Candidates).
+  - Normalización de resolución a 720p (máx 1280px con alineación a 16, 30-45 fps, 1.5 - 4.5 Mbps) para eliminar sobrecarga del codificador por hardware Qualcomm (`HardwareVideoEncoder: Dropped frame, encoder queue full`).
+- **YouTube:**
+  - Subtítulos desactivados por defecto en la TV (`cc_load_policy=0` y descarga del módulo de captions en IFrame API).
+- **Control Remoto & UI:**
+  - Eliminado el selector de pistas de idioma a petición del usuario.
+- **Gobernanza:**
+  - 100% de los archivos de código Kotlin respetan el límite de <= 200 líneas.
+

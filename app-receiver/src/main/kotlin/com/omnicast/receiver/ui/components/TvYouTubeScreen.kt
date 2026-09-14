@@ -83,10 +83,24 @@ fun TvYouTubeScreen(videoId: String, title: String, timestamp: Long = 0L) {
                                 </head>
                                 <body>
                                   <iframe id="ytplayer"
-                                    src="https://www.youtube-nocookie.com/embed/$videoId?autoplay=1&controls=1&fs=1&rel=0&iv_load_policy=3&modestbranding=1&cc_load_policy=0"
+                                    src="https://www.youtube-nocookie.com/embed/$videoId?autoplay=1&controls=1&fs=1&rel=0&iv_load_policy=3&modestbranding=1&cc_load_policy=0&hl=es&cc_lang_pref="
                                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
                                     allowfullscreen>
                                   </iframe>
+                                  <script>
+                                    var tag = document.createElement('script');
+                                    tag.src = "https://www.youtube.com/iframe_api";
+                                    document.head.appendChild(tag);
+                                    function onYouTubeIframeAPIReady() {
+                                      new YT.Player('ytplayer', {
+                                        events: {
+                                          'onReady': function(e) {
+                                            try { e.target.unloadModule('captions'); } catch(err) {}
+                                          }
+                                        }
+                                      });
+                                    }
+                                  </script>
                                 </body>
                                 </html>
                             """.trimIndent()

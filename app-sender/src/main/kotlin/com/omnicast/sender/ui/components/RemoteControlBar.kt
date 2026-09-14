@@ -24,8 +24,7 @@ fun RemoteControlBar(
     onSkip: (Long) -> Unit,
     onVolumeChange: (Float) -> Unit,
     onStop: () -> Unit,
-    onSelectQuality: (() -> Unit)? = null,
-    onSelectTracks: (() -> Unit)? = null
+    onSelectQuality: (() -> Unit)? = null
 ) {
     Card(
         colors = CardDefaults.cardColors(containerColor = Color(0xF00F172A)),
@@ -100,11 +99,6 @@ fun RemoteControlBar(
                 if (onSelectQuality != null) {
                     FilledTonalButton(onClick = onSelectQuality, contentPadding = PaddingValues(horizontal = 6.dp), modifier = Modifier.padding(start = 6.dp)) {
                         Text("🎬 Calidad", fontSize = 10.sp)
-                    }
-                }
-                if (onSelectTracks != null) {
-                    FilledTonalButton(onClick = onSelectTracks, contentPadding = PaddingValues(horizontal = 6.dp), modifier = Modifier.padding(start = 4.dp)) {
-                        Text("💬 Audio/Sub", fontSize = 10.sp)
                     }
                 }
             }

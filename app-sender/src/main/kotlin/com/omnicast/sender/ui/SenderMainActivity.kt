@@ -20,6 +20,7 @@ import com.omnicast.sender.discovery.NsdScannerManager
 import com.omnicast.sender.history.PlayHistoryManager
 import com.omnicast.sender.network.QuickSignalingHelper
 import com.omnicast.sender.network.SignalingClient
+import com.omnicast.sender.network.SignalingClientHolder
 import com.omnicast.sender.overlay.FloatingIndicatorService
 import com.omnicast.sender.service.ProjectionForegroundService
 import com.omnicast.sender.stream.ActiveStreamHolder
@@ -42,13 +43,13 @@ class SenderMainActivity : ComponentActivity() {
         }
 
         fun sendDisconnectStatic(context: Context) {
-            instance?.signalingClient?.sendMessage(SignalingMessage.Disconnect()) ?: QuickSignalingHelper.sendQuickMessage(context, SignalingMessage.Disconnect(), disconnect = true)
+            SignalingClientHolder.get().sendMessage(SignalingMessage.Disconnect())
         }
     }
 
     private lateinit var nsdScanner: NsdScannerManager
     private lateinit var clipboardExtractor: ClipboardStreamExtractor
-    private var signalingClient: SignalingClient? = null
+    private val signalingClient: SignalingClient get() = SignalingClientHolder.get()
     private val autoPromptCapture = androidx.compose.runtime.mutableStateOf(false)
     private val isTvConnected = androidx.compose.runtime.mutableStateOf(false)
     private val openBrowserDirectly = androidx.compose.runtime.mutableStateOf(false)
@@ -118,14 +119,11 @@ class SenderMainActivity : ComponentActivity() {
 
     fun connectToTv(ipAddress: String, port: Int) {
         try {
-            signalingClient?.disconnect()
-            signalingClient = SignalingClient().apply {
-                connect(ipAddress, port, {
-                    isTvConnected.value = true
-                    listenToPlaybackStatus()
-                    if (!isFinishing && !isDestroyed) Toast.makeText(this@SenderMainActivity, "🟢 Conectado con TV ($ipAddress)", Toast.LENGTH_SHORT).show()
-                }, { isTvConnected.value = false })
-            }
+            signalingClient.connect(ipAddress, port, {
+                isTvConnected.value = true
+                listenToPlaybackStatus()
+                if (!isFinishing && !isDestroyed) Toast.makeText(this@SenderMainActivity, "🟢 Conectado con TV ($ipAddress)", Toast.LENGTH_SHORT).show()
+            }, { isTvConnected.value = false })
         } catch (e: Throwable) { isTvConnected.value = false }
     }
 
@@ -174,7 +172,7 @@ class SenderMainActivity : ComponentActivity() {
     }
 
     private fun sendSignalingMessage(msg: SignalingMessage) {
-        val client = signalingClient ?: SignalingClient().also { signalingClient = it }
+        val client = signalingClient
         if (client.isConnected) client.sendMessage(msg) else {
             val prefs = getSharedPreferences("omnicast_prefs", Context.MODE_PRIVATE)
             client.connect(prefs.getString("saved_tv_ip", "192.168.0.136") ?: "192.168.0.136", prefs.getInt("saved_tv_port", 8088), { client.sendMessage(msg) }, {})

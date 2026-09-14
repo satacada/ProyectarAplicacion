@@ -64,13 +64,25 @@ fun BrowserWebView(
                     override fun shouldOverrideUrlLoading(v: WebView?, r: WebResourceRequest?): Boolean {
                         val reqUrl = r?.url?.toString() ?: return false
                         if (AdBlocker.isExternalRedirect(reqUrl)) return true
-                        if (isAdBlockEnabled && AdBlocker.isAd(reqUrl)) return true
                         val liveUrl = v?.url ?: currentUrl
                         val curHost = try { java.net.URI(liveUrl).host?.lowercase() } catch (_: Throwable) { null }
                         val tgtHost = try { r.url.host?.lowercase() } catch (_: Throwable) { null }
                         if (curHost != null && tgtHost != null && curHost != tgtHost && !tgtHost.endsWith(curHost) && !curHost.endsWith(tgtHost)) {
                             if (!AdBlocker.isKnownMediaHost(tgtHost)) {
-                                android.util.Log.w("BrowserWebView", "🛑 Redirección publicitaria bloqueada: $tgtHost")
+                                android.util.Log.w("BrowserWebView", "🛑 Redirección externa aislada en popup: $tgtHost")
+                                val popup = WebView(ctx).apply {
+                                    CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
+                                    settings.javaScriptEnabled = true; settings.domStorageEnabled = true; settings.userAgentString = UA_MOBILE
+                                    webViewClient = object : WebViewClient() {
+                                        override fun shouldOverrideUrlLoading(view: WebView?, req: WebResourceRequest?): Boolean =
+                                            req?.url?.toString()?.let { AdBlocker.isExternalRedirect(it) } ?: false
+                                    }
+                                    webChromeClient = object : WebChromeClient() {
+                                        override fun onCloseWindow(window: WebView?) { onClosePopup() }
+                                    }
+                                    loadUrl(reqUrl)
+                                }
+                                onOpenPopup(popup)
                                 return true
                             }
                         }
@@ -111,20 +123,10 @@ fun BrowserWebView(
                         if (resultMsg == null) return false
                         val popup = WebView(ctx).apply {
                             CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
-                            settings.javaScriptEnabled = true
-                            settings.domStorageEnabled = true
-                            settings.userAgentString = UA_MOBILE
+                            settings.javaScriptEnabled = true; settings.domStorageEnabled = true; settings.userAgentString = UA_MOBILE
                             webViewClient = object : WebViewClient() {
-                                override fun shouldOverrideUrlLoading(view: WebView?, req: WebResourceRequest?): Boolean {
-                                    val u = req?.url?.toString() ?: return false
-                                    if (AdBlocker.isExternalRedirect(u) || (isAdBlockEnabled && AdBlocker.isAd(u))) {
-                                        onClosePopup(); return true
-                                    }
-                                    return false
-                                }
-                                override fun onPageStarted(view: WebView?, u: String?, favicon: Bitmap?) {
-                                    if (u != null && isAdBlockEnabled && AdBlocker.isAd(u)) onClosePopup()
-                                }
+                                override fun shouldOverrideUrlLoading(view: WebView?, req: WebResourceRequest?): Boolean =
+                                    req?.url?.toString()?.let { AdBlocker.isExternalRedirect(it) } ?: false
                             }
                             webChromeClient = object : WebChromeClient() {
                                 override fun onCloseWindow(window: WebView?) { onClosePopup() }

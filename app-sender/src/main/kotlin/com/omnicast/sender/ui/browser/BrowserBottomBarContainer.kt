@@ -16,7 +16,6 @@ fun BrowserBottomBarContainer(
     pageTitle: String,
     onTransmitDirect: () -> Unit,
     onOpenQualities: () -> Unit,
-    onOpenTracks: (() -> Unit)? = null,
     onPlayControl: (String, Long, Float) -> Unit,
     onStopCasting: () -> Unit,
     modifier: Modifier = Modifier
@@ -31,8 +30,7 @@ fun BrowserBottomBarContainer(
                 onSkip = { onPlayControl("SEEK", (posMs + it).coerceAtLeast(0L), 1f) },
                 onVolumeChange = { onPlayControl("VOLUME", 0L, it) },
                 onStop = onStopCasting,
-                onSelectQuality = onOpenQualities,
-                onSelectTracks = onOpenTracks
+                onSelectQuality = onOpenQualities
             )
         } else if (detectedCount > 0) {
             DetectedStreamBar(

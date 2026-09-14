@@ -77,7 +77,6 @@ object AdBlocker {
     fun getAdHidingScript(): String = """
         (function() {
             try {
-                window.open = function() { return null; };
                 document.addEventListener('click', function(e) {
                     var el = e.target;
                     while (el && el !== document.body) {

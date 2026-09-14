@@ -9,6 +9,7 @@ import com.omnicast.core.protocol.SignalingMessage
 import com.omnicast.sender.audio.DigitalAudioSender
 import com.omnicast.sender.capture.AudioCaptureManager
 import com.omnicast.sender.network.SignalingClient
+import com.omnicast.sender.network.SignalingClientHolder
 import com.omnicast.sender.webrtc.WebRtcSenderManager
 import kotlinx.coroutines.*
 
@@ -25,7 +26,6 @@ class ProjectionSession(
 ) {
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private var webRtcManager: WebRtcSenderManager? = null
-    private var signalingClient: SignalingClient? = null
     private var audioSender: DigitalAudioSender? = null
     private var audioCaptureManager: AudioCaptureManager? = null
 
@@ -56,39 +56,50 @@ class ProjectionSession(
 
         var offerSent = false
         val pendingCandidates = mutableListOf<SignalingMessage.IceCandidate>()
-        signalingClient = SignalingClient()
+        val client = SignalingClientHolder.get()
+
         webRtcManager?.onLocalIceCandidate = { c ->
             val msg = SignalingMessage.IceCandidate(c.sdpMid, c.sdpMLineIndex, c.sdp)
-            if (signalingClient?.isConnected == true && offerSent) {
-                signalingClient?.sendMessage(msg)
+            if (client.isConnected && offerSent) {
+                client.sendMessage(msg)
             } else {
                 pendingCandidates.add(msg)
             }
         }
 
         scope.launch {
-            signalingClient?.messages?.collect { msg ->
+            client.messages.collect { msg ->
                 when (msg) {
-                    is SignalingMessage.Answer -> webRtcManager?.handleAnswer(msg.sdp)
+                    is SignalingMessage.Answer -> {
+                        Log.i("ProjectionSession", "🟢 Answer SDP recibido de TV Box. Conectando WebRTC...")
+                        webRtcManager?.handleAnswer(msg.sdp)
+                    }
                     is SignalingMessage.IceCandidate -> webRtcManager?.addRemoteIceCandidate(msg.sdpMid, msg.sdpMLineIndex, msg.candidate)
                     else -> Unit
                 }
             }
         }
 
-        signalingClient?.connect(
-            ipAddress = targetIp, port = targetPort,
-            onConnected = {
-                Log.i("ProjectionSession", "Conexión señalización OK con TV. Creando oferta SDP...")
-                webRtcManager?.createOffer { offerSdp ->
-                    signalingClient?.sendMessage(SignalingMessage.Offer(offerSdp, profile.width, profile.height, profile.frameRate, profile.targetBitrateKbps))
-                    offerSent = true
-                    pendingCandidates.forEach { signalingClient?.sendMessage(it) }
-                    pendingCandidates.clear()
-                }
-            },
-            onError = { e -> Log.e("ProjectionSession", "Error conectando TV ($targetIp:$targetPort): ${e.message}") }
-        )
+        fun doCreateOffer() {
+            Log.i("ProjectionSession", "Creando oferta SDP para TV...")
+            webRtcManager?.createOffer { offerSdp ->
+                client.sendMessage(SignalingMessage.Offer(offerSdp, profile.width, profile.height, profile.frameRate, profile.targetBitrateKbps))
+                offerSent = true
+                pendingCandidates.forEach { client.sendMessage(it) }
+                pendingCandidates.clear()
+                Log.i("ProjectionSession", "🟢 Oferta SDP y candidatos enviados a TV Box")
+            }
+        }
+
+        if (client.isConnected) {
+            doCreateOffer()
+        } else {
+            client.connect(
+                ipAddress = targetIp, port = targetPort,
+                onConnected = { doCreateOffer() },
+                onError = { e -> Log.e("ProjectionSession", "Error conectando TV ($targetIp:$targetPort): ${e.message}") }
+            )
+        }
     }
 
     fun stop() {
@@ -98,16 +109,10 @@ class ProjectionSession(
             audioSender?.close()
             audioSender = null
 
-            val client = signalingClient
-            signalingClient = null
-            client?.sendMessage(SignalingMessage.Disconnect())
-            scope.launch {
-                delay(100)
-                client?.disconnect()
-                scope.cancel()
-            }
+            SignalingClientHolder.get().sendMessage(SignalingMessage.Disconnect())
             webRtcManager?.close()
             webRtcManager = null
+            scope.cancel()
         } catch (e: Throwable) {
             Log.e("ProjectionSession", "Error cerrando sesión", e)
         }

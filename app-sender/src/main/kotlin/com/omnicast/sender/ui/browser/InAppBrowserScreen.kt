@@ -39,7 +39,6 @@ fun InAppBrowserScreen(
     var historyList by remember { mutableStateOf(historyManager.getHistory()) }
     var webViewInstance by remember { mutableStateOf<WebView?>(null) }
     var popupWebView by remember { mutableStateOf<WebView?>(null) }
-    var showTracksSheet by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
     val isCasting by ActiveStreamHolder.isCasting.collectAsState()
@@ -47,11 +46,9 @@ fun InAppBrowserScreen(
     val posMs by ActiveStreamHolder.positionMs.collectAsState()
     val durMs by ActiveStreamHolder.durationMs.collectAsState()
     val castTitle by ActiveStreamHolder.currentMediaTitle.collectAsState()
-    val tracksInfo by ActiveStreamHolder.tracksInfo.collectAsState()
 
     androidx.activity.compose.BackHandler(enabled = true) {
         if (popupWebView != null) { popupWebView?.destroy(); popupWebView = null }
-        else if (showTracksSheet) showTracksSheet = false
         else if (showHistorySheet) showHistorySheet = false
         else if (showOptionsSheet) showOptionsSheet = false
         else if (webViewInstance?.canGoBack() == true) webViewInstance?.goBack()
@@ -165,7 +162,6 @@ fun InAppBrowserScreen(
                         onSendStreamToTv(first, pageTitle, streamHeaders[first] ?: emptyMap())
                     },
                     onOpenQualities = { openOptionsSheet() },
-                    onOpenTracks = { showTracksSheet = true },
                     onPlayControl = { act, pos, vol -> ActiveStreamHolder.onSendPlayControl?.invoke(act, pos, vol, null) },
                     onStopCasting = { ActiveStreamHolder.stopCasting() },
                     modifier = Modifier.align(Alignment.BottomCenter)
@@ -186,11 +182,6 @@ fun InAppBrowserScreen(
         onDismissOptions = { showOptionsSheet = false },
         onClearOptions = { detectedStreams.clear(); qualityOptions = emptyList(); showOptionsSheet = false },
         onDeleteHistory = { historyManager.remove(it); historyList = historyManager.getHistory() },
-        onClearHistory = { historyManager.clear(); historyList = emptyList() }, onDismissHistory = { showHistorySheet = false },
-        showTracksSheet = showTracksSheet, tracksInfo = tracksInfo,
-        onToggleSubtitles = { ActiveStreamHolder.onSendPlayControl?.invoke("TOGGLE_SUBTITLES", 0L, 1f, null) },
-        onSelectTextTrack = { idx -> ActiveStreamHolder.onSendPlayControl?.invoke("SET_SUBTITLE_TRACK", 0L, 1f, idx.toString()) },
-        onSelectAudioTrack = { idx -> ActiveStreamHolder.onSendPlayControl?.invoke("SET_AUDIO_TRACK", 0L, 1f, idx.toString()) },
-        onDismissTracks = { showTracksSheet = false }
+        onClearHistory = { historyManager.clear(); historyList = emptyList() }, onDismissHistory = { showHistorySheet = false }
     )
 }

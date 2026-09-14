@@ -1,0 +1,26 @@
+﻿# Gradle & Android build
+.gradle/
+build/
+app-receiver/build/
+app-sender/build/
+core/build/
+local.properties
+*.hprof
+
+# Releases & scratch dumps
+releases/
+scratch/
+*.apk
+*.dex
+*.log
+*.txt
+*.png
+*.xml
+*.js
+*.py
+*.ps1
+
+# IDE
+.idea/
+.system_generated/
+.DS_Store

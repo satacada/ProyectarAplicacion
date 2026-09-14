@@ -1,0 +1,196 @@
+package com.omnicast.sender.overlay
+
+import android.app.ActivityOptions
+import android.app.PendingIntent
+import android.app.Service
+import android.content.Context
+import android.content.Intent
+import android.graphics.Color
+import android.graphics.PixelFormat
+import android.graphics.Typeface
+import android.os.Build
+import android.os.Handler
+import android.os.IBinder
+import android.os.Looper
+import android.provider.Settings
+import android.util.Log
+import android.util.TypedValue
+import android.view.Gravity
+import android.view.View
+import android.view.WindowManager
+import android.widget.LinearLayout
+import android.widget.TextView
+import com.omnicast.core.protocol.SignalingMessage
+import com.omnicast.sender.service.ProjectionForegroundService
+import com.omnicast.sender.stream.ClipboardStreamExtractor
+import com.omnicast.sender.ui.SenderMainActivity
+
+class FloatingIndicatorService : Service() {
+
+    companion object {
+        private const val TAG = "FloatingIndicatorService"
+        var isRunning = false; private set
+        private var instance: FloatingIndicatorService? = null
+
+        fun updateMode() { instance?.let { it.handler.post { it.refreshDisplayMode() } } }
+
+        fun start(context: Context) {
+            try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && Settings.canDrawOverlays(context)) {
+                    context.startService(Intent(context, FloatingIndicatorService::class.java))
+                }
+            } catch (e: Throwable) { Log.e(TAG, "Error start", e) }
+        }
+        fun stop(context: Context) {
+            try { context.stopService(Intent(context, FloatingIndicatorService::class.java)) } catch (e: Throwable) { Log.e(TAG, "Error stop", e) }
+        }
+    }
+
+    private var windowManager: WindowManager? = null
+    private var rootLayout: LinearLayout? = null
+    private var pillLayoutRef: View? = null
+    private var dotViewRef: View? = null
+    private var layoutParamsRef: WindowManager.LayoutParams? = null
+    private var isExpanded = false
+    private lateinit var clipboardExtractor: ClipboardStreamExtractor
+    private val handler = Handler(Looper.getMainLooper())
+    private var pollRunnable: Runnable? = null
+
+    fun refreshDisplayMode() {
+        val projecting = ProjectionForegroundService.isProjecting
+        val pill = pillLayoutRef ?: return
+        val dot = dotViewRef ?: return
+        var changed = false
+        if (projecting) {
+            if (pill.visibility != View.GONE) { pill.visibility = View.GONE; changed = true }
+            if (dot.visibility != View.VISIBLE) { dot.visibility = View.VISIBLE; changed = true }
+        } else {
+            if (pill.visibility != View.VISIBLE) { pill.visibility = View.VISIBLE; changed = true }
+            if (dot.visibility != View.GONE) { dot.visibility = View.GONE; changed = true }
+        }
+        if (changed) {
+            try { windowManager?.updateViewLayout(rootLayout, layoutParamsRef) } catch (_: Throwable) {}
+        }
+    }
+
+    override fun onCreate() {
+        super.onCreate()
+        instance = this
+        isRunning = true
+        clipboardExtractor = ClipboardStreamExtractor(this)
+        setupFloatingView()
+    }
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int = START_STICKY
+
+    private fun setupFloatingView() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) { stopSelf(); return }
+        val builder = FloatingViewBuilder(this)
+        windowManager = getSystemService(WINDOW_SERVICE) as? WindowManager ?: run { stopSelf(); return }
+
+        val windowLayoutParams = WindowManager.LayoutParams(
+            WindowManager.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.WRAP_CONTENT,
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY else WindowManager.LayoutParams.TYPE_PHONE,
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
+            PixelFormat.TRANSLUCENT
+        ).apply { gravity = Gravity.TOP or Gravity.END; x = builder.dpToPx(16f); y = builder.dpToPx(120f) }
+
+        rootLayout = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; gravity = Gravity.END }
+        val pillText = TextView(this).apply { text = "OmniCast"; setTextColor(Color.WHITE); setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f); typeface = Typeface.DEFAULT_BOLD }
+        val prefs = getSharedPreferences("omnicast_prefs", Context.MODE_PRIVATE)
+        val tvIp = prefs.getString("saved_tv_ip", "192.168.0.136") ?: "192.168.0.136"
+        val statusFeedbackText = TextView(this).apply { text = "TV Box: $tvIp"; setTextColor(Color.parseColor("#94A3B8")); setTextSize(TypedValue.COMPLEX_UNIT_SP, 11f); setPadding(0, builder.dpToPx(2f), 0, builder.dpToPx(8f)) }
+
+        val pillLayout = builder.buildPill(pillText)
+        val dotView = builder.buildDotView().apply { visibility = View.GONE }
+        var menuLayoutRef: LinearLayout? = null
+        var exitConfirmRef: LinearLayout? = null
+        val exitConfirmLayout = builder.buildExitConfirmation(onConfirmClose = { stopSelf() }, onCancel = { exitConfirmRef?.visibility = View.GONE })
+        exitConfirmRef = exitConfirmLayout
+
+        val menuLayout = builder.buildMenu(
+            statusFeedbackText = statusFeedbackText,
+            onDetectVideo = {
+                val actUrl = com.omnicast.sender.stream.ActiveStreamHolder.streamUrl
+                val actTitle = com.omnicast.sender.stream.ActiveStreamHolder.title ?: "Video Detectado"
+                val actHdrs = com.omnicast.sender.stream.ActiveStreamHolder.headers
+                if (!actUrl.isNullOrBlank()) {
+                    statusFeedbackText.text = "✅ Transmitiendo: ${actTitle.take(20)}"; statusFeedbackText.setTextColor(Color.parseColor("#10B981"))
+                    SenderMainActivity.sendDirectStreamStatic(this, actUrl, actTitle, actHdrs)
+                } else {
+                    val res = clipboardExtractor.extractFromClipboard()
+                    val clipUrl = res.mediaUrl
+                    if (res.isSuccess && clipUrl != null) {
+                        statusFeedbackText.text = "✅ ¡Flujo Detectado! Transmitiendo..."; statusFeedbackText.setTextColor(Color.parseColor("#10B981"))
+                        SenderMainActivity.sendDirectStreamStatic(this, clipUrl, "Video Capturado")
+                    } else {
+                        statusFeedbackText.text = "⚠️ Reproduce el video o pulsa 'Transmitir'."; statusFeedbackText.setTextColor(Color.parseColor("#F59E0B"))
+                    }
+                }
+            },
+            onStartScreenMirror = {
+                menuLayoutRef?.visibility = View.GONE; isExpanded = false
+                if (ProjectionForegroundService.isProjecting) {
+                    statusFeedbackText.text = "🟢 Ya estás proyectando."; statusFeedbackText.setTextColor(Color.parseColor("#10B981"))
+                } else {
+                    launchIntentSafely(Intent(this, TransparentCaptureActivity::class.java).apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }, 103)
+                }
+            },
+            onCastGallery = {
+                menuLayoutRef?.visibility = View.GONE; isExpanded = false
+                launchIntentSafely(Intent(this, GalleryPickerActivity::class.java).apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }, 104)
+            },
+            onToggleTvScale = {
+                val port = prefs.getInt("saved_tv_port", 8088)
+                com.omnicast.sender.network.SignalingClient().apply { connect(tvIp, port, { sendMessage(SignalingMessage.SetDisplayMode("TOGGLE")) }, {}) }
+                statusFeedbackText.text = "📺 Modo TV alternado (16:9 / Ajustar)"; statusFeedbackText.setTextColor(Color.parseColor("#8B5CF6"))
+            },
+            onOpenOmniCast = {
+                menuLayoutRef?.visibility = View.GONE; isExpanded = false
+                launchIntentSafely(Intent(this, SenderMainActivity::class.java).apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP) }, 102)
+            },
+            onStopCast = {
+                menuLayoutRef?.visibility = View.GONE; isExpanded = false
+                ProjectionForegroundService.stopService(this); SenderMainActivity.sendDisconnectStatic(this)
+                pillText.text = "OmniCast"; statusFeedbackText.text = "🛑 Transmisión detenida."; statusFeedbackText.setTextColor(Color.parseColor("#EF4444"))
+            }
+        )
+        menuLayoutRef = menuLayout
+
+        pillLayoutRef = pillLayout; dotViewRef = dotView; layoutParamsRef = windowLayoutParams
+        rootLayout?.addView(dotView); rootLayout?.addView(pillLayout); rootLayout?.addView(menuLayout); rootLayout?.addView(exitConfirmLayout)
+
+        val toggleMenu = {
+            if (exitConfirmLayout.visibility == View.VISIBLE) exitConfirmLayout.visibility = View.GONE
+            else { isExpanded = !isExpanded; menuLayout.visibility = if (isExpanded) View.VISIBLE else View.GONE }
+        }
+        pillLayout.setOnClickListener { toggleMenu() }
+        dotView.setOnClickListener { toggleMenu() }
+
+        builder.attachDragToMove(pillLayout, windowLayoutParams, windowManager, rootLayout) { menuLayout.visibility = View.GONE; exitConfirmLayout.visibility = View.VISIBLE }
+        builder.attachDragToMove(dotView, windowLayoutParams, windowManager, rootLayout) { menuLayout.visibility = View.GONE; exitConfirmLayout.visibility = View.VISIBLE }
+
+        pollRunnable = Runnable { refreshDisplayMode(); handler.postDelayed(pollRunnable!!, 1000) }
+        handler.post(pollRunnable!!)
+
+        try { windowManager?.addView(rootLayout, windowLayoutParams); Log.i(TAG, "Asistente flotante agregado") } catch (e: Throwable) { Log.e(TAG, "Error vista flotante", e) }
+    }
+
+    private fun launchIntentSafely(intent: Intent, reqCode: Int) {
+        try {
+            val bundle = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                ActivityOptions.makeBasic().apply { setPendingIntentBackgroundActivityStartMode(ActivityOptions.MODE_BACKGROUND_ACTIVITY_START_ALLOWED) }.toBundle()
+            } else null
+            PendingIntent.getActivity(this, reqCode, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE, bundle).send()
+        } catch (_: Throwable) { try { startActivity(intent) } catch (t: Throwable) { Log.e(TAG, "Error launch", t) } }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy(); isRunning = false; instance = null
+        pollRunnable?.let { handler.removeCallbacks(it) }
+        try { rootLayout?.let { windowManager?.removeView(it) } } catch (e: Throwable) { Log.e(TAG, "Error remove", e) }
+        rootLayout = null; pillLayoutRef = null; dotViewRef = null
+    }
+
+    override fun onBind(intent: Intent?): IBinder? = null
+}

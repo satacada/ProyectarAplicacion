@@ -1,0 +1,175 @@
+package com.omnicast.sender.service
+
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.app.Service
+import android.content.Context
+import android.content.Intent
+import android.os.Build
+import android.os.IBinder
+import android.util.Log
+import androidx.core.app.NotificationCompat
+import com.omnicast.core.domain.models.QualityMode
+import com.omnicast.core.domain.models.StreamProfile
+import com.omnicast.sender.ui.SenderMainActivity
+
+/**
+ * Foreground Service mandatorio en Android 10+ para autorizar y mantener viva
+ * la sesión de MediaProjection mientras el usuario navega en cualquier otra app.
+ */
+class ProjectionForegroundService : Service() {
+
+    companion object {
+        private const val TAG = "ProjectionForegroundService"
+        const val CHANNEL_ID = "OmniCast_Projection_Channel"
+        const val NOTIFICATION_ID = 1001
+        const val ACTION_START = "com.omnicast.sender.ACTION_START_PROJECTION"
+        const val ACTION_STOP = "com.omnicast.sender.ACTION_STOP_PROJECTION"
+
+        var isProjecting = false
+            private set
+
+        private var currentSession: ProjectionSession? = null
+
+        fun startProjection(
+            context: Context,
+            targetIp: String,
+            targetPort: Int,
+            profile: StreamProfile,
+            permissionData: Intent
+        ) {
+            val intent = Intent(context, ProjectionForegroundService::class.java).apply {
+                action = ACTION_START
+                putExtra("EXTRA_IP", targetIp)
+                putExtra("EXTRA_PORT", targetPort)
+                putExtra("EXTRA_WIDTH", profile.width)
+                putExtra("EXTRA_HEIGHT", profile.height)
+                putExtra("EXTRA_FPS", profile.frameRate)
+                putExtra("EXTRA_BITRATE", profile.targetBitrateKbps)
+                putExtra("EXTRA_PERMISSION_DATA", permissionData)
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                context.startForegroundService(intent)
+            } else {
+                context.startService(intent)
+            }
+        }
+
+        fun stopService(context: Context) {
+            val intent = Intent(context, ProjectionForegroundService::class.java).apply {
+                action = ACTION_STOP
+            }
+            context.startService(intent)
+        }
+    }
+
+    override fun onCreate() {
+        super.onCreate()
+        createNotificationChannel()
+    }
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        when (intent?.action) {
+            ACTION_STOP -> {
+                Log.i(TAG, "Deteniendo servicio de proyección")
+                currentSession?.stop()
+                currentSession = null
+                isProjecting = false
+                com.omnicast.sender.overlay.FloatingIndicatorService.updateMode()
+                stopForeground(STOP_FOREGROUND_REMOVE)
+                stopSelf()
+                return START_NOT_STICKY
+            }
+            ACTION_START -> {
+                val notification = buildForegroundNotification()
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    startForeground(
+                        NOTIFICATION_ID,
+                        notification,
+                        android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION
+                    )
+                } else {
+                    startForeground(NOTIFICATION_ID, notification)
+                }
+
+                val prefs = getSharedPreferences("omnicast_prefs", Context.MODE_PRIVATE)
+                val ip = intent.getStringExtra("EXTRA_IP") ?: prefs.getString("saved_tv_ip", "192.168.0.136") ?: "192.168.0.136"
+                val port = intent.getIntExtra("EXTRA_PORT", prefs.getInt("saved_tv_port", 8088))
+                val width = intent.getIntExtra("EXTRA_WIDTH", 1920)
+                val height = intent.getIntExtra("EXTRA_HEIGHT", 1080)
+                val fps = intent.getIntExtra("EXTRA_FPS", 60)
+                val bitrate = intent.getIntExtra("EXTRA_BITRATE", 10000)
+                val permData = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    intent.getParcelableExtra("EXTRA_PERMISSION_DATA", Intent::class.java)
+                } else {
+                    @Suppress("DEPRECATION") intent.getParcelableExtra("EXTRA_PERMISSION_DATA")
+                }
+                Log.i(TAG, "ACTION_START recibido: ip=$ip, port=$port, permData=$permData")
+                if (permData != null) {
+                    currentSession?.stop()
+                    val profile = StreamProfile(QualityMode.BALANCED, width, height, fps, bitrate, 65)
+                    currentSession = ProjectionSession(this, ip, port, profile, permData).apply {
+                        start()
+                    }
+                    isProjecting = true
+                    com.omnicast.sender.overlay.FloatingIndicatorService.start(this)
+                    com.omnicast.sender.overlay.FloatingIndicatorService.updateMode()
+                } else {
+                    Log.e(TAG, "EXTRA_PERMISSION_DATA es null. No se puede iniciar captura.")
+                }
+            }
+        }
+        return START_STICKY
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        currentSession?.stop()
+        currentSession = null
+        isProjecting = false
+        com.omnicast.sender.overlay.FloatingIndicatorService.updateMode()
+    }
+
+    private fun createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                CHANNEL_ID,
+                "OmniCast Proyección Activa",
+                NotificationManager.IMPORTANCE_LOW
+            ).apply {
+                description = "Notificación persistente requerida durante la transmisión de pantalla"
+            }
+            val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            manager.createNotificationChannel(channel)
+        }
+    }
+
+    private fun buildForegroundNotification(): Notification {
+        val openAppIntent = Intent(this, SenderMainActivity::class.java)
+        val pendingIntent = PendingIntent.getActivity(
+            this, 0, openAppIntent,
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
+
+        val stopIntent = Intent(this, ProjectionForegroundService::class.java).apply {
+            action = ACTION_STOP
+        }
+        val stopPendingIntent = PendingIntent.getService(
+            this, 1, stopIntent,
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
+
+        return NotificationCompat.Builder(this, CHANNEL_ID)
+            .setContentTitle("OmniCast Proyectando")
+            .setContentText("Transmitiendo pantalla y audio a la TV Box")
+            .setSmallIcon(android.R.drawable.ic_menu_slideshow)
+            .setContentIntent(pendingIntent)
+            .addAction(android.R.drawable.ic_menu_close_clear_cancel, "Detener", stopPendingIntent)
+            .setOngoing(true)
+            .build()
+    }
+
+    override fun onBind(intent: Intent?): IBinder? = null
+}

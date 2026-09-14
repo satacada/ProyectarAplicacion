@@ -30,7 +30,10 @@ object ActiveStreamHolder {
     private val _currentMediaTitle = MutableStateFlow("")
     val currentMediaTitle = _currentMediaTitle.asStateFlow()
 
-    var onSendPlayControl: ((action: String, posMs: Long, vol: Float) -> Unit)? = null
+    private val _tracksInfo = MutableStateFlow<com.omnicast.core.protocol.SignalingMessage.TracksInfo?>(null)
+    val tracksInfo = _tracksInfo.asStateFlow()
+
+    var onSendPlayControl: ((action: String, posMs: Long, vol: Float, param: String?) -> Unit)? = null
 
     fun update(url: String, videoTitle: String? = null, hdrs: Map<String, String> = emptyMap()) {
         streamUrl = url
@@ -45,6 +48,7 @@ object ActiveStreamHolder {
         _isPlaying.value = true
         _positionMs.value = 0L
         _durationMs.value = 0L
+        _tracksInfo.value = null
     }
 
     fun updatePlayback(playing: Boolean, pos: Long, dur: Long) {
@@ -53,10 +57,15 @@ object ActiveStreamHolder {
         _durationMs.value = dur
     }
 
+    fun updateTracksInfo(info: com.omnicast.core.protocol.SignalingMessage.TracksInfo) {
+        _tracksInfo.value = info
+    }
+
     fun stopCasting() {
         _isCasting.value = false
         _isPlaying.value = false
-        onSendPlayControl?.invoke("STOP", 0L, 1.0f)
+        _tracksInfo.value = null
+        onSendPlayControl?.invoke("STOP", 0L, 1.0f, null)
     }
 
     fun clear() {

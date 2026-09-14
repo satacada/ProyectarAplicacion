@@ -39,6 +39,7 @@ fun InAppBrowserScreen(
     var historyList by remember { mutableStateOf(historyManager.getHistory()) }
     var webViewInstance by remember { mutableStateOf<WebView?>(null) }
     var popupWebView by remember { mutableStateOf<WebView?>(null) }
+    var showTracksSheet by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
     val isCasting by ActiveStreamHolder.isCasting.collectAsState()
@@ -46,9 +47,11 @@ fun InAppBrowserScreen(
     val posMs by ActiveStreamHolder.positionMs.collectAsState()
     val durMs by ActiveStreamHolder.durationMs.collectAsState()
     val castTitle by ActiveStreamHolder.currentMediaTitle.collectAsState()
+    val tracksInfo by ActiveStreamHolder.tracksInfo.collectAsState()
 
     androidx.activity.compose.BackHandler(enabled = true) {
         if (popupWebView != null) { popupWebView?.destroy(); popupWebView = null }
+        else if (showTracksSheet) showTracksSheet = false
         else if (showHistorySheet) showHistorySheet = false
         else if (showOptionsSheet) showOptionsSheet = false
         else if (webViewInstance?.canGoBack() == true) webViewInstance?.goBack()
@@ -56,29 +59,22 @@ fun InAppBrowserScreen(
     }
 
     fun registerStream(url: String, hdrs: Map<String, String>, isPrimary: Boolean = false, label: String? = null) {
-        if (!detectedStreams.contains(url)) {
-            if (isPrimary) detectedStreams.add(0, url) else detectedStreams.add(url)
-        } else if (isPrimary && detectedStreams.firstOrNull() != url) {
-            detectedStreams.remove(url); detectedStreams.add(0, url)
-        }
-        if (hdrs.isNotEmpty()) streamHeaders[url] = hdrs
-        if (!label.isNullOrBlank()) streamLabels[url] = label
+        if (!detectedStreams.contains(url)) { if (isPrimary) detectedStreams.add(0, url) else detectedStreams.add(url) }
+        else if (isPrimary && detectedStreams.firstOrNull() != url) { detectedStreams.remove(url); detectedStreams.add(0, url) }
+        if (hdrs.isNotEmpty()) streamHeaders[url] = hdrs; if (!label.isNullOrBlank()) streamLabels[url] = label
         ActiveStreamHolder.update(url, pageTitle, hdrs)
     }
 
     fun checkAndRegisterYouTube(url: String?, title: String? = null) {
         val ytId = BrowserUrlHelper.extractYouTubeId(url ?: return) ?: return
-        val ytUrl = "https://www.youtube.com/watch?v=$ytId"
-        registerStream(ytUrl, mapOf("X-YouTube-Id" to ytId, "User-Agent" to UA_MOBILE), isPrimary = true, label = "YouTube")
+        registerStream("https://www.youtube.com/watch?v=$ytId", mapOf("X-YouTube-Id" to ytId, "User-Agent" to UA_MOBILE), isPrimary = true, label = "YouTube")
         if (!title.isNullOrBlank()) pageTitle = title.replace(" - YouTube", "")
     }
 
     fun navigateTo(url: String) {
         detectedStreams.clear(); streamHeaders.clear(); streamLabels.clear(); qualityOptions = emptyList()
         val target = BrowserUrlHelper.normalizeUrl(url)
-        inputUrl = target; currentUrl = target; isHome = false
-        checkAndRegisterYouTube(target)
-        webViewInstance?.loadUrl(target)
+        inputUrl = target; currentUrl = target; isHome = false; checkAndRegisterYouTube(target); webViewInstance?.loadUrl(target)
     }
 
     fun openOptionsSheet() {
@@ -169,7 +165,8 @@ fun InAppBrowserScreen(
                         onSendStreamToTv(first, pageTitle, streamHeaders[first] ?: emptyMap())
                     },
                     onOpenQualities = { openOptionsSheet() },
-                    onPlayControl = { act, pos, vol -> ActiveStreamHolder.onSendPlayControl?.invoke(act, pos, vol) },
+                    onOpenTracks = { showTracksSheet = true },
+                    onPlayControl = { act, pos, vol -> ActiveStreamHolder.onSendPlayControl?.invoke(act, pos, vol, null) },
                     onStopCasting = { ActiveStreamHolder.stopCasting() },
                     modifier = Modifier.align(Alignment.BottomCenter)
                 )
@@ -184,15 +181,16 @@ fun InAppBrowserScreen(
     BrowserModalSheets(
         showOptionsSheet = showOptionsSheet, showHistorySheet = showHistorySheet,
         pageTitle = pageTitle, qualityOptions = qualityOptions, historyList = historyList,
-        onTransmitOption = { opt ->
-            showOptionsSheet = false
-            val hdrs = streamHeaders[opt.streamUrl] ?: streamHeaders.values.firstOrNull { it.isNotEmpty() } ?: emptyMap()
-            onSendStreamToTv(opt.streamUrl, pageTitle, hdrs)
-        },
+        onTransmitOption = { opt -> showOptionsSheet = false; onSendStreamToTv(opt.streamUrl, pageTitle, streamHeaders[opt.streamUrl] ?: streamHeaders.values.firstOrNull { it.isNotEmpty() } ?: emptyMap()) },
         onTransmitHistory = { item -> showHistorySheet = false; onSendStreamToTv(item.url, item.title, item.headers) },
         onDismissOptions = { showOptionsSheet = false },
         onClearOptions = { detectedStreams.clear(); qualityOptions = emptyList(); showOptionsSheet = false },
         onDeleteHistory = { historyManager.remove(it); historyList = historyManager.getHistory() },
-        onClearHistory = { historyManager.clear(); historyList = emptyList() }, onDismissHistory = { showHistorySheet = false }
+        onClearHistory = { historyManager.clear(); historyList = emptyList() }, onDismissHistory = { showHistorySheet = false },
+        showTracksSheet = showTracksSheet, tracksInfo = tracksInfo,
+        onToggleSubtitles = { ActiveStreamHolder.onSendPlayControl?.invoke("TOGGLE_SUBTITLES", 0L, 1f, null) },
+        onSelectTextTrack = { idx -> ActiveStreamHolder.onSendPlayControl?.invoke("SET_SUBTITLE_TRACK", 0L, 1f, idx.toString()) },
+        onSelectAudioTrack = { idx -> ActiveStreamHolder.onSendPlayControl?.invoke("SET_AUDIO_TRACK", 0L, 1f, idx.toString()) },
+        onDismissTracks = { showTracksSheet = false }
     )
 }

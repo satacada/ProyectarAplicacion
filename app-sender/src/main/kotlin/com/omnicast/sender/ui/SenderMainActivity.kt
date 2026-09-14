@@ -1,4 +1,4 @@
-﻿package com.omnicast.sender.ui
+package com.omnicast.sender.ui
 
 import android.content.Context
 import android.content.Intent
@@ -134,6 +134,8 @@ class SenderMainActivity : ComponentActivity() {
             signalingClient?.messages?.collect { msg ->
                 if (msg is SignalingMessage.PlaybackStatus) {
                     ActiveStreamHolder.updatePlayback(msg.state == "PLAYING", msg.positionMs, msg.durationMs)
+                } else if (msg is SignalingMessage.TracksInfo) {
+                    ActiveStreamHolder.updateTracksInfo(msg)
                 }
             }
         }
@@ -157,13 +159,13 @@ class SenderMainActivity : ComponentActivity() {
         val safeTitle = title?.ifBlank { "Transmisión Web" } ?: "Transmisión Web"
         historyManager.addOrUpdate(url, safeTitle, headers = headers)
         ActiveStreamHolder.startCasting(url, safeTitle, headers)
-        ActiveStreamHolder.onSendPlayControl = { action, pos, vol -> sendPlayControl(action, pos, vol) }
+        ActiveStreamHolder.onSendPlayControl = { act, pos, vol, par -> sendPlayControl(act, pos, vol, par) }
         sendSignalingMessage(SignalingMessage.DirectStreamHandoff(mediaUrl = url, title = safeTitle, headers = headers))
         Toast.makeText(this, "Enviando video directo a la TV Box...", Toast.LENGTH_SHORT).show()
     }
 
-    fun sendPlayControl(action: String, positionMs: Long = 0L, volume: Float = 1.0f) {
-        sendSignalingMessage(SignalingMessage.PlayControl(action, positionMs, volume))
+    fun sendPlayControl(action: String, positionMs: Long = 0L, volume: Float = 1.0f, param: String? = null) {
+        sendSignalingMessage(SignalingMessage.PlayControl(action, positionMs, volume, param))
     }
 
     fun sendImageToTv(url: String, title: String? = null) {
@@ -187,8 +189,7 @@ class SenderMainActivity : ComponentActivity() {
     }
 
     private fun stopScreenStreaming() {
-        ProjectionForegroundService.stopService(this); sendDisconnectStatic(this)
-        Toast.makeText(this, "Proyección finalizada", Toast.LENGTH_SHORT).show()
+        ProjectionForegroundService.stopService(this); sendDisconnectStatic(this); Toast.makeText(this, "Proyección finalizada", Toast.LENGTH_SHORT).show()
     }
 
     override fun onDestroy() {

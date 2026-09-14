@@ -1,4 +1,4 @@
-﻿package com.omnicast.sender.ui.browser
+package com.omnicast.sender.ui.browser
 
 import androidx.compose.runtime.Composable
 import com.omnicast.sender.history.HistoryItem
@@ -16,7 +16,13 @@ fun BrowserModalSheets(
     onClearOptions: () -> Unit,
     onDeleteHistory: (String) -> Unit,
     onClearHistory: () -> Unit,
-    onDismissHistory: () -> Unit
+    onDismissHistory: () -> Unit,
+    showTracksSheet: Boolean = false,
+    tracksInfo: com.omnicast.core.protocol.SignalingMessage.TracksInfo? = null,
+    onToggleSubtitles: () -> Unit = {},
+    onSelectTextTrack: (Int) -> Unit = {},
+    onSelectAudioTrack: (Int) -> Unit = {},
+    onDismissTracks: () -> Unit = {}
 ) {
     if (showOptionsSheet && qualityOptions.isNotEmpty()) {
         WvcVideoListSheet(
@@ -34,6 +40,16 @@ fun BrowserModalSheets(
             onDelete = onDeleteHistory,
             onClearAll = onClearHistory,
             onDismiss = onDismissHistory
+        )
+    }
+
+    if (showTracksSheet) {
+        com.omnicast.sender.ui.components.TrackSelectorBottomSheet(
+            tracksInfo = tracksInfo,
+            onToggleSubtitles = onToggleSubtitles,
+            onSelectTextTrack = onSelectTextTrack,
+            onSelectAudioTrack = onSelectAudioTrack,
+            onDismiss = onDismissTracks
         )
     }
 }

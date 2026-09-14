@@ -27,7 +27,7 @@ fun TvStandbyScreen(ipAddress: String) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text("OmniCast Pro TV", fontSize = 40.sp, fontWeight = FontWeight.Bold, color = Color.White)
                 androidx.compose.material3.Surface(color = Color(0xFF0284C7), shape = RoundedCornerShape(8.dp)) {
-                    Text("v3.6", modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp), fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    Text("v3.8", modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp), fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
                 }
             }
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -143,7 +143,7 @@ fun TvDirectStreamScreen(
                     androidx.media3.ui.PlayerView(ctx).apply {
                         this.player = player
                         useController = true
-                        subtitleView?.visibility = android.view.View.GONE
+                        subtitleView?.visibility = android.view.View.VISIBLE
                         setShowBuffering(androidx.media3.ui.PlayerView.SHOW_BUFFERING_ALWAYS)
                         layoutParams = android.view.ViewGroup.LayoutParams(
                             android.view.ViewGroup.LayoutParams.MATCH_PARENT,

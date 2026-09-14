@@ -58,7 +58,7 @@ class WebRtcReceiverManager(private val context: Context) {
         peerConnection = peerConnectionFactory?.createPeerConnection(rtcConfig, object : PeerConnection.Observer {
             override fun onIceConnectionChange(newState: PeerConnection.IceConnectionState?) {
                 ReceiverLogger.log(TAG, "Estado de conexión ICE en TV: $newState")
-                if (!isResetting && (newState == PeerConnection.IceConnectionState.DISCONNECTED || newState == PeerConnection.IceConnectionState.FAILED)) {
+                if (!isResetting && newState == PeerConnection.IceConnectionState.FAILED) {
                     onConnectionClosed?.invoke()
                 }
             }

@@ -47,7 +47,9 @@ class TvReceiverActivity : ComponentActivity() {
             initialize()
             onConnectionClosed = { runOnUiThread { if (receiverState.value is ReceiverUiState.ScreenMirroring) receiverState.value = ReceiverUiState.Standby } }
         }
-        exoPlayerManager = ExoPlayerTvManager(this)
+        exoPlayerManager = ExoPlayerTvManager(this).apply {
+            onTracksChanged = { info -> lifecycleScope.launch { signalingServer.sendMessage(info) } }
+        }
         digitalAudioReceiver = DigitalAudioReceiver()
         signalingServer = LocalSignalingServer(port = 8088).apply { start() }
         nsdAdvertiser = NsdAdvertiserManager(this).apply { registerService(port = 8088) }
@@ -102,7 +104,9 @@ class TvReceiverActivity : ComponentActivity() {
                     "STOP" -> { exoPlayerManager.stop(); receiverState.value = ReceiverUiState.Standby }
                     "SEEK" -> exoPlayerManager.seekTo(message.positionMs)
                     "VOLUME" -> exoPlayerManager.setVolume(message.volume)
-                    "SUBTITLE_TOGGLE" -> exoPlayerManager.toggleSubtitles()
+                    "SUBTITLE_TOGGLE", "TOGGLE_SUBTITLES" -> exoPlayerManager.toggleSubtitles()
+                    "SET_SUBTITLE_TRACK" -> message.param?.toIntOrNull()?.let { exoPlayerManager.selectTextTrack(it) }
+                    "SET_AUDIO_TRACK" -> message.param?.toIntOrNull()?.let { exoPlayerManager.selectAudioTrack(it) }
                 }
             }
             is SignalingMessage.ImageTransform -> {

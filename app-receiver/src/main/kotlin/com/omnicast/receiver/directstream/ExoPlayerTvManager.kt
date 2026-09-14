@@ -7,6 +7,7 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
+import androidx.media3.common.Tracks
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.DefaultHttpDataSource
 import androidx.media3.exoplayer.DefaultLoadControl
@@ -15,10 +16,6 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
 
-/**
- * Gestor de reproducción multimedia nativa en la TV Box.
- * Configurado con buffer adaptativo de 30-60s (LoadControl) y decodificación por hardware de Web Video Caster.
- */
 class ExoPlayerTvManager(private val context: Context) {
 
     companion object {
@@ -26,9 +23,9 @@ class ExoPlayerTvManager(private val context: Context) {
         private const val DEFAULT_UA = "Mozilla/5.0 (Linux; Android 14; Mobile) AppleWebKit/537.36 Chrome/124.0.0.0 Mobile Safari/537.36"
     }
 
-    var player: ExoPlayer? = null
-        private set
-
+    var player: ExoPlayer? = null; private set
+    var trackManager: TvTrackManager? = null; private set
+    var onTracksChanged: ((com.omnicast.core.protocol.SignalingMessage.TracksInfo) -> Unit)? = null
     private var currentUrl: String? = null
     private var currentTitle: String? = null
     private var isRetryingClean = false
@@ -49,6 +46,8 @@ class ExoPlayerTvManager(private val context: Context) {
             val trackSelector = DefaultTrackSelector(context).apply {
                 parameters = buildUponParameters().setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_TEXT, true).build()
             }
+            val tm = TvTrackManager(context, trackSelector)
+            trackManager = tm
 
             val httpFactory = DefaultHttpDataSource.Factory()
                 .setUserAgent(DEFAULT_UA).setAllowCrossProtocolRedirects(true).setConnectTimeoutMs(20000).setReadTimeoutMs(20000)
@@ -60,10 +59,12 @@ class ExoPlayerTvManager(private val context: Context) {
                 .setLoadControl(loadControl)
                 .setTrackSelector(trackSelector)
                 .build().apply {
-                    trackSelectionParameters = trackSelectionParameters.buildUpon()
-                        .setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_TEXT, true).build()
                     playWhenReady = true
                     addListener(object : Player.Listener {
+                        override fun onTracksChanged(tracks: Tracks) {
+                            val info = tm.getTracksInfo(this@apply)
+                            onTracksChanged?.invoke(info)
+                        }
                         override fun onPlayerError(error: PlaybackException) {
                             com.omnicast.receiver.log.ReceiverLogger.log(TAG, "❌ Error en ExoPlayer: ${error.errorCodeName} (${error.errorCode}): ${error.message}", error)
                             if (!isRetryingClean && currentUrl != null) {
@@ -174,25 +175,24 @@ class ExoPlayerTvManager(private val context: Context) {
         }
         if (!allowed.containsKey("User-Agent")) allowed["User-Agent"] = DEFAULT_UA
         if (url.contains("mycdn.me", true) || url.contains("ok.ru", true)) allowed["Referer"] = "https://ok.ru/"
-        else if (url.contains("mail.ru", true)) allowed.remove("Referer")
         return allowed
     }
 
-    fun seekTo(positionMs: Long) { player?.seekTo(positionMs) }
+    fun seekTo(pos: Long) { player?.seekTo(pos) }
     fun pause() { player?.pause() }
     fun resume() { player?.play() }
     fun setVolume(vol: Float) { player?.volume = vol.coerceIn(0f, 1f) }
-    fun toggleSubtitles() {
-        val p = player ?: return
-        val disabled = p.trackSelectionParameters.disabledTrackTypes.contains(androidx.media3.common.C.TRACK_TYPE_TEXT)
-        p.trackSelectionParameters = p.trackSelectionParameters.buildUpon()
-            .setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_TEXT, !disabled)
-            .setPreferredTextLanguage(if (disabled) "es" else null).build()
+    fun toggleSubtitles(enable: Boolean? = null): Boolean {
+        val p = player ?: return false
+        val st = trackManager?.toggleSubtitles(enable) ?: false
+        trackManager?.getTracksInfo(p)?.let { onTracksChanged?.invoke(it) }
+        return st
     }
+    fun selectTextTrack(idx: Int) { player?.let { trackManager?.selectTextTrack(it, idx); trackManager?.getTracksInfo(it)?.let { info -> onTracksChanged?.invoke(info) } } }
+    fun selectAudioTrack(idx: Int) { player?.let { trackManager?.selectAudioTrack(it, idx); trackManager?.getTracksInfo(it)?.let { info -> onTracksChanged?.invoke(info) } } }
     val currentPositionMs: Long get() = player?.currentPosition?.coerceAtLeast(0L) ?: 0L
     val durationMs: Long get() = player?.duration?.coerceAtLeast(0L) ?: 0L
     val isPlaying: Boolean get() = player?.isPlaying ?: false
-
     fun stop() { player?.stop(); player?.clearMediaItems() }
     fun release() { stop(); player?.release(); player = null }
 }

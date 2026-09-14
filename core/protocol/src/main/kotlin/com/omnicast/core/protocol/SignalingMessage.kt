@@ -95,6 +95,16 @@ sealed class SignalingMessage {
     ) : SignalingMessage()
 
     @Serializable
+    @SerialName("TRACKS_INFO")
+    data class TracksInfo(
+        val audioTracks: List<String> = emptyList(),
+        val textTracks: List<String> = emptyList(),
+        val selectedAudioIndex: Int = -1,
+        val selectedTextIndex: Int = -1,
+        val subtitlesEnabled: Boolean = false
+    ) : SignalingMessage()
+
+    @Serializable
     @SerialName("DISCONNECT")
     data class Disconnect(
         val reason: String = "User requested disconnect"

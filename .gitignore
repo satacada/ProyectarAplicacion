@@ -1,4 +1,4 @@
-﻿# Gradle & Android build
+# Gradle & Android build
 .gradle/
 build/
 app-receiver/build/
@@ -10,6 +10,7 @@ local.properties
 # Releases & scratch dumps
 releases/
 scratch/
+references/decompiled/
 *.apk
 *.dex
 *.log

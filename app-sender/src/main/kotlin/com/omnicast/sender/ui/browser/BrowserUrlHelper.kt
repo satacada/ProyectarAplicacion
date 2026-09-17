@@ -30,7 +30,8 @@ object BrowserUrlHelper {
         val lower = url.lowercase()
         if (AdBlocker.isAd(url)) return false
         if (lower.contains("googlevideo.com") || lower.contains("youtube.com/videoplayback")) return false
-        if (lower.contains("stub.mp4") || lower.contains("dummy.mp4") || lower.contains("blank.mp4")) return false
+        if (lower.contains("preroll") || lower.contains("midroll") || lower.contains("commercial") || lower.contains("/vast") || lower.contains("vast.")) return false
+        if (lower.contains("stub.mp4") || lower.contains("dummy.mp4") || lower.contains("blank.mp4") || lower.contains("ad.mp4")) return false
         if (lower.contains(".ts?") || lower.endsWith(".ts") || lower.contains(".m4s")) return false
         if (lower.contains("/audio") || lower.contains("_audio.m3u8") || lower.contains("-audio.m3u8")) return false
         if (lower.endsWith(".html") || lower.endsWith(".htm") || lower.contains(".html?") || lower.contains(".htm?")) return false

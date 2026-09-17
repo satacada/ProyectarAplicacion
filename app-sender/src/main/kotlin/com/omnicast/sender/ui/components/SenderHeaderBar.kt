@@ -34,7 +34,7 @@ fun SenderHeaderBar(onOpenHelp: () -> Unit) {
                     shape = RoundedCornerShape(6.dp)
                 ) {
                     Text(
-                        "v2.5",
+                        "v3.18",
                         modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,

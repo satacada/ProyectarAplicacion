@@ -1,7 +1,9 @@
 package com.omnicast.receiver.ui
 
+import android.content.Context
 import android.content.Intent
 import android.graphics.Color
+import android.media.AudioManager
 import android.os.Bundle
 import android.view.KeyEvent
 import android.view.WindowManager
@@ -22,6 +24,7 @@ import com.omnicast.receiver.ui.components.*
 import com.omnicast.receiver.webrtc.WebRtcReceiverManager
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
 import java.net.Inet4Address
 import java.net.NetworkInterface
@@ -30,6 +33,7 @@ class TvReceiverActivity : ComponentActivity() {
 
     private val receiverState = mutableStateOf<ReceiverUiState>(ReceiverUiState.Standby)
     private val localIpAddress = mutableStateOf("127.0.0.1")
+    private val youTubeControlFlow = MutableSharedFlow<SignalingMessage.PlayControl>(extraBufferCapacity = 16)
     private lateinit var webRtcReceiver: WebRtcReceiverManager
     private lateinit var exoPlayerManager: ExoPlayerTvManager
     private lateinit var signalingServer: LocalSignalingServer
@@ -71,7 +75,18 @@ class TvReceiverActivity : ComponentActivity() {
                     is ReceiverUiState.ClientConnectedStandby -> TvConnectedStandbyScreen(clientAddress = state.clientAddress)
                     is ReceiverUiState.ScreenMirroring -> TvMirroringActiveScreen(webRtcReceiver, state.resolution, state.fps)
                     is ReceiverUiState.DirectStreamPlaying -> TvDirectStreamScreen(exoPlayerManager, state.title, state.streamUrl)
-                    is ReceiverUiState.YouTubePlaying -> TvYouTubeScreen(videoId = state.videoId, title = state.title, timestamp = state.timestamp)
+                    is ReceiverUiState.YouTubePlaying -> TvYouTubeScreen(
+                        videoId = state.videoId,
+                        title = state.title,
+                        timestamp = state.timestamp,
+                        commandFlow = youTubeControlFlow,
+                        onPlaybackStatus = { pos, dur, playing ->
+                            lifecycleScope.launch {
+                                val st = if (playing) "PLAYING" else "PAUSED"
+                                signalingServer.sendMessage(SignalingMessage.PlaybackStatus(st, pos, dur))
+                            }
+                        }
+                    )
                     is ReceiverUiState.ImageDisplaying -> TvImageScreen(state.imageUrl, state.title, state.scale, state.panX, state.panY)
                 }
             }
@@ -98,12 +113,18 @@ class TvReceiverActivity : ComponentActivity() {
                 }
             }
             is SignalingMessage.PlayControl -> {
+                if (receiverState.value is ReceiverUiState.YouTubePlaying) {
+                    youTubeControlFlow.tryEmit(message)
+                }
                 when (message.action) {
                     "PLAY" -> exoPlayerManager.resume()
                     "PAUSE" -> exoPlayerManager.pause()
-                    "STOP" -> { exoPlayerManager.stop(); receiverState.value = ReceiverUiState.Standby }
+                    "STOP" -> {
+                        exoPlayerManager.stop()
+                        receiverState.value = ReceiverUiState.Standby
+                    }
                     "SEEK" -> exoPlayerManager.seekTo(message.positionMs)
-                    "VOLUME" -> exoPlayerManager.setVolume(message.volume)
+                    "VOLUME" -> applySystemAndPlayerVolume(message.volume)
                     "SUBTITLE_TOGGLE", "TOGGLE_SUBTITLES" -> exoPlayerManager.toggleSubtitles()
                     "SET_SUBTITLE_TRACK" -> message.param?.toIntOrNull()?.let { exoPlayerManager.selectTextTrack(it) }
                     "SET_AUDIO_TRACK" -> message.param?.toIntOrNull()?.let { exoPlayerManager.selectAudioTrack(it) }
@@ -136,6 +157,18 @@ class TvReceiverActivity : ComponentActivity() {
                 } else break
             }
         }
+    }
+
+    private fun applySystemAndPlayerVolume(vol: Float) {
+        try {
+            val audioManager = getSystemService(Context.AUDIO_SERVICE) as? AudioManager
+            if (audioManager != null) {
+                val maxVol = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+                val targetVol = (vol.coerceIn(0f, 1f) * maxVol).toInt()
+                audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, targetVol, AudioManager.FLAG_SHOW_UI)
+            }
+        } catch (_: Throwable) {}
+        exoPlayerManager.setVolume(vol)
     }
 
     private fun getLocalIpAddress(): String = try {

@@ -69,13 +69,16 @@ fun BrowserWebView(
                         val tgtHost = try { r.url.host?.lowercase() } catch (_: Throwable) { null }
                         if (curHost != null && tgtHost != null && curHost != tgtHost && !tgtHost.endsWith(curHost) && !curHost.endsWith(tgtHost)) {
                             if (!AdBlocker.isKnownMediaHost(tgtHost)) {
-                                android.util.Log.w("BrowserWebView", "🛑 Redirección externa aislada en popup: $tgtHost")
+                                if (isAdBlockEnabled || AdBlocker.isAd(reqUrl)) {
+                                    android.util.Log.w("BrowserWebView", "🛑 Redirección publicitaria bloqueada silenciosamente: $tgtHost")
+                                    return true
+                                }
                                 val popup = WebView(ctx).apply {
                                     CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
                                     settings.javaScriptEnabled = true; settings.domStorageEnabled = true; settings.userAgentString = UA_MOBILE
                                     webViewClient = object : WebViewClient() {
                                         override fun shouldOverrideUrlLoading(view: WebView?, req: WebResourceRequest?): Boolean =
-                                            req?.url?.toString()?.let { AdBlocker.isExternalRedirect(it) } ?: false
+                                            req?.url?.toString()?.let { AdBlocker.isExternalRedirect(it) || AdBlocker.isAd(it) } ?: false
                                     }
                                     webChromeClient = object : WebChromeClient() {
                                         override fun onCloseWindow(window: WebView?) { onClosePopup() }

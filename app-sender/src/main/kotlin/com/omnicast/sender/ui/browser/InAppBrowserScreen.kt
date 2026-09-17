@@ -45,6 +45,7 @@ fun InAppBrowserScreen(
     val isPlaying by ActiveStreamHolder.isPlaying.collectAsState()
     val posMs by ActiveStreamHolder.positionMs.collectAsState()
     val durMs by ActiveStreamHolder.durationMs.collectAsState()
+    val volume by ActiveStreamHolder.volume.collectAsState()
     val castTitle by ActiveStreamHolder.currentMediaTitle.collectAsState()
 
     androidx.activity.compose.BackHandler(enabled = true) {
@@ -56,10 +57,13 @@ fun InAppBrowserScreen(
     }
 
     fun registerStream(url: String, hdrs: Map<String, String>, isPrimary: Boolean = false, label: String? = null) {
-        if (!detectedStreams.contains(url)) { if (isPrimary) detectedStreams.add(0, url) else detectedStreams.add(url) }
-        else if (isPrimary && detectedStreams.firstOrNull() != url) { detectedStreams.remove(url); detectedStreams.add(0, url) }
+        val isM3u8 = url.contains(".m3u8", ignoreCase = true)
+        val shouldBePrimary = isPrimary || isM3u8
+        if (!detectedStreams.contains(url)) { if (shouldBePrimary) detectedStreams.add(0, url) else detectedStreams.add(url) }
+        else if (shouldBePrimary && detectedStreams.firstOrNull() != url) { detectedStreams.remove(url); detectedStreams.add(0, url) }
         if (hdrs.isNotEmpty()) streamHeaders[url] = hdrs; if (!label.isNullOrBlank()) streamLabels[url] = label
-        ActiveStreamHolder.update(url, pageTitle, hdrs)
+        val primaryUrl = detectedStreams.firstOrNull() ?: url
+        ActiveStreamHolder.update(primaryUrl, pageTitle, streamHeaders[primaryUrl] ?: hdrs)
     }
 
     fun checkAndRegisterYouTube(url: String?, title: String? = null) {
@@ -69,9 +73,12 @@ fun InAppBrowserScreen(
     }
 
     fun navigateTo(url: String) {
-        detectedStreams.clear(); streamHeaders.clear(); streamLabels.clear(); qualityOptions = emptyList()
+        if (ActiveStreamHolder.isCasting.value) ActiveStreamHolder.stopCasting()
+        detectedStreams.clear(); streamHeaders.clear(); streamLabels.clear(); qualityOptions = emptyList(); ActiveStreamHolder.clear()
         val target = BrowserUrlHelper.normalizeUrl(url)
-        inputUrl = target; currentUrl = target; isHome = false; checkAndRegisterYouTube(target); webViewInstance?.loadUrl(target)
+        inputUrl = target; currentUrl = target; isHome = false
+        if (target.contains("youtube.com") || target.contains("youtu.be")) checkAndRegisterYouTube(target)
+        webViewInstance?.loadUrl(target)
     }
 
     fun openOptionsSheet() {
@@ -125,16 +132,24 @@ fun InAppBrowserScreen(
             BrowserWebView(
                 isHome = isHome, isAdBlockEnabled = isAdBlockEnabled, currentUrl = currentUrl,
                 onProgress = { progress = it },
-                onPageStarted = {
-                    val prevHost = try { java.net.URI(currentUrl).host } catch (_: Throwable) { "" }
-                    val newHost = try { java.net.URI(it).host } catch (_: Throwable) { "" }
+                onPageStarted = { newUrl ->
+                    val prevHost = try { java.net.URI(currentUrl).host?.lowercase() } catch (_: Throwable) { "" }
+                    val newHost = try { java.net.URI(newUrl).host?.lowercase() } catch (_: Throwable) { "" }
                     if (!prevHost.isNullOrEmpty() && !newHost.isNullOrEmpty() && prevHost != newHost) {
-                        detectedStreams.clear(); streamHeaders.clear(); streamLabels.clear(); qualityOptions = emptyList()
+                        if (ActiveStreamHolder.isCasting.value) ActiveStreamHolder.stopCasting()
+                        detectedStreams.clear(); streamHeaders.clear(); streamLabels.clear(); qualityOptions = emptyList(); ActiveStreamHolder.clear()
                     }
-                    inputUrl = it; currentUrl = it; checkAndRegisterYouTube(it)
+                    inputUrl = newUrl; currentUrl = newUrl
+                    if (newUrl.contains("youtube.com") || newUrl.contains("youtu.be")) checkAndRegisterYouTube(newUrl)
                 },
-                onPageFinished = { t, u -> pageTitle = t; checkAndRegisterYouTube(u, pageTitle) },
-                onHistoryUpdated = { u, t -> currentUrl = u; if (!t.isNullOrBlank()) pageTitle = t; checkAndRegisterYouTube(u, t) },
+                onPageFinished = { t, u ->
+                    if (!t.isNullOrBlank()) pageTitle = t
+                    if (u?.contains("youtube.com") == true || u?.contains("youtu.be") == true) checkAndRegisterYouTube(u, pageTitle)
+                },
+                onHistoryUpdated = { u, t ->
+                    currentUrl = u; if (!t.isNullOrBlank()) pageTitle = t
+                    if (u.contains("youtube.com") || u.contains("youtu.be")) checkAndRegisterYouTube(u, t)
+                },
                 onStreamIntercepted = { sUrl, hdrs, isM -> registerStream(sUrl, hdrs, isPrimary = isM) },
                 onSniffedVideo = { sniffed ->
                     val hdrs = BrowserUrlHelper.buildSafeHeaders(sniffed.src, currentUrl, UA_MOBILE)
@@ -156,13 +171,16 @@ fun InAppBrowserScreen(
             if (isCasting || (!isHome && detectedStreams.isNotEmpty())) {
                 BrowserBottomBarContainer(
                     isCasting = isCasting, castTitle = castTitle, isPlaying = isPlaying,
-                    posMs = posMs, durMs = durMs, detectedCount = detectedStreams.size, pageTitle = pageTitle,
+                    posMs = posMs, durMs = durMs, volume = volume, detectedCount = detectedStreams.size, pageTitle = pageTitle,
                     onTransmitDirect = {
                         val first = detectedStreams.firstOrNull() ?: return@BrowserBottomBarContainer
                         onSendStreamToTv(first, pageTitle, streamHeaders[first] ?: emptyMap())
                     },
                     onOpenQualities = { openOptionsSheet() },
-                    onPlayControl = { act, pos, vol -> ActiveStreamHolder.onSendPlayControl?.invoke(act, pos, vol, null) },
+                    onPlayControl = { act, pos, vol ->
+                        if (act == "VOLUME") ActiveStreamHolder.setVolume(vol)
+                        ActiveStreamHolder.onSendPlayControl?.invoke(act, pos, vol, null)
+                    },
                     onStopCasting = { ActiveStreamHolder.stopCasting() },
                     modifier = Modifier.align(Alignment.BottomCenter)
                 )

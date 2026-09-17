@@ -59,7 +59,8 @@ class FloatingViewBuilder(private val context: Context) {
         onCastGallery: () -> Unit,
         onToggleTvScale: () -> Unit,
         onOpenOmniCast: () -> Unit,
-        onStopCast: () -> Unit
+        onStopCast: () -> Unit,
+        onDisableOverlay: () -> Unit
     ): View {
         val menuDrawable = GradientDrawable().apply {
             setColor(Color.parseColor("#F80F172A")); cornerRadius = dpToPx(14f).toFloat(); setStroke(dpToPx(1f), Color.parseColor("#334155"))
@@ -78,6 +79,7 @@ class FloatingViewBuilder(private val context: Context) {
         innerMenu.addView(createBtn("📱 Proyectar Pantalla (Toda)", "#2563EB", onStartScreenMirror))
         innerMenu.addView(createBtn("⚙️ Abrir OmniCast", "#334155", onOpenOmniCast))
         innerMenu.addView(createBtn("🛑 Detener Transmisión", "#DC2626", onStopCast))
+        innerMenu.addView(createBtn("❌ Desactivar Asistente", "#475569", onDisableOverlay))
 
         val scrollView = object : android.widget.ScrollView(context) {
             override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {

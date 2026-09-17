@@ -1,11 +1,16 @@
 package com.omnicast.sender.overlay
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
+import android.util.Base64
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.lifecycle.lifecycleScope
+import java.io.ByteArrayOutputStream
+import kotlinx.coroutines.launch
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTransformGestures
@@ -41,12 +46,19 @@ class PhotoCastViewerActivity : ComponentActivity() {
         val prefs = getSharedPreferences("omnicast_prefs", Context.MODE_PRIVATE)
         val ip = prefs.getString("saved_tv_ip", "192.168.0.136") ?: "192.168.0.136"
         val port = prefs.getInt("saved_tv_port", 8088)
-        signalingClient = SignalingClient().apply {
-            connect(ip, port, {
-                if (!mediaUrl.isNullOrBlank()) {
-                    sendMessage(SignalingMessage.ShowImage(mediaUrl, "Foto de Galería"))
-                }
-            }, {})
+
+        lifecycleScope.launch(Dispatchers.IO) {
+            val photoUrl = if (imageUri != null) {
+                com.omnicast.sender.media.LocalImageServer.serveImage(imageUri, this@PhotoCastViewerActivity)
+            } else mediaUrl
+
+            signalingClient = SignalingClient().apply {
+                connect(ip, port, {
+                    if (!photoUrl.isNullOrBlank()) {
+                        sendMessage(SignalingMessage.ShowImage(photoUrl, "Foto de Galería"))
+                    }
+                }, {})
+            }
         }
 
         setContent {

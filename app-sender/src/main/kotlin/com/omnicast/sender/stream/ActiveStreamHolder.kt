@@ -41,6 +41,18 @@ object ActiveStreamHolder {
         headers = hdrs
     }
 
+    fun clear() {
+        streamUrl = null
+        title = null
+        headers = emptyMap()
+        _isCasting.value = false
+        _isPlaying.value = false
+        _positionMs.value = 0L
+        _durationMs.value = 0L
+        _currentMediaTitle.value = ""
+        _tracksInfo.value = null
+    }
+
     fun startCasting(url: String, videoTitle: String? = null, hdrs: Map<String, String> = emptyMap()) {
         update(url, videoTitle, hdrs)
         _currentMediaTitle.value = videoTitle?.takeIf { it.isNotBlank() } ?: "Video en Transmisión"
@@ -61,18 +73,18 @@ object ActiveStreamHolder {
         _tracksInfo.value = info
     }
 
+    private val _volume = MutableStateFlow(1.0f)
+    val volume = _volume.asStateFlow()
+
+    fun setVolume(vol: Float) {
+        _volume.value = vol.coerceIn(0f, 1f)
+    }
+
     fun stopCasting() {
         _isCasting.value = false
         _isPlaying.value = false
         _tracksInfo.value = null
         onSendPlayControl?.invoke("STOP", 0L, 1.0f, null)
-    }
-
-    fun clear() {
-        streamUrl = null
-        title = null
-        headers = emptyMap()
-        _isCasting.value = false
     }
 
     fun hasStream(): Boolean = !streamUrl.isNullOrBlank()

@@ -21,7 +21,8 @@ class ProjectionSession(
     private val targetIp: String,
     private val targetPort: Int,
     private val profile: StreamProfile,
-    private val permissionData: Intent
+    private val permissionData: Intent,
+    private var tvScaleMode: String = "EXTEND_16_9"
 ) {
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private var webRtcManager: WebRtcSenderManager? = null
@@ -29,9 +30,24 @@ class ProjectionSession(
     private var audioCaptureManager: AudioCaptureManager? = null
     private var signalingClient: SignalingClient? = null
 
+    fun setTvScaleMode(mode: String) {
+        tvScaleMode = mode
+        webRtcManager?.tvScaleMode = mode
+        signalingClient?.sendMessage(SignalingMessage.SetDisplayMode(if (mode == "EXTEND_16_9") "FILL" else "FIT"))
+    }
+
+    fun toggleTvScaleMode(): String {
+        val next = if (tvScaleMode == "EXTEND_16_9") "ORIGINAL_FIT" else "EXTEND_16_9"
+        setTvScaleMode(next)
+        return next
+    }
+
+    fun getTvScaleMode(): String = tvScaleMode
+
     fun start() {
-        Log.i("ProjectionSession", "Iniciando proyección en segundo plano a $targetIp:$targetPort")
+        Log.i("ProjectionSession", "Iniciando proyección en segundo plano a $targetIp:$targetPort (modo: $tvScaleMode)")
         webRtcManager = WebRtcSenderManager(context, permissionData).apply {
+            this.tvScaleMode = this@ProjectionSession.tvScaleMode
             initialize()
             startScreenStreaming(profile)
         }
@@ -86,7 +102,8 @@ class ProjectionSession(
             onConnected = {
                 Log.i("ProjectionSession", "Conexión señalización OK con TV. Creando oferta SDP...")
                 webRtcManager?.createOffer { offerSdp ->
-                    client.sendMessage(SignalingMessage.Offer(offerSdp, profile.width, profile.height, profile.frameRate, profile.targetBitrateKbps))
+                    val dims = webRtcManager?.calcCaptureDimensions() ?: Pair(profile.width, profile.height)
+                    client.sendMessage(SignalingMessage.Offer(offerSdp, dims.first, dims.second, profile.frameRate, profile.targetBitrateKbps))
                     offerSent = true
                     pendingCandidates.forEach { client.sendMessage(it) }
                     pendingCandidates.clear()

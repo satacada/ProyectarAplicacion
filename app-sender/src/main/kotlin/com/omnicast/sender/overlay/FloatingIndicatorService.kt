@@ -141,9 +141,21 @@ class FloatingIndicatorService : Service() {
                 launchIntentSafely(Intent(this, GalleryPickerActivity::class.java).apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }, 104)
             },
             onToggleTvScale = {
-                val port = prefs.getInt("saved_tv_port", 8088)
-                com.omnicast.sender.network.SignalingClient().apply { connect(tvIp, port, { sendMessage(SignalingMessage.SetDisplayMode("TOGGLE")) }, {}) }
-                statusFeedbackText.text = "📺 Modo TV alternado (16:9 / Ajustar)"; statusFeedbackText.setTextColor(Color.parseColor("#8B5CF6"))
+                val newMode = if (ProjectionForegroundService.isProjecting) {
+                    ProjectionForegroundService.toggleTvScaleMode()
+                } else {
+                    val cur = prefs.getString("saved_tv_scale_mode", "EXTEND_16_9") ?: "EXTEND_16_9"
+                    val next = if (cur == "EXTEND_16_9") "ORIGINAL_FIT" else "EXTEND_16_9"
+                    prefs.edit().putString("saved_tv_scale_mode", next).apply()
+                    val port = prefs.getInt("saved_tv_port", 8088)
+                    com.omnicast.sender.network.SignalingClient().apply {
+                        connect(tvIp, port, { sendMessage(SignalingMessage.SetDisplayMode(if (next == "EXTEND_16_9") "FILL" else "FIT")) }, {})
+                    }
+                    next
+                }
+                val is169 = newMode == "EXTEND_16_9"
+                statusFeedbackText.text = if (is169) "📺 Modo: Llenar Pantalla 16:9" else "📱 Modo: Ajustar Original (Fit)"
+                statusFeedbackText.setTextColor(Color.parseColor("#38BDF8"))
             },
             onOpenOmniCast = {
                 menuLayoutRef?.visibility = View.GONE; isExpanded = false
@@ -153,6 +165,10 @@ class FloatingIndicatorService : Service() {
                 menuLayoutRef?.visibility = View.GONE; isExpanded = false
                 ProjectionForegroundService.stopService(this); SenderMainActivity.sendDisconnectStatic(this)
                 pillText.text = "OmniCast"; statusFeedbackText.text = "🛑 Transmisión detenida."; statusFeedbackText.setTextColor(Color.parseColor("#EF4444"))
+            },
+            onDisableOverlay = {
+                menuLayoutRef?.visibility = View.GONE; isExpanded = false
+                stopSelf()
             }
         )
         menuLayoutRef = menuLayout

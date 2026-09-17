@@ -12,6 +12,7 @@ fun BrowserBottomBarContainer(
     isPlaying: Boolean,
     posMs: Long,
     durMs: Long,
+    volume: Float = 1.0f,
     detectedCount: Int,
     pageTitle: String,
     onTransmitDirect: () -> Unit,
@@ -24,7 +25,7 @@ fun BrowserBottomBarContainer(
         if (isCasting) {
             RemoteControlBar(
                 title = castTitle.ifBlank { pageTitle },
-                isPlaying = isPlaying, positionMs = posMs, durationMs = durMs, volume = 1f,
+                isPlaying = isPlaying, positionMs = posMs, durationMs = durMs, volume = volume,
                 onPlayPause = { onPlayControl(if (isPlaying) "PAUSE" else "PLAY", posMs, 1f) },
                 onSeekTo = { onPlayControl("SEEK", it, 1f) },
                 onSkip = { onPlayControl("SEEK", (posMs + it).coerceAtLeast(0L), 1f) },

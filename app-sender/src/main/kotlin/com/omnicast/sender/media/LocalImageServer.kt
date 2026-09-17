@@ -125,7 +125,17 @@ object LocalImageServer {
                 if (intf.isLoopback || !intf.isUp) continue
                 for (addr in intf.inetAddresses) {
                     if (!addr.isLoopbackAddress && addr is Inet4Address) {
-                        return addr.hostAddress ?: "127.0.0.1"
+                        val ip = addr.hostAddress ?: continue
+                        if (ip.startsWith("192.168.")) return ip
+                    }
+                }
+            }
+            for (intf in interfaces) {
+                if (intf.isLoopback || !intf.isUp) continue
+                for (addr in intf.inetAddresses) {
+                    if (!addr.isLoopbackAddress && addr is Inet4Address) {
+                        val ip = addr.hostAddress ?: continue
+                        if (!ip.startsWith("127.")) return ip
                     }
                 }
             }

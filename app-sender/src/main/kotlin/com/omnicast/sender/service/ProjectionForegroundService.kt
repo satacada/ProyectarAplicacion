@@ -38,7 +38,8 @@ class ProjectionForegroundService : Service() {
             targetIp: String,
             targetPort: Int,
             profile: StreamProfile,
-            permissionData: Intent
+            permissionData: Intent,
+            tvScaleMode: String = "EXTEND_16_9"
         ) {
             val intent = Intent(context, ProjectionForegroundService::class.java).apply {
                 action = ACTION_START
@@ -48,6 +49,8 @@ class ProjectionForegroundService : Service() {
                 putExtra("EXTRA_HEIGHT", profile.height)
                 putExtra("EXTRA_FPS", profile.frameRate)
                 putExtra("EXTRA_BITRATE", profile.targetBitrateKbps)
+                putExtra("EXTRA_MODE", profile.mode.name)
+                putExtra("EXTRA_TV_SCALE_MODE", tvScaleMode)
                 putExtra("EXTRA_PERMISSION_DATA", permissionData)
             }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -55,6 +58,18 @@ class ProjectionForegroundService : Service() {
             } else {
                 context.startService(intent)
             }
+        }
+
+        fun setTvScaleMode(mode: String) {
+            currentSession?.setTvScaleMode(mode)
+        }
+
+        fun toggleTvScaleMode(): String {
+            return currentSession?.toggleTvScaleMode() ?: "EXTEND_16_9"
+        }
+
+        fun getTvScaleMode(): String {
+            return currentSession?.getTvScaleMode() ?: "EXTEND_16_9"
         }
 
         fun stopService(context: Context) {
@@ -98,19 +113,23 @@ class ProjectionForegroundService : Service() {
                 val ip = intent.getStringExtra("EXTRA_IP") ?: prefs.getString("saved_tv_ip", "192.168.0.136") ?: "192.168.0.136"
                 val port = intent.getIntExtra("EXTRA_PORT", prefs.getInt("saved_tv_port", 8088))
                 val width = intent.getIntExtra("EXTRA_WIDTH", 1920)
-                val height = intent.getIntExtra("EXTRA_HEIGHT", 1080)
-                val fps = intent.getIntExtra("EXTRA_FPS", 60)
-                val bitrate = intent.getIntExtra("EXTRA_BITRATE", 10000)
+                val height = intent.getIntExtra("EXTRA_HEIGHT", 1280)
+                val fps = intent.getIntExtra("EXTRA_FPS", 30)
+                val bitrate = intent.getIntExtra("EXTRA_BITRATE", 3500)
+                val modeStr = intent.getStringExtra("EXTRA_MODE")
+                val mode = try { QualityMode.valueOf(modeStr ?: "") } catch (_: Throwable) { QualityMode.BALANCED_30FPS }
                 val permData = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                     intent.getParcelableExtra("EXTRA_PERMISSION_DATA", Intent::class.java)
                 } else {
                     @Suppress("DEPRECATION") intent.getParcelableExtra("EXTRA_PERMISSION_DATA")
                 }
-                Log.i(TAG, "ACTION_START recibido: ip=$ip, port=$port, permData=$permData")
+                val tvScaleMode = intent.getStringExtra("EXTRA_TV_SCALE_MODE") ?: prefs.getString("saved_tv_scale_mode", "EXTEND_16_9") ?: "EXTEND_16_9"
+                Log.i(TAG, "ACTION_START recibido: ip=$ip, port=$port, mode=$mode, fps=$fps, tvScaleMode=$tvScaleMode")
                 if (permData != null) {
                     currentSession?.stop()
-                    val profile = StreamProfile(QualityMode.BALANCED, width, height, fps, bitrate, 65)
-                    currentSession = ProjectionSession(this, ip, port, profile, permData).apply {
+                    val profile = StreamProfile.ALL_PROFILES.firstOrNull { it.mode == mode }
+                        ?: StreamProfile(mode, width, height, fps, bitrate, 65)
+                    currentSession = ProjectionSession(this, ip, port, profile, permData, tvScaleMode).apply {
                         start()
                     }
                     isProjecting = true

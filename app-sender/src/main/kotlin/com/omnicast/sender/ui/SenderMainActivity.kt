@@ -79,7 +79,7 @@ class SenderMainActivity : ComponentActivity() {
                     onConnectToTv = { ip, port -> connectToTv(ip, port) },
                     onAnalyzeStream = { url -> if (url != null) clipboardExtractor.extractStream(url) else clipboardExtractor.extractFromClipboard() },
                     onSendDirectStream = { url, title, hdrs -> sendDirectStreamToTv(url, title, hdrs) },
-                    onStartProjection = { target, profile, permIntent -> startScreenStreaming(target, profile, permIntent) },
+                    onStartProjection = { target, profile, scaleMode, permIntent -> startScreenStreaming(target, profile, scaleMode, permIntent) },
                     onStopProjection = { stopScreenStreaming() },
                     initialOpenBrowser = openBrowserDirectly.value
                 )
@@ -179,9 +179,9 @@ class SenderMainActivity : ComponentActivity() {
         }
     }
 
-    private fun startScreenStreaming(target: DeviceTarget, profile: StreamProfile, permissionData: Intent) {
+    private fun startScreenStreaming(target: DeviceTarget, profile: StreamProfile, tvScaleMode: String, permissionData: Intent) {
         autoPromptCapture.value = false
-        ProjectionForegroundService.startProjection(this, target.ipAddress, target.port, profile, permissionData)
+        ProjectionForegroundService.startProjection(this, target.ipAddress, target.port, profile, permissionData, tvScaleMode)
         Toast.makeText(this, "Proyectando pantalla en ${target.name}", Toast.LENGTH_SHORT).show()
         lifecycleScope.launch { kotlinx.coroutines.delay(700); if (!isFinishing && !isDestroyed) moveTaskToBack(true) }
     }

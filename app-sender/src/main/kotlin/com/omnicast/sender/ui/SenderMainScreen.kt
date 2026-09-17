@@ -34,7 +34,7 @@ fun SenderMainScreen(
     onConnectToTv: (String, Int) -> Unit = { _, _ -> },
     onAnalyzeStream: (String?) -> StreamDetectionResult,
     onSendDirectStream: (String, String?, Map<String, String>) -> Unit,
-    onStartProjection: (DeviceTarget, StreamProfile, Intent) -> Unit,
+    onStartProjection: (DeviceTarget, StreamProfile, String, Intent) -> Unit,
     onStopProjection: () -> Unit
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
@@ -43,7 +43,13 @@ fun SenderMainScreen(
     var selectedDevice by remember { mutableStateOf<DeviceTarget?>(null) }
     var manualIp by remember { mutableStateOf(prefs.getString("saved_tv_ip", "192.168.0.136") ?: "192.168.0.136") }
     var manualPort by remember { mutableStateOf(prefs.getInt("saved_tv_port", 8088).toString()) }
-    var selectedProfile by remember { mutableStateOf(StreamProfile.BALANCED_1080P) }
+    val savedProfileName = prefs.getString("saved_stream_profile", StreamProfile.BALANCED_30FPS.mode.name)
+    var selectedProfile by remember {
+        mutableStateOf(
+            StreamProfile.ALL_PROFILES.firstOrNull { it.mode.name == savedProfileName } ?: StreamProfile.BALANCED_30FPS
+        )
+    }
+    var tvScaleMode by remember { mutableStateOf(prefs.getString("saved_tv_scale_mode", "EXTEND_16_9") ?: "EXTEND_16_9") }
     var isStreaming by remember { mutableStateOf(com.omnicast.sender.service.ProjectionForegroundService.isProjecting) }
     var detectionResult by remember { mutableStateOf<StreamDetectionResult?>(null) }
     var showInAppBrowser by remember { mutableStateOf(initialOpenBrowser) }
@@ -84,7 +90,7 @@ fun SenderMainScreen(
             saveTarget(manualIp.trim(), manualPort)
             val target = selectedDevice ?: DeviceTarget("direct-tv", "OmniCast TV Box", manualIp.trim(), manualPort.toIntOrNull() ?: 8088)
             isStreaming = true
-            onStartProjection(target, selectedProfile, result.data!!)
+            onStartProjection(target, selectedProfile, tvScaleMode, result.data!!)
         } else {
             Toast.makeText(context, "Permiso de captura de pantalla denegado", Toast.LENGTH_SHORT).show()
         }
@@ -152,7 +158,18 @@ fun SenderMainScreen(
                 ScreenMirrorSection(
                     isStreaming = isStreaming,
                     selectedProfile = selectedProfile,
-                    onSelectProfile = { selectedProfile = it },
+                    onSelectProfile = {
+                        selectedProfile = it
+                        prefs.edit().putString("saved_stream_profile", it.mode.name).apply()
+                    },
+                    tvScaleMode = tvScaleMode,
+                    onSelectTvScaleMode = {
+                        tvScaleMode = it
+                        prefs.edit().putString("saved_tv_scale_mode", it).apply()
+                        if (isStreaming) {
+                            com.omnicast.sender.service.ProjectionForegroundService.setTvScaleMode(it)
+                        }
+                    },
                     onStartProjection = { projectionLauncher.launch(getSafeCaptureIntent()) },
                     onStopProjection = {
                         isStreaming = false

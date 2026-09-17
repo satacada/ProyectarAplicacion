@@ -31,6 +31,14 @@ class WebRtcSenderManager(
     private val queuedRemoteCandidates = mutableListOf<IceCandidate>()
     private var isRemoteDescriptionSet = false
 
+    var tvScaleMode: String = "EXTEND_16_9"
+        set(value) {
+            field = value
+            updateCaptureFormatIfRunning()
+        }
+    private var orientationListener: android.view.OrientationEventListener? = null
+    private var lastIsLandscape: Boolean? = null
+
     override fun initialize() {
         Log.i(TAG, "Inicializando WebRTC universal (HW encoder con fallback SW para cualquier Android)")
         PeerConnectionFactory.initialize(
@@ -39,10 +47,7 @@ class WebRtcSenderManager(
         )
         eglBase = EglBase.create()
         val eglContext = eglBase!!.eglBaseContext
-        // Encoder adaptativo: intenta HW, el propio DefaultVideoEncoderFactory selecciona
-        // el mejor disponible en el chip (Qualcomm, MediaTek, Exynos, Google Tensor, etc.)
-        // enableH264HighProfile=false → compatibilidad máxima con todos los decodificadores TV
-        val encoderFactory = DefaultVideoEncoderFactory(eglContext, true, true)
+        val encoderFactory = DefaultVideoEncoderFactory(eglContext, true, false)
         val decoderFactory = DefaultVideoDecoderFactory(eglContext)
         peerConnectionFactory = PeerConnectionFactory.builder()
             .setVideoEncoderFactory(encoderFactory)
@@ -55,6 +60,7 @@ class WebRtcSenderManager(
         surfaceTextureHelper = SurfaceTextureHelper.create("ScreenCaptureThread", eglContext)
         videoSource = peerConnectionFactory?.createVideoSource(true)
         screenCapturer?.initialize(surfaceTextureHelper, context, videoSource?.capturerObserver)
+        setupOrientationListener()
     }
 
     fun startScreenStreaming(profile: StreamProfile, iceServers: List<PeerConnection.IceServer> = emptyList()) {
@@ -86,26 +92,72 @@ class WebRtcSenderManager(
 
         videoTrack = peerConnectionFactory?.createVideoTrack("ARDAMSv0", videoSource)?.apply { setEnabled(true) }
         videoTrack?.let { peerConnection?.addTrack(it, listOf("ARDAMS")) }
-
-        val dims = calcCaptureDimensions()
-        val fps = (profile.frameRate).coerceIn(24, 60)
-        Log.i(TAG, "🎬 Iniciando captura de pantalla (v3.4): ${dims.first}x${dims.second} @ ${fps}fps")
-        screenCapturer?.startCapture(dims.first, dims.second, fps)
         _connectionState.value = P2PConnectionState.CONNECTING
     }
 
-    /** Mantiene compatibilidad con ProjectionSession. */
+    /** Inicia la captura real de pantalla DESPUÉS de haber enviado la oferta SDP (v3.11 / v3.4 estable). */
     fun beginCapture() {
-        // La captura arranca de inmediato en startScreenStreaming como en v3.4 estable
+        val dims = calcCaptureDimensions()
+        val fps = (activeProfile?.frameRate ?: 30).coerceIn(15, 60)
+        Log.i(TAG, "🎬 Iniciando captura: ${dims.first}x${dims.second} @ ${fps}fps (modo: $tvScaleMode, perfil: ${activeProfile?.label})")
+        screenCapturer?.startCapture(dims.first, dims.second, fps)
     }
 
-    private fun calcCaptureDimensions(): Pair<Int, Int> {
+    fun calcCaptureDimensions(): Pair<Int, Int> {
         val dm = context.resources.displayMetrics
-        val maxScreen = maxOf(dm.widthPixels, dm.heightPixels).toFloat().coerceAtLeast(1f)
-        val scale = minOf(1.0f, 1920f / maxScreen)
-        val capW = (((dm.widthPixels * scale).toInt() / 16) * 16).coerceAtLeast(320)
-        val capH = (((dm.heightPixels * scale).toInt() / 16) * 16).coerceAtLeast(480)
-        return Pair(capW, capH)
+        val isLand = lastIsLandscape ?: (context.resources.configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE || dm.widthPixels > dm.heightPixels)
+        val baseH = (activeProfile?.height ?: 1080).coerceIn(480, 1280)
+        return if (tvScaleMode == "EXTEND_16_9") {
+            if (isLand) {
+                when {
+                    baseH >= 1000 -> Pair(1920, 1080)
+                    baseH >= 700 -> Pair(1280, 720)
+                    else -> Pair(960, 540)
+                }
+            } else {
+                when {
+                    baseH >= 700 -> Pair(720, 1280)
+                    else -> Pair(540, 960)
+                }
+            }
+        } else {
+            // Proporción original del móvil
+            val maxScreen = maxOf(dm.widthPixels, dm.heightPixels).toFloat().coerceAtLeast(1f)
+            val scale = minOf(1.0f, baseH.toFloat() / maxScreen)
+            val capW = (((dm.widthPixels * scale).toInt() / 16) * 16).coerceAtLeast(240)
+            val capH = (((dm.heightPixels * scale).toInt() / 16) * 16).coerceAtLeast(320)
+            Pair(capW, capH)
+        }
+    }
+
+    private fun setupOrientationListener() {
+        try {
+            orientationListener = object : android.view.OrientationEventListener(context) {
+                override fun onOrientationChanged(orientation: Int) {
+                    if (orientation == ORIENTATION_UNKNOWN) return
+                    val isLand = (orientation in 60..120) || (orientation in 240..300)
+                    val isPort = (orientation in 330..360) || (orientation in 0..30) || (orientation in 150..210)
+                    val detectedLand = if (isLand) true else if (isPort) false else lastIsLandscape
+                    if (detectedLand != null && lastIsLandscape != detectedLand) {
+                        lastIsLandscape = detectedLand
+                        updateCaptureFormatIfRunning()
+                    }
+                }
+            }
+            if (orientationListener?.canDetectOrientation() == true) orientationListener?.enable()
+        } catch (_: Throwable) {}
+    }
+
+    fun updateCaptureFormatIfRunning() {
+        val capturer = screenCapturer ?: return
+        val dims = calcCaptureDimensions()
+        val fps = (activeProfile?.frameRate ?: 30).coerceIn(15, 60)
+        try {
+            capturer.changeCaptureFormat(dims.first, dims.second, fps)
+            Log.i(TAG, "📐 Formato de captura adaptado en vivo: ${dims.first}x${dims.second} @ ${fps}fps")
+        } catch (e: Throwable) {
+            Log.w(TAG, "Error al cambiar formato de captura: ${e.message}")
+        }
     }
 
     private fun preferH264(sdp: String): String {
@@ -167,9 +219,9 @@ class WebRtcSenderManager(
             peerConnection?.senders?.filter { it.track() is VideoTrack }?.forEach { sender ->
                 val p = sender.parameters
                 p.encodings?.firstOrNull()?.let {
-                    it.minBitrateBps = 1_500_000
-                    it.maxBitrateBps = (targetBitrateKbps * 1000).coerceIn(2_000_000, 8_000_000)
-                    it.maxFramerate = activeProfile?.frameRate?.coerceIn(30, 60) ?: 60
+                    it.minBitrateBps = 500_000
+                    it.maxBitrateBps = (targetBitrateKbps * 1000).coerceIn(1_000_000, 5_000_000)
+                    it.maxFramerate = (activeProfile?.frameRate ?: 30).coerceIn(15, 60)
                 }
                 sender.parameters = p
             }
@@ -183,6 +235,7 @@ class WebRtcSenderManager(
             surfaceTextureHelper?.dispose(); surfaceTextureHelper = null
             peerConnection?.close(); peerConnection = null
             peerConnectionFactory?.dispose(); peerConnectionFactory = null
+            orientationListener?.disable(); orientationListener = null
             eglBase?.release(); eglBase = null
             isRemoteDescriptionSet = false; queuedRemoteCandidates.clear()
         } catch (e: Exception) { Log.e(TAG, "Error cerrando WebRtcSenderManager", e) }

@@ -125,26 +125,34 @@ class WebRtcReceiverManager(private val context: Context) {
 
     fun toggleScalingType(): RendererCommon.ScalingType {
         currentScalingType = if (currentScalingType == RendererCommon.ScalingType.SCALE_ASPECT_FIT) RendererCommon.ScalingType.SCALE_ASPECT_FILL else RendererCommon.ScalingType.SCALE_ASPECT_FIT
-        surfaceViewRenderer?.setScalingType(currentScalingType)
+        android.os.Handler(android.os.Looper.getMainLooper()).post {
+            surfaceViewRenderer?.setScalingType(currentScalingType)
+            surfaceViewRenderer?.requestLayout()
+        }
         return currentScalingType
     }
 
     fun setDisplayMode(mode: String, zoom: Float = 1f, panY: Float = 0f) {
-        when (mode.uppercase()) {
-            "FILL", "16:9" -> {
-                currentScalingType = RendererCommon.ScalingType.SCALE_ASPECT_FILL
-                surfaceViewRenderer?.setScalingType(currentScalingType)
-                surfaceViewRenderer?.scaleX = 1f; surfaceViewRenderer?.scaleY = 1f; surfaceViewRenderer?.translationY = 0f
-            }
-            "FIT" -> {
-                currentScalingType = RendererCommon.ScalingType.SCALE_ASPECT_FIT
-                surfaceViewRenderer?.setScalingType(currentScalingType)
-                surfaceViewRenderer?.scaleX = 1f; surfaceViewRenderer?.scaleY = 1f; surfaceViewRenderer?.translationY = 0f
-            }
-            "TOGGLE" -> toggleScalingType()
-            "ZOOM" -> {
-                surfaceViewRenderer?.scaleX = zoom; surfaceViewRenderer?.scaleY = zoom
-                surfaceViewRenderer?.translationY = panY
+        android.os.Handler(android.os.Looper.getMainLooper()).post {
+            when (mode.uppercase()) {
+                "FILL", "16:9", "EXTEND_16_9" -> {
+                    currentScalingType = RendererCommon.ScalingType.SCALE_ASPECT_FILL
+                    surfaceViewRenderer?.setScalingType(currentScalingType)
+                    surfaceViewRenderer?.scaleX = 1f; surfaceViewRenderer?.scaleY = 1f; surfaceViewRenderer?.translationY = 0f
+                    surfaceViewRenderer?.requestLayout()
+                }
+                "FIT", "ORIGINAL_FIT" -> {
+                    currentScalingType = RendererCommon.ScalingType.SCALE_ASPECT_FIT
+                    surfaceViewRenderer?.setScalingType(currentScalingType)
+                    surfaceViewRenderer?.scaleX = 1f; surfaceViewRenderer?.scaleY = 1f; surfaceViewRenderer?.translationY = 0f
+                    surfaceViewRenderer?.requestLayout()
+                }
+                "TOGGLE" -> toggleScalingType()
+                "ZOOM" -> {
+                    surfaceViewRenderer?.scaleX = zoom; surfaceViewRenderer?.scaleY = zoom
+                    surfaceViewRenderer?.translationY = panY
+                    surfaceViewRenderer?.requestLayout()
+                }
             }
         }
     }

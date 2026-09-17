@@ -86,3 +86,24 @@ Historial sistemático de versiones, control de cambios y validación de regresi
   - Alternancia entre modo `FIT` y modo `FILL (16:9)` mediante botón OK del control remoto o comando remoto desde el celular para eliminar franjas negras superior/inferior.
 - **Resguardo de Artefactos:**
   - `OmniCast-Sender-Mobile-v3.12.apk` y `OmniCast-Receiver-TVBox-v3.12.apk` archivados en `releases/`.
+
+---
+
+## [v3.13] - Estabilización Definitiva Modular: WebRTC v3.4 Exacto, Fix YouTube 152-4, Asistente Flotante y Fotos
+- **Módulo 1: Espejo de Pantalla (Screen Mirroring WebRTC):**
+  - Restauración exacta de `WebRtcSenderManager.kt` a la configuración v3.4: `DefaultVideoEncoderFactory` con `enableH264HighProfile = true`.
+  - Captura inmediata de pantalla dentro de `startScreenStreaming()` con resolución basada en escala `minOf(1.0f, 1920f / maxScreen)`.
+  - Eliminado el desfase que provocaba pantalla negra y desconexión a los 6 segundos.
+- **Módulo 2: YouTube en TV Box (`TvYouTubeScreen`):**
+  - Reversión a la estructura de embed limpia `youtube-nocookie.com/embed/$videoId` de v3.8/v3.9.
+  - Eliminado el interceptor de scripts de publicidad que detonaba el bloqueo anti-bot de Google ("Error 152-4").
+- **Módulo 3: Asistente Flotante Permanente (`FloatingViewBuilder`):**
+  - Corrección crítica en `attachDragToMove`: retorna `true` en `ACTION_DOWN` para garantizar recepción fluida de eventos `MOVE` y `UP` por el sistema operativo.
+  - El botón verde responde al instante, se arrastra suavemente y el menú desplegable no se congela.
+- **Módulo 4: Envío de Fotos y Galería Local:**
+  - `LocalImageServer` ahora se auto-inicia automáticamente al solicitar servir cualquier imagen o video (`serveMedia`), garantizando que esté activo sin importar si la actividad principal está en segundo plano.
+  - `PhotoCastViewerActivity` envía `ShowImage` al conectar y mantiene la sesión activa para soportar zoom táctil y paneo en tiempo real.
+- **Módulo 5: Streaming Web (ok.ru, Dailymotion, Pelismart):**
+  - Validación de tests unitarios automáticos (`StreamExtractorTest`) para captura de streams HLS, MP4 y URLs directas.
+- **Resguardo de Artefactos:**
+  - `releases/OmniCast-Sender-Mobile-v3.13.apk` y `releases/OmniCast-Receiver-TVBox-v3.13.apk` archivados.

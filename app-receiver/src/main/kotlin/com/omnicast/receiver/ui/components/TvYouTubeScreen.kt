@@ -57,15 +57,7 @@ fun TvYouTubeScreen(videoId: String, title: String, timestamp: Long = 0L) {
                             settings.userAgentString = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
                             CookieManager.getInstance().setAcceptCookie(true)
                             CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
-                            webViewClient = object : WebViewClient() {
-                                override fun shouldInterceptRequest(v: WebView?, r: WebResourceRequest?): WebResourceResponse? {
-                                    val u = r?.url?.toString()?.lowercase() ?: return null
-                                    if (u.contains("googleads") || u.contains("/pagead/") || u.contains("doubleclick") || u.contains("/api/stats/ads") || u.contains("adservice")) {
-                                        return WebResourceResponse("text/plain", "UTF-8", ByteArrayInputStream(ByteArray(0)))
-                                    }
-                                    return super.shouldInterceptRequest(v, r)
-                                }
-                            }
+                            webViewClient = WebViewClient()
                             webChromeClient = object : WebChromeClient() {
                                 override fun onShowCustomView(v: View?, c: CustomViewCallback?) { customView = v }
                                 override fun onHideCustomView() { customView = null }
@@ -78,55 +70,19 @@ fun TvYouTubeScreen(videoId: String, title: String, timestamp: Long = 0L) {
                                 <style>
                                   * { margin:0; padding:0; box-sizing:border-box; }
                                   html, body { width:100vw; height:100vh; overflow:hidden; background:#000; }
-                                  #player { position:fixed; top:0; left:0; width:100vw !important; height:100vh !important; border:none; }
+                                  #ytplayer { position:fixed; top:0; left:0; width:100vw !important; height:100vh !important; border:none; }
                                 </style>
                                 </head>
                                 <body>
-                                  <div id="player"></div>
-                                  <script src="https://www.youtube.com/iframe_api"></script>
-                                  <script>
-                                    var player;
-                                    function onYouTubeIframeAPIReady() {
-                                      player = new YT.Player('player', {
-                                        width: '100%',
-                                        height: '100%',
-                                        videoId: '$videoId',
-                                        playerVars: {
-                                          'autoplay': 1,
-                                          'controls': 1,
-                                          'fs': 1,
-                                          'rel': 0,
-                                          'iv_load_policy': 3,
-                                          'modestbranding': 1,
-                                          'cc_load_policy': 0,
-                                          'playsinline': 1,
-                                          'enablejsapi': 1,
-                                          'origin': 'https://www.youtube.com'
-                                        },
-                                        events: {
-                                          'onReady': function(event) {
-                                            try { event.target.unloadModule('captions'); } catch(e){}
-                                            try {
-                                              event.target.mute();
-                                              event.target.playVideo();
-                                              setTimeout(function() { try { event.target.unMute(); } catch(e){} }, 800);
-                                            } catch(e) {
-                                              try { event.target.playVideo(); } catch(e2){}
-                                            }
-                                          },
-                                          'onStateChange': function(event) {
-                                            if (event.data === 1) { // 1 = PLAYING
-                                              try { event.target.unMute(); } catch(e){}
-                                            }
-                                          }
-                                        }
-                                      });
-                                    }
-                                  </script>
+                                  <iframe id="ytplayer"
+                                    src="https://www.youtube-nocookie.com/embed/$videoId?autoplay=1&controls=1&fs=1&rel=0&iv_load_policy=3&modestbranding=1&cc_load_policy=0"
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+                                    allowfullscreen>
+                                  </iframe>
                                 </body>
                                 </html>
                             """.trimIndent()
-                            loadDataWithBaseURL("https://www.youtube.com", embedHtml, "text/html", "UTF-8", null)
+                            loadDataWithBaseURL("https://www.youtube-nocookie.com", embedHtml, "text/html", "UTF-8", null)
                         }
                     },
                     onRelease = { webView ->

@@ -35,12 +35,19 @@ class PhotoCastViewerActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val imageUriStr = intent.getStringExtra("IMAGE_URI")
+        val mediaUrl = intent.getStringExtra("MEDIA_URL")
         val imageUri = imageUriStr?.let { Uri.parse(it) }
 
         val prefs = getSharedPreferences("omnicast_prefs", Context.MODE_PRIVATE)
         val ip = prefs.getString("saved_tv_ip", "192.168.0.136") ?: "192.168.0.136"
         val port = prefs.getInt("saved_tv_port", 8088)
-        signalingClient = SignalingClient().apply { connect(ip, port, {}, {}) }
+        signalingClient = SignalingClient().apply {
+            connect(ip, port, {
+                if (!mediaUrl.isNullOrBlank()) {
+                    sendMessage(SignalingMessage.ShowImage(mediaUrl, "Foto de Galería"))
+                }
+            }, {})
+        }
 
         setContent {
             PhotoViewerContent(imageUri = imageUri, onTransform = { scale, px, py ->
@@ -51,6 +58,7 @@ class PhotoCastViewerActivity : ComponentActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        signalingClient?.sendMessage(SignalingMessage.Disconnect())
         signalingClient?.disconnect()
         signalingClient = null
     }

@@ -42,7 +42,7 @@ class WebRtcSenderManager(
         // Encoder adaptativo: intenta HW, el propio DefaultVideoEncoderFactory selecciona
         // el mejor disponible en el chip (Qualcomm, MediaTek, Exynos, Google Tensor, etc.)
         // enableH264HighProfile=false → compatibilidad máxima con todos los decodificadores TV
-        val encoderFactory = DefaultVideoEncoderFactory(eglContext, true, false)
+        val encoderFactory = DefaultVideoEncoderFactory(eglContext, true, true)
         val decoderFactory = DefaultVideoDecoderFactory(eglContext)
         peerConnectionFactory = PeerConnectionFactory.builder()
             .setVideoEncoderFactory(encoderFactory)
@@ -86,25 +86,23 @@ class WebRtcSenderManager(
 
         videoTrack = peerConnectionFactory?.createVideoTrack("ARDAMSv0", videoSource)?.apply { setEnabled(true) }
         videoTrack?.let { peerConnection?.addTrack(it, listOf("ARDAMS")) }
-        // CRÍTICO: startCapture NO se llama aquí sino en beginCapture(), DESPUÉS de enviar
-        // la Offer SDP. Esto garantiza que el encoder HW ya está negociado cuando llegan frames.
+
+        val dims = calcCaptureDimensions()
+        val fps = (profile.frameRate).coerceIn(24, 60)
+        Log.i(TAG, "🎬 Iniciando captura de pantalla (v3.4): ${dims.first}x${dims.second} @ ${fps}fps")
+        screenCapturer?.startCapture(dims.first, dims.second, fps)
         _connectionState.value = P2PConnectionState.CONNECTING
     }
 
-    /** Inicia la captura real de pantalla. DEBE llamarse DESPUÉS de haber enviado la Offer SDP. */
+    /** Mantiene compatibilidad con ProjectionSession. */
     fun beginCapture() {
-        val dims = calcCaptureDimensions()
-        val fps = (activeProfile?.frameRate ?: 30).coerceIn(24, 60)
-        Log.i(TAG, "🎬 Iniciando captura de pantalla: ${dims.first}x${dims.second} @ ${fps}fps")
-        screenCapturer?.startCapture(dims.first, dims.second, fps)
+        // La captura arranca de inmediato en startScreenStreaming como en v3.4 estable
     }
 
     private fun calcCaptureDimensions(): Pair<Int, Int> {
         val dm = context.resources.displayMetrics
         val maxScreen = maxOf(dm.widthPixels, dm.heightPixels).toFloat().coerceAtLeast(1f)
-        // Escala 1280/maxScreen = comportamiento exacto v3.4 → produce 576x1280 en Redmi Note 13
-        // Con 1920/maxScreen se producía 944x1920 que el encoder Qualcomm no maneja en surface mode
-        val scale = minOf(1.0f, 1280.0f / maxScreen)
+        val scale = minOf(1.0f, 1920f / maxScreen)
         val capW = (((dm.widthPixels * scale).toInt() / 16) * 16).coerceAtLeast(320)
         val capH = (((dm.heightPixels * scale).toInt() / 16) * 16).coerceAtLeast(480)
         return Pair(capW, capH)

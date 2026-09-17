@@ -51,4 +51,32 @@ class StreamExtractorTest {
         assertTrue(result.isSuccess)
         assertEquals("WEB_STREAM", result.format)
     }
+
+    @Test
+    fun testOkRuStreamDetection() {
+        val input = "https://mycdn.me/video.mp4?sig=abc&id=123"
+        val result = extractor.extractStream(input)
+
+        assertTrue(result.isSuccess)
+        assertEquals("MP4", result.format)
+        assertEquals("https://mycdn.me/video.mp4?sig=abc&id=123", result.mediaUrl)
+    }
+
+    @Test
+    fun testDailymotionStreamDetection() {
+        val input = "https://www.dailymotion.com/video/x7xyz12"
+        val result = extractor.extractStream(input)
+
+        assertTrue(result.isSuccess)
+        assertEquals("DIRECT_VIDEO", result.format)
+    }
+
+    @Test
+    fun testPelismartHlsStreamDetection() {
+        val input = "https://vidhide.com/stream/master.m3u8?token=xyz"
+        val result = extractor.extractStream(input)
+
+        assertTrue(result.isSuccess)
+        assertEquals("HLS", result.format)
+    }
 }

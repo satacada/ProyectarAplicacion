@@ -1,0 +1,48 @@
+﻿{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "HealthCheckPayload",
+  "type": "object",
+  "required": ["status", "project", "version", "uptime", "timestamp", "dependencies"],
+  "properties": {
+    "status": {
+      "type": "string",
+      "enum": ["healthy", "degraded", "unhealthy"]
+    },
+    "project": {
+      "type": "string",
+      "description": "Nombre canónico del proyecto auditado"
+    },
+    "version": {
+      "type": "string",
+      "description": "Versión semántica del paquete"
+    },
+    "uptime": {
+      "type": "number",
+      "description": "Segundos transcurridos desde el inicio del proceso"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "dependencies": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string",
+        "enum": ["connected", "disconnected", "degraded", "operational", "unreachable"]
+      }
+    }
+  },
+  "example": {
+    "status": "healthy",
+    "project": "boot-ventas-saas",
+    "version": "1.0.0",
+    "uptime": 14205,
+    "timestamp": "2026-09-12T10:30:00.000Z",
+    "dependencies": {
+      "database": "connected",
+      "cache_redis": "connected",
+      "ai_provider": "operational",
+      "external_webhook": "operational"
+    }
+  }
+}

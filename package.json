@@ -1,0 +1,19 @@
+{
+  "name": "proyectar-aplicacion",
+  "version": "1.0.0",
+  "description": "Aplicación Android Dual Sender/Receiver",
+  "workspaces": [
+    "app-receiver",
+    "app-sender",
+    "core"
+  ],
+  "packages": [
+    "app-receiver",
+    "app-sender",
+    "core"
+  ],
+  "scripts": {
+    "verify": "pnpm lint && pnpm test && pnpm build",
+    "gradle-verify": ".\\gradlew.bat clean test build"
+  }
+}

@@ -41,7 +41,8 @@ object LocalImageServer {
         }
     }
 
-    fun serveMedia(uri: Uri, mime: String): String {
+    fun serveMedia(uri: Uri, mime: String, context: Context? = null): String {
+        context?.let { start(it) }
         currentUri = uri
         currentMime = mime
         val ip = getLocalIpAddress()
@@ -49,7 +50,7 @@ object LocalImageServer {
         return "http://$ip:$PORT/media_${System.currentTimeMillis()}.$ext"
     }
 
-    fun serveImage(uri: Uri): String = serveMedia(uri, "image/jpeg")
+    fun serveImage(uri: Uri, context: Context? = null): String = serveMedia(uri, "image/jpeg", context)
 
     private fun handleClient(client: Socket) {
         try {

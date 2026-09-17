@@ -131,21 +131,26 @@ class FloatingViewBuilder(private val context: Context) {
                     initialX = layoutParams.x; initialY = layoutParams.y; initialTouchX = event.rawX; initialTouchY = event.rawY; isMoving = false
                     runnable = Runnable { if (!isMoving) onLongPress2s?.invoke() }
                     handler.postDelayed(runnable!!, 2000)
-                    false
+                    true
                 }
                 MotionEvent.ACTION_MOVE -> {
                     val deltaX = (initialTouchX - event.rawX).toInt(); val deltaY = (event.rawY - initialTouchY).toInt()
-                    if (Math.abs(deltaX) > 10 || Math.abs(deltaY) > 10) {
+                    if (Math.abs(deltaX) > dpToPx(4f) || Math.abs(deltaY) > dpToPx(4f)) {
                         isMoving = true
                         runnable?.let { handler.removeCallbacks(it) }
                         layoutParams.x = initialX + deltaX; layoutParams.y = initialY + deltaY
-                        windowManager?.updateViewLayout(rootLayout, layoutParams)
-                        true
-                    } else false
+                        try { windowManager?.updateViewLayout(rootLayout, layoutParams) } catch (_: Throwable) {}
+                    }
+                    true
                 }
-                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                MotionEvent.ACTION_UP -> {
                     runnable?.let { handler.removeCallbacks(it) }
-                    if (isMoving) true else v.performClick()
+                    if (!isMoving) { v.performClick() }
+                    true
+                }
+                MotionEvent.ACTION_CANCEL -> {
+                    runnable?.let { handler.removeCallbacks(it) }
+                    true
                 }
                 else -> false
             }

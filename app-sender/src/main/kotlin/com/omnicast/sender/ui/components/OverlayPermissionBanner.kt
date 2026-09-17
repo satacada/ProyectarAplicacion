@@ -123,7 +123,7 @@ fun OverlayPermissionBanner() {
                         fontSize = 14.sp
                     )
                     Text(
-                        "Burbuja visible sobre tus apps. En Xiaomi/MIUI: activa 'Ventanas emergentes en 2do plano' y 'Sin restricciones de batería' para que no se oculte.",
+                        "Burbuja visible sobre tus apps. En Ajustes de tu teléfono: activa 'Aparecer encima' y 'Sin restricciones de batería' para que permanezca activa en segundo plano en cualquier marca (Samsung, Motorola, Huawei, Xiaomi, etc.).",
                         color = Color(0xFFD1FAE5),
                         fontSize = 11.sp
                     )

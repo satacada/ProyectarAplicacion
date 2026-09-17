@@ -30,12 +30,17 @@ class TransparentCaptureActivity : ComponentActivity() {
             val port = prefs.getInt("saved_tv_port", 8088)
             val target = DeviceTarget("direct-tv", "OmniCast TV Box", ip, port)
 
+            val savedProfileName = prefs.getString("saved_stream_profile", StreamProfile.BALANCED_30FPS.mode.name)
+            val profile = StreamProfile.ALL_PROFILES.firstOrNull { it.mode.name == savedProfileName } ?: StreamProfile.BALANCED_30FPS
+            val scaleMode = prefs.getString("saved_tv_scale_mode", "EXTEND_16_9") ?: "EXTEND_16_9"
+
             ProjectionForegroundService.startProjection(
                 this,
                 target.ipAddress,
                 target.port,
-                StreamProfile.BALANCED_1080P,
-                result.data!!
+                profile,
+                result.data!!,
+                scaleMode
             )
             Toast.makeText(this, "🟢 Transmitiendo pantalla a la TV", Toast.LENGTH_SHORT).show()
         } else {
@@ -53,13 +58,6 @@ class TransparentCaptureActivity : ComponentActivity() {
             finish()
             return
         }
-
-        val captureIntent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            val config = MediaProjectionConfig.createConfigForDefaultDisplay()
-            mpm.createScreenCaptureIntent(config)
-        } else {
-            mpm.createScreenCaptureIntent()
-        }
-        captureLauncher.launch(captureIntent)
+        captureLauncher.launch(mpm.createScreenCaptureIntent())
     }
 }

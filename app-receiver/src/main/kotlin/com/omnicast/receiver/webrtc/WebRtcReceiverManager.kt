@@ -42,7 +42,6 @@ class WebRtcReceiverManager(private val context: Context) {
             })
             setScalingType(RendererCommon.ScalingType.SCALE_ASPECT_FIT)
             setEnableHardwareScaler(true)
-            setFpsReduction(0f)
             setZOrderMediaOverlay(true)
         }
         createPeerConnection()

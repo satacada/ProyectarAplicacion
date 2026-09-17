@@ -40,7 +40,7 @@ class WebRtcSenderManager(
     private var lastIsLandscape: Boolean? = null
 
     override fun initialize() {
-        Log.i(TAG, "Inicializando WebRTC universal (HW encoder con fallback SW para cualquier Android)")
+        Log.i(TAG, "🚀 OmniCast Sender v3.19 Inicializado (Universal WebRTC)")
         PeerConnectionFactory.initialize(
             PeerConnectionFactory.InitializationOptions.builder(context)
                 .setEnableInternalTracer(true).createInitializationOptions()

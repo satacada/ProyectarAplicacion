@@ -64,12 +64,7 @@ fun SenderMainScreen(
 
     fun getSafeCaptureIntent(): Intent {
         val mpm = context.getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            val cfg = MediaProjectionConfig.createConfigForDefaultDisplay()
-            mpm.createScreenCaptureIntent(cfg)
-        } else {
-            mpm.createScreenCaptureIntent()
-        }
+        return mpm.createScreenCaptureIntent()
     }
 
     LaunchedEffect(devices) {

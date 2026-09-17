@@ -70,7 +70,7 @@ class FloatingViewBuilder(private val context: Context) {
             setPadding(dpToPx(14f), dpToPx(14f), dpToPx(14f), dpToPx(14f))
         }
         val menuTitle = TextView(context).apply {
-            text = "OmniCast Asistente"; setTextColor(Color.parseColor("#38BDF8")); setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f); typeface = Typeface.DEFAULT_BOLD
+            text = "OmniCast v3.19 Asistente"; setTextColor(Color.parseColor("#38BDF8")); setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f); typeface = Typeface.DEFAULT_BOLD
         }
         innerMenu.addView(menuTitle); innerMenu.addView(statusFeedbackText)
         innerMenu.addView(createBtn("🔍 Detectar Flujo de Video", "#0284C7", onDetectVideo))

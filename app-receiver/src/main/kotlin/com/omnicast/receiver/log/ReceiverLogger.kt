@@ -36,7 +36,7 @@ object ReceiverLogger {
             } else {
                 File(context.filesDir, "omnicast_receiver.log")
             }
-            log("INIT", "=== OmniCast TV Box Logger Iniciado ===")
+            log("INIT", "=== OmniCast TV Box Receiver v3.19 Iniciado ===")
         } catch (e: Throwable) {
             Log.e(TAG, "Error inicializando archivo de log", e)
         }

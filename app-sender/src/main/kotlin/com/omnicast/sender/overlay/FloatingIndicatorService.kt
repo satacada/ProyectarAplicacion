@@ -103,7 +103,7 @@ class FloatingIndicatorService : Service() {
 
         val pillLayout = builder.buildPill(pillText)
         val dotView = builder.buildDotView().apply { visibility = View.GONE }
-        var menuLayoutRef: LinearLayout? = null
+        var menuLayoutRef: View? = null
         var exitConfirmRef: LinearLayout? = null
         val exitConfirmLayout = builder.buildExitConfirmation(onConfirmClose = { stopSelf() }, onCancel = { exitConfirmRef?.visibility = View.GONE })
         exitConfirmRef = exitConfirmLayout

@@ -1,0 +1,9 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Proyectar Aplicacion Dual Sync API",
+    "version": "1.0.0",
+    "description": "Especificación de comunicación interna entre app-sender y app-receiver"
+  },
+  "paths": {}
+}

@@ -52,3 +52,37 @@ Historial sistemático de versiones, control de cambios y validación de regresi
 - **Gobernanza:**
   - 100% de los archivos de código Kotlin respetan el límite de <= 200 líneas.
 
+
+---
+
+## [v3.10] - Casteo WebRTC Restaurado + Fix Pelismart Play
+- **Espejo de Pantalla (Screen Mirroring WebRTC):**
+  - `ProjectionSession` instancia su propio `SignalingClient` dedicado.
+  - Eliminada guarda de sesion que impedia reconexion limpia en `SignalingClient.connect()`.
+  - Encoder H.264 sin High Profile, compatible Qualcomm Snapdragon 685.
+  - Escala de captura 1920/maxScreen restaurada igual que v3.4.
+  - `setBitrate()` usa fps del perfil activo en lugar de hardcoded 45fps.
+- **Navegador Web & Pelismart:**
+  - Eliminado bloque JS de `AdBlocker` que borraba elementos zIndex>=100 (mataba boton Play).
+  - Agregados pelismart.mov, pelismart.com, embed69.org y players a KNOWN_MEDIA_HOSTS.
+- **Gobernanza:**
+  - APKs Sender v3.10 y Receiver v3.10 guardados en releases/.
+  - Regla: toda version compilada se guarda en releases/ ANTES de instalar en dispositivo.
+
+---
+
+## [v3.12] - Compatibilidad Universal Android 8/9/10+, YouTube TV Autoplay y Asistente Flotante con Scroll
+- **Compatibilidad de Plataforma:**
+  - `minSdk = 26` en `:app-sender` para habilitar instalación en celulares con Android 8.0, 8.1 y 9.0 (Pie).
+  - Detección dinámica en tiempo de ejecución: audio digital interno puro en Android 10+ (`Build.VERSION_CODES.Q`) y fallback seguro en Android 9 e inferiores.
+  - `:app-receiver` soporta nativamente desde Android 7.0 (API 24) hasta Android 14.
+- **Módulo YouTube en TV Box (`TvYouTubeScreen`):**
+  - Migración a la API formal `YT.Player` con parámetro `enablejsapi=1` y bypass del bloqueo de autoplay de Android TV (mute inicial breve y desmuteo inmediato tras arrancar).
+  - Eliminado el congelamiento en el logo de YouTube; reproducción inmediata a pantalla completa sin subtítulos automáticos.
+- **Asistente Flotante (`FloatingViewBuilder`):**
+  - Menú envuelto en `ScrollView` con barra de desplazamiento en el lateral izquierdo (`verticalScrollbarPosition = LEFT`) y altura máxima controlada (270dp) para que todas las opciones sean siempre accesibles sin importar la posición del botón verde.
+- **Casteo y Control de Relación de Aspecto en TV:**
+  - Base de decodificación WebRTC idéntica a la versión v3.4 estable.
+  - Alternancia entre modo `FIT` y modo `FILL (16:9)` mediante botón OK del control remoto o comando remoto desde el celular para eliminar franjas negras superior/inferior.
+- **Resguardo de Artefactos:**
+  - `OmniCast-Sender-Mobile-v3.12.apk` y `OmniCast-Receiver-TVBox-v3.12.apk` archivados en `releases/`.

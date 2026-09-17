@@ -1,0 +1,13 @@
+{
+  "status": "healthy",
+  "type": "android-mobile-app",
+  "modules": [
+    { "name": "app-receiver", "type": "android-client", "status": "active" },
+    { "name": "app-sender", "type": "android-client", "status": "active" },
+    { "name": "core", "type": "kotlin-library", "status": "active" }
+  ],
+  "checks": {
+    "build": ".\\gradlew.bat clean build",
+    "unitTests": ".\\gradlew.bat test"
+  }
+}

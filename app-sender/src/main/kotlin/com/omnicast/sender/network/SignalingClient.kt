@@ -34,15 +34,10 @@ class SignalingClient {
     val isConnected: Boolean
         get() = session != null
 
-    private val _messages = MutableSharedFlow<SignalingMessage>(replay = 32, extraBufferCapacity = 64)
+    private val _messages = MutableSharedFlow<SignalingMessage>(replay = 0, extraBufferCapacity = 64)
     val messages: SharedFlow<SignalingMessage> = _messages.asSharedFlow()
 
     fun connect(ipAddress: String, port: Int, onConnected: () -> Unit, onError: (Throwable) -> Unit) {
-        if (session != null) {
-            onConnected()
-            return
-        }
-
         clientScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
         clientScope?.launch {
             try {

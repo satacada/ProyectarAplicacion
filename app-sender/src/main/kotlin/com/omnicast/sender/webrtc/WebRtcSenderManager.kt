@@ -32,16 +32,25 @@ class WebRtcSenderManager(
     private var isRemoteDescriptionSet = false
 
     override fun initialize() {
-        Log.i(TAG, "Inicializando WebRTC con H.264 High Profile por hardware y modo fluido para deportes")
-        PeerConnectionFactory.initialize(PeerConnectionFactory.InitializationOptions.builder(context).setEnableInternalTracer(true).createInitializationOptions())
+        Log.i(TAG, "Inicializando WebRTC universal (HW encoder con fallback SW para cualquier Android)")
+        PeerConnectionFactory.initialize(
+            PeerConnectionFactory.InitializationOptions.builder(context)
+                .setEnableInternalTracer(true).createInitializationOptions()
+        )
         eglBase = EglBase.create()
         val eglContext = eglBase!!.eglBaseContext
+        // Encoder adaptativo: intenta HW, el propio DefaultVideoEncoderFactory selecciona
+        // el mejor disponible en el chip (Qualcomm, MediaTek, Exynos, Google Tensor, etc.)
+        // enableH264HighProfile=false → compatibilidad máxima con todos los decodificadores TV
+        val encoderFactory = DefaultVideoEncoderFactory(eglContext, true, false)
+        val decoderFactory = DefaultVideoDecoderFactory(eglContext)
         peerConnectionFactory = PeerConnectionFactory.builder()
-            .setVideoEncoderFactory(DefaultVideoEncoderFactory(eglContext, true, true))
-            .setVideoDecoderFactory(DefaultVideoDecoderFactory(eglContext)).createPeerConnectionFactory()
+            .setVideoEncoderFactory(encoderFactory)
+            .setVideoDecoderFactory(decoderFactory)
+            .createPeerConnectionFactory()
 
         screenCapturer = ScreenCapturerAndroid(mediaProjectionPermissionData, object : MediaProjection.Callback() {
-            override fun onStop() { Log.w(TAG, "MediaProjection detenido"); close() }
+            override fun onStop() { Log.w(TAG, "MediaProjection detenido por el sistema"); close() }
         })
         surfaceTextureHelper = SurfaceTextureHelper.create("ScreenCaptureThread", eglContext)
         videoSource = peerConnectionFactory?.createVideoSource(true)
@@ -77,20 +86,27 @@ class WebRtcSenderManager(
 
         videoTrack = peerConnectionFactory?.createVideoTrack("ARDAMSv0", videoSource)?.apply { setEnabled(true) }
         videoTrack?.let { peerConnection?.addTrack(it, listOf("ARDAMS")) }
-
-        val dims = calcCaptureDimensions()
-        val fps = profile.frameRate.coerceIn(30, 45)
-        Log.i(TAG, "Iniciando Captura de Pantalla: ${dims.first}x${dims.second} @ ${fps}fps")
-        screenCapturer?.startCapture(dims.first, dims.second, fps)
+        // CRÍTICO: startCapture NO se llama aquí sino en beginCapture(), DESPUÉS de enviar
+        // la Offer SDP. Esto garantiza que el encoder HW ya está negociado cuando llegan frames.
         _connectionState.value = P2PConnectionState.CONNECTING
+    }
+
+    /** Inicia la captura real de pantalla. DEBE llamarse DESPUÉS de haber enviado la Offer SDP. */
+    fun beginCapture() {
+        val dims = calcCaptureDimensions()
+        val fps = (activeProfile?.frameRate ?: 30).coerceIn(24, 60)
+        Log.i(TAG, "🎬 Iniciando captura de pantalla: ${dims.first}x${dims.second} @ ${fps}fps")
+        screenCapturer?.startCapture(dims.first, dims.second, fps)
     }
 
     private fun calcCaptureDimensions(): Pair<Int, Int> {
         val dm = context.resources.displayMetrics
         val maxScreen = maxOf(dm.widthPixels, dm.heightPixels).toFloat().coerceAtLeast(1f)
-        val scale = minOf(1.0f, 1280f / maxScreen)
-        val capW = (((dm.widthPixels * scale).toInt() / 16) * 16).coerceIn(480, 1280)
-        val capH = (((dm.heightPixels * scale).toInt() / 16) * 16).coerceIn(480, 1280)
+        // Escala 1280/maxScreen = comportamiento exacto v3.4 → produce 576x1280 en Redmi Note 13
+        // Con 1920/maxScreen se producía 944x1920 que el encoder Qualcomm no maneja en surface mode
+        val scale = minOf(1.0f, 1280.0f / maxScreen)
+        val capW = (((dm.widthPixels * scale).toInt() / 16) * 16).coerceAtLeast(320)
+        val capH = (((dm.heightPixels * scale).toInt() / 16) * 16).coerceAtLeast(480)
         return Pair(capW, capH)
     }
 
@@ -154,8 +170,8 @@ class WebRtcSenderManager(
                 val p = sender.parameters
                 p.encodings?.firstOrNull()?.let {
                     it.minBitrateBps = 1_500_000
-                    it.maxBitrateBps = 4_500_000
-                    it.maxFramerate = 45
+                    it.maxBitrateBps = (targetBitrateKbps * 1000).coerceIn(2_000_000, 8_000_000)
+                    it.maxFramerate = activeProfile?.frameRate?.coerceIn(30, 60) ?: 60
                 }
                 sender.parameters = p
             }

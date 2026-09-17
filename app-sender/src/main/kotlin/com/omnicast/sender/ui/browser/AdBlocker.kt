@@ -40,7 +40,11 @@ object AdBlocker {
         "voe.sx", "vidoza.net", "streamtape.com", "mp4upload.com", "upstream.to",
         "waaw.to", "netu.tv", "vidguard.to", "uqload.com", "luluvdo.com",
         "streamlare.com", "wolfstream.tv", "streamcloud.club", "embedgram.com",
-        "vidhide.com", "vidhidepro.com", "vidhidepre.com", "embed69.org"
+        "vidhide.com", "vidhidepro.com", "vidhidepre.com", "embed69.org",
+        // Pelismart y sus players embebidos
+        "pelismart.mov", "pelismart.com", "pelismart.online",
+        "vidurl.to", "fembed.com", "fplayer.info", "swdyu.com",
+        "doo.la", "ds2play.com", "ds2video.com"
     )
 
     fun isAd(url: String): Boolean {
@@ -97,13 +101,8 @@ object AdBlocker {
                 }, true);
                 var selectors = ['div[class*="ad-box"]', 'div[class*="ad-container"]', 'div[id*="ad-banner"]', 'div[class*="ad-banner"]', 'a[href*="bet365"]', 'a[href*="1xbet"]', 'div[class*="popunder"]', '.ad-overlay', '#ad-overlay'];
                 selectors.forEach(function(s) { document.querySelectorAll(s).forEach(function(el) { if (!el.querySelector('video') && !el.querySelector('iframe')) el.remove(); }); });
-                document.querySelectorAll('div, a').forEach(function(el) {
-                    var s = window.getComputedStyle(el);
-                    if (s && parseInt(s.zIndex || 0) >= 100 && (s.position === 'absolute' || s.position === 'fixed')) {
-                        var h = el.getAttribute('href') || '';
-                        if (h.indexOf('http') === 0 && !h.includes(window.location.hostname)) el.remove();
-                    }
-                });
+                /* Nota: el bloque de zIndex fue eliminado porque removía falsamente
+                   botones legítimos de players (Pelismart, etc.) que tienen position:fixed */
             } catch(e) {}
         })();
     """.trimIndent()

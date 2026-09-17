@@ -60,26 +60,40 @@ class FloatingViewBuilder(private val context: Context) {
         onToggleTvScale: () -> Unit,
         onOpenOmniCast: () -> Unit,
         onStopCast: () -> Unit
-    ): LinearLayout {
+    ): View {
         val menuDrawable = GradientDrawable().apply {
             setColor(Color.parseColor("#F80F172A")); cornerRadius = dpToPx(14f).toFloat(); setStroke(dpToPx(1f), Color.parseColor("#334155"))
         }
-        val menuLayout = LinearLayout(context).apply {
-            orientation = LinearLayout.VERTICAL; background = menuDrawable
-            setPadding(dpToPx(14f), dpToPx(14f), dpToPx(14f), dpToPx(14f)); visibility = View.GONE
-            layoutParams = LinearLayout.LayoutParams(dpToPx(240f), LinearLayout.LayoutParams.WRAP_CONTENT).apply { topMargin = dpToPx(8f) }
+        val innerMenu = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dpToPx(14f), dpToPx(14f), dpToPx(14f), dpToPx(14f))
         }
         val menuTitle = TextView(context).apply {
             text = "OmniCast Asistente"; setTextColor(Color.parseColor("#38BDF8")); setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f); typeface = Typeface.DEFAULT_BOLD
         }
-        menuLayout.addView(menuTitle); menuLayout.addView(statusFeedbackText)
-        menuLayout.addView(createBtn("🔍 Detectar Flujo de Video", "#0284C7", onDetectVideo))
-        menuLayout.addView(createBtn("🖼️ Enviar Foto con Zoom Táctil", "#059669", onCastGallery))
-        menuLayout.addView(createBtn("📺 Cambiar Modo TV (16:9 / Fit)", "#8B5CF6", onToggleTvScale))
-        menuLayout.addView(createBtn("📱 Proyectar Pantalla (Toda)", "#2563EB", onStartScreenMirror))
-        menuLayout.addView(createBtn("⚙️ Abrir OmniCast", "#334155", onOpenOmniCast))
-        menuLayout.addView(createBtn("🛑 Detener Transmisión", "#DC2626", onStopCast))
-        return menuLayout
+        innerMenu.addView(menuTitle); innerMenu.addView(statusFeedbackText)
+        innerMenu.addView(createBtn("🔍 Detectar Flujo de Video", "#0284C7", onDetectVideo))
+        innerMenu.addView(createBtn("🖼️ Enviar Foto con Zoom Táctil", "#059669", onCastGallery))
+        innerMenu.addView(createBtn("📺 Cambiar Modo TV (16:9 / Fit)", "#8B5CF6", onToggleTvScale))
+        innerMenu.addView(createBtn("📱 Proyectar Pantalla (Toda)", "#2563EB", onStartScreenMirror))
+        innerMenu.addView(createBtn("⚙️ Abrir OmniCast", "#334155", onOpenOmniCast))
+        innerMenu.addView(createBtn("🛑 Detener Transmisión", "#DC2626", onStopCast))
+
+        val scrollView = object : android.widget.ScrollView(context) {
+            override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+                val maxH = dpToPx(270f)
+                val customHeightSpec = MeasureSpec.makeMeasureSpec(maxH, MeasureSpec.AT_MOST)
+                super.onMeasure(widthMeasureSpec, customHeightSpec)
+            }
+        }.apply {
+            isVerticalScrollBarEnabled = true
+            scrollBarStyle = View.SCROLLBARS_INSIDE_INSET
+            verticalScrollbarPosition = View.SCROLLBAR_POSITION_LEFT
+            background = menuDrawable; visibility = View.GONE
+            layoutParams = LinearLayout.LayoutParams(dpToPx(240f), LinearLayout.LayoutParams.WRAP_CONTENT).apply { topMargin = dpToPx(8f) }
+            addView(innerMenu)
+        }
+        return scrollView
     }
 
     fun buildExitConfirmation(onConfirmClose: () -> Unit, onCancel: () -> Unit): LinearLayout {

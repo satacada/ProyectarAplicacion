@@ -28,7 +28,6 @@ object WvcDomSniffer {
             val fallbackHooks = """
                 (function() {
                     try {
-                        window.open = function(u) { return null; };
                         function reportVid(v) {
                             var s = v.currentSrc || v.src;
                             if (s && s.indexOf('blob:') !== 0 && s.indexOf('data:') !== 0) {

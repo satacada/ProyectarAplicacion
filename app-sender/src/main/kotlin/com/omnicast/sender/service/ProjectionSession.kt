@@ -9,7 +9,6 @@ import com.omnicast.core.protocol.SignalingMessage
 import com.omnicast.sender.audio.DigitalAudioSender
 import com.omnicast.sender.capture.AudioCaptureManager
 import com.omnicast.sender.network.SignalingClient
-import com.omnicast.sender.network.SignalingClientHolder
 import com.omnicast.sender.webrtc.WebRtcSenderManager
 import kotlinx.coroutines.*
 
@@ -28,6 +27,7 @@ class ProjectionSession(
     private var webRtcManager: WebRtcSenderManager? = null
     private var audioSender: DigitalAudioSender? = null
     private var audioCaptureManager: AudioCaptureManager? = null
+    private var signalingClient: SignalingClient? = null
 
     fun start() {
         Log.i("ProjectionSession", "Iniciando proyección en segundo plano a $targetIp:$targetPort")
@@ -56,7 +56,8 @@ class ProjectionSession(
 
         var offerSent = false
         val pendingCandidates = mutableListOf<SignalingMessage.IceCandidate>()
-        val client = SignalingClientHolder.get()
+        val client = SignalingClient()
+        signalingClient = client
 
         webRtcManager?.onLocalIceCandidate = { c ->
             val msg = SignalingMessage.IceCandidate(c.sdpMid, c.sdpMLineIndex, c.sdp)
@@ -80,26 +81,23 @@ class ProjectionSession(
             }
         }
 
-        fun doCreateOffer() {
-            Log.i("ProjectionSession", "Creando oferta SDP para TV...")
-            webRtcManager?.createOffer { offerSdp ->
-                client.sendMessage(SignalingMessage.Offer(offerSdp, profile.width, profile.height, profile.frameRate, profile.targetBitrateKbps))
-                offerSent = true
-                pendingCandidates.forEach { client.sendMessage(it) }
-                pendingCandidates.clear()
-                Log.i("ProjectionSession", "🟢 Oferta SDP y candidatos enviados a TV Box")
-            }
-        }
-
-        if (client.isConnected) {
-            doCreateOffer()
-        } else {
-            client.connect(
-                ipAddress = targetIp, port = targetPort,
-                onConnected = { doCreateOffer() },
-                onError = { e -> Log.e("ProjectionSession", "Error conectando TV ($targetIp:$targetPort): ${e.message}") }
-            )
-        }
+        client.connect(
+            ipAddress = targetIp, port = targetPort,
+            onConnected = {
+                Log.i("ProjectionSession", "Conexión señalización OK con TV. Creando oferta SDP...")
+                webRtcManager?.createOffer { offerSdp ->
+                    client.sendMessage(SignalingMessage.Offer(offerSdp, profile.width, profile.height, profile.frameRate, profile.targetBitrateKbps))
+                    offerSent = true
+                    pendingCandidates.forEach { client.sendMessage(it) }
+                    pendingCandidates.clear()
+                    Log.i("ProjectionSession", "🟢 Oferta SDP y candidatos enviados a TV Box")
+                    // CRÍTICO: iniciar captura DESPUÉS de enviar la oferta, no antes
+                    // El encoder ya está negociado y puede recibir frames inmediatamente
+                    webRtcManager?.beginCapture()
+                }
+            },
+            onError = { e -> Log.e("ProjectionSession", "Error conectando TV ($targetIp:$targetPort): ${e.message}") }
+        )
     }
 
     fun stop() {
@@ -109,7 +107,10 @@ class ProjectionSession(
             audioSender?.close()
             audioSender = null
 
-            SignalingClientHolder.get().sendMessage(SignalingMessage.Disconnect())
+            signalingClient?.sendMessage(SignalingMessage.Disconnect())
+            signalingClient?.disconnect()
+            signalingClient = null
+
             webRtcManager?.close()
             webRtcManager = null
             scope.cancel()

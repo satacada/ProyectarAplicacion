@@ -78,24 +78,46 @@ fun TvYouTubeScreen(videoId: String, title: String, timestamp: Long = 0L) {
                                 <style>
                                   * { margin:0; padding:0; box-sizing:border-box; }
                                   html, body { width:100vw; height:100vh; overflow:hidden; background:#000; }
-                                  #ytplayer { position:fixed; top:0; left:0; width:100vw !important; height:100vh !important; border:none; }
+                                  #player { position:fixed; top:0; left:0; width:100vw !important; height:100vh !important; border:none; }
                                 </style>
                                 </head>
                                 <body>
-                                  <iframe id="ytplayer"
-                                    src="https://www.youtube-nocookie.com/embed/$videoId?autoplay=1&controls=1&fs=1&rel=0&iv_load_policy=3&modestbranding=1&cc_load_policy=0&hl=es&cc_lang_pref="
-                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
-                                    allowfullscreen>
-                                  </iframe>
+                                  <div id="player"></div>
+                                  <script src="https://www.youtube.com/iframe_api"></script>
                                   <script>
-                                    var tag = document.createElement('script');
-                                    tag.src = "https://www.youtube.com/iframe_api";
-                                    document.head.appendChild(tag);
+                                    var player;
                                     function onYouTubeIframeAPIReady() {
-                                      new YT.Player('ytplayer', {
+                                      player = new YT.Player('player', {
+                                        width: '100%',
+                                        height: '100%',
+                                        videoId: '$videoId',
+                                        playerVars: {
+                                          'autoplay': 1,
+                                          'controls': 1,
+                                          'fs': 1,
+                                          'rel': 0,
+                                          'iv_load_policy': 3,
+                                          'modestbranding': 1,
+                                          'cc_load_policy': 0,
+                                          'playsinline': 1,
+                                          'enablejsapi': 1,
+                                          'origin': 'https://www.youtube.com'
+                                        },
                                         events: {
-                                          'onReady': function(e) {
-                                            try { e.target.unloadModule('captions'); } catch(err) {}
+                                          'onReady': function(event) {
+                                            try { event.target.unloadModule('captions'); } catch(e){}
+                                            try {
+                                              event.target.mute();
+                                              event.target.playVideo();
+                                              setTimeout(function() { try { event.target.unMute(); } catch(e){} }, 800);
+                                            } catch(e) {
+                                              try { event.target.playVideo(); } catch(e2){}
+                                            }
+                                          },
+                                          'onStateChange': function(event) {
+                                            if (event.data === 1) { // 1 = PLAYING
+                                              try { event.target.unMute(); } catch(e){}
+                                            }
                                           }
                                         }
                                       });
@@ -104,7 +126,7 @@ fun TvYouTubeScreen(videoId: String, title: String, timestamp: Long = 0L) {
                                 </body>
                                 </html>
                             """.trimIndent()
-                            loadDataWithBaseURL("https://www.youtube-nocookie.com", embedHtml, "text/html", "UTF-8", null)
+                            loadDataWithBaseURL("https://www.youtube.com", embedHtml, "text/html", "UTF-8", null)
                         }
                     },
                     onRelease = { webView ->

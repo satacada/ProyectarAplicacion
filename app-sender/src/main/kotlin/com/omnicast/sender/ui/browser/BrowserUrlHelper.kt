@@ -34,7 +34,8 @@ object BrowserUrlHelper {
         if (lower.contains(".ts?") || lower.endsWith(".ts") || lower.contains(".m4s")) return false
         if (lower.contains("/audio") || lower.contains("_audio.m3u8") || lower.contains("-audio.m3u8")) return false
         if (lower.endsWith(".html") || lower.endsWith(".htm") || lower.contains(".html?") || lower.contains(".htm?")) return false
-        if (lower.contains("mycdn.me") && (lower.contains("video") || lower.contains("mid=") || lower.contains(".m3u8") || lower.contains("type="))) return true
+        if (lower.contains("mycdn.me") || lower.contains("vd.mycdn") || lower.contains("vd2.mycdn") || lower.contains("vd3.mycdn")) return true
+        if (lower.contains("ok.ru") && (lower.contains(".m3u8") || lower.contains("videometa") || lower.contains("api/video"))) return true
         if (lower.contains(".m3u8") || lower.contains(".mpd") || lower.contains(".mp4") || lower.contains(".webm") || lower.contains(".mkv")) return true
         return lower.contains("/hls/") || lower.contains("/manifest") || lower.contains("chunklist")
     }

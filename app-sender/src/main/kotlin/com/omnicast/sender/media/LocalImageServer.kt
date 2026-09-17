@@ -56,31 +56,56 @@ object LocalImageServer {
             client.use { s ->
                 val input = s.getInputStream().bufferedReader()
                 val reqLine = input.readLine() ?: return
+                var rangeHeader: String? = null
                 var line = input.readLine()
-                while (!line.isNullOrEmpty()) { line = input.readLine() }
+                while (!line.isNullOrEmpty()) {
+                    if (line.startsWith("Range:", ignoreCase = true)) {
+                        rangeHeader = line.substringAfter(":", "").trim()
+                    }
+                    line = input.readLine()
+                }
 
                 val uri = currentUri
                 val ctx = appContext
                 if (uri != null && ctx != null) {
-                    val stream: InputStream? = ctx.contentResolver.openInputStream(uri)
-                    if (stream != null) {
-                        val out = s.getOutputStream()
-                        val mime = currentMime.ifBlank { "application/octet-stream" }
-                        val size = try {
-                            ctx.contentResolver.openFileDescriptor(uri, "r")?.use { it.statSize } ?: -1L
-                        } catch (_: Throwable) { -1L }
-                        val lenHeader = if (size > 0) "Content-Length: $size\r\n" else ""
-                        val header = "HTTP/1.1 200 OK\r\nContent-Type: $mime\r\n${lenHeader}Accept-Ranges: bytes\r\nAccess-Control-Allow-Origin: *\r\nConnection: close\r\n\r\n"
+                    val out = s.getOutputStream()
+                    val mime = currentMime.ifBlank { "application/octet-stream" }
+                    val pfd = ctx.contentResolver.openFileDescriptor(uri, "r")
+                    val size = pfd?.statSize ?: -1L
+
+                    if (pfd != null && size > 0) {
+                        var start = 0L
+                        var end = size - 1
+                        val isRange = rangeHeader != null && rangeHeader.startsWith("bytes=")
+                        if (isRange) {
+                            val rangeVal = rangeHeader!!.substringAfter("bytes=").trim()
+                            val parts = rangeVal.split("-")
+                            start = parts.getOrNull(0)?.toLongOrNull() ?: 0L
+                            end = parts.getOrNull(1)?.toLongOrNull() ?: (size - 1)
+                            if (end >= size) end = size - 1
+                        }
+
+                        val contentLength = end - start + 1
+                        val statusLine = if (isRange) "HTTP/1.1 206 Partial Content" else "HTTP/1.1 200 OK"
+                        val rangeRespHeader = if (isRange) "Content-Range: bytes $start-$end/$size\r\n" else ""
+                        val header = "$statusLine\r\nContent-Type: $mime\r\nContent-Length: $contentLength\r\n${rangeRespHeader}Accept-Ranges: bytes\r\nAccess-Control-Allow-Origin: *\r\nConnection: close\r\n\r\n"
                         out.write(header.toByteArray())
-                        val buffer = ByteArray(64 * 1024)
-                        stream.use { ins ->
-                            var read: Int
-                            while (ins.read(buffer).also { read = it } != -1) {
-                                out.write(buffer, 0, read)
+
+                        pfd.use { fd ->
+                            java.io.FileInputStream(fd.fileDescriptor).use { fis ->
+                                if (start > 0) fis.channel.position(start)
+                                val buffer = ByteArray(64 * 1024)
+                                var remaining = contentLength
+                                while (remaining > 0) {
+                                    val toRead = minOf(buffer.size.toLong(), remaining).toInt()
+                                    val read = fis.read(buffer, 0, toRead)
+                                    if (read == -1) break
+                                    out.write(buffer, 0, read)
+                                    remaining -= read
+                                }
                             }
                         }
                         out.flush()
-                        Log.i(TAG, "Media enviado con éxito ($mime) a ${s.inetAddress}")
                         return
                     }
                 }

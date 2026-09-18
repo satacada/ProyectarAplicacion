@@ -115,6 +115,7 @@ class ProjectionSession(
                     // CRÍTICO: iniciar captura DESPUÉS de enviar la oferta, no antes
                     // El encoder ya está negociado y puede recibir frames inmediatamente
                     webRtcManager?.beginCapture()
+                    client.sendMessage(SignalingMessage.SetDisplayMode(if (tvScaleMode == "EXTEND_16_9") "FILL" else "FIT"))
                 }
             },
             onError = { e -> Log.e("ProjectionSession", "Error conectando TV ($targetIp:$targetPort): ${e.message}") }

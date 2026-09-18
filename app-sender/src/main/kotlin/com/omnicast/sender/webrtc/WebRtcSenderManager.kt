@@ -33,15 +33,9 @@ class WebRtcSenderManager(
     private var isRemoteDescriptionSet = false
 
     var tvScaleMode: String = "EXTEND_16_9"
-        set(value) {
-            field = value
-            updateCaptureFormatIfRunning()
-        }
-    private var orientationListener: android.view.OrientationEventListener? = null
-    private var lastIsLandscape: Boolean? = null
 
     override fun initialize() {
-        Log.i(TAG, "🚀 OmniCast Sender v3.19 Inicializado (Universal WebRTC)")
+        Log.i(TAG, "🚀 OmniCast Sender v3.20 Inicializado (Universal WebRTC)")
         PeerConnectionFactory.initialize(
             PeerConnectionFactory.InitializationOptions.builder(context)
                 .setEnableInternalTracer(true).createInitializationOptions()
@@ -61,7 +55,6 @@ class WebRtcSenderManager(
         surfaceTextureHelper = SurfaceTextureHelper.create("ScreenCaptureThread", eglContext)
         videoSource = peerConnectionFactory?.createVideoSource(true)
         screenCapturer?.initialize(surfaceTextureHelper, context, videoSource?.capturerObserver)
-        setupOrientationListener()
     }
 
     fun startScreenStreaming(profile: StreamProfile, iceServers: List<PeerConnection.IceServer> = emptyList()) {
@@ -119,36 +112,6 @@ class WebRtcSenderManager(
         val capW = (((dm.widthPixels * scale).toInt() / 16) * 16).coerceAtLeast(320)
         val capH = (((dm.heightPixels * scale).toInt() / 16) * 16).coerceAtLeast(480)
         return Pair(capW, capH)
-    }
-
-    private fun setupOrientationListener() {
-        try {
-            orientationListener = object : android.view.OrientationEventListener(context) {
-                override fun onOrientationChanged(orientation: Int) {
-                    if (orientation == ORIENTATION_UNKNOWN) return
-                    val isLand = (orientation in 60..120) || (orientation in 240..300)
-                    val isPort = (orientation in 330..360) || (orientation in 0..30) || (orientation in 150..210)
-                    val detectedLand = if (isLand) true else if (isPort) false else lastIsLandscape
-                    if (detectedLand != null && lastIsLandscape != detectedLand) {
-                        lastIsLandscape = detectedLand
-                        updateCaptureFormatIfRunning()
-                    }
-                }
-            }
-            if (orientationListener?.canDetectOrientation() == true) orientationListener?.enable()
-        } catch (_: Throwable) {}
-    }
-
-    fun updateCaptureFormatIfRunning() {
-        val capturer = screenCapturer ?: return
-        val dims = calcCaptureDimensions()
-        val fps = (activeProfile?.frameRate ?: 30).coerceIn(15, 60)
-        try {
-            capturer.changeCaptureFormat(dims.first, dims.second, fps)
-            Log.i(TAG, "📐 Formato de captura adaptado en vivo: ${dims.first}x${dims.second} @ ${fps}fps")
-        } catch (e: Throwable) {
-            Log.w(TAG, "Error al cambiar formato de captura: ${e.message}")
-        }
     }
 
     private fun preferH264(sdp: String): String {
@@ -226,7 +189,6 @@ class WebRtcSenderManager(
             surfaceTextureHelper?.dispose(); surfaceTextureHelper = null
             peerConnection?.close(); peerConnection = null
             peerConnectionFactory?.dispose(); peerConnectionFactory = null
-            orientationListener?.disable(); orientationListener = null
             eglBase?.release(); eglBase = null
             isRemoteDescriptionSet = false; queuedRemoteCandidates.clear()
         } catch (e: Exception) { Log.e(TAG, "Error cerrando WebRtcSenderManager", e) }

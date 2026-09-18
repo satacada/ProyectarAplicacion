@@ -24,6 +24,9 @@ class WebRtcReceiverManager(private val context: Context) {
     private var isRemoteDescriptionSet = false
     private var isResetting = false
     private var currentScalingType = RendererCommon.ScalingType.SCALE_ASPECT_FIT
+    private var lastFrameW = 0
+    private var lastFrameH = 0
+    private var lastRot = 0
 
     fun initialize() {
         ReceiverLogger.log(TAG, "Inicializando decodificador WebRTC por hardware en TV Box")
@@ -35,16 +38,60 @@ class WebRtcReceiverManager(private val context: Context) {
             .setVideoEncoderFactory(DefaultVideoEncoderFactory(eglBase.eglBaseContext, false, false))
             .createPeerConnectionFactory()
 
+        initSurfaceView()
+        createPeerConnection()
+    }
+
+    private fun initSurfaceView() {
         surfaceViewRenderer = SurfaceViewRenderer(context).apply {
             init(eglBase.eglBaseContext, object : RendererCommon.RendererEvents {
                 override fun onFirstFrameRendered() { ReceiverLogger.log(TAG, "🎉 ¡PRIMER FRAME RENDERIZADO EN TV!") }
-                override fun onFrameResolutionChanged(w: Int, h: Int, r: Int) { ReceiverLogger.log(TAG, "📐 Frame TV: ${w}x${h} rot:$r") }
+                override fun onFrameResolutionChanged(w: Int, h: Int, r: Int) {
+                    ReceiverLogger.log(TAG, "📐 Frame TV: ${w}x${h} rot:$r")
+                    lastFrameW = w; lastFrameH = h; lastRot = r
+                    applyDisplayTransform()
+                }
             })
             setScalingType(RendererCommon.ScalingType.SCALE_ASPECT_FIT)
             setEnableHardwareScaler(true)
             setZOrderMediaOverlay(true)
         }
-        createPeerConnection()
+    }
+
+    private fun applyDisplayTransform() {
+        val renderer = surfaceViewRenderer ?: return
+        android.os.Handler(android.os.Looper.getMainLooper()).post {
+            val isRotated = (lastRot == 90 || lastRot == 270)
+            val frameW = if (isRotated) lastFrameH else lastFrameW
+            val frameH = if (isRotated) lastFrameW else lastFrameH
+            if (frameW <= 0 || frameH <= 0) return@post
+
+            val tvMetrics = context.resources.displayMetrics
+            val tvW = tvMetrics.widthPixels.toFloat().coerceAtLeast(1280f)
+            val tvH = tvMetrics.heightPixels.toFloat().coerceAtLeast(720f)
+            val tvAspect = tvW / tvH
+            val frameAspect = frameW.toFloat() / frameH.toFloat()
+
+            if (currentScalingType == RendererCommon.ScalingType.SCALE_ASPECT_FILL) {
+                val factor = if (frameAspect > tvAspect) {
+                    frameAspect / tvAspect
+                } else if (frameAspect < tvAspect && frameW > frameH) {
+                    tvAspect / frameAspect
+                } else {
+                    1.0f
+                }
+                renderer.scaleX = factor
+                renderer.scaleY = factor
+                renderer.translationY = 0f
+                ReceiverLogger.log(TAG, "📺 Modo 16:9 EXPANDIDO: factor=${factor} (frame=${frameW}x${frameH} rot=$lastRot)")
+            } else {
+                renderer.scaleX = 1f
+                renderer.scaleY = 1f
+                renderer.translationY = 0f
+                ReceiverLogger.log(TAG, "📱 Modo FIT ORIGINAL: escala 1.0 (frame=${frameW}x${frameH} rot=$lastRot)")
+            }
+            renderer.requestLayout()
+        }
     }
 
     private fun createPeerConnection() {
@@ -123,31 +170,28 @@ class WebRtcReceiverManager(private val context: Context) {
     }
 
     fun toggleScalingType(): RendererCommon.ScalingType {
-        currentScalingType = if (currentScalingType == RendererCommon.ScalingType.SCALE_ASPECT_FIT) RendererCommon.ScalingType.SCALE_ASPECT_FILL else RendererCommon.ScalingType.SCALE_ASPECT_FIT
-        android.os.Handler(android.os.Looper.getMainLooper()).post {
-            surfaceViewRenderer?.setScalingType(currentScalingType)
-            surfaceViewRenderer?.requestLayout()
+        currentScalingType = if (currentScalingType == RendererCommon.ScalingType.SCALE_ASPECT_FIT) {
+            RendererCommon.ScalingType.SCALE_ASPECT_FILL
+        } else {
+            RendererCommon.ScalingType.SCALE_ASPECT_FIT
         }
+        applyDisplayTransform()
         return currentScalingType
     }
 
     fun setDisplayMode(mode: String, zoom: Float = 1f, panY: Float = 0f) {
-        android.os.Handler(android.os.Looper.getMainLooper()).post {
-            when (mode.uppercase()) {
-                "FILL", "16:9", "EXTEND_16_9" -> {
-                    currentScalingType = RendererCommon.ScalingType.SCALE_ASPECT_FILL
-                    surfaceViewRenderer?.setScalingType(currentScalingType)
-                    surfaceViewRenderer?.scaleX = 1f; surfaceViewRenderer?.scaleY = 1f; surfaceViewRenderer?.translationY = 0f
-                    surfaceViewRenderer?.requestLayout()
-                }
-                "FIT", "ORIGINAL_FIT" -> {
-                    currentScalingType = RendererCommon.ScalingType.SCALE_ASPECT_FIT
-                    surfaceViewRenderer?.setScalingType(currentScalingType)
-                    surfaceViewRenderer?.scaleX = 1f; surfaceViewRenderer?.scaleY = 1f; surfaceViewRenderer?.translationY = 0f
-                    surfaceViewRenderer?.requestLayout()
-                }
-                "TOGGLE" -> toggleScalingType()
-                "ZOOM" -> {
+        when (mode.uppercase()) {
+            "FILL", "16:9", "EXTEND_16_9" -> {
+                currentScalingType = RendererCommon.ScalingType.SCALE_ASPECT_FILL
+                applyDisplayTransform()
+            }
+            "FIT", "ORIGINAL_FIT" -> {
+                currentScalingType = RendererCommon.ScalingType.SCALE_ASPECT_FIT
+                applyDisplayTransform()
+            }
+            "TOGGLE" -> toggleScalingType()
+            "ZOOM" -> {
+                android.os.Handler(android.os.Looper.getMainLooper()).post {
                     surfaceViewRenderer?.scaleX = zoom; surfaceViewRenderer?.scaleY = zoom
                     surfaceViewRenderer?.translationY = panY
                     surfaceViewRenderer?.requestLayout()

@@ -66,15 +66,21 @@ fun TvYouTubeScreen(
             when (msg.action) {
                 "PLAY" -> wv.evaluateJavascript("sendYtCommand('playVideo');", null)
                 "PAUSE" -> wv.evaluateJavascript("sendYtCommand('pauseVideo');", null)
+                "TOGGLE_PLAY" -> wv.evaluateJavascript("toggleYtPlay();", null)
                 "SEEK" -> {
                     val sec = msg.positionMs / 1000.0
                     wv.evaluateJavascript("sendYtCommand('seekTo', [$sec, true]);", null)
+                }
+                "SEEK_REL" -> {
+                    val secDelta = msg.positionMs / 1000.0
+                    wv.evaluateJavascript("seekYtRel($secDelta);", null)
                 }
                 "VOLUME" -> {
                     val volPct = (msg.volume.coerceIn(0f, 1f) * 100).toInt()
                     wv.evaluateJavascript("sendYtCommand('setVolume', [$volPct]);", null)
                 }
                 "STOP" -> wv.evaluateJavascript("sendYtCommand('stopVideo');", null)
+                "TOGGLE_SUBTITLES", "SUBTITLE_TOGGLE" -> wv.evaluateJavascript("toggleYtCaptions();", null)
             }
         }
     }
@@ -122,16 +128,41 @@ fun TvYouTubeScreen(
                                     allowfullscreen>
                                   </iframe>
                                   <script>
+                                    var captionsOn = false;
+                                    var lastState = 1;
+                                    var curTime = 0;
+
+                                    function toggleYtPlay() {
+                                      if (lastState === 1) sendYtCommand('pauseVideo'); else sendYtCommand('playVideo');
+                                    }
+
+                                    function seekYtRel(deltaSec) {
+                                      var target = Math.max(0, curTime + deltaSec);
+                                      sendYtCommand('seekTo', [target, true]);
+                                    }
+
+                                    function toggleYtCaptions() {
+                                      captionsOn = !captionsOn;
+                                      if (captionsOn) {
+                                        sendYtCommand('loadModule', ['captions']);
+                                      } else {
+                                        sendYtCommand('unloadModule', ['captions']);
+                                      }
+                                    }
+
                                     window.addEventListener('message', function(event) {
                                       try {
                                         var data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
                                         if (data && data.event === 'infoDelivery' && data.info) {
-                                          var cur = data.info.currentTime;
+                                          if (data.info.currentTime !== undefined) curTime = data.info.currentTime;
                                           var dur = data.info.duration;
-                                          var st = data.info.playerState;
-                                          if (window.AndroidBridge && cur !== undefined && dur !== undefined) {
-                                            window.AndroidBridge.onPlaybackStatus(cur, dur, st !== undefined ? st : 1);
+                                          if (data.info.playerState !== undefined) lastState = data.info.playerState;
+                                          if (window.AndroidBridge && curTime !== undefined && dur !== undefined) {
+                                            window.AndroidBridge.onPlaybackStatus(curTime, dur, lastState !== undefined ? lastState : 1);
                                           }
+                                        }
+                                        if (data && data.event === 'initialDelivery') {
+                                          sendYtCommand('unloadModule', ['captions']);
                                         }
                                       } catch(e) {}
                                     });
@@ -146,6 +177,8 @@ fun TvYouTubeScreen(
                                         }), '*');
                                       }
                                     }
+
+                                    setTimeout(function() { sendYtCommand('unloadModule', ['captions']); }, 1800);
 
                                     setInterval(function() {
                                       var iframe = document.getElementById('ytplayer');

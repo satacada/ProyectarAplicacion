@@ -14,9 +14,27 @@ import com.omnicast.sender.ui.SenderMainActivity
 
 class GalleryPickerActivity : ComponentActivity() {
 
+    private fun resolveMime(uri: Uri): String {
+        val type = contentResolver.getType(uri)
+        if (!type.isNullOrBlank() && type != "application/octet-stream") return type
+        val path = uri.toString().lowercase()
+        return when {
+            path.endsWith(".mp4") || path.contains(".mp4?") -> "video/mp4"
+            path.endsWith(".mkv") || path.contains(".mkv?") -> "video/x-matroska"
+            path.endsWith(".mov") || path.contains(".mov?") -> "video/quicktime"
+            path.endsWith(".webm") || path.contains(".webm?") -> "video/webm"
+            path.endsWith(".avi") || path.contains(".avi?") -> "video/x-msvideo"
+            path.endsWith(".png") || path.contains(".png?") -> "image/png"
+            path.endsWith(".webp") || path.contains(".webp?") -> "image/webp"
+            path.endsWith(".gif") || path.contains(".gif?") -> "image/gif"
+            path.endsWith(".jpg") || path.endsWith(".jpeg") -> "image/jpeg"
+            else -> type ?: "image/jpeg"
+        }
+    }
+
     private val picker = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         if (uri != null) {
-            val mime = contentResolver.getType(uri) ?: "image/jpeg"
+            val mime = resolveMime(uri)
             val mediaUrl = LocalImageServer.serveMedia(uri, mime, this)
             if (mime.startsWith("video/")) {
                 SenderMainActivity.sendDirectStreamStatic(this, mediaUrl, "Video de Galería")

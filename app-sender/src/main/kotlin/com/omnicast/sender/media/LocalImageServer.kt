@@ -63,7 +63,9 @@ object LocalImageServer {
                 Log.w(TAG, "Error copiando media a cache local: ${e.message}")
             }
         }
-        val ip = getLocalIpAddress()
+        val tvIp = ctx?.getSharedPreferences("omnicast_prefs", Context.MODE_PRIVATE)?.getString("saved_tv_ip", null)
+        val subnet = tvIp?.substringBeforeLast(".")?.let { "$it." }
+        val ip = getLocalIpAddress(subnet)
         val ext = if (mime.startsWith("video/")) "mp4" else "jpg"
         return "http://$ip:$PORT/media_${System.currentTimeMillis()}.$ext"
     }
@@ -75,6 +77,7 @@ object LocalImageServer {
             client.use { s ->
                 val input = s.getInputStream().bufferedReader()
                 val reqLine = input.readLine() ?: return
+                val isHead = reqLine.startsWith("HEAD", ignoreCase = true)
                 var rangeHeader: String? = null
                 var line = input.readLine()
                 while (!line.isNullOrEmpty()) {
@@ -109,16 +112,18 @@ object LocalImageServer {
                     val header = "$statusLine\r\nContent-Type: $mime\r\nContent-Length: $contentLength\r\n${rangeRespHeader}Accept-Ranges: bytes\r\nAccess-Control-Allow-Origin: *\r\nConnection: close\r\n\r\n"
                     out.write(header.toByteArray())
 
-                    java.io.FileInputStream(file).use { fis ->
-                        if (start > 0) fis.channel.position(start)
-                        val buffer = ByteArray(64 * 1024)
-                        var remaining = contentLength
-                        while (remaining > 0) {
-                            val toRead = minOf(buffer.size.toLong(), remaining).toInt()
-                            val read = fis.read(buffer, 0, toRead)
-                            if (read == -1) break
-                            out.write(buffer, 0, read)
-                            remaining -= read
+                    if (!isHead) {
+                        java.io.FileInputStream(file).use { fis ->
+                            if (start > 0) fis.channel.position(start)
+                            val buffer = ByteArray(64 * 1024)
+                            var remaining = contentLength
+                            while (remaining > 0) {
+                                val toRead = minOf(buffer.size.toLong(), remaining).toInt()
+                                val read = fis.read(buffer, 0, toRead)
+                                if (read == -1) break
+                                out.write(buffer, 0, read)
+                                remaining -= read
+                            }
                         }
                     }
                     out.flush()
@@ -145,17 +150,19 @@ object LocalImageServer {
                         val header = "$statusLine\r\nContent-Type: $mime\r\nContent-Length: $contentLength\r\n${rangeRespHeader}Accept-Ranges: bytes\r\nAccess-Control-Allow-Origin: *\r\nConnection: close\r\n\r\n"
                         out.write(header.toByteArray())
 
-                        pfd.use { fd ->
-                            java.io.FileInputStream(fd.fileDescriptor).use { fis ->
-                                if (start > 0) fis.channel.position(start)
-                                val buffer = ByteArray(64 * 1024)
-                                var remaining = contentLength
-                                while (remaining > 0) {
-                                    val toRead = minOf(buffer.size.toLong(), remaining).toInt()
-                                    val read = fis.read(buffer, 0, toRead)
-                                    if (read == -1) break
-                                    out.write(buffer, 0, read)
-                                    remaining -= read
+                        if (!isHead) {
+                            pfd.use { fd ->
+                                java.io.FileInputStream(fd.fileDescriptor).use { fis ->
+                                    if (start > 0) fis.channel.position(start)
+                                    val buffer = ByteArray(64 * 1024)
+                                    var remaining = contentLength
+                                    while (remaining > 0) {
+                                        val toRead = minOf(buffer.size.toLong(), remaining).toInt()
+                                        val read = fis.read(buffer, 0, toRead)
+                                        if (read == -1) break
+                                        out.write(buffer, 0, read)
+                                        remaining -= read
+                                    }
                                 }
                             }
                         }
@@ -171,9 +178,20 @@ object LocalImageServer {
         }
     }
 
-    fun getLocalIpAddress(): String {
+    fun getLocalIpAddress(preferredSubnet: String? = null): String {
         try {
             val interfaces = NetworkInterface.getNetworkInterfaces()?.toList() ?: return "127.0.0.1"
+            if (!preferredSubnet.isNullOrBlank()) {
+                for (intf in interfaces) {
+                    if (intf.isLoopback || !intf.isUp) continue
+                    for (addr in intf.inetAddresses) {
+                        if (!addr.isLoopbackAddress && addr is Inet4Address) {
+                            val ip = addr.hostAddress ?: continue
+                            if (ip.startsWith(preferredSubnet)) return ip
+                        }
+                    }
+                }
+            }
             for (intf in interfaces) {
                 if (intf.isLoopback || !intf.isUp) continue
                 for (addr in intf.inetAddresses) {

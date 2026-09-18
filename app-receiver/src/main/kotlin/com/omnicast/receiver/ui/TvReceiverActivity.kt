@@ -140,7 +140,11 @@ class TvReceiverActivity : ComponentActivity() {
                 val cur = receiverState.value
                 if (cur is ReceiverUiState.ImageDisplaying) receiverState.value = cur.copy(scale = message.scale, panX = message.panX, panY = message.panY)
             }
-            is SignalingMessage.SetDisplayMode -> webRtcReceiver.setDisplayMode(message.mode, message.zoom, message.panY)
+            is SignalingMessage.SetDisplayMode -> {
+                webRtcReceiver.setDisplayMode(message.mode, message.zoom, message.panY)
+                val isZoom = message.mode == "FILL" || message.mode == "ZOOM" || message.mode == "EXTEND_16_9"
+                exoPlayerManager.setResizeMode(isZoom)
+            }
             is SignalingMessage.ShowImage -> {
                 digitalAudioReceiver?.stop(); exoPlayerManager.stop(); webRtcReceiver.resetConnection()
                 receiverState.value = ReceiverUiState.ImageDisplaying(message.imageUrl, message.title ?: "Foto de Galería")
@@ -190,15 +194,74 @@ class TvReceiverActivity : ComponentActivity() {
             digitalAudioReceiver?.stop(); exoPlayerManager.stop(); webRtcReceiver.resetConnection()
             receiverState.value = ReceiverUiState.Standby; return true
         }
-        if (keyCode == KeyEvent.KEYCODE_DPAD_CENTER || keyCode == KeyEvent.KEYCODE_ENTER) {
-            val cur = receiverState.value
-            if (cur is ReceiverUiState.YouTubePlaying) {
-                try { startActivity(Intent(Intent.ACTION_VIEW, android.net.Uri.parse("https://www.youtube.com/watch?v=${cur.videoId}")).apply { flags = Intent.FLAG_ACTIVITY_NEW_TASK }) } catch (_: Throwable) {}
-                return true
+
+        when (receiverState.value) {
+            is ReceiverUiState.DirectStreamPlaying -> {
+                when (keyCode) {
+                    KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER,
+                    KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE, KeyEvent.KEYCODE_MEDIA_PLAY, KeyEvent.KEYCODE_MEDIA_PAUSE,
+                    KeyEvent.KEYCODE_SPACE -> {
+                        if (exoPlayerManager.isPlaying) {
+                            exoPlayerManager.pause()
+                            Toast.makeText(this, "⏸️ Pausado", Toast.LENGTH_SHORT).show()
+                        } else {
+                            exoPlayerManager.resume()
+                            Toast.makeText(this, "▶️ Reproduciendo", Toast.LENGTH_SHORT).show()
+                        }
+                        return true
+                    }
+                    KeyEvent.KEYCODE_DPAD_RIGHT, KeyEvent.KEYCODE_MEDIA_FAST_FORWARD, KeyEvent.KEYCODE_MEDIA_NEXT -> {
+                        val newPos = (exoPlayerManager.currentPositionMs + 10_000L).coerceAtMost(exoPlayerManager.durationMs)
+                        exoPlayerManager.seekTo(newPos)
+                        Toast.makeText(this, "⏩ +10s", Toast.LENGTH_SHORT).show()
+                        return true
+                    }
+                    KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.KEYCODE_MEDIA_REWIND, KeyEvent.KEYCODE_MEDIA_PREVIOUS -> {
+                        val newPos = (exoPlayerManager.currentPositionMs - 10_000L).coerceAtLeast(0L)
+                        exoPlayerManager.seekTo(newPos)
+                        Toast.makeText(this, "⏪ -10s", Toast.LENGTH_SHORT).show()
+                        return true
+                    }
+                    KeyEvent.KEYCODE_DPAD_UP, KeyEvent.KEYCODE_DPAD_DOWN, KeyEvent.KEYCODE_MENU -> {
+                        val mode = exoPlayerManager.toggleResizeMode()
+                        val txt = if (mode == androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_ZOOM) "📺 Modo: Llenar Pantalla (16:9)" else "📺 Modo: Ajustar Proporción (Fit)"
+                        Toast.makeText(this, txt, Toast.LENGTH_SHORT).show()
+                        return true
+                    }
+                }
             }
-            val mode = webRtcReceiver.toggleScalingType()
-            val txt = if (mode == org.webrtc.RendererCommon.ScalingType.SCALE_ASPECT_FILL) "Modo: Llenar Pantalla (16:9)" else "Modo: Ajustar Proporción (Fit)"
-            Toast.makeText(this, txt, Toast.LENGTH_SHORT).show(); return true
+            is ReceiverUiState.YouTubePlaying -> {
+                when (keyCode) {
+                    KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER,
+                    KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE, KeyEvent.KEYCODE_MEDIA_PLAY, KeyEvent.KEYCODE_MEDIA_PAUSE -> {
+                        youTubeControlFlow.tryEmit(SignalingMessage.PlayControl("TOGGLE_PLAY"))
+                        return true
+                    }
+                    KeyEvent.KEYCODE_DPAD_RIGHT, KeyEvent.KEYCODE_MEDIA_FAST_FORWARD -> {
+                        youTubeControlFlow.tryEmit(SignalingMessage.PlayControl("SEEK_REL", 10_000L))
+                        Toast.makeText(this, "⏩ +10s", Toast.LENGTH_SHORT).show()
+                        return true
+                    }
+                    KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.KEYCODE_MEDIA_REWIND -> {
+                        youTubeControlFlow.tryEmit(SignalingMessage.PlayControl("SEEK_REL", -10_000L))
+                        Toast.makeText(this, "⏪ -10s", Toast.LENGTH_SHORT).show()
+                        return true
+                    }
+                    KeyEvent.KEYCODE_DPAD_UP, KeyEvent.KEYCODE_MENU -> {
+                        youTubeControlFlow.tryEmit(SignalingMessage.PlayControl("TOGGLE_SUBTITLES"))
+                        Toast.makeText(this, "💬 Alternando Subtítulos", Toast.LENGTH_SHORT).show()
+                        return true
+                    }
+                }
+            }
+            is ReceiverUiState.ScreenMirroring -> {
+                if (keyCode == KeyEvent.KEYCODE_DPAD_CENTER || keyCode == KeyEvent.KEYCODE_ENTER || keyCode == KeyEvent.KEYCODE_MENU) {
+                    val mode = webRtcReceiver.toggleScalingType()
+                    val txt = if (mode == org.webrtc.RendererCommon.ScalingType.SCALE_ASPECT_FILL) "Modo: Llenar Pantalla (16:9)" else "Modo: Ajustar Proporción (Fit)"
+                    Toast.makeText(this, txt, Toast.LENGTH_SHORT).show(); return true
+                }
+            }
+            else -> Unit
         }
         return super.onKeyDown(keyCode, event)
     }

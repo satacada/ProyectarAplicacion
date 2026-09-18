@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.runtime.saveable.rememberSaveable
 import com.omnicast.sender.history.PlayHistoryManager
 import com.omnicast.sender.stream.ActiveStreamHolder
 import kotlinx.coroutines.launch
@@ -23,10 +24,13 @@ fun InAppBrowserScreen(
 ) {
     val context = LocalContext.current
     val historyManager = remember { PlayHistoryManager(context) }
-    var inputUrl by remember { mutableStateOf("") }
-    var currentUrl by remember { mutableStateOf("") }
-    var isHome by remember { mutableStateOf(true) }
-    var pageTitle by remember { mutableStateOf("OmniCast Browser") }
+    val prefs = remember { context.getSharedPreferences("omnicast_prefs", android.content.Context.MODE_PRIVATE) }
+    val savedLastUrl = remember { prefs.getString("saved_browser_last_url", "") ?: "" }
+    val initialIsHome = savedLastUrl.isBlank() || savedLastUrl == "about:blank"
+    var inputUrl by rememberSaveable { mutableStateOf(if (initialIsHome) "" else savedLastUrl) }
+    var currentUrl by rememberSaveable { mutableStateOf(if (initialIsHome) "" else savedLastUrl) }
+    var isHome by rememberSaveable { mutableStateOf(initialIsHome) }
+    var pageTitle by rememberSaveable { mutableStateOf("OmniCast Browser") }
     var progress by remember { mutableStateOf(0) }
     var isDesktopMode by remember { mutableStateOf(false) }
     var isAdBlockEnabled by remember { mutableStateOf(true) }
@@ -85,6 +89,7 @@ fun InAppBrowserScreen(
         ActiveStreamHolder.clearDetectedStream()
         val target = BrowserUrlHelper.normalizeUrl(url)
         inputUrl = target; currentUrl = target; isHome = false
+        prefs.edit().putString("saved_browser_last_url", target).apply()
         if (target.contains("youtube.com") || target.contains("youtu.be")) checkAndRegisterYouTube(target)
         webViewInstance?.loadUrl(target)
     }
@@ -127,7 +132,11 @@ fun InAppBrowserScreen(
             onToggleDesktopMode = { isDesktopMode = !isDesktopMode; webViewInstance?.settings?.userAgentString = if (isDesktopMode) UA_DESKTOP else UA_MOBILE; webViewInstance?.reload() },
             isAdBlockEnabled = isAdBlockEnabled, onToggleAdBlock = { isAdBlockEnabled = !isAdBlockEnabled },
             onForceRescan = { webViewInstance?.evaluateJavascript(WvcDomSniffer.getInjectionScript(context), null) },
-            onClearData = { webViewInstance?.clearCache(true); webViewInstance?.clearHistory(); detectedStreams.clear(); qualityOptions = emptyList(); isHome = true; inputUrl = "" },
+            onClearData = {
+                webViewInstance?.clearCache(true); webViewInstance?.clearHistory()
+                detectedStreams.clear(); qualityOptions = emptyList(); isHome = true; inputUrl = ""; currentUrl = ""
+                prefs.edit().remove("saved_browser_last_url").apply()
+            },
             detectedStreamsCount = detectedStreams.size, onOpenVideoList = { openOptionsSheet() },
             onOpenHistory = { historyList = historyManager.getHistory(); showHistorySheet = true }, isTvConnected = isTvConnected
         )
@@ -147,6 +156,7 @@ fun InAppBrowserScreen(
                         ActiveStreamHolder.clearDetectedStream()
                     }
                     inputUrl = newUrl; currentUrl = newUrl
+                    if (!newUrl.startsWith("about:")) prefs.edit().putString("saved_browser_last_url", newUrl).apply()
                     if (newUrl.contains("youtube.com") || newUrl.contains("youtu.be")) checkAndRegisterYouTube(newUrl)
                 },
                 onPageFinished = { t, u ->
@@ -161,6 +171,7 @@ fun InAppBrowserScreen(
                         ActiveStreamHolder.clearDetectedStream()
                     }
                     currentUrl = u; if (!t.isNullOrBlank()) pageTitle = t
+                    if (!u.startsWith("about:")) prefs.edit().putString("saved_browser_last_url", u).apply()
                     if (u.contains("youtube.com") || u.contains("youtu.be")) checkAndRegisterYouTube(u, t)
                 },
                 onStreamIntercepted = { sUrl, hdrs, isM -> registerStream(sUrl, hdrs, isPrimary = isM) },
@@ -179,7 +190,10 @@ fun InAppBrowserScreen(
                 },
                 onOpenPopup = { popupWebView = it; Toast.makeText(context, "⚠️ Pestaña emergente aislada. Pulsa 'Descartar' para volver.", Toast.LENGTH_SHORT).show() },
                 onClosePopup = { popupWebView?.destroy(); popupWebView = null },
-                onWebViewCreated = { webViewInstance = it }
+                onWebViewCreated = {
+                    webViewInstance = it
+                    if (!isHome && currentUrl.isNotBlank() && it.url == null) it.loadUrl(currentUrl)
+                }
             )
 
             if (isCasting || (!isHome && detectedStreams.isNotEmpty())) {

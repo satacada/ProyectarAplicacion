@@ -48,7 +48,27 @@ class PhotoCastViewerActivity : ComponentActivity() {
         val port = prefs.getInt("saved_tv_port", 8088)
 
         lifecycleScope.launch(Dispatchers.IO) {
-            val photoUrl = if (imageUri != null) {
+            val base64Url = if (imageUri != null) {
+                try {
+                    contentResolver.openInputStream(imageUri)?.use { stream ->
+                        val original = BitmapFactory.decodeStream(stream)
+                        if (original != null) {
+                            val maxDim = 1920
+                            val maxSide = maxOf(original.width, original.height)
+                            val scale = if (maxSide > maxDim) maxDim.toFloat() / maxSide else 1f
+                            val targetBmp = if (scale < 1f) {
+                                Bitmap.createScaledBitmap(original, (original.width * scale).toInt(), (original.height * scale).toInt(), true)
+                            } else original
+                            val baos = ByteArrayOutputStream()
+                            targetBmp.compress(Bitmap.CompressFormat.JPEG, 85, baos)
+                            val b64 = Base64.encodeToString(baos.toByteArray(), Base64.NO_WRAP)
+                            "data:image/jpeg;base64,$b64"
+                        } else null
+                    }
+                } catch (_: Throwable) { null }
+            } else null
+
+            val photoUrl = base64Url ?: if (imageUri != null) {
                 com.omnicast.sender.media.LocalImageServer.serveImage(imageUri, this@PhotoCastViewerActivity)
             } else mediaUrl
 

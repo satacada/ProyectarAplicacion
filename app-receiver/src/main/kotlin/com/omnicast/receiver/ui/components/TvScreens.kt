@@ -27,7 +27,7 @@ fun TvStandbyScreen(ipAddress: String) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text("OmniCast Pro TV", fontSize = 40.sp, fontWeight = FontWeight.Bold, color = Color.White)
                 androidx.compose.material3.Surface(color = Color(0xFF0284C7), shape = RoundedCornerShape(8.dp)) {
-                    Text("v3.22", modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp), fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    Text("v3.23", modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp), fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
                 }
             }
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -142,12 +142,18 @@ fun TvDirectStreamScreen(
         contentAlignment = Alignment.Center
     ) {
         val player = exoPlayerManager.player
+        val currentResizeMode = remember { mutableStateOf(exoPlayerManager.resizeMode) }
+        DisposableEffect(exoPlayerManager) {
+            exoPlayerManager.onResizeModeChanged = { mode -> currentResizeMode.value = mode }
+            onDispose { exoPlayerManager.onResizeModeChanged = null }
+        }
         if (player != null) {
             androidx.compose.ui.viewinterop.AndroidView(
                 factory = { ctx ->
                     androidx.media3.ui.PlayerView(ctx).apply {
                         this.player = player
                         useController = true
+                        resizeMode = currentResizeMode.value
                         subtitleView?.visibility = android.view.View.VISIBLE
                         setShowBuffering(androidx.media3.ui.PlayerView.SHOW_BUFFERING_ALWAYS)
                         layoutParams = android.view.ViewGroup.LayoutParams(
@@ -156,7 +162,10 @@ fun TvDirectStreamScreen(
                         )
                     }
                 },
-                update = { pv -> if (pv.player != player) pv.player = player },
+                update = { pv ->
+                    if (pv.player != player) pv.player = player
+                    pv.resizeMode = currentResizeMode.value
+                },
                 modifier = Modifier.fillMaxSize()
             )
             val showBanner = remember(title, streamUrl) { mutableStateOf(true) }

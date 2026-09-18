@@ -42,9 +42,12 @@ class GalleryPickerActivity : ComponentActivity() {
                 Toast.makeText(this, "🎬 Video enviado a la TV Box", Toast.LENGTH_SHORT).show()
                 finish()
             } else {
-                Toast.makeText(this, "🖼️ ${uris.size} foto(s) cargada(s). Sesión activa.", Toast.LENGTH_SHORT).show()
+                val photoItems = uris.mapIndexed { idx, u ->
+                    com.omnicast.sender.gallery.GalleryPhotoItem(idx.toLong(), u, "Foto", "Selección", System.currentTimeMillis())
+                }
+                com.omnicast.sender.gallery.GallerySessionHolder.setPhotos(photoItems, 0)
                 val viewerIntent = Intent(this, PhotoCastViewerActivity::class.java).apply {
-                    putStringArrayListExtra("EXTRA_IMAGE_URIS", ArrayList(uris.map { it.toString() }))
+                    putExtra("EXTRA_START_INDEX", 0)
                     putExtra("IMAGE_URI", firstUri.toString())
                     putExtra("MEDIA_URL", mediaUrl)
                 }

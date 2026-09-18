@@ -35,7 +35,7 @@ class WebRtcSenderManager(
     var tvScaleMode: String = "EXTEND_16_9"
 
     override fun initialize() {
-        Log.i(TAG, "🚀 OmniCast Sender v3.24 Inicializado (Universal WebRTC)")
+        Log.i(TAG, "🚀 OmniCast Sender v3.25 Inicializado (Universal WebRTC)")
         PeerConnectionFactory.initialize(
             PeerConnectionFactory.InitializationOptions.builder(context)
                 .setEnableInternalTracer(true).createInitializationOptions()

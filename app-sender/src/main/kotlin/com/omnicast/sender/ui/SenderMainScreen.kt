@@ -222,7 +222,7 @@ fun SenderMainScreen(
                 }
                 2 -> {
                     item {
-                        GallerySection(onPickImage = {
+                        GallerySection(onPickExternalFile = {
                             context.startActivity(
                                 Intent(context, com.omnicast.sender.overlay.GalleryPickerActivity::class.java).apply {
                                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)

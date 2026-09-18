@@ -139,10 +139,7 @@ class TvReceiverActivity : ComponentActivity() {
                 when (message.action) {
                     "PLAY" -> exoPlayerManager.resume()
                     "PAUSE" -> exoPlayerManager.pause()
-                    "STOP" -> {
-                        exoPlayerManager.stop()
-                        receiverState.value = ReceiverUiState.Standby
-                    }
+                    "STOP" -> { exoPlayerManager.stop(); receiverState.value = ReceiverUiState.Standby }
                     "SEEK" -> exoPlayerManager.seekTo(message.positionMs)
                     "VOLUME" -> applySystemAndPlayerVolume(message.volume)
                     "SUBTITLE_TOGGLE", "TOGGLE_SUBTITLES" -> exoPlayerManager.toggleSubtitles()

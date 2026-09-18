@@ -57,6 +57,7 @@ fun InAppBrowserScreen(
     }
 
     fun registerStream(url: String, hdrs: Map<String, String>, isPrimary: Boolean = false, label: String? = null) {
+        if (url.isBlank() || AdBlocker.isAd(url)) return
         val isM3u8 = url.contains(".m3u8", ignoreCase = true)
         val shouldBePrimary = isPrimary || isM3u8
         if (isPrimary) {
@@ -159,6 +160,7 @@ fun InAppBrowserScreen(
                 },
                 onStreamIntercepted = { sUrl, hdrs, isM -> registerStream(sUrl, hdrs, isPrimary = isM) },
                 onSniffedVideo = { sniffed ->
+                    if (AdBlocker.isAd(sniffed.src)) return@BrowserWebView
                     val hdrs = BrowserUrlHelper.buildSafeHeaders(sniffed.src, currentUrl, UA_MOBILE)
                     if (sniffed.isPlaying) {
                         detectedStreams.clear()

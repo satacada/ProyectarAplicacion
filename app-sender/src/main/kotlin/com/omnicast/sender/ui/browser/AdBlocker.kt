@@ -24,14 +24,19 @@ object AdBlocker {
         "shein.com", "shein.top", "temu.com", "aliexpress.com", "shopee.com", "lazada.com",
         "amazon.com", "ebay.com", "alibaba.com", "sh.st", "ouo.io", "linkvertise.com",
         "tsyndicate.com", "popmyads.com", "directrev.com", "revenuehits.com",
-        "giggle.com", "giggles.com", "giggleclick.com", "giggletrack.com", "giggleredirect.com"
+        "giggle.com", "giggles.com", "giggleclick.com", "giggletrack.com", "giggleredirect.com",
+        "cat-bolt.com", "imasdk.googleapis.com", "securepubads.g.doubleclick.net",
+        "pagead2.googlesyndication.com", "ad-delivery.net", "adkeeper.com", "trafficjunky.com",
+        "whocares.club", "pemsrv.com", "gdtcdn.com"
     )
 
     private val AD_KEYWORDS = listOf(
         "/ads/", "/banner/", "adsystem", "advertisement", "popunder",
         "popup.js", "floating_ad", "adserver", "ads.js", "tracker.js", "/affiliate/",
         "zoneid=", "iclick-v", "ad_unit", "promoted", "sponsor", "partnerize", "tradedoubler",
-        "s.click.aliexpress", "c.lazada", "shp.ee", "aff_c", "clickalgo", "giggle"
+        "s.click.aliexpress", "c.lazada", "shp.ee", "aff_c", "clickalgo", "giggle",
+        "/creatives/", "/creative/", "cat-bolt", "imasdk", "securepubads",
+        "preroll", "pre-roll", "midroll", "postroll", "/vast", "/vpaid", "ad-delivery"
     )
 
     private val KNOWN_MEDIA_HOSTS = hashSetOf(
@@ -49,6 +54,10 @@ object AdBlocker {
 
     fun isAd(url: String): Boolean {
         val lower = url.lowercase()
+        if (lower.contains("cat-bolt") || lower.contains("/creatives/") || lower.contains("securepubads") ||
+            lower.contains("imasdk") || lower.contains("doubleclick") || lower.contains("/vast") ||
+            lower.contains("/vpaid") || lower.contains("preroll") || lower.contains("ad-delivery")
+        ) return true
         val host = try { java.net.URI(url).host?.lowercase() } catch (_: Throwable) { null }
         if (host != null) {
             for (domain in AD_DOMAINS) {

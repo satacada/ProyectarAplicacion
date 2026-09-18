@@ -124,6 +124,10 @@ fun BrowserWebView(
                     }
                     override fun onCreateWindow(v: WebView?, isDialog: Boolean, isUserGesture: Boolean, resultMsg: Message?): Boolean {
                         if (resultMsg == null) return false
+                        if (isAdBlockEnabled) {
+                            android.util.Log.d("BrowserWebView", "🛑 Popup publicitario bloqueado en onCreateWindow")
+                            return false
+                        }
                         val popup = WebView(ctx).apply {
                             CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
                             settings.javaScriptEnabled = true; settings.domStorageEnabled = true; settings.userAgentString = UA_MOBILE

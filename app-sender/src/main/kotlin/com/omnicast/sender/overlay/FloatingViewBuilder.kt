@@ -71,14 +71,14 @@ class FloatingViewBuilder(private val context: Context) {
             setPadding(dpToPx(14f), dpToPx(14f), dpToPx(14f), dpToPx(14f))
         }
         val menuTitle = TextView(context).apply {
-            text = "OmniCast v3.23 Asistente"; setTextColor(Color.parseColor("#38BDF8")); setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f); typeface = Typeface.DEFAULT_BOLD
+            text = "OmniCast v3.24 Asistente"; setTextColor(Color.parseColor("#38BDF8")); setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f); typeface = Typeface.DEFAULT_BOLD
         }
         innerMenu.addView(menuTitle)
         innerMenu.addView(createBtn("⚙️ Abrir OmniCast", "#334155", onOpenOmniCast))
         innerMenu.addView(createBtn("❌ Desactivar Asistente", "#475569", onDisableOverlay))
         innerMenu.addView(createBtn("🛑 Detener Transmisión", "#DC2626", onStopCast))
         innerMenu.addView(createBtn("📱 Proyectar Pantalla (Toda)", "#2563EB", onStartScreenMirror))
-        innerMenu.addView(createBtn("📺 Cambiar Modo TV (16:9 / Fit)", "#8B5CF6", onToggleTvScale))
+        innerMenu.addView(createBtn("🔍 Zoom TV (Fit / Reducir / 16:9)", "#8B5CF6", onToggleTvScale))
         innerMenu.addView(createBtn("🖼️ Enviar Foto con Zoom Táctil", "#059669", onCastGallery))
         innerMenu.addView(createBtn("🌐 Abrir Browser Omni", "#0D9488", onOpenBrowser))
         innerMenu.addView(statusFeedbackText)

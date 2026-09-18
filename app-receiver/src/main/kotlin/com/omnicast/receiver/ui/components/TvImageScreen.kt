@@ -2,14 +2,14 @@ package com.omnicast.receiver.ui.components
 
 import android.graphics.BitmapFactory
 import android.util.Base64
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -31,7 +31,9 @@ fun TvImageScreen(
     title: String,
     scale: Float = 1f,
     panX: Float = 0f,
-    panY: Float = 0f
+    panY: Float = 0f,
+    onPrevClick: () -> Unit = {},
+    onNextClick: () -> Unit = {}
 ) {
     var imageBitmap by remember(imageUrl) { mutableStateOf<ImageBitmap?>(null) }
     var isLoading by remember(imageUrl) { mutableStateOf(true) }
@@ -49,7 +51,7 @@ fun TvImageScreen(
                 }
                 imageBitmap = bmp?.asImageBitmap()
             } catch (e: Throwable) {
-                com.omnicast.receiver.log.ReceiverLogger.log("TvImageScreen", "Error cargando imagen: ${e.message}", e)
+                com.omnicast.receiver.log.ReceiverLogger.log("TvImageScreen", "Error cargando: ${e.message}", e)
             } finally {
                 isLoading = false
             }
@@ -70,18 +72,47 @@ fun TvImageScreen(
                 },
                 contentScale = ContentScale.Fit
             )
-            var showBanner by remember(imageUrl) { mutableStateOf(true) }
-            LaunchedEffect(imageUrl) { kotlinx.coroutines.delay(3000); showBanner = false }
-            androidx.compose.animation.AnimatedVisibility(
-                visible = showBanner,
-                exit = androidx.compose.animation.fadeOut(),
-                modifier = Modifier.align(Alignment.BottomEnd).padding(end = 24.dp, bottom = 24.dp)
+
+            // Flecha Izquierda
+            IconButton(
+                onClick = onPrevClick,
+                modifier = Modifier
+                    .align(Alignment.CenterStart)
+                    .padding(start = 28.dp)
+                    .size(58.dp)
+                    .background(Color(0x66000000), shape = CircleShape)
             ) {
-                Card(colors = CardDefaults.cardColors(containerColor = Color(0xCC0F172A)), shape = RoundedCornerShape(8.dp)) {
-                    Row(modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text("🖼️", fontSize = 14.sp)
-                        Text(title.ifBlank { "Foto de Galería" }, color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-                    }
+                Text("◀", color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+            }
+
+            // Flecha Derecha
+            IconButton(
+                onClick = onNextClick,
+                modifier = Modifier
+                    .align(Alignment.CenterEnd)
+                    .padding(end = 28.dp)
+                    .size(58.dp)
+                    .background(Color(0x66000000), shape = CircleShape)
+            ) {
+                Text("▶", color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+            }
+
+            // Banner inferior con título, contador y ayuda de control remoto
+            Card(
+                colors = CardDefaults.cardColors(containerColor = Color(0xBB0F172A)),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 24.dp)
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Text("🖼️", fontSize = 14.sp)
+                    Text(title.ifBlank { "Foto de Galería" }, color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                    Text("•  ◀ / ▶ en el control de la TV", color = Color(0xFF94A3B8), fontSize = 11.sp)
                 }
             }
         } else if (isLoading) {

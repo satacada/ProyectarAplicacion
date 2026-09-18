@@ -32,18 +32,20 @@ class GalleryPickerActivity : ComponentActivity() {
         }
     }
 
-    private val picker = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
-        if (uri != null) {
-            val mime = resolveMime(uri)
-            val mediaUrl = LocalImageServer.serveMedia(uri, mime, this)
+    private val picker = registerForActivityResult(ActivityResultContracts.GetMultipleContents()) { uris: List<Uri> ->
+        if (!uris.isNullOrEmpty()) {
+            val firstUri = uris.first()
+            val mime = resolveMime(firstUri)
+            val mediaUrl = LocalImageServer.serveMedia(firstUri, mime, this)
             if (mime.startsWith("video/")) {
                 SenderMainActivity.sendDirectStreamStatic(this, mediaUrl, "Video de Galería")
                 Toast.makeText(this, "🎬 Video enviado a la TV Box", Toast.LENGTH_SHORT).show()
                 finish()
             } else {
-                Toast.makeText(this, "🖼️ Foto enviada. Usa tus dedos para zoom en TV.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "🖼️ ${uris.size} foto(s) cargada(s). Sesión activa.", Toast.LENGTH_SHORT).show()
                 val viewerIntent = Intent(this, PhotoCastViewerActivity::class.java).apply {
-                    putExtra("IMAGE_URI", uri.toString())
+                    putStringArrayListExtra("EXTRA_IMAGE_URIS", ArrayList(uris.map { it.toString() }))
+                    putExtra("IMAGE_URI", firstUri.toString())
                     putExtra("MEDIA_URL", mediaUrl)
                 }
                 startActivity(viewerIntent)

@@ -8,10 +8,12 @@ object QuickSignalingHelper {
         val prefs = context.getSharedPreferences("omnicast_prefs", Context.MODE_PRIVATE)
         val ip = prefs.getString("saved_tv_ip", "192.168.0.136") ?: "192.168.0.136"
         val port = prefs.getInt("saved_tv_port", 8088)
-        SignalingClient().apply {
-            connect(ip, port, {
-                sendMessage(msg)
-                if (disconnect) disconnect()
+        val client = SignalingClientHolder.get()
+        if (client.isConnected) {
+            client.sendMessage(msg)
+        } else {
+            client.connect(ip, port, {
+                client.sendMessage(msg)
             }, {})
         }
     }

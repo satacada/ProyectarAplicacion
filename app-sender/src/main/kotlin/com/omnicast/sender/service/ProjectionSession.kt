@@ -34,7 +34,18 @@ class ProjectionSession(
     fun setTvScaleMode(mode: String) {
         tvScaleMode = mode
         webRtcManager?.tvScaleMode = mode
-        signalingClient?.sendMessage(SignalingMessage.SetDisplayMode(if (mode == "EXTEND_16_9") "FILL" else "FIT"))
+        val preset = TvZoomManager.PRESETS.firstOrNull { it.id == mode || it.mode == mode }
+        if (preset != null) {
+            signalingClient?.sendMessage(TvZoomManager.toSignalingMessage(preset))
+        } else {
+            signalingClient?.sendMessage(SignalingMessage.SetDisplayMode(if (mode == "EXTEND_16_9" || mode == "FILL") "FILL" else "FIT"))
+        }
+    }
+
+    fun setDisplayMode(mode: String, zoom: Float = 1.0f, panY: Float = 0.0f) {
+        tvScaleMode = mode
+        webRtcManager?.tvScaleMode = mode
+        signalingClient?.sendMessage(SignalingMessage.SetDisplayMode(mode, zoom, panY))
     }
 
     fun toggleTvScaleMode(): String {
@@ -116,7 +127,12 @@ class ProjectionSession(
                     // CRÍTICO: iniciar captura DESPUÉS de enviar la oferta, no antes
                     // El encoder ya está negociado y puede recibir frames inmediatamente
                     webRtcManager?.beginCapture()
-                    client.sendMessage(SignalingMessage.SetDisplayMode(if (tvScaleMode == "EXTEND_16_9") "FILL" else "FIT"))
+                    val initPreset = TvZoomManager.PRESETS.firstOrNull { it.id == tvScaleMode || it.mode == tvScaleMode }
+                    if (initPreset != null) {
+                        client.sendMessage(TvZoomManager.toSignalingMessage(initPreset))
+                    } else {
+                        client.sendMessage(SignalingMessage.SetDisplayMode(if (tvScaleMode == "EXTEND_16_9" || tvScaleMode == "FILL") "FILL" else "FIT"))
+                    }
                 }
             },
             onError = { e -> Log.e("ProjectionSession", "Error conectando TV ($targetIp:$targetPort): ${e.message}") }

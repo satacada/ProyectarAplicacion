@@ -20,6 +20,7 @@ import android.view.View
 import android.view.WindowManager
 import android.widget.LinearLayout
 import android.widget.TextView
+import android.widget.Toast
 import com.omnicast.core.protocol.SignalingMessage
 import com.omnicast.sender.service.ProjectionForegroundService
 import com.omnicast.sender.stream.ClipboardStreamExtractor
@@ -96,7 +97,7 @@ class FloatingIndicatorService : Service() {
         ).apply { gravity = Gravity.TOP or Gravity.END; x = builder.dpToPx(16f); y = builder.dpToPx(120f) }
 
         rootLayout = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; gravity = Gravity.END }
-        val pillText = TextView(this).apply { text = "OmniCast v3.23"; setTextColor(Color.WHITE); setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f); typeface = Typeface.DEFAULT_BOLD }
+        val pillText = TextView(this).apply { text = "OmniCast v3.24"; setTextColor(Color.WHITE); setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f); typeface = Typeface.DEFAULT_BOLD }
         val prefs = getSharedPreferences("omnicast_prefs", Context.MODE_PRIVATE)
         val tvIp = prefs.getString("saved_tv_ip", "192.168.0.136") ?: "192.168.0.136"
         val statusFeedbackText = TextView(this).apply {
@@ -154,21 +155,17 @@ class FloatingIndicatorService : Service() {
                 }, 105)
             },
             onToggleTvScale = {
-                val newMode = if (ProjectionForegroundService.isProjecting) {
-                    ProjectionForegroundService.toggleTvScaleMode()
+                val preset = com.omnicast.sender.service.TvZoomManager.cycleNext()
+                val msg = com.omnicast.sender.service.TvZoomManager.toSignalingMessage(preset)
+                prefs.edit().putString("saved_tv_scale_mode", preset.mode).apply()
+                if (ProjectionForegroundService.isProjecting) {
+                    ProjectionForegroundService.setDisplayMode(preset.mode, preset.zoom, preset.panY)
                 } else {
-                    val cur = prefs.getString("saved_tv_scale_mode", "EXTEND_16_9") ?: "EXTEND_16_9"
-                    val next = if (cur == "EXTEND_16_9") "ORIGINAL_FIT" else "EXTEND_16_9"
-                    prefs.edit().putString("saved_tv_scale_mode", next).apply()
-                    val port = prefs.getInt("saved_tv_port", 8088)
-                    com.omnicast.sender.network.SignalingClient().apply {
-                        connect(tvIp, port, { sendMessage(SignalingMessage.SetDisplayMode(if (next == "EXTEND_16_9") "FILL" else "FIT")) }, {})
-                    }
-                    next
+                    com.omnicast.sender.network.QuickSignalingHelper.sendQuickMessage(this, msg)
                 }
-                val is169 = newMode == "EXTEND_16_9"
-                statusFeedbackText.text = if (is169) "📺 Modo: Llenar Pantalla 16:9" else "📱 Modo: Ajustar Original (Fit)"
+                statusFeedbackText.text = preset.label
                 statusFeedbackText.setTextColor(Color.parseColor("#38BDF8"))
+                Toast.makeText(this, preset.label, Toast.LENGTH_SHORT).show()
             },
             onOpenOmniCast = {
                 menuLayoutRef?.visibility = View.GONE; isExpanded = false
@@ -177,7 +174,10 @@ class FloatingIndicatorService : Service() {
             onStopCast = {
                 menuLayoutRef?.visibility = View.GONE; isExpanded = false
                 ProjectionForegroundService.stopService(this); SenderMainActivity.sendDisconnectStatic(this)
-                pillText.text = "OmniCast"; statusFeedbackText.text = "🛑 Transmisión detenida."; statusFeedbackText.setTextColor(Color.parseColor("#EF4444"))
+                com.omnicast.sender.stream.ActiveStreamHolder.stopCastingAndClear()
+                pillText.text = "OmniCast"; statusFeedbackText.text = "🛑 Detenido y capturas limpiadas."
+                statusFeedbackText.setTextColor(Color.parseColor("#EF4444"))
+                Toast.makeText(this, "🛑 Transmisión detenida y capturas limpiadas", Toast.LENGTH_SHORT).show()
             },
             onDisableOverlay = {
                 menuLayoutRef?.visibility = View.GONE; isExpanded = false

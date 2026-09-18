@@ -93,5 +93,10 @@ object ActiveStreamHolder {
         onSendPlayControl?.invoke("STOP", 0L, 1.0f, null)
     }
 
+    fun stopCastingAndClear() {
+        stopCasting()
+        clearDetectedStream()
+    }
+
     fun hasStream(): Boolean = !streamUrl.isNullOrBlank()
 }

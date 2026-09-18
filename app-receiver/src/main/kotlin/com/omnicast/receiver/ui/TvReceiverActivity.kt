@@ -92,7 +92,21 @@ class TvReceiverActivity : ComponentActivity() {
                             }
                         }
                     )
-                    is ReceiverUiState.ImageDisplaying -> TvImageScreen(state.imageUrl, state.title, state.scale, state.panX, state.panY)
+                    is ReceiverUiState.ImageDisplaying -> TvImageScreen(
+                        imageUrl = state.imageUrl,
+                        title = state.title,
+                        scale = state.scale,
+                        panX = state.panX,
+                        panY = state.panY,
+                        onPrevClick = {
+                            lifecycleScope.launch { signalingServer.sendMessage(SignalingMessage.PlayControl("PREV")) }
+                            Toast.makeText(this@TvReceiverActivity, "◀ Foto Anterior", Toast.LENGTH_SHORT).show()
+                        },
+                        onNextClick = {
+                            lifecycleScope.launch { signalingServer.sendMessage(SignalingMessage.PlayControl("NEXT")) }
+                            Toast.makeText(this@TvReceiverActivity, "Foto Siguiente ▶", Toast.LENGTH_SHORT).show()
+                        }
+                    )
                 }
             }
         }
@@ -259,6 +273,20 @@ class TvReceiverActivity : ComponentActivity() {
                     val mode = webRtcReceiver.toggleScalingType()
                     val txt = if (mode == org.webrtc.RendererCommon.ScalingType.SCALE_ASPECT_FILL) "Modo: Llenar Pantalla (16:9)" else "Modo: Ajustar Proporción (Fit)"
                     Toast.makeText(this, txt, Toast.LENGTH_SHORT).show(); return true
+                }
+            }
+            is ReceiverUiState.ImageDisplaying -> {
+                when (keyCode) {
+                    KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.KEYCODE_MEDIA_PREVIOUS, KeyEvent.KEYCODE_DPAD_UP -> {
+                        lifecycleScope.launch { signalingServer.sendMessage(SignalingMessage.PlayControl("PREV")) }
+                        Toast.makeText(this, "◀ Foto Anterior", Toast.LENGTH_SHORT).show()
+                        return true
+                    }
+                    KeyEvent.KEYCODE_DPAD_RIGHT, KeyEvent.KEYCODE_MEDIA_NEXT, KeyEvent.KEYCODE_DPAD_DOWN -> {
+                        lifecycleScope.launch { signalingServer.sendMessage(SignalingMessage.PlayControl("NEXT")) }
+                        Toast.makeText(this, "Foto Siguiente ▶", Toast.LENGTH_SHORT).show()
+                        return true
+                    }
                 }
             }
             else -> Unit

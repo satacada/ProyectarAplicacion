@@ -107,3 +107,29 @@ Historial sistemático de versiones, control de cambios y validación de regresi
   - Validación de tests unitarios automáticos (`StreamExtractorTest`) para captura de streams HLS, MP4 y URLs directas.
 - **Resguardo de Artefactos:**
   - `releases/OmniCast-Sender-Mobile-v3.13.apk` y `releases/OmniCast-Receiver-TVBox-v3.13.apk` archivados.
+
+---
+
+## 📌 [v3.24] - Galería Secuencial Persistente, Vaciado Limpio de Capturas y Zoom TV Gradual
+- **Galería Secuencial y Persistente (`PhotoCastViewerActivity`, `PhotoViewerBottomBar`):**
+  - Selección múltiple de fotos/videos desde la galería o explorador con `ActivityResultContracts.GetMultipleContents()`.
+  - El visor se mantiene abierto en el teléfono sin cerrarse tras la primera foto.
+  - Barra inferior con botones `◀ Ant`, contador dinámico `X / Y`, `Sig ▶` y botón `➕ Galería` para agregar más fotos sin salir de la proyección.
+  - Soporte de gestos táctiles swipe (deslizamiento horizontal) para cambiar entre fotos.
+  - Sincronización WebSocket bidireccional con la TV: comandos `PREV` y `NEXT` recibidos desde el control remoto de la TV cambian la foto al instante.
+- **Flechas de Navegación en Pantalla de TV (`TvImageScreen`, `TvReceiverActivity`):**
+  - Flechas visuales flotantes semitransparentes en los bordes laterales (`◀` y `▶`) para ratón, air-mouse o puntero.
+  - Soporte nativo de cruceta del mando a distancia (`DPAD_LEFT` y `DPAD_RIGHT` o teclas multimedia previo/siguiente) para navegar fotos.
+- **Vaciado Limpio de Capturas al Detener (`InAppBrowserScreen`, `FloatingIndicatorService`):**
+  - Al pulsar el botón rojo "Detener Transmisión" en la barra del navegador o "Detener Flujo" en el asistente flotante, se limpia completamente la memoria (`detectedStreams`, `streamHeaders`, `ActiveStreamHolder`).
+  - Al presionar "Capturar Flujo" posteriormente, se escanea un flujo limpio sin reproducir transmisiones previas.
+  - Filtro para ignorar comerciales breves (< 16 segundos) y URLs típicas de anuncios pre-roll (`preroll`, `ad-delivery`, `cat-bolt`, `imasdk`).
+- **Zoom TV Gradual Unificado (6 Presets):**
+  - Presets configurados en `TvZoomManager`: `Fit 100%`, `Zoom 85% (-15% Reduciendo)`, `Zoom 75% (-25% Reduciendo Max)`, `Zoom 115% (+15% Aumentando)`, `Zoom 130% (+30% Aumentando)` y `16:9 Llenar Pantalla`.
+  - Selector de 6 botones accesible directamente en la pestaña de Proyección de la app (`ScreenMirrorSection`) y en el asistente flotante.
+  - Avisos Toast explícitos con porcentaje y dirección en el móvil.
+- **Control de Versiones y Despliegue:**
+  - `versionCode = 29`, `versionName = "3.24.0"`.
+  - Insignia visual **v3.24** en cabecera principal, menú flotante, pantalla de TV y logs.
+  - APK compilado e instalado vía ADB en el teléfono (`192.168.0.13:37115`).
+  - Copias archivadas en `releases/OmniCast-Sender-Mobile-v3.24.apk` y `releases/OmniCast-Receiver-TVBox-v3.24.apk`.

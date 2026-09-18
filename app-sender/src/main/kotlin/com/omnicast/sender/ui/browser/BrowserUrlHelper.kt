@@ -1,6 +1,5 @@
-package com.omnicast.sender.ui.browser
+﻿package com.omnicast.sender.ui.browser
 
-import android.net.Uri
 import android.webkit.CookieManager
 
 /**
@@ -39,7 +38,8 @@ object BrowserUrlHelper {
         if (lower.endsWith(".css") || lower.endsWith(".js") || lower.endsWith(".woff") || lower.endsWith(".woff2") || lower.endsWith(".ttf") || lower.contains(".css?") || lower.contains(".js?")) return false
         if (lower.contains("i.mycdn.me") || lower.contains("st.mycdn.me") || lower.contains("static.mycdn.me")) return false
         if (lower.contains(".m3u8") || lower.contains(".mpd") || lower.contains(".mp4") || lower.contains(".webm") || lower.contains(".mkv")) return true
-        if (lower.contains("/hls/") || lower.contains("/manifest") || lower.contains("chunklist")) return true
+        if (lower.contains("/hls/") || lower.contains("/stream/") || lower.contains("/manifest") || lower.contains("chunklist")) return true
+        if (lower.contains("morencius.com") || lower.contains("swdyu.com") || lower.contains("cloudemb.com")) return true
         if (lower.contains("vd.mycdn.me") || lower.contains("vd2.mycdn.me") || lower.contains("vd3.mycdn.me") || lower.contains("vd4.mycdn.me") || (lower.contains("mycdn.me") && (lower.contains("/video/") || lower.contains("cmd=video") || lower.contains("sig=")))) return true
         if (lower.contains("ok.ru") && (lower.contains("videometa") || lower.contains("api/video") || lower.contains("cmd=video"))) return true
         return false
@@ -67,6 +67,8 @@ object BrowserUrlHelper {
                 headers["Referer"] = "https://ok.ru/"
             } else if (streamUrl.contains("mail.ru", ignoreCase = true)) {
                 headers.remove("Referer")
+            } else if (streamUrl.contains("morencius.com", ignoreCase = true) && !headers.containsKey("Referer")) {
+                headers["Referer"] = "https://embed69.org/"
             } else if (!headers.containsKey("Referer") && currentUrl.isNotBlank()) {
                 headers["Referer"] = currentUrl
             }

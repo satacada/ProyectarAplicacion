@@ -1,23 +1,20 @@
-package com.omnicast.sender.overlay
+﻿package com.omnicast.sender.overlay
 
 import android.app.Activity
 import android.content.Context
-import android.content.Intent
-import android.media.projection.MediaProjectionConfig
-import android.media.projection.MediaProjectionManager
-import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
 import com.omnicast.core.domain.models.DeviceTarget
 import com.omnicast.core.domain.models.StreamProfile
+import com.omnicast.sender.capture.LegacyCaptureCompat
 import com.omnicast.sender.service.ProjectionForegroundService
 
 /**
  * Actividad invisible y transparente que solicita permiso de proyección sin interrumpir
  * ni tapar la aplicación o juego que el usuario está utilizando.
- * En Android 14+, utiliza createConfigForDefaultDisplay para evitar el selector de apps.
+ * Compatible al 100% con Android 9 (Pie) y Android 10-14.
  */
 class TransparentCaptureActivity : ComponentActivity() {
 
@@ -55,11 +52,11 @@ class TransparentCaptureActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val mpm = getSystemService(Context.MEDIA_PROJECTION_SERVICE) as? MediaProjectionManager
-        if (mpm == null) {
+        val captureIntent = LegacyCaptureCompat.createCaptureIntent(this)
+        if (captureIntent == null) {
             finish()
             return
         }
-        captureLauncher.launch(mpm.createScreenCaptureIntent())
+        captureLauncher.launch(captureIntent)
     }
 }

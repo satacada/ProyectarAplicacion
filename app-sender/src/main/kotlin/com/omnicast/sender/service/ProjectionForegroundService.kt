@@ -66,6 +66,10 @@ class ProjectionForegroundService : Service() {
             currentSession?.setTvScaleMode(mode)
         }
 
+        fun setDisplayMode(mode: String, zoom: Float = 1.0f, panY: Float = 0.0f) {
+            currentSession?.setDisplayMode(mode, zoom, panY)
+        }
+
         fun toggleTvScaleMode(): String {
             return currentSession?.toggleTvScaleMode() ?: "EXTEND_16_9"
         }

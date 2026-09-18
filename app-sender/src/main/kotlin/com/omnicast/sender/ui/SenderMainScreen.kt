@@ -197,8 +197,14 @@ fun SenderMainScreen(
                             onSelectTvScaleMode = {
                                 tvScaleMode = it
                                 prefs.edit().putString("saved_tv_scale_mode", it).apply()
+                                val preset = com.omnicast.sender.service.TvZoomManager.PRESETS.firstOrNull { p -> p.id == it || p.mode == it }
                                 if (isStreaming) {
                                     com.omnicast.sender.service.ProjectionForegroundService.setTvScaleMode(it)
+                                } else if (preset != null) {
+                                    com.omnicast.sender.network.QuickSignalingHelper.sendQuickMessage(context, com.omnicast.sender.service.TvZoomManager.toSignalingMessage(preset))
+                                }
+                                if (preset != null) {
+                                    android.widget.Toast.makeText(context, preset.label, android.widget.Toast.LENGTH_SHORT).show()
                                 }
                             },
                             smoothBufferEnabled = smoothBufferEnabled,

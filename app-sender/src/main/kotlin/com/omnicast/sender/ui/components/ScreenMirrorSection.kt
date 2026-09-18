@@ -124,37 +124,58 @@ fun ScreenMirrorSection(
                 )
             }
 
-            Text("Proporción en Pantalla de TV", fontSize = 13.sp, color = Color.White)
+            Text("Proporción y Zoom Gradual en TV", fontSize = 13.sp, color = Color.White)
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                val isExtend = tvScaleMode == "EXTEND_16_9"
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .background(if (isExtend) Color(0xFF0284C7) else Color(0xFF334155), RoundedCornerShape(8.dp))
-                        .clickable { onSelectTvScaleMode("EXTEND_16_9") }
-                        .padding(vertical = 8.dp, horizontal = 6.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("📺 Llenar 16:9 (TV)", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                        Text("Sin bordes negros", color = Color(0xFFBAE6FD), fontSize = 10.sp)
+                com.omnicast.sender.service.TvZoomManager.PRESETS.take(3).forEach { preset ->
+                    val isSel = tvScaleMode == preset.id || (tvScaleMode == "ORIGINAL_FIT" && preset.id == "FIT_100")
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .background(if (isSel) Color(0xFF0284C7) else Color(0xFF334155), RoundedCornerShape(8.dp))
+                            .clickable { onSelectTvScaleMode(preset.id) }
+                            .padding(vertical = 7.dp, horizontal = 4.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = when (preset.id) {
+                                "FIT_100" -> "Fit 100%"
+                                "ZOOM_85" -> "🔍 85% (-15%)"
+                                "ZOOM_75" -> "🔍 75% (-25%)"
+                                else -> preset.id
+                            },
+                            color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.SemiBold
+                        )
                     }
                 }
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .background(if (!isExtend) Color(0xFF0284C7) else Color(0xFF334155), RoundedCornerShape(8.dp))
-                        .clickable { onSelectTvScaleMode("ORIGINAL_FIT") }
-                        .padding(vertical = 8.dp, horizontal = 6.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("📱 Original (Fit)", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                        Text("Proporción móvil", color = Color(0xFFBAE6FD), fontSize = 10.sp)
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                com.omnicast.sender.service.TvZoomManager.PRESETS.drop(3).forEach { preset ->
+                    val isSel = tvScaleMode == preset.id || (tvScaleMode == "EXTEND_16_9" && preset.id == "FILL_16_9")
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .background(if (isSel) Color(0xFF0284C7) else Color(0xFF334155), RoundedCornerShape(8.dp))
+                            .clickable { onSelectTvScaleMode(preset.id) }
+                            .padding(vertical = 7.dp, horizontal = 4.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = when (preset.id) {
+                                "ZOOM_115" -> "🔍 115% (+15%)"
+                                "ZOOM_130" -> "🔍 130% (+30%)"
+                                "FILL_16_9" -> "📺 16:9 Llenar"
+                                else -> preset.id
+                            },
+                            color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.SemiBold
+                        )
                     }
                 }
             }

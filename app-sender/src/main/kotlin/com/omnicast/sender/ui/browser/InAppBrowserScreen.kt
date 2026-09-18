@@ -150,8 +150,10 @@ fun InAppBrowserScreen(
                 isHome = isHome, isAdBlockEnabled = isAdBlockEnabled, currentUrl = currentUrl,
                 onProgress = { progress = it },
                 onPageStarted = { newUrl ->
-                    val urlChanged = newUrl.substringBefore("#") != currentUrl.substringBefore("#")
-                    if (urlChanged) {
+                    val oldHost = try { java.net.URI(currentUrl).host?.lowercase() } catch (_: Throwable) { null }
+                    val newHost = try { java.net.URI(newUrl).host?.lowercase() } catch (_: Throwable) { null }
+                    val isDomainChange = oldHost != null && newHost != null && oldHost != newHost && !oldHost.endsWith(newHost) && !newHost.endsWith(oldHost)
+                    if (isDomainChange) {
                         detectedStreams.clear(); streamHeaders.clear(); streamLabels.clear(); qualityOptions = emptyList()
                         ActiveStreamHolder.clearDetectedStream()
                     }
@@ -209,7 +211,14 @@ fun InAppBrowserScreen(
                         if (act == "VOLUME") ActiveStreamHolder.setVolume(vol)
                         ActiveStreamHolder.onSendPlayControl?.invoke(act, pos, vol, null)
                     },
-                    onStopCasting = { ActiveStreamHolder.stopCasting() },
+                    onStopCasting = {
+                        ActiveStreamHolder.stopCastingAndClear()
+                        detectedStreams.clear()
+                        streamHeaders.clear()
+                        streamLabels.clear()
+                        qualityOptions = emptyList()
+                        Toast.makeText(context, "🛑 Transmisión detenida y capturas limpiadas", Toast.LENGTH_SHORT).show()
+                    },
                     modifier = Modifier.align(Alignment.BottomCenter)
                 )
             }

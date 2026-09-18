@@ -29,7 +29,7 @@ class WebRtcReceiverManager(private val context: Context) {
     private var lastRot = 0
 
     fun initialize() {
-        ReceiverLogger.log(TAG, "Inicializando decodificador WebRTC por hardware en TV Box (v3.23)")
+        ReceiverLogger.log(TAG, "Inicializando decodificador WebRTC por hardware en TV Box (v3.24)")
         setSmoothBuffer(true)
         val initOptions = PeerConnectionFactory.InitializationOptions.builder(context).setEnableInternalTracer(true).createInitializationOptions()
         PeerConnectionFactory.initialize(initOptions)
@@ -73,6 +73,7 @@ class WebRtcReceiverManager(private val context: Context) {
             val tvAspect = tvW / tvH
             val frameAspect = frameW.toFloat() / frameH.toFloat()
 
+            renderer.setScalingType(currentScalingType)
             if (currentScalingType == RendererCommon.ScalingType.SCALE_ASPECT_FILL) {
                 val factor = if (frameAspect > tvAspect) {
                     frameAspect / tvAspect
@@ -193,9 +194,12 @@ class WebRtcReceiverManager(private val context: Context) {
             "TOGGLE" -> toggleScalingType()
             "ZOOM" -> {
                 android.os.Handler(android.os.Looper.getMainLooper()).post {
-                    surfaceViewRenderer?.scaleX = zoom; surfaceViewRenderer?.scaleY = zoom
+                    surfaceViewRenderer?.setScalingType(RendererCommon.ScalingType.SCALE_ASPECT_FIT)
+                    surfaceViewRenderer?.scaleX = zoom
+                    surfaceViewRenderer?.scaleY = zoom
                     surfaceViewRenderer?.translationY = panY
                     surfaceViewRenderer?.requestLayout()
+                    ReceiverLogger.log(TAG, "🔍 Zoom gradual TV: ${String.format(java.util.Locale.US, "%.2f", zoom)}x (panY=$panY)")
                 }
             }
         }

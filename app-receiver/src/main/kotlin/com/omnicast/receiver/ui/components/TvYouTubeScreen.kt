@@ -141,12 +141,23 @@ fun TvYouTubeScreen(
                                       sendYtCommand('seekTo', [target, true]);
                                     }
 
+                                    function disableCaptions() {
+                                      try {
+                                        sendYtCommand('unloadModule', ['captions']);
+                                        sendYtCommand('unloadModule', ['cc']);
+                                        sendYtCommand('setOption', ['captions', 'track', {}]);
+                                        sendYtCommand('setOption', ['cc', 'track', {}]);
+                                        sendYtCommand('setOption', ['captions', 'reload', true]);
+                                        sendYtCommand('setOption', ['captions', 'fontSize', 0]);
+                                      } catch(_) {}
+                                    }
+
                                     function toggleYtCaptions() {
                                       captionsOn = !captionsOn;
                                       if (captionsOn) {
                                         sendYtCommand('loadModule', ['captions']);
                                       } else {
-                                        sendYtCommand('unloadModule', ['captions']);
+                                        disableCaptions();
                                       }
                                     }
 
@@ -161,8 +172,8 @@ fun TvYouTubeScreen(
                                             window.AndroidBridge.onPlaybackStatus(curTime, dur, lastState !== undefined ? lastState : 1);
                                           }
                                         }
-                                        if (data && data.event === 'initialDelivery') {
-                                          sendYtCommand('unloadModule', ['captions']);
+                                        if (data && (data.event === 'initialDelivery' || data.event === 'onReady')) {
+                                          disableCaptions();
                                         }
                                       } catch(e) {}
                                     });
@@ -178,7 +189,9 @@ fun TvYouTubeScreen(
                                       }
                                     }
 
-                                    setTimeout(function() { sendYtCommand('unloadModule', ['captions']); }, 1800);
+                                    setTimeout(disableCaptions, 600);
+                                    setTimeout(disableCaptions, 1500);
+                                    setTimeout(disableCaptions, 3000);
 
                                     setInterval(function() {
                                       var iframe = document.getElementById('ytplayer');

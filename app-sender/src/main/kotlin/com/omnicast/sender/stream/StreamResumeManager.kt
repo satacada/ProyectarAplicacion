@@ -43,7 +43,13 @@ object StreamResumeManager {
     }
 
     private fun cleanKey(url: String): String {
-        val noQuery = url.substringBefore('?')
-        return "pos_" + noQuery.hashCode()
+        val uri = try { android.net.Uri.parse(url) } catch (_: Throwable) { null }
+        val videoId = uri?.getQueryParameter("id") ?: uri?.getQueryParameter("v") ?: uri?.getQueryParameter("mid")
+        val base = if (!videoId.isNullOrBlank() && uri != null) {
+            "${uri.scheme}://${uri.host}${uri.path}?id=$videoId"
+        } else {
+            url.substringBefore('?')
+        }
+        return "pos_" + base.hashCode()
     }
 }

@@ -31,7 +31,7 @@ object BrowserUrlHelper {
         if (lower.contains("googlevideo.com") || lower.contains("youtube.com/videoplayback")) return false
         if (lower.contains("preroll") || lower.contains("midroll") || lower.contains("commercial") || lower.contains("/vast") || lower.contains("vast.")) return false
         if (lower.contains("stub.mp4") || lower.contains("dummy.mp4") || lower.contains("blank.mp4") || lower.contains("ad.mp4")) return false
-        if (lower.contains(".ts?") || lower.endsWith(".ts") || lower.contains(".m4s")) return false
+        if (lower.contains(".ts?") || lower.endsWith(".ts") || lower.contains(".m4s") || lower.contains("init.mp4") || lower.contains("/init-") || lower.contains("-init.")) return false
         if (lower.contains("/audio") || lower.contains("_audio.m3u8") || lower.contains("-audio.m3u8")) return false
         if (lower.endsWith(".html") || lower.endsWith(".htm") || lower.contains(".html?") || lower.contains(".htm?")) return false
         if (lower.endsWith(".jpg") || lower.endsWith(".jpeg") || lower.endsWith(".png") || lower.endsWith(".webp") || lower.endsWith(".gif") || lower.endsWith(".svg") || lower.endsWith(".ico") || lower.contains(".jpg?") || lower.contains(".jpeg?") || lower.contains(".png?") || lower.contains(".webp?")) return false

@@ -143,9 +143,14 @@ fun TvDirectStreamScreen(
     ) {
         val player = exoPlayerManager.player
         val currentResizeMode = remember { mutableStateOf(exoPlayerManager.resizeMode) }
+        val currentZoom = remember { mutableStateOf(exoPlayerManager.currentZoom) }
         DisposableEffect(exoPlayerManager) {
             exoPlayerManager.onResizeModeChanged = { mode -> currentResizeMode.value = mode }
-            onDispose { exoPlayerManager.onResizeModeChanged = null }
+            exoPlayerManager.onZoomChanged = { z -> currentZoom.value = z }
+            onDispose {
+                exoPlayerManager.onResizeModeChanged = null
+                exoPlayerManager.onZoomChanged = null
+            }
         }
         if (player != null) {
             androidx.compose.ui.viewinterop.AndroidView(
@@ -165,6 +170,25 @@ fun TvDirectStreamScreen(
                 update = { pv ->
                     if (pv.player != player) pv.player = player
                     pv.resizeMode = currentResizeMode.value
+                    val z = currentZoom.value
+                    if (z > 0f && z != 1.0f) {
+                        val dm = pv.context.resources.displayMetrics
+                        val w = dm.widthPixels.coerceAtLeast(1280)
+                        val h = dm.heightPixels.coerceAtLeast(720)
+                        val lp = pv.layoutParams
+                        if (lp != null) {
+                            lp.width = (w * z).toInt()
+                            lp.height = (h * z).toInt()
+                            pv.layoutParams = lp
+                        }
+                    } else {
+                        val lp = pv.layoutParams
+                        if (lp != null && (lp.width != android.view.ViewGroup.LayoutParams.MATCH_PARENT || lp.height != android.view.ViewGroup.LayoutParams.MATCH_PARENT)) {
+                            lp.width = android.view.ViewGroup.LayoutParams.MATCH_PARENT
+                            lp.height = android.view.ViewGroup.LayoutParams.MATCH_PARENT
+                            pv.layoutParams = lp
+                        }
+                    }
                 },
                 modifier = Modifier.fillMaxSize()
             )

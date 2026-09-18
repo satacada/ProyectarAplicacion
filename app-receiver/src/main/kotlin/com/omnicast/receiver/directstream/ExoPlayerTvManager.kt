@@ -180,6 +180,8 @@ class ExoPlayerTvManager(private val context: Context) {
 
     var resizeMode: Int = androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_FIT; private set
     var onResizeModeChanged: ((Int) -> Unit)? = null
+    var currentZoom: Float = 1.0f; private set
+    var onZoomChanged: ((Float) -> Unit)? = null
 
     fun toggleResizeMode(): Int {
         resizeMode = if (resizeMode == androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_ZOOM) {
@@ -194,6 +196,14 @@ class ExoPlayerTvManager(private val context: Context) {
     fun setResizeMode(isZoom169: Boolean) {
         resizeMode = if (isZoom169) androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_ZOOM else androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_FIT
         onResizeModeChanged?.invoke(resizeMode)
+    }
+
+    fun setDisplayMode(mode: String, zoom: Float = 1.0f) {
+        currentZoom = zoom
+        val isZoom169 = mode == "FILL" || mode == "EXTEND_16_9"
+        resizeMode = if (isZoom169) androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_ZOOM else androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_FIT
+        onResizeModeChanged?.invoke(resizeMode)
+        onZoomChanged?.invoke(zoom)
     }
 
     fun seekTo(pos: Long) { player?.seekTo(pos) }

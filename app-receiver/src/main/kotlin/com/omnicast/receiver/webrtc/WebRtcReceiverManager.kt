@@ -74,21 +74,43 @@ class WebRtcReceiverManager(private val context: Context) {
             val effectiveScaling = if (isPortrait) RendererCommon.ScalingType.SCALE_ASPECT_FIT else currentScalingType
             renderer.setScalingType(effectiveScaling)
 
-            if (currentMode == "ZOOM") {
-                renderer.scaleX = currentZoom
-                renderer.scaleY = currentZoom
+            val tvMetrics = context.resources.displayMetrics
+            val tvW = tvMetrics.widthPixels.coerceAtLeast(1280)
+            val tvH = tvMetrics.heightPixels.coerceAtLeast(720)
+
+            if (currentMode == "ZOOM" || (isPortrait && currentZoom != 1.0f)) {
+                val targetW = (tvW * currentZoom).toInt()
+                val targetH = (tvH * currentZoom).toInt()
+                val lp = renderer.layoutParams
+                if (lp != null) {
+                    lp.width = targetW
+                    lp.height = targetH
+                    renderer.layoutParams = lp
+                }
                 renderer.translationY = currentPanY
-                ReceiverLogger.log(TAG, "🔍 Zoom gradual TV: ${String.format(java.util.Locale.US, "%.2f", currentZoom)}x (panY=$currentPanY)")
+                ReceiverLogger.log(TAG, "🔍 Zoom gradual TV: ${String.format(java.util.Locale.US, "%.2f", currentZoom)}x (${targetW}x$targetH)")
             } else if (effectiveScaling == RendererCommon.ScalingType.SCALE_ASPECT_FILL) {
+                val lp = renderer.layoutParams
+                if (lp != null && (lp.width != android.view.ViewGroup.LayoutParams.MATCH_PARENT || lp.height != android.view.ViewGroup.LayoutParams.MATCH_PARENT)) {
+                    lp.width = android.view.ViewGroup.LayoutParams.MATCH_PARENT
+                    lp.height = android.view.ViewGroup.LayoutParams.MATCH_PARENT
+                    renderer.layoutParams = lp
+                }
                 renderer.scaleX = 1.0f
                 renderer.scaleY = 1.0f
                 renderer.translationY = 0f
                 ReceiverLogger.log(TAG, "📺 Modo 16:9 EXPANDIDO: FILL (frame=${frameW}x${frameH} rot=$lastRot)")
             } else {
-                renderer.scaleX = currentZoom
-                renderer.scaleY = currentZoom
+                val lp = renderer.layoutParams
+                if (lp != null && (lp.width != android.view.ViewGroup.LayoutParams.MATCH_PARENT || lp.height != android.view.ViewGroup.LayoutParams.MATCH_PARENT)) {
+                    lp.width = android.view.ViewGroup.LayoutParams.MATCH_PARENT
+                    lp.height = android.view.ViewGroup.LayoutParams.MATCH_PARENT
+                    renderer.layoutParams = lp
+                }
+                renderer.scaleX = 1.0f
+                renderer.scaleY = 1.0f
                 renderer.translationY = currentPanY
-                ReceiverLogger.log(TAG, "📱 Modo FIT ORIGINAL: escala $currentZoom (frame=${frameW}x${frameH} rot=$lastRot)")
+                ReceiverLogger.log(TAG, "📱 Modo FIT ORIGINAL: escala 1.0 (frame=${frameW}x${frameH} rot=$lastRot)")
             }
             renderer.requestLayout()
         }

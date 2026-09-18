@@ -153,8 +153,7 @@ class TvReceiverActivity : ComponentActivity() {
             }
             is SignalingMessage.SetDisplayMode -> {
                 webRtcReceiver.setDisplayMode(message.mode, message.zoom, message.panY)
-                val isZoom = message.mode == "FILL" || message.mode == "ZOOM" || message.mode == "EXTEND_16_9"
-                exoPlayerManager.setResizeMode(isZoom)
+                exoPlayerManager.setDisplayMode(message.mode, message.zoom)
             }
             is SignalingMessage.ShowImage -> {
                 digitalAudioReceiver?.stop(); exoPlayerManager.stop(); webRtcReceiver.resetConnection()

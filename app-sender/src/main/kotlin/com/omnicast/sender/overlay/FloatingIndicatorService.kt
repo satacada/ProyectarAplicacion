@@ -122,6 +122,7 @@ class FloatingIndicatorService : Service() {
                 val actTitle = com.omnicast.sender.stream.ActiveStreamHolder.title ?: "Video Detectado"
                 val actHdrs = com.omnicast.sender.stream.ActiveStreamHolder.headers
                 if (!actUrl.isNullOrBlank()) {
+                    if (ProjectionForegroundService.isProjecting) ProjectionForegroundService.stopService(this)
                     statusFeedbackText.text = "✅ Transmitiendo: ${actTitle.take(20)}"; statusFeedbackText.setTextColor(Color.parseColor("#10B981"))
                     SenderMainActivity.sendDirectStreamStatic(this, actUrl, actTitle, actHdrs)
                     Toast.makeText(this, "▶ Transmitiendo: ${actTitle.take(22)}", Toast.LENGTH_SHORT).show()
@@ -134,6 +135,7 @@ class FloatingIndicatorService : Service() {
                         val retryTitle = com.omnicast.sender.stream.ActiveStreamHolder.title ?: "Video Detectado"
                         val retryHdrs = com.omnicast.sender.stream.ActiveStreamHolder.headers
                         if (!retryUrl.isNullOrBlank()) {
+                            if (ProjectionForegroundService.isProjecting) ProjectionForegroundService.stopService(this)
                             statusFeedbackText.text = "✅ Transmitiendo: ${retryTitle.take(20)}"
                             statusFeedbackText.setTextColor(Color.parseColor("#10B981"))
                             SenderMainActivity.sendDirectStreamStatic(this, retryUrl, retryTitle, retryHdrs)
@@ -142,6 +144,7 @@ class FloatingIndicatorService : Service() {
                             val res = clipboardExtractor.extractFromClipboard()
                             val clipUrl = res.mediaUrl
                             if (res.isSuccess && clipUrl != null) {
+                                if (ProjectionForegroundService.isProjecting) ProjectionForegroundService.stopService(this)
                                 statusFeedbackText.text = "✅ ¡Flujo Detectado! Transmitiendo..."
                                 statusFeedbackText.setTextColor(Color.parseColor("#10B981"))
                                 SenderMainActivity.sendDirectStreamStatic(this, clipUrl, "Video Capturado")
@@ -156,6 +159,8 @@ class FloatingIndicatorService : Service() {
             },
             onStartScreenMirror = {
                 menuLayoutRef?.visibility = View.GONE; isExpanded = false
+                SenderMainActivity.sendPlayControlStatic(this, "STOP")
+                com.omnicast.sender.stream.ActiveStreamHolder.clear()
                 if (ProjectionForegroundService.isProjecting) {
                     statusFeedbackText.text = "🟢 Ya estás proyectando."; statusFeedbackText.setTextColor(Color.parseColor("#10B981"))
                 } else {
@@ -164,17 +169,13 @@ class FloatingIndicatorService : Service() {
             },
             onCastGallery = {
                 menuLayoutRef?.visibility = View.GONE; isExpanded = false
-                if (com.omnicast.sender.gallery.GalleryMediaHelper.hasGalleryPermission(this)) {
-                    launchIntentSafely(Intent(this, PhotoCastViewerActivity::class.java).apply {
-                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                        putExtra("EXTRA_START_INDEX", 0)
-                    }, 104)
-                } else {
-                    launchIntentSafely(Intent(this, SenderMainActivity::class.java).apply {
-                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
-                        putExtra("EXTRA_OPEN_GALLERY", true)
-                    }, 104)
-                }
+                if (ProjectionForegroundService.isProjecting) ProjectionForegroundService.stopService(this)
+                SenderMainActivity.sendPlayControlStatic(this, "STOP")
+                com.omnicast.sender.stream.ActiveStreamHolder.clear()
+                launchIntentSafely(Intent(this, SenderMainActivity::class.java).apply {
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                    putExtra("EXTRA_OPEN_GALLERY", true)
+                }, 104)
             },
             onOpenBrowser = {
                 menuLayoutRef?.visibility = View.GONE; isExpanded = false

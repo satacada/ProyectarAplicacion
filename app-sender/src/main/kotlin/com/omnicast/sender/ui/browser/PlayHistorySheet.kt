@@ -22,6 +22,7 @@ import com.omnicast.sender.history.HistoryItem
 fun PlayHistorySheet(
     historyList: List<HistoryItem>,
     onSelectAndTransmit: (HistoryItem) -> Unit,
+    onToggleFavorite: (String) -> Unit = {},
     onDelete: (String) -> Unit,
     onClearAll: () -> Unit,
     onDismiss: () -> Unit
@@ -40,7 +41,7 @@ fun PlayHistorySheet(
                 Text("📜 Historial de Películas", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
                 if (historyList.isNotEmpty()) {
                     TextButton(onClick = onClearAll) {
-                        Text("Limpiar Todo", color = Color(0xFFEF4444), fontSize = 12.sp)
+                        Text("Limpiar (conserva ⭐)", color = Color(0xFFEF4444), fontSize = 12.sp)
                     }
                 }
             }
@@ -62,11 +63,23 @@ fun PlayHistorySheet(
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
                                 Column(modifier = Modifier.weight(1f)) {
-                                    Text(item.title, color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                    Text(
+                                        (if (item.isFavorite) "⭐ " else "") + item.title,
+                                        color = if (item.isFavorite) Color(0xFFFDE047) else Color.White,
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
                                     Text(item.url, color = Color(0xFF64748B), fontSize = 10.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
                                 }
-                                IconButton(onClick = { onDelete(item.url) }, modifier = Modifier.size(28.dp)) {
-                                    Text("✕", color = Color(0xFF94A3B8), fontSize = 12.sp)
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    IconButton(onClick = { onToggleFavorite(item.url) }, modifier = Modifier.size(32.dp)) {
+                                        Text(if (item.isFavorite) "⭐" else "☆", color = if (item.isFavorite) Color(0xFFF59E0B) else Color(0xFF94A3B8), fontSize = 15.sp)
+                                    }
+                                    IconButton(onClick = { onDelete(item.url) }, modifier = Modifier.size(28.dp)) {
+                                        Text("✕", color = Color(0xFF94A3B8), fontSize = 12.sp)
+                                    }
                                 }
                             }
                         }

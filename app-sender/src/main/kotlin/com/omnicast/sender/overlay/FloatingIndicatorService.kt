@@ -140,6 +140,13 @@ class FloatingIndicatorService : Service() {
                 menuLayoutRef?.visibility = View.GONE; isExpanded = false
                 launchIntentSafely(Intent(this, GalleryPickerActivity::class.java).apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }, 104)
             },
+            onOpenBrowser = {
+                menuLayoutRef?.visibility = View.GONE; isExpanded = false
+                launchIntentSafely(Intent(this, SenderMainActivity::class.java).apply {
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                    putExtra("EXTRA_OPEN_BROWSER", true)
+                }, 105)
+            },
             onToggleTvScale = {
                 val newMode = if (ProjectionForegroundService.isProjecting) {
                     ProjectionForegroundService.toggleTvScaleMode()

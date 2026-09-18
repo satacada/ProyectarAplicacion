@@ -52,10 +52,15 @@ class PhotoCastViewerActivity : ComponentActivity() {
                 com.omnicast.sender.media.LocalImageServer.serveImage(imageUri, this@PhotoCastViewerActivity)
             } else mediaUrl
 
-            signalingClient = SignalingClient().apply {
-                connect(ip, port, {
+            signalingClient = com.omnicast.sender.network.SignalingClientHolder.get()
+            if (signalingClient?.isConnected == true) {
+                if (!photoUrl.isNullOrBlank()) {
+                    signalingClient?.sendMessage(SignalingMessage.ShowImage(photoUrl, "Foto de Galería"))
+                }
+            } else {
+                signalingClient?.connect(ip, port, {
                     if (!photoUrl.isNullOrBlank()) {
-                        sendMessage(SignalingMessage.ShowImage(photoUrl, "Foto de Galería"))
+                        signalingClient?.sendMessage(SignalingMessage.ShowImage(photoUrl, "Foto de Galería"))
                     }
                 }, {})
             }
@@ -70,8 +75,6 @@ class PhotoCastViewerActivity : ComponentActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        signalingClient?.sendMessage(SignalingMessage.Disconnect())
-        signalingClient?.disconnect()
         signalingClient = null
     }
 }

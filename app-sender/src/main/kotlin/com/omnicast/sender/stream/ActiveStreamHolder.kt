@@ -41,6 +41,12 @@ object ActiveStreamHolder {
         headers = hdrs
     }
 
+    fun clearDetectedStream() {
+        streamUrl = null
+        title = null
+        headers = emptyMap()
+    }
+
     fun clear() {
         streamUrl = null
         title = null

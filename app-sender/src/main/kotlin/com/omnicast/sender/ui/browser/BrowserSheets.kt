@@ -16,6 +16,7 @@ fun BrowserModalSheets(
     onClearOptions: () -> Unit,
     onDeleteHistory: (String) -> Unit,
     onClearHistory: () -> Unit,
+    onToggleFavorite: (String) -> Unit = {},
     onDismissHistory: () -> Unit
 ) {
     if (showOptionsSheet && qualityOptions.isNotEmpty()) {
@@ -31,6 +32,7 @@ fun BrowserModalSheets(
         PlayHistorySheet(
             historyList = historyList,
             onSelectAndTransmit = onTransmitHistory,
+            onToggleFavorite = onToggleFavorite,
             onDelete = onDeleteHistory,
             onClearAll = onClearHistory,
             onDismiss = onDismissHistory

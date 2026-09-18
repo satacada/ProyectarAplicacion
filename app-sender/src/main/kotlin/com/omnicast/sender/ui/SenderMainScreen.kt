@@ -13,6 +13,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.*
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -55,6 +56,7 @@ fun SenderMainScreen(
     var detectionResult by remember { mutableStateOf<StreamDetectionResult?>(null) }
     var showInAppBrowser by remember { mutableStateOf(initialOpenBrowser) }
     var showHelpDialog by remember { mutableStateOf(false) }
+    var selectedTabIndex by remember { mutableIntStateOf(0) }
 
     LaunchedEffect(initialOpenBrowser) { if (initialOpenBrowser) showInAppBrowser = true }
 
@@ -146,37 +148,83 @@ fun SenderMainScreen(
                     }
                 )
             }
-            item { InAppBrowserCard(onOpenBrowser = { showInAppBrowser = true }) }
             item {
-                DirectStreamSection(onAnalyzeStream = { url -> detectionResult = onAnalyzeStream(url) })
-            }
-            item {
-                ScreenMirrorSection(
-                    isStreaming = isStreaming,
-                    selectedProfile = selectedProfile,
-                    onSelectProfile = {
-                        selectedProfile = it
-                        prefs.edit().putString("saved_stream_profile", it.mode.name).apply()
-                    },
-                    tvScaleMode = tvScaleMode,
-                    onSelectTvScaleMode = {
-                        tvScaleMode = it
-                        prefs.edit().putString("saved_tv_scale_mode", it).apply()
-                        if (isStreaming) {
-                            com.omnicast.sender.service.ProjectionForegroundService.setTvScaleMode(it)
-                        }
-                    },
-                    smoothBufferEnabled = smoothBufferEnabled,
-                    onToggleSmoothBuffer = {
-                        smoothBufferEnabled = it
-                        prefs.edit().putBoolean("saved_smooth_buffer", it).apply()
-                    },
-                    onStartProjection = { projectionLauncher.launch(getSafeCaptureIntent()) },
-                    onStopProjection = {
-                        isStreaming = false
-                        onStopProjection()
+                val tabTitles = listOf("🌐 Web / Video", "📱 Proyección TV", "🖼️ Galería")
+                TabRow(
+                    selectedTabIndex = selectedTabIndex,
+                    containerColor = Color(0xFF1E293B),
+                    contentColor = Color(0xFF38BDF8),
+                    indicator = { tabPositions ->
+                        TabRowDefaults.SecondaryIndicator(
+                            Modifier.tabIndicatorOffset(tabPositions[selectedTabIndex]),
+                            color = Color(0xFF38BDF8)
+                        )
                     }
-                )
+                ) {
+                    tabTitles.forEachIndexed { index, title ->
+                        Tab(
+                            selected = selectedTabIndex == index,
+                            onClick = { selectedTabIndex = index },
+                            text = {
+                                Text(
+                                    title,
+                                    fontSize = 12.sp,
+                                    fontWeight = if (selectedTabIndex == index) FontWeight.Bold else FontWeight.Normal,
+                                    color = if (selectedTabIndex == index) Color(0xFF38BDF8) else Color(0xFF94A3B8)
+                                )
+                            }
+                        )
+                    }
+                }
+            }
+            when (selectedTabIndex) {
+                0 -> {
+                    item { InAppBrowserCard(onOpenBrowser = { showInAppBrowser = true }) }
+                    item {
+                        DirectStreamSection(onAnalyzeStream = { url -> detectionResult = onAnalyzeStream(url) })
+                    }
+                }
+                1 -> {
+                    item {
+                        ScreenMirrorSection(
+                            isStreaming = isStreaming,
+                            selectedProfile = selectedProfile,
+                            onSelectProfile = {
+                                selectedProfile = it
+                                prefs.edit().putString("saved_stream_profile", it.mode.name).apply()
+                            },
+                            tvScaleMode = tvScaleMode,
+                            onSelectTvScaleMode = {
+                                tvScaleMode = it
+                                prefs.edit().putString("saved_tv_scale_mode", it).apply()
+                                if (isStreaming) {
+                                    com.omnicast.sender.service.ProjectionForegroundService.setTvScaleMode(it)
+                                }
+                            },
+                            smoothBufferEnabled = smoothBufferEnabled,
+                            onToggleSmoothBuffer = {
+                                smoothBufferEnabled = it
+                                prefs.edit().putBoolean("saved_smooth_buffer", it).apply()
+                            },
+                            onStartProjection = { projectionLauncher.launch(getSafeCaptureIntent()) },
+                            onStopProjection = {
+                                isStreaming = false
+                                onStopProjection()
+                            }
+                        )
+                    }
+                }
+                2 -> {
+                    item {
+                        GallerySection(onPickImage = {
+                            context.startActivity(
+                                Intent(context, com.omnicast.sender.overlay.GalleryPickerActivity::class.java).apply {
+                                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                }
+                            )
+                        })
+                    }
+                }
             }
         }
 

@@ -55,6 +55,18 @@ object WvcDomSniffer {
                                 return origOpen.apply(this, arguments);
                             };
                         }
+                        var origSrcDescriptor = Object.getOwnPropertyDescriptor(HTMLMediaElement.prototype, 'src');
+                        if (origSrcDescriptor && origSrcDescriptor.set) {
+                            var origSet = origSrcDescriptor.set;
+                            Object.defineProperty(HTMLMediaElement.prototype, 'src', {
+                                set: function(val) {
+                                    if (typeof val === 'string' && val.indexOf('blob:') !== 0 && val.indexOf('data:') !== 0) {
+                                        console.log('$CONSOLE_PREFIX' + JSON.stringify({type:'videoPlaying', video:val, title:document.title}));
+                                    }
+                                    return origSet.call(this, val);
+                                }
+                            });
+                        }
                     } catch(e) {}
                 })();
             """.trimIndent()
@@ -67,8 +79,9 @@ object WvcDomSniffer {
     fun parseConsoleMessage(message: String): List<SniffedVideo> {
         val list = mutableListOf<SniffedVideo>()
         try {
-            if (message.contains("\"ibMessage\":") || message.contains("\"type\":")) {
-                val json = JSONObject(message)
+            val cleanMessage = if (message.startsWith(CONSOLE_PREFIX)) message.removePrefix(CONSOLE_PREFIX).trim() else message.trim()
+            if (cleanMessage.contains("\"ibMessage\":") || cleanMessage.contains("\"type\":")) {
+                val json = JSONObject(cleanMessage)
                 val type = json.optString("type")
                 when (type) {
                     "videoPlaying" -> {
@@ -87,7 +100,7 @@ object WvcDomSniffer {
                     "videoList" -> {
                         val pageTitle = json.optString("title", "Transmisión Web")
                         val vList = json.optJSONArray("videoList")
-                        if (vList != null && vList.length() <= 2) {
+                        if (vList != null && vList.length() <= 15) {
                             for (i in 0 until vList.length()) {
                                 val item = vList.optJSONObject(i) ?: continue
                                 val poster = item.optString("poster", "")
@@ -106,9 +119,15 @@ object WvcDomSniffer {
                             }
                         }
                     }
+                    "video" -> {
+                        val src = json.optString("src")
+                        if (isValidMediaUrl(src)) {
+                            list.add(SniffedVideo(src, json.optString("title", "Transmisión Web"), json.optString("poster", "")))
+                        }
+                    }
                 }
             } else if (message.startsWith(CONSOLE_PREFIX)) {
-                val jsonStr = message.removePrefix(CONSOLE_PREFIX)
+                val jsonStr = message.removePrefix(CONSOLE_PREFIX).trim()
                 val json = JSONObject(jsonStr)
                 val src = json.optString("src")
                 if (isValidMediaUrl(src)) {

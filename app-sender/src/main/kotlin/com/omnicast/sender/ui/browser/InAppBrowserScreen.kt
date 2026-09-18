@@ -71,9 +71,7 @@ fun InAppBrowserScreen(
         }
         if (hdrs.isNotEmpty()) streamHeaders[url] = hdrs; if (!label.isNullOrBlank()) streamLabels[url] = label
         val primaryUrl = detectedStreams.firstOrNull() ?: url
-        if (!ActiveStreamHolder.isCasting.value) {
-            ActiveStreamHolder.update(primaryUrl, pageTitle, streamHeaders[primaryUrl] ?: hdrs)
-        }
+        ActiveStreamHolder.update(primaryUrl, pageTitle, streamHeaders[primaryUrl] ?: hdrs)
     }
 
     fun checkAndRegisterYouTube(url: String?, title: String? = null) {
@@ -84,6 +82,7 @@ fun InAppBrowserScreen(
 
     fun navigateTo(url: String) {
         detectedStreams.clear(); streamHeaders.clear(); streamLabels.clear(); qualityOptions = emptyList()
+        ActiveStreamHolder.clearDetectedStream()
         val target = BrowserUrlHelper.normalizeUrl(url)
         inputUrl = target; currentUrl = target; isHome = false
         if (target.contains("youtube.com") || target.contains("youtu.be")) checkAndRegisterYouTube(target)
@@ -142,10 +141,10 @@ fun InAppBrowserScreen(
                 isHome = isHome, isAdBlockEnabled = isAdBlockEnabled, currentUrl = currentUrl,
                 onProgress = { progress = it },
                 onPageStarted = { newUrl ->
-                    val prevHost = try { java.net.URI(currentUrl).host?.lowercase() } catch (_: Throwable) { "" }
-                    val newHost = try { java.net.URI(newUrl).host?.lowercase() } catch (_: Throwable) { "" }
-                    if (!prevHost.isNullOrEmpty() && !newHost.isNullOrEmpty() && prevHost != newHost) {
+                    val urlChanged = newUrl.substringBefore("#") != currentUrl.substringBefore("#")
+                    if (urlChanged) {
                         detectedStreams.clear(); streamHeaders.clear(); streamLabels.clear(); qualityOptions = emptyList()
+                        ActiveStreamHolder.clearDetectedStream()
                     }
                     inputUrl = newUrl; currentUrl = newUrl
                     if (newUrl.contains("youtube.com") || newUrl.contains("youtu.be")) checkAndRegisterYouTube(newUrl)
@@ -155,6 +154,12 @@ fun InAppBrowserScreen(
                     if (u?.contains("youtube.com") == true || u?.contains("youtu.be") == true) checkAndRegisterYouTube(u, pageTitle)
                 },
                 onHistoryUpdated = { u, t ->
+                    val prevYt = BrowserUrlHelper.extractYouTubeId(currentUrl)
+                    val newYt = BrowserUrlHelper.extractYouTubeId(u)
+                    if (newYt != null && newYt != prevYt) {
+                        detectedStreams.clear(); streamHeaders.clear(); streamLabels.clear(); qualityOptions = emptyList()
+                        ActiveStreamHolder.clearDetectedStream()
+                    }
                     currentUrl = u; if (!t.isNullOrBlank()) pageTitle = t
                     if (u.contains("youtube.com") || u.contains("youtu.be")) checkAndRegisterYouTube(u, t)
                 },
@@ -209,6 +214,8 @@ fun InAppBrowserScreen(
         onDismissOptions = { showOptionsSheet = false },
         onClearOptions = { detectedStreams.clear(); qualityOptions = emptyList(); showOptionsSheet = false },
         onDeleteHistory = { historyManager.remove(it); historyList = historyManager.getHistory() },
-        onClearHistory = { historyManager.clear(); historyList = emptyList() }, onDismissHistory = { showHistorySheet = false }
+        onClearHistory = { historyManager.clear(keepFavorites = true); historyList = historyManager.getHistory() },
+        onToggleFavorite = { historyManager.toggleFavorite(it); historyList = historyManager.getHistory() },
+        onDismissHistory = { showHistorySheet = false }
     )
 }

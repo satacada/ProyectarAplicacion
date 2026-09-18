@@ -1,4 +1,4 @@
-﻿package com.omnicast.sender.ui.browser
+package com.omnicast.sender.ui.browser
 
 import android.webkit.CookieManager
 
@@ -37,9 +37,10 @@ object BrowserUrlHelper {
         if (lower.endsWith(".jpg") || lower.endsWith(".jpeg") || lower.endsWith(".png") || lower.endsWith(".webp") || lower.endsWith(".gif") || lower.endsWith(".svg") || lower.endsWith(".ico") || lower.contains(".jpg?") || lower.contains(".jpeg?") || lower.contains(".png?") || lower.contains(".webp?")) return false
         if (lower.endsWith(".css") || lower.endsWith(".js") || lower.endsWith(".woff") || lower.endsWith(".woff2") || lower.endsWith(".ttf") || lower.contains(".css?") || lower.contains(".js?")) return false
         if (lower.contains("i.mycdn.me") || lower.contains("st.mycdn.me") || lower.contains("static.mycdn.me")) return false
+        if (lower.contains("/embed/") || lower.contains("/embed69") || lower.contains("/vidurl/")) return false
         if (lower.contains(".m3u8") || lower.contains(".mpd") || lower.contains(".mp4") || lower.contains(".webm") || lower.contains(".mkv")) return true
-        if (lower.contains("/hls/") || lower.contains("/stream/") || lower.contains("/manifest") || lower.contains("chunklist")) return true
-        if (lower.contains("morencius.com") || lower.contains("swdyu.com") || lower.contains("cloudemb.com")) return true
+        if (lower.contains("/hls") || lower.contains("/stream/") || lower.contains("/manifest") || lower.contains("chunklist")) return true
+        if (lower.contains("master.txt") && lower.contains("/hls")) return true
         if (lower.contains("vd.mycdn.me") || lower.contains("vd2.mycdn.me") || lower.contains("vd3.mycdn.me") || lower.contains("vd4.mycdn.me") || (lower.contains("mycdn.me") && (lower.contains("/video/") || lower.contains("cmd=video") || lower.contains("sig=")))) return true
         if (lower.contains("ok.ru") && (lower.contains("videometa") || lower.contains("api/video") || lower.contains("cmd=video"))) return true
         return false

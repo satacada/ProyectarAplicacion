@@ -32,6 +32,7 @@ fun SenderMainScreen(
     autoPromptCapture: Boolean = false,
     isTvConnected: Boolean = false,
     initialOpenBrowser: Boolean = false,
+    initialOpenGallery: Boolean = false,
     onConnectToTv: (String, Int) -> Unit = { _, _ -> },
     onAnalyzeStream: (String?) -> StreamDetectionResult,
     onSendDirectStream: (String, String?, Map<String, String>) -> Unit,
@@ -54,11 +55,12 @@ fun SenderMainScreen(
     var smoothBufferEnabled by remember { mutableStateOf(prefs.getBoolean("saved_smooth_buffer", true)) }
     var isStreaming by remember { mutableStateOf(com.omnicast.sender.service.ProjectionForegroundService.isProjecting) }
     var detectionResult by remember { mutableStateOf<StreamDetectionResult?>(null) }
-    var showInAppBrowser by remember { mutableStateOf(initialOpenBrowser) }
+    var showInAppBrowser by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(initialOpenBrowser) }
     var showHelpDialog by remember { mutableStateOf(false) }
-    var selectedTabIndex by remember { mutableIntStateOf(0) }
+    var selectedTabIndex by androidx.compose.runtime.saveable.rememberSaveable { mutableIntStateOf(if (initialOpenGallery) 2 else 0) }
 
     LaunchedEffect(initialOpenBrowser) { if (initialOpenBrowser) showInAppBrowser = true }
+    LaunchedEffect(initialOpenGallery) { if (initialOpenGallery) selectedTabIndex = 2 }
 
     fun saveTarget(ip: String, portStr: String) {
         val port = portStr.toIntOrNull() ?: 8088

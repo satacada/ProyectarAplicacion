@@ -24,6 +24,9 @@ class WebRtcReceiverManager(private val context: Context) {
     private var isRemoteDescriptionSet = false
     private var isResetting = false
     private var currentScalingType = RendererCommon.ScalingType.SCALE_ASPECT_FIT
+    private var currentMode = "FIT"
+    private var currentZoom = 1.0f
+    private var currentPanY = 0.0f
     private var lastFrameW = 0
     private var lastFrameH = 0
     private var lastRot = 0
@@ -67,30 +70,25 @@ class WebRtcReceiverManager(private val context: Context) {
             val frameH = if (isRotated) lastFrameW else lastFrameH
             if (frameW <= 0 || frameH <= 0) return@post
 
-            val tvMetrics = context.resources.displayMetrics
-            val tvW = tvMetrics.widthPixels.toFloat().coerceAtLeast(1280f)
-            val tvH = tvMetrics.heightPixels.toFloat().coerceAtLeast(720f)
-            val tvAspect = tvW / tvH
-            val frameAspect = frameW.toFloat() / frameH.toFloat()
+            val isPortrait = frameH > frameW
+            val effectiveScaling = if (isPortrait) RendererCommon.ScalingType.SCALE_ASPECT_FIT else currentScalingType
+            renderer.setScalingType(effectiveScaling)
 
-            renderer.setScalingType(currentScalingType)
-            if (currentScalingType == RendererCommon.ScalingType.SCALE_ASPECT_FILL) {
-                val factor = if (frameAspect > tvAspect) {
-                    frameAspect / tvAspect
-                } else if (frameAspect < tvAspect && frameW > frameH) {
-                    tvAspect / frameAspect
-                } else {
-                    1.0f
-                }
-                renderer.scaleX = factor
-                renderer.scaleY = factor
+            if (currentMode == "ZOOM") {
+                renderer.scaleX = currentZoom
+                renderer.scaleY = currentZoom
+                renderer.translationY = currentPanY
+                ReceiverLogger.log(TAG, "🔍 Zoom gradual TV: ${String.format(java.util.Locale.US, "%.2f", currentZoom)}x (panY=$currentPanY)")
+            } else if (effectiveScaling == RendererCommon.ScalingType.SCALE_ASPECT_FILL) {
+                renderer.scaleX = 1.0f
+                renderer.scaleY = 1.0f
                 renderer.translationY = 0f
-                ReceiverLogger.log(TAG, "📺 Modo 16:9 EXPANDIDO: factor=${factor} (frame=${frameW}x${frameH} rot=$lastRot)")
+                ReceiverLogger.log(TAG, "📺 Modo 16:9 EXPANDIDO: FILL (frame=${frameW}x${frameH} rot=$lastRot)")
             } else {
-                renderer.scaleX = 1f
-                renderer.scaleY = 1f
-                renderer.translationY = 0f
-                ReceiverLogger.log(TAG, "📱 Modo FIT ORIGINAL: escala 1.0 (frame=${frameW}x${frameH} rot=$lastRot)")
+                renderer.scaleX = currentZoom
+                renderer.scaleY = currentZoom
+                renderer.translationY = currentPanY
+                ReceiverLogger.log(TAG, "📱 Modo FIT ORIGINAL: escala $currentZoom (frame=${frameW}x${frameH} rot=$lastRot)")
             }
             renderer.requestLayout()
         }
@@ -182,27 +180,24 @@ class WebRtcReceiverManager(private val context: Context) {
     }
 
     fun setDisplayMode(mode: String, zoom: Float = 1f, panY: Float = 0f) {
-        when (mode.uppercase()) {
+        currentMode = mode.uppercase()
+        currentZoom = zoom
+        currentPanY = panY
+        when (currentMode) {
             "FILL", "16:9", "EXTEND_16_9" -> {
                 currentScalingType = RendererCommon.ScalingType.SCALE_ASPECT_FILL
-                applyDisplayTransform()
             }
             "FIT", "ORIGINAL_FIT" -> {
                 currentScalingType = RendererCommon.ScalingType.SCALE_ASPECT_FIT
-                applyDisplayTransform()
+                currentZoom = 1.0f
+                currentPanY = 0.0f
+            }
+            "ZOOM" -> {
+                currentScalingType = RendererCommon.ScalingType.SCALE_ASPECT_FIT
             }
             "TOGGLE" -> toggleScalingType()
-            "ZOOM" -> {
-                android.os.Handler(android.os.Looper.getMainLooper()).post {
-                    surfaceViewRenderer?.setScalingType(RendererCommon.ScalingType.SCALE_ASPECT_FIT)
-                    surfaceViewRenderer?.scaleX = zoom
-                    surfaceViewRenderer?.scaleY = zoom
-                    surfaceViewRenderer?.translationY = panY
-                    surfaceViewRenderer?.requestLayout()
-                    ReceiverLogger.log(TAG, "🔍 Zoom gradual TV: ${String.format(java.util.Locale.US, "%.2f", zoom)}x (panY=$panY)")
-                }
-            }
         }
+        applyDisplayTransform()
     }
 
     fun setSmoothBuffer(enabled: Boolean) {

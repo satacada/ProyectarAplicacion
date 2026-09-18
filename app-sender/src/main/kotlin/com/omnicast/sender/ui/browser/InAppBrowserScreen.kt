@@ -14,6 +14,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.saveable.rememberSaveable
 import com.omnicast.sender.history.PlayHistoryManager
 import com.omnicast.sender.stream.ActiveStreamHolder
+import com.omnicast.sender.ui.SenderMainActivity
 import kotlinx.coroutines.launch
 
 @Composable
@@ -60,6 +61,16 @@ fun InAppBrowserScreen(
         else if (!isHome) isHome = true else onCloseBrowser()
     }
 
+    androidx.compose.runtime.DisposableEffect(webViewInstance) {
+        SenderMainActivity.onBrowserRescanRequested = {
+            webViewInstance?.evaluateJavascript(WvcDomSniffer.getInjectionScript(context), null)
+            webViewInstance?.evaluateJavascript(WvcSnifferScripts.buildAggressiveRescanScript(WvcDomSniffer.CONSOLE_PREFIX), null)
+        }
+        onDispose {
+            SenderMainActivity.onBrowserRescanRequested = null
+        }
+    }
+
     fun registerStream(url: String, hdrs: Map<String, String>, isPrimary: Boolean = false, label: String? = null) {
         if (url.isBlank() || AdBlocker.isAd(url)) return
         val isM3u8 = url.contains(".m3u8", ignoreCase = true)
@@ -75,7 +86,8 @@ fun InAppBrowserScreen(
         }
         if (hdrs.isNotEmpty()) streamHeaders[url] = hdrs; if (!label.isNullOrBlank()) streamLabels[url] = label
         val primaryUrl = detectedStreams.firstOrNull() ?: url
-        ActiveStreamHolder.update(primaryUrl, pageTitle, streamHeaders[primaryUrl] ?: hdrs)
+        val effectiveTitle = if (pageTitle.isNotBlank() && pageTitle != "Cargando..." && pageTitle != "Transmisión") pageTitle else "Video Web"
+        ActiveStreamHolder.update(primaryUrl, effectiveTitle, streamHeaders[primaryUrl] ?: hdrs)
     }
 
     fun checkAndRegisterYouTube(url: String?, title: String? = null) {
@@ -86,7 +98,7 @@ fun InAppBrowserScreen(
 
     fun navigateTo(url: String) {
         detectedStreams.clear(); streamHeaders.clear(); streamLabels.clear(); qualityOptions = emptyList()
-        ActiveStreamHolder.clearDetectedStream()
+        ActiveStreamHolder.clear()
         val target = BrowserUrlHelper.normalizeUrl(url)
         inputUrl = target; currentUrl = target; isHome = false
         prefs.edit().putString("saved_browser_last_url", target).apply()
@@ -131,10 +143,14 @@ fun InAppBrowserScreen(
             onReload = { webViewInstance?.reload() }, isDesktopMode = isDesktopMode,
             onToggleDesktopMode = { isDesktopMode = !isDesktopMode; webViewInstance?.settings?.userAgentString = if (isDesktopMode) UA_DESKTOP else UA_MOBILE; webViewInstance?.reload() },
             isAdBlockEnabled = isAdBlockEnabled, onToggleAdBlock = { isAdBlockEnabled = !isAdBlockEnabled },
-            onForceRescan = { webViewInstance?.evaluateJavascript(WvcDomSniffer.getInjectionScript(context), null) },
+            onForceRescan = {
+                webViewInstance?.evaluateJavascript(WvcDomSniffer.getInjectionScript(context), null)
+                webViewInstance?.evaluateJavascript(WvcSnifferScripts.buildAggressiveRescanScript(WvcDomSniffer.CONSOLE_PREFIX), null)
+            },
             onClearData = {
                 webViewInstance?.clearCache(true); webViewInstance?.clearHistory()
                 detectedStreams.clear(); qualityOptions = emptyList(); isHome = true; inputUrl = ""; currentUrl = ""
+                ActiveStreamHolder.clear()
                 prefs.edit().remove("saved_browser_last_url").apply()
             },
             detectedStreamsCount = detectedStreams.size, onOpenVideoList = { openOptionsSheet() },
@@ -150,44 +166,48 @@ fun InAppBrowserScreen(
                 isHome = isHome, isAdBlockEnabled = isAdBlockEnabled, currentUrl = currentUrl,
                 onProgress = { progress = it },
                 onPageStarted = { newUrl ->
-                    val oldHost = try { java.net.URI(currentUrl).host?.lowercase() } catch (_: Throwable) { null }
-                    val newHost = try { java.net.URI(newUrl).host?.lowercase() } catch (_: Throwable) { null }
-                    val isDomainChange = oldHost != null && newHost != null && oldHost != newHost && !oldHost.endsWith(newHost) && !newHost.endsWith(oldHost)
-                    if (isDomainChange) {
+                    val isRealChange = currentUrl.isNotBlank() && currentUrl != newUrl && !newUrl.startsWith("about:")
+                    if (isRealChange) {
                         detectedStreams.clear(); streamHeaders.clear(); streamLabels.clear(); qualityOptions = emptyList()
-                        ActiveStreamHolder.clearDetectedStream()
+                        ActiveStreamHolder.clear()
+                        pageTitle = "Cargando..."
                     }
                     inputUrl = newUrl; currentUrl = newUrl
                     if (!newUrl.startsWith("about:")) prefs.edit().putString("saved_browser_last_url", newUrl).apply()
                     if (newUrl.contains("youtube.com") || newUrl.contains("youtu.be")) checkAndRegisterYouTube(newUrl)
                 },
                 onPageFinished = { t, u ->
-                    if (!t.isNullOrBlank()) pageTitle = t
+                    if (!t.isNullOrBlank() && t != "Transmisión" && !t.contains("about:blank")) pageTitle = t
                     if (u?.contains("youtube.com") == true || u?.contains("youtu.be") == true) checkAndRegisterYouTube(u, pageTitle)
                 },
                 onHistoryUpdated = { u, t ->
-                    val prevYt = BrowserUrlHelper.extractYouTubeId(currentUrl)
-                    val newYt = BrowserUrlHelper.extractYouTubeId(u)
-                    if (newYt != null && newYt != prevYt) {
+                    val isRealChange = currentUrl.isNotBlank() && currentUrl != u && !u.startsWith("about:") && !u.contains("favicon")
+                    if (isRealChange) {
                         detectedStreams.clear(); streamHeaders.clear(); streamLabels.clear(); qualityOptions = emptyList()
-                        ActiveStreamHolder.clearDetectedStream()
+                        ActiveStreamHolder.clear()
                     }
-                    currentUrl = u; if (!t.isNullOrBlank()) pageTitle = t
+                    currentUrl = u; if (!t.isNullOrBlank() && t != "Transmisión" && !t.contains("about:blank")) pageTitle = t
                     if (!u.startsWith("about:")) prefs.edit().putString("saved_browser_last_url", u).apply()
                     if (u.contains("youtube.com") || u.contains("youtu.be")) checkAndRegisterYouTube(u, t)
                 },
                 onStreamIntercepted = { sUrl, hdrs, isM -> registerStream(sUrl, hdrs, isPrimary = isM) },
                 onSniffedVideo = { sniffed ->
                     if (AdBlocker.isAd(sniffed.src)) return@BrowserWebView
+                    if (sniffed.duration in 0.1f..59.9f) {
+                        android.util.Log.d("InAppBrowser", "🛑 Ignorando video menor de 1 minuto (${sniffed.duration}s)")
+                        return@BrowserWebView
+                    }
                     val hdrs = BrowserUrlHelper.buildSafeHeaders(sniffed.src, currentUrl, UA_MOBILE)
                     if (sniffed.isPlaying) {
                         detectedStreams.clear()
                         registerStream(sniffed.src, hdrs, isPrimary = true, label = sniffed.label ?: "▶ En Reproducción")
-                        if (sniffed.title.isNotBlank()) pageTitle = sniffed.title
+                        if (sniffed.title.isNotBlank() && sniffed.title != "Video Web" && sniffed.title != "Transmisión Web") {
+                            pageTitle = sniffed.title
+                        }
                         Toast.makeText(context, "▶ Video detectado: ${pageTitle.take(24)}", Toast.LENGTH_SHORT).show()
                     } else if (detectedStreams.size < 10) {
                         registerStream(sniffed.src, hdrs, isPrimary = false, label = sniffed.label)
-                        if (sniffed.title.isNotBlank()) pageTitle = sniffed.title
+                        if (sniffed.title.isNotBlank() && (pageTitle == "Cargando..." || pageTitle == "Transmisión")) pageTitle = sniffed.title
                     }
                 },
                 onOpenPopup = { popupWebView = it; Toast.makeText(context, "⚠️ Pestaña emergente aislada. Pulsa 'Descartar' para volver.", Toast.LENGTH_SHORT).show() },

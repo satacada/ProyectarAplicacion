@@ -37,8 +37,12 @@ object ActiveStreamHolder {
 
     fun update(url: String, videoTitle: String? = null, hdrs: Map<String, String> = emptyMap()) {
         streamUrl = url
-        title = videoTitle?.takeIf { it.isNotBlank() } ?: "Video Detectado"
+        val clean = videoTitle?.takeIf { it.isNotBlank() && it != "Cargando..." && it != "Transmisión" } ?: "Video Detectado"
+        title = clean
         headers = hdrs
+        if (_isCasting.value && clean != "Video Detectado") {
+            _currentMediaTitle.value = clean
+        }
     }
 
     fun clearDetectedStream() {

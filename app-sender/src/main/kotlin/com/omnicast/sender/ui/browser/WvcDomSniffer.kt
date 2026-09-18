@@ -1,4 +1,4 @@
-﻿package com.omnicast.sender.ui.browser
+package com.omnicast.sender.ui.browser
 
 import org.json.JSONObject
 
@@ -16,7 +16,8 @@ object WvcDomSniffer {
         val title: String,
         val poster: String,
         val isPlaying: Boolean = false,
-        val label: String? = null
+        val label: String? = null,
+        val duration: Float = 0f
     )
 
     fun getInjectionScript(context: android.content.Context): String {
@@ -39,13 +40,16 @@ object WvcDomSniffer {
                 when (json.optString("type")) {
                     "videoPlaying" -> {
                         val videoUrl = json.optString("video")
+                        val dur = json.optDouble("duration", 0.0).toFloat()
+                        if (dur in 0.1f..59.9f) return emptyList()
                         if (isValidMediaUrl(videoUrl)) {
                             list.add(
                                 SniffedVideo(
                                     src = videoUrl,
                                     title = json.optString("title", "Video en Reproducción"),
                                     poster = json.optString("poster", ""),
-                                    isPlaying = true
+                                    isPlaying = true,
+                                    duration = dur
                                 )
                             )
                         }

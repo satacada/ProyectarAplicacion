@@ -62,6 +62,7 @@ fun BrowserWebView(
                         u?.let { onHistoryUpdated(it, v?.title) }
                     }
                     override fun shouldOverrideUrlLoading(v: WebView?, r: WebResourceRequest?): Boolean {
+                        if (r?.isForMainFrame == false) return false
                         val reqUrl = r?.url?.toString() ?: return false
                         if (AdBlocker.isExternalRedirect(reqUrl)) return true
                         val liveUrl = v?.url ?: currentUrl
@@ -109,6 +110,7 @@ fun BrowserWebView(
                         if (isAdBlockEnabled && AdBlocker.isAd(reqUrl)) return AdBlocker.createEmptyResponse()
                         val isMedia = BrowserUrlHelper.isPlayableStream(reqUrl) && !AdBlocker.isAd(reqUrl)
                         if (isMedia) {
+                            android.util.Log.d("BrowserWebView", "🎬 Flujo interceptado en red: $reqUrl")
                             val hdrs = BrowserUrlHelper.buildSafeHeaders(reqUrl, currentUrl, UA_MOBILE, r.requestHeaders)
                             val isMaster = reqUrl.contains("master", ignoreCase = true) || reqUrl.contains("manifest", ignoreCase = true)
                             post { onStreamIntercepted(reqUrl, hdrs, isMaster) }

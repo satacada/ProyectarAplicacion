@@ -1,4 +1,4 @@
-﻿package com.omnicast.sender.overlay
+package com.omnicast.sender.overlay
 
 import android.content.Context
 import android.graphics.Bitmap
@@ -46,15 +46,16 @@ class PhotoCastViewerActivity : ComponentActivity() {
             val initialUris = urisExtra?.map { Uri.parse(it) } ?: listOfNotNull(singleUriExtra?.let { Uri.parse(it) })
             photoUris.addAll(initialUris)
             currentIndexState.intValue = startIdxExtra.coerceIn(0, (photoUris.size - 1).coerceAtLeast(0))
+        }
 
-            // Background discovery: cargar secuencia de galería completa si se abrió con una sola foto
+        if (GalleryMediaHelper.hasGalleryPermission(this)) {
             lifecycleScope.launch(Dispatchers.IO) {
                 val fullList = GalleryMediaHelper.loadGalleryPhotos(this@PhotoCastViewerActivity)
-                if (fullList.isNotEmpty()) {
+                if (fullList.isNotEmpty() && fullList.size > photoUris.size) {
                     withContext(Dispatchers.Main) {
-                        GallerySessionHolder.setPhotos(fullList, 0)
                         val currentTargetUri = photoUris.getOrNull(currentIndexState.intValue)
                         val matchIdx = fullList.indexOfFirst { it.uri == currentTargetUri }
+                        GallerySessionHolder.setPhotos(fullList, if (matchIdx >= 0) matchIdx else 0)
                         photoUris.clear()
                         photoUris.addAll(fullList.map { it.uri })
                         currentIndexState.intValue = if (matchIdx >= 0) matchIdx else 0
@@ -88,16 +89,6 @@ class PhotoCastViewerActivity : ComponentActivity() {
         }
 
         setContent {
-            val addPicker = rememberLauncherForActivityResult(ActivityResultContracts.GetMultipleContents()) { newUris ->
-                if (newUris.isNotEmpty()) {
-                    val startIndex = photoUris.size
-                    photoUris.addAll(newUris)
-                    currentIndexState.intValue = startIndex
-                    transmitCurrentPhoto()
-                    Toast.makeText(this, "➕ ${newUris.size} foto(s) añadidas", Toast.LENGTH_SHORT).show()
-                }
-            }
-
             PhotoViewerContent(
                 uris = photoUris,
                 currentIndex = currentIndexState.intValue,
@@ -107,7 +98,6 @@ class PhotoCastViewerActivity : ComponentActivity() {
                         transmitCurrentPhoto()
                     }
                 },
-                onAddMore = { addPicker.launch("image/*") },
                 onTransform = { scale, px, py ->
                     signalingClient?.sendMessage(SignalingMessage.ImageTransform(scale, px, py))
                 },

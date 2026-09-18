@@ -33,7 +33,8 @@ class SenderMainActivity : ComponentActivity() {
         private var instance: SenderMainActivity? = null
 
         fun sendDirectStreamStatic(context: Context, url: String, title: String? = null, headers: Map<String, String> = emptyMap()) {
-            val msg = SignalingMessage.DirectStreamHandoff(mediaUrl = url, title = title, headers = headers)
+            val savedPos = com.omnicast.sender.stream.StreamResumeManager.getPosition(context, url)
+            val msg = SignalingMessage.DirectStreamHandoff(mediaUrl = url, title = title, headers = headers, startPositionMs = savedPos)
             instance?.sendDirectStreamToTv(url, title, headers) ?: QuickSignalingHelper.sendQuickMessage(context, msg)
         }
 
@@ -45,6 +46,15 @@ class SenderMainActivity : ComponentActivity() {
         fun sendDisconnectStatic(context: Context) {
             SignalingClientHolder.get().sendMessage(SignalingMessage.Disconnect())
         }
+
+        var onBrowserRescanRequested: (() -> Unit)? = null
+
+        fun requestBrowserRescan(context: Context) {
+            val inst = instance
+            if (inst != null && onBrowserRescanRequested != null) {
+                inst.runOnUiThread { onBrowserRescanRequested?.invoke() }
+            }
+        }
     }
 
     private lateinit var nsdScanner: NsdScannerManager
@@ -53,6 +63,7 @@ class SenderMainActivity : ComponentActivity() {
     private val autoPromptCapture = androidx.compose.runtime.mutableStateOf(false)
     private val isTvConnected = androidx.compose.runtime.mutableStateOf(false)
     private val openBrowserDirectly = androidx.compose.runtime.mutableStateOf(false)
+    private val openGalleryDirectly = androidx.compose.runtime.mutableStateOf(false)
     private lateinit var historyManager: PlayHistoryManager
 
     private val audioPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
@@ -81,7 +92,8 @@ class SenderMainActivity : ComponentActivity() {
                     onSendDirectStream = { url, title, hdrs -> sendDirectStreamToTv(url, title, hdrs) },
                     onStartProjection = { target, profile, scaleMode, permIntent -> startScreenStreaming(target, profile, scaleMode, permIntent) },
                     onStopProjection = { stopScreenStreaming() },
-                    initialOpenBrowser = openBrowserDirectly.value
+                    initialOpenBrowser = openBrowserDirectly.value,
+                    initialOpenGallery = openGalleryDirectly.value
                 )
             }
         }
@@ -115,6 +127,9 @@ class SenderMainActivity : ComponentActivity() {
         if (intent?.getBooleanExtra("EXTRA_OPEN_BROWSER", false) == true) {
             intent.removeExtra("EXTRA_OPEN_BROWSER"); openBrowserDirectly.value = true
         }
+        if (intent?.getBooleanExtra("EXTRA_OPEN_GALLERY", false) == true) {
+            intent.removeExtra("EXTRA_OPEN_GALLERY"); openGalleryDirectly.value = true
+        }
     }
 
     fun connectToTv(ipAddress: String, port: Int) {
@@ -132,6 +147,9 @@ class SenderMainActivity : ComponentActivity() {
             signalingClient?.messages?.collect { msg ->
                 if (msg is SignalingMessage.PlaybackStatus) {
                     ActiveStreamHolder.updatePlayback(msg.state == "PLAYING", msg.positionMs, msg.durationMs)
+                    if (msg.positionMs > 5000L) {
+                        com.omnicast.sender.stream.StreamResumeManager.savePosition(this@SenderMainActivity, ActiveStreamHolder.streamUrl, msg.positionMs)
+                    }
                 } else if (msg is SignalingMessage.TracksInfo) {
                     ActiveStreamHolder.updateTracksInfo(msg)
                 }
@@ -155,11 +173,17 @@ class SenderMainActivity : ComponentActivity() {
 
     fun sendDirectStreamToTv(url: String, title: String? = null, headers: Map<String, String> = emptyMap()) {
         val safeTitle = title?.ifBlank { "Transmisión Web" } ?: "Transmisión Web"
+        val savedPos = com.omnicast.sender.stream.StreamResumeManager.getPosition(this, url)
         historyManager.addOrUpdate(url, safeTitle, headers = headers)
         ActiveStreamHolder.startCasting(url, safeTitle, headers)
         ActiveStreamHolder.onSendPlayControl = { act, pos, vol, par -> sendPlayControl(act, pos, vol, par) }
-        sendSignalingMessage(SignalingMessage.DirectStreamHandoff(mediaUrl = url, title = safeTitle, headers = headers))
-        Toast.makeText(this, "Enviando video directo a la TV Box...", Toast.LENGTH_SHORT).show()
+        sendSignalingMessage(SignalingMessage.DirectStreamHandoff(mediaUrl = url, title = safeTitle, headers = headers, startPositionMs = savedPos))
+        if (savedPos > 0L) {
+            val formatted = com.omnicast.sender.stream.StreamResumeManager.formatTime(savedPos)
+            Toast.makeText(this, "▶ Reanudando en $formatted", Toast.LENGTH_SHORT).show()
+        } else {
+            Toast.makeText(this, "Enviando video directo a la TV Box...", Toast.LENGTH_SHORT).show()
+        }
     }
 
     fun sendPlayControl(action: String, positionMs: Long = 0L, volume: Float = 1.0f, param: String? = null) {

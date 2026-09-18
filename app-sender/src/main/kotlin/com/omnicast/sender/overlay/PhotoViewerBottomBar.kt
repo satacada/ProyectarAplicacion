@@ -17,7 +17,6 @@ fun PhotoViewerBottomBar(
     totalCount: Int,
     onPrev: () -> Unit,
     onNext: () -> Unit,
-    onAddMore: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -26,14 +25,14 @@ fun PhotoViewerBottomBar(
         modifier = modifier.padding(bottom = 32.dp, start = 12.dp, end = 12.dp)
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             FilledTonalButton(
                 onClick = onPrev,
                 enabled = totalCount > 1,
-                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
                 colors = ButtonDefaults.filledTonalButtonColors(containerColor = Color(0xFF1E293B))
             ) {
                 Text("◀ Ant", fontSize = 12.sp, color = Color.White)
@@ -44,26 +43,16 @@ fun PhotoViewerBottomBar(
                 color = Color.White,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(horizontal = 6.dp)
+                modifier = Modifier.padding(horizontal = 8.dp)
             )
 
             FilledTonalButton(
                 onClick = onNext,
                 enabled = totalCount > 1,
-                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
                 colors = ButtonDefaults.filledTonalButtonColors(containerColor = Color(0xFF1E293B))
             ) {
                 Text("Sig ▶", fontSize = 12.sp, color = Color.White)
-            }
-
-            Spacer(modifier = Modifier.width(4.dp))
-
-            Button(
-                onClick = onAddMore,
-                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0284C7))
-            ) {
-                Text("➕ Galería", fontSize = 12.sp, color = Color.White, fontWeight = FontWeight.SemiBold)
             }
         }
     }

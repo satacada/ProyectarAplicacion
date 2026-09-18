@@ -90,7 +90,7 @@ class ExoPlayerTvManager(private val context: Context) {
     }
 
     @OptIn(UnstableApi::class)
-    fun playStream(url: String, headers: Map<String, String> = emptyMap(), title: String? = null) {
+    fun playStream(url: String, headers: Map<String, String> = emptyMap(), title: String? = null, startPositionMs: Long = 0L) {
         if (url.contains("stub.mp4", ignoreCase = true) || url.contains("dummy.mp4", ignoreCase = true)) {
             com.omnicast.receiver.log.ReceiverLogger.log(TAG, "⚠️ Ignorando video dummy/placeholder: $url")
             return
@@ -104,7 +104,7 @@ class ExoPlayerTvManager(private val context: Context) {
         val mediaItem = buildMediaItem(url, title)
 
         if (safeHeaders.isEmpty()) {
-            playClean(url, title)
+            playClean(url, title, startPositionMs)
             return
         }
 
@@ -124,29 +124,29 @@ class ExoPlayerTvManager(private val context: Context) {
                 stop()
                 clearMediaItems()
                 setMediaSource(mediaSource)
-                seekToDefaultPosition()
+                if (startPositionMs > 0L) seekTo(startPositionMs) else seekToDefaultPosition()
                 prepare()
                 play()
             }
-            com.omnicast.receiver.log.ReceiverLogger.log(TAG, "Reproduciendo con cabeceras (${safeHeaders.keys.joinToString()}): $url")
+            com.omnicast.receiver.log.ReceiverLogger.log(TAG, "Reproduciendo con cabeceras (${safeHeaders.keys.joinToString()}): $url (pos=${startPositionMs}ms)")
         } catch (e: Throwable) {
             com.omnicast.receiver.log.ReceiverLogger.log(TAG, "Error con cabeceras, fallback a limpio", e)
-            playClean(url, title)
+            playClean(url, title, startPositionMs)
         }
     }
 
-    fun playClean(url: String, title: String? = null) {
+    fun playClean(url: String, title: String? = null, startPositionMs: Long = 0L) {
         if (url.contains("stub.mp4", ignoreCase = true) || url.contains("dummy.mp4", ignoreCase = true)) return
         val mediaItem = buildMediaItem(url, title)
         player?.apply {
             stop()
             clearMediaItems()
             setMediaItem(mediaItem)
-            seekToDefaultPosition()
+            if (startPositionMs > 0L) seekTo(startPositionMs) else seekToDefaultPosition()
             prepare()
             play()
         }
-        com.omnicast.receiver.log.ReceiverLogger.log(TAG, "Reproduciendo flujo directo limpio: $url")
+        com.omnicast.receiver.log.ReceiverLogger.log(TAG, "Reproduciendo flujo directo limpio: $url (pos=${startPositionMs}ms)")
     }
 
     private fun buildMediaItem(url: String, title: String?): MediaItem {

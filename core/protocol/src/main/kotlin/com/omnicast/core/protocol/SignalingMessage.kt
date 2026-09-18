@@ -40,7 +40,8 @@ sealed class SignalingMessage {
         val mediaUrl: String,
         val format: String = "HLS",
         val headers: Map<String, String> = emptyMap(),
-        val title: String? = null
+        val title: String? = null,
+        val startPositionMs: Long = 0L
     ) : SignalingMessage()
 
     @Serializable

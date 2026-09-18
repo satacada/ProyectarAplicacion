@@ -7,6 +7,11 @@ import android.util.Log
 import com.omnicast.core.domain.models.StreamProfile
 import com.omnicast.core.domain.ports.IP2PTransport
 import com.omnicast.core.domain.ports.P2PConnectionState
+import android.hardware.display.DisplayManager
+import android.os.Handler
+import android.os.Looper
+import android.util.DisplayMetrics
+import android.view.Display
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -31,11 +36,15 @@ class WebRtcSenderManager(
     private var videoTrack: VideoTrack? = null; private var videoSource: VideoSource? = null
     private val queuedRemoteCandidates = mutableListOf<IceCandidate>()
     private var isRemoteDescriptionSet = false
+    private var displayListener: DisplayManager.DisplayListener? = null
+    private var lastCaptureWidth = 0
+    private var lastCaptureHeight = 0
 
     var tvScaleMode: String = "EXTEND_16_9"
 
     override fun initialize() {
         Log.i(TAG, "🚀 OmniCast Sender v3.25 Inicializado (Universal WebRTC)")
+        setupDisplayListener()
         PeerConnectionFactory.initialize(
             PeerConnectionFactory.InitializationOptions.builder(context)
                 .setEnableInternalTracer(true).createInitializationOptions()
@@ -95,22 +104,63 @@ class WebRtcSenderManager(
         _connectionState.value = P2PConnectionState.CONNECTING
     }
 
+    private fun setupDisplayListener() {
+        val dm = context.getSystemService(Context.DISPLAY_SERVICE) as? DisplayManager ?: return
+        displayListener = object : DisplayManager.DisplayListener {
+            override fun onDisplayAdded(displayId: Int) = Unit
+            override fun onDisplayRemoved(displayId: Int) = Unit
+            override fun onDisplayChanged(displayId: Int) {
+                if (displayId == Display.DEFAULT_DISPLAY) {
+                    checkAndApplyOrientationChange()
+                }
+            }
+        }
+        dm.registerDisplayListener(displayListener, Handler(Looper.getMainLooper()))
+    }
+
+    fun checkAndApplyOrientationChange() {
+        val capturer = screenCapturer ?: return
+        val dims = calcCaptureDimensions()
+        val w = dims.first
+        val h = dims.second
+        if (w != lastCaptureWidth || h != lastCaptureHeight) {
+            val fps = (activeProfile?.frameRate ?: 30).coerceIn(15, 60)
+            Log.i(TAG, "🔄 Orientación adaptativa detectada: ${w}x${h} @ ${fps}fps (previo: ${lastCaptureWidth}x${lastCaptureHeight})")
+            lastCaptureWidth = w
+            lastCaptureHeight = h
+            try {
+                capturer.changeCaptureFormat(w, h, fps)
+            } catch (e: Throwable) {
+                Log.w(TAG, "Error cambiando formato de captura: ${e.message}")
+            }
+        }
+    }
+
     /** Inicia la captura real de pantalla DESPUÉS de haber enviado la oferta SDP (v3.11 / v3.4 estable). */
     fun beginCapture() {
         val dims = calcCaptureDimensions()
+        lastCaptureWidth = dims.first
+        lastCaptureHeight = dims.second
         val fps = (activeProfile?.frameRate ?: 30).coerceIn(15, 60)
         Log.i(TAG, "🎬 Iniciando captura: ${dims.first}x${dims.second} @ ${fps}fps (modo: $tvScaleMode, perfil: ${activeProfile?.label})")
         screenCapturer?.startCapture(dims.first, dims.second, fps)
     }
 
     fun calcCaptureDimensions(): Pair<Int, Int> {
-        val dm = context.resources.displayMetrics
-        val isLandscape = dm.widthPixels > dm.heightPixels
+        val displayManager = context.getSystemService(Context.DISPLAY_SERVICE) as? DisplayManager
+        val defaultDisplay = displayManager?.getDisplay(Display.DEFAULT_DISPLAY)
+        val metrics = DisplayMetrics()
+        @Suppress("DEPRECATION")
+        defaultDisplay?.getRealMetrics(metrics)
+        val screenW = if (metrics.widthPixels > 0) metrics.widthPixels else context.resources.displayMetrics.widthPixels
+        val screenH = if (metrics.heightPixels > 0) metrics.heightPixels else context.resources.displayMetrics.heightPixels
+
+        val isLandscape = screenW > screenH
         val maxDim = (if (isLandscape) activeProfile?.width ?: 1920 else activeProfile?.height ?: 1280).toFloat()
-        val curMax = (if (isLandscape) dm.widthPixels else dm.heightPixels).toFloat().coerceAtLeast(1f)
+        val curMax = (if (isLandscape) screenW else screenH).toFloat().coerceAtLeast(1f)
         val scale = minOf(1.0f, maxDim / curMax)
-        val capW = (((dm.widthPixels * scale).toInt() / 16) * 16).coerceAtLeast(320)
-        val capH = (((dm.heightPixels * scale).toInt() / 16) * 16).coerceAtLeast(480)
+        val capW = (((screenW * scale).toInt() / 16) * 16).coerceAtLeast(320)
+        val capH = (((screenH * scale).toInt() / 16) * 16).coerceAtLeast(480)
         return Pair(capW, capH)
     }
 
@@ -189,6 +239,11 @@ class WebRtcSenderManager(
             surfaceTextureHelper?.dispose(); surfaceTextureHelper = null
             peerConnection?.close(); peerConnection = null
             peerConnectionFactory?.dispose(); peerConnectionFactory = null
+            displayListener?.let {
+                val dm = context.getSystemService(Context.DISPLAY_SERVICE) as? DisplayManager
+                dm?.unregisterDisplayListener(it)
+                displayListener = null
+            }
             eglBase?.release(); eglBase = null
             isRemoteDescriptionSet = false; queuedRemoteCandidates.clear()
         } catch (e: Exception) { Log.e(TAG, "Error cerrando WebRtcSenderManager", e) }

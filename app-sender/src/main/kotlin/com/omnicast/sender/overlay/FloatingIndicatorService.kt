@@ -124,15 +124,34 @@ class FloatingIndicatorService : Service() {
                 if (!actUrl.isNullOrBlank()) {
                     statusFeedbackText.text = "✅ Transmitiendo: ${actTitle.take(20)}"; statusFeedbackText.setTextColor(Color.parseColor("#10B981"))
                     SenderMainActivity.sendDirectStreamStatic(this, actUrl, actTitle, actHdrs)
+                    Toast.makeText(this, "▶ Transmitiendo: ${actTitle.take(22)}", Toast.LENGTH_SHORT).show()
                 } else {
-                    val res = clipboardExtractor.extractFromClipboard()
-                    val clipUrl = res.mediaUrl
-                    if (res.isSuccess && clipUrl != null) {
-                        statusFeedbackText.text = "✅ ¡Flujo Detectado! Transmitiendo..."; statusFeedbackText.setTextColor(Color.parseColor("#10B981"))
-                        SenderMainActivity.sendDirectStreamStatic(this, clipUrl, "Video Capturado")
-                    } else {
-                        statusFeedbackText.text = "⚠️ Reproduce el video o pulsa 'Transmitir'."; statusFeedbackText.setTextColor(Color.parseColor("#F59E0B"))
-                    }
+                    statusFeedbackText.text = "🔍 Escaneando reproductor..."
+                    statusFeedbackText.setTextColor(Color.parseColor("#38BDF8"))
+                    SenderMainActivity.requestBrowserRescan(this)
+                    handler.postDelayed({
+                        val retryUrl = com.omnicast.sender.stream.ActiveStreamHolder.streamUrl
+                        val retryTitle = com.omnicast.sender.stream.ActiveStreamHolder.title ?: "Video Detectado"
+                        val retryHdrs = com.omnicast.sender.stream.ActiveStreamHolder.headers
+                        if (!retryUrl.isNullOrBlank()) {
+                            statusFeedbackText.text = "✅ Transmitiendo: ${retryTitle.take(20)}"
+                            statusFeedbackText.setTextColor(Color.parseColor("#10B981"))
+                            SenderMainActivity.sendDirectStreamStatic(this, retryUrl, retryTitle, retryHdrs)
+                            Toast.makeText(this, "▶ Transmitiendo: ${retryTitle.take(22)}", Toast.LENGTH_SHORT).show()
+                        } else {
+                            val res = clipboardExtractor.extractFromClipboard()
+                            val clipUrl = res.mediaUrl
+                            if (res.isSuccess && clipUrl != null) {
+                                statusFeedbackText.text = "✅ ¡Flujo Detectado! Transmitiendo..."
+                                statusFeedbackText.setTextColor(Color.parseColor("#10B981"))
+                                SenderMainActivity.sendDirectStreamStatic(this, clipUrl, "Video Capturado")
+                            } else {
+                                statusFeedbackText.text = "⚠️ Reproduce el video o pulsa 'Transmitir'."
+                                statusFeedbackText.setTextColor(Color.parseColor("#F59E0B"))
+                                Toast.makeText(this, "⚠️ Dale Play al video en la página para capturar el flujo", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    }, 800)
                 }
             },
             onStartScreenMirror = {
@@ -145,7 +164,17 @@ class FloatingIndicatorService : Service() {
             },
             onCastGallery = {
                 menuLayoutRef?.visibility = View.GONE; isExpanded = false
-                launchIntentSafely(Intent(this, GalleryPickerActivity::class.java).apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }, 104)
+                if (com.omnicast.sender.gallery.GalleryMediaHelper.hasGalleryPermission(this)) {
+                    launchIntentSafely(Intent(this, PhotoCastViewerActivity::class.java).apply {
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        putExtra("EXTRA_START_INDEX", 0)
+                    }, 104)
+                } else {
+                    launchIntentSafely(Intent(this, SenderMainActivity::class.java).apply {
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                        putExtra("EXTRA_OPEN_GALLERY", true)
+                    }, 104)
+                }
             },
             onOpenBrowser = {
                 menuLayoutRef?.visibility = View.GONE; isExpanded = false
@@ -174,7 +203,7 @@ class FloatingIndicatorService : Service() {
             onStopCast = {
                 menuLayoutRef?.visibility = View.GONE; isExpanded = false
                 ProjectionForegroundService.stopService(this); SenderMainActivity.sendDisconnectStatic(this)
-                com.omnicast.sender.stream.ActiveStreamHolder.stopCastingAndClear()
+                com.omnicast.sender.stream.ActiveStreamHolder.clear()
                 pillText.text = "OmniCast"; statusFeedbackText.text = "🛑 Detenido y capturas limpiadas."
                 statusFeedbackText.setTextColor(Color.parseColor("#EF4444"))
                 Toast.makeText(this, "🛑 Transmisión detenida y capturas limpiadas", Toast.LENGTH_SHORT).show()
@@ -199,7 +228,22 @@ class FloatingIndicatorService : Service() {
         builder.attachDragToMove(pillLayout, windowLayoutParams, windowManager, rootLayout) { menuLayout.visibility = View.GONE; exitConfirmLayout.visibility = View.VISIBLE }
         builder.attachDragToMove(dotView, windowLayoutParams, windowManager, rootLayout) { menuLayout.visibility = View.GONE; exitConfirmLayout.visibility = View.VISIBLE }
 
-        pollRunnable = Runnable { refreshDisplayMode(); handler.postDelayed(pollRunnable!!, 1000) }
+        pollRunnable = Runnable {
+            refreshDisplayMode()
+            if (isExpanded) {
+                if (com.omnicast.sender.stream.ActiveStreamHolder.isCasting.value) {
+                    val t = com.omnicast.sender.stream.ActiveStreamHolder.currentMediaTitle.value
+                    if (t.isNotBlank()) {
+                        statusFeedbackText.text = "✅ Transmitiendo: ${t.take(20)}"
+                        statusFeedbackText.setTextColor(Color.parseColor("#10B981"))
+                    }
+                } else if (!com.omnicast.sender.stream.ActiveStreamHolder.hasStream() && statusFeedbackText.text.startsWith("✅ Transmitiendo:")) {
+                    statusFeedbackText.text = "TV: $tvIp"
+                    statusFeedbackText.setTextColor(Color.parseColor("#94A3B8"))
+                }
+            }
+            handler.postDelayed(pollRunnable!!, 1000)
+        }
         handler.post(pollRunnable!!)
 
         try { windowManager?.addView(rootLayout, windowLayoutParams); Log.i(TAG, "Asistente flotante agregado") } catch (e: Throwable) { Log.e(TAG, "Error vista flotante", e) }

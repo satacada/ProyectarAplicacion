@@ -1,22 +1,27 @@
-﻿package com.omnicast.sender.overlay
+package com.omnicast.sender.overlay
 
 import android.graphics.BitmapFactory
 import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.detectHorizontalDragGestures
-import androidx.compose.foundation.gestures.detectTransformGestures
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.calculatePan
+import androidx.compose.foundation.gestures.calculateZoom
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.positionChanged
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -30,7 +35,6 @@ fun PhotoViewerContent(
     uris: List<Uri>,
     currentIndex: Int,
     onIndexChange: (Int) -> Unit,
-    onAddMore: () -> Unit,
     onTransform: (Float, Float, Float) -> Unit,
     onClose: () -> Unit
 ) {
@@ -77,29 +81,65 @@ fun PhotoViewerContent(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.Black)
-            .pointerInput(currentIndex, scale) {
-                if (scale > 1.05f) {
-                    detectTransformGestures { _, pan, zoom, _ ->
-                        val newScale = (scale * zoom).coerceIn(0.40f, 5.0f)
-                        scale = newScale
-                        panX += pan.x
-                        panY += pan.y
-                        onTransform(scale, panX, panY)
-                    }
-                } else {
-                    var dragAccumulator = 0f
-                    detectHorizontalDragGestures(
-                        onDragStart = { dragAccumulator = 0f },
-                        onHorizontalDrag = { change, dragAmount ->
-                            change.consume()
-                            dragAccumulator += dragAmount
-                        },
-                        onDragEnd = {
-                            if (dragAccumulator < -60f) onNext()
-                            else if (dragAccumulator > 60f) onPrev()
-                            dragAccumulator = 0f
+            .pointerInput(currentIndex) {
+                detectTapGestures(
+                    onDoubleTap = {
+                        if (scale > 1.05f) {
+                            resetZoom()
+                        } else {
+                            scale = 2.0f
+                            panX = 0f
+                            panY = 0f
+                            onTransform(2.0f, 0f, 0f)
                         }
-                    )
+                    }
+                )
+            }
+            .pointerInput(currentIndex) {
+                awaitEachGesture {
+                    awaitFirstDown(requireUnconsumed = false)
+                    var panAccumulator = Offset.Zero
+                    var wasZooming = false
+
+                    do {
+                        val event = awaitPointerEvent()
+                        val activePointers = event.changes.filter { it.pressed }
+                        val pointerCount = activePointers.size
+
+                        val zoom = event.calculateZoom()
+                        val pan = event.calculatePan()
+                        val isPinch = abs(zoom - 1f) > 0.005f || pointerCount > 1
+
+                        if (isPinch) {
+                            wasZooming = true
+                            scale = (scale * zoom).coerceIn(0.40f, 5.0f)
+                            panX += pan.x
+                            panY += pan.y
+                            onTransform(scale, panX, panY)
+                            event.changes.forEach { if (it.positionChanged()) it.consume() }
+                        } else if (scale > 1.05f) {
+                            panX += pan.x
+                            panY += pan.y
+                            onTransform(scale, panX, panY)
+                            event.changes.forEach { if (it.positionChanged()) it.consume() }
+                        } else {
+                            panAccumulator += pan
+                            if (abs(panAccumulator.x) > 25f) {
+                                event.changes.forEach { if (it.positionChanged()) it.consume() }
+                            }
+                        }
+                    } while (event.changes.any { it.pressed })
+
+                    if (!wasZooming && scale <= 1.05f) {
+                        if (panAccumulator.x < -70f) {
+                            onNext()
+                        } else if (panAccumulator.x > 70f) {
+                            onPrev()
+                        }
+                        panX = 0f
+                        panY = 0f
+                        onTransform(1.0f, 0f, 0f)
+                    }
                 }
             }
     ) {
@@ -146,7 +186,6 @@ fun PhotoViewerContent(
             totalCount = uris.size,
             onPrev = onPrev,
             onNext = onNext,
-            onAddMore = onAddMore,
             modifier = Modifier.align(Alignment.BottomCenter)
         )
     }

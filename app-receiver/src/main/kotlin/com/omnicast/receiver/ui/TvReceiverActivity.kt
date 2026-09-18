@@ -129,7 +129,7 @@ class TvReceiverActivity : ComponentActivity() {
                     exoPlayerManager.stop(); receiverState.value = ReceiverUiState.YouTubePlaying(ytId, title, System.currentTimeMillis())
                 } else {
                     receiverState.value = ReceiverUiState.DirectStreamPlaying(message.mediaUrl, title)
-                    exoPlayerManager.playStream(message.mediaUrl, message.headers, title); startPlaybackStatusReporting()
+                    exoPlayerManager.playStream(message.mediaUrl, message.headers, title, message.startPositionMs); startPlaybackStatusReporting()
                 }
             }
             is SignalingMessage.PlayControl -> {

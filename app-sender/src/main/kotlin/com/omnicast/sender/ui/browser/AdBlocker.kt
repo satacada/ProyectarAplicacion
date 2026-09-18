@@ -27,7 +27,8 @@ object AdBlocker {
         "giggle.com", "giggles.com", "giggleclick.com", "giggletrack.com", "giggleredirect.com",
         "cat-bolt.com", "imasdk.googleapis.com", "securepubads.g.doubleclick.net",
         "pagead2.googlesyndication.com", "ad-delivery.net", "adkeeper.com", "trafficjunky.com",
-        "whocares.club", "pemsrv.com", "gdtcdn.com"
+        "whocares.club", "pemsrv.com", "gdtcdn.com", "mc.yandex.ru", "yandex.ru", "luugy.com",
+        "google-analytics.com", "googletagmanager.com"
     )
 
     private val AD_KEYWORDS = listOf(
@@ -36,7 +37,8 @@ object AdBlocker {
         "zoneid=", "iclick-v", "ad_unit", "promoted", "sponsor", "partnerize", "tradedoubler",
         "s.click.aliexpress", "c.lazada", "shp.ee", "aff_c", "clickalgo", "giggle",
         "/creatives/", "/creative/", "cat-bolt", "imasdk", "securepubads",
-        "preroll", "pre-roll", "midroll", "postroll", "/vast", "/vpaid", "ad-delivery"
+        "preroll", "pre-roll", "midroll", "postroll", "/vast", "/vpaid", "ad-delivery",
+        "clmap", "metrika", "analytics"
     )
 
     private val KNOWN_MEDIA_HOSTS = hashSetOf(

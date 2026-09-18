@@ -50,6 +50,10 @@ class ProjectionSession(
             this.tvScaleMode = this@ProjectionSession.tvScaleMode
             initialize()
             startScreenStreaming(profile)
+            onIceConnectionClosed = {
+                Log.w("ProjectionSession", "Conexión WebRTC cerrada o fallida en red. Finalizando servicio.")
+                ProjectionForegroundService.stopService(context)
+            }
         }
 
         audioSender = DigitalAudioSender(targetIp, 8089)

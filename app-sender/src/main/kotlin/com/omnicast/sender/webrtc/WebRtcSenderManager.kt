@@ -22,12 +22,13 @@ class WebRtcSenderManager(
     private val _connectionState = MutableStateFlow(P2PConnectionState.DISCONNECTED)
     override val connectionState: StateFlow<P2PConnectionState> = _connectionState.asStateFlow()
     var onLocalIceCandidate: ((IceCandidate) -> Unit)? = null
+    var onIceConnectionClosed: (() -> Unit)? = null
+    var activeProfile: StreamProfile? = null
 
     private var eglBase: EglBase? = null; private var surfaceTextureHelper: SurfaceTextureHelper? = null
     private var peerConnectionFactory: PeerConnectionFactory? = null; private var peerConnection: PeerConnection? = null
     private var screenCapturer: ScreenCapturerAndroid? = null
     private var videoTrack: VideoTrack? = null; private var videoSource: VideoSource? = null
-    private var activeProfile: StreamProfile? = null
     private val queuedRemoteCandidates = mutableListOf<IceCandidate>()
     private var isRemoteDescriptionSet = false
 
@@ -75,8 +76,14 @@ class WebRtcSenderManager(
                 Log.i(TAG, "ICE Emisor: $newState")
                 when (newState) {
                     PeerConnection.IceConnectionState.CONNECTED -> _connectionState.value = P2PConnectionState.CONNECTED
-                    PeerConnection.IceConnectionState.DISCONNECTED, PeerConnection.IceConnectionState.CLOSED -> _connectionState.value = P2PConnectionState.DISCONNECTED
-                    PeerConnection.IceConnectionState.FAILED -> _connectionState.value = P2PConnectionState.FAILED
+                    PeerConnection.IceConnectionState.DISCONNECTED, PeerConnection.IceConnectionState.CLOSED -> {
+                        _connectionState.value = P2PConnectionState.DISCONNECTED
+                        onIceConnectionClosed?.invoke()
+                    }
+                    PeerConnection.IceConnectionState.FAILED -> {
+                        _connectionState.value = P2PConnectionState.FAILED
+                        onIceConnectionClosed?.invoke()
+                    }
                     else -> Unit
                 }
             }
@@ -105,29 +112,13 @@ class WebRtcSenderManager(
 
     fun calcCaptureDimensions(): Pair<Int, Int> {
         val dm = context.resources.displayMetrics
-        val isLand = lastIsLandscape ?: (context.resources.configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE || dm.widthPixels > dm.heightPixels)
-        val baseH = (activeProfile?.height ?: 1080).coerceIn(480, 1280)
-        return if (tvScaleMode == "EXTEND_16_9") {
-            if (isLand) {
-                when {
-                    baseH >= 1000 -> Pair(1920, 1080)
-                    baseH >= 700 -> Pair(1280, 720)
-                    else -> Pair(960, 540)
-                }
-            } else {
-                when {
-                    baseH >= 700 -> Pair(720, 1280)
-                    else -> Pair(540, 960)
-                }
-            }
-        } else {
-            // Proporción original del móvil
-            val maxScreen = maxOf(dm.widthPixels, dm.heightPixels).toFloat().coerceAtLeast(1f)
-            val scale = minOf(1.0f, baseH.toFloat() / maxScreen)
-            val capW = (((dm.widthPixels * scale).toInt() / 16) * 16).coerceAtLeast(240)
-            val capH = (((dm.heightPixels * scale).toInt() / 16) * 16).coerceAtLeast(320)
-            Pair(capW, capH)
-        }
+        val isLandscape = dm.widthPixels > dm.heightPixels
+        val maxDim = (if (isLandscape) activeProfile?.width ?: 1920 else activeProfile?.height ?: 1280).toFloat()
+        val curMax = (if (isLandscape) dm.widthPixels else dm.heightPixels).toFloat().coerceAtLeast(1f)
+        val scale = minOf(1.0f, maxDim / curMax)
+        val capW = (((dm.widthPixels * scale).toInt() / 16) * 16).coerceAtLeast(320)
+        val capH = (((dm.heightPixels * scale).toInt() / 16) * 16).coerceAtLeast(480)
+        return Pair(capW, capH)
     }
 
     private fun setupOrientationListener() {

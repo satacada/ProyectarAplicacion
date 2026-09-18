@@ -70,6 +70,8 @@ class AudioCaptureManager(
                 val readBytes = audioRecord?.read(buffer, 0, buffer.size) ?: 0
                 if (readBytes > 0 && !isMuted) {
                     onAudioChunkCaptured(buffer, readBytes)
+                } else {
+                    kotlinx.coroutines.delay(20)
                 }
             }
         }

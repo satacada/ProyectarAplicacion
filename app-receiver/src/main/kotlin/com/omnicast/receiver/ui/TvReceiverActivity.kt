@@ -49,6 +49,11 @@ class TvReceiverActivity : ComponentActivity() {
 
         webRtcReceiver = WebRtcReceiverManager(this).apply {
             initialize()
+            onLocalIceCandidate = { c ->
+                lifecycleScope.launch {
+                    signalingServer.sendMessage(SignalingMessage.IceCandidate(c.sdpMid, c.sdpMLineIndex, c.sdp))
+                }
+            }
             onConnectionClosed = { runOnUiThread { if (receiverState.value is ReceiverUiState.ScreenMirroring) receiverState.value = ReceiverUiState.Standby } }
         }
         exoPlayerManager = ExoPlayerTvManager(this).apply {

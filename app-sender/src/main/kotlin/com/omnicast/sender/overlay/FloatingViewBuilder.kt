@@ -73,7 +73,7 @@ class FloatingViewBuilder(private val context: Context) {
         val menuTitle = TextView(context).apply {
             text = "OmniCast v3.22 Asistente"; setTextColor(Color.parseColor("#38BDF8")); setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f); typeface = Typeface.DEFAULT_BOLD
         }
-        innerMenu.addView(menuTitle); innerMenu.addView(statusFeedbackText)
+        innerMenu.addView(menuTitle)
         innerMenu.addView(createBtn("⚙️ Abrir OmniCast", "#334155", onOpenOmniCast))
         innerMenu.addView(createBtn("❌ Desactivar Asistente", "#475569", onDisableOverlay))
         innerMenu.addView(createBtn("🛑 Detener Transmisión", "#DC2626", onStopCast))
@@ -81,11 +81,12 @@ class FloatingViewBuilder(private val context: Context) {
         innerMenu.addView(createBtn("📺 Cambiar Modo TV (16:9 / Fit)", "#8B5CF6", onToggleTvScale))
         innerMenu.addView(createBtn("🖼️ Enviar Foto con Zoom Táctil", "#059669", onCastGallery))
         innerMenu.addView(createBtn("🌐 Abrir Browser Omni", "#0D9488", onOpenBrowser))
+        innerMenu.addView(statusFeedbackText)
         innerMenu.addView(createBtn("🔍 Detectar Flujo de Video", "#0284C7", onDetectVideo))
 
         val scrollView = object : android.widget.ScrollView(context) {
             override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-                val maxH = dpToPx(270f)
+                val maxH = dpToPx(380f)
                 val customHeightSpec = MeasureSpec.makeMeasureSpec(maxH, MeasureSpec.AT_MOST)
                 super.onMeasure(widthMeasureSpec, customHeightSpec)
             }

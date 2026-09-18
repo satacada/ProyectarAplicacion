@@ -64,7 +64,7 @@ fun InAppBrowserScreen(
             if (!detectedStreams.contains(url)) detectedStreams.add(0, url)
             else if (detectedStreams.firstOrNull() != url) { detectedStreams.remove(url); detectedStreams.add(0, url) }
         } else {
-            if (detectedStreams.size >= 3) return
+            if (detectedStreams.size >= 10) return
             if (!detectedStreams.contains(url)) {
                 if (shouldBePrimary) detectedStreams.add(0, url) else detectedStreams.add(url)
             }
@@ -172,7 +172,7 @@ fun InAppBrowserScreen(
                         registerStream(sniffed.src, hdrs, isPrimary = true, label = sniffed.label ?: "▶ En Reproducción")
                         if (sniffed.title.isNotBlank()) pageTitle = sniffed.title
                         Toast.makeText(context, "▶ Video detectado: ${pageTitle.take(24)}", Toast.LENGTH_SHORT).show()
-                    } else if (detectedStreams.size < 3) {
+                    } else if (detectedStreams.size < 10) {
                         registerStream(sniffed.src, hdrs, isPrimary = false, label = sniffed.label)
                         if (sniffed.title.isNotBlank()) pageTitle = sniffed.title
                     }

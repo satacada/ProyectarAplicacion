@@ -35,10 +35,14 @@ object BrowserUrlHelper {
         if (lower.contains(".ts?") || lower.endsWith(".ts") || lower.contains(".m4s")) return false
         if (lower.contains("/audio") || lower.contains("_audio.m3u8") || lower.contains("-audio.m3u8")) return false
         if (lower.endsWith(".html") || lower.endsWith(".htm") || lower.contains(".html?") || lower.contains(".htm?")) return false
-        if (lower.contains("mycdn.me") || lower.contains("vd.mycdn") || lower.contains("vd2.mycdn") || lower.contains("vd3.mycdn")) return true
-        if (lower.contains("ok.ru") && (lower.contains(".m3u8") || lower.contains("videometa") || lower.contains("api/video"))) return true
+        if (lower.endsWith(".jpg") || lower.endsWith(".jpeg") || lower.endsWith(".png") || lower.endsWith(".webp") || lower.endsWith(".gif") || lower.endsWith(".svg") || lower.endsWith(".ico") || lower.contains(".jpg?") || lower.contains(".jpeg?") || lower.contains(".png?") || lower.contains(".webp?")) return false
+        if (lower.endsWith(".css") || lower.endsWith(".js") || lower.endsWith(".woff") || lower.endsWith(".woff2") || lower.endsWith(".ttf") || lower.contains(".css?") || lower.contains(".js?")) return false
+        if (lower.contains("i.mycdn.me") || lower.contains("st.mycdn.me") || lower.contains("static.mycdn.me")) return false
         if (lower.contains(".m3u8") || lower.contains(".mpd") || lower.contains(".mp4") || lower.contains(".webm") || lower.contains(".mkv")) return true
-        return lower.contains("/hls/") || lower.contains("/manifest") || lower.contains("chunklist")
+        if (lower.contains("/hls/") || lower.contains("/manifest") || lower.contains("chunklist")) return true
+        if (lower.contains("vd.mycdn.me") || lower.contains("vd2.mycdn.me") || lower.contains("vd3.mycdn.me") || lower.contains("vd4.mycdn.me") || (lower.contains("mycdn.me") && (lower.contains("/video/") || lower.contains("cmd=video") || lower.contains("sig=")))) return true
+        if (lower.contains("ok.ru") && (lower.contains("videometa") || lower.contains("api/video") || lower.contains("cmd=video"))) return true
+        return false
     }
 
     fun buildSafeHeaders(

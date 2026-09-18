@@ -87,7 +87,7 @@ object WvcDomSniffer {
                     "videoList" -> {
                         val pageTitle = json.optString("title", "Transmisión Web")
                         val vList = json.optJSONArray("videoList")
-                        if (vList != null) {
+                        if (vList != null && vList.length() <= 2) {
                             for (i in 0 until vList.length()) {
                                 val item = vList.optJSONObject(i) ?: continue
                                 val poster = item.optString("poster", "")

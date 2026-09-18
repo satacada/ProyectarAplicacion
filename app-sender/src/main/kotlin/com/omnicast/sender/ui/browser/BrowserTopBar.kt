@@ -14,8 +14,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
@@ -44,6 +46,15 @@ fun BrowserTopBar(
 ) {
     val focusManager = LocalFocusManager.current
     var showMenu by remember { mutableStateOf(false) }
+    var textFieldValue by remember {
+        mutableStateOf(TextFieldValue(inputUrl, TextRange(inputUrl.length)))
+    }
+
+    LaunchedEffect(inputUrl) {
+        if (inputUrl != textFieldValue.text) {
+            textFieldValue = TextFieldValue(inputUrl, TextRange(inputUrl.length))
+        }
+    }
 
     Surface(color = Color(0xFF0F172A), tonalElevation = 4.dp) {
         Row(
@@ -75,8 +86,13 @@ fun BrowserTopBar(
                 Text("🔒", fontSize = 11.sp)
                 Spacer(modifier = Modifier.width(6.dp))
                 BasicTextField(
-                    value = inputUrl,
-                    onValueChange = onInputUrlChange,
+                    value = textFieldValue,
+                    onValueChange = { newValue ->
+                        textFieldValue = newValue
+                        if (newValue.text != inputUrl) {
+                            onInputUrlChange(newValue.text)
+                        }
+                    },
                     modifier = Modifier.weight(1f).fillMaxHeight(),
                     singleLine = true,
                     cursorBrush = androidx.compose.ui.graphics.SolidColor(Color(0xFF38BDF8)),
@@ -90,19 +106,22 @@ fun BrowserTopBar(
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Go),
                     keyboardActions = KeyboardActions(onGo = {
                         focusManager.clearFocus()
-                        onNavigate(inputUrl)
+                        onNavigate(textFieldValue.text)
                     }),
                     decorationBox = { innerTextField ->
                         Box(contentAlignment = Alignment.CenterStart, modifier = Modifier.fillMaxSize()) {
-                            if (inputUrl.isEmpty()) {
+                            if (textFieldValue.text.isEmpty()) {
                                 Text("Buscar o escribir URL...", color = Color(0xFF94A3B8), fontSize = 13.sp)
                             }
                             innerTextField()
                         }
                     }
                 )
-                if (inputUrl.isNotBlank()) {
-                    IconButton(onClick = { onInputUrlChange("") }, modifier = Modifier.size(24.dp)) {
+                if (textFieldValue.text.isNotBlank()) {
+                    IconButton(onClick = {
+                        textFieldValue = TextFieldValue("")
+                        onInputUrlChange("")
+                    }, modifier = Modifier.size(24.dp)) {
                         Text("✕", color = Color(0xFF94A3B8), fontSize = 12.sp)
                     }
                 }

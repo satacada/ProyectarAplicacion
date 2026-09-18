@@ -59,11 +59,20 @@ fun InAppBrowserScreen(
     fun registerStream(url: String, hdrs: Map<String, String>, isPrimary: Boolean = false, label: String? = null) {
         val isM3u8 = url.contains(".m3u8", ignoreCase = true)
         val shouldBePrimary = isPrimary || isM3u8
-        if (!detectedStreams.contains(url)) { if (shouldBePrimary) detectedStreams.add(0, url) else detectedStreams.add(url) }
-        else if (shouldBePrimary && detectedStreams.firstOrNull() != url) { detectedStreams.remove(url); detectedStreams.add(0, url) }
+        if (isPrimary) {
+            if (!detectedStreams.contains(url)) detectedStreams.add(0, url)
+            else if (detectedStreams.firstOrNull() != url) { detectedStreams.remove(url); detectedStreams.add(0, url) }
+        } else {
+            if (detectedStreams.size >= 3) return
+            if (!detectedStreams.contains(url)) {
+                if (shouldBePrimary) detectedStreams.add(0, url) else detectedStreams.add(url)
+            }
+        }
         if (hdrs.isNotEmpty()) streamHeaders[url] = hdrs; if (!label.isNullOrBlank()) streamLabels[url] = label
         val primaryUrl = detectedStreams.firstOrNull() ?: url
-        ActiveStreamHolder.update(primaryUrl, pageTitle, streamHeaders[primaryUrl] ?: hdrs)
+        if (!ActiveStreamHolder.isCasting.value) {
+            ActiveStreamHolder.update(primaryUrl, pageTitle, streamHeaders[primaryUrl] ?: hdrs)
+        }
     }
 
     fun checkAndRegisterYouTube(url: String?, title: String? = null) {
@@ -73,8 +82,7 @@ fun InAppBrowserScreen(
     }
 
     fun navigateTo(url: String) {
-        if (ActiveStreamHolder.isCasting.value) ActiveStreamHolder.stopCasting()
-        detectedStreams.clear(); streamHeaders.clear(); streamLabels.clear(); qualityOptions = emptyList(); ActiveStreamHolder.clear()
+        detectedStreams.clear(); streamHeaders.clear(); streamLabels.clear(); qualityOptions = emptyList()
         val target = BrowserUrlHelper.normalizeUrl(url)
         inputUrl = target; currentUrl = target; isHome = false
         if (target.contains("youtube.com") || target.contains("youtu.be")) checkAndRegisterYouTube(target)
@@ -136,8 +144,7 @@ fun InAppBrowserScreen(
                     val prevHost = try { java.net.URI(currentUrl).host?.lowercase() } catch (_: Throwable) { "" }
                     val newHost = try { java.net.URI(newUrl).host?.lowercase() } catch (_: Throwable) { "" }
                     if (!prevHost.isNullOrEmpty() && !newHost.isNullOrEmpty() && prevHost != newHost) {
-                        if (ActiveStreamHolder.isCasting.value) ActiveStreamHolder.stopCasting()
-                        detectedStreams.clear(); streamHeaders.clear(); streamLabels.clear(); qualityOptions = emptyList(); ActiveStreamHolder.clear()
+                        detectedStreams.clear(); streamHeaders.clear(); streamLabels.clear(); qualityOptions = emptyList()
                     }
                     inputUrl = newUrl; currentUrl = newUrl
                     if (newUrl.contains("youtube.com") || newUrl.contains("youtu.be")) checkAndRegisterYouTube(newUrl)
@@ -155,10 +162,10 @@ fun InAppBrowserScreen(
                     val hdrs = BrowserUrlHelper.buildSafeHeaders(sniffed.src, currentUrl, UA_MOBILE)
                     if (sniffed.isPlaying) {
                         detectedStreams.clear()
-                        registerStream(sniffed.src, hdrs, isPrimary = true, label = sniffed.label)
+                        registerStream(sniffed.src, hdrs, isPrimary = true, label = sniffed.label ?: "▶ En Reproducción")
                         if (sniffed.title.isNotBlank()) pageTitle = sniffed.title
-                        Toast.makeText(context, "▶ Video: ${pageTitle.take(24)}", Toast.LENGTH_SHORT).show()
-                    } else {
+                        Toast.makeText(context, "▶ Video detectado: ${pageTitle.take(24)}", Toast.LENGTH_SHORT).show()
+                    } else if (detectedStreams.size < 3) {
                         registerStream(sniffed.src, hdrs, isPrimary = false, label = sniffed.label)
                         if (sniffed.title.isNotBlank()) pageTitle = sniffed.title
                     }

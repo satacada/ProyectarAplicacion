@@ -29,7 +29,8 @@ class WebRtcReceiverManager(private val context: Context) {
     private var lastRot = 0
 
     fun initialize() {
-        ReceiverLogger.log(TAG, "Inicializando decodificador WebRTC por hardware en TV Box")
+        ReceiverLogger.log(TAG, "Inicializando decodificador WebRTC por hardware en TV Box (v3.21)")
+        setSmoothBuffer(true)
         val initOptions = PeerConnectionFactory.InitializationOptions.builder(context).setEnableInternalTracer(true).createInitializationOptions()
         PeerConnectionFactory.initialize(initOptions)
 
@@ -198,6 +199,14 @@ class WebRtcReceiverManager(private val context: Context) {
                 }
             }
         }
+    }
+
+    fun setSmoothBuffer(enabled: Boolean) {
+        val trial = if (enabled) "WebRTC-ForcePlayoutDelay/min_ms:100,max_ms:250/" else "WebRTC-ForcePlayoutDelay/min_ms:0,max_ms:50/"
+        try {
+            PeerConnectionFactory.initializeFieldTrials(trial)
+            ReceiverLogger.log(TAG, "🛡️ Buffer Anti-Tirones en TV: ${if (enabled) "ACTIVADO (100ms)" else "DESACTIVADO (0ms)"}")
+        } catch (e: Throwable) { ReceiverLogger.log(TAG, "Buffer warning: ${e.message}") }
     }
 
     fun resetConnection() {

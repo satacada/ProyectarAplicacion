@@ -181,7 +181,9 @@ class SenderMainActivity : ComponentActivity() {
 
     private fun startScreenStreaming(target: DeviceTarget, profile: StreamProfile, tvScaleMode: String, permissionData: Intent) {
         autoPromptCapture.value = false
-        ProjectionForegroundService.startProjection(this, target.ipAddress, target.port, profile, permissionData, tvScaleMode)
+        val prefs = getSharedPreferences("omnicast_prefs", Context.MODE_PRIVATE)
+        val smoothBuffer = prefs.getBoolean("saved_smooth_buffer", true)
+        ProjectionForegroundService.startProjection(this, target.ipAddress, target.port, profile, permissionData, tvScaleMode, smoothBuffer)
         Toast.makeText(this, "Proyectando pantalla en ${target.name}", Toast.LENGTH_SHORT).show()
         lifecycleScope.launch { kotlinx.coroutines.delay(700); if (!isFinishing && !isDestroyed) moveTaskToBack(true) }
     }

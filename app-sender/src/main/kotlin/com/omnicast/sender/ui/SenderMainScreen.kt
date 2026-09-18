@@ -50,6 +50,7 @@ fun SenderMainScreen(
         )
     }
     var tvScaleMode by remember { mutableStateOf(prefs.getString("saved_tv_scale_mode", "EXTEND_16_9") ?: "EXTEND_16_9") }
+    var smoothBufferEnabled by remember { mutableStateOf(prefs.getBoolean("saved_smooth_buffer", true)) }
     var isStreaming by remember { mutableStateOf(com.omnicast.sender.service.ProjectionForegroundService.isProjecting) }
     var detectionResult by remember { mutableStateOf<StreamDetectionResult?>(null) }
     var showInAppBrowser by remember { mutableStateOf(initialOpenBrowser) }
@@ -164,6 +165,11 @@ fun SenderMainScreen(
                         if (isStreaming) {
                             com.omnicast.sender.service.ProjectionForegroundService.setTvScaleMode(it)
                         }
+                    },
+                    smoothBufferEnabled = smoothBufferEnabled,
+                    onToggleSmoothBuffer = {
+                        smoothBufferEnabled = it
+                        prefs.edit().putBoolean("saved_smooth_buffer", it).apply()
                     },
                     onStartProjection = { projectionLauncher.launch(getSafeCaptureIntent()) },
                     onStopProjection = {

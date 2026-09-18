@@ -103,6 +103,7 @@ class TvReceiverActivity : ComponentActivity() {
             is SignalingMessage.Offer -> {
                 exoPlayerManager.stop(); digitalAudioReceiver?.start(); webRtcReceiver.resetConnection()
                 receiverState.value = ReceiverUiState.ScreenMirroring("${message.width}x${message.height}", message.fps)
+                webRtcReceiver.setSmoothBuffer(message.smoothBuffer)
                 webRtcReceiver.handleOffer(message.sdp) { sdp -> lifecycleScope.launch { signalingServer.sendMessage(SignalingMessage.Answer(sdp)) } }
             }
             is SignalingMessage.IceCandidate -> webRtcReceiver.addRemoteIceCandidate(message.sdpMid, message.sdpMLineIndex, message.candidate)

@@ -22,7 +22,8 @@ class ProjectionSession(
     private val targetPort: Int,
     private val profile: StreamProfile,
     private val permissionData: Intent,
-    private var tvScaleMode: String = "EXTEND_16_9"
+    private var tvScaleMode: String = "EXTEND_16_9",
+    private val smoothBuffer: Boolean = true
 ) {
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private var webRtcManager: WebRtcSenderManager? = null
@@ -107,7 +108,7 @@ class ProjectionSession(
                 Log.i("ProjectionSession", "Conexión señalización OK con TV. Creando oferta SDP...")
                 webRtcManager?.createOffer { offerSdp ->
                     val dims = webRtcManager?.calcCaptureDimensions() ?: Pair(profile.width, profile.height)
-                    client.sendMessage(SignalingMessage.Offer(offerSdp, dims.first, dims.second, profile.frameRate, profile.targetBitrateKbps))
+                    client.sendMessage(SignalingMessage.Offer(offerSdp, dims.first, dims.second, profile.frameRate, profile.targetBitrateKbps, smoothBuffer))
                     offerSent = true
                     pendingCandidates.forEach { client.sendMessage(it) }
                     pendingCandidates.clear()

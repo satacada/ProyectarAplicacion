@@ -16,7 +16,8 @@ sealed class SignalingMessage {
         val width: Int,
         val height: Int,
         val fps: Int,
-        val bitrateKbps: Int
+        val bitrateKbps: Int,
+        val smoothBuffer: Boolean = true
     ) : SignalingMessage()
 
     @Serializable

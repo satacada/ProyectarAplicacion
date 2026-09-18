@@ -63,7 +63,20 @@ data class StreamProfile(
             description = "1280px altura @ 60 FPS (~48M px/s) — Carga muy alta. Puede saturar procesadores de gama media."
         )
 
+        val CINEMA_1080P_30FPS = StreamProfile(
+            mode = QualityMode.CINEMA_1080P_30FPS,
+            width = 1920,
+            height = 1080,
+            frameRate = 30,
+            targetBitrateKbps = 4500,
+            maxLatencyMs = 65,
+            label = "1080p @ 30 FPS",
+            badge = "🎬 1080p Cine",
+            description = "1080px altura @ 30 FPS (~35M px/s) — Máxima definición para películas y series con movimiento estable."
+        )
+
         val ALL_PROFILES = listOf(
+            CINEMA_1080P_30FPS,
             BALANCED_30FPS,
             FLUID_45FPS,
             ULTRA_60FPS,
@@ -78,6 +91,7 @@ data class StreamProfile(
 }
 
 enum class QualityMode {
+    CINEMA_1080P_30FPS,
     BALANCED_30FPS,
     FLUID_45FPS,
     ULTRA_60FPS,

@@ -25,6 +25,8 @@ fun ScreenMirrorSection(
     onSelectProfile: (StreamProfile) -> Unit,
     tvScaleMode: String = "EXTEND_16_9",
     onSelectTvScaleMode: (String) -> Unit = {},
+    smoothBufferEnabled: Boolean = true,
+    onToggleSmoothBuffer: (Boolean) -> Unit = {},
     onStartProjection: () -> Unit,
     onStopProjection: () -> Unit
 ) {
@@ -85,6 +87,40 @@ fun ScreenMirrorSection(
                     isSelected = selectedProfile.mode == QualityMode.MAX_60FPS || selectedProfile.mode == QualityMode.CINEMA,
                     onSelect = { onSelectProfile(StreamProfile.MAX_60FPS) },
                     modifier = Modifier.weight(1f)
+                )
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                ProfileButton(
+                    profile = StreamProfile.CINEMA_1080P_30FPS,
+                    isSelected = selectedProfile.mode == QualityMode.CINEMA_1080P_30FPS,
+                    onSelect = { onSelectProfile(StreamProfile.CINEMA_1080P_30FPS) },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color(0xFF0F172A), RoundedCornerShape(8.dp))
+                    .padding(horizontal = 12.dp, vertical = 6.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text("🛡️ Suavizado Anti-Tirones", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    Text("Buffer elástico de 100ms en TV para evitar micro-cortes", color = Color(0xFF94A3B8), fontSize = 10.sp)
+                }
+                Switch(
+                    checked = smoothBufferEnabled,
+                    onCheckedChange = onToggleSmoothBuffer,
+                    colors = SwitchDefaults.colors(
+                        checkedThumbColor = Color.White,
+                        checkedTrackColor = Color(0xFF0284C7)
+                    )
                 )
             }
 

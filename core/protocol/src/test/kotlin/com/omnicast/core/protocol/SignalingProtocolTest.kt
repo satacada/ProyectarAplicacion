@@ -33,6 +33,7 @@ class SignalingProtocolTest {
         assertEquals(1920, decodedOffer.width)
         assertEquals(1080, decodedOffer.height)
         assertEquals(60, decodedOffer.fps)
+        assertTrue(decodedOffer.smoothBuffer)
     }
 
     @Test

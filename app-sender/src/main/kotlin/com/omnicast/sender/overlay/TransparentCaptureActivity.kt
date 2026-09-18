@@ -33,6 +33,7 @@ class TransparentCaptureActivity : ComponentActivity() {
             val savedProfileName = prefs.getString("saved_stream_profile", StreamProfile.BALANCED_30FPS.mode.name)
             val profile = StreamProfile.ALL_PROFILES.firstOrNull { it.mode.name == savedProfileName } ?: StreamProfile.BALANCED_30FPS
             val scaleMode = prefs.getString("saved_tv_scale_mode", "EXTEND_16_9") ?: "EXTEND_16_9"
+            val smoothBuffer = prefs.getBoolean("saved_smooth_buffer", true)
 
             ProjectionForegroundService.startProjection(
                 this,
@@ -40,7 +41,8 @@ class TransparentCaptureActivity : ComponentActivity() {
                 target.port,
                 profile,
                 result.data!!,
-                scaleMode
+                scaleMode,
+                smoothBuffer
             )
             Toast.makeText(this, "🟢 Transmitiendo pantalla a la TV", Toast.LENGTH_SHORT).show()
         } else {

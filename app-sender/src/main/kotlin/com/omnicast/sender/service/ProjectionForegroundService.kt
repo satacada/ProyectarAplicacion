@@ -39,7 +39,8 @@ class ProjectionForegroundService : Service() {
             targetPort: Int,
             profile: StreamProfile,
             permissionData: Intent,
-            tvScaleMode: String = "EXTEND_16_9"
+            tvScaleMode: String = "EXTEND_16_9",
+            smoothBuffer: Boolean = true
         ) {
             val intent = Intent(context, ProjectionForegroundService::class.java).apply {
                 action = ACTION_START
@@ -51,6 +52,7 @@ class ProjectionForegroundService : Service() {
                 putExtra("EXTRA_BITRATE", profile.targetBitrateKbps)
                 putExtra("EXTRA_MODE", profile.mode.name)
                 putExtra("EXTRA_TV_SCALE_MODE", tvScaleMode)
+                putExtra("EXTRA_SMOOTH_BUFFER", smoothBuffer)
                 putExtra("EXTRA_PERMISSION_DATA", permissionData)
             }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -124,12 +126,13 @@ class ProjectionForegroundService : Service() {
                     @Suppress("DEPRECATION") intent.getParcelableExtra("EXTRA_PERMISSION_DATA")
                 }
                 val tvScaleMode = intent.getStringExtra("EXTRA_TV_SCALE_MODE") ?: prefs.getString("saved_tv_scale_mode", "EXTEND_16_9") ?: "EXTEND_16_9"
-                Log.i(TAG, "ACTION_START recibido: ip=$ip, port=$port, mode=$mode, fps=$fps, tvScaleMode=$tvScaleMode")
+                val smoothBuffer = intent.getBooleanExtra("EXTRA_SMOOTH_BUFFER", prefs.getBoolean("saved_smooth_buffer", true))
+                Log.i(TAG, "ACTION_START recibido: ip=$ip, port=$port, mode=$mode, fps=$fps, tvScaleMode=$tvScaleMode, smoothBuffer=$smoothBuffer")
                 if (permData != null) {
                     currentSession?.stop()
                     val profile = StreamProfile.ALL_PROFILES.firstOrNull { it.mode == mode }
                         ?: StreamProfile(mode, width, height, fps, bitrate, 65)
-                    currentSession = ProjectionSession(this, ip, port, profile, permData, tvScaleMode).apply {
+                    currentSession = ProjectionSession(this, ip, port, profile, permData, tvScaleMode, smoothBuffer).apply {
                         start()
                     }
                     isProjecting = true

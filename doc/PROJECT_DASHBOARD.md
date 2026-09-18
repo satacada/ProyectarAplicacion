@@ -1,7 +1,7 @@
 # 📊 PROJECT DASHBOARD — OmniCast Pro
 
-**Última actualización:** 2026-09-17  
-**Versión de producción actual:** v3.20 (Sender) / v3.20 (Receiver)  
+**Última actualización:** 2026-09-18  
+**Versión de producción actual:** v3.21 (Sender) / v3.21 (Receiver)  
 **Estándar de calidad:** AGENTS.md (Archivos <= 300 líneas, Clean Architecture, 100% Offline/Local)
 
 ---
@@ -10,16 +10,14 @@
 
 | Módulo | Componente Clave | Estado | Capacidades |
 |---|---|---|---|
-| `:core:domain` | `StreamProfile`, `UrlStreamExtractor` | 🟢 Estable | 4 perfiles seleccionables: 1280p@30fps, 720p@45fps, 540p@60fps y 1280p@60fps experimental. |
-| `:core:protocol` | `SignalingMessage`, `QualityOptions` | 🟢 Estable | Protocolo de señalización WebSocket JSON tipado con soporte de candidatos ICE bidireccionales y fotos. |
-| `:app-sender` | `WebRtcSenderManager`, `ProjectionSession` | 🟢 Estable | Insignia visual **v3.20** en barra superior y menú flotante; cálculo exacto de proporciones en `calcCaptureDimensions()` preservando aspect ratio nativo del teléfono (evita marcos recortados); reconexión/cierre de ICE limpio sin zombies. |
-| `:app-sender` | `ScreenMirrorSection`, `SenderMainScreen` | 🟢 Estable | Selector de Proporción TV: "📺 Llenar 16:9 (TV)" vs "📱 Original (Fit)", interactivo y persistente. |
-| `:app-sender` | `PhotoCastViewerActivity`, `LocalImageServer` | 🟢 Estable | Envío de fotos vía HTTP Server local (IP WiFi `192.168.0.*`) compatible 100% con Receiver. |
-| `:app-sender` | `FloatingIndicatorService`, `FloatingViewBuilder` | 🟢 Estable | Botón "📺 Cambiar Modo TV (16:9 / Fit)" y badge `OmniCast v3.20`. |
-| `:app-sender` | `InAppBrowserScreen`, `AdBlocker`, `ActiveStreamHolder` | 🟢 Estable | Purga de modales y banners clickjacking (Pelismart), limpieza automática al cambiar de web. |
-| `:app-receiver` | `TvReceiverActivity`, `WebRtcReceiverManager` | 🟢 Estable | **Candidatos ICE bidireccionales restaurados (`onLocalIceCandidate`)** evitando congelamientos y caídas a "Listo para conectar"; `setZOrderMediaOverlay(true)` idéntico a v3.4. |
-| `:app-receiver` | `TvYouTubeScreen` | 🟢 Estable | YouTube IFrame Player oficial sin Error 152-4, control remoto (Play/Pausa/Seek) y reporte de tiempo. |
-| `:app-receiver` | `TvScreens`, `TvReceiverActivity` | 🟢 Estable | Insignia visual **v3.20** prominente en pantalla de espera y conectado; log de inicio `[INIT] === OmniCast TV Box Receiver v3.20 Iniciado ===`. |
+| `:core:domain` | `StreamProfile`, `QualityMode` | 🟢 Estable | 5 perfiles seleccionables: 1080p@30fps Cine, 1280p@30fps, 720p@45fps, 540p@60fps y 1280p@60fps. |
+| `:core:protocol` | `SignalingMessage`, `SignalingProtocolTest` | 🟢 Estable | Soporte para `smoothBuffer` en `Offer` WebRTC, candidatos ICE bidireccionales y comandos de control de reproducción. |
+| `:app-sender` | `WebRtcSenderManager`, `ProjectionSession` | 🟢 Estable | Insignia visual **v3.21**; integración de buffer elástico anti-tirones configurable; bitrate dinámico adaptativo. |
+| `:app-sender` | `ScreenMirrorSection`, `SenderMainScreen` | 🟢 Estable | Botón para perfil 1080p Cine + Switch "🛡️ Suavizado Anti-Tirones (100ms)", selectores persistentes. |
+| `:app-sender` | `BrowserTopBar`, `InAppBrowserScreen`, `WvcDomSniffer` | 🟢 Estable | **Cero desconexión al navegar webs**: la reproducción en TV se mantiene viva; cursor sincronizado con `TextFieldValue` (evita escritura invertida); filtro estricto de videos sniffeados (evita saturación de 83 videos en Dailymotion). |
+| `:app-sender` | `AdBlocker` | 🟢 Estable | Restaurado a versión estable limpia v3.12 (sin intervalos ni `MutationObserver` invasivos que bloqueaban inputs o destruían buscadores). |
+| `:app-receiver` | `TvReceiverActivity`, `WebRtcReceiverManager` | 🟢 Estable | Insignia visual **v3.21**; `PeerConnectionFactory.initializeFieldTrials` dinámico para jitter buffer (`WebRTC-ForcePlayoutDelay/min_ms:100,max_ms:250/`). |
+| `:app-receiver` | `ReceiverLogger`, `TvScreens` | 🟢 Estable | Log HTTP con timestamps en `:8087` y pantalla de bienvenida con distintivo **v3.21**. |
 
 ---
 
@@ -36,6 +34,8 @@
 
 | Archivo APK | Tamaño | Versión | Notas de Entrega |
 |---|---|---|---|
+| `OmniCast-Sender-Mobile-v3.21.apk` | ~52.3 MB | **v3.21** | **Fix Navegación, Dailymotion y Nuevo Perfil 1080p Cine:**<br>• Cero desconexión al cambiar de web: navegar entre YouTube, Dailymotion u otros sitios no detiene la transmisión activa en TV.<br>• Sniffer quirúrgico: se limita a capturar el video en reproducción directa evitando la avalancha de 83 videos pasivos en el feed de Dailymotion.<br>• Fix escritura invertida: `TextFieldValue` con tracking de cursor y rollback de `AdBlocker` invasivo a la versión limpia de v3.12.<br>• Nuevo perfil **1080p @ 30 FPS Cine** (4500 kbps) manteniendo intactos los otros 4 perfiles.<br>• Switch **🛡️ Suavizado Anti-Tirones** (Jitter Buffer elástico 100-250ms) en la interfaz del móvil y señalizado dinámicamente a la TV Box. |
+| `OmniCast-Receiver-TVBox-v3.21.apk` | ~53.7 MB | **v3.21** | **Jitter Buffer Anti-Tirones y Badge v3.21:**<br>• Soporte de `smoothBuffer` vía SDP/WebRTC con `PeerConnectionFactory.initializeFieldTrials("WebRTC-ForcePlayoutDelay/min_ms:100,max_ms:250/")` para absorber fluctuaciones de WiFi y micro-cortes sin lag perceptibles.<br>• Identificador visual **v3.21** en pantalla inicial y logs. |
 | `OmniCast-Sender-Mobile-v3.20.apk` | ~52.4 MB | **v3.20** | **Fix Rotación y Seguridad Android 14:** Eliminado `OrientationEventListener` y llamadas a `changeCaptureFormat()` en caliente para prevenir la `SecurityException` de Android 14; rotación nativa fluida sin cortes; delegación de control de escala (Fit / 16:9) al receptor vía WebSocket. Badge visual **v3.20**. |
 | `OmniCast-Receiver-TVBox-v3.20.apk` | ~53.7 MB | **v3.20** | **Fix 16:9 Real y Candidatos ICE:** Cálculo matemático del factor de escala ($AR_{frame} / AR_{tv}$) en `applyDisplayTransform()` para que el modo 16:9 expanda y llene la pantalla completa eliminando las barras negras superior/inferior en celulares 20:9, y el modo Fit mantenga el 100% nativo. Candidatos ICE bidireccionales restaurados. |
 | `OmniCast-Sender-Mobile-v3.19.apk` | ~52.4 MB | **v3.19** | **Identificador Visual v3.19 y Fix Diálogo de Google:** Badge prominente v3.19 en cabecera y botón flotante; restaurado `createScreenCaptureIntent()` canónico sin `MediaProjectionConfig` para que el diálogo del sistema aparezca inmediatamente en Xiaomi/MIUI y cualquier Android. |

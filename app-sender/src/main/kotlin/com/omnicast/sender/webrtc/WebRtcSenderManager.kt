@@ -35,7 +35,7 @@ class WebRtcSenderManager(
     var tvScaleMode: String = "EXTEND_16_9"
 
     override fun initialize() {
-        Log.i(TAG, "🚀 OmniCast Sender v3.20 Inicializado (Universal WebRTC)")
+        Log.i(TAG, "🚀 OmniCast Sender v3.21 Inicializado (Universal WebRTC)")
         PeerConnectionFactory.initialize(
             PeerConnectionFactory.InitializationOptions.builder(context)
                 .setEnableInternalTracer(true).createInitializationOptions()
@@ -156,7 +156,7 @@ class WebRtcSenderManager(
                 isRemoteDescriptionSet = true
                 queuedRemoteCandidates.forEach { peerConnection?.addIceCandidate(it) }
                 queuedRemoteCandidates.clear()
-                setBitrate(activeProfile?.targetBitrateKbps ?: 10000)
+                setBitrate(activeProfile?.targetBitrateKbps ?: 4500)
             }
             override fun onSetFailure(e: String?) = Unit
             override fun onCreateSuccess(d: SessionDescription?) = Unit; override fun onCreateFailure(e: String?) = Unit

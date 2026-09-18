@@ -81,22 +81,6 @@ object AdBlocker {
     fun getAdHidingScript(): String = """
         (function() {
             try {
-                function purgeAdModals() {
-                    var selectors = ['div[class*="ad-box"]', 'div[class*="ad-container"]', 'div[id*="ad-banner"]', 'div[class*="ad-banner"]', 'a[href*="bet365"]', 'a[href*="1xbet"]', 'div[class*="popunder"]', '.ad-overlay', '#ad-overlay'];
-                    selectors.forEach(function(s) { document.querySelectorAll(s).forEach(function(el) { if (!el.querySelector('video') && !el.querySelector('iframe')) el.remove(); }); });
-                    var els = document.querySelectorAll('div, dialog, section');
-                    for (var i = 0; i < els.length; i++) {
-                        var el = els[i];
-                        if (el.querySelector('video') || el.querySelector('iframe')) continue;
-                        var txt = (el.innerText || '').toLowerCase();
-                        if (txt.indexOf('desnuda') !== -1 || txt.indexOf('verme') !== -1 || txt.indexOf('18+') !== -1 || (txt.indexOf('cancelar') !== -1 && txt.indexOf('continuar') !== -1 && el.offsetWidth > 180 && el.offsetHeight > 100)) {
-                            var st = window.getComputedStyle(el);
-                            if (st.position === 'fixed' || st.position === 'absolute' || parseInt(st.zIndex, 10) > 100) {
-                                el.remove();
-                            }
-                        }
-                    }
-                }
                 document.addEventListener('click', function(e) {
                     var el = e.target;
                     while (el && el !== document.body) {
@@ -106,7 +90,7 @@ object AdBlocker {
                                 var host = '';
                                 try { host = new URL(h, window.location.href).hostname.toLowerCase(); } catch(err){}
                                 if (host && host !== window.location.hostname && !host.endsWith(window.location.hostname)) {
-                                    if (host.indexOf('aliexpress') !== -1 || host.indexOf('temu') !== -1 || host.indexOf('shein') !== -1 || host.indexOf('bet') !== -1 || host.indexOf('click') !== -1 || host.indexOf('track') !== -1 || host.indexOf('ad') !== -1) {
+                                    if (host.indexOf('aliexpress') !== -1 || host.indexOf('temu') !== -1 || host.indexOf('shein') !== -1 || host.indexOf('bet') !== -1 || host.indexOf('click') !== -1 || host.indexOf('track') !== -1) {
                                         e.preventDefault(); e.stopPropagation(); el.remove(); return false;
                                     }
                                 }
@@ -115,11 +99,8 @@ object AdBlocker {
                         el = el.parentElement;
                     }
                 }, true);
-                purgeAdModals();
-                setInterval(purgeAdModals, 1500);
-                if (window.MutationObserver && document.body) {
-                    new MutationObserver(purgeAdModals).observe(document.body, { childList: true, subtree: true });
-                }
+                var selectors = ['div[class*="ad-box"]', 'div[class*="ad-container"]', 'div[id*="ad-banner"]', 'div[class*="ad-banner"]', 'a[href*="bet365"]', 'a[href*="1xbet"]', 'div[class*="popunder"]', '.ad-overlay', '#ad-overlay'];
+                selectors.forEach(function(s) { document.querySelectorAll(s).forEach(function(el) { if (!el.querySelector('video') && !el.querySelector('iframe')) el.remove(); }); });
             } catch(e) {}
         })();
     """.trimIndent()

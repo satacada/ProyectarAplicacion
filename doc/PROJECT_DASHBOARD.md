@@ -1,7 +1,7 @@
 # 📊 PROJECT DASHBOARD — OmniCast Pro
 
 **Última actualización:** 2026-09-18  
-**Versión de producción actual:** v3.21 (Sender) / v3.21 (Receiver)  
+**Versión de producción actual:** v3.22 (Sender) / v3.22 (Receiver)  
 **Estándar de calidad:** AGENTS.md (Archivos <= 300 líneas, Clean Architecture, 100% Offline/Local)
 
 ---
@@ -12,12 +12,13 @@
 |---|---|---|---|
 | `:core:domain` | `StreamProfile`, `QualityMode` | 🟢 Estable | 5 perfiles seleccionables: 1080p@30fps Cine, 1280p@30fps, 720p@45fps, 540p@60fps y 1280p@60fps. |
 | `:core:protocol` | `SignalingMessage`, `SignalingProtocolTest` | 🟢 Estable | Soporte para `smoothBuffer` en `Offer` WebRTC, candidatos ICE bidireccionales y comandos de control de reproducción. |
-| `:app-sender` | `WebRtcSenderManager`, `ProjectionSession` | 🟢 Estable | Insignia visual **v3.21**; integración de buffer elástico anti-tirones configurable; bitrate dinámico adaptativo. |
-| `:app-sender` | `ScreenMirrorSection`, `SenderMainScreen` | 🟢 Estable | Botón para perfil 1080p Cine + Switch "🛡️ Suavizado Anti-Tirones (100ms)", selectores persistentes. |
-| `:app-sender` | `BrowserTopBar`, `InAppBrowserScreen`, `WvcDomSniffer` | 🟢 Estable | **Cero desconexión al navegar webs**: la reproducción en TV se mantiene viva; cursor sincronizado con `TextFieldValue` (evita escritura invertida); filtro estricto de videos sniffeados (evita saturación de 83 videos en Dailymotion). |
-| `:app-sender` | `AdBlocker` | 🟢 Estable | Restaurado a versión estable limpia v3.12 (sin intervalos ni `MutationObserver` invasivos que bloqueaban inputs o destruían buscadores). |
-| `:app-receiver` | `TvReceiverActivity`, `WebRtcReceiverManager` | 🟢 Estable | Insignia visual **v3.21**; `PeerConnectionFactory.initializeFieldTrials` dinámico para jitter buffer (`WebRTC-ForcePlayoutDelay/min_ms:100,max_ms:250/`). |
-| `:app-receiver` | `ReceiverLogger`, `TvScreens` | 🟢 Estable | Log HTTP con timestamps en `:8087` y pantalla de bienvenida con distintivo **v3.21**. |
+| `:app-sender` | `WebRtcSenderManager`, `ProjectionSession` | 🟢 Estable | Insignia visual **v3.22**; integración de buffer elástico anti-tirones configurable; bitrate dinámico adaptativo. |
+| `:app-sender` | `ScreenMirrorSection`, `SenderMainScreen` | 🟢 Estable | Organización en 3 pestañas (`🌐 Web / Video`, `📱 Proyección TV`, `🖼️ Galería`), TopBar y Conexión TV siempre fijas. |
+| `:app-sender` | `BrowserTopBar`, `InAppBrowserScreen`, `WvcDomSniffer` | 🟢 Estable | Captura ok.ru y YouTube sin colapsos de JSON; renovación de streams sin cortar transmisión activa de TV; favoritos protegidos en historial. |
+| `:app-sender` | `LocalImageServer`, `PhotoCastViewerActivity` | 🟢 Estable | Envío de fotos y videos locales vía copia en caché física (resuelve SecurityException de Android 14); soporte HTTP 206 Range. |
+| `:app-sender` | `FloatingViewBuilder`, `FloatingIndicatorService` | 🟢 Estable | Menú de asistente flotante reordenado exactamente (8 opciones, con acceso a Proyección Total y Browser Omni). |
+| `:app-receiver` | `TvReceiverActivity`, `WebRtcReceiverManager` | 🟢 Estable | Insignia visual **v3.22**; `PeerConnectionFactory.initializeFieldTrials` dinámico para jitter buffer. |
+| `:app-receiver` | `ReceiverLogger`, `TvScreens` | 🟢 Estable | Log HTTP con timestamps en `:8087` y pantalla de bienvenida con distintivo **v3.22**. |
 
 ---
 
@@ -34,7 +35,9 @@
 
 | Archivo APK | Tamaño | Versión | Notas de Entrega |
 |---|---|---|---|
-| `OmniCast-Sender-Mobile-v3.21.apk` | ~52.4 MB | **v3.21** | **Rediseño por Pestañas, Fix ok.ru, Fotos/Videos Locales y Menú Asistente:**<br>• **Rediseño con Pestañas:** Organización modular en 3 pestañas (`🌐 Web / Video`, `📱 Proyección TV`, `🖼️ Galería`), manteniendo fijos y permanentemente visibles el banner del asistente verde y la tarjeta de conexión a TV.<br>• **Fix Captura ok.ru:** Eliminado el bug de parseo JSON (`JSONException` por prefijo `OMNICAST_STREAM:`), ampliado el umbral de detección de fuentes múltiples de video hasta 15 y añadido hook al setter `HTMLMediaElement.prototype.src`.<br>• **Cero bloqueo al navegar:** Los streams detectados no quedan pegados al navegar a nuevos videos en ok.ru o YouTube; `ActiveStreamHolder.clearDetectedStream()` renueva la captura sin interrumpir la reproducción en la TV.<br>• **Fix Envío de Fotos y Videos locales:** Guardado y servicio seguro desde archivo en caché física en `LocalImageServer`, resolviendo definitivamente la `SecurityException` por revocación de permisos URI en Android 14.<br>• **Reordenamiento Asistente Flotante:** `📱 Proyectar Pantalla (Toda)` en primer lugar y `📺 Cambiar Modo TV (16:9 / Fit)` en segundo lugar.<br>• **Historial con Favoritos Protegidos:** Botón ⭐ para marcar favoritos permanentes en el historial; limpieza segura que conserva favoritos. |
+| `OmniCast-Sender-Mobile-v3.22.apk` | ~52.3 MB | **v3.22** | **Rediseño por Pestañas, Fix ok.ru, Fotos/Videos Locales y Menú Asistente:**<br>• **Rediseño con Pestañas:** Organización modular en 3 pestañas (`🌐 Web / Video`, `📱 Proyección TV`, `🖼️ Galería`), manteniendo fijos la cabecera, el banner verde y la tarjeta de conexión a TV.<br>• **Fix Captura ok.ru:** Eliminado el bug de parseo JSON (`JSONException` por prefijo `OMNICAST_STREAM:`), ampliado el umbral de detección de fuentes múltiples de video hasta 15 y añadido hook al setter `HTMLMediaElement.prototype.src`.<br>• **Cero bloqueo al navegar:** Los streams detectados no quedan pegados al navegar a nuevos videos en ok.ru o YouTube; `ActiveStreamHolder.clearDetectedStream()` renueva la captura sin interrumpir la reproducción en la TV.<br>• **Fix Envío de Fotos y Videos locales:** Guardado y servicio seguro desde archivo en caché física en `LocalImageServer`, resolviendo definitivamente la `SecurityException` por revocación de permisos URI en Android 14.<br>• **Reordenamiento Asistente Flotante:** Reordenado a 8 opciones según especificación, incluyendo Proyectar Pantalla, Cambiar Modo TV y Abrir Browser Omni.<br>• **Historial con Favoritos Protegidos:** Botón ⭐ para marcar favoritos permanentes en el historial; limpieza segura que conserva favoritos. |
+| `OmniCast-Receiver-TVBox-v3.22.apk` | ~53.6 MB | **v3.22** | **Sincronización v3.22 y Soporte Multimedia Local:**<br>• Insignia visual **v3.22** en pantalla de inicio de TV y en logs HTTP `:8087`.<br>• Compatible con streaming de video web, fotos y videos locales con streaming de rango HTTP 206 y jitter buffer WebRTC anti-tirones. |
+| `OmniCast-Sender-Mobile-v3.21.apk` | ~52.4 MB | **v3.21** | Versión preliminar con buffer elástico. |
 | `OmniCast-Receiver-TVBox-v3.21.apk` | ~53.7 MB | **v3.21** | **Jitter Buffer Anti-Tirones y Badge v3.21:**<br>• Soporte de `smoothBuffer` vía SDP/WebRTC con `PeerConnectionFactory.initializeFieldTrials("WebRTC-ForcePlayoutDelay/min_ms:100,max_ms:250/")` para absorber fluctuaciones de WiFi y micro-cortes sin lag perceptibles.<br>• Identificador visual **v3.21** en pantalla inicial y logs. |
 | `OmniCast-Sender-Mobile-v3.20.apk` | ~52.4 MB | **v3.20** | **Fix Rotación y Seguridad Android 14:** Eliminado `OrientationEventListener` y llamadas a `changeCaptureFormat()` en caliente para prevenir la `SecurityException` de Android 14; rotación nativa fluida sin cortes; delegación de control de escala (Fit / 16:9) al receptor vía WebSocket. Badge visual **v3.20**. |
 | `OmniCast-Receiver-TVBox-v3.20.apk` | ~53.7 MB | **v3.20** | **Fix 16:9 Real y Candidatos ICE:** Cálculo matemático del factor de escala ($AR_{frame} / AR_{tv}$) en `applyDisplayTransform()` para que el modo 16:9 expanda y llene la pantalla completa eliminando las barras negras superior/inferior en celulares 20:9, y el modo Fit mantenga el 100% nativo. Candidatos ICE bidireccionales restaurados. |

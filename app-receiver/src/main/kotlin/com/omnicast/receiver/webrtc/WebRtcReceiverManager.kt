@@ -29,7 +29,7 @@ class WebRtcReceiverManager(private val context: Context) {
     private var lastRot = 0
 
     fun initialize() {
-        ReceiverLogger.log(TAG, "Inicializando decodificador WebRTC por hardware en TV Box (v3.21)")
+        ReceiverLogger.log(TAG, "Inicializando decodificador WebRTC por hardware en TV Box (v3.22)")
         setSmoothBuffer(true)
         val initOptions = PeerConnectionFactory.InitializationOptions.builder(context).setEnableInternalTracer(true).createInitializationOptions()
         PeerConnectionFactory.initialize(initOptions)

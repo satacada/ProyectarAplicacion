@@ -108,7 +108,8 @@ fun BrowserWebView(
                                 WebResourceResponse("application/javascript", "UTF-8", stream)
                             } catch (_: Throwable) { super.shouldInterceptRequest(v, r) }
                         }
-                        if (isAdBlockEnabled && (AdBlocker.isAd(reqUrl) || NativeAdBlockEngine.shouldBlock(reqUrl, v?.url))) {
+                        val docUrl = r?.requestHeaders?.get("Referer") ?: currentUrl
+                        if (isAdBlockEnabled && (AdBlocker.isAd(reqUrl) || NativeAdBlockEngine.shouldBlock(reqUrl, docUrl))) {
                             return AdBlocker.createEmptyResponse()
                         }
                         val isMedia = BrowserUrlHelper.isPlayableStream(reqUrl) && !AdBlocker.isAd(reqUrl)

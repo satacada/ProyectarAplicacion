@@ -54,10 +54,18 @@ class PlaylistManager(context: Context) {
         }
     }
 
+    var onPlaylistsChanged: ((String) -> Unit)? = null
+
     private fun savePlaylists(list: List<Playlist>) {
         try {
-            prefs.edit().putString(KEY_PLAYLISTS, json.encodeToString(list)).apply()
+            val encoded = json.encodeToString(list)
+            prefs.edit().putString(KEY_PLAYLISTS, encoded).apply()
+            onPlaylistsChanged?.invoke(encoded)
         } catch (_: Throwable) {}
+    }
+
+    fun getRawJson(): String {
+        return json.encodeToString(getPlaylists())
     }
 
     fun getPlaylists(): List<Playlist> {

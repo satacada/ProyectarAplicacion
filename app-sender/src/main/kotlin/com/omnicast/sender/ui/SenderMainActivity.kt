@@ -65,6 +65,7 @@ class SenderMainActivity : ComponentActivity() {
     private val openBrowserDirectly = androidx.compose.runtime.mutableStateOf(false)
     private val openGalleryDirectly = androidx.compose.runtime.mutableStateOf(false)
     private lateinit var historyManager: PlayHistoryManager
+    private lateinit var playlistManager: com.omnicast.sender.playlist.PlaylistManager
 
     private val audioPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         if (!granted) Toast.makeText(this, "Audio interno desactivado. Transmitirá solo video.", Toast.LENGTH_SHORT).show()
@@ -74,6 +75,11 @@ class SenderMainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         instance = this
         historyManager = PlayHistoryManager(this)
+        playlistManager = com.omnicast.sender.playlist.PlaylistManager(this).apply {
+            onPlaylistsChanged = { jsonStr ->
+                if (signalingClient.isConnected) signalingClient.sendMessage(SignalingMessage.SyncPlaylists(jsonStr))
+            }
+        }
         try { nsdScanner = NsdScannerManager(this).apply { startDiscovery() } } catch (e: Throwable) { Log.e("Sender", "NSD", e) }
         clipboardExtractor = ClipboardStreamExtractor(this)
         if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
@@ -120,6 +126,7 @@ class SenderMainActivity : ComponentActivity() {
         }
     }
 
+
     private fun checkAutoMirroring(intent: Intent?) {
         if (intent?.getBooleanExtra("EXTRA_START_MIRRORING_AUTO", false) == true) {
             intent.removeExtra("EXTRA_START_MIRRORING_AUTO"); autoPromptCapture.value = true
@@ -136,6 +143,7 @@ class SenderMainActivity : ComponentActivity() {
         try {
             signalingClient.connect(ipAddress, port, {
                 isTvConnected.value = true
+                signalingClient.sendMessage(SignalingMessage.SyncPlaylists(playlistManager.getRawJson()))
                 listenToPlaybackStatus()
                 if (!isFinishing && !isDestroyed) Toast.makeText(this@SenderMainActivity, "🟢 Conectado con TV ($ipAddress)", Toast.LENGTH_SHORT).show()
             }, { isTvConnected.value = false })
@@ -159,6 +167,7 @@ class SenderMainActivity : ComponentActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
+        setIntent(intent)
         checkAutoMirroring(intent); handleIncomingSharedIntent(intent)
     }
 

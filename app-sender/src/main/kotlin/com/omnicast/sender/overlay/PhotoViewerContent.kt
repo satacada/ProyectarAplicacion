@@ -131,9 +131,9 @@ fun PhotoViewerContent(
                     } while (event.changes.any { it.pressed })
 
                     if (!wasZooming && scale <= 1.05f) {
-                        if (panAccumulator.x < -70f) {
+                        if (panAccumulator.x < -40f) {
                             onNext()
-                        } else if (panAccumulator.x > 70f) {
+                        } else if (panAccumulator.x > 40f) {
                             onPrev()
                         }
                         panX = 0f

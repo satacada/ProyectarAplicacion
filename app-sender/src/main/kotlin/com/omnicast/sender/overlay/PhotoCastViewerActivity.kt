@@ -51,14 +51,23 @@ class PhotoCastViewerActivity : ComponentActivity() {
         if (GalleryMediaHelper.hasGalleryPermission(this)) {
             lifecycleScope.launch(Dispatchers.IO) {
                 val fullList = GalleryMediaHelper.loadGalleryPhotos(this@PhotoCastViewerActivity)
-                if (fullList.isNotEmpty() && fullList.size > photoUris.size) {
+                if (fullList.isNotEmpty()) {
                     withContext(Dispatchers.Main) {
                         val currentTargetUri = photoUris.getOrNull(currentIndexState.intValue)
-                        val matchIdx = fullList.indexOfFirst { it.uri == currentTargetUri }
-                        GallerySessionHolder.setPhotos(fullList, if (matchIdx >= 0) matchIdx else 0)
+                        val targetId = currentTargetUri?.lastPathSegment?.substringAfterLast(":") ?: ""
+                        val matchIdx = fullList.indexOfFirst {
+                            it.uri == currentTargetUri || (targetId.isNotBlank() && (it.uri.toString().endsWith("/$targetId") || it.id.toString() == targetId))
+                        }
+                        val finalList = if (matchIdx >= 0) {
+                            fullList
+                        } else if (currentTargetUri != null) {
+                            listOf(GalleryPhotoItem(0L, currentTargetUri, "Foto", "Selección", System.currentTimeMillis())) + fullList
+                        } else fullList
+                        val finalIndex = if (matchIdx >= 0) matchIdx else 0
+                        GallerySessionHolder.setPhotos(finalList, finalIndex)
                         photoUris.clear()
-                        photoUris.addAll(fullList.map { it.uri })
-                        currentIndexState.intValue = if (matchIdx >= 0) matchIdx else 0
+                        photoUris.addAll(finalList.map { it.uri })
+                        currentIndexState.intValue = finalIndex
                     }
                 }
             }

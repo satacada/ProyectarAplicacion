@@ -172,8 +172,9 @@ class FloatingIndicatorService : Service() {
                 if (ProjectionForegroundService.isProjecting) ProjectionForegroundService.stopService(this)
                 SenderMainActivity.sendPlayControlStatic(this, "STOP")
                 com.omnicast.sender.stream.ActiveStreamHolder.clear()
-                launchIntentSafely(Intent(this, GalleryPickerActivity::class.java).apply {
-                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                launchIntentSafely(Intent(this, SenderMainActivity::class.java).apply {
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                    putExtra("EXTRA_OPEN_GALLERY", true)
                 }, 104)
             },
             onOpenBrowser = {

@@ -41,6 +41,7 @@ class TvReceiverActivity : ComponentActivity() {
     private lateinit var signalingServer: LocalSignalingServer
     private lateinit var nsdAdvertiser: NsdAdvertiserManager
     private lateinit var historyManager: com.omnicast.receiver.directstream.TvPlaybackHistoryManager
+    private lateinit var playlistManager: com.omnicast.receiver.directstream.TvPlaylistManager
     private var digitalAudioReceiver: DigitalAudioReceiver? = null
     private var statusJob: Job? = null
 
@@ -64,6 +65,7 @@ class TvReceiverActivity : ComponentActivity() {
         }
         digitalAudioReceiver = DigitalAudioReceiver()
         historyManager = com.omnicast.receiver.directstream.TvPlaybackHistoryManager(this)
+        playlistManager = com.omnicast.receiver.directstream.TvPlaylistManager(this)
         signalingServer = LocalSignalingServer(port = 8088).apply { start() }
         nsdAdvertiser = NsdAdvertiserManager(this).apply { registerService(port = 8088) }
 
@@ -79,12 +81,15 @@ class TvReceiverActivity : ComponentActivity() {
 
         setContent {
             val historyList by historyManager.history.collectAsState()
+            val playlistsList by playlistManager.playlists.collectAsState()
             MaterialTheme(colorScheme = darkColorScheme(primary = androidx.compose.ui.graphics.Color(0xFF38BDF8), background = androidx.compose.ui.graphics.Color(0xFF0F172A))) {
                 when (val state = receiverState.value) {
                     is ReceiverUiState.Standby -> TvStandbyScreen(
                         ipAddress = localIpAddress.value,
                         history = historyList,
-                        onPlayHistory = { playHistoryItem(it) }
+                        playlists = playlistsList,
+                        onPlayHistory = { playHistoryItem(it) },
+                        onPlayPlaylist = { playPlaylistItem(it) }
                     )
                     is ReceiverUiState.ClientConnectedStandby -> TvConnectedStandbyScreen(clientAddress = state.clientAddress)
                     is ReceiverUiState.ScreenMirroring -> TvMirroringActiveScreen(webRtcReceiver, state.resolution, state.fps)
@@ -170,6 +175,9 @@ class TvReceiverActivity : ComponentActivity() {
                 digitalAudioReceiver?.stop(); exoPlayerManager.stop(); webRtcReceiver.resetConnection()
                 receiverState.value = ReceiverUiState.ImageDisplaying(message.imageUrl, message.title ?: "Foto de Galería")
             }
+            is SignalingMessage.SyncPlaylists -> {
+                lifecycleScope.launch { playlistManager.syncPlaylistsJson(message.playlistsJson) }
+            }
             is SignalingMessage.Disconnect -> {
                 digitalAudioReceiver?.stop(); exoPlayerManager.stop(); webRtcReceiver.resetConnection(); receiverState.value = ReceiverUiState.Standby
             }
@@ -238,6 +246,13 @@ class TvReceiverActivity : ComponentActivity() {
         digitalAudioReceiver?.stop(); webRtcReceiver.resetConnection()
         receiverState.value = ReceiverUiState.DirectStreamPlaying(item.mediaUrl, item.title)
         exoPlayerManager.playStream(item.mediaUrl, item.headers, item.title, item.lastPositionMs)
+        startPlaybackStatusReporting()
+    }
+
+    private fun playPlaylistItem(item: com.omnicast.receiver.directstream.TvPlaylistItem) {
+        digitalAudioReceiver?.stop(); webRtcReceiver.resetConnection()
+        receiverState.value = ReceiverUiState.DirectStreamPlaying(item.url, item.title)
+        exoPlayerManager.playStream(item.url, item.headers, item.title, item.lastPositionMs)
         startPlaybackStatusReporting()
     }
 

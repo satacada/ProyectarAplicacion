@@ -18,7 +18,9 @@ import androidx.compose.ui.unit.sp
 fun TvStandbyScreen(
     ipAddress: String,
     history: List<com.omnicast.receiver.directstream.TvHistoryItem> = emptyList(),
-    onPlayHistory: (com.omnicast.receiver.directstream.TvHistoryItem) -> Unit = {}
+    playlists: List<com.omnicast.receiver.directstream.TvPlaylist> = emptyList(),
+    onPlayHistory: (com.omnicast.receiver.directstream.TvHistoryItem) -> Unit = {},
+    onPlayPlaylist: (com.omnicast.receiver.directstream.TvPlaylistItem) -> Unit = {}
 ) {
     Box(
         modifier = Modifier.fillMaxSize().background(Color(0xFF0F172A)),
@@ -59,6 +61,14 @@ fun TvStandbyScreen(
                 TvHistorySection(
                     history = history,
                     onPlayItem = onPlayHistory,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+            }
+
+            if (playlists.isNotEmpty()) {
+                TvPlaylistsSection(
+                    playlists = playlists,
+                    onPlayItem = onPlayPlaylist,
                     modifier = Modifier.padding(top = 8.dp)
                 )
             }

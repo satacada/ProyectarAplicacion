@@ -111,4 +111,10 @@ sealed class SignalingMessage {
     data class Disconnect(
         val reason: String = "User requested disconnect"
     ) : SignalingMessage()
+
+    @Serializable
+    @SerialName("SYNC_PLAYLISTS")
+    data class SyncPlaylists(
+        val playlistsJson: String
+    ) : SignalingMessage()
 }

@@ -59,8 +59,8 @@ fun SenderMainScreen(
     var showHelpDialog by remember { mutableStateOf(false) }
     var selectedTabIndex by androidx.compose.runtime.saveable.rememberSaveable { mutableIntStateOf(if (initialOpenGallery) 2 else 0) }
 
-    LaunchedEffect(initialOpenBrowser) { if (initialOpenBrowser) showInAppBrowser = true }
-    LaunchedEffect(initialOpenGallery) { if (initialOpenGallery) selectedTabIndex = 2 }
+    LaunchedEffect(initialOpenBrowser) { if (initialOpenBrowser) { showInAppBrowser = true; selectedTabIndex = 0 } }
+    LaunchedEffect(initialOpenGallery) { if (initialOpenGallery) { showInAppBrowser = false; selectedTabIndex = 2 } }
 
     fun saveTarget(ip: String, portStr: String) {
         val port = portStr.toIntOrNull() ?: 8088

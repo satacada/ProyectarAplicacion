@@ -92,8 +92,15 @@ fun InAppBrowserScreen(
 
     fun checkAndRegisterYouTube(url: String?, title: String? = null) {
         val ytId = BrowserUrlHelper.extractYouTubeId(url ?: return) ?: return
+        val currentPrimary = detectedStreams.firstOrNull()
+        val currentYtId = currentPrimary?.let { BrowserUrlHelper.extractYouTubeId(it) }
+        if (currentYtId != null && currentYtId != ytId) {
+            detectedStreams.clear(); streamHeaders.clear(); streamLabels.clear(); qualityOptions = emptyList()
+            ActiveStreamHolder.clear()
+        }
         registerStream("https://www.youtube.com/watch?v=$ytId", mapOf("X-YouTube-Id" to ytId, "User-Agent" to UA_MOBILE), isPrimary = true, label = "YouTube")
-        if (!title.isNullOrBlank()) pageTitle = title.replace(" - YouTube", "")
+        val cleanT = if (!title.isNullOrBlank() && title != "Transmisión") title.replace(" - YouTube", "") else webViewInstance?.title?.replace(" - YouTube", "")
+        if (!cleanT.isNullOrBlank() && cleanT != "Transmisión") pageTitle = cleanT
     }
 
     fun navigateTo(url: String) {
@@ -238,6 +245,22 @@ fun InAppBrowserScreen(
                         streamLabels.clear()
                         qualityOptions = emptyList()
                         Toast.makeText(context, "🛑 Transmisión detenida y capturas limpiadas", Toast.LENGTH_SHORT).show()
+                    },
+                    onClearStreams = {
+                        detectedStreams.clear()
+                        streamHeaders.clear()
+                        streamLabels.clear()
+                        qualityOptions = emptyList()
+                        ActiveStreamHolder.clear()
+                        webViewInstance?.let { wv ->
+                            val s = WvcDomSniffer.getInjectionScript(context)
+                            wv.evaluateJavascript(s, null)
+                            val u = wv.url
+                            if (u?.contains("youtube.com") == true || u?.contains("youtu.be") == true) {
+                                checkAndRegisterYouTube(u, wv.title)
+                            }
+                        }
+                        Toast.makeText(context, "🗑️ Capturas limpiadas. Re-escaneando...", Toast.LENGTH_SHORT).show()
                     },
                     modifier = Modifier.align(Alignment.BottomCenter)
                 )

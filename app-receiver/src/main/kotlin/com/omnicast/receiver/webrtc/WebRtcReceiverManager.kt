@@ -70,49 +70,40 @@ class WebRtcReceiverManager(private val context: Context) {
             val frameH = if (isRotated) lastFrameW else lastFrameH
             if (frameW <= 0 || frameH <= 0) return@post
 
+            val tvMetrics = context.resources.displayMetrics
+            val tvW = tvMetrics.widthPixels.toFloat().coerceAtLeast(1280f)
+            val tvH = tvMetrics.heightPixels.toFloat().coerceAtLeast(720f)
+            val tvAspect = tvW / tvH
+            val frameAspect = frameW.toFloat() / frameH.toFloat()
+
             val isPortrait = frameH > frameW
             val effectiveScaling = if (isPortrait) RendererCommon.ScalingType.SCALE_ASPECT_FIT else currentScalingType
             renderer.setScalingType(effectiveScaling)
 
-            val tvMetrics = context.resources.displayMetrics
-            val tvW = tvMetrics.widthPixels.coerceAtLeast(1280)
-            val tvH = tvMetrics.heightPixels.coerceAtLeast(720)
-
-            if (currentMode == "ZOOM" || (isPortrait && currentZoom != 1.0f)) {
-                val targetW = (tvW * currentZoom).toInt()
-                val targetH = (tvH * currentZoom).toInt()
-                val lp = renderer.layoutParams
-                if (lp != null) {
-                    lp.width = targetW
-                    lp.height = targetH
-                    renderer.layoutParams = lp
-                }
+            if (currentMode == "ZOOM") {
+                renderer.scaleX = currentZoom
+                renderer.scaleY = currentZoom
                 renderer.translationY = currentPanY
-                ReceiverLogger.log(TAG, "🔍 Zoom gradual TV: ${String.format(java.util.Locale.US, "%.2f", currentZoom)}x (${targetW}x$targetH)")
+                ReceiverLogger.log(TAG, "🔍 Zoom gradual TV: ${String.format(java.util.Locale.US, "%.2f", currentZoom)}x (panY=$currentPanY)")
             } else if (effectiveScaling == RendererCommon.ScalingType.SCALE_ASPECT_FILL) {
-                val lp = renderer.layoutParams
-                if (lp != null && (lp.width != android.view.ViewGroup.LayoutParams.MATCH_PARENT || lp.height != android.view.ViewGroup.LayoutParams.MATCH_PARENT)) {
-                    lp.width = android.view.ViewGroup.LayoutParams.MATCH_PARENT
-                    lp.height = android.view.ViewGroup.LayoutParams.MATCH_PARENT
-                    renderer.layoutParams = lp
+                val factor = if (frameAspect > tvAspect) {
+                    frameAspect / tvAspect
+                } else if (frameAspect < tvAspect && frameW > frameH) {
+                    tvAspect / frameAspect
+                } else {
+                    1.0f
                 }
-                renderer.scaleX = 1.0f
-                renderer.scaleY = 1.0f
+                renderer.scaleX = factor
+                renderer.scaleY = factor
                 renderer.translationY = 0f
-                ReceiverLogger.log(TAG, "📺 Modo 16:9 EXPANDIDO: FILL (frame=${frameW}x${frameH} rot=$lastRot)")
+                ReceiverLogger.log(TAG, "📺 Modo 16:9 EXPANDIDO: factor=$factor (frame=${frameW}x${frameH} rot=$lastRot)")
             } else {
-                val lp = renderer.layoutParams
-                if (lp != null && (lp.width != android.view.ViewGroup.LayoutParams.MATCH_PARENT || lp.height != android.view.ViewGroup.LayoutParams.MATCH_PARENT)) {
-                    lp.width = android.view.ViewGroup.LayoutParams.MATCH_PARENT
-                    lp.height = android.view.ViewGroup.LayoutParams.MATCH_PARENT
-                    renderer.layoutParams = lp
-                }
-                renderer.scaleX = 1.0f
-                renderer.scaleY = 1.0f
+                val scale = if (isPortrait && currentZoom > 0f) currentZoom else 1.0f
+                renderer.scaleX = scale
+                renderer.scaleY = scale
                 renderer.translationY = currentPanY
-                ReceiverLogger.log(TAG, "📱 Modo FIT ORIGINAL: escala 1.0 (frame=${frameW}x${frameH} rot=$lastRot)")
+                ReceiverLogger.log(TAG, "📱 Modo FIT ORIGINAL: escala $scale (frame=${frameW}x${frameH} rot=$lastRot)")
             }
-            renderer.requestLayout()
         }
     }
 

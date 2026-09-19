@@ -1,4 +1,4 @@
-﻿package com.omnicast.sender.ui.components
+package com.omnicast.sender.ui.components
 
 import android.content.Context
 import android.content.Intent
@@ -62,6 +62,11 @@ fun GallerySection(onPickExternalFile: () -> Unit) {
 
     fun openPhotoAt(index: Int) {
         if (photos.isEmpty()) return
+        if (com.omnicast.sender.service.ProjectionForegroundService.isProjecting) {
+            com.omnicast.sender.service.ProjectionForegroundService.stopService(context)
+        }
+        com.omnicast.sender.ui.SenderMainActivity.sendPlayControlStatic(context, "STOP")
+        com.omnicast.sender.stream.ActiveStreamHolder.clear()
         GallerySessionHolder.setPhotos(photos, index)
         val intent = Intent(context, PhotoCastViewerActivity::class.java).apply {
             putExtra("EXTRA_START_INDEX", index)

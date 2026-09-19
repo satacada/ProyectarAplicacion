@@ -1,7 +1,7 @@
 # 📊 PROJECT DASHBOARD — OmniCast Pro
 
 **Última actualización:** 2026-09-18  
-**Versión de producción actual:** v3.25 (Sender) / v3.25 (Receiver)  
+**Versión de producción actual:** v3.26 (Sender) / v3.26 (Receiver)  
 **Estándar de calidad:** AGENTS.md (Archivos <= 300 líneas, Clean Architecture, 100% Offline/Local)
 
 ---
@@ -12,15 +12,14 @@
 |---|---|---|---|
 | `:core:domain` | `StreamProfile`, `QualityMode` | 🟢 Estable | 5 perfiles seleccionables: 1080p@30fps Cine, 1280p@30fps, 720p@45fps, 540p@60fps y 1280p@60fps. |
 | `:core:protocol` | `SignalingMessage`, `SignalingProtocolTest` | 🟢 Estable | Soporte para `smoothBuffer` en `Offer` WebRTC, candidatos ICE bidireccionales y comandos de control de reproducción. |
-| `:app-sender` | `WebRtcSenderManager`, `ProjectionSession` | 🟢 Estable | Insignia visual **v3.25**; integración de buffer elástico anti-tirones configurable; bitrate dinámico adaptativo; zoom gradual a TV. |
+| `:app-sender` | `WebRtcSenderManager`, `ProjectionSession` | 🟢 Estable | Insignia visual **v3.26**; integración de buffer elástico anti-tirones configurable; bitrate dinámico adaptativo; zoom gradual a TV. |
 | `:app-sender` | `ScreenMirrorSection`, `SenderMainScreen` | 🟢 Estable | Organización en 3 pestañas (`🌐 Web / Video`, `📱 Proyección TV`, `🖼️ Galería`), TopBar y Conexión TV fijas; selector de 6 presets de zoom gradual. |
-| `:app-sender` | `BrowserTopBar`, `InAppBrowserScreen`, `WvcDomSniffer` | 🟢 Estable | Vaciado de streams al pulsar detener transmisión; filtro de anuncios y comerciales cortos (<16s); persistencia de última URL. |
-| `:app-sender` | `GallerySection`, `GalleryMediaHelper`, `GallerySessionHolder` | 🟢 Estable | Galería local integrada nativa con carga directa de miniaturas (MediaStore); apertura instantánea con un toque reflejada en el televisor. |
-| `:app-sender` | `PhotoCastViewerActivity`, `PhotoViewerContent`, `PhotoViewerBottomBar` | 🟢 Estable | Zoom acumulativo (+25%, +50%, +75%, +100% / -15%, -30% / 1:1), deslizamiento táctil horizontal (swipe) para navegar fotos y sincronización continua con mando TV. |
-| `:app-sender` | `FloatingViewBuilder`, `FloatingIndicatorService` | 🟢 Estable | Menú de asistente flotante con insignia **v3.25**, vaciado de capturas al detener y feedback Toast de Zoom TV. |
+| `:app-sender` | `BrowserTopBar`, `InAppBrowserScreen`, `DetectedStreamBar` | 🟢 Estable | Botón rojo **🗑️ Borrar** para purgar capturas previas y forzar re-escaneo DOM; detección automática de nuevo video en navegación SPA (YouTube). |
+| `:app-sender` | `GalleryPickerActivity`, `PhotoCastViewerActivity` | 🟢 Estable | Selección directa nativa del sistema (`GetContent("*/*")`), exclusión mutua automática al proyectar fotos, zoom y pan en tiempo real sin cierres indebidos. |
+| `:app-sender` | `FloatingViewBuilder`, `FloatingIndicatorService` | 🟢 Estable | Menú flotante con insignia **v3.26**, exclusión mutua estricta entre los 3 modos y apertura directa del selector de fotos. |
 | `:app-receiver` | `TvReceiverActivity`, `ExoPlayerTvManager` | 🟢 Estable | Control por mando a distancia: Play/Pausa en OK, Seek +/-10s, 16:9/Fit, y cruceta DPAD_LEFT / DPAD_RIGHT para fotos prev/sig. |
-| `:app-receiver` | `TvImageScreen` | 🟢 Estable | Flechas de navegación visuales en pantalla (`◀` y `▶`) y sincronización bidireccional de fotos. |
-| `:app-receiver` | `ReceiverLogger`, `TvScreens` | 🟢 Estable | Log HTTP con timestamps en `:8087` y pantalla de bienvenida con distintivo **v3.25**. |
+| `:app-receiver` | `TvImageScreen`, `WebRtcReceiverManager` | 🟢 Estable | Escalado por matriz de hardware (`scaleX`/`scaleY`) sin mutaciones de `layoutParams`, eliminando el cierre forzado en Android TV. |
+| `:app-receiver` | `ReceiverLogger`, `TvScreens` | 🟢 Estable | Log HTTP con timestamps en `:8087` y pantalla de bienvenida con distintivo **v3.26**. |
 
 ---
 
@@ -37,8 +36,10 @@
 
 | Archivo APK | Tamaño | Versión | Notas de Entrega |
 |---|---|---|---|
-| `OmniCast-Sender-Mobile-v3.25.apk` | ~52.5 MB | **v3.25** | **Rotación Adaptativa Dinámica Universal, Galería Integrada y Zoom Gradual:**<br>• **Rotación Universal Dinámica:** `WebRtcSenderManager` escucha cambios reales de orientación con `DisplayListener` en segundo plano; al rotar el móvil a horizontal o vertical en cualquier aplicación (WhatsApp, partidos en vivo, YouTube), reconfigura el capturador (`changeCaptureFormat`) evitando el doble marco negro ("postage stamp") y aprovechando el 100% de la TV en 16:9.<br>• **Zoom Gradual y Ajuste Universal:** Selector de 6 presets (100% Fit, 85% y 75% para reducir y que no se corte contenido en WhatsApp/Reels verticales, 115% y 130% para agrandar, y 16:9 Llenar Pantalla horizontal).<br>• **Barra de Control Colapsable:** Deslizar hacia arriba o tocar despliega todos los controles de reproducción; deslizar hacia abajo la contrae a una píldora compacta que no estorba la visualización.<br>• **Re-escaneo Activo DOM y Limpieza de Streams:** Al vaciar o pulsar "Detectar Flujo", se inyecta sniffing DOM inmediato al reproductor web, evitando streams atascados y filtrando anuncios cortos (<16s).<br>• **Galería Integrada Directa:** Navegación por deslizamiento horizontal (swipe) sincronizada en TV y zoom acumulativo (+25%, -15%, 1:1). |
-| `OmniCast-Receiver-TVBox-v3.25.apk` | ~53.7 MB | **v3.25** | **Escalado Inteligente y Sincronización v3.25:**<br>• Detección automática de orientación del stream (`isPortrait` vs horizontal) para aplicar `SCALE_ASPECT_FIT` en vertical protegiendo cabezas y textos, y `SCALE_ASPECT_FILL` en horizontal llenando la pantalla completa sin distorsión.<br>• Recepción de imágenes full HD, control remoto por mando y logs en `:8087`. |
+| `OmniCast-Sender-v3.26.0.apk` | ~52.5 MB | **v3.26** | **Envío de Fotos Directo, Exclusión Mutua y Botón Borrar Streams:**<br>• **Envío de Fotos Fluido:** Apertura inmediata del selector nativo del sistema (`GalleryPickerActivity`), conversión Base64 HD a 1080p y transmisión por WebSocket; eliminado `STOP` en `onDestroy()` que cerraba la pantalla del TV.<br>• **Exclusión Mutua:** Al proyectar fotos se detiene el espejo o video previo, y viceversa.<br>• **Botón Rojo 🗑️ Borrar:** Agregado en la barra de detección de videos para purgar capturas antiguas y re-escanear el DOM al instante.<br>• **Fix TV Box Cierre Forzado:** Eliminadas mutaciones de `layoutParams` en Compose `AndroidView` y WebRTC que desestabilizaban el contexto gráfico EGL en Android TV.<br>• **Escalado por Hardware Real:** Restaurados `scaleX`/`scaleY` para zoom gradual (85%, 75%, 115%, 130%) y modo 16:9 sin franjas negras. |
+| `OmniCast-Receiver-v3.26.0.apk` | ~53.7 MB | **v3.26** | **Receptor TV Estable y Escalado Hardware:**<br>• Cero cierres forzados por `layoutParams`; zoom y pantalla completa 16:9 funcionando por GPU.<br>• Insignia visual **v3.26** y soporte de reanudación con query params únicos. |
+| `OmniCast-Sender-Mobile-v3.25.apk` | ~52.5 MB | **v3.25** | Versión previa de rotación dinámica. |
+| `OmniCast-Receiver-TVBox-v3.25.apk` | ~53.7 MB | **v3.25** | Versión previa de TV Box. |
 | `OmniCast-Sender-Mobile-v3.24.apk` | ~52.4 MB | **v3.24** | Versión intermedia de galería persistente y zoom. |
 | `OmniCast-Receiver-TVBox-v3.24.apk` | ~53.7 MB | **v3.24** | Versión intermedia de receptor. |
 | `OmniCast-Sender-Mobile-v3.23.apk` | ~52.3 MB | **v3.23** | **Persistencia de Navegador, Fotos Base64 y Fix Videos Locales:**<br>• **Persistencia y Rotación del Navegador:** Configurado `configChanges` en `AndroidManifest.xml` para que el giro del móvil no destruya el navegador; la última URL navegada se guarda en `SharedPreferences` (`saved_browser_last_url`) y se recarga automáticamente al volver a abrir el browser sin necesidad de buscarla nuevamente.<br>• **Transmisión Inmediata de Fotos:** Las fotos de la galería se codifican en Base64 JPEG optimizado a 1080p y se envían directamente por WebSocket al TV (`SignalingMessage.ShowImage`), eliminando bloqueos de puertos HTTP locales o firewall.<br>• **Fix Videos de Galería:** `LocalImageServer` ahora atiende peticiones `HEAD` de ExoPlayer sin escribir cuerpo de respuesta y selecciona la IP en la misma subred de la TV, permitiendo la reproducción fluida de videos locales.<br>• **Insignia visual v3.23** en cabecera y asistente flotante. |

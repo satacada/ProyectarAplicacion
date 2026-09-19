@@ -25,7 +25,8 @@ fun DetectedStreamBar(
     streamCount: Int,
     title: String,
     onTransmitDirect: () -> Unit,
-    onOpenQualities: () -> Unit
+    onOpenQualities: () -> Unit,
+    onClearStreams: () -> Unit = {}
 ) {
     AnimatedVisibility(
         visible = streamCount > 0,
@@ -72,10 +73,16 @@ fun DetectedStreamBar(
                             )
                         }
                     }
+                    IconButton(
+                        onClick = onClearStreams,
+                        modifier = Modifier.size(36.dp).background(Color(0xFFEF4444).copy(alpha = 0.2f), shape = androidx.compose.foundation.shape.CircleShape)
+                    ) {
+                        Text("🗑️", fontSize = 16.sp)
+                    }
                 }
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Button(
                         onClick = onTransmitDirect,
@@ -92,6 +99,15 @@ fun DetectedStreamBar(
                         colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF38BDF8))
                     ) {
                         Text("Calidades", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                    }
+                    Button(
+                        onClick = onClearStreams,
+                        modifier = Modifier.height(44.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDC2626)),
+                        shape = RoundedCornerShape(10.dp),
+                        contentPadding = PaddingValues(horizontal = 12.dp)
+                    ) {
+                        Text("🗑️ Borrar", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.White)
                     }
                 }
             }

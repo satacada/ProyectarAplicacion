@@ -27,7 +27,7 @@ fun TvStandbyScreen(ipAddress: String) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text("OmniCast Pro TV", fontSize = 40.sp, fontWeight = FontWeight.Bold, color = Color.White)
                 androidx.compose.material3.Surface(color = Color(0xFF0284C7), shape = RoundedCornerShape(8.dp)) {
-                    Text("v3.25", modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp), fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    Text("v3.26", modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp), fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
                 }
             }
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -171,24 +171,8 @@ fun TvDirectStreamScreen(
                     if (pv.player != player) pv.player = player
                     pv.resizeMode = currentResizeMode.value
                     val z = currentZoom.value
-                    if (z > 0f && z != 1.0f) {
-                        val dm = pv.context.resources.displayMetrics
-                        val w = dm.widthPixels.coerceAtLeast(1280)
-                        val h = dm.heightPixels.coerceAtLeast(720)
-                        val lp = pv.layoutParams
-                        if (lp != null) {
-                            lp.width = (w * z).toInt()
-                            lp.height = (h * z).toInt()
-                            pv.layoutParams = lp
-                        }
-                    } else {
-                        val lp = pv.layoutParams
-                        if (lp != null && (lp.width != android.view.ViewGroup.LayoutParams.MATCH_PARENT || lp.height != android.view.ViewGroup.LayoutParams.MATCH_PARENT)) {
-                            lp.width = android.view.ViewGroup.LayoutParams.MATCH_PARENT
-                            lp.height = android.view.ViewGroup.LayoutParams.MATCH_PARENT
-                            pv.layoutParams = lp
-                        }
-                    }
+                    pv.scaleX = if (z > 0f) z else 1.0f
+                    pv.scaleY = if (z > 0f) z else 1.0f
                 },
                 modifier = Modifier.fillMaxSize()
             )

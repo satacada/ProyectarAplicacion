@@ -19,6 +19,7 @@ fun BrowserBottomBarContainer(
     onOpenQualities: () -> Unit,
     onPlayControl: (String, Long, Float) -> Unit,
     onStopCasting: () -> Unit,
+    onClearStreams: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Box(modifier = modifier) {
@@ -36,7 +37,8 @@ fun BrowserBottomBarContainer(
         } else if (detectedCount > 0) {
             DetectedStreamBar(
                 streamCount = detectedCount, title = pageTitle,
-                onTransmitDirect = onTransmitDirect, onOpenQualities = onOpenQualities
+                onTransmitDirect = onTransmitDirect, onOpenQualities = onOpenQualities,
+                onClearStreams = onClearStreams
             )
         }
     }

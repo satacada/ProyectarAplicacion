@@ -99,10 +99,22 @@ class PhotoCastViewerActivity : ComponentActivity() {
                     }
                 },
                 onTransform = { scale, px, py ->
-                    signalingClient?.sendMessage(SignalingMessage.ImageTransform(scale, px, py))
+                    sendSignaling(SignalingMessage.ImageTransform(scale, px, py))
                 },
                 onClose = { finish() }
             )
+        }
+    }
+
+    private fun sendSignaling(msg: SignalingMessage) {
+        val client = signalingClient ?: SignalingClientHolder.get().also { signalingClient = it }
+        if (client.isConnected) {
+            client.sendMessage(msg)
+        } else {
+            val prefs = getSharedPreferences("omnicast_prefs", Context.MODE_PRIVATE)
+            val ip = prefs.getString("saved_tv_ip", "192.168.0.136") ?: "192.168.0.136"
+            val port = prefs.getInt("saved_tv_port", 8088)
+            client.connect(ip, port, { client.sendMessage(msg) }, {})
         }
     }
 
@@ -141,14 +153,13 @@ class PhotoCastViewerActivity : ComponentActivity() {
             } catch (_: Throwable) { null }
 
             val photoUrl = dataUrl ?: LocalImageServer.serveMedia(uri, "image/jpeg", this@PhotoCastViewerActivity)
-            signalingClient?.sendMessage(SignalingMessage.ShowImage(photoUrl, "Foto (${idx + 1}/$count)"))
-            signalingClient?.sendMessage(SignalingMessage.ImageTransform(1f, 0f, 0f))
+            sendSignaling(SignalingMessage.ShowImage(photoUrl, "Foto (${idx + 1}/$count)"))
+            sendSignaling(SignalingMessage.ImageTransform(1f, 0f, 0f))
         }
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        signalingClient?.sendMessage(SignalingMessage.PlayControl("STOP"))
         signalingClient = null
     }
 }

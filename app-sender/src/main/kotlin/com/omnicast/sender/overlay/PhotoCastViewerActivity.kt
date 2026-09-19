@@ -205,6 +205,12 @@ class PhotoCastViewerActivity : ComponentActivity() {
         }
     }
 
+    override fun finish() {
+        super.finish()
+        @Suppress("DEPRECATION")
+        overridePendingTransition(0, 0)
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         signalingClient = null

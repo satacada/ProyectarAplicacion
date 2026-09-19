@@ -75,6 +75,8 @@ class GalleryPickerActivity : ComponentActivity() {
     private val viewerLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == PhotoCastViewerActivity.RESULT_EXIT_TO_MAIN) {
             finish()
+            @Suppress("DEPRECATION")
+            overridePendingTransition(0, 0)
         } else {
             // Usuario dio ATRÁS en foto a pantalla completa -> Retrocede a la Galería de origen (Paso 2)
             val pkg = lastAppPackage ?: getInstalledGalleryPackage()
@@ -104,8 +106,11 @@ class GalleryPickerActivity : ComponentActivity() {
                 setDataAndType(android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI, "image/* video/*")
                 setPackage(pkg)
                 putExtra(Intent.EXTRA_MIME_TYPES, arrayOf("image/*", "video/*"))
+                addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
             }
             appPickerLauncher.launch(intent)
+            @Suppress("DEPRECATION")
+            overridePendingTransition(0, 0)
         } catch (_: Throwable) {
             launchExplorer()
         }
@@ -155,5 +160,11 @@ class GalleryPickerActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         launchExplorer()
+    }
+
+    override fun finish() {
+        super.finish()
+        @Suppress("DEPRECATION")
+        overridePendingTransition(0, 0)
     }
 }

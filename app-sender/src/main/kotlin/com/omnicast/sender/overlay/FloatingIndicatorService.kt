@@ -97,7 +97,7 @@ class FloatingIndicatorService : Service() {
         ).apply { gravity = Gravity.TOP or Gravity.END; x = builder.dpToPx(16f); y = builder.dpToPx(120f) }
 
         rootLayout = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; gravity = Gravity.END }
-        val pillText = TextView(this).apply { text = "OmniCast v3.25"; setTextColor(Color.WHITE); setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f); typeface = Typeface.DEFAULT_BOLD }
+        val pillText = TextView(this).apply { text = "OmniCast v3.28"; setTextColor(Color.WHITE); setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f); typeface = Typeface.DEFAULT_BOLD }
         val prefs = getSharedPreferences("omnicast_prefs", Context.MODE_PRIVATE)
         val tvIp = prefs.getString("saved_tv_ip", "192.168.0.136") ?: "192.168.0.136"
         val statusFeedbackText = TextView(this).apply {
@@ -172,9 +172,8 @@ class FloatingIndicatorService : Service() {
                 if (ProjectionForegroundService.isProjecting) ProjectionForegroundService.stopService(this)
                 SenderMainActivity.sendPlayControlStatic(this, "STOP")
                 com.omnicast.sender.stream.ActiveStreamHolder.clear()
-                launchIntentSafely(Intent(this, SenderMainActivity::class.java).apply {
-                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
-                    putExtra("EXTRA_OPEN_GALLERY", true)
+                launchIntentSafely(Intent(this, GalleryPickerActivity::class.java).apply {
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 }, 104)
             },
             onOpenBrowser = {

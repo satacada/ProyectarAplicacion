@@ -48,7 +48,9 @@ class TvPlaybackHistoryManager(private val context: Context) {
                 val text = historyFile.readText()
                 if (text.isNotBlank()) {
                     val list = json.decodeFromString<List<TvHistoryItem>>(text)
-                    _history.value = list.sortedByDescending { it.updatedAt }
+                    _history.value = list.distinctBy {
+                        if (it.title.isNotBlank() && it.title != "Película / Video Web") it.title else it.mediaUrl
+                    }.sortedByDescending { it.updatedAt }
                 }
             }
         } catch (e: Throwable) {
@@ -65,11 +67,15 @@ class TvPlaybackHistoryManager(private val context: Context) {
     ) = withContext(Dispatchers.IO) {
         try {
             val current = _history.value.toMutableList()
-            val existingIdx = current.indexOfFirst { it.mediaUrl == url }
+            val cleanTitle = title.ifBlank { "Película / Video Web" }
+            val existingIdx = current.indexOfFirst {
+                it.mediaUrl == url || (cleanTitle != "Película / Video Web" && cleanTitle != "Dailymotion" && it.title == cleanTitle)
+            }
             val item = if (existingIdx >= 0) {
                 val old = current.removeAt(existingIdx)
                 old.copy(
-                    title = if (title.isNotBlank() && title != "Transmisión Web") title else old.title,
+                    mediaUrl = url,
+                    title = if (cleanTitle.isNotBlank() && cleanTitle != "Transmisión Web" && cleanTitle != "Dailymotion") cleanTitle else old.title,
                     headers = if (headers.isNotEmpty()) headers else old.headers,
                     lastPositionMs = if (positionMs > 0L) positionMs else old.lastPositionMs,
                     durationMs = if (durationMs > 0L) durationMs else old.durationMs,
@@ -78,14 +84,16 @@ class TvPlaybackHistoryManager(private val context: Context) {
             } else {
                 TvHistoryItem(
                     mediaUrl = url,
-                    title = title.ifBlank { "Película / Video Web" },
+                    title = cleanTitle,
                     headers = headers,
                     lastPositionMs = positionMs,
                     durationMs = durationMs
                 )
             }
             current.add(0, item)
-            val trimmed = current.take(MAX_ITEMS)
+            val trimmed = current.distinctBy {
+                if (it.title.isNotBlank() && it.title != "Película / Video Web") it.title else it.mediaUrl
+            }.take(MAX_ITEMS)
             _history.value = trimmed
             historyFile.writeText(json.encodeToString(trimmed))
             Log.i(TAG, "Guardado en historial TV: ${item.title} ($url)")

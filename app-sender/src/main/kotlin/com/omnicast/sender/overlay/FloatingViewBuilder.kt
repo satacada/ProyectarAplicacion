@@ -71,7 +71,7 @@ class FloatingViewBuilder(private val context: Context) {
             setPadding(dpToPx(14f), dpToPx(14f), dpToPx(14f), dpToPx(14f))
         }
         val menuTitle = TextView(context).apply {
-            text = "OmniCast v3.25 Asistente"; setTextColor(Color.parseColor("#38BDF8")); setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f); typeface = Typeface.DEFAULT_BOLD
+            text = "OmniCast v3.28 Asistente"; setTextColor(Color.parseColor("#38BDF8")); setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f); typeface = Typeface.DEFAULT_BOLD
         }
         innerMenu.addView(menuTitle)
         innerMenu.addView(createBtn("⚙️ Abrir OmniCast", "#334155", onOpenOmniCast))

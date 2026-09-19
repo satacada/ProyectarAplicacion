@@ -84,7 +84,7 @@ class TvReceiverActivity : ComponentActivity() {
             val playlistsList by playlistManager.playlists.collectAsState()
             MaterialTheme(colorScheme = darkColorScheme(primary = androidx.compose.ui.graphics.Color(0xFF38BDF8), background = androidx.compose.ui.graphics.Color(0xFF0F172A))) {
                 when (val state = receiverState.value) {
-                    is ReceiverUiState.Standby -> TvStandbyScreen(
+                    is ReceiverUiState.Standby -> TvStandbyCleanScreen(
                         ipAddress = localIpAddress.value,
                         history = historyList,
                         playlists = playlistsList,
@@ -198,7 +198,10 @@ class TvReceiverActivity : ComponentActivity() {
                     val st = if (isPlaying) "PLAYING" else "PAUSED"
                     signalingServer.sendMessage(SignalingMessage.PlaybackStatus(st, pos, dur))
                     historyManager.updateProgress(cur.streamUrl, pos, dur)
-                } else break
+                } else {
+                    signalingServer.sendMessage(SignalingMessage.PlaybackStatus("STOPPED", 0L, 0L))
+                    break
+                }
             }
         }
     }

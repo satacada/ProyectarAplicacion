@@ -1,7 +1,7 @@
 # 📊 PROJECT DASHBOARD — OmniCast Pro
 
-**Última actualización:** 2026-09-18  
-**Versión de producción actual:** v3.27 (Sender) / v3.27 (Receiver)  
+**Última actualización:** 2026-09-19  
+**Versión de producción actual:** v3.28 (Sender) / v3.28 (Receiver)  
 **Estándar de calidad:** AGENTS.md (Archivos <= 300 líneas, Clean Architecture, 100% Offline/Local)
 
 ---
@@ -15,14 +15,47 @@
 | `:app-sender` | `CastMediaNotificationService`, `MediaSession` | 🟢 Estable | Widget nativo en pantalla de bloqueo (`MediaStyle`) con barra de progreso interactiva, [X Cerrar], [-10s], [Play/Pause], [+10s]. |
 | `:app-sender` | `NativeAdBlockEngine`, `DynamicSnifferManager` | 🟢 Estable | Motor C++ nativo AdBlockPlus (`libadblock-client.so`) para filtrado de sub-milisegundos de popups; sniffer dinámico con preservación de blobs (`window.URL.revokeObjectURL`). |
 | `:app-sender` | `LocalImageServer`, `PhotoCastViewerActivity` | 🟢 Estable | Servidor HTTP local para fotos de alta resolución (`port 8090`), eliminando sobrecarga Base64 en WebSocket y permitiendo proyección instantánea. |
-| `:app-sender` | `WebRtcSenderManager`, `ProjectionSession` | 🟢 Estable | Insignia visual **v3.27**; buffer elástico anti-tirones configurable; bitrate dinámico adaptativo; zoom gradual a TV. |
+| `:app-sender` | `WebRtcSenderManager`, `ProjectionSession` | 🟢 Estable | Insignia visual **v3.28**; buffer elástico anti-tirones configurable; bitrate dinámico adaptativo; zoom gradual a TV. |
 | `:app-receiver` | `TvPlaybackHistoryManager`, `TvHistorySection` | 🟢 Estable | Historial persistente en Android TV ("Continuar Viendo") en pantalla standby con soporte de control remoto para reproducir sin el teléfono. |
 | `:app-receiver` | `PlaybackRecoveryManager`, `TvAspectRatioHelper` | 🟢 Estable | Resiliencia contra micro-cortes y `BehindLiveWindowException`; alternancia en caliente de relación de aspecto (Fit, 16:9 Llenar, Zoom). |
-| `:app-receiver` | `ReceiverLogger`, `TvScreens` | 🟢 Estable | Log HTTP con timestamps en `:8087` y pantalla de bienvenida con distintivo **v3.27**. |
+| `:app-receiver` | `ReceiverLogger`, `TvScreens` | 🟢 Estable | Log HTTP con timestamps en `:8087` y pantalla de bienvenida con distintivo **v3.28**. |
 
 ---
 
-## 2. Matriz de Compatibilidad Android y Detección Dinámica
+## 2. Historias de Usuario Inamovibles (Contrato de Experiencia de Usuario)
+
+### 📌 HU-01 (Inamovible) — Galería de Fotos Continua y Sincronizada con TV
+*(Documento detallado completo: [`doc/USER_STORIES.md`](file:///d:/APLICACIONES/proyectarAplicacion/doc/USER_STORIES.md))*
+- **Acceso:** Desde el botón "🖼️ Enviar Foto con Zoom Táctil" en el menú flotante o desde la pestaña "🖼️ Galería" en OmniCast.
+- **Selector de Fotos Universal:** Abre el selector nativo del sistema (`*/*` / `image/*`), permitiendo al usuario elegir libremente entre **Galería nativa**, **Google Fotos**, **Exploradores de archivos** o **Descargas**, sin pantallas o diálogos intermedios restrictivos.
+- **Visualización en Pantalla Completa:** Al tocar una foto en la app de fotos elegida, ésta se muestra a pantalla completa en el móvil y se transmite **sincronizadamente de forma instantánea a la TV** vía WebSocket (~15 ms en Base64 JPEG HD).
+- **Pase Continuo (Swipe Adelante / Atrás):** Estando en el visor en el móvil, el usuario desliza con el dedo hacia la izquierda o derecha para ver la foto siguiente o anterior. La foto visualizada en la pantalla del móvil **debe reflejarse automáticamente en la TV**.
+- **Navegación con Botón Atrás:** Al pulsar el botón "Atrás" propio del celular en una foto, **debe regresar a la Galería / Selector** para seguir eligiendo fotos, sin salir intempestivamente a OmniCast. Solo si se pulsa Atrás dentro de la galería/selector se retorna a OmniCast. Botón "Cerrar" rojo en pantalla permite salir directamente.
+- **Prohibición Arquitectónica:** **TERMINANTEMENTE PROHIBIDO** el patrón de "seleccionar una foto, salir, enviar y repetir". El visor debe mantenerse abierto y la galería completa debe ser navegable con gestos táctiles fluidos.
+
+### 📌 HU-02 (Inamovible) — Interfaz Limpia y Standby en TV Receiver (Estilo Seekee TV)
+- **Cabecera (Top Bar):** Logo `OmniCast TV`, navegación por pestañas (`Recientes` | `Todo` | `Favoritos`), nombre de usuario / badge de versión `v3.28`.
+- **Cuerpo Central:** Contador de elementos (`1 elemento` / `X elementos`), lista de carpetas limpias con icono amber `📁` (ej: `FromWebSite`, `⭐ Favoritos`), fecha/hora y navegación con control remoto D-Pad. Píldora de ayuda central.
+- **Dock Inferior de Conexión:** Anclado en la parte inferior de la pantalla con estado de red `🟢 Listo para conectar`, dirección IP y puerto local claramente visibles (`$ipAddress:8088`), y subtítulo de instrucciones.
+
+---
+
+## 3. Matriz de Funcionalidades Validadas y Aprobadas por Versión
+
+| Versión | Funcionalidades Aprobadas y Validadas por el Usuario | Estado |
+|---|---|---|
+| **v3.28** | • **Interfaz Limpia en TV Receiver:** Top Bar con tabs Recientes/Todo/Favoritos, lista de carpetas limpias (`FromWebSite`) y dock inferior de conexión IP/puerto.<br>• **Fix Crash WebRTC a las 8:41:** Eliminado `SEGV_MAPERR` en `nativeFreeFactory` al cerrar `WebRtcSenderManager`.<br>• **Selector Universal y Galería Continua:** Selector nativo del sistema con todas las apps (Galería, Google Fotos, Explorador) y carga de colección completa para swipe continuo a TV.<br>• **Menú Lateral Móvil:** Drawer `☰` con `🕒 Historial` (indicando posición exacta `▶ Se quedó en: XX:XX`) y `⭐ Guardadas`.<br>• **Fix Títulos Dailymotion:** Título real capturado antes del registro y deduplicación de variantes CDN. | 🟢 En Validación |
+| **v3.27** | • Motor AdBlock C++ nativo (`libadblock-client.so`).<br>• Widget de notificación en pantalla de bloqueo (`MediaStyle`).<br>• Script dinámico de sniffing. | 🟢 Aprobado |
+| **v3.26** | • Selector de archivos universal `GetContent("*/*")`.<br>• Botón borrar capturas en navegador web. | 🟢 Aprobado |
+| **v3.25** | • Transmisión rápida de fotos en Base64 JPEG por WebSocket.<br>• Sincronización de zoom táctil a TV. | 🟢 Aprobado |
+| **v3.24** | • Persistencia de URL en navegador web tras rotación de pantalla.<br>• Zoom gradual 6 presets en TV Box. | 🟢 Aprobado |
+| **v3.23** | • Control remoto TV: Play/Pausa en botón central, +/-10s en flechas.<br>• Modo 16:9 estirar pantalla completa en TV sin barras negras. | 🟢 Aprobado |
+| **v3.22** | • Rediseño por pestañas en móvil.<br>• Captura y parseo corregido para ok.ru. | 🟢 Aprobado |
+| **v3.4 / v3.13** | • WebRTC Screen Mirroring nativo de baja latencia con sincronización de audio. | 🟢 Aprobado |
+
+---
+
+## 4. Matriz de Compatibilidad Android y Detección Dinámica
 
 | Dispositivo | Versión Mínima (minSdk) | Versión Target (targetSdk) | Estrategia de Adaptación |
 |---|---|---|---|
@@ -35,8 +68,10 @@
 
 | Archivo APK | Tamaño | Versión | Notas de Entrega |
 |---|---|---|---|
-| `OmniCast-Sender-v3.27.0.apk` | ~58.9 MB | **v3.27** | **AdBlock C++, Widget Bloqueo, Réplica de Listas a TV, Fix Browser y Galería Continua:**<br>• **Fix Crash Navegador Web:** Eliminada llamada a `WebView.getUrl()` en hilo de fondo (`ThreadPoolForeg`) en `shouldInterceptRequest`, usando Referer de encabezados HTTP.<br>• **Galería Continua con Swipe:** Selección y pase de fotos fluido (adelante/atrás) sin salirse de la galería ni requerir el menú flotante; la siguiente foto se proyecta en automático a la TV.<br>• **Sincronización de Listas con TV:** Transmisión automática de carpetas y listas creadas en el móvil (`SignalingMessage.SyncPlaylists`) a la TV Box para navegación autónoma con control remoto.<br>• **Controles en Pantalla de Bloqueo:** Notificación nativa `MediaStyle` y `MediaSessionCompat` con [Cerrar X], [-10s], [Play/Pause], [+10s] y barra de progreso sincronizada al apagar la pantalla del móvil.<br>• **Motor AdBlock C++ Nativo:** Integración de `libadblock-client.so` (núcleo AdBlockPlus en C++) interceptando peticiones en `shouldInterceptRequest` de WebView a nivel de milisegundos.<br>• **Preservación de Blobs y Sniffer Dinámico:** Interceptación de `window.URL.revokeObjectURL` para aplazar la destrucción de streams en memoria y carga dinámica de script de sniffing.<br>• **Insignia v3.27.** |
-| `OmniCast-Receiver-v3.27.0.apk` | ~53.7 MB | **v3.27** | **Listas y Carpetas del Móvil en Standby, Historial Autónomo, Resiliencia y Relación de Aspecto:**<br>• **Réplica de Listas y Carpetas:** Sección horizontal dedicada en pantalla Standby que replica las carpetas ("⭐ Favoritos", "Películas", etc.) guardadas en el móvil para reproducción directa con el mando.<br>• **Historial en Pantalla Standby:** Fila "Continuar Viendo (Historial en TV)" con tarjetas navegables con D-Pad que permite reanudar o repetir reproducciones directamente desde la TV Box sin necesidad del teléfono.<br>• **Playback Recovery Manager:** Recuperación automática ante `BehindLiveWindowException` o cortes de red en streams web HLS con backoff exponencial.<br>• **Ajuste de Aspecto en Caliente:** Alternancia entre Fit, 16:9 Estirar y Zoom mediante mando a distancia.<br>• **Insignia v3.27.** |
+| `OmniCast-Sender-v3.28.0.apk` | ~58.9 MB | **v3.28** | **Menú Lateral (Historial y Guardadas con Tiempo), Galería Continua con Swipe, Fix Dailymotion, AdBlock C++:**<br>• **Menú Lateral Desplegable (☰):** Drawer lateral en móvil con 2 pestañas ("🕒 Historial" y "⭐ Guardadas"), mostrando lista clara con el punto exacto donde se quedó el video (`▶ Se quedó en: XX:XX / YY:YY`), y accesos rápidos `▶ TV`, `🌐 Web` y `✕ Eliminar`.<br>• **Fix Título y Deduplicación Dailymotion:** Se captura el título real antes de registrar el flujo evitando tarjetas genéricas "Dailymotion" duplicadas en la TV y en el móvil.<br>• **Selector de Apps de Galería y Swipe Continuo:** Selector del sistema (`Intent.createChooser`) que permite elegir entre Galería, Google Fotos o Explorador de archivos; la vista (`PhotoCastViewerActivity`) permanece abierta y proyecta fotos en tiempo real a la TV al deslizar (adelante/atrás) vía Base64 WebSocket (~15ms).<br>• **Motor AdBlock C++ Nativo:** Integración de `libadblock-client.so` (núcleo AdBlockPlus en C++) interceptando peticiones en `shouldInterceptRequest` de WebView a nivel de milisegundos.<br>• **Controles en Pantalla de Bloqueo:** Notificación nativa `MediaStyle` y `MediaSessionCompat` con controles y barra de progreso sincronizada.<br>• **Insignia v3.28.** |
+| `OmniCast-Receiver-v3.28.0.apk` | ~53.7 MB | **v3.28** | **Deduplicación de Tarjetas, Sincronización de Tiempo y Modo Standby:**<br>• **Deduplicación de Historial en TV:** Previene tarjetas duplicadas para streams con múltiples variantes CDN (Dailymotion, etc.).<br>• **Sincronización de Estado de Reproducción:** Notifica al móvil periódicamente el progreso de reproducción (`SignalingMessage.PlaybackStatus`) para reflejarlo en tiempo real en el menú lateral.<br>• **Playback Recovery Manager:** Recuperación automática ante `BehindLiveWindowException` o cortes de red en streams web HLS.<br>• **Ajuste de Aspecto en Caliente:** Alternancia entre Fit, 16:9 Estirar y Zoom mediante mando a distancia.<br>• **Insignia v3.28.** |
+| `OmniCast-Sender-v3.27.0.apk` | ~58.9 MB | **v3.27** | Versión previa con AdBlock C++, réplica de listas a TV y widget de pantalla de bloqueo. |
+| `OmniCast-Receiver-v3.27.0.apk` | ~53.7 MB | **v3.27** | Versión previa de receptor con listas y carpetas en Standby y recuperación HLS. |
 | `OmniCast-Sender-v3.26.0.apk` | ~52.5 MB | **v3.26** | Versión previa con listas de reproducción estilo YouTube y borrado de streams. |
 | `OmniCast-Receiver-v3.26.0.apk` | ~53.7 MB | **v3.26** | Versión previa de receptor. |
 | `OmniCast-Sender-Mobile-v3.25.apk` | ~52.5 MB | **v3.25** | Versión previa de rotación dinámica. |

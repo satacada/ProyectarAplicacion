@@ -157,6 +157,9 @@ class SenderMainActivity : ComponentActivity() {
                     ActiveStreamHolder.updatePlayback(msg.state == "PLAYING", msg.positionMs, msg.durationMs)
                     if (msg.positionMs > 5000L) {
                         com.omnicast.sender.stream.StreamResumeManager.savePosition(this@SenderMainActivity, ActiveStreamHolder.streamUrl, msg.positionMs)
+                        ActiveStreamHolder.streamUrl?.let { sUrl ->
+                            com.omnicast.sender.history.PlayHistoryManager(this@SenderMainActivity).updateProgress(sUrl, msg.positionMs, msg.durationMs)
+                        }
                     }
                 } else if (msg is SignalingMessage.TracksInfo) {
                     ActiveStreamHolder.updateTracksInfo(msg)

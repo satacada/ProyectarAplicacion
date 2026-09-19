@@ -238,7 +238,7 @@ class WebRtcSenderManager(
             videoTrack?.dispose(); videoTrack = null; videoSource?.dispose(); videoSource = null
             surfaceTextureHelper?.dispose(); surfaceTextureHelper = null
             peerConnection?.close(); peerConnection = null
-            peerConnectionFactory?.dispose(); peerConnectionFactory = null
+            peerConnectionFactory = null
             displayListener?.let {
                 val dm = context.getSystemService(Context.DISPLAY_SERVICE) as? DisplayManager
                 dm?.unregisterDisplayListener(it)

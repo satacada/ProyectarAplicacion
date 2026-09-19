@@ -1,4 +1,4 @@
-﻿package com.omnicast.receiver.ui.components
+package com.omnicast.receiver.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -64,7 +64,7 @@ fun TvPlaylistsSection(
 }
 
 @Composable
-private fun TvPlaylistVideoCard(
+fun TvPlaylistVideoCard(
     item: TvPlaylistItem,
     onClick: () -> Unit,
     modifier: Modifier = Modifier

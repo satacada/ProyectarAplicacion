@@ -32,11 +32,23 @@ class GalleryPickerActivity : ComponentActivity() {
         }
     }
 
+    private val viewerLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == PhotoCastViewerActivity.RESULT_EXIT_TO_MAIN) {
+            finish()
+        } else {
+            launchPicker()
+        }
+    }
+
     private val picker = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         if (uri != null) {
+            try {
+                contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            } catch (_: Throwable) {}
+
             val mime = resolveMime(uri)
-            val mediaUrl = LocalImageServer.serveMedia(uri, mime, this)
             if (mime.startsWith("video/")) {
+                val mediaUrl = LocalImageServer.serveMedia(uri, mime, this)
                 SenderMainActivity.sendDirectStreamStatic(this, mediaUrl, "Video de Galería")
                 Toast.makeText(this, "🎬 Video enviado a la TV Box", Toast.LENGTH_SHORT).show()
                 finish()
@@ -44,12 +56,12 @@ class GalleryPickerActivity : ComponentActivity() {
                 val photoItems = listOf(com.omnicast.sender.gallery.GalleryPhotoItem(0L, uri, "Foto", "Selección", System.currentTimeMillis()))
                 com.omnicast.sender.gallery.GallerySessionHolder.setPhotos(photoItems, 0)
                 val viewerIntent = Intent(this, PhotoCastViewerActivity::class.java).apply {
+                    data = uri
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                     putExtra("EXTRA_START_INDEX", 0)
                     putExtra("IMAGE_URI", uri.toString())
-                    putExtra("MEDIA_URL", mediaUrl)
                 }
-                startActivity(viewerIntent)
-                finish()
+                viewerLauncher.launch(viewerIntent)
             }
         } else {
             finish()
@@ -58,8 +70,21 @@ class GalleryPickerActivity : ComponentActivity() {
         overridePendingTransition(0, 0)
     }
 
+    private fun launchPicker() {
+        try {
+            picker.launch("*/*")
+        } catch (_: Throwable) {
+            try {
+                picker.launch("image/*")
+            } catch (_: Throwable) {
+                Toast.makeText(this, "No se encontró selector de archivos", Toast.LENGTH_SHORT).show()
+                finish()
+            }
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        picker.launch("*/*")
+        launchPicker()
     }
 }

@@ -8,10 +8,16 @@ import android.webkit.CookieManager
 object BrowserUrlHelper {
 
     private val YOUTUBE_REGEX = Regex("(?:watch\\?v=|shorts/|youtu\\.be/|embed/)([a-zA-Z0-9_-]{11})")
+    private val DAILYMOTION_REGEX = Regex("(?:video/|dai\\.ly/)([a-zA-Z0-9]+)")
 
     fun extractYouTubeId(url: String): String? {
         if (!url.contains("youtube.com") && !url.contains("youtu.be")) return null
         return YOUTUBE_REGEX.find(url)?.groupValues?.get(1)
+    }
+
+    fun extractDailymotionId(url: String): String? {
+        if (!url.contains("dailymotion.com") && !url.contains("dai.ly")) return null
+        return DAILYMOTION_REGEX.find(url)?.groupValues?.get(1)
     }
 
     fun createYouTubeQualityOptions(videoId: String, title: String? = null): List<StreamQualityOption> {
@@ -66,6 +72,8 @@ object BrowserUrlHelper {
 
             if (streamUrl.contains("mycdn.me", ignoreCase = true) || streamUrl.contains("ok.ru", ignoreCase = true)) {
                 headers["Referer"] = "https://ok.ru/"
+            } else if (streamUrl.contains("dailymotion.com", ignoreCase = true) || streamUrl.contains("dmcdn.net", ignoreCase = true)) {
+                headers["Referer"] = "https://www.dailymotion.com/"
             } else if (streamUrl.contains("mail.ru", ignoreCase = true)) {
                 headers.remove("Referer")
             } else if (streamUrl.contains("morencius.com", ignoreCase = true) && !headers.containsKey("Referer")) {

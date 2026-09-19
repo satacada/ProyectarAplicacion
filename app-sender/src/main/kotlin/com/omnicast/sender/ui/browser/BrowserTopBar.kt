@@ -43,6 +43,7 @@ fun BrowserTopBar(
     onOpenVideoList: () -> Unit = {},
     onOpenHistory: () -> Unit = {},
     onOpenPlaylists: () -> Unit = {},
+    onOpenDrawer: () -> Unit = {},
     isTvConnected: Boolean = true
 ) {
     val focusManager = LocalFocusManager.current
@@ -65,6 +66,9 @@ fun BrowserTopBar(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {
+            IconButton(onClick = onOpenDrawer, modifier = Modifier.size(32.dp)) {
+                Text("☰", color = Color(0xFF38BDF8), fontSize = 18.sp, fontWeight = FontWeight.Bold)
+            }
             IconButton(onClick = onClose, modifier = Modifier.size(32.dp)) {
                 Text("✕", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
             }
@@ -204,6 +208,10 @@ fun BrowserTopBar(
                     DropdownMenuItem(
                         text = { Text("📂 Listas Guardadas", color = Color(0xFF10B981)) },
                         onClick = { onOpenPlaylists(); showMenu = false }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("☰ Menú Lateral Completo", color = Color(0xFF38BDF8)) },
+                        onClick = { onOpenDrawer(); showMenu = false }
                     )
                     HorizontalDivider(color = Color(0xFF334155))
                     DropdownMenuItem(

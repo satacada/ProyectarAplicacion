@@ -57,6 +57,7 @@ fun SenderMainScreen(
     var detectionResult by remember { mutableStateOf<StreamDetectionResult?>(null) }
     var showInAppBrowser by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(initialOpenBrowser) }
     var showHelpDialog by remember { mutableStateOf(false) }
+    var showSideDrawer by remember { mutableStateOf(false) }
     var selectedTabIndex by androidx.compose.runtime.saveable.rememberSaveable { mutableIntStateOf(if (initialOpenGallery) 2 else 0) }
 
     LaunchedEffect(initialOpenBrowser) { if (initialOpenBrowser) { showInAppBrowser = true; selectedTabIndex = 0 } }
@@ -106,28 +107,40 @@ fun SenderMainScreen(
         }
     }
 
-    if (showInAppBrowser) {
-        com.omnicast.sender.ui.browser.InAppBrowserScreen(
-            onSendStreamToTv = { url, title, hdrs ->
-                onSendDirectStream(url, title, hdrs)
-                Toast.makeText(context, "Transmitiendo a TV Box...", Toast.LENGTH_SHORT).show()
-            },
-            onCloseBrowser = { showInAppBrowser = false },
-            isTvConnected = isTvConnected
-        )
-    } else {
-        LazyColumn(
-            modifier = Modifier.fillMaxSize().background(Color(0xFF0F172A)).padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            item { SenderHeaderBar(onOpenHelp = { showHelpDialog = true }) }
-            item { OverlayPermissionBanner() }
-            item {
-                DeviceSelectionCard(
-                    discoveredDevices = devices,
-                    selectedDevice = selectedDevice,
-                    manualIp = manualIp,
-                    manualPort = manualPort,
+    SideMediaDrawer(
+        isOpen = showSideDrawer,
+        onClose = { showSideDrawer = false },
+        onPlayOnTv = { url, title, hdrs, _ ->
+            onSendDirectStream(url, title, hdrs)
+            Toast.makeText(context, "Transmitiendo a TV Box...", Toast.LENGTH_SHORT).show()
+        },
+        onOpenInBrowser = {
+            prefs.edit().putString("saved_browser_last_url", it).apply()
+            showInAppBrowser = true
+        }
+    ) {
+        if (showInAppBrowser) {
+            com.omnicast.sender.ui.browser.InAppBrowserScreen(
+                onSendStreamToTv = { url, title, hdrs ->
+                    onSendDirectStream(url, title, hdrs)
+                    Toast.makeText(context, "Transmitiendo a TV Box...", Toast.LENGTH_SHORT).show()
+                },
+                onCloseBrowser = { showInAppBrowser = false },
+                isTvConnected = isTvConnected
+            )
+        } else {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize().background(Color(0xFF0F172A)).padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                item { SenderHeaderBar(onOpenHelp = { showHelpDialog = true }, onOpenDrawer = { showSideDrawer = true }) }
+                item { OverlayPermissionBanner() }
+                item {
+                    DeviceSelectionCard(
+                        discoveredDevices = devices,
+                        selectedDevice = selectedDevice,
+                        manualIp = manualIp,
+                        manualPort = manualPort,
                     isConnected = isTvConnected,
                     onManualIpChange = {
                         manualIp = it
@@ -235,6 +248,7 @@ fun SenderMainScreen(
                 }
             }
         }
+    }
 
         detectionResult?.let { res ->
             StreamResultDialog(

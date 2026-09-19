@@ -8,6 +8,7 @@ import android.os.Bundle
 import android.util.Base64
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
@@ -27,9 +28,44 @@ import java.io.ByteArrayOutputStream
 
 class PhotoCastViewerActivity : ComponentActivity() {
 
+    companion object {
+        const val RESULT_EXIT_TO_MAIN = 100
+        const val RESULT_BACK_TO_GALLERY = 101
+    }
+
     private var signalingClient: SignalingClient? = null
     private val photoUris = mutableStateListOf<Uri>()
     private var currentIndexState = mutableIntStateOf(0)
+
+    private val permLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        if (granted) loadFullGallery()
+    }
+
+    private fun loadFullGallery() {
+        lifecycleScope.launch(Dispatchers.IO) {
+            val fullList = GalleryMediaHelper.loadGalleryPhotos(this@PhotoCastViewerActivity)
+            if (fullList.isNotEmpty()) {
+                withContext(Dispatchers.Main) {
+                    val currentTargetUri = photoUris.getOrNull(currentIndexState.intValue)
+                    val targetId = currentTargetUri?.lastPathSegment?.substringAfterLast(":") ?: ""
+                    val matchIdx = fullList.indexOfFirst {
+                        it.uri == currentTargetUri || (targetId.isNotBlank() && (it.uri.toString().endsWith("/$targetId") || it.id.toString() == targetId))
+                    }
+                    val finalList = if (matchIdx >= 0) {
+                        fullList
+                    } else if (currentTargetUri != null) {
+                        listOf(GalleryPhotoItem(0L, currentTargetUri, "Foto", "Selección", System.currentTimeMillis())) + fullList
+                    } else fullList
+                    val finalIndex = if (matchIdx >= 0) matchIdx else 0
+                    GallerySessionHolder.setPhotos(finalList, finalIndex)
+                    photoUris.clear()
+                    photoUris.addAll(finalList.map { it.uri })
+                    currentIndexState.intValue = finalIndex
+                    transmitCurrentPhoto()
+                }
+            }
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -49,28 +85,9 @@ class PhotoCastViewerActivity : ComponentActivity() {
         }
 
         if (GalleryMediaHelper.hasGalleryPermission(this)) {
-            lifecycleScope.launch(Dispatchers.IO) {
-                val fullList = GalleryMediaHelper.loadGalleryPhotos(this@PhotoCastViewerActivity)
-                if (fullList.isNotEmpty()) {
-                    withContext(Dispatchers.Main) {
-                        val currentTargetUri = photoUris.getOrNull(currentIndexState.intValue)
-                        val targetId = currentTargetUri?.lastPathSegment?.substringAfterLast(":") ?: ""
-                        val matchIdx = fullList.indexOfFirst {
-                            it.uri == currentTargetUri || (targetId.isNotBlank() && (it.uri.toString().endsWith("/$targetId") || it.id.toString() == targetId))
-                        }
-                        val finalList = if (matchIdx >= 0) {
-                            fullList
-                        } else if (currentTargetUri != null) {
-                            listOf(GalleryPhotoItem(0L, currentTargetUri, "Foto", "Selección", System.currentTimeMillis())) + fullList
-                        } else fullList
-                        val finalIndex = if (matchIdx >= 0) matchIdx else 0
-                        GallerySessionHolder.setPhotos(finalList, finalIndex)
-                        photoUris.clear()
-                        photoUris.addAll(finalList.map { it.uri })
-                        currentIndexState.intValue = finalIndex
-                    }
-                }
-            }
+            loadFullGallery()
+        } else {
+            permLauncher.launch(GalleryMediaHelper.getRequiredPermission())
         }
 
         val prefs = getSharedPreferences("omnicast_prefs", Context.MODE_PRIVATE)
@@ -90,12 +107,19 @@ class PhotoCastViewerActivity : ComponentActivity() {
                         when (msg.action) {
                             "NEXT" -> changePhoto(1)
                             "PREV" -> changePhoto(-1)
-                            "STOP" -> finish()
                         }
                     }
                 }
             }
         }
+
+        setResult(RESULT_BACK_TO_GALLERY)
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                setResult(RESULT_BACK_TO_GALLERY)
+                finish()
+            }
+        })
 
         setContent {
             PhotoViewerContent(
@@ -110,7 +134,10 @@ class PhotoCastViewerActivity : ComponentActivity() {
                 onTransform = { scale, px, py ->
                     sendSignaling(SignalingMessage.ImageTransform(scale, px, py))
                 },
-                onClose = { finish() }
+                onClose = {
+                    setResult(RESULT_EXIT_TO_MAIN)
+                    finish()
+                }
             )
         }
     }
@@ -144,25 +171,32 @@ class PhotoCastViewerActivity : ComponentActivity() {
 
         lifecycleScope.launch(Dispatchers.IO) {
             val photoUrl = try {
-                LocalImageServer.serveMedia(uri, "image/jpeg", this@PhotoCastViewerActivity)
-            } catch (_: Throwable) {
-                // Fallback ligero comprimido solo si el servidor local falla
-                try {
-                    contentResolver.openInputStream(uri)?.use { stream ->
-                        val original = BitmapFactory.decodeStream(stream)
-                        if (original != null) {
-                            val maxDim = 800
-                            val maxSide = maxOf(original.width, original.height)
-                            val factor = if (maxSide > maxDim) maxDim.toFloat() / maxSide else 1f
-                            val scaled = Bitmap.createScaledBitmap(original, (original.width * factor).toInt(), (original.height * factor).toInt(), true)
+                contentResolver.openInputStream(uri)?.use { stream ->
+                    val opts = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+                    BitmapFactory.decodeStream(stream, null, opts)
+                    var inSample = 1
+                    val maxDim = 1920
+                    if (opts.outWidth > maxDim || opts.outHeight > maxDim) {
+                        val maxSide = maxOf(opts.outWidth, opts.outHeight)
+                        inSample = (maxSide / maxDim).coerceAtLeast(1)
+                    }
+                    val decodeOpts = BitmapFactory.Options().apply {
+                        inSampleSize = inSample
+                        inPreferredConfig = Bitmap.Config.RGB_565
+                    }
+                    contentResolver.openInputStream(uri)?.use { s2 ->
+                        val bmp = BitmapFactory.decodeStream(s2, null, decodeOpts)
+                        if (bmp != null) {
                             val baos = ByteArrayOutputStream()
-                            scaled.compress(Bitmap.CompressFormat.JPEG, 60, baos)
+                            bmp.compress(Bitmap.CompressFormat.JPEG, 85, baos)
                             val b64 = Base64.encodeToString(baos.toByteArray(), Base64.NO_WRAP)
                             "data:image/jpeg;base64,$b64"
                         } else null
                     }
-                } catch (_: Throwable) { null }
-            }
+                }
+            } catch (_: Throwable) { null } ?: try {
+                LocalImageServer.serveMedia(uri, "image/jpeg", this@PhotoCastViewerActivity)
+            } catch (_: Throwable) { null }
 
             if (photoUrl != null) {
                 sendSignaling(SignalingMessage.ShowImage(photoUrl, "Foto (${idx + 1}/$count)"))

@@ -42,6 +42,7 @@ fun BrowserTopBar(
     detectedStreamsCount: Int = 0,
     onOpenVideoList: () -> Unit = {},
     onOpenHistory: () -> Unit = {},
+    onOpenPlaylists: () -> Unit = {},
     isTvConnected: Boolean = true
 ) {
     val focusManager = LocalFocusManager.current
@@ -199,6 +200,10 @@ fun BrowserTopBar(
                     DropdownMenuItem(
                         text = { Text("📜 Historial de Películas", color = Color(0xFFF59E0B)) },
                         onClick = { onOpenHistory(); showMenu = false }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("📂 Listas Guardadas", color = Color(0xFF10B981)) },
+                        onClick = { onOpenPlaylists(); showMenu = false }
                     )
                     HorizontalDivider(color = Color(0xFF334155))
                     DropdownMenuItem(

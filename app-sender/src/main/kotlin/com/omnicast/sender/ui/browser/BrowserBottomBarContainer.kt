@@ -20,6 +20,7 @@ fun BrowserBottomBarContainer(
     onPlayControl: (String, Long, Float) -> Unit,
     onStopCasting: () -> Unit,
     onClearStreams: () -> Unit = {},
+    onSaveToPlaylist: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     Box(modifier = modifier) {
@@ -32,13 +33,15 @@ fun BrowserBottomBarContainer(
                 onSkip = { onPlayControl("SEEK", (posMs + it).coerceAtLeast(0L), 1f) },
                 onVolumeChange = { onPlayControl("VOLUME", 0L, it) },
                 onStop = onStopCasting,
-                onSelectQuality = onOpenQualities
+                onSelectQuality = onOpenQualities,
+                onSaveToPlaylist = onSaveToPlaylist
             )
         } else if (detectedCount > 0) {
             DetectedStreamBar(
                 streamCount = detectedCount, title = pageTitle,
                 onTransmitDirect = onTransmitDirect, onOpenQualities = onOpenQualities,
-                onClearStreams = onClearStreams
+                onClearStreams = onClearStreams,
+                onSaveToPlaylist = onSaveToPlaylist
             )
         }
     }

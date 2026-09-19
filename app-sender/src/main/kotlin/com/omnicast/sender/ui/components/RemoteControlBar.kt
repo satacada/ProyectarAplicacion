@@ -32,7 +32,8 @@ fun RemoteControlBar(
     onSkip: (Long) -> Unit,
     onVolumeChange: (Float) -> Unit,
     onStop: () -> Unit,
-    onSelectQuality: (() -> Unit)? = null
+    onSelectQuality: (() -> Unit)? = null,
+    onSaveToPlaylist: (() -> Unit)? = null
 ) {
     var isExpanded by rememberSaveable { mutableStateOf(true) }
 
@@ -114,6 +115,12 @@ fun RemoteControlBar(
                             contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
                         ) { Text(if (isPlaying) "⏸" else "▶", fontSize = 12.sp, color = Color.White) }
 
+                        if (onSaveToPlaylist != null) {
+                            IconButton(onClick = onSaveToPlaylist, modifier = Modifier.size(32.dp)) {
+                                Text("💾", fontSize = 14.sp)
+                            }
+                        }
+
                         IconButton(onClick = onStop, modifier = Modifier.size(32.dp)) {
                             Text("🛑", fontSize = 14.sp)
                         }
@@ -143,7 +150,12 @@ fun RemoteControlBar(
                                     color = Color(0xFF94A3B8), fontSize = 11.sp
                                 )
                             }
-                            IconButton(onClick = onStop) { Text("🛑", fontSize = 18.sp) }
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                if (onSaveToPlaylist != null) {
+                                    IconButton(onClick = onSaveToPlaylist) { Text("💾", fontSize = 16.sp) }
+                                }
+                                IconButton(onClick = onStop) { Text("🛑", fontSize = 18.sp) }
+                            }
                         }
 
                         if (durationMs > 0) {

@@ -12,7 +12,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.saveable.rememberSaveable
+import com.omnicast.sender.history.HistoryItem
 import com.omnicast.sender.history.PlayHistoryManager
+import com.omnicast.sender.playlist.PlaylistManager
 import com.omnicast.sender.stream.ActiveStreamHolder
 import com.omnicast.sender.ui.SenderMainActivity
 import kotlinx.coroutines.launch
@@ -41,6 +43,9 @@ fun InAppBrowserScreen(
     var qualityOptions by remember { mutableStateOf<List<StreamQualityOption>>(emptyList()) }
     var showOptionsSheet by remember { mutableStateOf(false) }
     var showHistorySheet by remember { mutableStateOf(false) }
+    var showSavedPlaylistsSheet by remember { mutableStateOf(false) }
+    var videoToSave by remember { mutableStateOf<HistoryItem?>(null) }
+    val playlistManager = remember { PlaylistManager(context) }
     var historyList by remember { mutableStateOf(historyManager.getHistory()) }
     var webViewInstance by remember { mutableStateOf<WebView?>(null) }
     var popupWebView by remember { mutableStateOf<WebView?>(null) }
@@ -55,6 +60,8 @@ fun InAppBrowserScreen(
 
     androidx.activity.compose.BackHandler(enabled = true) {
         if (popupWebView != null) { popupWebView?.destroy(); popupWebView = null }
+        else if (videoToSave != null) videoToSave = null
+        else if (showSavedPlaylistsSheet) showSavedPlaylistsSheet = false
         else if (showHistorySheet) showHistorySheet = false
         else if (showOptionsSheet) showOptionsSheet = false
         else if (webViewInstance?.canGoBack() == true) webViewInstance?.goBack()
@@ -66,9 +73,7 @@ fun InAppBrowserScreen(
             webViewInstance?.evaluateJavascript(WvcDomSniffer.getInjectionScript(context), null)
             webViewInstance?.evaluateJavascript(WvcSnifferScripts.buildAggressiveRescanScript(WvcDomSniffer.CONSOLE_PREFIX), null)
         }
-        onDispose {
-            SenderMainActivity.onBrowserRescanRequested = null
-        }
+        onDispose { SenderMainActivity.onBrowserRescanRequested = null }
     }
 
     fun registerStream(url: String, hdrs: Map<String, String>, isPrimary: Boolean = false, label: String? = null) {
@@ -134,11 +139,7 @@ fun InAppBrowserScreen(
         qualityOptions = allOpts.distinctBy { it.streamUrl }
         showOptionsSheet = true
         scope.launch {
-            val deep = mutableListOf<StreamQualityOption>()
-            detectedStreams.forEach { u ->
-                val hdrs = streamHeaders[u] ?: emptyMap()
-                deep.addAll(StreamQualityDetector.detectQualities(u, hdrs, cleanTitle))
-            }
+            val deep = detectedStreams.flatMap { u -> StreamQualityDetector.detectQualities(u, streamHeaders[u] ?: emptyMap(), cleanTitle) }
             if (deep.isNotEmpty()) qualityOptions = (qualityOptions + deep).distinctBy { it.label }
         }
     }
@@ -161,7 +162,9 @@ fun InAppBrowserScreen(
                 prefs.edit().remove("saved_browser_last_url").apply()
             },
             detectedStreamsCount = detectedStreams.size, onOpenVideoList = { openOptionsSheet() },
-            onOpenHistory = { historyList = historyManager.getHistory(); showHistorySheet = true }, isTvConnected = isTvConnected
+            onOpenHistory = { historyList = historyManager.getHistory(); showHistorySheet = true },
+            onOpenPlaylists = { showSavedPlaylistsSheet = true },
+            isTvConnected = isTvConnected
         )
 
         if (progress in 1..99) LinearProgressIndicator(progress = { progress / 100f }, modifier = Modifier.fillMaxWidth().height(3.dp), color = Color(0xFF38BDF8))
@@ -240,27 +243,27 @@ fun InAppBrowserScreen(
                     },
                     onStopCasting = {
                         ActiveStreamHolder.stopCastingAndClear()
-                        detectedStreams.clear()
-                        streamHeaders.clear()
-                        streamLabels.clear()
-                        qualityOptions = emptyList()
-                        Toast.makeText(context, "🛑 Transmisión detenida y capturas limpiadas", Toast.LENGTH_SHORT).show()
+                        detectedStreams.clear(); streamHeaders.clear(); streamLabels.clear(); qualityOptions = emptyList()
+                        Toast.makeText(context, "🛑 Transmisión detenida", Toast.LENGTH_SHORT).show()
                     },
                     onClearStreams = {
-                        detectedStreams.clear()
-                        streamHeaders.clear()
-                        streamLabels.clear()
-                        qualityOptions = emptyList()
-                        ActiveStreamHolder.clear()
+                        detectedStreams.clear(); streamHeaders.clear(); streamLabels.clear(); qualityOptions = emptyList(); ActiveStreamHolder.clear()
                         webViewInstance?.let { wv ->
-                            val s = WvcDomSniffer.getInjectionScript(context)
-                            wv.evaluateJavascript(s, null)
+                            wv.evaluateJavascript(WvcDomSniffer.getInjectionScript(context), null)
                             val u = wv.url
-                            if (u?.contains("youtube.com") == true || u?.contains("youtu.be") == true) {
-                                checkAndRegisterYouTube(u, wv.title)
-                            }
+                            if (u?.contains("youtube.com") == true || u?.contains("youtu.be") == true) checkAndRegisterYouTube(u, wv.title)
                         }
                         Toast.makeText(context, "🗑️ Capturas limpiadas. Re-escaneando...", Toast.LENGTH_SHORT).show()
+                    },
+                    onSaveToPlaylist = {
+                        val active = ActiveStreamHolder.streamUrl ?: ""
+                        val primary = if (active.isNotBlank()) active else detectedStreams.firstOrNull() ?: ""
+                        if (primary.isNotBlank()) {
+                            val t = if (castTitle.isNotBlank()) castTitle else if (pageTitle.isNotBlank() && pageTitle != "Cargando...") pageTitle else "Película / Video"
+                            videoToSave = HistoryItem(url = primary, title = t, pageUrl = currentUrl, headers = streamHeaders[primary] ?: emptyMap())
+                        } else {
+                            Toast.makeText(context, "No hay video detectado para guardar", Toast.LENGTH_SHORT).show()
+                        }
                     },
                     modifier = Modifier.align(Alignment.BottomCenter)
                 )
@@ -274,14 +277,19 @@ fun InAppBrowserScreen(
 
     BrowserModalSheets(
         showOptionsSheet = showOptionsSheet, showHistorySheet = showHistorySheet,
-        pageTitle = pageTitle, qualityOptions = qualityOptions, historyList = historyList,
+        showSavedPlaylistsSheet = showSavedPlaylistsSheet, videoToSave = videoToSave,
+        playlistManager = playlistManager, pageTitle = pageTitle, qualityOptions = qualityOptions,
+        historyList = historyList,
         onTransmitOption = { opt -> showOptionsSheet = false; onSendStreamToTv(opt.streamUrl, pageTitle, streamHeaders[opt.streamUrl] ?: streamHeaders.values.firstOrNull { it.isNotEmpty() } ?: emptyMap()) },
-        onTransmitHistory = { item -> showHistorySheet = false; onSendStreamToTv(item.url, item.title, item.headers) },
+        onTransmitHistory = { item -> showHistorySheet = false; showSavedPlaylistsSheet = false; onSendStreamToTv(item.url, item.title, item.headers) },
         onDismissOptions = { showOptionsSheet = false },
         onClearOptions = { detectedStreams.clear(); qualityOptions = emptyList(); showOptionsSheet = false },
         onDeleteHistory = { historyManager.remove(it); historyList = historyManager.getHistory() },
         onClearHistory = { historyManager.clear(keepFavorites = true); historyList = historyManager.getHistory() },
         onToggleFavorite = { historyManager.toggleFavorite(it); historyList = historyManager.getHistory() },
-        onDismissHistory = { showHistorySheet = false }
+        onDismissHistory = { showHistorySheet = false },
+        onDismissPlaylists = { showSavedPlaylistsSheet = false },
+        onDismissSaveDialog = { videoToSave = null },
+        onSavedToPlaylist = { plName -> Toast.makeText(context, "💾 Guardado en $plName", Toast.LENGTH_SHORT).show() }
     )
 }

@@ -26,7 +26,8 @@ fun DetectedStreamBar(
     title: String,
     onTransmitDirect: () -> Unit,
     onOpenQualities: () -> Unit,
-    onClearStreams: () -> Unit = {}
+    onClearStreams: () -> Unit = {},
+    onSaveToPlaylist: (() -> Unit)? = null
 ) {
     AnimatedVisibility(
         visible = streamCount > 0,
@@ -73,11 +74,21 @@ fun DetectedStreamBar(
                             )
                         }
                     }
-                    IconButton(
-                        onClick = onClearStreams,
-                        modifier = Modifier.size(36.dp).background(Color(0xFFEF4444).copy(alpha = 0.2f), shape = androidx.compose.foundation.shape.CircleShape)
-                    ) {
-                        Text("🗑️", fontSize = 16.sp)
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                        if (onSaveToPlaylist != null) {
+                            IconButton(
+                                onClick = onSaveToPlaylist,
+                                modifier = Modifier.size(36.dp).background(Color(0xFF38BDF8).copy(alpha = 0.2f), shape = androidx.compose.foundation.shape.CircleShape)
+                            ) {
+                                Text("💾", fontSize = 16.sp)
+                            }
+                        }
+                        IconButton(
+                            onClick = onClearStreams,
+                            modifier = Modifier.size(36.dp).background(Color(0xFFEF4444).copy(alpha = 0.2f), shape = androidx.compose.foundation.shape.CircleShape)
+                        ) {
+                            Text("🗑️", fontSize = 16.sp)
+                        }
                     }
                 }
                 Row(

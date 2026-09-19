@@ -65,6 +65,7 @@
 
 ## 4. Referencia de Ingeniería Inversa Permanente
 - Documentación estática registrada en `docs/references/OMNICAST_V3.4_REFERENCE.md` para evitar consumo de tokens en tareas repetitivas.
+- Roadmap y auditoría de la APK Seekee registrado en `doc/references/SEEKEE_REVERSE_ENGINEERING_ROADMAP.md`.
 
 ---
 

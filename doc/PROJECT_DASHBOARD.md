@@ -23,20 +23,12 @@
 ---
 
 ## 2. Historias de Usuario Inamovibles (Contrato de Experiencia de Usuario)
+*(Carpeta modular permanente: [`doc/historias-usuario/`](file:///d:/APLICACIONES/proyectarAplicacion/doc/historias-usuario/README.md))*
 
-### 📌 HU-01 (Inamovible) — Galería de Fotos Continua y Sincronizada con TV
-*(Documento detallado completo: [`doc/USER_STORIES.md`](file:///d:/APLICACIONES/proyectarAplicacion/doc/USER_STORIES.md))*
-- **Acceso:** Desde el botón "🖼️ Enviar Foto con Zoom Táctil" en el menú flotante o desde la pestaña "🖼️ Galería" en OmniCast.
-- **Selector de Fotos Universal:** Abre el selector nativo del sistema (`*/*` / `image/*`), permitiendo al usuario elegir libremente entre **Galería nativa**, **Google Fotos**, **Exploradores de archivos** o **Descargas**, sin pantallas o diálogos intermedios restrictivos.
-- **Visualización en Pantalla Completa:** Al tocar una foto en la app de fotos elegida, ésta se muestra a pantalla completa en el móvil y se transmite **sincronizadamente de forma instantánea a la TV** vía WebSocket (~15 ms en Base64 JPEG HD).
-- **Pase Continuo (Swipe Adelante / Atrás):** Estando en el visor en el móvil, el usuario desliza con el dedo hacia la izquierda o derecha para ver la foto siguiente o anterior. La foto visualizada en la pantalla del móvil **debe reflejarse automáticamente en la TV**.
-- **Navegación con Botón Atrás:** Al pulsar el botón "Atrás" propio del celular en una foto, **debe regresar a la Galería / Selector** para seguir eligiendo fotos, sin salir intempestivamente a OmniCast. Solo si se pulsa Atrás dentro de la galería/selector se retorna a OmniCast. Botón "Cerrar" rojo en pantalla permite salir directamente.
-- **Prohibición Arquitectónica:** **TERMINANTEMENTE PROHIBIDO** el patrón de "seleccionar una foto, salir, enviar y repetir". El visor debe mantenerse abierto y la galería completa debe ser navegable con gestos táctiles fluidos.
-
-### 📌 HU-02 (Inamovible) — Interfaz Limpia y Standby en TV Receiver (Estilo Seekee TV)
-- **Cabecera (Top Bar):** Logo `OmniCast TV`, navegación por pestañas (`Recientes` | `Todo` | `Favoritos`), nombre de usuario / badge de versión `v3.28`.
-- **Cuerpo Central:** Contador de elementos (`1 elemento` / `X elementos`), lista de carpetas limpias con icono amber `📁` (ej: `FromWebSite`, `⭐ Favoritos`), fecha/hora y navegación con control remoto D-Pad. Píldora de ayuda central.
-- **Dock Inferior de Conexión:** Anclado en la parte inferior de la pantalla con estado de red `🟢 Listo para conectar`, dirección IP y puerto local claramente visibles (`$ipAddress:8088`), y subtítulo de instrucciones.
+- **[HU-001: Galería de Fotos Continua y Retorno con Botón Atrás](file:///d:/APLICACIONES/proyectarAplicacion/doc/historias-usuario/HU-001-galeria-fotos-continua.md):** Selector universal (`*/*`), swipe continuo a TV y retorno automático a la galería con botón Atrás.
+- **[HU-002: Interfaz Limpia y Standby en TV Receiver](file:///d:/APLICACIONES/proyectarAplicacion/doc/historias-usuario/HU-002-standby-limpio-tv.md):** Diseño Seekee TV con carpetas, navegación por pestañas y dock inferior de conexión IP:8088.
+- **[HU-003: Menú Lateral Móvil con Historial y Tiempo Exacto](file:///d:/APLICACIONES/proyectarAplicacion/doc/historias-usuario/HU-003-menu-lateral-historial.md):** Cajón lateral `☰` con indicador `▶ Se quedó en: mm:ss` y accesos directos.
+- **[HU-004: Detección Limpia y Anti-Duplicados en Streams Web](file:///d:/APLICACIONES/proyectarAplicacion/doc/historias-usuario/HU-004-deduplicacion-streams-web.md):** Extracción de título real del DOM y deduplicación de variantes CDN.
 
 ---
 

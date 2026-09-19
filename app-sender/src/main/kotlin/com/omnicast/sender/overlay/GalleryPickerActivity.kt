@@ -14,6 +14,8 @@ import com.omnicast.sender.ui.SenderMainActivity
 
 class GalleryPickerActivity : ComponentActivity() {
 
+    private var lastAppPackage: String? = null
+
     private fun resolveMime(uri: Uri): String {
         val type = contentResolver.getType(uri)
         if (!type.isNullOrBlank() && type != "application/octet-stream") return type
@@ -32,45 +34,84 @@ class GalleryPickerActivity : ComponentActivity() {
         }
     }
 
+    private fun getInstalledGalleryPackage(): String? {
+        val candidates = listOf(
+            "com.miui.gallery",
+            "com.google.android.apps.photos",
+            "com.sec.android.gallery3d",
+            "com.coloros.gallery3d",
+            "com.huawei.photos"
+        )
+        for (pkg in candidates) {
+            try {
+                packageManager.getPackageInfo(pkg, 0)
+                return pkg
+            } catch (_: Throwable) {}
+        }
+        return null
+    }
+
+    private fun resolveAppPackage(uri: Uri): String {
+        val auth = uri.authority ?: ""
+        return when {
+            auth.contains("miui.gallery") -> "com.miui.gallery"
+            auth.contains("photos") -> "com.google.android.apps.photos"
+            auth.contains("gallery") -> auth.substringBefore(".open").substringBefore(".provider")
+            else -> getInstalledGalleryPackage() ?: "com.miui.gallery"
+        }
+    }
+
+    private val appPickerLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        val uri = result.data?.data
+        if (result.resultCode == android.app.Activity.RESULT_OK && uri != null) {
+            handleMediaSelected(uri)
+        } else {
+            // Usuario dio ATRÁS dentro de la Galería -> Retrocede al Explorador Nativo (Paso 1)
+            lastAppPackage = null
+            launchExplorer()
+        }
+    }
+
     private val viewerLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == PhotoCastViewerActivity.RESULT_EXIT_TO_MAIN) {
             finish()
         } else {
-            launchPicker()
+            // Usuario dio ATRÁS en foto a pantalla completa -> Retrocede a la Galería de origen (Paso 2)
+            val pkg = lastAppPackage ?: getInstalledGalleryPackage()
+            if (pkg != null) {
+                launchAppPicker(pkg)
+            } else {
+                launchExplorer()
+            }
         }
     }
 
     private val picker = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         if (uri != null) {
-            try {
-                contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            } catch (_: Throwable) {}
-
-            val mime = resolveMime(uri)
-            if (mime.startsWith("video/")) {
-                val mediaUrl = LocalImageServer.serveMedia(uri, mime, this)
-                SenderMainActivity.sendDirectStreamStatic(this, mediaUrl, "Video de Galería")
-                Toast.makeText(this, "🎬 Video enviado a la TV Box", Toast.LENGTH_SHORT).show()
-                finish()
-            } else {
-                val photoItems = listOf(com.omnicast.sender.gallery.GalleryPhotoItem(0L, uri, "Foto", "Selección", System.currentTimeMillis()))
-                com.omnicast.sender.gallery.GallerySessionHolder.setPhotos(photoItems, 0)
-                val viewerIntent = Intent(this, PhotoCastViewerActivity::class.java).apply {
-                    data = uri
-                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                    putExtra("EXTRA_START_INDEX", 0)
-                    putExtra("IMAGE_URI", uri.toString())
-                }
-                viewerLauncher.launch(viewerIntent)
-            }
+            handleMediaSelected(uri)
         } else {
+            // Usuario dio ATRÁS en el Explorador Nativo -> Retrocede a OmniCast (Paso 0)
             finish()
         }
         @Suppress("DEPRECATION")
         overridePendingTransition(0, 0)
     }
 
-    private fun launchPicker() {
+    private fun launchAppPicker(pkg: String) {
+        lastAppPackage = pkg
+        try {
+            val intent = Intent(Intent.ACTION_PICK).apply {
+                setDataAndType(android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI, "image/* video/*")
+                setPackage(pkg)
+                putExtra(Intent.EXTRA_MIME_TYPES, arrayOf("image/*", "video/*"))
+            }
+            appPickerLauncher.launch(intent)
+        } catch (_: Throwable) {
+            launchExplorer()
+        }
+    }
+
+    private fun launchExplorer() {
         try {
             picker.launch("*/*")
         } catch (_: Throwable) {
@@ -83,8 +124,36 @@ class GalleryPickerActivity : ComponentActivity() {
         }
     }
 
+    private fun handleMediaSelected(uri: Uri) {
+        try {
+            contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        } catch (_: Throwable) {}
+
+        val pkg = resolveAppPackage(uri)
+        lastAppPackage = pkg
+
+        val mime = resolveMime(uri)
+        if (mime.startsWith("video/")) {
+            val mediaUrl = LocalImageServer.serveMedia(uri, mime, this)
+            SenderMainActivity.sendDirectStreamStatic(this, mediaUrl, "Video de Galería")
+            Toast.makeText(this, "🎬 Reproduciendo video en TV Box", Toast.LENGTH_SHORT).show()
+            // Permanece en la Galería para seguir seleccionando videos/fotos sin cerrar la app
+            launchAppPicker(pkg)
+        } else {
+            val photoItems = listOf(com.omnicast.sender.gallery.GalleryPhotoItem(0L, uri, "Foto", "Selección", System.currentTimeMillis()))
+            com.omnicast.sender.gallery.GallerySessionHolder.setPhotos(photoItems, 0)
+            val viewerIntent = Intent(this, PhotoCastViewerActivity::class.java).apply {
+                data = uri
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                putExtra("EXTRA_START_INDEX", 0)
+                putExtra("IMAGE_URI", uri.toString())
+            }
+            viewerLauncher.launch(viewerIntent)
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        launchPicker()
+        launchExplorer()
     }
 }

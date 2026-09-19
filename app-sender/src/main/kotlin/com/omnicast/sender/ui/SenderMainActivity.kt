@@ -176,6 +176,7 @@ class SenderMainActivity : ComponentActivity() {
         val savedPos = com.omnicast.sender.stream.StreamResumeManager.getPosition(this, url)
         historyManager.addOrUpdate(url, safeTitle, headers = headers)
         ActiveStreamHolder.startCasting(url, safeTitle, headers)
+        com.omnicast.sender.service.CastMediaNotificationService.start(this)
         ActiveStreamHolder.onSendPlayControl = { act, pos, vol, par -> sendPlayControl(act, pos, vol, par) }
         sendSignalingMessage(SignalingMessage.DirectStreamHandoff(mediaUrl = url, title = safeTitle, headers = headers, startPositionMs = savedPos))
         if (savedPos > 0L) {
@@ -205,6 +206,7 @@ class SenderMainActivity : ComponentActivity() {
 
     private fun startScreenStreaming(target: DeviceTarget, profile: StreamProfile, tvScaleMode: String, permissionData: Intent) {
         autoPromptCapture.value = false
+        com.omnicast.sender.service.CastMediaNotificationService.stop(this)
         val prefs = getSharedPreferences("omnicast_prefs", Context.MODE_PRIVATE)
         val smoothBuffer = prefs.getBoolean("saved_smooth_buffer", true)
         ProjectionForegroundService.startProjection(this, target.ipAddress, target.port, profile, permissionData, tvScaleMode, smoothBuffer)

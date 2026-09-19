@@ -21,6 +21,8 @@ java-websocket = { group = "org.java-websocket", name = "Java-WebSocket", versio
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycleRuntimeKtx" }
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
+androidx-media = { group = "androidx.media", name = "media", version = "1.7.0" }
+adblock-filter = { group = "com.github.Edsuns.AdblockAndroid", name = "adblock-client", version = "0.9.1" }
 
 # Compose UI (Mobile)
 androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }

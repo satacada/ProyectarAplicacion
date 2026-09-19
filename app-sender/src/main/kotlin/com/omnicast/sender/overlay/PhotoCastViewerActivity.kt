@@ -134,27 +134,31 @@ class PhotoCastViewerActivity : ComponentActivity() {
         val count = photoUris.size
 
         lifecycleScope.launch(Dispatchers.IO) {
-            val dataUrl = try {
-                contentResolver.openInputStream(uri)?.use { stream ->
-                    val original = BitmapFactory.decodeStream(stream)
-                    if (original != null) {
-                        val maxDim = 1920
-                        val maxSide = maxOf(original.width, original.height)
-                        val factor = if (maxSide > maxDim) maxDim.toFloat() / maxSide else 1f
-                        val scaled = if (factor < 1f) {
-                            Bitmap.createScaledBitmap(original, (original.width * factor).toInt(), (original.height * factor).toInt(), true)
-                        } else original
-                        val baos = ByteArrayOutputStream()
-                        scaled.compress(Bitmap.CompressFormat.JPEG, 85, baos)
-                        val b64 = Base64.encodeToString(baos.toByteArray(), Base64.NO_WRAP)
-                        "data:image/jpeg;base64,$b64"
-                    } else null
-                }
-            } catch (_: Throwable) { null }
+            val photoUrl = try {
+                LocalImageServer.serveMedia(uri, "image/jpeg", this@PhotoCastViewerActivity)
+            } catch (_: Throwable) {
+                // Fallback ligero comprimido solo si el servidor local falla
+                try {
+                    contentResolver.openInputStream(uri)?.use { stream ->
+                        val original = BitmapFactory.decodeStream(stream)
+                        if (original != null) {
+                            val maxDim = 800
+                            val maxSide = maxOf(original.width, original.height)
+                            val factor = if (maxSide > maxDim) maxDim.toFloat() / maxSide else 1f
+                            val scaled = Bitmap.createScaledBitmap(original, (original.width * factor).toInt(), (original.height * factor).toInt(), true)
+                            val baos = ByteArrayOutputStream()
+                            scaled.compress(Bitmap.CompressFormat.JPEG, 60, baos)
+                            val b64 = Base64.encodeToString(baos.toByteArray(), Base64.NO_WRAP)
+                            "data:image/jpeg;base64,$b64"
+                        } else null
+                    }
+                } catch (_: Throwable) { null }
+            }
 
-            val photoUrl = dataUrl ?: LocalImageServer.serveMedia(uri, "image/jpeg", this@PhotoCastViewerActivity)
-            sendSignaling(SignalingMessage.ShowImage(photoUrl, "Foto (${idx + 1}/$count)"))
-            sendSignaling(SignalingMessage.ImageTransform(1f, 0f, 0f))
+            if (photoUrl != null) {
+                sendSignaling(SignalingMessage.ShowImage(photoUrl, "Foto (${idx + 1}/$count)"))
+                sendSignaling(SignalingMessage.ImageTransform(1f, 0f, 0f))
+            }
         }
     }
 

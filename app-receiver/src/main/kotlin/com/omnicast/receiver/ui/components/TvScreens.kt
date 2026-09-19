@@ -15,39 +15,52 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun TvStandbyScreen(ipAddress: String) {
+fun TvStandbyScreen(
+    ipAddress: String,
+    history: List<com.omnicast.receiver.directstream.TvHistoryItem> = emptyList(),
+    onPlayHistory: (com.omnicast.receiver.directstream.TvHistoryItem) -> Unit = {}
+) {
     Box(
         modifier = Modifier.fillMaxSize().background(Color(0xFF0F172A)),
         contentAlignment = Alignment.Center
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(20.dp)
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            modifier = Modifier.padding(vertical = 20.dp)
         ) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text("OmniCast Pro TV", fontSize = 40.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                Text("OmniCast Pro TV", fontSize = 38.sp, fontWeight = FontWeight.Bold, color = Color.White)
                 androidx.compose.material3.Surface(color = Color(0xFF0284C7), shape = RoundedCornerShape(8.dp)) {
-                    Text("v3.26", modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp), fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    Text("v3.27", modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp), fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Color.White)
                 }
             }
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                Box(modifier = Modifier.size(14.dp).background(Color(0xFF38BDF8), RoundedCornerShape(7.dp)))
-                Text("Listo para conectar", fontSize = 20.sp, color = Color(0xFF94A3B8))
+                Box(modifier = Modifier.size(12.dp).background(Color(0xFF38BDF8), RoundedCornerShape(6.dp)))
+                Text("Listo para conectar", fontSize = 18.sp, color = Color(0xFF94A3B8))
             }
             Card(
                 colors = CardDefaults.cardColors(containerColor = Color(0xFF1E293B)),
                 shape = RoundedCornerShape(16.dp),
-                modifier = Modifier.padding(16.dp)
+                modifier = Modifier.padding(horizontal = 16.dp)
             ) {
                 Column(
-                    modifier = Modifier.padding(horizontal = 36.dp, vertical = 24.dp),
+                    modifier = Modifier.padding(horizontal = 32.dp, vertical = 18.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Text("Dirección de Red Local", color = Color.LightGray, fontSize = 16.sp)
-                    Text("$ipAddress:8088", color = Color(0xFF38BDF8), fontSize = 28.sp, fontWeight = FontWeight.SemiBold)
-                    Text("Abre OmniCast en tu celular para conectar automáticamente", color = Color.Gray, fontSize = 14.sp)
+                    Text("Dirección de Red Local", color = Color.LightGray, fontSize = 14.sp)
+                    Text("$ipAddress:8088", color = Color(0xFF38BDF8), fontSize = 24.sp, fontWeight = FontWeight.SemiBold)
+                    Text("Abre OmniCast en tu celular o reproduce un video guardado abajo", color = Color.Gray, fontSize = 13.sp)
                 }
+            }
+
+            if (history.isNotEmpty()) {
+                TvHistorySection(
+                    history = history,
+                    onPlayItem = onPlayHistory,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
             }
         }
     }
@@ -66,7 +79,7 @@ fun TvConnectedStandbyScreen(clientAddress: String) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text("OmniCast Pro TV", fontSize = 42.sp, fontWeight = FontWeight.Bold, color = Color.White)
                 androidx.compose.material3.Surface(color = Color(0xFF059669), shape = RoundedCornerShape(8.dp)) {
-                    Text("v3.19", modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp), fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    Text("v3.27", modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp), fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
                 }
             }
             Row(

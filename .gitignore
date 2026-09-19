@@ -20,6 +20,7 @@ references/decompiled/
 *.js
 *.py
 *.ps1
+!app-sender/src/main/assets/**
 
 # IDE
 .idea/

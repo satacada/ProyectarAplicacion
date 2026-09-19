@@ -35,6 +35,7 @@ fun BrowserWebView(
 ) {
     AndroidView(
         factory = { ctx ->
+            NativeAdBlockEngine.init(ctx)
             WebView(ctx).apply {
                 CookieManager.getInstance().setAcceptCookie(true)
                 CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
@@ -107,7 +108,9 @@ fun BrowserWebView(
                                 WebResourceResponse("application/javascript", "UTF-8", stream)
                             } catch (_: Throwable) { super.shouldInterceptRequest(v, r) }
                         }
-                        if (isAdBlockEnabled && AdBlocker.isAd(reqUrl)) return AdBlocker.createEmptyResponse()
+                        if (isAdBlockEnabled && (AdBlocker.isAd(reqUrl) || NativeAdBlockEngine.shouldBlock(reqUrl, v?.url))) {
+                            return AdBlocker.createEmptyResponse()
+                        }
                         val isMedia = BrowserUrlHelper.isPlayableStream(reqUrl) && !AdBlocker.isAd(reqUrl)
                         if (isMedia) {
                             android.util.Log.d("BrowserWebView", "🎬 Flujo interceptado en red: $reqUrl")

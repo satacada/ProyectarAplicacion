@@ -26,6 +26,8 @@ class ExoPlayerTvManager(private val context: Context) {
     var player: ExoPlayer? = null; private set
     var trackManager: TvTrackManager? = null; private set
     var onTracksChanged: ((com.omnicast.core.protocol.SignalingMessage.TracksInfo) -> Unit)? = null
+    val recoveryManager = PlaybackRecoveryManager()
+    val aspectRatioHelper = TvAspectRatioHelper()
     private var currentUrl: String? = null
     private var currentTitle: String? = null
     private var isRetryingClean = false
@@ -67,14 +69,23 @@ class ExoPlayerTvManager(private val context: Context) {
                         }
                         override fun onPlayerError(error: PlaybackException) {
                             com.omnicast.receiver.log.ReceiverLogger.log(TAG, "❌ Error en ExoPlayer: ${error.errorCodeName} (${error.errorCode}): ${error.message}", error)
-                            if (!isRetryingClean && currentUrl != null) {
-                                com.omnicast.receiver.log.ReceiverLogger.log(TAG, "🔄 Reintentando con flujo limpio directo sin cabeceras...")
+                            val handled = recoveryManager.handlePlaybackError(error, player) {
+                                if (!isRetryingClean && currentUrl != null) {
+                                    com.omnicast.receiver.log.ReceiverLogger.log(TAG, "🔄 Reintentando con flujo limpio directo sin cabeceras...")
+                                    isRetryingClean = true
+                                    playClean(currentUrl!!, currentTitle)
+                                }
+                            }
+                            if (!handled && !isRetryingClean && currentUrl != null) {
                                 isRetryingClean = true
                                 playClean(currentUrl!!, currentTitle)
                             }
                         }
 
                         override fun onPlaybackStateChanged(playbackState: Int) {
+                            if (playbackState == Player.STATE_READY) {
+                                recoveryManager.onPlaybackReady()
+                            }
                             val stateName = when (playbackState) {
                                 Player.STATE_READY -> "LISTO / REPRODUCIENDO"
                                 Player.STATE_BUFFERING -> "BUFFERING"
@@ -184,11 +195,8 @@ class ExoPlayerTvManager(private val context: Context) {
     var onZoomChanged: ((Float) -> Unit)? = null
 
     fun toggleResizeMode(): Int {
-        resizeMode = if (resizeMode == androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_ZOOM) {
-            androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_FIT
-        } else {
-            androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_ZOOM
-        }
+        val next = aspectRatioHelper.cycleNextMode()
+        resizeMode = next.resizeMode
         onResizeModeChanged?.invoke(resizeMode)
         return resizeMode
     }

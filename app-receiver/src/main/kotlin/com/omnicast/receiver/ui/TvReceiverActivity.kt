@@ -12,6 +12,8 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.lifecycleScope
 import com.omnicast.core.protocol.SignalingMessage
@@ -38,6 +40,7 @@ class TvReceiverActivity : ComponentActivity() {
     private lateinit var exoPlayerManager: ExoPlayerTvManager
     private lateinit var signalingServer: LocalSignalingServer
     private lateinit var nsdAdvertiser: NsdAdvertiserManager
+    private lateinit var historyManager: com.omnicast.receiver.directstream.TvPlaybackHistoryManager
     private var digitalAudioReceiver: DigitalAudioReceiver? = null
     private var statusJob: Job? = null
 
@@ -60,6 +63,7 @@ class TvReceiverActivity : ComponentActivity() {
             onTracksChanged = { info -> lifecycleScope.launch { signalingServer.sendMessage(info) } }
         }
         digitalAudioReceiver = DigitalAudioReceiver()
+        historyManager = com.omnicast.receiver.directstream.TvPlaybackHistoryManager(this)
         signalingServer = LocalSignalingServer(port = 8088).apply { start() }
         nsdAdvertiser = NsdAdvertiserManager(this).apply { registerService(port = 8088) }
 
@@ -74,9 +78,14 @@ class TvReceiverActivity : ComponentActivity() {
         lifecycleScope.launch { signalingServer.incomingMessages.collect { handleSignalingMessage(it) } }
 
         setContent {
+            val historyList by historyManager.history.collectAsState()
             MaterialTheme(colorScheme = darkColorScheme(primary = androidx.compose.ui.graphics.Color(0xFF38BDF8), background = androidx.compose.ui.graphics.Color(0xFF0F172A))) {
                 when (val state = receiverState.value) {
-                    is ReceiverUiState.Standby -> TvStandbyScreen(ipAddress = localIpAddress.value)
+                    is ReceiverUiState.Standby -> TvStandbyScreen(
+                        ipAddress = localIpAddress.value,
+                        history = historyList,
+                        onPlayHistory = { playHistoryItem(it) }
+                    )
                     is ReceiverUiState.ClientConnectedStandby -> TvConnectedStandbyScreen(clientAddress = state.clientAddress)
                     is ReceiverUiState.ScreenMirroring -> TvMirroringActiveScreen(webRtcReceiver, state.resolution, state.fps)
                     is ReceiverUiState.DirectStreamPlaying -> TvDirectStreamScreen(exoPlayerManager, state.title, state.streamUrl)
@@ -129,7 +138,9 @@ class TvReceiverActivity : ComponentActivity() {
                     exoPlayerManager.stop(); receiverState.value = ReceiverUiState.YouTubePlaying(ytId, title, System.currentTimeMillis())
                 } else {
                     receiverState.value = ReceiverUiState.DirectStreamPlaying(message.mediaUrl, title)
-                    exoPlayerManager.playStream(message.mediaUrl, message.headers, title, message.startPositionMs); startPlaybackStatusReporting()
+                    exoPlayerManager.playStream(message.mediaUrl, message.headers, title, message.startPositionMs)
+                    lifecycleScope.launch { historyManager.addOrUpdate(message.mediaUrl, title, message.headers, message.startPositionMs) }
+                    startPlaybackStatusReporting()
                 }
             }
             is SignalingMessage.PlayControl -> {
@@ -171,9 +182,14 @@ class TvReceiverActivity : ComponentActivity() {
         statusJob = lifecycleScope.launch {
             while (true) {
                 delay(1000)
-                if (receiverState.value is ReceiverUiState.DirectStreamPlaying) {
-                    val st = if (exoPlayerManager.isPlaying) "PLAYING" else "PAUSED"
-                    signalingServer.sendMessage(SignalingMessage.PlaybackStatus(st, exoPlayerManager.currentPositionMs, exoPlayerManager.durationMs))
+                val cur = receiverState.value
+                if (cur is ReceiverUiState.DirectStreamPlaying) {
+                    val isPlaying = exoPlayerManager.isPlaying
+                    val pos = exoPlayerManager.currentPositionMs
+                    val dur = exoPlayerManager.durationMs
+                    val st = if (isPlaying) "PLAYING" else "PAUSED"
+                    signalingServer.sendMessage(SignalingMessage.PlaybackStatus(st, pos, dur))
+                    historyManager.updateProgress(cur.streamUrl, pos, dur)
                 } else break
             }
         }
@@ -200,94 +216,29 @@ class TvReceiverActivity : ComponentActivity() {
         Regex("(?:watch\\?v=|shorts/|youtu\\.be/|embed/)([a-zA-Z0-9_-]{11})").find(url)?.groupValues?.get(1)
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
-        if (keyCode == KeyEvent.KEYCODE_BACK && receiverState.value !is ReceiverUiState.Standby) {
-            digitalAudioReceiver?.stop(); exoPlayerManager.stop(); webRtcReceiver.resetConnection()
-            receiverState.value = ReceiverUiState.Standby; return true
-        }
-
-        when (receiverState.value) {
-            is ReceiverUiState.DirectStreamPlaying -> {
-                when (keyCode) {
-                    KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER,
-                    KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE, KeyEvent.KEYCODE_MEDIA_PLAY, KeyEvent.KEYCODE_MEDIA_PAUSE,
-                    KeyEvent.KEYCODE_SPACE -> {
-                        if (exoPlayerManager.isPlaying) {
-                            exoPlayerManager.pause()
-                            Toast.makeText(this, "⏸️ Pausado", Toast.LENGTH_SHORT).show()
-                        } else {
-                            exoPlayerManager.resume()
-                            Toast.makeText(this, "▶️ Reproduciendo", Toast.LENGTH_SHORT).show()
-                        }
-                        return true
-                    }
-                    KeyEvent.KEYCODE_DPAD_RIGHT, KeyEvent.KEYCODE_MEDIA_FAST_FORWARD, KeyEvent.KEYCODE_MEDIA_NEXT -> {
-                        val newPos = (exoPlayerManager.currentPositionMs + 10_000L).coerceAtMost(exoPlayerManager.durationMs)
-                        exoPlayerManager.seekTo(newPos)
-                        Toast.makeText(this, "⏩ +10s", Toast.LENGTH_SHORT).show()
-                        return true
-                    }
-                    KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.KEYCODE_MEDIA_REWIND, KeyEvent.KEYCODE_MEDIA_PREVIOUS -> {
-                        val newPos = (exoPlayerManager.currentPositionMs - 10_000L).coerceAtLeast(0L)
-                        exoPlayerManager.seekTo(newPos)
-                        Toast.makeText(this, "⏪ -10s", Toast.LENGTH_SHORT).show()
-                        return true
-                    }
-                    KeyEvent.KEYCODE_DPAD_UP, KeyEvent.KEYCODE_DPAD_DOWN, KeyEvent.KEYCODE_MENU -> {
-                        val mode = exoPlayerManager.toggleResizeMode()
-                        val txt = if (mode == androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_ZOOM) "📺 Modo: Llenar Pantalla (16:9)" else "📺 Modo: Ajustar Proporción (Fit)"
-                        Toast.makeText(this, txt, Toast.LENGTH_SHORT).show()
-                        return true
-                    }
-                }
-            }
-            is ReceiverUiState.YouTubePlaying -> {
-                when (keyCode) {
-                    KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER,
-                    KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE, KeyEvent.KEYCODE_MEDIA_PLAY, KeyEvent.KEYCODE_MEDIA_PAUSE -> {
-                        youTubeControlFlow.tryEmit(SignalingMessage.PlayControl("TOGGLE_PLAY"))
-                        return true
-                    }
-                    KeyEvent.KEYCODE_DPAD_RIGHT, KeyEvent.KEYCODE_MEDIA_FAST_FORWARD -> {
-                        youTubeControlFlow.tryEmit(SignalingMessage.PlayControl("SEEK_REL", 10_000L))
-                        Toast.makeText(this, "⏩ +10s", Toast.LENGTH_SHORT).show()
-                        return true
-                    }
-                    KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.KEYCODE_MEDIA_REWIND -> {
-                        youTubeControlFlow.tryEmit(SignalingMessage.PlayControl("SEEK_REL", -10_000L))
-                        Toast.makeText(this, "⏪ -10s", Toast.LENGTH_SHORT).show()
-                        return true
-                    }
-                    KeyEvent.KEYCODE_DPAD_UP, KeyEvent.KEYCODE_MENU -> {
-                        youTubeControlFlow.tryEmit(SignalingMessage.PlayControl("TOGGLE_SUBTITLES"))
-                        Toast.makeText(this, "💬 Alternando Subtítulos", Toast.LENGTH_SHORT).show()
-                        return true
-                    }
-                }
-            }
-            is ReceiverUiState.ScreenMirroring -> {
-                if (keyCode == KeyEvent.KEYCODE_DPAD_CENTER || keyCode == KeyEvent.KEYCODE_ENTER || keyCode == KeyEvent.KEYCODE_MENU) {
-                    val mode = webRtcReceiver.toggleScalingType()
-                    val txt = if (mode == org.webrtc.RendererCommon.ScalingType.SCALE_ASPECT_FILL) "Modo: Llenar Pantalla (16:9)" else "Modo: Ajustar Proporción (Fit)"
-                    Toast.makeText(this, txt, Toast.LENGTH_SHORT).show(); return true
-                }
-            }
-            is ReceiverUiState.ImageDisplaying -> {
-                when (keyCode) {
-                    KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.KEYCODE_MEDIA_PREVIOUS, KeyEvent.KEYCODE_DPAD_UP -> {
-                        lifecycleScope.launch { signalingServer.sendMessage(SignalingMessage.PlayControl("PREV")) }
-                        Toast.makeText(this, "◀ Foto Anterior", Toast.LENGTH_SHORT).show()
-                        return true
-                    }
-                    KeyEvent.KEYCODE_DPAD_RIGHT, KeyEvent.KEYCODE_MEDIA_NEXT, KeyEvent.KEYCODE_DPAD_DOWN -> {
-                        lifecycleScope.launch { signalingServer.sendMessage(SignalingMessage.PlayControl("NEXT")) }
-                        Toast.makeText(this, "Foto Siguiente ▶", Toast.LENGTH_SHORT).show()
-                        return true
-                    }
-                }
-            }
-            else -> Unit
+        if (TvRemoteKeyHandler.handleKeyDown(
+                context = this,
+                keyCode = keyCode,
+                event = event,
+                currentState = receiverState.value,
+                exoPlayerManager = exoPlayerManager,
+                webRtcReceiver = webRtcReceiver,
+                digitalAudioReceiver = digitalAudioReceiver,
+                youTubeControlFlow = youTubeControlFlow,
+                scope = lifecycleScope,
+                sendSignaling = { lifecycleScope.launch { signalingServer.sendMessage(it) } },
+                onResetToStandby = { receiverState.value = ReceiverUiState.Standby }
+            )) {
+            return true
         }
         return super.onKeyDown(keyCode, event)
+    }
+
+    private fun playHistoryItem(item: com.omnicast.receiver.directstream.TvHistoryItem) {
+        digitalAudioReceiver?.stop(); webRtcReceiver.resetConnection()
+        receiverState.value = ReceiverUiState.DirectStreamPlaying(item.mediaUrl, item.title)
+        exoPlayerManager.playStream(item.mediaUrl, item.headers, item.title, item.lastPositionMs)
+        startPlaybackStatusReporting()
     }
 
     override fun onDestroy() {

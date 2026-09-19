@@ -1,7 +1,7 @@
 # 📊 PROJECT DASHBOARD — OmniCast Pro
 
 **Última actualización:** 2026-09-18  
-**Versión de producción actual:** v3.26 (Sender) / v3.26 (Receiver)  
+**Versión de producción actual:** v3.27 (Sender) / v3.27 (Receiver)  
 **Estándar de calidad:** AGENTS.md (Archivos <= 300 líneas, Clean Architecture, 100% Offline/Local)
 
 ---
@@ -12,14 +12,13 @@
 |---|---|---|---|
 | `:core:domain` | `StreamProfile`, `QualityMode` | 🟢 Estable | 5 perfiles seleccionables: 1080p@30fps Cine, 1280p@30fps, 720p@45fps, 540p@60fps y 1280p@60fps. |
 | `:core:protocol` | `SignalingMessage`, `SignalingProtocolTest` | 🟢 Estable | Soporte para `smoothBuffer` en `Offer` WebRTC, candidatos ICE bidireccionales y comandos de control de reproducción. |
-| `:app-sender` | `WebRtcSenderManager`, `ProjectionSession` | 🟢 Estable | Insignia visual **v3.26**; integración de buffer elástico anti-tirones configurable; bitrate dinámico adaptativo; zoom gradual a TV. |
-| `:app-sender` | `ScreenMirrorSection`, `SenderMainScreen` | 🟢 Estable | Organización en 3 pestañas (`🌐 Web / Video`, `📱 Proyección TV`, `🖼️ Galería`), TopBar y Conexión TV fijas; selector de 6 presets de zoom gradual. |
-| `:app-sender` | `BrowserTopBar`, `InAppBrowserScreen`, `DetectedStreamBar` | 🟢 Estable | Botón rojo **🗑️ Borrar** para purgar capturas previas y forzar re-escaneo DOM; detección automática de nuevo video en navegación SPA (YouTube). |
-| `:app-sender` | `GalleryPickerActivity`, `PhotoCastViewerActivity` | 🟢 Estable | Selección directa nativa del sistema (`GetContent("*/*")`), exclusión mutua automática al proyectar fotos, zoom y pan en tiempo real sin cierres indebidos. |
-| `:app-sender` | `FloatingViewBuilder`, `FloatingIndicatorService` | 🟢 Estable | Menú flotante con insignia **v3.26**, exclusión mutua estricta entre los 3 modos y apertura directa del selector de fotos. |
-| `:app-receiver` | `TvReceiverActivity`, `ExoPlayerTvManager` | 🟢 Estable | Control por mando a distancia: Play/Pausa en OK, Seek +/-10s, 16:9/Fit, y cruceta DPAD_LEFT / DPAD_RIGHT para fotos prev/sig. |
-| `:app-receiver` | `TvImageScreen`, `WebRtcReceiverManager` | 🟢 Estable | Escalado por matriz de hardware (`scaleX`/`scaleY`) sin mutaciones de `layoutParams`, eliminando el cierre forzado en Android TV. |
-| `:app-receiver` | `ReceiverLogger`, `TvScreens` | 🟢 Estable | Log HTTP con timestamps en `:8087` y pantalla de bienvenida con distintivo **v3.26**. |
+| `:app-sender` | `CastMediaNotificationService`, `MediaSession` | 🟢 Estable | Widget nativo en pantalla de bloqueo (`MediaStyle`) con barra de progreso interactiva, [X Cerrar], [-10s], [Play/Pause], [+10s]. |
+| `:app-sender` | `NativeAdBlockEngine`, `DynamicSnifferManager` | 🟢 Estable | Motor C++ nativo AdBlockPlus (`libadblock-client.so`) para filtrado de sub-milisegundos de popups; sniffer dinámico con preservación de blobs (`window.URL.revokeObjectURL`). |
+| `:app-sender` | `LocalImageServer`, `PhotoCastViewerActivity` | 🟢 Estable | Servidor HTTP local para fotos de alta resolución (`port 8090`), eliminando sobrecarga Base64 en WebSocket y permitiendo proyección instantánea. |
+| `:app-sender` | `WebRtcSenderManager`, `ProjectionSession` | 🟢 Estable | Insignia visual **v3.27**; buffer elástico anti-tirones configurable; bitrate dinámico adaptativo; zoom gradual a TV. |
+| `:app-receiver` | `TvPlaybackHistoryManager`, `TvHistorySection` | 🟢 Estable | Historial persistente en Android TV ("Continuar Viendo") en pantalla standby con soporte de control remoto para reproducir sin el teléfono. |
+| `:app-receiver` | `PlaybackRecoveryManager`, `TvAspectRatioHelper` | 🟢 Estable | Resiliencia contra micro-cortes y `BehindLiveWindowException`; alternancia en caliente de relación de aspecto (Fit, 16:9 Llenar, Zoom). |
+| `:app-receiver` | `ReceiverLogger`, `TvScreens` | 🟢 Estable | Log HTTP con timestamps en `:8087` y pantalla de bienvenida con distintivo **v3.27**. |
 
 ---
 
@@ -36,8 +35,10 @@
 
 | Archivo APK | Tamaño | Versión | Notas de Entrega |
 |---|---|---|---|
-| `OmniCast-Sender-v3.26.0.apk` | ~52.5 MB | **v3.26** | **Listas de Reproducción Estilo YouTube, Fotos Directas y Borrado de Streams:**<br>• **Listas y Marcadores Personalizados:** Nuevo gestor persistente (`PlaylistManager`) que permite crear listas de reproducción temáticas con nombres propios (ej. "Películas", "Anime", "Fútbol"), además de las predeterminadas "⭐ Favoritos" y "🕒 Ver más tarde".<br>• **Botón 💾 Guardar:** Integrado en la barra de video detectado (`DetectedStreamBar`) y en el control remoto (`RemoteControlBar`), permitiendo guardar cualquier video al instante con feedback visual en pantalla.<br>• **Explorador de Listas Guardadas:** Menú dedicado en el navegador (`SavedPlaylistsSheet`) con visualización por carpetas, contador de videos y botón directo "▶ TV" para proyectar a la TV Box con 1 toque.<br>• **Envío de Fotos Fluido:** Apertura inmediata del selector nativo del sistema (`GalleryPickerActivity`), conversión Base64 HD a 1080p y transmisión por WebSocket; eliminado `STOP` en `onDestroy()` que cerraba la pantalla del TV.<br>• **Exclusión Mutua:** Al proyectar fotos se detiene el espejo o video previo, y viceversa.<br>• **Botón Rojo 🗑️ Borrar:** Agregado en la barra de detección de videos para purgar capturas antiguas y re-escanear el DOM al instante.<br>• **Fix TV Box Cierre Forzado:** Eliminadas mutaciones de `layoutParams` en Compose `AndroidView` y WebRTC que desestabilizaban el contexto gráfico EGL en Android TV.<br>• **Escalado por Hardware Real:** Restaurados `scaleX`/`scaleY` para zoom gradual (85%, 75%, 115%, 130%) y modo 16:9 sin franjas negras. |
-| `OmniCast-Receiver-v3.26.0.apk` | ~53.7 MB | **v3.26** | **Receptor TV Estable y Escalado Hardware:**<br>• Cero cierres forzados por `layoutParams`; zoom y pantalla completa 16:9 funcionando por GPU.<br>• Insignia visual **v3.26** y soporte de reanudación con query params únicos. |
+| `OmniCast-Sender-v3.27.0.apk` | ~58.7 MB | **v3.27** | **AdBlock C++ Nativo, Widget en Pantalla de Bloqueo, Fotos HTTP y Sniffer Dinámico:**<br>• **Controles en Pantalla de Bloqueo:** Notificación nativa `MediaStyle` y `MediaSessionCompat` con [Cerrar X], [-10s], [Play/Pause], [+10s] y barra de progreso sincronizada al apagar la pantalla del móvil.<br>• **Motor AdBlock C++ Nativo:** Integración de `libadblock-client.so` (núcleo AdBlockPlus en C++) interceptando peticiones en `shouldInterceptRequest` de WebView a nivel de milisegundos, bloqueando popups y ventanas trampa.<br>• **Preservación de Blobs y Sniffer Dinámico:** Interceptación de `window.URL.revokeObjectURL` para aplazar la destrucción de streams en memoria y carga dinámica de script de sniffing.<br>• **Fix Proyección de Fotos:** Servidor local HTTP (`LocalImageServer`) en puerto 8090 que reemplaza la sobrecarga de Base64, permitiendo proyección rápida y estable de fotos de cualquier tamaño.<br>• **Insignia v3.27.** |
+| `OmniCast-Receiver-v3.27.0.apk` | ~53.7 MB | **v3.27** | **Historial Autónomo en TV ("Continuar Viendo"), Resiliencia de Streaming y Relación de Aspecto en Caliente:**<br>• **Historial en Pantalla Standby:** Fila "Continuar Viendo (Historial en TV)" con tarjetas navegables con D-Pad que permite reanudar o repetir reproducciones directamente desde la TV Box sin necesidad del teléfono.<br>• **Playback Recovery Manager:** Recuperación automática ante `BehindLiveWindowException` o cortes de red en streams web HLS con backoff exponencial.<br>• **Ajuste de Aspecto en Caliente:** Alternancia entre Fit, 16:9 Estirar y Zoom mediante mando a distancia.<br>• **Insignia v3.27.** |
+| `OmniCast-Sender-v3.26.0.apk` | ~52.5 MB | **v3.26** | Versión previa con listas de reproducción estilo YouTube y borrado de streams. |
+| `OmniCast-Receiver-v3.26.0.apk` | ~53.7 MB | **v3.26** | Versión previa de receptor. |
 | `OmniCast-Sender-Mobile-v3.25.apk` | ~52.5 MB | **v3.25** | Versión previa de rotación dinámica. |
 | `OmniCast-Receiver-TVBox-v3.25.apk` | ~53.7 MB | **v3.25** | Versión previa de TV Box. |
 | `OmniCast-Sender-Mobile-v3.24.apk` | ~52.4 MB | **v3.24** | Versión intermedia de galería persistente y zoom. |

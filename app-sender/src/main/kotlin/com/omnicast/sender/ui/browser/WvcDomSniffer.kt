@@ -20,16 +20,8 @@ object WvcDomSniffer {
         val duration: Float = 0f
     )
 
-    fun getInjectionScript(context: android.content.Context): String {
-        if (cachedWvcScript == null) {
-            val wvc = try {
-                context.assets.open("wvc_sniffer.js").bufferedReader().use { it.readText() }
-            } catch (_: Throwable) { "" }
-            val fallbackHooks = WvcSnifferScripts.buildFallbackHooks(CONSOLE_PREFIX)
-            cachedWvcScript = "$wvc\n$fallbackHooks"
-        }
-        return cachedWvcScript!!
-    }
+    fun getInjectionScript(context: android.content.Context): String =
+        DynamicSnifferManager.getInjectionScript(context)
 
     fun parseConsoleMessage(message: String): List<SniffedVideo> {
         val list = mutableListOf<SniffedVideo>()

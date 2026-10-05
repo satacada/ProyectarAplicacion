@@ -36,9 +36,9 @@ class ExoPlayerTvManager(private val context: Context) {
     fun initialize() {
         if (player == null) {
             val loadControl = DefaultLoadControl.Builder()
-                .setBufferDurationsMs(30_000, 60_000, 1_500, 3_000)
+                .setBufferDurationsMs(60_000, 120_000, 2_000, 4_000)
                 .setPrioritizeTimeOverSizeThresholds(true)
-                .setBackBuffer(10_000, true)
+                .setBackBuffer(30_000, true)
                 .build()
 
             val renderersFactory = DefaultRenderersFactory(context)
@@ -54,7 +54,8 @@ class ExoPlayerTvManager(private val context: Context) {
             val httpFactory = DefaultHttpDataSource.Factory()
                 .setUserAgent(DEFAULT_UA).setAllowCrossProtocolRedirects(true).setConnectTimeoutMs(20000).setReadTimeoutMs(20000)
 
-            val mediaSourceFactory = DefaultMediaSourceFactory(context).setDataSourceFactory(httpFactory)
+            val cachedDataSourceFactory = TvMediaCacheManager.buildCacheDataSourceFactory(context, httpFactory)
+            val mediaSourceFactory = DefaultMediaSourceFactory(context).setDataSourceFactory(cachedDataSourceFactory)
 
             player = ExoPlayer.Builder(context, renderersFactory)
                 .setMediaSourceFactory(mediaSourceFactory)
@@ -127,8 +128,9 @@ class ExoPlayerTvManager(private val context: Context) {
                 .setReadTimeoutMs(15000)
                 .setDefaultRequestProperties(safeHeaders)
 
+            val cachedDataSourceFactory = TvMediaCacheManager.buildCacheDataSourceFactory(context, httpFactory)
             val mediaSource = DefaultMediaSourceFactory(context)
-                .setDataSourceFactory(httpFactory)
+                .setDataSourceFactory(cachedDataSourceFactory)
                 .createMediaSource(mediaItem)
 
             player?.apply {
@@ -149,15 +151,22 @@ class ExoPlayerTvManager(private val context: Context) {
     fun playClean(url: String, title: String? = null, startPositionMs: Long = 0L) {
         if (url.contains("stub.mp4", ignoreCase = true) || url.contains("dummy.mp4", ignoreCase = true)) return
         val mediaItem = buildMediaItem(url, title)
+        val httpFactory = DefaultHttpDataSource.Factory()
+            .setUserAgent(DEFAULT_UA).setAllowCrossProtocolRedirects(true).setConnectTimeoutMs(15000).setReadTimeoutMs(15000)
+        val cachedDataSourceFactory = TvMediaCacheManager.buildCacheDataSourceFactory(context, httpFactory)
+        val mediaSource = DefaultMediaSourceFactory(context)
+            .setDataSourceFactory(cachedDataSourceFactory)
+            .createMediaSource(mediaItem)
+
         player?.apply {
             stop()
             clearMediaItems()
-            setMediaItem(mediaItem)
+            setMediaSource(mediaSource)
             if (startPositionMs > 0L) seekTo(startPositionMs) else seekToDefaultPosition()
             prepare()
             play()
         }
-        com.omnicast.receiver.log.ReceiverLogger.log(TAG, "Reproduciendo flujo directo limpio: $url (pos=${startPositionMs}ms)")
+        com.omnicast.receiver.log.ReceiverLogger.log(TAG, "Reproduciendo flujo directo limpio con caché: $url (pos=${startPositionMs}ms)")
     }
 
     private fun buildMediaItem(url: String, title: String?): MediaItem {
@@ -239,5 +248,5 @@ class ExoPlayerTvManager(private val context: Context) {
     val durationMs: Long get() = player?.duration?.coerceAtLeast(0L) ?: 0L
     val isPlaying: Boolean get() = player?.isPlaying ?: false
     fun stop() { player?.stop(); player?.clearMediaItems() }
-    fun release() { stop(); player?.release(); player = null }
+    fun release() { stop(); player?.release(); player = null; TvMediaCacheManager.release() }
 }

@@ -74,7 +74,7 @@ fun TvCleanTopBar(
                 }
             }
             Surface(color = Color(0xFF0284C7), shape = RoundedCornerShape(6.dp)) {
-                Text("v3.28", modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp), fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                Text("v3.29", modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp), fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.White)
             }
         }
     }

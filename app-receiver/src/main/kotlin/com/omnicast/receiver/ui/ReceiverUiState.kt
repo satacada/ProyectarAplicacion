@@ -14,6 +14,7 @@ sealed class ReceiverUiState {
         val title: String,
         val scale: Float = 1f,
         val panX: Float = 0f,
-        val panY: Float = 0f
+        val panY: Float = 0f,
+        val rotation: Float = 0f
     ) : ReceiverUiState()
 }

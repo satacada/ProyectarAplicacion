@@ -32,8 +32,11 @@ fun TvImageScreen(
     scale: Float = 1f,
     panX: Float = 0f,
     panY: Float = 0f,
+    rotation: Float = 0f,
     onPrevClick: () -> Unit = {},
-    onNextClick: () -> Unit = {}
+    onNextClick: () -> Unit = {},
+    onCloseClick: () -> Unit = {},
+    onRotateClick: () -> Unit = {}
 ) {
     var imageBitmap by remember(imageUrl) { mutableStateOf<ImageBitmap?>(null) }
     var isLoading by remember(imageUrl) { mutableStateOf(true) }
@@ -68,10 +71,34 @@ fun TvImageScreen(
                 bitmap = bmp,
                 contentDescription = title,
                 modifier = Modifier.fillMaxSize().graphicsLayer {
-                    scaleX = scale; scaleY = scale; translationX = panX; translationY = panY
+                    scaleX = scale; scaleY = scale; translationX = panX; translationY = panY; rotationZ = rotation
                 },
                 contentScale = ContentScale.Fit
             )
+
+            // Botón en pantalla pequeño y no invasivo para regresar a la principal de OmniCast
+            IconButton(
+                onClick = onCloseClick,
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(start = 24.dp, top = 24.dp)
+                    .size(38.dp)
+                    .background(Color(0xBB0F172A), RoundedCornerShape(10.dp))
+            ) {
+                Text("🚪", fontSize = 18.sp)
+            }
+
+            // Botón en pantalla pequeño y no invasivo para rotar la foto
+            IconButton(
+                onClick = onRotateClick,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(end = 24.dp, top = 24.dp)
+                    .size(38.dp)
+                    .background(Color(0xBB0284C7), RoundedCornerShape(10.dp))
+            ) {
+                Text("⟳", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+            }
 
             // Flecha Izquierda
             IconButton(
@@ -112,7 +139,7 @@ fun TvImageScreen(
                 ) {
                     Text("🖼️", fontSize = 14.sp)
                     Text(title.ifBlank { "Foto de Galería" }, color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
-                    Text("•  ◀ / ▶ en el control de la TV", color = Color(0xFF94A3B8), fontSize = 11.sp)
+                    Text("• ◀ / ▶ navegar • OK / ⟳ Rotar 90°", color = Color(0xFF94A3B8), fontSize = 11.sp)
                 }
             }
         } else if (isLoading) {

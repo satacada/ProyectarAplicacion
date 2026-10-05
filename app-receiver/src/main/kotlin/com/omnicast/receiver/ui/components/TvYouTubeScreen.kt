@@ -49,7 +49,8 @@ fun TvYouTubeScreen(
     title: String,
     timestamp: Long = 0L,
     commandFlow: Flow<SignalingMessage.PlayControl>? = null,
-    onPlaybackStatus: ((posMs: Long, durMs: Long, isPlaying: Boolean) -> Unit)? = null
+    onPlaybackStatus: ((posMs: Long, durMs: Long, isPlaying: Boolean) -> Unit)? = null,
+    onCloseClick: () -> Unit = {}
 ) {
     var showBanner by remember(videoId, timestamp) { mutableStateOf(true) }
     var customView by remember(videoId, timestamp) { mutableStateOf<View?>(null) }
@@ -86,6 +87,16 @@ fun TvYouTubeScreen(
     }
 
     Box(modifier = Modifier.fillMaxSize().background(Color.Black), contentAlignment = Alignment.Center) {
+        androidx.compose.material3.IconButton(
+            onClick = onCloseClick,
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .padding(start = 24.dp, top = 24.dp)
+                .size(38.dp)
+                .background(Color(0x990F172A), RoundedCornerShape(10.dp))
+        ) {
+            Text("🚪", fontSize = 18.sp)
+        }
         if (customView != null) {
             AndroidView(factory = { customView!! }, modifier = Modifier.fillMaxSize())
         } else {

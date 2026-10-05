@@ -73,7 +73,12 @@ class TvReceiverActivity : ComponentActivity() {
             signalingServer.clientStatus.collect { st ->
                 when (st) {
                     is ClientStatus.Connected -> if (receiverState.value is ReceiverUiState.Standby) receiverState.value = ReceiverUiState.ClientConnectedStandby(st.clientAddress)
-                    is ClientStatus.Disconnected -> if (receiverState.value is ReceiverUiState.ClientConnectedStandby) receiverState.value = ReceiverUiState.Standby
+                    is ClientStatus.Disconnected -> {
+                        digitalAudioReceiver?.stop(); webRtcReceiver.resetConnection()
+                        if (receiverState.value !is ReceiverUiState.Standby && receiverState.value !is ReceiverUiState.DirectStreamPlaying) {
+                            receiverState.value = ReceiverUiState.Standby
+                        }
+                    }
                 }
             }
         }
@@ -91,9 +96,18 @@ class TvReceiverActivity : ComponentActivity() {
                         onPlayHistory = { playHistoryItem(it) },
                         onPlayPlaylist = { playPlaylistItem(it) }
                     )
-                    is ReceiverUiState.ClientConnectedStandby -> TvConnectedStandbyScreen(clientAddress = state.clientAddress)
-                    is ReceiverUiState.ScreenMirroring -> TvMirroringActiveScreen(webRtcReceiver, state.resolution, state.fps)
-                    is ReceiverUiState.DirectStreamPlaying -> TvDirectStreamScreen(exoPlayerManager, state.title, state.streamUrl)
+                    is ReceiverUiState.ClientConnectedStandby -> TvConnectedStandbyScreen(
+                        clientAddress = state.clientAddress,
+                        onReturnToStandby = { receiverState.value = ReceiverUiState.Standby }
+                    )
+                    is ReceiverUiState.ScreenMirroring -> TvMirroringActiveScreen(
+                        webRtcReceiver, state.resolution, state.fps,
+                        onCloseClick = { digitalAudioReceiver?.stop(); webRtcReceiver.resetConnection(); receiverState.value = ReceiverUiState.Standby }
+                    )
+                    is ReceiverUiState.DirectStreamPlaying -> TvDirectStreamScreen(
+                        exoPlayerManager, state.title, state.streamUrl,
+                        onCloseClick = { exoPlayerManager.stop(); receiverState.value = ReceiverUiState.Standby }
+                    )
                     is ReceiverUiState.YouTubePlaying -> TvYouTubeScreen(
                         videoId = state.videoId,
                         title = state.title,
@@ -104,7 +118,8 @@ class TvReceiverActivity : ComponentActivity() {
                                 val st = if (playing) "PLAYING" else "PAUSED"
                                 signalingServer.sendMessage(SignalingMessage.PlaybackStatus(st, pos, dur))
                             }
-                        }
+                        },
+                        onCloseClick = { receiverState.value = ReceiverUiState.Standby }
                     )
                     is ReceiverUiState.ImageDisplaying -> TvImageScreen(
                         imageUrl = state.imageUrl,
@@ -112,6 +127,7 @@ class TvReceiverActivity : ComponentActivity() {
                         scale = state.scale,
                         panX = state.panX,
                         panY = state.panY,
+                        rotation = state.rotation,
                         onPrevClick = {
                             lifecycleScope.launch { signalingServer.sendMessage(SignalingMessage.PlayControl("PREV")) }
                             Toast.makeText(this@TvReceiverActivity, "◀ Foto Anterior", Toast.LENGTH_SHORT).show()
@@ -119,7 +135,9 @@ class TvReceiverActivity : ComponentActivity() {
                         onNextClick = {
                             lifecycleScope.launch { signalingServer.sendMessage(SignalingMessage.PlayControl("NEXT")) }
                             Toast.makeText(this@TvReceiverActivity, "Foto Siguiente ▶", Toast.LENGTH_SHORT).show()
-                        }
+                        },
+                        onCloseClick = { receiverState.value = ReceiverUiState.Standby },
+                        onRotateClick = { (receiverState.value as? ReceiverUiState.ImageDisplaying)?.let { receiverState.value = it.copy(rotation = (it.rotation + 90f) % 360f) } }
                     )
                 }
             }
@@ -153,7 +171,10 @@ class TvReceiverActivity : ComponentActivity() {
                     youTubeControlFlow.tryEmit(message)
                 }
                 when (message.action) {
-                    "PLAY" -> exoPlayerManager.resume()
+                    "PLAY" -> {
+                        if (message.positionMs > 0L && !exoPlayerManager.isNearEnd()) exoPlayerManager.seekTo(message.positionMs)
+                        exoPlayerManager.resume()
+                    }
                     "PAUSE" -> exoPlayerManager.pause()
                     "STOP" -> { exoPlayerManager.stop(); receiverState.value = ReceiverUiState.Standby }
                     "SEEK" -> exoPlayerManager.seekTo(message.positionMs)
@@ -161,11 +182,12 @@ class TvReceiverActivity : ComponentActivity() {
                     "SUBTITLE_TOGGLE", "TOGGLE_SUBTITLES" -> exoPlayerManager.toggleSubtitles()
                     "SET_SUBTITLE_TRACK" -> message.param?.toIntOrNull()?.let { exoPlayerManager.selectTextTrack(it) }
                     "SET_AUDIO_TRACK" -> message.param?.toIntOrNull()?.let { exoPlayerManager.selectAudioTrack(it) }
+                    "ROTATE" -> (receiverState.value as? ReceiverUiState.ImageDisplaying)?.let { receiverState.value = it.copy(rotation = (it.rotation + 90f) % 360f) }
                 }
             }
             is SignalingMessage.ImageTransform -> {
                 val cur = receiverState.value
-                if (cur is ReceiverUiState.ImageDisplaying) receiverState.value = cur.copy(scale = message.scale, panX = message.panX, panY = message.panY)
+                if (cur is ReceiverUiState.ImageDisplaying) receiverState.value = cur.copy(scale = message.scale, panX = message.panX, panY = message.panY, rotation = message.rotation)
             }
             is SignalingMessage.SetDisplayMode -> {
                 webRtcReceiver.setDisplayMode(message.mode, message.zoom, message.panY)

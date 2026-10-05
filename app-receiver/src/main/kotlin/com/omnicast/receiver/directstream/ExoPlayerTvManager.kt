@@ -16,6 +16,7 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
 
+@OptIn(UnstableApi::class)
 class ExoPlayerTvManager(private val context: Context) {
 
     companion object {
@@ -32,7 +33,6 @@ class ExoPlayerTvManager(private val context: Context) {
     private var currentTitle: String? = null
     private var isRetryingClean = false
 
-    @OptIn(UnstableApi::class)
     fun initialize() {
         if (player == null) {
             val loadControl = DefaultLoadControl.Builder()
@@ -214,9 +214,18 @@ class ExoPlayerTvManager(private val context: Context) {
         onZoomChanged?.invoke(zoom)
     }
 
+    fun isNearEnd(): Boolean {
+        val p = player ?: return false
+        return p.playbackState == androidx.media3.common.Player.STATE_ENDED || (p.duration > 0L && p.currentPosition >= p.duration - 1500L)
+    }
+
     fun seekTo(pos: Long) { player?.seekTo(pos) }
     fun pause() { player?.pause() }
-    fun resume() { player?.play() }
+    fun resume() {
+        val p = player ?: return
+        if (isNearEnd()) p.seekTo(0L)
+        p.play()
+    }
     fun setVolume(vol: Float) { player?.volume = vol.coerceIn(0f, 1f) }
     fun toggleSubtitles(enable: Boolean? = null): Boolean {
         val p = player ?: return false

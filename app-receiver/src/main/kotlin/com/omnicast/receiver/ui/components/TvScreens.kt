@@ -34,7 +34,7 @@ fun TvStandbyScreen(
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text("OmniCast Pro TV", fontSize = 38.sp, fontWeight = FontWeight.Bold, color = Color.White)
                 androidx.compose.material3.Surface(color = Color(0xFF0284C7), shape = RoundedCornerShape(8.dp)) {
-                    Text("v3.28", modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp), fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    Text("v3.29", modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp), fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Color.White)
                 }
             }
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -77,7 +77,10 @@ fun TvStandbyScreen(
 }
 
 @Composable
-fun TvConnectedStandbyScreen(clientAddress: String) {
+fun TvConnectedStandbyScreen(
+    clientAddress: String,
+    onReturnToStandby: () -> Unit = {}
+) {
     Box(
         modifier = Modifier.fillMaxSize().background(Color(0xFF064E3B)),
         contentAlignment = Alignment.Center
@@ -89,7 +92,7 @@ fun TvConnectedStandbyScreen(clientAddress: String) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text("OmniCast Pro TV", fontSize = 42.sp, fontWeight = FontWeight.Bold, color = Color.White)
                 androidx.compose.material3.Surface(color = Color(0xFF059669), shape = RoundedCornerShape(8.dp)) {
-                    Text("v3.28", modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp), fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    Text("v3.30", modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp), fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
                 }
             }
             Row(
@@ -115,6 +118,20 @@ fun TvConnectedStandbyScreen(clientAddress: String) {
                     Text("💡 Usa el Asistente Flotante en tu celular para enviar tu partido o video.", color = Color(0xFFE0F2FE), fontSize = 14.sp)
                 }
             }
+            androidx.compose.material3.Button(
+                onClick = onReturnToStandby,
+                colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = Color(0xFF047857)),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
+                ) {
+                    Text("⮌", color = Color(0xFFA7F3D0), fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                    Text("Volver a la Pantalla Principal (OmniCast)", color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.Bold)
+                }
+            }
         }
     }
 }
@@ -123,7 +140,8 @@ fun TvConnectedStandbyScreen(clientAddress: String) {
 fun TvMirroringActiveScreen(
     webRtcReceiver: com.omnicast.receiver.webrtc.WebRtcReceiverManager,
     resolution: String,
-    fps: Int
+    fps: Int,
+    onCloseClick: () -> Unit = {}
 ) {
     Box(
         modifier = Modifier.fillMaxSize(),
@@ -151,6 +169,16 @@ fun TvMirroringActiveScreen(
                 Text("$resolution @ ${fps}fps (Decodificación Hardware)", color = Color(0xFF10B981), fontSize = 18.sp)
             }
         }
+        androidx.compose.material3.IconButton(
+            onClick = onCloseClick,
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .padding(start = 24.dp, top = 24.dp)
+                .size(38.dp)
+                .background(Color(0x990F172A), RoundedCornerShape(10.dp))
+        ) {
+            Text("🚪", fontSize = 18.sp)
+        }
     }
 }
 
@@ -158,12 +186,24 @@ fun TvMirroringActiveScreen(
 fun TvDirectStreamScreen(
     exoPlayerManager: com.omnicast.receiver.directstream.ExoPlayerTvManager,
     title: String,
-    streamUrl: String
+    streamUrl: String,
+    onCloseClick: () -> Unit = {}
 ) {
     Box(
         modifier = Modifier.fillMaxSize().background(Color.Black),
         contentAlignment = Alignment.Center
     ) {
+        // Botón en pantalla pequeño y no invasivo para salir a la principal de OmniCast
+        androidx.compose.material3.IconButton(
+            onClick = onCloseClick,
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .padding(start = 24.dp, top = 24.dp)
+                .size(38.dp)
+                .background(Color(0x990F172A), RoundedCornerShape(10.dp))
+        ) {
+            Text("🚪", fontSize = 18.sp)
+        }
         val player = exoPlayerManager.player
         val currentResizeMode = remember { mutableStateOf(exoPlayerManager.resizeMode) }
         val currentZoom = remember { mutableStateOf(exoPlayerManager.currentZoom) }

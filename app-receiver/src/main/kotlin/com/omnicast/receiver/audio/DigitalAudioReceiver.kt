@@ -85,6 +85,8 @@ class DigitalAudioReceiver(private val port: Int = 8089) {
         try { socket?.close() } catch (_: Exception) {}
         socket = null
         try {
+            audioTrack?.pause()
+            audioTrack?.flush()
             audioTrack?.stop()
             audioTrack?.release()
         } catch (_: Exception) {}

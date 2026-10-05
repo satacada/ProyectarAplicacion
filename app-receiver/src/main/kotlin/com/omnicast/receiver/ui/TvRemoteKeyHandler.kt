@@ -30,10 +30,24 @@ object TvRemoteKeyHandler {
         sendSignaling: (SignalingMessage) -> Unit,
         onResetToStandby: () -> Unit
     ): Boolean {
-        if (keyCode == KeyEvent.KEYCODE_BACK && currentState !is ReceiverUiState.Standby) {
+        val isExitKey = keyCode == KeyEvent.KEYCODE_BACK ||
+                        keyCode == KeyEvent.KEYCODE_ESCAPE ||
+                        keyCode == KeyEvent.KEYCODE_BUTTON_B ||
+                        keyCode == KeyEvent.KEYCODE_MEDIA_STOP ||
+                        keyCode == KeyEvent.KEYCODE_DEL
+        if (isExitKey && currentState !is ReceiverUiState.Standby) {
             digitalAudioReceiver?.stop(); exoPlayerManager.stop(); webRtcReceiver.resetConnection()
             onResetToStandby()
             return true
+        }
+
+        if (currentState is ReceiverUiState.ClientConnectedStandby) {
+            when (keyCode) {
+                KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER, KeyEvent.KEYCODE_SPACE -> {
+                    onResetToStandby()
+                    return true
+                }
+            }
         }
 
         when (currentState) {
@@ -113,6 +127,11 @@ object TvRemoteKeyHandler {
                     KeyEvent.KEYCODE_DPAD_RIGHT, KeyEvent.KEYCODE_MEDIA_NEXT, KeyEvent.KEYCODE_DPAD_DOWN -> {
                         scope.launch { sendSignaling(SignalingMessage.PlayControl("NEXT")) }
                         Toast.makeText(context, "Foto Siguiente ▶", Toast.LENGTH_SHORT).show()
+                        return true
+                    }
+                    KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER, KeyEvent.KEYCODE_SPACE, KeyEvent.KEYCODE_MENU -> {
+                        scope.launch { sendSignaling(SignalingMessage.PlayControl("ROTATE")) }
+                        Toast.makeText(context, "⟳ Rotando 90°", Toast.LENGTH_SHORT).show()
                         return true
                     }
                 }

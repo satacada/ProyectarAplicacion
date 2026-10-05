@@ -31,21 +31,32 @@
             l.indexOf('.gif') !== -1 || l.indexOf('.css') !== -1 || l.indexOf('.js') !== -1 ||
             l.indexOf('i.mycdn.me') !== -1 || l.indexOf('st.mycdn.me') !== -1) return false;
         if (l.indexOf('/embed/') !== -1 || l.indexOf('/embed69') !== -1 || l.indexOf('/vidurl/') !== -1) return false;
-        if (l.indexOf('init.mp4') !== -1 || l.indexOf('/init-') !== -1 || l.indexOf('.m4s') !== -1 || l.indexOf('.ts') !== -1) return false;
+        if (l.indexOf('init.mp4') !== -1 || l.indexOf('/init-') !== -1 || l.indexOf('.m4s') !== -1) return false;
+        if (l.indexOf('.ts') !== -1 && l.indexOf('.m3u8') === -1) return false;
         return l.indexOf('.m3u8') !== -1 || l.indexOf('.mp4') !== -1 || l.indexOf('.mpd') !== -1 ||
                l.indexOf('/hls') !== -1 || l.indexOf('/stream/') !== -1 || l.indexOf('/manifest') !== -1 ||
-               l.indexOf('chunklist') !== -1 || (l.indexOf('mycdn.me') !== -1 && (l.indexOf('vd') !== -1 || l.indexOf('video') !== -1 || l.indexOf('cmd=video') !== -1 || l.indexOf('/cmd/') !== -1 || l.indexOf('sig=') !== -1)) ||
+               l.indexOf('/live') !== -1 || l.indexOf('chunklist') !== -1 ||
+               (l.indexOf('mycdn.me') !== -1 && (l.indexOf('vd') !== -1 || l.indexOf('video') !== -1 || l.indexOf('cmd=video') !== -1 || l.indexOf('/cmd/') !== -1 || l.indexOf('sig=') !== -1)) ||
                (l.indexOf('master.txt') !== -1 && l.indexOf('/hls') !== -1);
     }
 
     function isCommercial(v) {
         if (!v) return false;
+        var s = (v.currentSrc || v.src || '').toLowerCase();
+        // 1. Descarte inmediato si la URL contiene patrones explícitos de anuncios
+        if (s.indexOf('preroll') !== -1 || s.indexOf('ad-delivery') !== -1 ||
+            s.indexOf('/ads/') !== -1 || s.indexOf('imasdk') !== -1 ||
+            s.indexOf('cat-bolt') !== -1 || s.indexOf('ad.mp4') !== -1 || s.indexOf('vast') !== -1) {
+            return true;
+        }
+        // 2. Transmisiones en vivo o adaptativas (.m3u8, .mpd, chunklist, live) NUNCA son anuncios cortos
+        if (s.indexOf('.m3u8') !== -1 || s.indexOf('.mpd') !== -1 || s.indexOf('chunklist') !== -1 || s.indexOf('/live') !== -1) {
+            return false;
+        }
+        // 3. Para archivos MP4 o clips simples: si dura menos de 60 segundos es comercial
         var d = v.duration;
         if (typeof d === 'number' && !isNaN(d) && d > 0 && d < 60) return true;
-        var s = (v.currentSrc || v.src || '').toLowerCase();
-        return s.indexOf('preroll') !== -1 || s.indexOf('ad-delivery') !== -1 ||
-               s.indexOf('/ads/') !== -1 || s.indexOf('imasdk') !== -1 ||
-               s.indexOf('cat-bolt') !== -1 || s.indexOf('ad.mp4') !== -1 || s.indexOf('vast') !== -1;
+        return false;
     }
 
     function reportMedia(src, title, duration, isPlaying) {

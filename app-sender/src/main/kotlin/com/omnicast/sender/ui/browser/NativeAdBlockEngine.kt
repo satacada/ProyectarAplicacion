@@ -44,6 +44,24 @@ object NativeAdBlockEngine {
         }
     }
 
+    fun reload(context: Context) {
+        scope.launch {
+            try {
+                val customFile = File(context.filesDir, "adblock/easylist.txt")
+                if (customFile.exists() && customFile.length() > 0) {
+                    val c = AdBlockClient("omnicast_adblock")
+                    val rulesBytes = customFile.readBytes()
+                    c.loadBasicData(rulesBytes, false)
+                    client = c
+                    isReady = true
+                    Log.i(TAG, "Reglas de EasyList recargadas dinámicamente en caliente (${rulesBytes.size} bytes)")
+                }
+            } catch (e: Throwable) {
+                Log.e(TAG, "Error recargando reglas dinámicas en C++: ${e.message}", e)
+            }
+        }
+    }
+
     fun shouldBlock(url: String, pageUrl: String? = null): Boolean {
         if (AdBlocker.isAd(url)) return true
         val c = client ?: return false

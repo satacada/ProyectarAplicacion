@@ -19,14 +19,16 @@ class UniversalHlsExtractorAdapter : IMediaStreamExtractorPort {
                (lower.contains("/hls") && !lower.endsWith(".ts")) ||
                (lower.contains("master.txt") && lower.contains("/hls")) ||
                lower.contains("/stream/") || lower.contains("/manifest") ||
+               lower.contains("/live") || lower.contains("live.m3u8") ||
                lower.contains("swdyu.com") || lower.contains("cloudemb.com") || lower.contains("morencius.com")
     }
 
     override fun extract(candidate: StreamCandidate): MediaStream {
         val lower = candidate.url.lowercase()
-        val isMaster = lower.contains("master") || lower.contains("manifest") || lower.contains("playlist")
-        val title = candidate.pageTitle ?: "Transmisión HLS"
-        val quality = if (isMaster) "Auto Adaptativo" else "HLS Estándar"
+        val isLive = lower.contains("live") || lower.contains("chunklist")
+        val isMaster = lower.contains("master") || lower.contains("manifest") || lower.contains("playlist") || isLive
+        val title = candidate.pageTitle ?: if (isLive) "🔴 Transmisión En Vivo" else "Transmisión HLS"
+        val quality = if (isLive) "En Vivo" else if (isMaster) "Auto Adaptativo" else "HLS Estándar"
 
         return MediaStream(
             url = candidate.url,

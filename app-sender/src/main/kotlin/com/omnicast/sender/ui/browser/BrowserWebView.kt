@@ -37,6 +37,7 @@ fun BrowserWebView(
     AndroidView(
         factory = { ctx ->
             NativeAdBlockEngine.init(ctx)
+            AdBlockRuleSyncManager.syncIfNeeded(ctx)
             var currentKnownTitle: String? = null
             WebView(ctx).apply {
                 CookieManager.getInstance().setAcceptCookie(true)

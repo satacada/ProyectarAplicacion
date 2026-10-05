@@ -34,7 +34,7 @@
         if (l.indexOf('init.mp4') !== -1 || l.indexOf('/init-') !== -1 || l.indexOf('.m4s') !== -1 || l.indexOf('.ts') !== -1) return false;
         return l.indexOf('.m3u8') !== -1 || l.indexOf('.mp4') !== -1 || l.indexOf('.mpd') !== -1 ||
                l.indexOf('/hls') !== -1 || l.indexOf('/stream/') !== -1 || l.indexOf('/manifest') !== -1 ||
-               l.indexOf('chunklist') !== -1 || l.indexOf('cmd=video') !== -1 || l.indexOf('vd.mycdn') !== -1 ||
+               l.indexOf('chunklist') !== -1 || (l.indexOf('mycdn.me') !== -1 && (l.indexOf('vd') !== -1 || l.indexOf('video') !== -1 || l.indexOf('cmd=video') !== -1 || l.indexOf('/cmd/') !== -1 || l.indexOf('sig=') !== -1)) ||
                (l.indexOf('master.txt') !== -1 && l.indexOf('/hls') !== -1);
     }
 
@@ -121,10 +121,43 @@
         }
     } catch(e) {}
 
-    // 6. Rescaneo agresivo periódico
+    // 6. Extractor DOM específico para OK.ru (Metadata JSON en elemento reproductor)
+    function sniffOkRuDom() {
+        try {
+            var elms = document.querySelectorAll('[data-options*="metadata"], [data-module="OKVideo"], div.vp-layer');
+            for (var i = 0; i < elms.length; i++) {
+                var raw = elms[i].getAttribute('data-options');
+                if (!raw) continue;
+                try {
+                    var p = JSON.parse(raw);
+                    var meta = (p.flashvars && p.flashvars.metadata) ? p.flashvars.metadata : null;
+                    if (typeof meta === 'string') { try { meta = JSON.parse(meta); } catch(e) {} }
+                    if (meta) {
+                        var t = (meta.movie && meta.movie.title) ? meta.movie.title : document.title;
+                        if (meta.hlsManifestUrl) {
+                            reportMedia(meta.hlsManifestUrl, t, 0, false);
+                        }
+                        if (meta.videos && meta.videos.length > 0) {
+                            for (var v = 0; v < meta.videos.length; v++) {
+                                if (meta.videos[v].url) {
+                                    reportMedia(meta.videos[v].url, t, 0, false);
+                                }
+                            }
+                        }
+                    }
+                } catch(e) {}
+            }
+        } catch(e) {}
+    }
+    sniffOkRuDom();
+    setTimeout(sniffOkRuDom, 1500);
+    setTimeout(sniffOkRuDom, 3500);
+
+    // 7. Rescaneo periódico ligero de video
     setInterval(function() {
         var allV = document.getElementsByTagName('video');
         for (var j = 0; j < allV.length; j++) { monitorVideo(allV[j]); }
-    }, 2500);
+        sniffOkRuDom();
+    }, 3000);
 
 })();

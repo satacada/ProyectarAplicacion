@@ -1,6 +1,8 @@
 package com.omnicast.sender.overlay
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -17,42 +19,52 @@ fun PhotoViewerBottomBar(
     totalCount: Int,
     onPrev: () -> Unit,
     onNext: () -> Unit,
+    onRotate: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Card(
         colors = CardDefaults.cardColors(containerColor = Color(0xDD0F172A)),
         shape = RoundedCornerShape(24.dp),
-        modifier = modifier.padding(bottom = 32.dp, start = 12.dp, end = 12.dp)
+        modifier = modifier.padding(bottom = 32.dp, start = 8.dp, end = 8.dp)
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             FilledTonalButton(
                 onClick = onPrev,
                 enabled = totalCount > 1,
-                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
                 colors = ButtonDefaults.filledTonalButtonColors(containerColor = Color(0xFF1E293B))
             ) {
-                Text("◀ Ant", fontSize = 12.sp, color = Color.White)
+                Text("◀", fontSize = 14.sp, color = Color.White)
+            }
+
+            IconButton(
+                onClick = onRotate,
+                modifier = Modifier
+                    .size(34.dp)
+                    .background(Color(0xFF0284C7), CircleShape)
+            ) {
+                Text("⟳", fontSize = 16.sp, color = Color.White, fontWeight = FontWeight.Bold)
             }
 
             Text(
-                text = if (totalCount > 0) "${currentIndex + 1} / $totalCount" else "0 / 0",
+                text = if (totalCount > 0) "${currentIndex + 1}/$totalCount" else "0/0",
                 color = Color.White,
-                fontSize = 13.sp,
+                fontSize = 12.sp,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(horizontal = 8.dp)
+                modifier = Modifier.padding(horizontal = 4.dp)
             )
 
             FilledTonalButton(
                 onClick = onNext,
                 enabled = totalCount > 1,
-                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
                 colors = ButtonDefaults.filledTonalButtonColors(containerColor = Color(0xFF1E293B))
             ) {
-                Text("Sig ▶", fontSize = 12.sp, color = Color.White)
+                Text("▶", fontSize = 14.sp, color = Color.White)
             }
         }
     }

@@ -45,6 +45,7 @@ fun SideMediaDrawer(
 
     ModalNavigationDrawer(
         drawerState = drawerState,
+        gesturesEnabled = false,
         drawerContent = {
             ModalDrawerSheet(
                 drawerContainerColor = Color(0xFF0F172A),

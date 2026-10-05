@@ -92,26 +92,85 @@ object AdBlocker {
     fun getAdHidingScript(): String = """
         (function() {
             try {
+                function cleanDoc(doc) {
+                    if (!doc) return;
+                    var selectors = [
+                        'div[class*="ad-box"]', 'div[class*="ad-container"]', 'div[id*="ad-banner"]',
+                        'div[class*="ad-banner"]', 'a[href*="bet365"]', 'a[href*="1xbet"]',
+                        'div[class*="popunder"]', 'div[id*="popunder"]', '.ad-overlay', '#ad-overlay',
+                        'div[class*="click-shield"]', 'div[class*="video-click-shield"]',
+                        '.vp_layer_fake', 'div[class*="fake-player"]', 'div[class*="play-overlay"]',
+                        'div[id*="overlay-container"]', 'div[class*="backdrop-pop"]', 'div[class*="click-layer"]'
+                    ];
+                    for (var s = 0; s < selectors.length; s++) {
+                        try {
+                            var found = doc.querySelectorAll(selectors[s]);
+                            for (var f = 0; f < found.length; f++) {
+                                var item = found[f];
+                                if (!item.querySelector('video') && !item.querySelector('iframe')) item.remove();
+                            }
+                        } catch(e) {}
+                    }
+                }
+
+                function cleanAll() {
+                    cleanDoc(document);
+                    var iframes = document.querySelectorAll('iframe');
+                    for (var k = 0; k < iframes.length; k++) {
+                        try { cleanDoc(iframes[k].contentDocument); } catch(e) {}
+                    }
+                }
+
+                cleanAll();
+
+                if (window.__omniAdBlockInjected) return;
+                window.__omniAdBlockInjected = true;
+
+                // Neutralización reactiva en fase de captura del evento click:
+                // Se evalúa únicamente el elemento tocado por el usuario, con costo de CPU 0 en reposo
                 document.addEventListener('click', function(e) {
                     var el = e.target;
-                    while (el && el !== document.body) {
-                        if (el.tagName === 'A') {
-                            var h = el.getAttribute('href') || '';
+                    if (!el) return;
+                    if (el !== document.body && el !== document.documentElement) {
+                        var cs = window.getComputedStyle(el);
+                        if (cs && (cs.position === 'fixed' || cs.position === 'absolute')) {
+                            var z = parseInt(cs.zIndex, 10);
+                            var rect = el.getBoundingClientRect();
+                            var w = window.innerWidth || 360;
+                            var h = window.innerHeight || 640;
+                            if (!isNaN(z) && z >= 5 && rect.width >= w * 0.5 && rect.height >= h * 0.3) {
+                                var op = parseFloat(cs.opacity);
+                                var bg = cs.backgroundColor;
+                                var isTrans = (bg === 'transparent' || bg === 'rgba(0, 0, 0, 0)' || bg === 'rgba(255, 255, 255, 0)');
+                                var noText = !el.innerText || el.innerText.trim().length === 0;
+                                if ((op <= 0.08 || (isTrans && noText)) && !el.querySelector('video, iframe, button, input')) {
+                                    e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
+                                    el.style.pointerEvents = 'none';
+                                    el.remove();
+                                    var under = document.elementFromPoint(e.clientX, e.clientY);
+                                    if (under && under !== el) under.click();
+                                    return false;
+                                }
+                            }
+                        }
+                    }
+                    var cur = el;
+                    while (cur && cur !== document.body) {
+                        if (cur.tagName === 'A') {
+                            var h = cur.getAttribute('href') || '';
                             if (h && (h.startsWith('http') || h.startsWith('//'))) {
                                 var host = '';
                                 try { host = new URL(h, window.location.href).hostname.toLowerCase(); } catch(err){}
                                 if (host && host !== window.location.hostname && !host.endsWith(window.location.hostname)) {
-                                    if (host.indexOf('aliexpress') !== -1 || host.indexOf('temu') !== -1 || host.indexOf('shein') !== -1 || host.indexOf('bet') !== -1 || host.indexOf('click') !== -1 || host.indexOf('track') !== -1) {
-                                        e.preventDefault(); e.stopPropagation(); el.remove(); return false;
+                                    if (host.indexOf('aliexpress') !== -1 || host.indexOf('temu') !== -1 || host.indexOf('shein') !== -1 || host.indexOf('bet') !== -1 || host.indexOf('click') !== -1 || host.indexOf('track') !== -1 || host.indexOf('pop') !== -1) {
+                                        e.preventDefault(); e.stopPropagation(); cur.remove(); return false;
                                     }
                                 }
                             }
                         }
-                        el = el.parentElement;
+                        cur = cur.parentElement;
                     }
                 }, true);
-                var selectors = ['div[class*="ad-box"]', 'div[class*="ad-container"]', 'div[id*="ad-banner"]', 'div[class*="ad-banner"]', 'a[href*="bet365"]', 'a[href*="1xbet"]', 'div[class*="popunder"]', '.ad-overlay', '#ad-overlay'];
-                selectors.forEach(function(s) { document.querySelectorAll(s).forEach(function(el) { if (!el.querySelector('video') && !el.querySelector('iframe')) el.remove(); }); });
             } catch(e) {}
         })();
     """.trimIndent()

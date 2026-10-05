@@ -64,7 +64,15 @@ fun BrowserBottomBarContainer(
             RemoteControlBar(
                 title = castTitle.ifBlank { pageTitle },
                 isPlaying = isPlaying, positionMs = posMs, durationMs = durMs, volume = volume,
-                onPlayPause = { onPlayControl(if (isPlaying) "PAUSE" else "PLAY", posMs, 1f) },
+                onPlayPause = {
+                    val isNearEnd = durMs > 2000L && posMs >= (durMs - 1500L)
+                    if (isPlaying) {
+                        onPlayControl("PAUSE", posMs, 1f)
+                    } else {
+                        if (isNearEnd) onPlayControl("SEEK", 0L, 1f)
+                        onPlayControl("PLAY", if (isNearEnd) 0L else posMs, 1f)
+                    }
+                },
                 onSeekTo = { onPlayControl("SEEK", it, 1f) },
                 onSkip = { onPlayControl("SEEK", (posMs + it).coerceAtLeast(0L), 1f) },
                 onVolumeChange = { onPlayControl("VOLUME", 0L, it) },

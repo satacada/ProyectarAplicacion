@@ -1,4 +1,4 @@
-﻿package com.omnicast.sender.media
+package com.omnicast.sender.media
 
 import android.content.Context
 import android.net.Uri
@@ -86,12 +86,22 @@ object LocalMediaStreamHandler {
         val pfd = try { context.contentResolver.openFileDescriptor(uri, "r") } catch (_: Throwable) { null }
         val size = pfd?.statSize ?: -1L
         if (pfd == null || size <= 0) {
-            context.contentResolver.openInputStream(uri)?.use { inputStream ->
-                val bytes = inputStream.readBytes()
-                val header = "HTTP/1.1 200 OK\r\nContent-Type: $mime\r\nContent-Length: ${bytes.size}\r\nAccess-Control-Allow-Origin: *\r\nConnection: close\r\n\r\n"
-                out.write(header.toByteArray())
-                if (!isHead) out.write(bytes)
-                out.flush()
+            val header = "HTTP/1.1 200 OK\r\nContent-Type: $mime\r\nTransfer-Encoding: chunked\r\nAccess-Control-Allow-Origin: *\r\nConnection: close\r\n\r\n"
+            out.write(header.toByteArray())
+            if (!isHead) {
+                context.contentResolver.openInputStream(uri)?.use { input ->
+                    val buffer = ByteArray(64 * 1024)
+                    while (true) {
+                        val read = input.read(buffer)
+                        if (read <= 0) break
+                        out.write("${Integer.toHexString(read)}\r\n".toByteArray())
+                        out.write(buffer, 0, read)
+                        out.write("\r\n".toByteArray())
+                        out.flush()
+                    }
+                    out.write("0\r\n\r\n".toByteArray())
+                    out.flush()
+                }
             }
             return
         }

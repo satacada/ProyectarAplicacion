@@ -29,6 +29,7 @@ fun BrowserWebView(
     onHistoryUpdated: (url: String, title: String?) -> Unit,
     onStreamIntercepted: (streamUrl: String, headers: Map<String, String>, isMaster: Boolean) -> Unit,
     onSniffedVideo: (WvcDomSniffer.SniffedVideo) -> Unit,
+    onTitleReceived: (String) -> Unit = {},
     onOpenPopup: (WebView) -> Unit = {},
     onClosePopup: () -> Unit = {},
     onWebViewCreated: (WebView) -> Unit
@@ -36,6 +37,7 @@ fun BrowserWebView(
     AndroidView(
         factory = { ctx ->
             NativeAdBlockEngine.init(ctx)
+            var currentKnownTitle: String? = null
             WebView(ctx).apply {
                 CookieManager.getInstance().setAcceptCookie(true)
                 CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
@@ -55,6 +57,7 @@ fun BrowserWebView(
                     }
                     override fun onPageFinished(v: WebView?, u: String?) {
                         val title = v?.title ?: "Transmisión"
+                        currentKnownTitle = title
                         onPageFinished(title, u)
                         if (isAdBlockEnabled) v?.evaluateJavascript(AdBlocker.getAdHidingScript(), null)
                         v?.evaluateJavascript(WvcDomSniffer.getInjectionScript(ctx), null)
@@ -100,33 +103,51 @@ fun BrowserWebView(
                         super.onReceivedError(v, req, err)
                     }
                     override fun shouldInterceptRequest(v: WebView?, r: WebResourceRequest?): WebResourceResponse? {
-                        val reqUrl = r?.url?.toString() ?: return super.shouldInterceptRequest(v, r)
-                        if (reqUrl.contains("/ibjslib/wai2iku6/")) {
-                            val assetName = if (reqUrl.contains("json2.js")) "json2.js" else "wvc_sniffer.js"
-                            return try {
-                                val stream = ctx.assets.open(assetName)
-                                WebResourceResponse("application/javascript", "UTF-8", stream)
-                            } catch (_: Throwable) { super.shouldInterceptRequest(v, r) }
+                        return try {
+                            val reqUrl = r?.url?.toString() ?: return super.shouldInterceptRequest(v, r)
+                            if (reqUrl.contains("/ibjslib/wai2iku6/")) {
+                                val assetName = if (reqUrl.contains("json2.js")) "json2.js" else "wvc_sniffer.js"
+                                return try {
+                                    val stream = ctx.assets.open(assetName)
+                                    WebResourceResponse("application/javascript", "UTF-8", stream)
+                                } catch (_: Throwable) { super.shouldInterceptRequest(v, r) }
+                            }
+                            val docUrl = r.requestHeaders?.get("Referer") ?: currentUrl
+                            if (isAdBlockEnabled && (AdBlocker.isAd(reqUrl) || NativeAdBlockEngine.shouldBlock(reqUrl, docUrl))) {
+                                return AdBlocker.createEmptyResponse()
+                            }
+                            val candidate = com.omnicast.core.domain.models.StreamCandidate(
+                                url = reqUrl,
+                                pageUrl = currentUrl,
+                                headers = r.requestHeaders ?: emptyMap(),
+                                userAgent = UA_MOBILE,
+                                pageTitle = currentKnownTitle
+                            )
+                            val detectedStream = com.omnicast.sender.ui.browser.extractors.StreamExtractorRegistry.useCase.execute(candidate)
+                            if (detectedStream != null) {
+                                android.util.Log.d("BrowserWebView", "🎬 Flujo detectado por arquitectura hexagonal [${detectedStream.format}]: ${detectedStream.url}")
+                                val hdrs = BrowserUrlHelper.buildSafeHeaders(detectedStream.url, currentUrl, UA_MOBILE, detectedStream.headers)
+                                post { onStreamIntercepted(detectedStream.url, hdrs, detectedStream.isMaster) }
+                            }
+                            super.shouldInterceptRequest(v, r)
+                        } catch (_: Throwable) {
+                            super.shouldInterceptRequest(v, r)
                         }
-                        val docUrl = r?.requestHeaders?.get("Referer") ?: currentUrl
-                        if (isAdBlockEnabled && (AdBlocker.isAd(reqUrl) || NativeAdBlockEngine.shouldBlock(reqUrl, docUrl))) {
-                            return AdBlocker.createEmptyResponse()
-                        }
-                        val isMedia = BrowserUrlHelper.isPlayableStream(reqUrl) && !AdBlocker.isAd(reqUrl)
-                        if (isMedia) {
-                            android.util.Log.d("BrowserWebView", "🎬 Flujo interceptado en red: $reqUrl")
-                            val hdrs = BrowserUrlHelper.buildSafeHeaders(reqUrl, currentUrl, UA_MOBILE, r.requestHeaders)
-                            val isMaster = reqUrl.contains("master", ignoreCase = true) || reqUrl.contains("manifest", ignoreCase = true)
-                            post { onStreamIntercepted(reqUrl, hdrs, isMaster) }
-                        }
-                        return super.shouldInterceptRequest(v, r)
                     }
                 }
                 webChromeClient = object : WebChromeClient() {
                     override fun onProgressChanged(v: WebView?, p: Int) {
                         onProgress(p)
-                        if (isAdBlockEnabled && (p == 30 || p == 70)) v?.evaluateJavascript(AdBlocker.getAdHidingScript(), null)
+                        if (isAdBlockEnabled && (p == 30 || p == 60 || p == 100)) v?.evaluateJavascript(AdBlocker.getAdHidingScript(), null)
                         if (p == 70) v?.evaluateJavascript(WvcDomSniffer.getInjectionScript(ctx), null)
+                    }
+                    override fun onReceivedTitle(v: WebView?, title: String?) {
+                        super.onReceivedTitle(v, title)
+                        val t = title?.trim()
+                        if (!t.isNullOrBlank() && !t.contains("about:blank") && t != "Transmisión" && !t.startsWith("http")) {
+                            currentKnownTitle = t
+                            post { onTitleReceived(t) }
+                        }
                     }
                     override fun onCreateWindow(v: WebView?, isDialog: Boolean, isUserGesture: Boolean, resultMsg: Message?): Boolean {
                         if (resultMsg == null) return false

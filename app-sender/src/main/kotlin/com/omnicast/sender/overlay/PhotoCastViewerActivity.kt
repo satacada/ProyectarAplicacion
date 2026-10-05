@@ -1,6 +1,7 @@
 package com.omnicast.sender.overlay
 
 import android.content.Context
+import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
@@ -13,6 +14,8 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.*
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.lifecycle.lifecycleScope
 import com.omnicast.core.protocol.SignalingMessage
 import com.omnicast.sender.gallery.GalleryMediaHelper
@@ -36,6 +39,7 @@ class PhotoCastViewerActivity : ComponentActivity() {
     private var signalingClient: SignalingClient? = null
     private val photoUris = mutableStateListOf<Uri>()
     private var currentIndexState = mutableIntStateOf(0)
+    private val currentBitmapState = mutableStateOf<ImageBitmap?>(null)
 
     private val permLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         if (granted) loadFullGallery()
@@ -84,10 +88,16 @@ class PhotoCastViewerActivity : ComponentActivity() {
             currentIndexState.intValue = startIdxExtra.coerceIn(0, (photoUris.size - 1).coerceAtLeast(0))
         }
 
-        if (GalleryMediaHelper.hasGalleryPermission(this)) {
-            loadFullGallery()
-        } else {
-            permLauncher.launch(GalleryMediaHelper.getRequiredPermission())
+        val isCloudOrDoc = photoUris.any {
+            val auth = it.authority ?: ""
+            auth.contains("docs") || auth.contains("drive") || auth.contains("documents")
+        }
+        if (!isCloudOrDoc) {
+            if (GalleryMediaHelper.hasGalleryPermission(this)) {
+                loadFullGallery()
+            } else {
+                permLauncher.launch(GalleryMediaHelper.getRequiredPermission())
+            }
         }
 
         val prefs = getSharedPreferences("omnicast_prefs", Context.MODE_PRIVATE)
@@ -116,7 +126,10 @@ class PhotoCastViewerActivity : ComponentActivity() {
         setResult(RESULT_BACK_TO_GALLERY)
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                setResult(RESULT_BACK_TO_GALLERY)
+                sendSignaling(SignalingMessage.PlayControl("STOP"))
+                val currentUri = photoUris.getOrNull(currentIndexState.intValue)
+                val resultData = Intent().apply { data = currentUri }
+                setResult(RESULT_BACK_TO_GALLERY, resultData)
                 finish()
             }
         })
@@ -125,16 +138,18 @@ class PhotoCastViewerActivity : ComponentActivity() {
             PhotoViewerContent(
                 uris = photoUris,
                 currentIndex = currentIndexState.intValue,
+                currentBitmap = currentBitmapState.value,
                 onIndexChange = { newIdx ->
                     if (newIdx in photoUris.indices) {
                         currentIndexState.intValue = newIdx
                         transmitCurrentPhoto()
                     }
                 },
-                onTransform = { scale, px, py ->
-                    sendSignaling(SignalingMessage.ImageTransform(scale, px, py))
+                onTransform = { scale, px, py, rot ->
+                    sendSignaling(SignalingMessage.ImageTransform(scale, px, py, rot))
                 },
                 onClose = {
+                    sendSignaling(SignalingMessage.PlayControl("STOP"))
                     setResult(RESULT_EXIT_TO_MAIN)
                     finish()
                 }
@@ -170,37 +185,44 @@ class PhotoCastViewerActivity : ComponentActivity() {
         val count = photoUris.size
 
         lifecycleScope.launch(Dispatchers.IO) {
-            val photoUrl = try {
+            val bmp = try {
+                val opts = BitmapFactory.Options().apply { inJustDecodeBounds = true }
                 contentResolver.openInputStream(uri)?.use { stream ->
-                    val opts = BitmapFactory.Options().apply { inJustDecodeBounds = true }
                     BitmapFactory.decodeStream(stream, null, opts)
-                    var inSample = 1
-                    val maxDim = 1920
-                    if (opts.outWidth > maxDim || opts.outHeight > maxDim) {
-                        val maxSide = maxOf(opts.outWidth, opts.outHeight)
-                        inSample = (maxSide / maxDim).coerceAtLeast(1)
-                    }
-                    val decodeOpts = BitmapFactory.Options().apply {
-                        inSampleSize = inSample
-                        inPreferredConfig = Bitmap.Config.RGB_565
-                    }
-                    contentResolver.openInputStream(uri)?.use { s2 ->
-                        val bmp = BitmapFactory.decodeStream(s2, null, decodeOpts)
-                        if (bmp != null) {
-                            val baos = ByteArrayOutputStream()
-                            bmp.compress(Bitmap.CompressFormat.JPEG, 85, baos)
-                            val b64 = Base64.encodeToString(baos.toByteArray(), Base64.NO_WRAP)
-                            "data:image/jpeg;base64,$b64"
-                        } else null
-                    }
                 }
-            } catch (_: Throwable) { null } ?: try {
-                LocalImageServer.serveMedia(uri, "image/jpeg", this@PhotoCastViewerActivity)
+                var inSample = 1
+                val maxDim = 1920
+                if (opts.outWidth > maxDim || opts.outHeight > maxDim) {
+                    val maxSide = maxOf(opts.outWidth, opts.outHeight)
+                    inSample = (maxSide / maxDim).coerceAtLeast(1)
+                }
+                val decodeOpts = BitmapFactory.Options().apply {
+                    inSampleSize = inSample
+                    inPreferredConfig = Bitmap.Config.RGB_565
+                }
+                contentResolver.openInputStream(uri)?.use { s2 ->
+                    BitmapFactory.decodeStream(s2, null, decodeOpts)
+                }
             } catch (_: Throwable) { null }
 
-            if (photoUrl != null) {
+            if (bmp != null) {
+                withContext(Dispatchers.Main) {
+                    currentBitmapState.value = bmp.asImageBitmap()
+                }
+                val baos = ByteArrayOutputStream()
+                bmp.compress(Bitmap.CompressFormat.JPEG, 85, baos)
+                val b64 = Base64.encodeToString(baos.toByteArray(), Base64.NO_WRAP)
+                val photoUrl = "data:image/jpeg;base64,$b64"
                 sendSignaling(SignalingMessage.ShowImage(photoUrl, "Foto (${idx + 1}/$count)"))
-                sendSignaling(SignalingMessage.ImageTransform(1f, 0f, 0f))
+                sendSignaling(SignalingMessage.ImageTransform(1f, 0f, 0f, 0f))
+            } else {
+                val fallbackUrl = try {
+                    LocalImageServer.serveMedia(uri, "image/jpeg", this@PhotoCastViewerActivity)
+                } catch (_: Throwable) { null }
+                if (fallbackUrl != null) {
+                    sendSignaling(SignalingMessage.ShowImage(fallbackUrl, "Foto (${idx + 1}/$count)"))
+                    sendSignaling(SignalingMessage.ImageTransform(1f, 0f, 0f, 0f))
+                }
             }
         }
     }

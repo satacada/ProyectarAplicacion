@@ -60,7 +60,7 @@ fun InAppBrowserScreen(
 
     fun transmitWithHistory(url: String, title: String, hdrs: Map<String, String>) {
         val cleanT = if (title.isNotBlank() && title != "Cargando..." && title != "Transmisión") title else pageTitle
-        historyManager.addOrUpdate(url, cleanT, currentUrl, hdrs)
+        pageTitle = cleanT; historyManager.addOrUpdate(url, cleanT, currentUrl, hdrs)
         onSendStreamToTv(url, cleanT, hdrs)
     }
 
@@ -120,12 +120,11 @@ fun InAppBrowserScreen(
 
     fun navigateTo(url: String) {
         detectedStreams.clear(); streamHeaders.clear(); streamLabels.clear(); qualityOptions = emptyList()
-        ActiveStreamHolder.clearDetectedStream()
+        ActiveStreamHolder.clearDetectedStream(); pageTitle = "Cargando..."
         val target = BrowserUrlHelper.normalizeUrl(url)
         inputUrl = target; currentUrl = target; isHome = false
         prefs.edit().putString("saved_browser_last_url", target).apply()
-        checkPlatformUrls(target)
-        webViewInstance?.loadUrl(target)
+        checkPlatformUrls(target); webViewInstance?.loadUrl(target)
     }
 
     fun openOptionsSheet() {
@@ -230,6 +229,7 @@ fun InAppBrowserScreen(
                             registerStream(sniffed.src, hdrs, isPrimary = false, label = sniffed.label ?: pageTitle)
                         }
                     },
+                    onTitleReceived = { t -> if (t.isNotBlank() && t != "Transmisión" && !t.contains("about:blank")) pageTitle = t },
                     onOpenPopup = { pView -> popupWebView = pView },
                     onClosePopup = { popupWebView?.destroy(); popupWebView = null },
                     onWebViewCreated = { webViewInstance = it; if (!isHome && currentUrl.isNotBlank() && it.url == null) it.loadUrl(currentUrl) }
@@ -241,7 +241,8 @@ fun InAppBrowserScreen(
                         posMs = posMs, durMs = durMs, volume = volume, detectedCount = detectedStreams.size, pageTitle = pageTitle,
                         onTransmitDirect = {
                             val first = detectedStreams.firstOrNull() ?: return@BrowserBottomBarContainer
-                            transmitWithHistory(first, pageTitle, streamHeaders[first] ?: emptyMap())
+                            val bestT = webViewInstance?.title?.takeIf { it.isNotBlank() && !it.contains("about:blank") && it != "Transmisión" } ?: pageTitle
+                            transmitWithHistory(first, bestT, streamHeaders[first] ?: emptyMap())
                         },
                         onOpenQualities = { openOptionsSheet() },
                         onPlayControl = { act, pos, vol ->
@@ -286,13 +287,12 @@ fun InAppBrowserScreen(
         showOptionsSheet = showOptionsSheet, showHistorySheet = false, showSavedPlaylistsSheet = false,
         videoToSave = videoToSave, playlistManager = playlistManager, pageTitle = pageTitle,
         qualityOptions = qualityOptions, historyList = emptyList(),
-        onTransmitOption = { opt -> showOptionsSheet = false; transmitWithHistory(opt.streamUrl, pageTitle, streamHeaders[opt.streamUrl] ?: emptyMap()) },
+        onTransmitOption = { opt -> showOptionsSheet = false; val bestT = webViewInstance?.title?.takeIf { it.isNotBlank() && !it.contains("about:blank") && it != "Transmisión" } ?: pageTitle; transmitWithHistory(opt.streamUrl, bestT, streamHeaders[opt.streamUrl] ?: emptyMap()) },
         onTransmitHistory = { transmitWithHistory(it.url, it.title, it.headers) },
         onDismissOptions = { showOptionsSheet = false },
         onClearOptions = { detectedStreams.clear(); qualityOptions = emptyList(); showOptionsSheet = false },
         onDeleteHistory = { historyManager.remove(it) }, onClearHistory = { historyManager.clear() },
         onToggleFavorite = { historyManager.toggleFavorite(it) }, onDismissHistory = {}, onDismissPlaylists = {},
-        onDismissSaveDialog = { videoToSave = null },
-        onSavedToPlaylist = { Toast.makeText(context, "💾 Guardado en " + it, Toast.LENGTH_SHORT).show() }
+        onDismissSaveDialog = { videoToSave = null }, onSavedToPlaylist = { Toast.makeText(context, "💾 Guardado en " + it, Toast.LENGTH_SHORT).show() }
     )
 }

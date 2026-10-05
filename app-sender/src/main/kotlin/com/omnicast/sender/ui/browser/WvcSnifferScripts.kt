@@ -19,7 +19,7 @@ object WvcSnifferScripts {
                     if (l.indexOf('init.mp4') !== -1 || l.indexOf('/init-') !== -1 || l.indexOf('.m4s') !== -1 || l.indexOf('.ts') !== -1) return false;
                     return l.indexOf('.m3u8') !== -1 || l.indexOf('.mp4') !== -1 || l.indexOf('.mpd') !== -1 ||
                            l.indexOf('/hls') !== -1 || l.indexOf('/stream/') !== -1 || l.indexOf('/manifest') !== -1 ||
-                           l.indexOf('chunklist') !== -1 || l.indexOf('cmd=video') !== -1 || l.indexOf('vd.mycdn') !== -1 ||
+                           l.indexOf('chunklist') !== -1 || l.indexOf('vd.mycdn') !== -1 ||
                            (l.indexOf('master.txt') !== -1 && l.indexOf('/hls') !== -1);
                 }
                 function isShortCommercial(v) {

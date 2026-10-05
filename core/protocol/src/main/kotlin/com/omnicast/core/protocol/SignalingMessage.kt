@@ -68,7 +68,8 @@ sealed class SignalingMessage {
     data class ImageTransform(
         val scale: Float = 1.0f,
         val panX: Float = 0.0f,
-        val panY: Float = 0.0f
+        val panY: Float = 0.0f,
+        val rotation: Float = 0.0f
     ) : SignalingMessage()
 
     @Serializable

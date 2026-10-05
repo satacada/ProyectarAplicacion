@@ -93,4 +93,25 @@ class SignalingProtocolTest {
         val decoded = json.decodeFromString<SignalingMessage>(encoded)
         assertTrue(decoded is SignalingMessage.Disconnect)
     }
+
+    @Test
+    fun testImageTransformSerialization() {
+        val transform = SignalingMessage.ImageTransform(
+            scale = 1.5f,
+            panX = 20.0f,
+            panY = -10.0f,
+            rotation = 90.0f
+        )
+        val encoded = json.encodeToString<SignalingMessage>(transform)
+        assertTrue(encoded.contains("\"type\":\"IMAGE_TRANSFORM\""))
+        assertTrue(encoded.contains("\"rotation\":90.0"))
+
+        val decoded = json.decodeFromString<SignalingMessage>(encoded)
+        assertTrue(decoded is SignalingMessage.ImageTransform)
+        val decodedTransform = decoded as SignalingMessage.ImageTransform
+        assertEquals(1.5f, decodedTransform.scale, 0.001f)
+        assertEquals(20.0f, decodedTransform.panX, 0.001f)
+        assertEquals(-10.0f, decodedTransform.panY, 0.001f)
+        assertEquals(90.0f, decodedTransform.rotation, 0.001f)
+    }
 }

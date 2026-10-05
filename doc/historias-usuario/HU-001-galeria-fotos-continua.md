@@ -46,6 +46,15 @@ El retroceso debe respetar la jerarquía inversa de actividades:
 3. **Atrás desde el Explorador Nativo:** Regresa a **OmniCast** (Paso 0).
 4. **Botón Rojo "Cerrar" en Visor:** Permite salir directamente a OmniCast en un solo toque.
 
+### CA-06: Memoria de Posición de Scroll en Galería al Dar Atrás
+- Si el usuario se desplazó (scroll) en la Galería hasta una posición específica y seleccionó una foto para proyectar, al pulsar el botón "Atrás" propio del móvil tras ver o deslizar fotos, debe regresar a la **misma posición de scroll exacta en la galería** desde donde envió la foto.
+- No se permite reiniciar la galería desde la posición superior (índice 0).
+
+### CA-07: Liberación Automática de Memoria en la TV Box
+- Ninguna foto ni video debe ocupar espacio en el disco/almacenamiento interno de la TV Box (0 Bytes en flash).
+- Al finalizar la proyección (cerrar con botón "X" o salir con botón "Atrás" de regreso a OmniCast), el emisor debe enviar `SignalingMessage.PlayControl("STOP")` a la TV Box.
+- La TV Box debe transicionar a `ReceiverUiState.Standby`, desmontando el visor de imágenes y liberando inmediatamente de la memoria RAM cualquier `Bitmap` cargado.
+
 ---
 
 ## 4. Historial de Ajustes
@@ -55,3 +64,6 @@ El retroceso debe respetar la jerarquía inversa de actividades:
   - Carga de galería completa (`loadFullGallery`) para swipe continuo sin salir del visor.
   - Corrección de cierre forzoso al enviar videos (el usuario permanece en la galería).
   - Implementación de la pila inversa LIFO de 3 niveles en `GalleryPickerActivity`.
+  - Corrección de pantalla negra en primera foto compartiendo el bitmap decodificado directamente con Compose.
+  - Memoria de posición de scroll en la galería al retroceder con el botón atrás (`FLAG_ACTIVITY_REORDER_TO_FRONT`, `lastMediaUri`).
+  - Liberación garantizada de memoria RAM en TV mediante transición a `Standby` al salir de proyección.

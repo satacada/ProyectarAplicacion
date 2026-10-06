@@ -73,28 +73,10 @@ fun BrowserWebView(
                         if (AdBlocker.isExternalRedirect(reqUrl)) return true
                         val liveUrl = v?.url ?: currentUrl
                         val curHost = try { java.net.URI(liveUrl).host?.lowercase() } catch (_: Throwable) { null }
-                        val tgtHost = try { r.url.host?.lowercase() } catch (_: Throwable) { null }
-                        if (curHost != null && tgtHost != null && curHost != tgtHost && !tgtHost.endsWith(curHost) && !curHost.endsWith(tgtHost)) {
-                            if (!AdBlocker.isKnownMediaHost(tgtHost) && !AdBlockWhitelistManager.isWhitelistedHost(tgtHost)) {
-                                if (isAdBlockEnabled && AdBlocker.isAd(reqUrl)) {
-                                    android.util.Log.w("BrowserWebView", "🛑 Redirección publicitaria bloqueada silenciosamente: $tgtHost")
-                                    return true
-                                }
-                                val popup = WebView(ctx).apply {
-                                    CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
-                                    settings.javaScriptEnabled = true; settings.domStorageEnabled = true; settings.userAgentString = UA_MOBILE
-                                    webViewClient = object : WebViewClient() {
-                                        override fun shouldOverrideUrlLoading(view: WebView?, req: WebResourceRequest?): Boolean =
-                                            req?.url?.toString()?.let { AdBlocker.isExternalRedirect(it) || AdBlocker.isAd(it) } ?: false
-                                    }
-                                    webChromeClient = object : WebChromeClient() {
-                                        override fun onCloseWindow(window: WebView?) { onClosePopup() }
-                                    }
-                                    loadUrl(reqUrl)
-                                }
-                                onOpenPopup(popup)
-                                return true
-                            }
+                        val isSourceWhitelisted = curHost?.let { AdBlockWhitelistManager.isWhitelistedHost(it) } ?: false
+                        if (isAdBlockEnabled && !isSourceWhitelisted && (AdBlocker.isAd(reqUrl) || NativeAdBlockEngine.shouldBlock(reqUrl, liveUrl))) {
+                            android.util.Log.w("BrowserWebView", "🛑 Redirección publicitaria bloqueada silenciosamente: ${r.url.host}")
+                            return true
                         }
                         return false
                     }
@@ -153,24 +135,32 @@ fun BrowserWebView(
                     }
                     override fun onCreateWindow(v: WebView?, isDialog: Boolean, isUserGesture: Boolean, resultMsg: Message?): Boolean {
                         if (resultMsg == null) return false
-                        if (isAdBlockEnabled) {
-                            android.util.Log.d("BrowserWebView", "🛑 Popup publicitario bloqueado en onCreateWindow")
+                        val curHost = try { v?.url?.let { java.net.URI(it).host } } catch (_: Throwable) { null }
+                        val isWhitelisted = curHost?.let { AdBlockWhitelistManager.isWhitelistedHost(it) } ?: false
+                        if (isAdBlockEnabled && !isUserGesture && !isWhitelisted) {
+                            android.util.Log.d("BrowserWebView", "🛑 Popup publicitario automático sin interacción bloqueado")
                             return false
                         }
-                        val popup = WebView(ctx).apply {
+                        val transportWebView = WebView(ctx).apply {
                             CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
-                            settings.javaScriptEnabled = true; settings.domStorageEnabled = true; settings.userAgentString = UA_MOBILE
+                            settings.javaScriptEnabled = true
+                            settings.domStorageEnabled = true
+                            settings.userAgentString = UA_MOBILE
                             webViewClient = object : WebViewClient() {
-                                override fun shouldOverrideUrlLoading(view: WebView?, req: WebResourceRequest?): Boolean =
-                                    req?.url?.toString()?.let { AdBlocker.isExternalRedirect(it) } ?: false
-                            }
-                            webChromeClient = object : WebChromeClient() {
-                                override fun onCloseWindow(window: WebView?) { onClosePopup() }
+                                override fun shouldOverrideUrlLoading(view: WebView?, req: WebResourceRequest?): Boolean {
+                                    val targetUrl = req?.url?.toString() ?: return false
+                                    if (AdBlocker.isExternalRedirect(targetUrl)) return true
+                                    if (isAdBlockEnabled && !isWhitelisted && (AdBlocker.isAd(targetUrl) || NativeAdBlockEngine.shouldBlock(targetUrl))) {
+                                        android.util.Log.w("BrowserWebView", "🛑 Enlace emergente publicitario bloqueado: $targetUrl")
+                                        return true
+                                    }
+                                    v?.loadUrl(targetUrl)
+                                    return true
+                                }
                             }
                         }
-                        (resultMsg.obj as? WebView.WebViewTransport)?.webView = popup
+                        (resultMsg.obj as? WebView.WebViewTransport)?.webView = transportWebView
                         resultMsg.sendToTarget()
-                        onOpenPopup(popup)
                         return true
                     }
                     override fun onConsoleMessage(cm: ConsoleMessage?): Boolean {

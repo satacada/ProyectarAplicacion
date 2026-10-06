@@ -44,6 +44,7 @@ fun BrowserTopBar(
     onOpenHistory: () -> Unit = {},
     onOpenPlaylists: () -> Unit = {},
     onOpenDrawer: () -> Unit = {},
+    onOpenWhitelist: () -> Unit = {},
     isTvConnected: Boolean = true
 ) {
     val focusManager = LocalFocusManager.current
@@ -192,6 +193,10 @@ fun BrowserTopBar(
                     DropdownMenuItem(
                         text = { Text(if (isAdBlockEnabled) "🛡️ Bloqueador (Activo)" else "🛡️ Bloquear Anuncios", color = Color.White) },
                         onClick = { onToggleAdBlock(); showMenu = false }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("✅ Sitios Permitidos (Lista Blanca)", color = Color(0xFF10B981)) },
+                        onClick = { onOpenWhitelist(); showMenu = false }
                     )
                     DropdownMenuItem(
                         text = { Text(if (isDesktopMode) "💻 Modo Móvil" else "💻 Sitio Escritorio", color = Color.White) },

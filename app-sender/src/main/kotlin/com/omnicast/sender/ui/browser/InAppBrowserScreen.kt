@@ -47,16 +47,13 @@ fun InAppBrowserScreen(
     var qualityOptions by remember { mutableStateOf<List<StreamQualityOption>>(emptyList()) }
     var showOptionsSheet by remember { mutableStateOf(false) }
     var showSideDrawer by remember { mutableStateOf(false) }
+    var showWhitelistDialog by remember { mutableStateOf(false) }
     var videoToSave by remember { mutableStateOf<HistoryItem?>(null) }
-    var webViewInstance by remember { mutableStateOf<WebView?>(null) }
-    var popupWebView by remember { mutableStateOf<WebView?>(null) }
+    var webViewInstance by remember { mutableStateOf<WebView?>(null); }; var popupWebView by remember { mutableStateOf<WebView?>(null) }
     val scope = rememberCoroutineScope()
-    val isCasting by ActiveStreamHolder.isCasting.collectAsState()
-    val isPlaying by ActiveStreamHolder.isPlaying.collectAsState()
-    val posMs by ActiveStreamHolder.positionMs.collectAsState()
-    val durMs by ActiveStreamHolder.durationMs.collectAsState()
-    val volume by ActiveStreamHolder.volume.collectAsState()
-    val castTitle by ActiveStreamHolder.currentMediaTitle.collectAsState()
+    val isCasting by ActiveStreamHolder.isCasting.collectAsState(); val isPlaying by ActiveStreamHolder.isPlaying.collectAsState()
+    val posMs by ActiveStreamHolder.positionMs.collectAsState(); val durMs by ActiveStreamHolder.durationMs.collectAsState()
+    val volume by ActiveStreamHolder.volume.collectAsState(); val castTitle by ActiveStreamHolder.currentMediaTitle.collectAsState()
 
     fun transmitWithHistory(url: String, title: String, hdrs: Map<String, String>) {
         val cleanT = if (title.isNotBlank() && title != "Cargando..." && title != "Transmisión") title else pageTitle
@@ -66,6 +63,7 @@ fun InAppBrowserScreen(
 
     BackHandler(enabled = true) {
         if (showSideDrawer) showSideDrawer = false
+        else if (showWhitelistDialog) showWhitelistDialog = false
         else if (popupWebView != null) { popupWebView?.destroy(); popupWebView = null }
         else if (videoToSave != null) videoToSave = null
         else if (showOptionsSheet) showOptionsSheet = false
@@ -173,7 +171,8 @@ fun InAppBrowserScreen(
                 },
                 detectedStreamsCount = detectedStreams.size, onOpenVideoList = { openOptionsSheet() },
                 onOpenHistory = { showSideDrawer = true }, onOpenPlaylists = { showSideDrawer = true },
-                onOpenDrawer = { showSideDrawer = true }, isTvConnected = isTvConnected
+                onOpenDrawer = { showSideDrawer = true }, onOpenWhitelist = { showWhitelistDialog = true },
+                isTvConnected = isTvConnected
             )
 
             if (progress in 1..99) LinearProgressIndicator(progress = { progress / 100f }, modifier = Modifier.fillMaxWidth().height(3.dp), color = Color(0xFF38BDF8))
@@ -293,6 +292,8 @@ fun InAppBrowserScreen(
         onClearOptions = { detectedStreams.clear(); qualityOptions = emptyList(); showOptionsSheet = false },
         onDeleteHistory = { historyManager.remove(it) }, onClearHistory = { historyManager.clear() },
         onToggleFavorite = { historyManager.toggleFavorite(it) }, onDismissHistory = {}, onDismissPlaylists = {},
-        onDismissSaveDialog = { videoToSave = null }, onSavedToPlaylist = { Toast.makeText(context, "💾 Guardado en " + it, Toast.LENGTH_SHORT).show() }
+        onDismissSaveDialog = { videoToSave = null }, onSavedToPlaylist = { Toast.makeText(context, "💾 Guardado en " + it, Toast.LENGTH_SHORT).show() },
+        showWhitelistDialog = showWhitelistDialog, currentUrl = currentUrl,
+        onDismissWhitelist = { showWhitelistDialog = false }, onWhitelistUpdated = { webViewInstance?.reload() }
     )
 }

@@ -36,9 +36,9 @@ class ExoPlayerTvManager(private val context: Context) {
     fun initialize() {
         if (player == null) {
             val loadControl = DefaultLoadControl.Builder()
-                .setBufferDurationsMs(60_000, 120_000, 2_000, 4_000)
+                .setBufferDurationsMs(25_000, 50_000, 2_000, 4_000)
                 .setPrioritizeTimeOverSizeThresholds(true)
-                .setBackBuffer(30_000, true)
+                .setBackBuffer(20_000, true)
                 .build()
 
             val renderersFactory = DefaultRenderersFactory(context)
@@ -46,7 +46,10 @@ class ExoPlayerTvManager(private val context: Context) {
                 .setEnableDecoderFallback(true)
 
             val trackSelector = DefaultTrackSelector(context).apply {
-                parameters = buildUponParameters().setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_TEXT, true).build()
+                parameters = buildUponParameters()
+                    .setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_TEXT, true)
+                    .setForceHighestSupportedBitrate(true)
+                    .build()
             }
             val tm = TvTrackManager(context, trackSelector)
             trackManager = tm
@@ -54,8 +57,7 @@ class ExoPlayerTvManager(private val context: Context) {
             val httpFactory = DefaultHttpDataSource.Factory()
                 .setUserAgent(DEFAULT_UA).setAllowCrossProtocolRedirects(true).setConnectTimeoutMs(20000).setReadTimeoutMs(20000)
 
-            val cachedDataSourceFactory = TvMediaCacheManager.buildCacheDataSourceFactory(context, httpFactory)
-            val mediaSourceFactory = DefaultMediaSourceFactory(context).setDataSourceFactory(cachedDataSourceFactory)
+            val mediaSourceFactory = DefaultMediaSourceFactory(context).setDataSourceFactory(httpFactory)
 
             player = ExoPlayer.Builder(context, renderersFactory)
                 .setMediaSourceFactory(mediaSourceFactory)
@@ -128,9 +130,8 @@ class ExoPlayerTvManager(private val context: Context) {
                 .setReadTimeoutMs(15000)
                 .setDefaultRequestProperties(safeHeaders)
 
-            val cachedDataSourceFactory = TvMediaCacheManager.buildCacheDataSourceFactory(context, httpFactory)
             val mediaSource = DefaultMediaSourceFactory(context)
-                .setDataSourceFactory(cachedDataSourceFactory)
+                .setDataSourceFactory(httpFactory)
                 .createMediaSource(mediaItem)
 
             player?.apply {
@@ -153,9 +154,8 @@ class ExoPlayerTvManager(private val context: Context) {
         val mediaItem = buildMediaItem(url, title)
         val httpFactory = DefaultHttpDataSource.Factory()
             .setUserAgent(DEFAULT_UA).setAllowCrossProtocolRedirects(true).setConnectTimeoutMs(15000).setReadTimeoutMs(15000)
-        val cachedDataSourceFactory = TvMediaCacheManager.buildCacheDataSourceFactory(context, httpFactory)
         val mediaSource = DefaultMediaSourceFactory(context)
-            .setDataSourceFactory(cachedDataSourceFactory)
+            .setDataSourceFactory(httpFactory)
             .createMediaSource(mediaItem)
 
         player?.apply {

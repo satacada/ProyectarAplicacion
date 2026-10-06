@@ -27,7 +27,7 @@ object AdBlocker {
         "giggle.com", "giggles.com", "giggleclick.com", "giggletrack.com", "giggleredirect.com",
         "cat-bolt.com", "imasdk.googleapis.com", "securepubads.g.doubleclick.net",
         "pagead2.googlesyndication.com", "ad-delivery.net", "adkeeper.com", "trafficjunky.com",
-        "whocares.club", "pemsrv.com", "gdtcdn.com", "mc.yandex.ru", "yandex.ru", "luugy.com",
+        "whocares.club", "pemsrv.com", "gdtcdn.com", "mc.yandex.ru", "an.yandex.ru", "luugy.com",
         "google-analytics.com", "googletagmanager.com"
     )
 
@@ -43,6 +43,7 @@ object AdBlocker {
 
     private val KNOWN_MEDIA_HOSTS = hashSetOf(
         "ok.ru", "mycdn.me", "vk.com", "dailymotion.com", "youtube.com", "youtu.be",
+        "yandex.com", "yandex.ru", "ya.ru", "dzen.ru", "yastatic.net",
         "streamwish.to", "filemoon.sx", "doodstream.com", "mixdrop.co", "vidmoly.me",
         "voe.sx", "vidoza.net", "streamtape.com", "mp4upload.com", "upstream.to",
         "waaw.to", "netu.tv", "vidguard.to", "uqload.com", "luluvdo.com",
@@ -55,7 +56,17 @@ object AdBlocker {
     )
 
     fun isAd(url: String): Boolean {
+        if (AdBlockWhitelistManager.isWhitelisted(url)) {
+            val lower = url.lowercase()
+            if (lower.contains("an.yandex.") || lower.contains("mc.yandex.")) return true
+            return false
+        }
         val lower = url.lowercase()
+        // Permitir completamente Yandex (.com, .ru, ya.ru, yastatic.net, dzen.ru) salvo subdominios de anuncios/métricas
+        if (lower.contains("yandex.") || lower.contains("ya.ru") || lower.contains("dzen.ru") || lower.contains("yastatic.net")) {
+            if (lower.contains("an.yandex.") || lower.contains("mc.yandex.")) return true
+            return false
+        }
         if (lower.contains("cat-bolt") || lower.contains("/creatives/") || lower.contains("securepubads") ||
             lower.contains("imasdk") || lower.contains("doubleclick") || lower.contains("/vast") ||
             lower.contains("/vpaid") || lower.contains("preroll") || lower.contains("ad-delivery")

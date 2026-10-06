@@ -38,6 +38,7 @@ fun BrowserWebView(
         factory = { ctx ->
             NativeAdBlockEngine.init(ctx)
             AdBlockRuleSyncManager.syncIfNeeded(ctx)
+            AdBlockWhitelistManager.init(ctx)
             var currentKnownTitle: String? = null
             WebView(ctx).apply {
                 CookieManager.getInstance().setAcceptCookie(true)
@@ -74,8 +75,8 @@ fun BrowserWebView(
                         val curHost = try { java.net.URI(liveUrl).host?.lowercase() } catch (_: Throwable) { null }
                         val tgtHost = try { r.url.host?.lowercase() } catch (_: Throwable) { null }
                         if (curHost != null && tgtHost != null && curHost != tgtHost && !tgtHost.endsWith(curHost) && !curHost.endsWith(tgtHost)) {
-                            if (!AdBlocker.isKnownMediaHost(tgtHost)) {
-                                if (isAdBlockEnabled || AdBlocker.isAd(reqUrl)) {
+                            if (!AdBlocker.isKnownMediaHost(tgtHost) && !AdBlockWhitelistManager.isWhitelistedHost(tgtHost)) {
+                                if (isAdBlockEnabled && AdBlocker.isAd(reqUrl)) {
                                     android.util.Log.w("BrowserWebView", "🛑 Redirección publicitaria bloqueada silenciosamente: $tgtHost")
                                     return true
                                 }

@@ -24,8 +24,20 @@ fun BrowserModalSheets(
     onDismissHistory: () -> Unit,
     onDismissPlaylists: () -> Unit = {},
     onDismissSaveDialog: () -> Unit = {},
-    onSavedToPlaylist: (String) -> Unit = {}
+    onSavedToPlaylist: (String) -> Unit = {},
+    showWhitelistDialog: Boolean = false,
+    currentUrl: String = "",
+    onDismissWhitelist: () -> Unit = {},
+    onWhitelistUpdated: () -> Unit = {}
 ) {
+    if (showWhitelistDialog) {
+        AdBlockWhitelistDialog(
+            currentUrl = currentUrl,
+            onDismiss = onDismissWhitelist,
+            onWhitelistUpdated = onWhitelistUpdated
+        )
+    }
+
     if (showOptionsSheet && qualityOptions.isNotEmpty()) {
         WvcVideoListSheet(
             pageTitle = pageTitle, options = qualityOptions,

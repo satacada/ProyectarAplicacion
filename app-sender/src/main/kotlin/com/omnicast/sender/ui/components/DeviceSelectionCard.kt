@@ -25,16 +25,22 @@ fun DeviceSelectionCard(
     manualIp: String,
     manualPort: String,
     isConnected: Boolean = false,
+    tooltipsEnabled: Boolean = true,
     onManualIpChange: (String) -> Unit,
     onManualPortChange: (String) -> Unit,
     onSelectDevice: (DeviceTarget) -> Unit,
     onConnect: () -> Unit = {}
 ) {
-    Card(
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF1E293B)),
-        shape = RoundedCornerShape(14.dp),
-        modifier = Modifier.fillMaxWidth()
+    OmniTooltip(
+        text = "¿Quieres conocer esta opción?\n" +
+                "Conecta tu teléfono a la TV Box en la misma red Wi-Fi local para transmitir pantalla, videos o fotos.",
+        enabled = tooltipsEnabled
     ) {
+        Card(
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF1E293B)),
+            shape = RoundedCornerShape(14.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
         Column(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
@@ -131,4 +137,5 @@ fun DeviceSelectionCard(
             }
         }
     }
+}
 }

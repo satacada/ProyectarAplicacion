@@ -52,6 +52,19 @@ class FloatingViewBuilder(private val context: Context) {
         return container
     }
 
+    class FloatingMenuController(
+        val rootView: View,
+        private val applyModeFn: (com.omnicast.sender.service.ActiveCastMode, String) -> Unit,
+        private val updateZoomLabelFn: (String) -> Unit
+    ) {
+        fun applyMode(mode: com.omnicast.sender.service.ActiveCastMode, zoomLabel: String) {
+            applyModeFn(mode, zoomLabel)
+        }
+        fun updateZoomLabel(label: String) {
+            updateZoomLabelFn(label)
+        }
+    }
+
     fun buildMenu(
         statusFeedbackText: TextView,
         onDetectVideo: () -> Unit,
@@ -62,7 +75,7 @@ class FloatingViewBuilder(private val context: Context) {
         onOpenOmniCast: () -> Unit,
         onStopCast: () -> Unit,
         onDisableOverlay: () -> Unit
-    ): View {
+    ): FloatingMenuController {
         val menuDrawable = GradientDrawable().apply {
             setColor(Color.parseColor("#F80F172A")); cornerRadius = dpToPx(14f).toFloat(); setStroke(dpToPx(1f), Color.parseColor("#334155"))
         }
@@ -71,18 +84,28 @@ class FloatingViewBuilder(private val context: Context) {
             setPadding(dpToPx(14f), dpToPx(14f), dpToPx(14f), dpToPx(14f))
         }
         val menuTitle = TextView(context).apply {
-            text = "OmniCast v3.29 Asistente"; setTextColor(Color.parseColor("#38BDF8")); setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f); typeface = Typeface.DEFAULT_BOLD
+            text = "OmniCast Asistente"; setTextColor(Color.parseColor("#38BDF8")); setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f); typeface = Typeface.DEFAULT_BOLD
         }
         innerMenu.addView(menuTitle)
-        innerMenu.addView(createBtn("⚙️ Abrir OmniCast", "#334155", onOpenOmniCast))
-        innerMenu.addView(createBtn("❌ Desactivar Asistente", "#475569", onDisableOverlay))
-        innerMenu.addView(createBtn("🛑 Detener Transmisión", "#DC2626", onStopCast))
-        innerMenu.addView(createBtn("📱 Proyectar Pantalla (Toda)", "#2563EB", onStartScreenMirror))
-        innerMenu.addView(createBtn("🔍 Zoom TV (Fit / Reducir / 16:9)", "#8B5CF6", onToggleTvScale))
-        innerMenu.addView(createBtn("🖼️ Enviar Foto con Zoom Táctil", "#059669", onCastGallery))
-        innerMenu.addView(createBtn("🌐 Abrir Browser Omni", "#0D9488", onOpenBrowser))
+
+        val btnOpenOmni = createBtn("⚙️ Abrir OmniCast", "#334155", onOpenOmniCast)
+        val btnDisableOverlay = createBtn("❌ Desactivar Asistente", "#475569", onDisableOverlay)
+        val btnStopCast = createBtn("🛑 Detener Transmisión", "#DC2626", onStopCast)
+        val btnStartMirror = createBtn("📱 Proyectar Pantalla (Toda)", "#2563EB", onStartScreenMirror)
+        val btnZoomTv = createBtn("🔍 Zoom TV", "#8B5CF6", onToggleTvScale)
+        val btnGallery = createBtn("🖼️ Enviar Foto (Galería)", "#059669", onCastGallery)
+        val btnOpenBrowser = createBtn("🌐 Abrir Browser Omni", "#0D9488", onOpenBrowser)
+        val btnDetectVideo = createBtn("🔍 Detectar Flujo de Video", "#0284C7", onDetectVideo)
+
+        innerMenu.addView(btnOpenOmni)
+        innerMenu.addView(btnDisableOverlay)
+        innerMenu.addView(btnStopCast)
+        innerMenu.addView(btnStartMirror)
+        innerMenu.addView(btnZoomTv)
+        innerMenu.addView(btnGallery)
+        innerMenu.addView(btnOpenBrowser)
         innerMenu.addView(statusFeedbackText)
-        innerMenu.addView(createBtn("🔍 Detectar Flujo de Video", "#0284C7", onDetectVideo))
+        innerMenu.addView(btnDetectVideo)
 
         val scrollView = object : android.widget.ScrollView(context) {
             override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
@@ -98,7 +121,58 @@ class FloatingViewBuilder(private val context: Context) {
             layoutParams = LinearLayout.LayoutParams(dpToPx(240f), LinearLayout.LayoutParams.WRAP_CONTENT).apply { topMargin = dpToPx(8f) }
             addView(innerMenu)
         }
-        return scrollView
+
+        fun applyMode(mode: com.omnicast.sender.service.ActiveCastMode, zoomLabel: String) {
+            btnZoomTv.text = "🔍 Zoom TV: $zoomLabel"
+            when (mode) {
+                com.omnicast.sender.service.ActiveCastMode.SCREEN_MIRROR -> {
+                    btnOpenOmni.visibility = View.VISIBLE
+                    btnDisableOverlay.visibility = View.VISIBLE
+                    btnZoomTv.visibility = View.VISIBLE
+                    btnStopCast.visibility = View.VISIBLE
+                    btnDetectVideo.visibility = View.GONE
+                    btnStartMirror.visibility = View.GONE
+                    btnGallery.visibility = View.GONE
+                    btnOpenBrowser.visibility = View.GONE
+                }
+                com.omnicast.sender.service.ActiveCastMode.GALLERY -> {
+                    btnOpenOmni.visibility = View.VISIBLE
+                    btnDisableOverlay.visibility = View.VISIBLE
+                    btnStopCast.visibility = View.VISIBLE
+                    btnZoomTv.visibility = View.GONE
+                    btnDetectVideo.visibility = View.GONE
+                    btnStartMirror.visibility = View.GONE
+                    btnGallery.visibility = View.GONE
+                    btnOpenBrowser.visibility = View.GONE
+                }
+                com.omnicast.sender.service.ActiveCastMode.WEB_STREAM -> {
+                    btnOpenOmni.visibility = View.VISIBLE
+                    btnDisableOverlay.visibility = View.VISIBLE
+                    btnDetectVideo.visibility = View.VISIBLE
+                    btnZoomTv.visibility = View.VISIBLE
+                    btnStopCast.visibility = View.VISIBLE
+                    btnStartMirror.visibility = View.GONE
+                    btnGallery.visibility = View.GONE
+                    btnOpenBrowser.visibility = View.GONE
+                }
+                com.omnicast.sender.service.ActiveCastMode.IDLE -> {
+                    btnOpenOmni.visibility = View.VISIBLE
+                    btnStartMirror.visibility = View.VISIBLE
+                    btnOpenBrowser.visibility = View.VISIBLE
+                    btnGallery.visibility = View.VISIBLE
+                    btnDisableOverlay.visibility = View.VISIBLE
+                    btnStopCast.visibility = View.GONE
+                    btnZoomTv.visibility = View.GONE
+                    btnDetectVideo.visibility = View.GONE
+                }
+            }
+        }
+
+        return FloatingMenuController(
+            rootView = scrollView,
+            applyModeFn = ::applyMode,
+            updateZoomLabelFn = { label -> btnZoomTv.text = "🔍 Zoom TV: $label" }
+        )
     }
 
     fun buildExitConfirmation(onConfirmClose: () -> Unit, onCancel: () -> Unit): LinearLayout {

@@ -51,6 +51,7 @@ class FloatingIndicatorService : Service() {
     private var rootLayout: LinearLayout? = null
     private var pillLayoutRef: View? = null
     private var dotViewRef: View? = null
+    private var menuControllerRef: FloatingViewBuilder.FloatingMenuController? = null
     private var layoutParamsRef: WindowManager.LayoutParams? = null
     private var isExpanded = false
     private lateinit var clipboardExtractor: ClipboardStreamExtractor
@@ -72,6 +73,10 @@ class FloatingIndicatorService : Service() {
         if (changed) {
             try { windowManager?.updateViewLayout(rootLayout, layoutParamsRef) } catch (_: Throwable) {}
         }
+        menuControllerRef?.applyMode(
+            com.omnicast.sender.service.CastSessionState.getCurrentMode(),
+            com.omnicast.sender.service.TvZoomManager.getCurrent().label
+        )
     }
 
     override fun onCreate() {
@@ -115,7 +120,7 @@ class FloatingIndicatorService : Service() {
         val exitConfirmLayout = builder.buildExitConfirmation(onConfirmClose = { stopSelf() }, onCancel = { exitConfirmRef?.visibility = View.GONE })
         exitConfirmRef = exitConfirmLayout
 
-        val menuLayout = builder.buildMenu(
+        val menuController = builder.buildMenu(
             statusFeedbackText = statusFeedbackText,
             onDetectVideo = {
                 val actUrl = com.omnicast.sender.stream.ActiveStreamHolder.streamUrl
@@ -194,6 +199,7 @@ class FloatingIndicatorService : Service() {
                 }
                 statusFeedbackText.text = preset.label
                 statusFeedbackText.setTextColor(Color.parseColor("#38BDF8"))
+                menuControllerRef?.updateZoomLabel(preset.label)
                 Toast.makeText(this, preset.label, Toast.LENGTH_SHORT).show()
             },
             onOpenOmniCast = {
@@ -213,6 +219,8 @@ class FloatingIndicatorService : Service() {
                 stopSelf()
             }
         )
+        menuControllerRef = menuController
+        val menuLayout = menuController.rootView
         menuLayoutRef = menuLayout
 
         pillLayoutRef = pillLayout; dotViewRef = dotView; layoutParamsRef = windowLayoutParams
@@ -220,7 +228,16 @@ class FloatingIndicatorService : Service() {
 
         val toggleMenu = {
             if (exitConfirmLayout.visibility == View.VISIBLE) exitConfirmLayout.visibility = View.GONE
-            else { isExpanded = !isExpanded; menuLayout.visibility = if (isExpanded) View.VISIBLE else View.GONE }
+            else {
+                isExpanded = !isExpanded
+                if (isExpanded) {
+                    menuController.applyMode(
+                        com.omnicast.sender.service.CastSessionState.getCurrentMode(),
+                        com.omnicast.sender.service.TvZoomManager.getCurrent().label
+                    )
+                }
+                menuLayout.visibility = if (isExpanded) View.VISIBLE else View.GONE
+            }
         }
         pillLayout.setOnClickListener { toggleMenu() }
         dotView.setOnClickListener { toggleMenu() }
@@ -262,7 +279,7 @@ class FloatingIndicatorService : Service() {
         super.onDestroy(); isRunning = false; instance = null
         pollRunnable?.let { handler.removeCallbacks(it) }
         try { rootLayout?.let { windowManager?.removeView(it) } } catch (e: Throwable) { Log.e(TAG, "Error remove", e) }
-        rootLayout = null; pillLayoutRef = null; dotViewRef = null
+        rootLayout = null; pillLayoutRef = null; dotViewRef = null; menuControllerRef = null
     }
 
     override fun onBind(intent: Intent?): IBinder? = null

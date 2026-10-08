@@ -73,6 +73,7 @@ class PhotoCastViewerActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        com.omnicast.sender.service.CastSessionState.isGalleryCasting = true
 
         val holderPhotos = GallerySessionHolder.activePhotos
         val startIdxExtra = intent.getIntExtra("EXTRA_START_INDEX", GallerySessionHolder.activeIndex)
@@ -235,6 +236,7 @@ class PhotoCastViewerActivity : ComponentActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        com.omnicast.sender.service.CastSessionState.isGalleryCasting = false
         signalingClient = null
     }
 }

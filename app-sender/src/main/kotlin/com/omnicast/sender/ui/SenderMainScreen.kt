@@ -55,7 +55,7 @@ fun SenderMainScreen(
     var showConfigDialog by remember { mutableStateOf(false) }
     var showHelpDialog by remember { mutableStateOf(false) }
     var showSideDrawer by remember { mutableStateOf(false) }
-    var tooltipsEnabled by remember { mutableStateOf(prefs.getBoolean("saved_tooltips_enabled", true)) }
+    var tooltipsEnabled by remember { mutableStateOf(prefs.getBoolean("saved_tooltips_enabled", false)) }
 
     LaunchedEffect(initialOpenBrowser) { if (initialOpenBrowser) showInAppBrowser = true }
     LaunchedEffect(initialOpenGallery) {

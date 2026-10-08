@@ -77,12 +77,12 @@ fun SenderHeaderBar(
                     modifier = Modifier
                         .size(36.dp)
                         .background(
-                            color = if (tooltipsEnabled) Color(0xFF064E3B) else Color(0xFF334155),
+                            color = if (tooltipsEnabled) Color(0xFFD1FAE5) else Color(0xFFE2E8F0),
                             shape = CircleShape
                         )
                         .border(
                             width = 1.5.dp,
-                            color = if (tooltipsEnabled) Color(0xFF10B981) else Color(0xFF475569),
+                            color = if (tooltipsEnabled) Color(0xFF10B981) else Color(0xFF94A3B8),
                             shape = CircleShape
                         )
                         .clickable { onToggleTooltips(!tooltipsEnabled) },

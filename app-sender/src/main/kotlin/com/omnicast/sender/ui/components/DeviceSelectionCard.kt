@@ -40,43 +40,66 @@ fun DeviceSelectionCard(
     ) {
         Surface(
             color = OmniThemeColors.CardSurface,
-            shape = RoundedCornerShape(12.dp),
+            shape = RoundedCornerShape(14.dp),
             border = androidx.compose.foundation.BorderStroke(
-                1.dp,
-                if (isConnected) OmniThemeColors.EmeraldAccent.copy(alpha = 0.6f) else OmniThemeColors.CardBorder
+                1.2.dp,
+                if (isConnected) OmniThemeColors.EmeraldAccent else OmniThemeColors.CardBorder
             ),
             modifier = Modifier.fillMaxWidth()
         ) {
             Column(
-                modifier = Modifier.padding(14.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = "📡 TV Receptora",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = OmniThemeColors.TextPrimary
-                    )
-                    Text(
-                        text = if (isConnected) "🟢 En Línea" else "⚪ Desconectado",
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = if (isConnected) OmniThemeColors.EmeraldAccent else OmniThemeColors.TextSecondary
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text("📺", fontSize = 20.sp)
+                        Text(
+                            text = "TV Receptora",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = OmniThemeColors.TextPrimary
+                        )
+                    }
+
+                    Surface(
+                        color = if (isConnected) Color(0xFFD1FAE5) else Color(0xFFF1F5F9),
+                        border = androidx.compose.foundation.BorderStroke(
+                            1.dp,
+                            if (isConnected) Color(0xFF10B981) else Color(0xFFCBD5E1)
+                        ),
+                        shape = RoundedCornerShape(20.dp)
+                    ) {
+                        Text(
+                            text = if (isConnected) "● En Línea" else "○ Desconectado",
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = if (isConnected) Color(0xFF065F46) else Color(0xFF64748B)
+                        )
+                    }
                 }
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     Column(modifier = Modifier.weight(2f)) {
-                        Text("IP de la TV", fontSize = 10.sp, color = OmniThemeColors.TextMuted)
+                        Text(
+                            text = "Dirección IP de la TV",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = OmniThemeColors.TextSecondary
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
                         BasicTextField(
                             value = manualIp,
                             onValueChange = onManualIpChange,
@@ -85,17 +108,23 @@ fun DeviceSelectionCard(
                                 .fillMaxWidth()
                                 .background(OmniThemeColors.InputBackground, RoundedCornerShape(8.dp))
                                 .border(1.dp, OmniThemeColors.CardBorder, RoundedCornerShape(8.dp))
-                                .padding(horizontal = 10.dp, vertical = 7.dp),
+                                .padding(horizontal = 12.dp, vertical = 9.dp),
                             textStyle = TextStyle(
                                 color = OmniThemeColors.TextPrimary,
-                                fontSize = 13.sp,
-                                fontWeight = FontWeight.SemiBold
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold
                             )
                         )
                     }
 
                     Column(modifier = Modifier.weight(1f)) {
-                        Text("Puerto", fontSize = 10.sp, color = OmniThemeColors.TextMuted)
+                        Text(
+                            text = "Puerto",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = OmniThemeColors.TextSecondary
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
                         BasicTextField(
                             value = manualPort,
                             onValueChange = onManualPortChange,
@@ -104,11 +133,11 @@ fun DeviceSelectionCard(
                                 .fillMaxWidth()
                                 .background(OmniThemeColors.InputBackground, RoundedCornerShape(8.dp))
                                 .border(1.dp, OmniThemeColors.CardBorder, RoundedCornerShape(8.dp))
-                                .padding(horizontal = 10.dp, vertical = 7.dp),
+                                .padding(horizontal = 12.dp, vertical = 9.dp),
                             textStyle = TextStyle(
                                 color = OmniThemeColors.TextPrimary,
-                                fontSize = 13.sp,
-                                fontWeight = FontWeight.SemiBold
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold
                             )
                         )
                     }
@@ -119,10 +148,10 @@ fun DeviceSelectionCard(
                             containerColor = if (isConnected) OmniThemeColors.EmeraldAccent else OmniThemeColors.BlueAccent
                         ),
                         shape = RoundedCornerShape(8.dp),
-                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp),
                         modifier = Modifier
-                            .padding(top = 14.dp)
-                            .height(36.dp)
+                            .padding(top = 18.dp)
+                            .height(40.dp)
                     ) {
                         Text(
                             text = if (isConnected) "✓ Listo" else "⚡ Conectar",
@@ -139,14 +168,14 @@ fun DeviceSelectionCard(
                         horizontalArrangement = Arrangement.spacedBy(6.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("Detectadas:", color = OmniThemeColors.TextMuted, fontSize = 10.sp)
+                        Text("Detectadas:", color = OmniThemeColors.TextMuted, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
                         discoveredDevices.take(2).forEach { dev ->
                             val isSel = selectedDevice?.id == dev.id
                             Surface(
-                                color = if (isSel) OmniThemeColors.BlueAccent.copy(alpha = 0.3f) else OmniThemeColors.InputBackground,
+                                color = if (isSel) Color(0xFFE0F2FE) else Color(0xFFF8FAFC),
                                 border = androidx.compose.foundation.BorderStroke(
                                     1.dp,
-                                    if (isSel) OmniThemeColors.CyanAccent else OmniThemeColors.CardBorder
+                                    if (isSel) Color(0xFF0284C7) else Color(0xFFCBD5E1)
                                 ),
                                 shape = RoundedCornerShape(6.dp),
                                 modifier = Modifier.clickable {
@@ -158,12 +187,22 @@ fun DeviceSelectionCard(
                                 Text(
                                     text = "${dev.name} (${dev.ipAddress})",
                                     fontSize = 11.sp,
-                                    color = if (isSel) OmniThemeColors.CyanAccent else OmniThemeColors.TextSecondary,
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                                    fontWeight = if (isSel) FontWeight.Bold else FontWeight.Normal,
+                                    color = if (isSel) Color(0xFF0284C7) else Color(0xFF334155),
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                                 )
                             }
                         }
                     }
+                }
+
+                if (tooltipsEnabled) {
+                    Text(
+                        text = "💡 Enlaza el celular con tu Android TV Box en la misma red Wi-Fi para transmitir video, fotos y pantalla.",
+                        color = OmniThemeColors.TextSecondary,
+                        fontSize = 11.sp,
+                        modifier = Modifier.padding(top = 2.dp)
+                    )
                 }
             }
         }

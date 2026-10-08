@@ -47,15 +47,15 @@ fun MainActionCards(
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
 
         // ==========================================
-        // 1. CAPTURA WEB — DISTINTIVO CYAN / CELESTE
+        // 1. CAPTURA WEB — DISTINTIVO CELESTE LUMINOSO
         // ==========================================
         Surface(
-            color = Color(0xFF0C2D48), // Azul océano profundo tintado
-            shape = RoundedCornerShape(10.dp),
-            border = androidx.compose.foundation.BorderStroke(1.2.dp, Color(0xFF0284C7)),
+            color = Color(0xFFE0F2FE), // Celeste luminoso y fresco
+            shape = RoundedCornerShape(12.dp),
+            border = androidx.compose.foundation.BorderStroke(1.2.dp, Color(0xFF38BDF8)),
             modifier = Modifier.fillMaxWidth()
         ) {
-            Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 9.dp)) {
+            Column(modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
@@ -65,31 +65,31 @@ fun MainActionCards(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Text("🌐", fontSize = 18.sp)
+                        Text("🌐", fontSize = 20.sp)
                         Text(
                             text = "Captura Web",
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF38BDF8)
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = Color(0xFF0369A1)
                         )
                     }
 
                     Button(
                         onClick = onOpenBrowser,
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0284C7)),
-                        shape = RoundedCornerShape(7.dp),
-                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
-                        modifier = Modifier.height(32.dp)
+                        shape = RoundedCornerShape(8.dp),
+                        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 5.dp),
+                        modifier = Modifier.height(34.dp)
                     ) {
-                        Text("🚀 Abrir Web", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                        Text("🚀 Abrir Web", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.White)
                     }
                 }
 
                 if (tooltipsEnabled) {
                     Text(
                         text = "💡 Navega sitios de fútbol o películas, bloquea anuncios y envía el stream directo a la TV sin gastar batería.",
-                        color = Color(0xFFBAE6FD),
-                        fontSize = 10.sp,
+                        color = Color(0xFF075985),
+                        fontSize = 11.sp,
                         modifier = Modifier.padding(top = 4.dp)
                     )
                 }
@@ -97,20 +97,20 @@ fun MainActionCards(
         }
 
         // ==========================================
-        // 2. CASTEO-TV — DISTINTIVO ÍNDIGO / VIOLETA
+        // 2. CASTEO-TV — DISTINTIVO VIOLETA LUMINOSO
         // ==========================================
         Surface(
-            color = Color(0xFF261D4E), // Púrpura índigo tintado
-            shape = RoundedCornerShape(10.dp),
+            color = Color(0xFFEEF2FF), // Violeta índigo suave y moderno
+            shape = RoundedCornerShape(12.dp),
             border = androidx.compose.foundation.BorderStroke(
                 1.2.dp,
-                if (isStreaming) Color(0xFF10B981) else Color(0xFF6366F1)
+                if (isStreaming) Color(0xFF10B981) else Color(0xFF818CF8)
             ),
             modifier = Modifier.fillMaxWidth()
         ) {
             Column(
-                modifier = Modifier.padding(horizontal = 12.dp, vertical = 9.dp),
-                verticalArrangement = Arrangement.spacedBy(6.dp)
+                modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -121,12 +121,12 @@ fun MainActionCards(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Text("📱", fontSize = 18.sp)
+                        Text("📱", fontSize = 20.sp)
                         Text(
                             text = "Casteo-TV",
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFFA5B4FC)
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = Color(0xFF4338CA)
                         )
                     }
 
@@ -139,13 +139,13 @@ fun MainActionCards(
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = if (!isStreaming) Color(0xFF4F46E5) else Color(0xFFDC2626)
                             ),
-                            shape = RoundedCornerShape(7.dp),
-                            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
-                            modifier = Modifier.height(32.dp)
+                            shape = RoundedCornerShape(8.dp),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 5.dp),
+                            modifier = Modifier.height(34.dp)
                         ) {
                             Text(
                                 text = if (!isStreaming) "📺 Proyectar" else "🛑 Detener",
-                                fontSize = 11.sp,
+                                fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White
                             )
@@ -153,68 +153,69 @@ fun MainActionCards(
 
                         Box(
                             modifier = Modifier
-                                .size(32.dp)
-                                .background(Color(0xFF1E1B4B), RoundedCornerShape(7.dp))
-                                .border(1.dp, Color(0xFF4338CA), RoundedCornerShape(7.dp))
+                                .size(34.dp)
+                                .background(Color.White, RoundedCornerShape(8.dp))
+                                .border(1.dp, Color(0xFFC7D2FE), RoundedCornerShape(8.dp))
                                 .clickable { onOpenProjectionConfig() },
                             contentAlignment = Alignment.Center
                         ) {
-                            Text("⚙️", fontSize = 14.sp)
+                            Text("⚙️", fontSize = 15.sp)
                         }
                     }
                 }
 
-                // Resumen compacto en una sola línea sutil
+                // Resumen en vivo nítido y claro
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(Color(0xFF191338), RoundedCornerShape(6.dp))
-                        .padding(horizontal = 8.dp, vertical = 3.dp),
+                        .background(Color.White, RoundedCornerShape(8.dp))
+                        .border(1.dp, Color(0xFFE0E7FF), RoundedCornerShape(8.dp))
+                        .padding(horizontal = 10.dp, vertical = 4.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
                         text = "Anti-Tirones: ${if (smoothBufferEnabled) "Sí" else "No"}",
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = if (smoothBufferEnabled) Color(0xFF34D399) else Color(0xFF94A3B8)
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = if (smoothBufferEnabled) Color(0xFF059669) else Color(0xFF64748B)
                     )
-                    Text("•", color = Color(0xFF4338CA), fontSize = 10.sp)
+                    Text("•", color = Color(0xFFC7D2FE), fontSize = 11.sp)
                     Text(
                         text = "R/F: $rfShort",
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = Color(0xFF818CF8)
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF4F46E5)
                     )
-                    Text("•", color = Color(0xFF4338CA), fontSize = 10.sp)
+                    Text("•", color = Color(0xFFC7D2FE), fontSize = 11.sp)
                     Text(
                         text = "Zoom: $zoomDisplayLabel",
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = Color(0xFFFBBF24)
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFFD97706)
                     )
                 }
 
                 if (tooltipsEnabled) {
                     Text(
                         text = "💡 Duplica la pantalla por hardware a 60 FPS con audio interno. Toca la tuerca ⚙️ para cambiar resolución o zoom.",
-                        color = Color(0xFFC7D2FE),
-                        fontSize = 10.sp
+                        color = Color(0xFF3730A3),
+                        fontSize = 11.sp
                     )
                 }
             }
         }
 
         // ==========================================
-        // 3. GALERÍA — DISTINTIVO VERDE ESMERALDA
+        // 3. GALERÍA — DISTINTIVO ESMERALDA LUMINOSO
         // ==========================================
         Surface(
-            color = Color(0xFF063E2F), // Verde esmeralda profundo tintado
-            shape = RoundedCornerShape(10.dp),
-            border = androidx.compose.foundation.BorderStroke(1.2.dp, Color(0xFF059669)),
+            color = Color(0xFFECFDF5), // Menta/esmeralda luminoso y natural
+            shape = RoundedCornerShape(12.dp),
+            border = androidx.compose.foundation.BorderStroke(1.2.dp, Color(0xFF34D399)),
             modifier = Modifier.fillMaxWidth()
         ) {
-            Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 9.dp)) {
+            Column(modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
@@ -224,12 +225,12 @@ fun MainActionCards(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Text("🖼️", fontSize = 18.sp)
+                        Text("🖼️", fontSize = 20.sp)
                         Text(
                             text = "Galería",
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF6EE7B7)
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = Color(0xFF065F46)
                         )
                     }
 
@@ -237,21 +238,21 @@ fun MainActionCards(
                         Button(
                             onClick = onOpenGallery,
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF059669)),
-                            shape = RoundedCornerShape(7.dp),
-                            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
-                            modifier = Modifier.height(32.dp)
+                            shape = RoundedCornerShape(8.dp),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 5.dp),
+                            modifier = Modifier.height(34.dp)
                         ) {
-                            Text("📷 Fotos", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                            Text("📷 Fotos", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.White)
                         }
 
                         FilledTonalButton(
                             onClick = onPickExternalFile,
-                            colors = ButtonDefaults.filledTonalButtonColors(containerColor = Color(0xFF0F5132)),
-                            shape = RoundedCornerShape(7.dp),
-                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
-                            modifier = Modifier.height(32.dp)
+                            colors = ButtonDefaults.filledTonalButtonColors(containerColor = Color(0xFFD1FAE5)),
+                            shape = RoundedCornerShape(8.dp),
+                            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 5.dp),
+                            modifier = Modifier.height(34.dp)
                         ) {
-                            Text("📁 Otros", fontSize = 11.sp, color = Color(0xFFA7F3D0))
+                            Text("📁 Otros", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color(0xFF065F46))
                         }
                     }
                 }
@@ -259,8 +260,8 @@ fun MainActionCards(
                 if (tooltipsEnabled) {
                     Text(
                         text = "💡 Transmite tus fotos en alta definición con zoom táctil y rotación sincronizada en tiempo real con la TV Box.",
-                        color = Color(0xFFA7F3D0),
-                        fontSize = 10.sp,
+                        color = Color(0xFF064E3B),
+                        fontSize = 11.sp,
                         modifier = Modifier.padding(top = 4.dp)
                     )
                 }

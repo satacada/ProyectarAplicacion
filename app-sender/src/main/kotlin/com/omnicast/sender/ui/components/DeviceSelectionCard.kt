@@ -5,18 +5,20 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.omnicast.core.domain.models.DeviceTarget
 
 /**
- * Tarjeta de selección de receptor TV Box (vía mDNS o IP directa).
+ * Barra ultra-compacta y estilizada de conexión a TV Receptora.
  */
 @Composable
 fun DeviceSelectionCard(
@@ -32,110 +34,75 @@ fun DeviceSelectionCard(
     onConnect: () -> Unit = {}
 ) {
     OmniTooltip(
-        text = "¿Quieres conocer esta opción?\n" +
-                "Conecta tu teléfono a la TV Box en la misma red Wi-Fi local para transmitir pantalla, videos o fotos.",
+        text = "¿Quieres conocer esta opción?\nConexión directa por Wi-Fi a tu Android TV Box.",
         enabled = tooltipsEnabled
     ) {
-        Card(
-            colors = CardDefaults.cardColors(containerColor = Color(0xFF1E293B)),
-            shape = RoundedCornerShape(14.dp),
+        Surface(
+            color = Color(0xFF1E293B),
+            shape = RoundedCornerShape(10.dp),
+            border = androidx.compose.foundation.BorderStroke(
+                1.dp,
+                if (isConnected) Color(0xFF10B981) else Color(0xFF334155)
+            ),
             modifier = Modifier.fillMaxWidth()
         ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 10.dp, vertical = 6.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                Text("📡 TV Box Receptora", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
                 Text(
-                    text = if (isConnected) "🟢 En Línea" else "⚪ Desconectado",
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = if (isConnected) Color(0xFF10B981) else Color(0xFF94A3B8)
+                    text = "📡 TV:",
+                    color = if (isConnected) Color(0xFF34D399) else Color(0xFF38BDF8),
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 12.sp
                 )
-            }
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                OutlinedTextField(
+                BasicTextField(
                     value = manualIp,
                     onValueChange = onManualIpChange,
-                    label = { Text("IP de TV Box") },
-                    modifier = Modifier.weight(2f),
                     singleLine = true,
-                    shape = RoundedCornerShape(8.dp)
+                    modifier = Modifier
+                        .weight(2f)
+                        .background(Color(0xFF0F172A), RoundedCornerShape(6.dp))
+                        .border(1.dp, Color(0xFF334155), RoundedCornerShape(6.dp))
+                        .padding(horizontal = 8.dp, vertical = 5.dp),
+                    textStyle = TextStyle(color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                 )
-                OutlinedTextField(
+
+                Text(":", color = Color(0xFF64748B), fontWeight = FontWeight.Bold, fontSize = 12.sp)
+
+                BasicTextField(
                     value = manualPort,
                     onValueChange = onManualPortChange,
-                    label = { Text("Puerto") },
-                    modifier = Modifier.weight(1f),
                     singleLine = true,
-                    shape = RoundedCornerShape(8.dp)
+                    modifier = Modifier
+                        .weight(0.9f)
+                        .background(Color(0xFF0F172A), RoundedCornerShape(6.dp))
+                        .border(1.dp, Color(0xFF334155), RoundedCornerShape(6.dp))
+                        .padding(horizontal = 6.dp, vertical = 5.dp),
+                    textStyle = TextStyle(color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                 )
-            }
 
-            Button(
-                onClick = onConnect,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = if (isConnected) Color(0xFF059669) else Color(0xFF2563EB)
-                ),
-                shape = RoundedCornerShape(8.dp),
-                modifier = Modifier.fillMaxWidth().height(42.dp)
-            ) {
-                Text(
-                    if (isConnected) "✓ Conectado a TV ($manualIp)" else "⚡ Conectar con TV",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 14.sp
-                )
-            }
-
-            if (discoveredDevices.isNotEmpty()) {
-                Text("Dispositivos descubiertos en red local:", fontSize = 12.sp, color = Color(0xFF94A3B8))
-                discoveredDevices.forEach { device ->
-                    val isSelected = selectedDevice?.id == device.id
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(
-                                color = if (isSelected) Color(0xFF1E3A8A) else Color(0xFF0F172A),
-                                shape = RoundedCornerShape(8.dp)
-                            )
-                            .border(
-                                width = if (isSelected) 1.dp else 0.dp,
-                                color = if (isSelected) Color(0xFF38BDF8) else Color.Transparent,
-                                shape = RoundedCornerShape(8.dp)
-                            )
-                            .clickable {
-                                onSelectDevice(device)
-                                onManualIpChange(device.ipAddress)
-                                onManualPortChange(device.port.toString())
-                            }
-                            .padding(12.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Column {
-                                Text(device.name, color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-                                Text("${device.ipAddress}:${device.port}", color = Color.LightGray, fontSize = 12.sp)
-                            }
-                            if (isSelected) {
-                                Text("✓ Seleccionado", color = Color(0xFF38BDF8), fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                            }
-                        }
-                    }
+                Button(
+                    onClick = onConnect,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (isConnected) Color(0xFF059669) else Color(0xFF2563EB)
+                    ),
+                    shape = RoundedCornerShape(6.dp),
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
+                    modifier = Modifier.height(30.dp)
+                ) {
+                    Text(
+                        text = if (isConnected) "🟢 Enlazado" else "⚡ Conectar",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
                 }
             }
         }
     }
-}
 }

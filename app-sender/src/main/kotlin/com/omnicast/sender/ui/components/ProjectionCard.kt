@@ -16,8 +16,7 @@ import androidx.compose.ui.unit.sp
 import com.omnicast.core.domain.models.StreamProfile
 
 /**
- * Tarjeta de acción de Casteo-TV en la pantalla principal.
- * Contiene el botón de Proyectar/Detener, la tuerca de configuración y el resumen en vivo.
+ * Tarjeta compacta y vibrante de control de Casteo-TV.
  */
 @Composable
 fun ProjectionCard(
@@ -42,42 +41,56 @@ fun ProjectionCard(
 
     val rfShort = selectedProfile.label.replace(" @ ", "@")
 
-    Card(
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF1E293B)),
-        shape = RoundedCornerShape(14.dp),
+    Surface(
+        color = Color(0xFF1E293B),
+        shape = RoundedCornerShape(12.dp),
+        border = androidx.compose.foundation.BorderStroke(
+            1.dp,
+            if (isStreaming) Color(0xFF10B981) else Color(0xFF3B82F6)
+        ),
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            modifier = Modifier.padding(10.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Column {
-                    Text(
-                        text = "📱 Casteo-TV (Pantalla Completa)",
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
-                    Text(
-                        text = if (isStreaming) "🟢 Transmitiendo a la TV" else "Duplica la pantalla del móvil a baja latencia",
-                        fontSize = 12.sp,
-                        color = if (isStreaming) Color(0xFF10B981) else Color(0xFF94A3B8)
-                    )
+                OmniTooltip(
+                    text = if (!isStreaming) "Inicia la captura y duplicación de pantalla en la TV Box."
+                    else "Detiene la transmisión actual.",
+                    enabled = tooltipsEnabled,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Button(
+                        onClick = if (!isStreaming) onStartProjection else onStopProjection,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (!isStreaming) Color(0xFF2563EB) else Color(0xFFDC2626)
+                        ),
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier.fillMaxWidth().height(40.dp)
+                    ) {
+                        Text(
+                            text = if (!isStreaming) "📺 Iniciar Proyección" else "🛑 Detener Proyección",
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                    }
                 }
 
                 OmniTooltip(
-                    text = "¿Quieres conocer esta opción?\nAbre el panel para cambiar resolución, FPS, suavizado anti-tirones y zoom.",
+                    text = "Ajustes: Resolución, FPS, suavizado anti-tirones y proporción de TV.",
                     enabled = tooltipsEnabled
                 ) {
                     Box(
                         modifier = Modifier
                             .size(40.dp)
-                            .background(Color(0xFF334155), RoundedCornerShape(10.dp))
+                            .background(Color(0xFF334155), RoundedCornerShape(8.dp))
+                            .border(1.dp, Color(0xFF475569), RoundedCornerShape(8.dp))
                             .clickable { onOpenConfig() },
                         contentAlignment = Alignment.Center
                     ) {
@@ -86,68 +99,35 @@ fun ProjectionCard(
                 }
             }
 
-            // Resumen en vivo solicitado por el usuario sin tener que dar clic en la rueda
-            OmniTooltip(
-                text = "Resumen de transmisión activo:\nAnti-Tirones, Resolución/FPS y proporción en TV seleccionada.",
-                enabled = tooltipsEnabled
+            // Resumen en vivo en una línea compacta
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color(0xFF0F172A), RoundedCornerShape(6.dp))
+                    .padding(horizontal = 8.dp, vertical = 5.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(Color(0xFF0F172A), RoundedCornerShape(8.dp))
-                        .padding(horizontal = 10.dp, vertical = 6.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "Anti-Tirones: ${if (smoothBufferEnabled) "Activado" else "Desactivado"}",
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = if (smoothBufferEnabled) Color(0xFF10B981) else Color(0xFF94A3B8)
-                    )
-                    Text("•", color = Color(0xFF475569), fontSize = 11.sp)
-                    Text(
-                        text = "R/F: $rfShort",
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = Color(0xFF38BDF8)
-                    )
-                    Text("•", color = Color(0xFF475569), fontSize = 11.sp)
-                    Text(
-                        text = "Zoom: $zoomDisplayLabel",
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = Color(0xFFFBBF24)
-                    )
-                }
-            }
-
-            // Botón de acción principal
-            OmniTooltip(
-                text = "¿Quieres conocer esta opción?\n" +
-                        if (!isStreaming) "Inicia la captura y duplicación de pantalla por GPU a la TV Box."
-                        else "Detiene la transmisión actual y libera los recursos de captura.",
-                enabled = tooltipsEnabled
-            ) {
-                if (!isStreaming) {
-                    Button(
-                        onClick = onStartProjection,
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2563EB)),
-                        shape = RoundedCornerShape(10.dp),
-                        modifier = Modifier.fillMaxWidth().height(46.dp)
-                    ) {
-                        Text("📺 Iniciar Proyección", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                    }
-                } else {
-                    Button(
-                        onClick = onStopProjection,
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDC2626)),
-                        shape = RoundedCornerShape(10.dp),
-                        modifier = Modifier.fillMaxWidth().height(46.dp)
-                    ) {
-                        Text("🛑 Detener Transmisión", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                    }
-                }
+                Text(
+                    text = "Anti-Tirones: ${if (smoothBufferEnabled) "Sí" else "No"}",
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = if (smoothBufferEnabled) Color(0xFF34D399) else Color(0xFF94A3B8)
+                )
+                Text("•", color = Color(0xFF475569), fontSize = 10.sp)
+                Text(
+                    text = "R/F: $rfShort",
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF38BDF8)
+                )
+                Text("•", color = Color(0xFF475569), fontSize = 10.sp)
+                Text(
+                    text = "Zoom: $zoomDisplayLabel",
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFFFBBF24)
+                )
             }
         }
     }

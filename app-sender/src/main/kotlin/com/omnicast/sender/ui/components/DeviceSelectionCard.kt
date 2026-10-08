@@ -16,9 +16,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.omnicast.core.domain.models.DeviceTarget
+import com.omnicast.sender.ui.theme.OmniThemeColors
 
 /**
- * Barra ultra-compacta y estilizada de conexión a TV Receptora.
+ * Tarjeta armónica para la configuración y enlace con la TV Receptora.
  */
 @Composable
 fun DeviceSelectionCard(
@@ -34,73 +35,135 @@ fun DeviceSelectionCard(
     onConnect: () -> Unit = {}
 ) {
     OmniTooltip(
-        text = "¿Quieres conocer esta opción?\nConexión directa por Wi-Fi a tu Android TV Box.",
+        text = "¿Quieres conocer esta opción?\nEnlaza el celular con tu Android TV Box en la misma red Wi-Fi.",
         enabled = tooltipsEnabled
     ) {
         Surface(
-            color = Color(0xFF1E293B),
-            shape = RoundedCornerShape(10.dp),
+            color = OmniThemeColors.CardSurface,
+            shape = RoundedCornerShape(12.dp),
             border = androidx.compose.foundation.BorderStroke(
                 1.dp,
-                if (isConnected) Color(0xFF10B981) else Color(0xFF334155)
+                if (isConnected) OmniThemeColors.EmeraldAccent.copy(alpha = 0.6f) else OmniThemeColors.CardBorder
             ),
             modifier = Modifier.fillMaxWidth()
         ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 10.dp, vertical = 6.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            Column(
+                modifier = Modifier.padding(14.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                Text(
-                    text = "📡 TV:",
-                    color = if (isConnected) Color(0xFF34D399) else Color(0xFF38BDF8),
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 12.sp
-                )
-
-                BasicTextField(
-                    value = manualIp,
-                    onValueChange = onManualIpChange,
-                    singleLine = true,
-                    modifier = Modifier
-                        .weight(2f)
-                        .background(Color(0xFF0F172A), RoundedCornerShape(6.dp))
-                        .border(1.dp, Color(0xFF334155), RoundedCornerShape(6.dp))
-                        .padding(horizontal = 8.dp, vertical = 5.dp),
-                    textStyle = TextStyle(color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-                )
-
-                Text(":", color = Color(0xFF64748B), fontWeight = FontWeight.Bold, fontSize = 12.sp)
-
-                BasicTextField(
-                    value = manualPort,
-                    onValueChange = onManualPortChange,
-                    singleLine = true,
-                    modifier = Modifier
-                        .weight(0.9f)
-                        .background(Color(0xFF0F172A), RoundedCornerShape(6.dp))
-                        .border(1.dp, Color(0xFF334155), RoundedCornerShape(6.dp))
-                        .padding(horizontal = 6.dp, vertical = 5.dp),
-                    textStyle = TextStyle(color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-                )
-
-                Button(
-                    onClick = onConnect,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = if (isConnected) Color(0xFF059669) else Color(0xFF2563EB)
-                    ),
-                    shape = RoundedCornerShape(6.dp),
-                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
-                    modifier = Modifier.height(30.dp)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = if (isConnected) "🟢 Enlazado" else "⚡ Conectar",
-                        fontSize = 11.sp,
+                        text = "📡 TV Receptora",
+                        fontSize = 14.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White
+                        color = OmniThemeColors.TextPrimary
                     )
+                    Text(
+                        text = if (isConnected) "🟢 En Línea" else "⚪ Desconectado",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = if (isConnected) OmniThemeColors.EmeraldAccent else OmniThemeColors.TextSecondary
+                    )
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Column(modifier = Modifier.weight(2f)) {
+                        Text("IP de la TV", fontSize = 10.sp, color = OmniThemeColors.TextMuted)
+                        BasicTextField(
+                            value = manualIp,
+                            onValueChange = onManualIpChange,
+                            singleLine = true,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(OmniThemeColors.InputBackground, RoundedCornerShape(8.dp))
+                                .border(1.dp, OmniThemeColors.CardBorder, RoundedCornerShape(8.dp))
+                                .padding(horizontal = 10.dp, vertical = 7.dp),
+                            textStyle = TextStyle(
+                                color = OmniThemeColors.TextPrimary,
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        )
+                    }
+
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text("Puerto", fontSize = 10.sp, color = OmniThemeColors.TextMuted)
+                        BasicTextField(
+                            value = manualPort,
+                            onValueChange = onManualPortChange,
+                            singleLine = true,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(OmniThemeColors.InputBackground, RoundedCornerShape(8.dp))
+                                .border(1.dp, OmniThemeColors.CardBorder, RoundedCornerShape(8.dp))
+                                .padding(horizontal = 10.dp, vertical = 7.dp),
+                            textStyle = TextStyle(
+                                color = OmniThemeColors.TextPrimary,
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        )
+                    }
+
+                    Button(
+                        onClick = onConnect,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (isConnected) OmniThemeColors.EmeraldAccent else OmniThemeColors.BlueAccent
+                        ),
+                        shape = RoundedCornerShape(8.dp),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                        modifier = Modifier
+                            .padding(top = 14.dp)
+                            .height(36.dp)
+                    ) {
+                        Text(
+                            text = if (isConnected) "✓ Listo" else "⚡ Conectar",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                    }
+                }
+
+                if (discoveredDevices.isNotEmpty()) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("Detectadas:", color = OmniThemeColors.TextMuted, fontSize = 10.sp)
+                        discoveredDevices.take(2).forEach { dev ->
+                            val isSel = selectedDevice?.id == dev.id
+                            Surface(
+                                color = if (isSel) OmniThemeColors.BlueAccent.copy(alpha = 0.3f) else OmniThemeColors.InputBackground,
+                                border = androidx.compose.foundation.BorderStroke(
+                                    1.dp,
+                                    if (isSel) OmniThemeColors.CyanAccent else OmniThemeColors.CardBorder
+                                ),
+                                shape = RoundedCornerShape(6.dp),
+                                modifier = Modifier.clickable {
+                                    onSelectDevice(dev)
+                                    onManualIpChange(dev.ipAddress)
+                                    onManualPortChange(dev.port.toString())
+                                }
+                            ) {
+                                Text(
+                                    text = "${dev.name} (${dev.ipAddress})",
+                                    fontSize = 11.sp,
+                                    color = if (isSel) OmniThemeColors.CyanAccent else OmniThemeColors.TextSecondary,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }

@@ -9,14 +9,14 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.omnicast.sender.ui.theme.OmniThemeColors
 
 /**
- * Cabecera ultra-compacta y animada con colores modernos para tema oscuro.
+ * Cabecera con colores armónicos y botón de ayuda.
  */
 @Composable
 fun SenderHeaderBar(
@@ -28,7 +28,7 @@ fun SenderHeaderBar(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 2.dp),
+            .padding(vertical = 4.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -37,56 +37,62 @@ fun SenderHeaderBar(
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             if (onOpenDrawer != null) {
-                IconButton(onClick = onOpenDrawer, modifier = Modifier.size(32.dp)) {
-                    Text("☰", color = Color(0xFF38BDF8), fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                IconButton(onClick = onOpenDrawer, modifier = Modifier.size(36.dp)) {
+                    Text("☰", color = OmniThemeColors.CyanAccent, fontSize = 20.sp, fontWeight = FontWeight.Bold)
                 }
             }
             Text(
-                text = "OmniCast",
-                fontSize = 18.sp,
+                text = "OmniCast Pro",
+                fontSize = 20.sp,
                 fontWeight = FontWeight.ExtraBold,
-                color = Color(0xFFF8FAFC)
+                color = OmniThemeColors.TextPrimary
             )
             Surface(
-                color = Color(0xFF0284C7),
-                shape = RoundedCornerShape(4.dp)
+                color = OmniThemeColors.BlueAccent.copy(alpha = 0.25f),
+                border = androidx.compose.foundation.BorderStroke(1.dp, OmniThemeColors.BlueAccent),
+                shape = RoundedCornerShape(6.dp)
             ) {
                 Text(
                     text = "v3.31",
-                    modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.dp),
-                    fontSize = 10.sp,
+                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                    fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.White
+                    color = OmniThemeColors.CyanAccent
                 )
             }
         }
 
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(6.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            FloatingAssistantCard(tooltipsEnabled = tooltipsEnabled)
-
             OmniTooltip(
-                text = if (tooltipsEnabled) "💡 Tooltips de ayuda activos (pasa el cursor)" else "⚪ Tooltips desactivados",
+                text = if (tooltipsEnabled) "💡 Modo Ayuda ON (Pasa el mouse para ver descripciones)"
+                else "⚪ Modo Ayuda OFF (Toca para activar explicaciones)",
                 enabled = true
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(30.dp)
-                        .background(
-                            color = if (tooltipsEnabled) Color(0xFF854D0E) else Color(0xFF1E293B),
-                            shape = RoundedCornerShape(6.dp)
-                        )
-                        .border(
-                            width = 1.dp,
-                            color = if (tooltipsEnabled) Color(0xFFEAB308) else Color(0xFF334155),
-                            shape = RoundedCornerShape(6.dp)
-                        )
-                        .clickable { onToggleTooltips(!tooltipsEnabled) },
-                    contentAlignment = Alignment.Center
+                Surface(
+                    color = if (tooltipsEnabled) OmniThemeColors.AmberAccent.copy(alpha = 0.2f) else OmniThemeColors.CardSurface,
+                    border = androidx.compose.foundation.BorderStroke(
+                        1.dp,
+                        if (tooltipsEnabled) OmniThemeColors.AmberAccent else OmniThemeColors.CardBorder
+                    ),
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier.clickable { onToggleTooltips(!tooltipsEnabled) }
                 ) {
-                    Text(if (tooltipsEnabled) "💡" else "⚪", fontSize = 12.sp)
+                    Row(
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Text(if (tooltipsEnabled) "💡" else "⚪", fontSize = 12.sp)
+                        Text(
+                            text = if (tooltipsEnabled) "Ayuda ON" else "Ayuda OFF",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = if (tooltipsEnabled) OmniThemeColors.AmberAccent else OmniThemeColors.TextSecondary
+                        )
+                    }
                 }
             }
         }

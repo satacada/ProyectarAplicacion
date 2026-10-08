@@ -13,7 +13,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.omnicast.core.domain.models.DeviceTarget
@@ -23,6 +22,7 @@ import com.omnicast.sender.discovery.NsdScannerManager
 import com.omnicast.sender.service.ProjectionForegroundService
 import com.omnicast.sender.service.TvZoomManager
 import com.omnicast.sender.ui.components.*
+import com.omnicast.sender.ui.theme.OmniThemeColors
 
 @Composable
 fun SenderMainScreen(
@@ -56,10 +56,17 @@ fun SenderMainScreen(
     var showHelpDialog by remember { mutableStateOf(false) }
     var showSideDrawer by remember { mutableStateOf(false) }
     var tooltipsEnabled by remember { mutableStateOf(prefs.getBoolean("saved_tooltips_enabled", true)) }
-    var selectedTabIndex by rememberSaveable { mutableIntStateOf(if (initialOpenGallery) 2 else 2) }
 
     LaunchedEffect(initialOpenBrowser) { if (initialOpenBrowser) showInAppBrowser = true }
-    LaunchedEffect(initialOpenGallery) { if (initialOpenGallery) { showInAppBrowser = false; selectedTabIndex = 2 } }
+    LaunchedEffect(initialOpenGallery) {
+        if (initialOpenGallery) {
+            context.startActivity(
+                Intent(context, com.omnicast.sender.overlay.GalleryPickerActivity::class.java).apply {
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+            )
+        }
+    }
 
     fun saveTarget(ip: String, portStr: String) {
         val port = portStr.toIntOrNull() ?: 8088
@@ -128,10 +135,11 @@ fun SenderMainScreen(
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color(0xFF0B1120))
-                    .padding(horizontal = 10.dp, vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                    .background(OmniThemeColors.Background)
+                    .padding(horizontal = 14.dp, vertical = 10.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
+                // 1. Encabezado con OmniCast Pro y botón de ayuda
                 item {
                     SenderHeaderBar(
                         tooltipsEnabled = tooltipsEnabled,
@@ -144,6 +152,12 @@ fun SenderMainScreen(
                     )
                 }
 
+                // 2. Activar agente que se superpone (Asistente Flotante)
+                item {
+                    FloatingAssistantCard(tooltipsEnabled = tooltipsEnabled)
+                }
+
+                // 3. IP del TV al que se conecta (TV Receptora)
                 item {
                     DeviceSelectionCard(
                         discoveredDevices = devices,
@@ -168,44 +182,36 @@ fun SenderMainScreen(
                     )
                 }
 
+                // 4. Las TRES opciones para poder elegirlas: Captura Web, Casteo-TV y Galería
                 item {
-                    CastModeSelectorBar(
-                        selectedTabIndex = selectedTabIndex,
+                    MainActionCards(
+                        isStreaming = isStreaming,
+                        selectedProfile = selectedProfile,
+                        smoothBufferEnabled = smoothBufferEnabled,
+                        tvScaleMode = tvScaleMode,
                         tooltipsEnabled = tooltipsEnabled,
                         onOpenBrowser = { showInAppBrowser = true },
-                        onSelectTabIndex = { selectedTabIndex = it }
-                    )
-                }
-
-                when (selectedTabIndex) {
-                    1 -> {
-                        item {
-                            ProjectionCard(
-                                isStreaming = isStreaming,
-                                selectedProfile = selectedProfile,
-                                smoothBufferEnabled = smoothBufferEnabled,
-                                tvScaleMode = tvScaleMode,
-                                onStartProjection = { projectionLauncher.launch(getSafeCaptureIntent()) },
-                                onStopProjection = {
-                                    isStreaming = false
-                                    onStopProjection()
-                                },
-                                onOpenConfig = { showConfigDialog = true },
-                                tooltipsEnabled = tooltipsEnabled
+                        onStartProjection = { projectionLauncher.launch(getSafeCaptureIntent()) },
+                        onStopProjection = {
+                            isStreaming = false
+                            onStopProjection()
+                        },
+                        onOpenProjectionConfig = { showConfigDialog = true },
+                        onOpenGallery = {
+                            context.startActivity(
+                                Intent(context, com.omnicast.sender.overlay.GalleryPickerActivity::class.java).apply {
+                                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                }
+                            )
+                        },
+                        onPickExternalFile = {
+                            context.startActivity(
+                                Intent(context, com.omnicast.sender.overlay.GalleryPickerActivity::class.java).apply {
+                                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                }
                             )
                         }
-                    }
-                    2 -> {
-                        item {
-                            GallerySection(onPickExternalFile = {
-                                context.startActivity(
-                                    Intent(context, com.omnicast.sender.overlay.GalleryPickerActivity::class.java).apply {
-                                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                                    }
-                                )
-                            })
-                        }
-                    }
+                    )
                 }
             }
         }

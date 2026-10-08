@@ -47,8 +47,8 @@ fun ProjectionConfigDialog(
     Dialog(onDismissRequest = onDismiss) {
         Surface(
             shape = RoundedCornerShape(16.dp),
-            color = Color.White,
-            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFCBD5E1)),
+            color = Color(0xFF262D3D), // Plomo grafito oscuro, cómodo a la vista
+            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF434E66)),
             modifier = Modifier.fillMaxWidth().padding(horizontal = 6.dp)
         ) {
             Column(
@@ -57,7 +57,7 @@ fun ProjectionConfigDialog(
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // Cabecera con Título, Foco de Ayuda interno y Cerrar
+                // Cabecera con Título, Indicador de Ayuda '?' y Cerrar
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -67,34 +67,39 @@ fun ProjectionConfigDialog(
                         text = "⚙️ Ajustes de Proyección",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.ExtraBold,
-                        color = Color(0xFF0F172A)
+                        color = Color(0xFFF1F5F9)
                     )
 
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
-                        // Foco de Ayuda interno (Verde = ON, Plomo = OFF)
+                        // Indicador de Ayuda interno '?' (Verde = ON, Plomo = OFF)
                         Box(
                             modifier = Modifier
                                 .size(32.dp)
                                 .background(
-                                    color = if (dialogTooltipsEnabled) Color(0xFFD1FAE5) else Color(0xFFE2E8F0),
+                                    color = if (dialogTooltipsEnabled) Color(0xFF064E3B) else Color(0xFF333D52),
                                     shape = androidx.compose.foundation.shape.CircleShape
                                 )
                                 .border(
                                     width = 1.2.dp,
-                                    color = if (dialogTooltipsEnabled) Color(0xFF10B981) else Color(0xFF94A3B8),
+                                    color = if (dialogTooltipsEnabled) Color(0xFF10B981) else Color(0xFF52607D),
                                     shape = androidx.compose.foundation.shape.CircleShape
                                 )
                                 .clickable { dialogTooltipsEnabled = !dialogTooltipsEnabled },
                             contentAlignment = Alignment.Center
                         ) {
-                            Text("💡", fontSize = 14.sp)
+                            Text(
+                                text = "?",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = if (dialogTooltipsEnabled) Color(0xFF6EE7B7) else Color(0xFFCBD5E1)
+                            )
                         }
 
                         IconButton(onClick = onDismiss, modifier = Modifier.size(32.dp)) {
-                            Text("✕", color = Color(0xFF64748B), fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                            Text("✕", color = Color(0xFF94A3B8), fontSize = 16.sp, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -105,7 +110,7 @@ fun ProjectionConfigDialog(
                         text = "Perfil de Transmisión (Resolución y FPS)",
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF334155)
+                        color = Color(0xFFCBD5E1)
                     )
 
                     PROFILE_OPTIONS.forEach { opt ->
@@ -115,12 +120,12 @@ fun ProjectionConfigDialog(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .background(
-                                    color = if (isSelected) Color(0xFFEEF2FF) else Color(0xFFF8FAFC),
+                                    color = if (isSelected) Color(0xFF333D56) else Color(0xFF1E2430),
                                     shape = RoundedCornerShape(8.dp)
                                 )
                                 .border(
                                     1.dp,
-                                    if (isSelected) Color(0xFF818CF8) else Color(0xFFE2E8F0),
+                                    if (isSelected) Color(0xFF6366F1) else Color(0xFF333D52),
                                     shape = RoundedCornerShape(8.dp)
                                 )
                                 .clickable { onSelectProfile(opt.profile) }
@@ -135,22 +140,22 @@ fun ProjectionConfigDialog(
                                     onClick = { onSelectProfile(opt.profile) },
                                     modifier = Modifier.size(20.dp),
                                     colors = RadioButtonDefaults.colors(
-                                        selectedColor = Color(0xFF4F46E5),
-                                        unselectedColor = Color(0xFF94A3B8)
+                                        selectedColor = Color(0xFF818CF8),
+                                        unselectedColor = Color(0xFF64748B)
                                     )
                                 )
                                 Text(
                                     text = opt.displayLabel,
                                     fontSize = 12.sp,
                                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                    color = if (isSelected) Color(0xFF4338CA) else Color(0xFF1E293B)
+                                    color = if (isSelected) Color(0xFFF1F5F9) else Color(0xFFCBD5E1)
                                 )
                             }
                             if (dialogTooltipsEnabled) {
                                 Text(
-                                    text = opt.infoTip,
+                                    text = "? ${opt.infoTip}",
                                     fontSize = 10.sp,
-                                    color = Color(0xFF64748B),
+                                    color = Color(0xFF94A3B8),
                                     modifier = Modifier.padding(start = 26.dp, top = 2.dp, bottom = 2.dp)
                                 )
                             }
@@ -162,8 +167,8 @@ fun ProjectionConfigDialog(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(Color(0xFFF8FAFC), RoundedCornerShape(10.dp))
-                        .border(1.dp, Color(0xFFE2E8F0), RoundedCornerShape(10.dp))
+                        .background(Color(0xFF1E2430), RoundedCornerShape(10.dp))
+                        .border(1.dp, Color(0xFF333D52), RoundedCornerShape(10.dp))
                         .padding(10.dp),
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
@@ -175,13 +180,13 @@ fun ProjectionConfigDialog(
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
                                 text = "🛡️ Suavizado Anti-Tirones",
-                                color = Color(0xFF0F172A),
+                                color = Color(0xFFF1F5F9),
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
                                 text = if (smoothBufferEnabled) "Activado (Buffer 100ms en TV)" else "Desactivado (Ultra-baja latencia cruda)",
-                                color = if (smoothBufferEnabled) Color(0xFF059669) else Color(0xFF64748B),
+                                color = if (smoothBufferEnabled) Color(0xFF10B981) else Color(0xFF94A3B8),
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.SemiBold
                             )
@@ -192,55 +197,36 @@ fun ProjectionConfigDialog(
                             colors = SwitchDefaults.colors(
                                 checkedThumbColor = Color.White,
                                 checkedTrackColor = Color(0xFF10B981),
-                                uncheckedThumbColor = Color.White,
-                                uncheckedTrackColor = Color(0xFFCBD5E1)
+                                uncheckedThumbColor = Color(0xFF94A3B8),
+                                uncheckedTrackColor = Color(0xFF333D52)
                             )
                         )
                     }
                     if (dialogTooltipsEnabled) {
                         Text(
-                            text = "💡 Buffer elástico en la TV para evitar micro-cortes y tirones de imagen en redes Wi-Fi con interferencia.",
-                            color = Color(0xFF64748B),
+                            text = "? Buffer elástico en la TV para evitar micro-cortes y tirones de imagen en redes Wi-Fi con interferencia.",
+                            color = Color(0xFF94A3B8),
                             fontSize = 10.sp
                         )
                     }
                 }
 
-                // 3. Proporción y Zoom en TV reducido
+                // 3. Proporción y Zoom en TV reducido con opción activa resaltada
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(Color(0xFFF8FAFC), RoundedCornerShape(10.dp))
-                        .border(1.dp, Color(0xFFE2E8F0), RoundedCornerShape(10.dp))
+                        .background(Color(0xFF1E2430), RoundedCornerShape(10.dp))
+                        .border(1.dp, Color(0xFF333D52), RoundedCornerShape(10.dp))
                         .padding(10.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     val activeStep = ZOOM_STEPS.getOrElse(sliderValue.roundToInt().coerceIn(0, ZOOM_STEPS.size - 1)) { ZOOM_STEPS[2] }
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "Proporción y Zoom en TV",
-                            color = Color(0xFF0F172A),
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Surface(
-                            color = Color(0xFFEEF2FF),
-                            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF818CF8)),
-                            shape = RoundedCornerShape(6.dp)
-                        ) {
-                            Text(
-                                text = activeStep.label,
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Color(0xFF4338CA),
-                                modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp)
-                            )
-                        }
-                    }
+                    Text(
+                        text = "Proporción y Zoom en TV",
+                        color = Color(0xFFF1F5F9),
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold
+                    )
 
                     Slider(
                         value = sliderValue,
@@ -252,43 +238,57 @@ fun ProjectionConfigDialog(
                         valueRange = 0f..(ZOOM_STEPS.size - 1).toFloat(),
                         steps = ZOOM_STEPS.size - 2,
                         colors = SliderDefaults.colors(
-                            thumbColor = Color(0xFF4F46E5),
-                            activeTrackColor = Color(0xFF4F46E5),
-                            inactiveTrackColor = Color(0xFFCBD5E1)
+                            thumbColor = Color(0xFF6366F1),
+                            activeTrackColor = Color(0xFF6366F1),
+                            inactiveTrackColor = Color(0xFF333D52)
                         )
                     )
 
+                    // Opciones de zoom resaltando visiblemente la activa
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        ZOOM_STEPS.forEach { step ->
-                            Text(
-                                text = step.label,
-                                fontSize = 9.sp,
-                                color = if (step.id == activeStep.id) Color(0xFF4F46E5) else Color(0xFF64748B),
-                                fontWeight = if (step.id == activeStep.id) FontWeight.Bold else FontWeight.Normal
-                            )
+                        ZOOM_STEPS.forEachIndexed { idx, step ->
+                            val isCurrent = step.id == activeStep.id
+                            Surface(
+                                color = if (isCurrent) Color(0xFF4F46E5) else Color.Transparent,
+                                shape = RoundedCornerShape(6.dp),
+                                border = if (isCurrent) androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF818CF8)) else null,
+                                modifier = Modifier.clickable {
+                                    sliderValue = idx.toFloat()
+                                    onSelectTvScaleMode(step.id)
+                                }
+                            ) {
+                                Text(
+                                    text = step.label,
+                                    fontSize = if (isCurrent) 10.sp else 9.sp,
+                                    color = if (isCurrent) Color.White else Color(0xFF94A3B8),
+                                    fontWeight = if (isCurrent) FontWeight.ExtraBold else FontWeight.Normal,
+                                    modifier = Modifier.padding(horizontal = if (isCurrent) 5.dp else 2.dp, vertical = 2.dp)
+                                )
+                            }
                         }
                     }
 
                     if (dialogTooltipsEnabled) {
                         Text(
-                            text = "💡 Ajusta el tamaño y encuadre en la TV: desde reducir al 75% hasta 16:9 pantalla completa.",
-                            color = Color(0xFF64748B),
+                            text = "? Ajusta el tamaño y encuadre en la TV: desde reducir al 75% hasta 16:9 pantalla completa.",
+                            color = Color(0xFF94A3B8),
                             fontSize = 10.sp
                         )
                     }
                 }
 
-                // Botón neutral de cerrar (sin azul invasivo)
+                // Botón neutral de cerrar
                 FilledTonalButton(
                     onClick = onDismiss,
-                    colors = ButtonDefaults.filledTonalButtonColors(containerColor = Color(0xFFF1F5F9)),
+                    colors = ButtonDefaults.filledTonalButtonColors(containerColor = Color(0xFF333D52)),
                     shape = RoundedCornerShape(8.dp),
                     modifier = Modifier.fillMaxWidth().height(38.dp)
                 ) {
-                    Text("Cerrar", fontWeight = FontWeight.SemiBold, fontSize = 13.sp, color = Color(0xFF334155))
+                    Text("Cerrar", fontWeight = FontWeight.SemiBold, fontSize = 13.sp, color = Color(0xFFF1F5F9))
                 }
             }
         }

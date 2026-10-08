@@ -47,12 +47,12 @@ fun MainActionCards(
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
 
         // ==========================================
-        // 1. CAPTURA WEB — DISTINTIVO CELESTE LUMINOSO
+        // 1. CAPTURA WEB — DISTINTIVO CYAN EN PLOMO
         // ==========================================
         Surface(
-            color = Color(0xFFE0F2FE), // Celeste luminoso y fresco
+            color = Color(0xFF202C3D), // Plomo slate tintado en azul/cyan
             shape = RoundedCornerShape(12.dp),
-            border = androidx.compose.foundation.BorderStroke(1.2.dp, Color(0xFF38BDF8)),
+            border = androidx.compose.foundation.BorderStroke(1.2.dp, Color(0xFF0284C7)),
             modifier = Modifier.fillMaxWidth()
         ) {
             Column(modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)) {
@@ -70,7 +70,7 @@ fun MainActionCards(
                             text = "Captura Web",
                             fontSize = 15.sp,
                             fontWeight = FontWeight.ExtraBold,
-                            color = Color(0xFF0369A1)
+                            color = Color(0xFF38BDF8)
                         )
                     }
 
@@ -87,8 +87,8 @@ fun MainActionCards(
 
                 if (tooltipsEnabled) {
                     Text(
-                        text = "💡 Navega sitios de fútbol o películas, bloquea anuncios y envía el stream directo a la TV sin gastar batería.",
-                        color = Color(0xFF075985),
+                        text = "? Navega sitios de fútbol o películas, bloquea anuncios y envía el stream directo a la TV sin gastar batería.",
+                        color = Color(0xFFBAE6FD),
                         fontSize = 11.sp,
                         modifier = Modifier.padding(top = 4.dp)
                     )
@@ -97,14 +97,14 @@ fun MainActionCards(
         }
 
         // ==========================================
-        // 2. CASTEO-TV — DISTINTIVO VIOLETA LUMINOSO
+        // 2. CASTEO-TV — DISTINTIVO VIOLETA EN PLOMO
         // ==========================================
         Surface(
-            color = Color(0xFFEEF2FF), // Violeta índigo suave y moderno
+            color = Color(0xFF282542), // Plomo slate tintado en violeta/índigo
             shape = RoundedCornerShape(12.dp),
             border = androidx.compose.foundation.BorderStroke(
                 1.2.dp,
-                if (isStreaming) Color(0xFF10B981) else Color(0xFF818CF8)
+                if (isStreaming) Color(0xFF10B981) else Color(0xFF6366F1)
             ),
             modifier = Modifier.fillMaxWidth()
         ) {
@@ -126,7 +126,7 @@ fun MainActionCards(
                             text = "Casteo-TV",
                             fontSize = 15.sp,
                             fontWeight = FontWeight.ExtraBold,
-                            color = Color(0xFF4338CA)
+                            color = Color(0xFFA5B4FC)
                         )
                     }
 
@@ -154,8 +154,8 @@ fun MainActionCards(
                         Box(
                             modifier = Modifier
                                 .size(34.dp)
-                                .background(Color.White, RoundedCornerShape(8.dp))
-                                .border(1.dp, Color(0xFFC7D2FE), RoundedCornerShape(8.dp))
+                                .background(Color(0xFF1E1C33), RoundedCornerShape(8.dp))
+                                .border(1.dp, Color(0xFF4B4673), RoundedCornerShape(8.dp))
                                 .clickable { onOpenProjectionConfig() },
                             contentAlignment = Alignment.Center
                         ) {
@@ -164,12 +164,12 @@ fun MainActionCards(
                     }
                 }
 
-                // Resumen en vivo nítido y claro
+                // Resumen en vivo nítido sobre plomo
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(Color.White, RoundedCornerShape(8.dp))
-                        .border(1.dp, Color(0xFFE0E7FF), RoundedCornerShape(8.dp))
+                        .background(Color(0xFF1E1C33), RoundedCornerShape(8.dp))
+                        .border(1.dp, Color(0xFF3E395E), RoundedCornerShape(8.dp))
                         .padding(horizontal = 10.dp, vertical = 4.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
@@ -178,28 +178,28 @@ fun MainActionCards(
                         text = "Anti-Tirones: ${if (smoothBufferEnabled) "Sí" else "No"}",
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
-                        color = if (smoothBufferEnabled) Color(0xFF059669) else Color(0xFF64748B)
+                        color = if (smoothBufferEnabled) Color(0xFF34D399) else Color(0xFF94A3B8)
                     )
-                    Text("•", color = Color(0xFFC7D2FE), fontSize = 11.sp)
+                    Text("•", color = Color(0xFF4B4673), fontSize = 11.sp)
                     Text(
                         text = "R/F: $rfShort",
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF4F46E5)
+                        color = Color(0xFF818CF8)
                     )
-                    Text("•", color = Color(0xFFC7D2FE), fontSize = 11.sp)
+                    Text("•", color = Color(0xFF4B4673), fontSize = 11.sp)
                     Text(
                         text = "Zoom: $zoomDisplayLabel",
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFFD97706)
+                        color = Color(0xFFFBBF24)
                     )
                 }
 
                 if (tooltipsEnabled) {
                     Text(
-                        text = "💡 Duplica la pantalla por hardware a 60 FPS con audio interno. Toca la tuerca ⚙️ para cambiar resolución o zoom.",
-                        color = Color(0xFF3730A3),
+                        text = "? Duplica la pantalla por hardware a 60 FPS con audio interno. Toca la tuerca ⚙️ para cambiar resolución o zoom.",
+                        color = Color(0xFFC7D2FE),
                         fontSize = 11.sp
                     )
                 }
@@ -207,12 +207,12 @@ fun MainActionCards(
         }
 
         // ==========================================
-        // 3. GALERÍA — DISTINTIVO ESMERALDA LUMINOSO
+        // 3. GALERÍA — DISTINTIVO ESMERALDA EN PLOMO
         // ==========================================
         Surface(
-            color = Color(0xFFECFDF5), // Menta/esmeralda luminoso y natural
+            color = Color(0xFF1B2F27), // Plomo slate tintado en verde esmeralda
             shape = RoundedCornerShape(12.dp),
-            border = androidx.compose.foundation.BorderStroke(1.2.dp, Color(0xFF34D399)),
+            border = androidx.compose.foundation.BorderStroke(1.2.dp, Color(0xFF059669)),
             modifier = Modifier.fillMaxWidth()
         ) {
             Column(modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)) {
@@ -230,7 +230,7 @@ fun MainActionCards(
                             text = "Galería",
                             fontSize = 15.sp,
                             fontWeight = FontWeight.ExtraBold,
-                            color = Color(0xFF065F46)
+                            color = Color(0xFF6EE7B7)
                         )
                     }
 
@@ -247,20 +247,20 @@ fun MainActionCards(
 
                         FilledTonalButton(
                             onClick = onPickExternalFile,
-                            colors = ButtonDefaults.filledTonalButtonColors(containerColor = Color(0xFFD1FAE5)),
+                            colors = ButtonDefaults.filledTonalButtonColors(containerColor = Color(0xFF123B2A)),
                             shape = RoundedCornerShape(8.dp),
                             contentPadding = PaddingValues(horizontal = 10.dp, vertical = 5.dp),
                             modifier = Modifier.height(34.dp)
                         ) {
-                            Text("📁 Otros", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color(0xFF065F46))
+                            Text("📁 Otros", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color(0xFFA7F3D0))
                         }
                     }
                 }
 
                 if (tooltipsEnabled) {
                     Text(
-                        text = "💡 Transmite tus fotos en alta definición con zoom táctil y rotación sincronizada en tiempo real con la TV Box.",
-                        color = Color(0xFF064E3B),
+                        text = "? Transmite tus fotos en alta definición con zoom táctil y rotación sincronizada en tiempo real con la TV Box.",
+                        color = Color(0xFFA7F3D0),
                         fontSize = 11.sp,
                         modifier = Modifier.padding(top = 4.dp)
                     )

@@ -70,10 +70,10 @@ fun DeviceSelectionCard(
                     }
 
                     Surface(
-                        color = if (isConnected) Color(0xFFD1FAE5) else Color(0xFFF1F5F9),
+                        color = if (isConnected) Color(0xFF064E3B) else Color(0xFF1E2430),
                         border = androidx.compose.foundation.BorderStroke(
                             1.dp,
-                            if (isConnected) Color(0xFF10B981) else Color(0xFFCBD5E1)
+                            if (isConnected) Color(0xFF10B981) else Color(0xFF434E66)
                         ),
                         shape = RoundedCornerShape(20.dp)
                     ) {
@@ -82,7 +82,7 @@ fun DeviceSelectionCard(
                             modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
-                            color = if (isConnected) Color(0xFF065F46) else Color(0xFF64748B)
+                            color = if (isConnected) Color(0xFF6EE7B7) else Color(0xFF94A3B8)
                         )
                     }
                 }
@@ -172,10 +172,10 @@ fun DeviceSelectionCard(
                         discoveredDevices.take(2).forEach { dev ->
                             val isSel = selectedDevice?.id == dev.id
                             Surface(
-                                color = if (isSel) Color(0xFFE0F2FE) else Color(0xFFF8FAFC),
+                                color = if (isSel) Color(0xFF1E3A5F) else Color(0xFF1B202B),
                                 border = androidx.compose.foundation.BorderStroke(
                                     1.dp,
-                                    if (isSel) Color(0xFF0284C7) else Color(0xFFCBD5E1)
+                                    if (isSel) Color(0xFF38BDF8) else Color(0xFF434E66)
                                 ),
                                 shape = RoundedCornerShape(6.dp),
                                 modifier = Modifier.clickable {
@@ -188,7 +188,7 @@ fun DeviceSelectionCard(
                                     text = "${dev.name} (${dev.ipAddress})",
                                     fontSize = 11.sp,
                                     fontWeight = if (isSel) FontWeight.Bold else FontWeight.Normal,
-                                    color = if (isSel) Color(0xFF0284C7) else Color(0xFF334155),
+                                    color = if (isSel) Color(0xFF38BDF8) else Color(0xFF94A3B8),
                                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                                 )
                             }

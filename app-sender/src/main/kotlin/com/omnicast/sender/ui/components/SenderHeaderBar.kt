@@ -67,31 +67,32 @@ fun SenderHeaderBar(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            // Foco de Ayuda visual por color (Verde = ON, Plomo = OFF, sin palabras ON/OFF)
+            // Indicador de Ayuda por color (Verde = ON, Plomo = OFF, con signo '?')
             OmniTooltip(
-                text = if (tooltipsEnabled) "Foco Activo: Descripciones detalladas habilitadas."
-                else "Foco Inactivo: Toca para ver descripciones y consejos detallados.",
+                text = if (tooltipsEnabled) "Ayuda Activa: Descripciones detalladas habilitadas."
+                else "Ayuda Inactiva: Toca para ver descripciones y consejos detallados.",
                 enabled = true
             ) {
                 Box(
                     modifier = Modifier
                         .size(36.dp)
                         .background(
-                            color = if (tooltipsEnabled) Color(0xFFD1FAE5) else Color(0xFFE2E8F0),
+                            color = if (tooltipsEnabled) Color(0xFF064E3B) else Color(0xFF333D52),
                             shape = CircleShape
                         )
                         .border(
                             width = 1.5.dp,
-                            color = if (tooltipsEnabled) Color(0xFF10B981) else Color(0xFF94A3B8),
+                            color = if (tooltipsEnabled) Color(0xFF10B981) else Color(0xFF52607D),
                             shape = CircleShape
                         )
                         .clickable { onToggleTooltips(!tooltipsEnabled) },
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "💡",
-                        fontSize = 16.sp,
-                        modifier = Modifier.padding(bottom = 1.dp)
+                        text = "?",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = if (tooltipsEnabled) Color(0xFF6EE7B7) else Color(0xFFCBD5E1)
                     )
                 }
             }

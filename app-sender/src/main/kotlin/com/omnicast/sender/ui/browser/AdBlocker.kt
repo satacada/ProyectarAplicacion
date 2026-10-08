@@ -50,10 +50,17 @@ object AdBlocker {
         "streamlare.com", "wolfstream.tv", "streamcloud.club", "embedgram.com",
         "vidhide.com", "vidhidepro.com", "vidhidepre.com", "embed69.org",
         // Pelismart y sus players embebidos
-        "pelismart.mov", "pelismart.com", "pelismart.online",
+        "pelismart.mov", "pelismart.com", "pelismart.online", "pelismart.vip", "pelismart.net", "pelismart.lat", "pelismart.app", "pelismart.org",
         "vidurl.to", "fembed.com", "fplayer.info", "swdyu.com",
         "doo.la", "ds2play.com", "ds2video.com"
     )
+
+    fun isSearchEngine(host: String?): Boolean {
+        if (host == null) return false
+        val h = host.lowercase()
+        return h.contains("yandex.") || h.contains("ya.ru") || h.contains("dzen.ru") ||
+               h.contains("google.") || h.contains("bing.") || h.contains("duckduckgo.")
+    }
 
     fun isAd(url: String): Boolean {
         if (AdBlockWhitelistManager.isWhitelisted(url)) {

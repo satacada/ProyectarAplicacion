@@ -50,6 +50,9 @@ class TvReceiverActivity : ComponentActivity() {
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         localIpAddress.value = getLocalIpAddress()
         com.omnicast.receiver.log.ReceiverLogger.init(this)
+        lifecycleScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            com.omnicast.receiver.directstream.TvMediaCacheManager.clearDiskCache(this@TvReceiverActivity)
+        }
 
         webRtcReceiver = WebRtcReceiverManager(this).apply {
             initialize()

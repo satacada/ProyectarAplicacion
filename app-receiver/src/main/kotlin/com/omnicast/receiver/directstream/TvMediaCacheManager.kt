@@ -49,6 +49,19 @@ object TvMediaCacheManager {
             .setFlags(CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR)
     }
 
+    fun clearDiskCache(context: Context) {
+        try {
+            release()
+            val cacheDir = File(context.cacheDir, "tv_media_cache")
+            if (cacheDir.exists()) {
+                cacheDir.deleteRecursively()
+                Log.i(TAG, "🧹 Caché antiguo de TV en disco purgado exitosamente")
+            }
+        } catch (e: Throwable) {
+            Log.w(TAG, "Error limpiando directorio de caché: ${e.message}")
+        }
+    }
+
     fun release() {
         try {
             simpleCache?.release()

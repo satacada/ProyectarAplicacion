@@ -36,7 +36,6 @@ class WebRtcSenderManager(
     private var videoTrack: VideoTrack? = null; private var videoSource: VideoSource? = null
     private val queuedRemoteCandidates = mutableListOf<IceCandidate>()
     private var isRemoteDescriptionSet = false
-
     var tvScaleMode: String = "EXTEND_16_9"
 
     override fun initialize() {
@@ -101,7 +100,7 @@ class WebRtcSenderManager(
     fun beginCapture() {
         val dims = calcCaptureDimensions()
         val fps = (activeProfile?.frameRate ?: 30).coerceIn(15, 60)
-        Log.i(TAG, "🎬 Iniciando captura: ${dims.first}x${dims.second} @ ${fps}fps (modo: $tvScaleMode, perfil: ${activeProfile?.label})")
+        Log.i(TAG, "🎬 Iniciando captura fija: ${dims.first}x${dims.second} @ ${fps}fps (modo: $tvScaleMode, perfil: ${activeProfile?.label})")
         screenCapturer?.startCapture(dims.first, dims.second, fps)
     }
 
@@ -115,9 +114,9 @@ class WebRtcSenderManager(
         val screenH = if (metrics.heightPixels > 0) metrics.heightPixels else context.resources.displayMetrics.heightPixels
 
         val isLandscape = screenW > screenH
-        val maxDim = (if (isLandscape) activeProfile?.width ?: 1920 else activeProfile?.height ?: 1280).toFloat()
-        val curMax = (if (isLandscape) screenW else screenH).toFloat().coerceAtLeast(1f)
-        val scale = minOf(1.0f, maxDim / curMax)
+        val targetLong = (if (isLandscape) activeProfile?.width ?: 1920 else 1920).toFloat()
+        val curLong = maxOf(screenW, screenH).toFloat().coerceAtLeast(1f)
+        val scale = minOf(1.0f, targetLong / curLong)
         val capW = (((screenW * scale).toInt() / 16) * 16).coerceAtLeast(320)
         val capH = (((screenH * scale).toInt() / 16) * 16).coerceAtLeast(480)
         return Pair(capW, capH)
@@ -197,7 +196,6 @@ class WebRtcSenderManager(
             videoTrack?.dispose(); videoTrack = null; videoSource?.dispose(); videoSource = null
             surfaceTextureHelper?.dispose(); surfaceTextureHelper = null
             peerConnection?.close(); peerConnection = null
-            peerConnectionFactory = null
             eglBase?.release(); eglBase = null
             isRemoteDescriptionSet = false; queuedRemoteCandidates.clear()
         } catch (e: Exception) { Log.e(TAG, "Error cerrando WebRtcSenderManager", e) }

@@ -80,23 +80,25 @@ class WebRtcReceiverManager(private val context: Context) {
             val effectiveScaling = if (isPortrait) RendererCommon.ScalingType.SCALE_ASPECT_FIT else currentScalingType
             renderer.setScalingType(effectiveScaling)
 
+            val aspectFillFactor = if (frameAspect > tvAspect) {
+                frameAspect / tvAspect
+            } else if (frameAspect < tvAspect && frameW > frameH) {
+                tvAspect / frameAspect
+            } else {
+                1.0f
+            }
+
             if (currentMode == "ZOOM") {
-                renderer.scaleX = currentZoom
-                renderer.scaleY = currentZoom
+                val scale = if (!isPortrait && aspectFillFactor > 1.0f) currentZoom * aspectFillFactor else currentZoom
+                renderer.scaleX = scale
+                renderer.scaleY = scale
                 renderer.translationY = currentPanY
-                ReceiverLogger.log(TAG, "🔍 Zoom gradual TV: ${String.format(java.util.Locale.US, "%.2f", currentZoom)}x (panY=$currentPanY)")
+                ReceiverLogger.log(TAG, "🔍 Zoom gradual TV: ${String.format(java.util.Locale.US, "%.2f", currentZoom)}x -> escala $scale (panY=$currentPanY, frame=${frameW}x${frameH})")
             } else if (effectiveScaling == RendererCommon.ScalingType.SCALE_ASPECT_FILL) {
-                val factor = if (frameAspect > tvAspect) {
-                    frameAspect / tvAspect
-                } else if (frameAspect < tvAspect && frameW > frameH) {
-                    tvAspect / frameAspect
-                } else {
-                    1.0f
-                }
-                renderer.scaleX = factor
-                renderer.scaleY = factor
+                renderer.scaleX = aspectFillFactor
+                renderer.scaleY = aspectFillFactor
                 renderer.translationY = 0f
-                ReceiverLogger.log(TAG, "📺 Modo 16:9 EXPANDIDO: factor=$factor (frame=${frameW}x${frameH} rot=$lastRot)")
+                ReceiverLogger.log(TAG, "📺 Modo 16:9 EXPANDIDO: factor=$aspectFillFactor (frame=${frameW}x${frameH} rot=$lastRot)")
             } else {
                 val scale = if (isPortrait && currentZoom > 0f) currentZoom else 1.0f
                 renderer.scaleX = scale

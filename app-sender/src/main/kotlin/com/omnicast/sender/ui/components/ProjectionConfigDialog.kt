@@ -169,7 +169,7 @@ fun ProjectionConfigDialog(
                             Column(modifier = Modifier.weight(1f)) {
                                 Text("Suavizado Anti-Tirones", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold, maxLines = 1)
                                 Text(
-                                    text = if (tempSmoothBuffer) "Activado (Buffer 100ms TV)" else "Desactivado (Baja latencia)",
+                                    text = if (tempSmoothBuffer) "Activado (Buffer 100ms)" else "Desactivado",
                                     color = if (tempSmoothBuffer) Color(0xFF34D399) else Color(0xFF94A3B8),
                                     fontSize = 10.sp,
                                     fontWeight = FontWeight.Medium,

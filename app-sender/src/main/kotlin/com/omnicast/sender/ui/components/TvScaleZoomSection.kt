@@ -31,34 +31,38 @@ fun TvScaleZoomSection(
         ) {
             val activeStep = ZOOM_STEPS.getOrElse(sliderValue.roundToInt().coerceIn(0, ZOOM_STEPS.size - 1)) { ZOOM_STEPS[2] }
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text("⛶", fontSize = 13.sp, color = Color(0xFF818CF8))
+                    Text("⛶", fontSize = 12.sp, color = Color(0xFF818CF8))
                     Text(
                         text = "PROPORCIÓN Y ZOOM EN TV",
                         color = Color(0xFFCBD5E1),
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
-                        letterSpacing = 0.6.sp
+                        letterSpacing = 0.5.sp
                     )
                 }
 
-                Surface(
-                    color = Color(0xFF1E2B4A),
-                    shape = RoundedCornerShape(8.dp),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF3B82F6))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    Text(
-                        text = activeStep.label,
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF93C5FD),
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
-                    )
+                    Text("Seleccionado:", color = Color(0xFF64748B), fontSize = 11.sp)
+                    Surface(
+                        color = Color(0xFF1E2B4A),
+                        shape = RoundedCornerShape(6.dp),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF3B82F6))
+                    ) {
+                        Text(
+                            text = activeStep.label,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF93C5FD),
+                            maxLines = 1,
+                            softWrap = false,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                        )
+                    }
                 }
             }
 

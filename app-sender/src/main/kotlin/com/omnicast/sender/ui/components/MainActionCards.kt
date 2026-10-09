@@ -124,25 +124,21 @@ fun MainActionCards(
                     }
                 }
 
-                // Barra de información inferior estilizada
+                // Barra de información inferior estilizada (sin palabra ESTADO y en una sola línea)
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(Color(0xFF100C1C), RoundedCornerShape(8.dp))
-                        .padding(horizontal = 10.dp, vertical = 6.dp)
+                        .padding(horizontal = 10.dp, vertical = 5.dp)
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        Text("ESTADO: $rfShort • Zoom: $zoomDisplayLabel •", fontSize = 10.sp, color = Color(0xFFCBD5E1))
-                        Text(
-                            text = "Anti-Tirones: ${if (smoothBufferEnabled) "Si" else "No"}",
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = if (smoothBufferEnabled) Color(0xFF34D399) else Color(0xFFF87171)
-                        )
-                    }
+                    Text(
+                        text = "$rfShort • Zoom: $zoomDisplayLabel • Anti-Tirones: ${if (smoothBufferEnabled) "Si" else "No"}",
+                        fontSize = 10.sp,
+                        color = Color(0xFFCBD5E1),
+                        maxLines = 1,
+                        softWrap = false,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                    )
                 }
 
                 if (tooltipsEnabled) {

@@ -50,6 +50,7 @@ fun BrowserTopBar(
 ) {
     val focusManager = LocalFocusManager.current
     var showMenu by remember { mutableStateOf(false) }
+    var showHelpDialog by remember { mutableStateOf(false) }
     var textFieldValue by remember {
         mutableStateOf(TextFieldValue(inputUrl, TextRange(inputUrl.length)))
     }
@@ -187,6 +188,11 @@ fun BrowserTopBar(
                     modifier = Modifier.background(Color(0xFF1E293B))
                 ) {
                     DropdownMenuItem(
+                        text = { Text("ℹ️ Detalle de Controles", color = Color(0xFF38BDF8), fontWeight = FontWeight.Bold) },
+                        onClick = { showHelpDialog = true; showMenu = false }
+                    )
+                    HorizontalDivider(color = Color(0xFF334155))
+                    DropdownMenuItem(
                         text = { Text(if (isAdBlockEnabled) "🛡️ Bloqueador (Activo)" else "🛡️ Bloquear Anuncios", color = Color.White) },
                         onClick = { onToggleAdBlock(); showMenu = false }
                     )
@@ -226,5 +232,39 @@ fun BrowserTopBar(
                 }
             }
         }
+    }
+
+    if (showHelpDialog) {
+        AlertDialog(
+            onDismissRequest = { showHelpDialog = false },
+            containerColor = Color(0xFF1E293B),
+            title = { Text("ℹ️ Detalle de Controles", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    HelpItem("⚡ Flujos (N)", "Servidores y fuentes de video capturados.")
+                    HelpItem("⚡✕ Reiniciar", "Borra flujos y recaptura el video en curso.")
+                    HelpItem("📺 Transmitir", "Envía el flujo de video activo a la TV Box.")
+                    HelpItem("🔖 Guardar", "Guarda la película en favoritos para ver después.")
+                    HelpItem("🔖✕ Quitar", "Elimina la película de tus listas guardadas.")
+                    HelpItem("🎛️ Calidad", "Cambia resolución (1080p, 720p, 480p).")
+                    HelpItem("❚❚ / ▶", "Pausa o reanuda la reproducción en el televisor.")
+                    HelpItem("↺ / ↻", "Adelanta o retrocede 10 segundos.")
+                    HelpItem("🔊 Volumen", "Regula el volumen de sonido en el televisor.")
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showHelpDialog = false }) {
+                    Text("Entendido", color = Color(0xFF38BDF8), fontWeight = FontWeight.Bold)
+                }
+            }
+        )
+    }
+}
+
+@Composable
+private fun HelpItem(title: String, desc: String) {
+    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        Text(title, color = Color(0xFFFBBF24), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+        Text(desc, color = Color(0xFFCBD5E1), fontSize = 11.sp)
     }
 }

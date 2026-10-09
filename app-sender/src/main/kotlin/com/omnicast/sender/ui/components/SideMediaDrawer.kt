@@ -180,7 +180,7 @@ private fun HistoryTextCard(
 
             val posStr = formatTime(item.lastPositionMs)
             val durStr = if (item.durationMs > 0L) formatTime(item.durationMs) else null
-            val progressText = if (durStr != null) "▶ Se quedó en: $posStr / $durStr" else if (item.lastPositionMs > 0L) "▶ Se quedó en: $posStr" else "▶ Sin iniciar"
+            val progressText = if (durStr != null) "▶ $posStr / $durStr" else if (item.lastPositionMs > 0L) "▶ $posStr" else "▶ 0:00"
 
             Text(
                 progressText,
@@ -194,23 +194,26 @@ private fun HistoryTextCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    FilledTonalButton(
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    IconButton(
                         onClick = onPlay,
-                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
+                        modifier = Modifier
+                            .size(32.dp)
+                            .background(Color(0xFF6366F1), RoundedCornerShape(8.dp))
                     ) {
-                        Text("▶ TV", fontSize = 11.sp, color = Color.White)
+                        Text("📺", fontSize = 14.sp)
                     }
-                    Button(
+                    IconButton(
                         onClick = onOpenWeb,
-                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF334155))
+                        modifier = Modifier
+                            .size(32.dp)
+                            .background(Color(0xFF334155), RoundedCornerShape(8.dp))
                     ) {
-                        Text("🌐 Web", fontSize = 11.sp, color = Color.White)
+                        Text("🌐", fontSize = 14.sp)
                     }
                 }
-                IconButton(onClick = onDelete, modifier = Modifier.size(24.dp)) {
-                    Text("✕", color = Color(0xFF64748B), fontSize = 12.sp)
+                IconButton(onClick = onDelete, modifier = Modifier.size(28.dp)) {
+                    Text("✕", color = Color(0xFF94A3B8), fontSize = 13.sp)
                 }
             }
         }
@@ -226,7 +229,7 @@ private fun SavedPlaylistsTextList(
 ) {
     if (playlists.isEmpty() || playlists.all { it.items.isEmpty() }) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text("No tienes videos guardados aún.`nUsa '⭐ Guardar' en el navegador.", color = Color(0xFF64748B), fontSize = 12.sp)
+            Text("No tienes videos guardados aún.\nUsa '⭐ Guardar' en el navegador.", color = Color(0xFF64748B), fontSize = 12.sp)
         }
     } else {
         LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -242,21 +245,25 @@ private fun SavedPlaylistsTextList(
                     ) {
                         Column(modifier = Modifier.padding(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                             Text(video.title, color = Color.White, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                            val posText = if (video.lastPositionMs > 0L) "▶ Posición: " + formatTime(video.lastPositionMs) else "▶ Listo para ver"
+                            val posText = if (video.lastPositionMs > 0L) "▶ " + formatTime(video.lastPositionMs) else "▶ 0:00"
                             Text(posText, color = Color(0xFF10B981), fontSize = 10.sp)
-                            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                                FilledTonalButton(
-                                    onClick = { onPlay(video.url, video.title, video.headers, video.lastPositionMs) },
-                                    contentPadding = PaddingValues(horizontal = 6.dp, vertical = 2.dp)
-                                ) { Text("▶ TV", fontSize = 10.sp) }
-                                Button(
-                                    onClick = { onOpenWeb(video.pageUrl ?: video.url) },
-                                    contentPadding = PaddingValues(horizontal = 6.dp, vertical = 2.dp),
-                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF334155))
-                                ) { Text("🌐 Web", fontSize = 10.sp) }
-                                Spacer(modifier = Modifier.weight(1f))
-                                IconButton(onClick = { onRemoveItem(pl.id, video.url) }, modifier = Modifier.size(20.dp)) {
-                                    Text("✕", color = Color(0xFF64748B), fontSize = 11.sp)
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    IconButton(
+                                        onClick = { onPlay(video.url, video.title, video.headers, video.lastPositionMs) },
+                                        modifier = Modifier.size(30.dp).background(Color(0xFF6366F1), RoundedCornerShape(6.dp))
+                                    ) { Text("📺", fontSize = 13.sp) }
+                                    IconButton(
+                                        onClick = { onOpenWeb(video.pageUrl ?: video.url) },
+                                        modifier = Modifier.size(30.dp).background(Color(0xFF334155), RoundedCornerShape(6.dp))
+                                    ) { Text("🌐", fontSize = 13.sp) }
+                                }
+                                IconButton(onClick = { onRemoveItem(pl.id, video.url) }, modifier = Modifier.size(24.dp)) {
+                                    Text("✕", color = Color(0xFF94A3B8), fontSize = 12.sp)
                                 }
                             }
                         }

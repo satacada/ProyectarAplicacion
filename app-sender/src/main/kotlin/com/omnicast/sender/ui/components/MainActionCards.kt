@@ -77,7 +77,7 @@ fun MainActionCards(
                                 .border(1.dp, Color(0xFF8B5CF6).copy(alpha = 0.5f), RoundedCornerShape(10.dp)),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text("📱", fontSize = 18.sp)
+                            Text("📺", fontSize = 18.sp)
                         }
                         Text(
                             text = "Casteo a Tv",
@@ -94,14 +94,14 @@ fun MainActionCards(
                         Button(
                             onClick = { if (isStreaming) onStopProjection() else onStartProjection() },
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = if (isStreaming) Color(0xFFDC2626) else Color(0xFF7C3AED)
+                                containerColor = if (isStreaming) Color(0xFFDC2626) else Color(0xFF6366F1)
                             ),
                             shape = RoundedCornerShape(10.dp),
                             contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp),
                             modifier = Modifier.height(36.dp)
                         ) {
                             Text(
-                                text = if (isStreaming) "⏹ Detener" else "📡 Proyectar",
+                                text = if (isStreaming) "⏹ Detener" else "⛶ Proyectar",
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White
@@ -121,7 +121,7 @@ fun MainActionCards(
                     }
                 }
 
-                // Barra de Estado inferior estilizada
+                // Barra de información inferior estilizada (sin la palabra ESTADO)
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -132,7 +132,6 @@ fun MainActionCards(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
-                        Text("ESTADO:", fontSize = 10.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFF94A3B8))
                         Text("$rfShort • Zoom: $zoomDisplayLabel •", fontSize = 10.sp, color = Color(0xFFCBD5E1))
                         Text(
                             text = "Anti-Tirones: ${if (smoothBufferEnabled) "Si" else "No"}",
@@ -261,7 +260,7 @@ fun MainActionCards(
                             contentPadding = PaddingValues(horizontal = 6.dp, vertical = 4.dp),
                             modifier = Modifier.weight(1f).height(36.dp)
                         ) {
-                            Text("📷 Fotos", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                            Text("🖼️ Fotos", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.White)
                         }
 
                         Button(
@@ -272,7 +271,7 @@ fun MainActionCards(
                             contentPadding = PaddingValues(horizontal = 4.dp, vertical = 4.dp),
                             modifier = Modifier.weight(1f).height(36.dp)
                         ) {
-                            Text("🎬 Videos", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFBCFE8))
+                            Text("• Videos", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFBCFE8))
                         }
                     }
                 }

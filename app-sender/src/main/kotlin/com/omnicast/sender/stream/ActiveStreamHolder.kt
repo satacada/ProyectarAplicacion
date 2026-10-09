@@ -40,9 +40,6 @@ object ActiveStreamHolder {
         val clean = videoTitle?.takeIf { it.isNotBlank() && it != "Cargando..." && it != "Transmisión" } ?: "Video Detectado"
         title = clean
         headers = hdrs
-        if (_isCasting.value && clean != "Video Detectado") {
-            _currentMediaTitle.value = clean
-        }
     }
 
     fun clearDetectedStream() {

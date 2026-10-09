@@ -104,30 +104,6 @@ fun BrowserWebView(
                             android.util.Log.w("BrowserWebView", "🛑 Redirección publicitaria bloqueada silenciosamente: ${r.url.host}")
                             return true
                         }
-                        val tgtHost = try { r.url.host?.lowercase() } catch (_: Throwable) { null }
-                        val isSearchEngine = AdBlocker.isSearchEngine(curHost)
-                        if (!isSearchEngine && curHost != null && tgtHost != null && curHost != tgtHost && !tgtHost.endsWith(curHost) && !curHost.endsWith(tgtHost)) {
-                            if (!AdBlocker.isKnownMediaHost(tgtHost)) {
-                                if (isAdBlockEnabled || AdBlocker.isAd(reqUrl) || NativeAdBlockEngine.shouldBlock(reqUrl, liveUrl)) {
-                                    android.util.Log.w("BrowserWebView", "🛑 Redirección publicitaria externa bloqueada en sitio multimedia: $tgtHost")
-                                    return true
-                                }
-                                val popup = WebView(ctx).apply {
-                                    CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
-                                    settings.javaScriptEnabled = true; settings.domStorageEnabled = true; settings.userAgentString = UA_MOBILE
-                                    webViewClient = object : WebViewClient() {
-                                        override fun shouldOverrideUrlLoading(view: WebView?, req: WebResourceRequest?): Boolean =
-                                            req?.url?.toString()?.let { AdBlocker.isExternalRedirect(it) || AdBlocker.isAd(it) } ?: false
-                                    }
-                                    webChromeClient = object : WebChromeClient() {
-                                        override fun onCloseWindow(window: WebView?) { onClosePopup() }
-                                    }
-                                    loadUrl(reqUrl)
-                                }
-                                onOpenPopup(popup)
-                                return true
-                            }
-                        }
                         return false
                     }
                     override fun onReceivedError(v: WebView?, req: WebResourceRequest?, err: WebResourceError?) {

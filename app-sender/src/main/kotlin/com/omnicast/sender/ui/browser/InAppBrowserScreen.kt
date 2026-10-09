@@ -126,16 +126,16 @@ fun InAppBrowserScreen(
     }
 
     fun openOptionsSheet() {
-        if (detectedStreams.isEmpty()) {
+        val currentStreams = detectedStreams.toList()
+        if (currentStreams.isEmpty()) {
             Toast.makeText(context, "Reproduce el video en la página para capturar el flujo", Toast.LENGTH_SHORT).show()
             webViewInstance?.evaluateJavascript(WvcDomSniffer.getInjectionScript(context), null)
             return
         }
         val cleanTitle = pageTitle.replace(" - YouTube", "").replace(" | OK", "").trim().take(22)
         val prefix = if (cleanTitle.isNotBlank() && cleanTitle != "Transmisión" && cleanTitle != "OmniCast Browser") "[$cleanTitle] " else ""
-        qualityOptions = detectedStreams.mapIndexed { index, url ->
-            val ytId = BrowserUrlHelper.extractYouTubeId(url)
-            val num = detectedStreams.size - index
+        qualityOptions = currentStreams.mapIndexed { index, url ->
+            val ytId = BrowserUrlHelper.extractYouTubeId(url); val num = currentStreams.size - index
             val dur = streamDurations[url] ?: (durMs / 1000f).coerceAtLeast(0f)
             val isMovie = dur >= 2400f || (dur == 0f && url.contains(".m3u8", true)) || cleanTitle.contains("pelicula", true)
             if (ytId != null) StreamQualityOption("🎬 $prefix YouTube #$num", "YouTube", "1080p / 720p", url, durationSeconds = dur, isMovie = isMovie)
@@ -146,8 +146,10 @@ fun InAppBrowserScreen(
         }.distinctBy { it.streamUrl }
         showOptionsSheet = true
         scope.launch {
-            val deep = detectedStreams.flatMap { u -> StreamQualityDetector.detectQualities(u, streamHeaders[u] ?: emptyMap(), cleanTitle) }
-            if (deep.isNotEmpty()) qualityOptions = (qualityOptions + deep).distinctBy { it.label }
+            runCatching {
+                val deep = currentStreams.flatMap { u -> StreamQualityDetector.detectQualities(u, streamHeaders[u] ?: emptyMap(), cleanTitle) }
+                if (deep.isNotEmpty()) qualityOptions = (qualityOptions + deep).distinctBy { it.label }
+            }
         }
     }
 
@@ -275,10 +277,7 @@ fun InAppBrowserScreen(
                         modifier = Modifier.align(Alignment.BottomCenter)
                     )
                 }
-
-                popupWebView?.let { pView ->
-                    BrowserPopupOverlay(popupView = pView, onDismiss = { popupWebView?.destroy(); popupWebView = null })
-                }
+                popupWebView?.let { pView -> BrowserPopupOverlay(popupView = pView, onDismiss = { popupWebView?.destroy(); popupWebView = null }) }
             }
         }
     }

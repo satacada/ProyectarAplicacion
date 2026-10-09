@@ -646,8 +646,13 @@ function ibSendListOfVideos(videos) {
             var src = video.getElementsByTagName('source');
             if (src.length > 0) {
                 for (var j = 0; j < src.length; j++) {
+                    var sSrc = src[j].src || '';
+                    var sLower = sSrc.toLowerCase();
+                    if (sLower.indexOf('stub.mp4') !== -1 || sLower.indexOf('dummy.mp4') !== -1 || sLower.indexOf('blank.mp4') !== -1) {
+                        continue;
+                    }
                     var current = new Object();
-                    current.source = src[j].src;
+                    current.source = sSrc;
                     current.currentTime = src[j].currentTime;
                     current.duration = src[j].duration;
                     sources.push(current);

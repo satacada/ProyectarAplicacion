@@ -151,22 +151,26 @@ class ExoPlayerTvManager(private val context: Context) {
 
     fun playClean(url: String, title: String? = null, startPositionMs: Long = 0L) {
         if (url.contains("stub.mp4", ignoreCase = true) || url.contains("dummy.mp4", ignoreCase = true)) return
-        val mediaItem = buildMediaItem(url, title)
-        val httpFactory = DefaultHttpDataSource.Factory()
-            .setUserAgent(DEFAULT_UA).setAllowCrossProtocolRedirects(true).setConnectTimeoutMs(15000).setReadTimeoutMs(15000)
-        val mediaSource = DefaultMediaSourceFactory(context)
-            .setDataSourceFactory(httpFactory)
-            .createMediaSource(mediaItem)
+        runCatching {
+            val mediaItem = buildMediaItem(url, title)
+            val httpFactory = DefaultHttpDataSource.Factory()
+                .setUserAgent(DEFAULT_UA).setAllowCrossProtocolRedirects(true).setConnectTimeoutMs(15000).setReadTimeoutMs(15000)
+            val mediaSource = DefaultMediaSourceFactory(context)
+                .setDataSourceFactory(httpFactory)
+                .createMediaSource(mediaItem)
 
-        player?.apply {
-            stop()
-            clearMediaItems()
-            setMediaSource(mediaSource)
-            if (startPositionMs > 0L) seekTo(startPositionMs) else seekToDefaultPosition()
-            prepare()
-            play()
+            player?.apply {
+                stop()
+                clearMediaItems()
+                setMediaSource(mediaSource)
+                if (startPositionMs > 0L) seekTo(startPositionMs) else seekToDefaultPosition()
+                prepare()
+                play()
+            }
+            com.omnicast.receiver.log.ReceiverLogger.log(TAG, "Reproduciendo flujo directo limpio con caché: $url (pos=${startPositionMs}ms)")
+        }.onFailure { err ->
+            com.omnicast.receiver.log.ReceiverLogger.log(TAG, "Error crítico reproduciendo flujo limpio: ${err.message}", err)
         }
-        com.omnicast.receiver.log.ReceiverLogger.log(TAG, "Reproduciendo flujo directo limpio con caché: $url (pos=${startPositionMs}ms)")
     }
 
     private fun buildMediaItem(url: String, title: String?): MediaItem {

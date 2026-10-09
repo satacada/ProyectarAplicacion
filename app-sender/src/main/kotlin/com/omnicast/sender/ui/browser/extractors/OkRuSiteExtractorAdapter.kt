@@ -20,10 +20,10 @@ class OkRuSiteExtractorAdapter : IMediaStreamExtractorPort {
             return false
         }
 
-        // El video real de OK.ru se sirve a través de su CDN dedicada mycdn.me (vd*.mycdn.me, mvd*.mycdn.me)
-        val isMyCdn = lower.contains("mycdn.me") &&
+        // El video real de OK.ru se sirve a través de su CDN dedicada mycdn.me / okcdn.ru
+        val isMyCdn = (lower.contains("mycdn.me") || lower.contains("okcdn.ru")) &&
                       (lower.contains("vd") || lower.contains("video") || lower.contains("cmd=video") ||
-                       lower.contains("/cmd/") || lower.contains(".m3u8") || lower.contains(".mp4") ||
+                       lower.contains("/cmd/") || lower.contains(".m3u8") || lower.contains(".mp4") || lower.contains(".mpd") ||
                        lower.contains("sig") || lower.contains("expires") || lower.contains("mid=")) &&
                       !lower.contains("i.mycdn.me") && !lower.contains("st.mycdn.me") && !lower.contains("static.mycdn.me")
 

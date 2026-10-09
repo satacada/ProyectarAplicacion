@@ -52,7 +52,7 @@ object BrowserUrlHelper {
                 ?: CookieManager.getInstance().getCookie(currentUrl) ?: ""
             if (cookie.isNotBlank() && !headers.containsKey("Cookie")) headers["Cookie"] = cookie
 
-            if (streamUrl.contains("mycdn.me", ignoreCase = true) || streamUrl.contains("ok.ru", ignoreCase = true)) {
+            if (streamUrl.contains("mycdn.me", ignoreCase = true) || streamUrl.contains("okcdn.ru", ignoreCase = true) || streamUrl.contains("ok.ru", ignoreCase = true)) {
                 headers["Referer"] = "https://ok.ru/"
             } else if (streamUrl.contains("dailymotion.com", ignoreCase = true) || streamUrl.contains("dmcdn.net", ignoreCase = true)) {
                 headers["Referer"] = "https://www.dailymotion.com/"

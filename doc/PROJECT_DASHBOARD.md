@@ -1,7 +1,7 @@
 # 📊 PROJECT DASHBOARD — OmniCast Pro
 
 **Última actualización:** 2026-10-09  
-**Versión de producción actual:** v3.32.9 (Sender) / v3.31.6 (Receiver)  
+**Versión de producción actual:** v3.32.10 (Sender) / v3.32.10 (Receiver)  
 **Estándar de calidad:** AGENTS.md (Archivos <= 300 líneas, Clean Architecture, 100% Offline/Local)
 
 ---
@@ -36,6 +36,7 @@
 
 | Versión | Funcionalidades Aprobadas y Validadas por el Usuario | Estado |
 |---|---|---|
+| **v3.32.10** | • **Soporte DASH (`androidx-media3-exoplayer-dash`) y Blindaje Anti-Crashes en TV Receiver:** Integrado el módulo DASH para reproducir manifiestos `.mpd` (ej. streams dinámicos de OK.ru). Blindado el ciclo de reproducción en `ExoPlayerTvManager` y `DirectStreamHandoff` con fallback a Standby ante cualquier error no recuperable para que la aplicación TV jamás se cierre o congele.<br>• **Captura de Tokens en Vivo al Instante (0 Segundos):** Implementado `window.__omniGetLiveStream()` y seguimiento de peticiones activas en `universal_sniffer.js`. Al presionar *"Transmitir"* se toma el token/manifest de video más fresco en tiempo real en lugar de un token expirado, resolviendo los errores 404/expiración en streams en vivo (PirloTV, 808ball).<br>• **Filtro Anti-Stubs / Dummies en OK.ru:** Descarte automático de videos simulados `stub.mp4` / `dummy.mp4` para no saturar la lista de flujos.<br>• **Soporte de CDN de OK.ru (`okcdn.ru`):** Reconocimiento de URLs de video de `okcdn.ru` con inyección de cabecera `Referer: https://ok.ru/` para reproducción de alta calidad (1080p). | 🟢 Aprobado |
 | **v3.32.9** | • **Desacoplamiento Total de Título Web en Mando Remoto (`BrowserBottomBarContainer`):** Eliminada por completo la variable `pageTitle` de la tarjeta de control; el título en los controles queda blindado exclusivamente al video transmitido (`castTitle`) o *"Transmisión Web"*, garantizando que nunca más cambie a nombres de buscadores o páginas visitadas (ej. Yandex, Google). | 🟢 Aprobado |
 | **v3.32.7** | • **Corrección de Formato de Duración en Lista de Flujos (`WvcVideoListSheet`):** Desacoplamiento de la duración de video colocándola en un renglón dedicado e independiente debajo de la resolución (`⏱ Duración: 1h 18m`), eliminando por completo el apretujamiento o deformación vertical de texto letra por letra y economizando el espacio en pantalla con espaciado vertical mínimo (2.dp). | 🟢 Aprobado |
 | **v3.32.6** | • **Eliminación Permanente de la Palabra "ESTADO:":** Se retiró definitivamente el texto redundante en la tarjeta de proyección principal, dejando una sola línea no truncada.<br>• **Subtítulo Compacto en Diálogo de Ajustes (`⚙️`):** Texto de Anti-Tirones simplificado a *"Activado (Buffer 100ms)"* sin desbordamiento.<br>• **Reubicación de Preset Zoom ("Fit 100%"):** Etiqueta ubicada debajo de *"PROPORCIÓN Y ZOOM EN TV"* eliminando deformaciones en pantallas estrechas. | 🟢 Aprobado |

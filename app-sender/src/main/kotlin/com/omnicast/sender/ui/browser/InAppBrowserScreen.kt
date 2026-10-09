@@ -68,8 +68,17 @@ fun InAppBrowserScreen(
 
     fun transmitWithHistory(url: String, title: String, hdrs: Map<String, String>) {
         val cleanT = if (title.isNotBlank() && title != "Cargando..." && title != "Transmisión") title else pageTitle
-        pageTitle = cleanT; historyManager.addOrUpdate(url, cleanT, currentUrl, hdrs)
-        onSendStreamToTv(url, cleanT, hdrs)
+        pageTitle = cleanT
+        webViewInstance?.evaluateJavascript("window.__omniGetLiveStream ? window.__omniGetLiveStream() : null") { res ->
+            val cleanLive = res?.trim('"', ' ', '\\')?.takeIf { it.startsWith("http") && it != "null" }
+            val finalUrl = if (cleanLive != null && (url.contains(".m3u8") || cleanLive.contains(".m3u8"))) cleanLive else url
+            val finalHdrs = if (finalUrl != url) BrowserUrlHelper.buildSafeHeaders(finalUrl, currentUrl, UA_MOBILE, hdrs) else hdrs
+            historyManager.addOrUpdate(finalUrl, cleanT, currentUrl, finalHdrs)
+            onSendStreamToTv(finalUrl, cleanT, finalHdrs)
+        } ?: run {
+            historyManager.addOrUpdate(url, cleanT, currentUrl, hdrs)
+            onSendStreamToTv(url, cleanT, hdrs)
+        }
     }
 
     BackHandler(enabled = true) {
@@ -167,10 +176,7 @@ fun InAppBrowserScreen(
                 isDesktopMode = isDesktopMode,
                 onToggleDesktopMode = { isDesktopMode = !isDesktopMode; webViewInstance?.settings?.userAgentString = if (isDesktopMode) UA_DESKTOP else UA_MOBILE; webViewInstance?.reload() },
                 isAdBlockEnabled = isAdBlockEnabled, onToggleAdBlock = { isAdBlockEnabled = !isAdBlockEnabled },
-                onForceRescan = {
-                    webViewInstance?.evaluateJavascript(WvcDomSniffer.getInjectionScript(context), null)
-                    webViewInstance?.evaluateJavascript(WvcSnifferScripts.buildAggressiveRescanScript(WvcDomSniffer.CONSOLE_PREFIX), null)
-                },
+                onForceRescan = { webViewInstance?.evaluateJavascript(WvcDomSniffer.getInjectionScript(context), null); webViewInstance?.evaluateJavascript(WvcSnifferScripts.buildAggressiveRescanScript(WvcDomSniffer.CONSOLE_PREFIX), null) },
                 onClearData = {
                     webViewInstance?.clearCache(true); webViewInstance?.clearHistory()
                     detectedStreams.clear(); qualityOptions = emptyList(); isHome = true; inputUrl = ""; currentUrl = ""
@@ -257,11 +263,7 @@ fun InAppBrowserScreen(
                         onClearStreams = {
                             detectedStreams.clear(); streamHeaders.clear(); streamLabels.clear(); streamDurations.clear(); qualityOptions = emptyList()
                             ActiveStreamHolder.clearDetectedStream()
-                            webViewInstance?.let { wv ->
-                                wv.evaluateJavascript(WvcDomSniffer.getInjectionScript(context), null)
-                                wv.evaluateJavascript(WvcSnifferScripts.buildAggressiveRescanScript(WvcDomSniffer.CONSOLE_PREFIX), null)
-                                checkPlatformUrls(wv.url, wv.title)
-                            }
+                            webViewInstance?.let { wv -> wv.evaluateJavascript(WvcDomSniffer.getInjectionScript(context), null); wv.evaluateJavascript(WvcSnifferScripts.buildAggressiveRescanScript(WvcDomSniffer.CONSOLE_PREFIX), null); checkPlatformUrls(wv.url, wv.title) }
                             Toast.makeText(context, "🗑️ Reiniciando y recapturando video...", Toast.LENGTH_SHORT).show()
                         },
                         onRescanStreams = {},

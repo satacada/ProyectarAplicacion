@@ -30,13 +30,14 @@
         if (l.indexOf('.jpg') !== -1 || l.indexOf('.png') !== -1 || l.indexOf('.webp') !== -1 ||
             l.indexOf('.gif') !== -1 || l.indexOf('.css') !== -1 || l.indexOf('.js') !== -1 ||
             l.indexOf('i.mycdn.me') !== -1 || l.indexOf('st.mycdn.me') !== -1) return false;
+        if (l.indexOf('stub.mp4') !== -1 || l.indexOf('dummy.mp4') !== -1 || l.indexOf('blank.mp4') !== -1) return false;
         if (l.indexOf('/embed/') !== -1 || l.indexOf('/embed69') !== -1 || l.indexOf('/vidurl/') !== -1) return false;
         if (l.indexOf('init.mp4') !== -1 || l.indexOf('/init-') !== -1 || l.indexOf('.m4s') !== -1) return false;
         if (l.indexOf('.ts') !== -1 && l.indexOf('.m3u8') === -1) return false;
         return l.indexOf('.m3u8') !== -1 || l.indexOf('.mp4') !== -1 || l.indexOf('.mpd') !== -1 ||
                l.indexOf('/hls') !== -1 || l.indexOf('/stream/') !== -1 || l.indexOf('/manifest') !== -1 ||
                l.indexOf('/live') !== -1 || l.indexOf('chunklist') !== -1 ||
-               (l.indexOf('mycdn.me') !== -1 && (l.indexOf('vd') !== -1 || l.indexOf('video') !== -1 || l.indexOf('cmd=video') !== -1 || l.indexOf('/cmd/') !== -1 || l.indexOf('sig=') !== -1)) ||
+               ((l.indexOf('mycdn.me') !== -1 || l.indexOf('okcdn.ru') !== -1) && (l.indexOf('vd') !== -1 || l.indexOf('video') !== -1 || l.indexOf('cmd=video') !== -1 || l.indexOf('/cmd/') !== -1 || l.indexOf('sig=') !== -1)) ||
                (l.indexOf('master.txt') !== -1 && l.indexOf('/hls') !== -1);
     }
 
@@ -117,14 +118,25 @@
         }
     } catch(e) {}
 
-    // 5. Intercepción de Fetch y XHR
+    // 5. Intercepción de Fetch y XHR con registro de Token Fresco en Tiempo Real
+    window.__omniActiveLiveStream = window.__omniActiveLiveStream || null;
+    function updateLiveStreamIfFresher(u) {
+        if (!u || typeof u !== 'string') return;
+        if (u.indexOf('.m3u8') !== -1 || u.indexOf('/hls') !== -1 || u.indexOf('.mpd') !== -1) {
+            window.__omniActiveLiveStream = { url: u, timestamp: Date.now() };
+        }
+    }
+
     try {
         var origFetch = window.fetch;
         if (origFetch) {
             window.fetch = function() {
                 var a = arguments[0];
                 var u = (typeof a === 'string') ? a : (a && a.url ? a.url : '');
-                if (isMediaUrl(u)) reportMedia(u, document.title, 0, false);
+                if (isMediaUrl(u)) {
+                    updateLiveStreamIfFresher(u);
+                    reportMedia(u, document.title, 0, false);
+                }
                 return origFetch.apply(this, arguments);
             };
         }
@@ -134,11 +146,31 @@
         var origOpen = XMLHttpRequest.prototype.open;
         if (origOpen) {
             XMLHttpRequest.prototype.open = function(m, u) {
-                if (isMediaUrl(u)) reportMedia(u, document.title, 0, false);
+                if (isMediaUrl(u)) {
+                    updateLiveStreamIfFresher(u);
+                    reportMedia(u, document.title, 0, false);
+                }
                 return origOpen.apply(this, arguments);
             };
         }
     } catch(e) {}
+
+    // Función global invocable antes de transmitir para obtener el stream activo con token vivo (0s de retraso)
+    window.__omniGetLiveStream = function() {
+        try {
+            var vids = document.getElementsByTagName('video');
+            for (var vi = 0; vi < vids.length; vi++) {
+                var v = vids[vi];
+                if (v && !v.paused && v.currentSrc && isMediaUrl(v.currentSrc)) {
+                    return v.currentSrc;
+                }
+            }
+            if (window.__omniActiveLiveStream && (Date.now() - window.__omniActiveLiveStream.timestamp < 120000)) {
+                return window.__omniActiveLiveStream.url;
+            }
+        } catch(e) {}
+        return null;
+    };
 
     // 6. Extractor DOM específico para OK.ru (Metadata JSON en elemento reproductor)
     function sniffOkRuDom() {

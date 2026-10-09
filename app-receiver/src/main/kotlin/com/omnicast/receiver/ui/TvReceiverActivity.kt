@@ -157,16 +157,21 @@ class TvReceiverActivity : ComponentActivity() {
             }
             is SignalingMessage.IceCandidate -> webRtcReceiver.addRemoteIceCandidate(message.sdpMid, message.sdpMLineIndex, message.candidate)
             is SignalingMessage.DirectStreamHandoff -> {
-                digitalAudioReceiver?.stop(); webRtcReceiver.resetConnection()
-                val title = message.title?.ifBlank { "Transmisión Web" } ?: "Transmisión Web"
-                val ytId = message.headers["X-YouTube-Id"] ?: extractYouTubeId(message.mediaUrl)
-                if (!ytId.isNullOrBlank()) {
-                    exoPlayerManager.stop(); receiverState.value = ReceiverUiState.YouTubePlaying(ytId, title, System.currentTimeMillis())
-                } else {
-                    receiverState.value = ReceiverUiState.DirectStreamPlaying(message.mediaUrl, title)
-                    exoPlayerManager.playStream(message.mediaUrl, message.headers, title, message.startPositionMs)
-                    lifecycleScope.launch { historyManager.addOrUpdate(message.mediaUrl, title, message.headers, message.startPositionMs) }
-                    startPlaybackStatusReporting()
+                runCatching {
+                    digitalAudioReceiver?.stop(); webRtcReceiver.resetConnection()
+                    val title = message.title?.ifBlank { "Transmisión Web" } ?: "Transmisión Web"
+                    val ytId = message.headers["X-YouTube-Id"] ?: extractYouTubeId(message.mediaUrl)
+                    if (!ytId.isNullOrBlank()) {
+                        exoPlayerManager.stop(); receiverState.value = ReceiverUiState.YouTubePlaying(ytId, title, System.currentTimeMillis())
+                    } else {
+                        receiverState.value = ReceiverUiState.DirectStreamPlaying(message.mediaUrl, title)
+                        exoPlayerManager.playStream(message.mediaUrl, message.headers, title, message.startPositionMs)
+                        lifecycleScope.launch { historyManager.addOrUpdate(message.mediaUrl, title, message.headers, message.startPositionMs) }
+                        startPlaybackStatusReporting()
+                    }
+                }.onFailure { err ->
+                    com.omnicast.receiver.log.ReceiverLogger.log("TvReceiverActivity", "Error al procesar DirectStreamHandoff: ${err.message}", err)
+                    receiverState.value = ReceiverUiState.Standby
                 }
             }
             is SignalingMessage.PlayControl -> {

@@ -175,16 +175,21 @@ class FloatingViewBuilder(private val context: Context) {
         )
     }
 
-    fun buildExitConfirmation(onConfirmClose: () -> Unit, onCancel: () -> Unit): LinearLayout {
+    fun buildExitConfirmation(
+        onConfirmHideOverlay: () -> Unit,
+        onExitCompletely: () -> Unit,
+        onCancel: () -> Unit
+    ): LinearLayout {
         val bg = GradientDrawable().apply {
-            setColor(Color.parseColor("#F80F172A")); cornerRadius = dpToPx(14f).toFloat(); setStroke(dpToPx(1f), Color.parseColor("#EF4444"))
+            setColor(Color.parseColor("#F80D111A")); cornerRadius = dpToPx(14f).toFloat(); setStroke(dpToPx(1.2f), Color.parseColor("#EF4444"))
         }
         return LinearLayout(context).apply {
             orientation = LinearLayout.VERTICAL; background = bg; setPadding(dpToPx(14f), dpToPx(14f), dpToPx(14f), dpToPx(14f)); visibility = View.GONE
             layoutParams = LinearLayout.LayoutParams(dpToPx(240f), LinearLayout.LayoutParams.WRAP_CONTENT).apply { topMargin = dpToPx(8f) }
-            addView(TextView(context).apply { text = "¿Cerrar Asistente?"; setTextColor(Color.WHITE); setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f); typeface = Typeface.DEFAULT_BOLD })
-            addView(createBtn("❌ Sí, Cerrar", "#DC2626", onConfirmClose))
-            addView(createBtn("↩ Continuar", "#334155", onCancel))
+            addView(TextView(context).apply { text = "¿Opciones de Cierre?"; setTextColor(Color.WHITE); setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f); typeface = Typeface.DEFAULT_BOLD })
+            addView(createBtn("❌ Solo Ocultar Asistente", "#334155", onConfirmHideOverlay))
+            addView(createBtn("🚪 Cerrar App Totalmente", "#DC2626", onExitCompletely))
+            addView(createBtn("↩ Continuar", "#1E293B", onCancel))
         }
     }
 

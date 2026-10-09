@@ -55,6 +55,21 @@ class SenderMainActivity : ComponentActivity() {
                 inst.runOnUiThread { onBrowserRescanRequested?.invoke() }
             }
         }
+
+        fun exitCompletely(context: Context) {
+            try {
+                com.omnicast.sender.overlay.FloatingIndicatorService.stop(context)
+                com.omnicast.sender.service.CastMediaNotificationService.stop(context)
+                com.omnicast.sender.service.ProjectionForegroundService.stopService(context)
+                com.omnicast.sender.stream.ActiveStreamHolder.clear()
+                com.omnicast.sender.stream.ActiveStreamHolder.stopCasting()
+                sendDisconnectStatic(context)
+                (context.getSystemService(Context.NOTIFICATION_SERVICE) as? android.app.NotificationManager)?.cancelAll()
+                instance?.let { act -> act.runOnUiThread { act.finishAffinity() } }
+            } catch (e: Throwable) {
+                Log.e("Sender", "exitCompletely", e)
+            }
+        }
     }
 
     private lateinit var nsdScanner: NsdScannerManager

@@ -10,6 +10,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -19,26 +20,40 @@ import androidx.compose.ui.unit.sp
 @Composable
 fun RemoteExpandedControls(
     title: String,
+    streamCount: Int = 1,
+    streamSubtitle: String = "HLS • m3u8 stream directo",
     isPlaying: Boolean,
     positionMs: Long,
     durationMs: Long,
     volume: Float,
+    onShowDetectedStreams: () -> Unit = {},
+    onRescanStreams: () -> Unit = {},
+    onClearStreams: () -> Unit = {},
+    onTransmitLatest: () -> Unit = {},
     onPlayPause: () -> Unit,
     onSeekTo: (Long) -> Unit,
     onSkip: (Long) -> Unit,
     onVolumeChange: (Float) -> Unit,
-    onStop: () -> Unit,
-    onSelectQuality: (() -> Unit)?,
-    onSaveToPlaylist: (() -> Unit)?
+    onSaveToPlaylist: (() -> Unit)? = null,
+    onDeleteFromSaved: (() -> Unit)? = null,
+    onSelectQuality: (() -> Unit)? = null
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.padding(top = 4.dp)) {
-        // Cabecera: Flujos detectados + Transmitir / Estado
+        // Cabecera: Flujos detectados (Click para ver en orden descendente) + Re-escanear + Reset + Transmitir a TV
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier
+                    .weight(1f, fill = false)
+                    .clip(RoundedCornerShape(8.dp))
+                    .clickable { onShowDetectedStreams() }
+                    .padding(vertical = 2.dp, horizontal = 2.dp)
+            ) {
                 Box(
                     modifier = Modifier
                         .size(34.dp)
@@ -49,29 +64,52 @@ fun RemoteExpandedControls(
                     Text("⚡", fontSize = 16.sp)
                 }
                 Column {
-                    Text("Flujos detectados (1)", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold)
-                    Text("HLS • m3u8 stream directo", color = Color(0xFF94A3B8), fontSize = 10.sp)
+                    Text("Flujos detectados ($streamCount)", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                    Text(streamSubtitle, color = Color(0xFF94A3B8), fontSize = 10.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
             }
 
-            Button(
-                onClick = onStop,
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF10B981)),
-                shape = RoundedCornerShape(10.dp),
-                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
-                modifier = Modifier.height(34.dp)
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                Text("📺 Transmitiendo a TV", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                IconButton(
+                    onClick = onRescanStreams,
+                    modifier = Modifier
+                        .size(32.dp)
+                        .background(Color(0xFF182234), CircleShape)
+                        .border(1.dp, Color(0xFF28354E), CircleShape)
+                ) {
+                    Text("🔍", fontSize = 13.sp)
+                }
+                IconButton(
+                    onClick = onClearStreams,
+                    modifier = Modifier
+                        .size(32.dp)
+                        .background(Color(0xFF2A1B24), CircleShape)
+                        .border(1.dp, Color(0xFF4C1D24), CircleShape)
+                ) {
+                    Text("🗑️", fontSize = 12.sp)
+                }
+                Button(
+                    onClick = onTransmitLatest,
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF10B981)),
+                    shape = RoundedCornerShape(10.dp),
+                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
+                    modifier = Modifier.height(34.dp)
+                ) {
+                    Text("▶ Transmitir a TV", fontSize = 11.sp, fontWeight = FontWeight.ExtraBold, color = Color.White)
+                }
             }
         }
 
-        // Título y Estado + Guardar
+        // Título de la película + Botones intuitivos (Guardar y Borrar de guardados sin nombres de texto)
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Column(modifier = Modifier.weight(1f)) {
+            Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
                 Text(
                     text = title.ifBlank { "Transmisión Web" },
                     color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold,
@@ -83,20 +121,30 @@ fun RemoteExpandedControls(
                 }
             }
 
-            if (onSaveToPlaylist != null) {
-                Surface(
-                    color = Color(0xFF1A2335),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF2C3B59)),
-                    shape = RoundedCornerShape(10.dp),
-                    modifier = Modifier.clickable { onSaveToPlaylist() }
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                if (onSaveToPlaylist != null) {
+                    IconButton(
+                        onClick = onSaveToPlaylist,
+                        modifier = Modifier
+                            .size(34.dp)
+                            .background(Color(0xFF1A2335), RoundedCornerShape(10.dp))
+                            .border(1.dp, Color(0xFF2C3B59), RoundedCornerShape(10.dp))
                     ) {
-                        Text("🔖", fontSize = 11.sp)
-                        Text("Guardar", color = Color(0xFFCBD5E1), fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                        Text("🔖", fontSize = 14.sp)
+                    }
+                }
+                if (onDeleteFromSaved != null) {
+                    IconButton(
+                        onClick = onDeleteFromSaved,
+                        modifier = Modifier
+                            .size(34.dp)
+                            .background(Color(0xFF251A22), RoundedCornerShape(10.dp))
+                            .border(1.dp, Color(0xFF3F212E), RoundedCornerShape(10.dp))
+                    ) {
+                        Text("🗑️", fontSize = 13.sp)
                     }
                 }
             }
@@ -113,8 +161,8 @@ fun RemoteExpandedControls(
                 onValueChangeFinished = { onSeekTo(sliderPos.toLong()) },
                 valueRange = 0f..effectiveDur,
                 colors = SliderDefaults.colors(
-                    thumbColor = Color(0xFF00B4D8),
-                    activeTrackColor = Color(0xFF00B4D8),
+                    thumbColor = Color(0xFFFF7A00),
+                    activeTrackColor = Color(0xFFFF7A00),
                     inactiveTrackColor = Color(0xFF1E283D)
                 ),
                 modifier = Modifier.fillMaxWidth().height(20.dp)
@@ -130,48 +178,35 @@ fun RemoteExpandedControls(
             }
         }
 
-        // Fila de Controles de Reproducción: -10s ⟲ | ⏸ (Cyan Glow) | ⟳ +10s
+        // Fila de Controles de Reproducción: -10s afuera | ↺ | ❚❚ / ▶ Naranja | ↻ | +10s afuera
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(22.dp)
+            Text(text = "-10s", color = Color(0xFF94A3B8), fontSize = 12.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(end = 8.dp))
+            Box(
+                modifier = Modifier.size(42.dp).background(Color(0xFF161F2E), CircleShape).border(1.dp, Color(0xFF26354D), CircleShape).clickable { onSkip(-10000L) },
+                contentAlignment = Alignment.Center
+            ) { Text("↺", fontSize = 20.sp, color = Color(0xFFCBD5E1), fontWeight = FontWeight.Bold) }
+
+            Spacer(modifier = Modifier.width(18.dp))
+
+            Box(
+                modifier = Modifier.size(52.dp).background(Color(0xFFFF7A00), CircleShape).clickable { onPlayPause() },
+                contentAlignment = Alignment.Center
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(46.dp)
-                        .background(Color(0xFF182030), CircleShape)
-                        .border(1.dp, Color(0xFF28354E), CircleShape)
-                        .clickable { onSkip(-10000L) },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text("-10s ⟲", fontSize = 11.sp, color = Color(0xFFCBD5E1), fontWeight = FontWeight.Bold)
-                }
-
-                Box(
-                    modifier = Modifier
-                        .size(62.dp)
-                        .background(Color(0xFF00B4D8), CircleShape)
-                        .clickable { onPlayPause() },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(if (isPlaying) "⏸" else "▶", fontSize = 26.sp, color = Color.White)
-                }
-
-                Box(
-                    modifier = Modifier
-                        .size(46.dp)
-                        .background(Color(0xFF182030), CircleShape)
-                        .border(1.dp, Color(0xFF28354E), CircleShape)
-                        .clickable { onSkip(10000L) },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text("⟳ +10s", fontSize = 11.sp, color = Color(0xFFCBD5E1), fontWeight = FontWeight.Bold)
-                }
+                Text(text = if (isPlaying) "❚❚" else "▶", fontSize = if (isPlaying) 18.sp else 22.sp, color = Color.White, fontWeight = FontWeight.Bold)
             }
+
+            Spacer(modifier = Modifier.width(18.dp))
+
+            Box(
+                modifier = Modifier.size(42.dp).background(Color(0xFF161F2E), CircleShape).border(1.dp, Color(0xFF26354D), CircleShape).clickable { onSkip(10000L) },
+                contentAlignment = Alignment.Center
+            ) { Text("↻", fontSize = 20.sp, color = Color(0xFFCBD5E1), fontWeight = FontWeight.Bold) }
+
+            Text(text = "+10s", color = Color(0xFF94A3B8), fontSize = 12.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(start = 8.dp))
         }
 
         // Fila Inferior: Control de Volumen y Calidad

@@ -48,12 +48,23 @@ fun InAppBrowserScreen(
     var showOptionsSheet by remember { mutableStateOf(false) }
     var showSideDrawer by remember { mutableStateOf(false) }
     var showWhitelistDialog by remember { mutableStateOf(false) }
+    var showBottomControls by rememberSaveable { mutableStateOf(false) }
     var videoToSave by remember { mutableStateOf<HistoryItem?>(null) }
     var webViewInstance by remember { mutableStateOf<WebView?>(null); }; var popupWebView by remember { mutableStateOf<WebView?>(null) }
     val scope = rememberCoroutineScope()
     val isCasting by ActiveStreamHolder.isCasting.collectAsState(); val isPlaying by ActiveStreamHolder.isPlaying.collectAsState()
     val posMs by ActiveStreamHolder.positionMs.collectAsState(); val durMs by ActiveStreamHolder.durationMs.collectAsState()
     val volume by ActiveStreamHolder.volume.collectAsState(); val castTitle by ActiveStreamHolder.currentMediaTitle.collectAsState()
+
+    fun deleteMovieFromSaved() {
+        val active = ActiveStreamHolder.streamUrl ?: ""
+        val primary = if (active.isNotBlank()) active else detectedStreams.firstOrNull() ?: ""
+        if (primary.isNotBlank()) {
+            historyManager.remove(primary)
+            playlistManager.getPlaylists().forEach { pl -> playlistManager.removeItemFromPlaylist(pl.id, primary) }
+            Toast.makeText(context, "🗑️ Video eliminado de guardados", Toast.LENGTH_SHORT).show()
+        }
+    }
 
     fun transmitWithHistory(url: String, title: String, hdrs: Map<String, String>) {
         val cleanT = if (title.isNotBlank() && title != "Cargando..." && title != "Transmisión") title else pageTitle
@@ -62,13 +73,10 @@ fun InAppBrowserScreen(
     }
 
     BackHandler(enabled = true) {
-        if (showSideDrawer) showSideDrawer = false
-        else if (showWhitelistDialog) showWhitelistDialog = false
+        if (showSideDrawer) showSideDrawer = false else if (showWhitelistDialog) showWhitelistDialog = false
         else if (popupWebView != null) { popupWebView?.destroy(); popupWebView = null }
-        else if (videoToSave != null) videoToSave = null
-        else if (showOptionsSheet) showOptionsSheet = false
-        else if (webViewInstance?.canGoBack() == true) webViewInstance?.goBack()
-        else if (!isHome) isHome = true else onCloseBrowser()
+        else if (videoToSave != null) videoToSave = null else if (showOptionsSheet) showOptionsSheet = false
+        else if (webViewInstance?.canGoBack() == true) webViewInstance?.goBack() else if (!isHome) isHome = true else onCloseBrowser()
     }
 
     DisposableEffect(webViewInstance) {
@@ -81,18 +89,13 @@ fun InAppBrowserScreen(
 
     fun registerStream(url: String, hdrs: Map<String, String>, isPrimary: Boolean = false, label: String? = null) {
         if (url.isBlank() || AdBlocker.isAd(url)) return
-        val isM3u8 = url.contains(".m3u8", ignoreCase = true)
-        val shouldBePrimary = isPrimary || isM3u8
-        if (isPrimary) {
-            if (!detectedStreams.contains(url)) detectedStreams.add(0, url)
-            else if (detectedStreams.firstOrNull() != url) { detectedStreams.remove(url); detectedStreams.add(0, url) }
-        } else if (detectedStreams.size < 10 && !detectedStreams.contains(url)) {
-            if (shouldBePrimary) detectedStreams.add(0, url) else detectedStreams.add(url)
-        }
+        if (detectedStreams.contains(url)) detectedStreams.remove(url)
+        detectedStreams.add(0, url)
         if (hdrs.isNotEmpty()) streamHeaders[url] = hdrs; if (!label.isNullOrBlank()) streamLabels[url] = label
         val primaryUrl = detectedStreams.firstOrNull() ?: url
-        val effectiveTitle = if (pageTitle.isNotBlank() && pageTitle != "Cargando..." && pageTitle != "Transmisión") pageTitle else "Video Web"
-        ActiveStreamHolder.update(primaryUrl, effectiveTitle, streamHeaders[primaryUrl] ?: hdrs)
+        val cleanT = if (pageTitle.isNotBlank() && pageTitle != "Cargando..." && pageTitle != "Transmisión") pageTitle else "Video Web"
+        ActiveStreamHolder.update(primaryUrl, cleanT, streamHeaders[primaryUrl] ?: hdrs)
+        showBottomControls = true
     }
 
     fun checkPlatformUrls(url: String?, title: String? = null) {
@@ -100,18 +103,15 @@ fun InAppBrowserScreen(
             url = url, title = title ?: webViewInstance?.title,
             onYouTube = { ytUrl, cleanT, hdrs ->
                 val curYt = detectedStreams.firstOrNull()?.let { BrowserUrlHelper.extractYouTubeId(it) }
-                val newYt = BrowserUrlHelper.extractYouTubeId(ytUrl)
-                if (curYt != null && curYt != newYt) {
-                    detectedStreams.clear(); streamHeaders.clear(); streamLabels.clear(); qualityOptions = emptyList()
-                    ActiveStreamHolder.clearDetectedStream()
+                if (curYt != null && curYt != BrowserUrlHelper.extractYouTubeId(ytUrl)) {
+                    detectedStreams.clear(); streamHeaders.clear(); streamLabels.clear(); qualityOptions = emptyList(); ActiveStreamHolder.clearDetectedStream()
                 }
                 if (!cleanT.isNullOrBlank() && cleanT != "Transmisión") pageTitle = cleanT
                 registerStream(ytUrl, hdrs, isPrimary = true, label = "YouTube")
             },
             onDailymotion = { sUrl, dTitle, dHdrs ->
                 val actualTitle = dTitle ?: webViewInstance?.title?.replace(" - Dailymotion", "")?.takeIf { it.isNotBlank() && it != "Dailymotion" } ?: "Video Dailymotion"
-                pageTitle = actualTitle
-                registerStream(sUrl, dHdrs, isPrimary = true, label = actualTitle)
+                pageTitle = actualTitle; registerStream(sUrl, dHdrs, isPrimary = true, label = actualTitle)
             }
         )
     }
@@ -133,12 +133,13 @@ fun InAppBrowserScreen(
         }
         val cleanTitle = pageTitle.replace(" - YouTube", "").replace(" | OK", "").trim().take(22)
         val prefix = if (cleanTitle.isNotBlank() && cleanTitle != "Transmisión" && cleanTitle != "OmniCast Browser") "[$cleanTitle] " else ""
-        qualityOptions = detectedStreams.map { url ->
+        qualityOptions = detectedStreams.mapIndexed { index, url ->
             val ytId = BrowserUrlHelper.extractYouTubeId(url)
-            if (ytId != null) StreamQualityOption("🎬 $prefix YouTube", "YouTube", "1080p / 720p", url)
+            val num = detectedStreams.size - index
+            if (ytId != null) StreamQualityOption("🎬 $prefix YouTube #$num", "YouTube", "1080p / 720p", url)
             else {
                 val qLabel = streamLabels[url] ?: if (url.contains(".m3u8", true)) "HLS Adaptativo" else "Video Directo"
-                StreamQualityOption("🎬 $prefix$qLabel", qLabel, "Máxima Calidad", url, isMaster = qLabel.contains("HLS"))
+                StreamQualityOption("🎬 $prefix$qLabel #$num", qLabel, "Máxima Calidad", url, isMaster = qLabel.contains("HLS"))
             }
         }.distinctBy { it.streamUrl }
         showOptionsSheet = true
@@ -157,7 +158,9 @@ fun InAppBrowserScreen(
             BrowserTopBar(
                 inputUrl = inputUrl, onInputUrlChange = { inputUrl = it }, onNavigate = { navigateTo(it) }, onClose = onCloseBrowser,
                 onBack = { if (webViewInstance?.canGoBack() == true) webViewInstance?.goBack() else isHome = true },
-                onReload = { webViewInstance?.reload() }, isDesktopMode = isDesktopMode,
+                onForward = { if (webViewInstance?.canGoForward() == true) webViewInstance?.goForward() },
+                canGoForward = webViewInstance?.canGoForward() == true, onReload = { webViewInstance?.reload() },
+                isDesktopMode = isDesktopMode,
                 onToggleDesktopMode = { isDesktopMode = !isDesktopMode; webViewInstance?.settings?.userAgentString = if (isDesktopMode) UA_DESKTOP else UA_MOBILE; webViewInstance?.reload() },
                 isAdBlockEnabled = isAdBlockEnabled, onToggleAdBlock = { isAdBlockEnabled = !isAdBlockEnabled },
                 onForceRescan = {
@@ -169,10 +172,9 @@ fun InAppBrowserScreen(
                     detectedStreams.clear(); qualityOptions = emptyList(); isHome = true; inputUrl = ""; currentUrl = ""
                     ActiveStreamHolder.clear(); prefs.edit().remove("saved_browser_last_url").apply()
                 },
-                detectedStreamsCount = detectedStreams.size, onOpenVideoList = { openOptionsSheet() },
+                detectedStreamsCount = detectedStreams.size, onToggleBottomControls = { showBottomControls = !showBottomControls },
                 onOpenHistory = { showSideDrawer = true }, onOpenPlaylists = { showSideDrawer = true },
-                onOpenDrawer = { showSideDrawer = true }, onOpenWhitelist = { showWhitelistDialog = true },
-                isTvConnected = isTvConnected
+                onOpenDrawer = { showSideDrawer = true }, onOpenWhitelist = { showWhitelistDialog = true }
             )
 
             if (progress in 1..99) LinearProgressIndicator(progress = { progress / 100f }, modifier = Modifier.fillMaxWidth().height(3.dp), color = Color(0xFF38BDF8))
@@ -184,11 +186,9 @@ fun InAppBrowserScreen(
                     isHome = isHome, isAdBlockEnabled = isAdBlockEnabled, currentUrl = currentUrl,
                     onProgress = { progress = it },
                     onPageStarted = { newUrl ->
-                        val oldHost = runCatching { java.net.URI(currentUrl).host }.getOrNull()
-                        val newHost = runCatching { java.net.URI(newUrl).host }.getOrNull()
-                        val oldPath = runCatching { java.net.URI(currentUrl).path }.getOrNull()
-                        val newPath = runCatching { java.net.URI(newUrl).path }.getOrNull()
-                        if (currentUrl.isNotBlank() && (oldHost != newHost || oldPath != newPath) && !newUrl.startsWith("about:")) {
+                        val hOld = runCatching { java.net.URI(currentUrl).host }.getOrNull(); val hNew = runCatching { java.net.URI(newUrl).host }.getOrNull()
+                        val pOld = runCatching { java.net.URI(currentUrl).path }.getOrNull(); val pNew = runCatching { java.net.URI(newUrl).path }.getOrNull()
+                        if (currentUrl.isNotBlank() && (hOld != hNew || pOld != pNew) && !newUrl.startsWith("about:")) {
                             detectedStreams.clear(); streamHeaders.clear(); streamLabels.clear(); qualityOptions = emptyList()
                             ActiveStreamHolder.clearDetectedStream(); pageTitle = "Cargando..."
                         }
@@ -201,11 +201,9 @@ fun InAppBrowserScreen(
                         u?.let { checkPlatformUrls(it, pageTitle) }
                     },
                     onHistoryUpdated = { u, t ->
-                        val oldHost = runCatching { java.net.URI(currentUrl).host }.getOrNull()
-                        val newHost = runCatching { java.net.URI(u).host }.getOrNull()
-                        val oldPath = runCatching { java.net.URI(currentUrl).path }.getOrNull()
-                        val newPath = runCatching { java.net.URI(u).path }.getOrNull()
-                        if (currentUrl.isNotBlank() && (oldHost != newHost || oldPath != newPath) && !u.startsWith("about:") && !u.contains("favicon")) {
+                        val hOld = runCatching { java.net.URI(currentUrl).host }.getOrNull(); val hNew = runCatching { java.net.URI(u).host }.getOrNull()
+                        val pOld = runCatching { java.net.URI(currentUrl).path }.getOrNull(); val pNew = runCatching { java.net.URI(u).path }.getOrNull()
+                        if (currentUrl.isNotBlank() && (hOld != hNew || pOld != pNew) && !u.startsWith("about:") && !u.contains("favicon")) {
                             detectedStreams.clear(); streamHeaders.clear(); streamLabels.clear(); qualityOptions = emptyList()
                             ActiveStreamHolder.clearDetectedStream()
                         }
@@ -234,32 +232,35 @@ fun InAppBrowserScreen(
                     onWebViewCreated = { webViewInstance = it; if (!isHome && currentUrl.isNotBlank() && it.url == null) it.loadUrl(currentUrl) }
                 )
 
-                if (isCasting || (!isHome && detectedStreams.isNotEmpty())) {
+                if ((showBottomControls || isCasting) && (!isHome && (detectedStreams.isNotEmpty() || isCasting))) {
                     BrowserBottomBarContainer(
                         isCasting = isCasting, castTitle = castTitle, isPlaying = isPlaying,
-                        posMs = posMs, durMs = durMs, volume = volume, detectedCount = detectedStreams.size, pageTitle = pageTitle,
-                        onTransmitDirect = {
+                        posMs = posMs, durMs = durMs, volume = volume, detectedCount = detectedStreams.size,
+                        streamSubtitle = streamLabels[detectedStreams.firstOrNull() ?: ""] ?: "HLS • m3u8 stream directo",
+                        pageTitle = pageTitle,
+                        onTransmitLatest = {
                             val first = detectedStreams.firstOrNull() ?: return@BrowserBottomBarContainer
                             val bestT = webViewInstance?.title?.takeIf { it.isNotBlank() && !it.contains("about:blank") && it != "Transmisión" } ?: pageTitle
                             transmitWithHistory(first, bestT, streamHeaders[first] ?: emptyMap())
                         },
+                        onShowDetectedStreams = { openOptionsSheet() },
                         onOpenQualities = { openOptionsSheet() },
                         onPlayControl = { act, pos, vol ->
                             if (act == "VOLUME") ActiveStreamHolder.setVolume(vol)
                             ActiveStreamHolder.onSendPlayControl?.invoke(act, pos, vol, null)
                         },
-                        onStopCasting = {
-                            ActiveStreamHolder.stopCasting()
-                            Toast.makeText(context, "🛑 Transmisión detenida", Toast.LENGTH_SHORT).show()
-                        },
+                        onStopCasting = { ActiveStreamHolder.stopCasting(); Toast.makeText(context, "🛑 Transmisión detenida", Toast.LENGTH_SHORT).show() },
                         onClearStreams = {
                             detectedStreams.clear(); streamHeaders.clear(); streamLabels.clear(); qualityOptions = emptyList()
-                            ActiveStreamHolder.clearDetectedStream()
+                            ActiveStreamHolder.clearDetectedStream(); Toast.makeText(context, "🗑️ Flujos reseteados", Toast.LENGTH_SHORT).show()
+                        },
+                        onRescanStreams = {
                             webViewInstance?.let { wv ->
                                 wv.evaluateJavascript(WvcDomSniffer.getInjectionScript(context), null)
+                                wv.evaluateJavascript(WvcSnifferScripts.buildAggressiveRescanScript(WvcDomSniffer.CONSOLE_PREFIX), null)
                                 checkPlatformUrls(wv.url, wv.title)
                             }
-                            Toast.makeText(context, "🗑️ Capturas limpiadas. Re-escaneando...", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "🔍 Re-escaneando flujos...", Toast.LENGTH_SHORT).show()
                         },
                         onSaveToPlaylist = {
                             val active = ActiveStreamHolder.streamUrl ?: ""
@@ -267,10 +268,9 @@ fun InAppBrowserScreen(
                             if (primary.isNotBlank()) {
                                 val t = if (castTitle.isNotBlank()) castTitle else if (pageTitle.isNotBlank() && pageTitle != "Cargando...") pageTitle else "Película / Video"
                                 videoToSave = HistoryItem(url = primary, title = t, pageUrl = currentUrl, headers = streamHeaders[primary] ?: emptyMap())
-                            } else {
-                                Toast.makeText(context, "No hay video detectado para guardar", Toast.LENGTH_SHORT).show()
                             }
                         },
+                        onDeleteFromSaved = { deleteMovieFromSaved() },
                         modifier = Modifier.align(Alignment.BottomCenter)
                     )
                 }
@@ -287,12 +287,11 @@ fun InAppBrowserScreen(
         videoToSave = videoToSave, playlistManager = playlistManager, pageTitle = pageTitle,
         qualityOptions = qualityOptions, historyList = emptyList(),
         onTransmitOption = { opt -> showOptionsSheet = false; val bestT = webViewInstance?.title?.takeIf { it.isNotBlank() && !it.contains("about:blank") && it != "Transmisión" } ?: pageTitle; transmitWithHistory(opt.streamUrl, bestT, streamHeaders[opt.streamUrl] ?: emptyMap()) },
-        onTransmitHistory = { transmitWithHistory(it.url, it.title, it.headers) },
-        onDismissOptions = { showOptionsSheet = false },
+        onTransmitHistory = { transmitWithHistory(it.url, it.title, it.headers) }, onDismissOptions = { showOptionsSheet = false },
         onClearOptions = { detectedStreams.clear(); qualityOptions = emptyList(); showOptionsSheet = false },
         onDeleteHistory = { historyManager.remove(it) }, onClearHistory = { historyManager.clear() },
         onToggleFavorite = { historyManager.toggleFavorite(it) }, onDismissHistory = {}, onDismissPlaylists = {},
-        onDismissSaveDialog = { videoToSave = null }, onSavedToPlaylist = { Toast.makeText(context, "💾 Guardado en " + it, Toast.LENGTH_SHORT).show() },
+        onDismissSaveDialog = { videoToSave = null }, onSavedToPlaylist = { Toast.makeText(context, "💾 Guardado en $it", Toast.LENGTH_SHORT).show() },
         showWhitelistDialog = showWhitelistDialog, currentUrl = currentUrl,
         onDismissWhitelist = { showWhitelistDialog = false }, onWhitelistUpdated = { webViewInstance?.reload() }
     )

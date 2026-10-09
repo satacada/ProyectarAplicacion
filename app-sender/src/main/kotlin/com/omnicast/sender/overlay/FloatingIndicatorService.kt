@@ -117,7 +117,14 @@ class FloatingIndicatorService : Service() {
         val dotView = builder.buildDotView().apply { visibility = View.GONE }
         var menuLayoutRef: View? = null
         var exitConfirmRef: LinearLayout? = null
-        val exitConfirmLayout = builder.buildExitConfirmation(onConfirmClose = { stopSelf() }, onCancel = { exitConfirmRef?.visibility = View.GONE })
+        val exitConfirmLayout = builder.buildExitConfirmation(
+            onConfirmHideOverlay = { stopSelf() },
+            onExitCompletely = {
+                SenderMainActivity.exitCompletely(this)
+                stopSelf()
+            },
+            onCancel = { exitConfirmRef?.visibility = View.GONE }
+        )
         exitConfirmRef = exitConfirmLayout
 
         val menuController = builder.buildMenu(
@@ -216,7 +223,7 @@ class FloatingIndicatorService : Service() {
             },
             onDisableOverlay = {
                 menuLayoutRef?.visibility = View.GONE; isExpanded = false
-                stopSelf()
+                exitConfirmRef?.visibility = View.VISIBLE
             }
         )
         menuControllerRef = menuController

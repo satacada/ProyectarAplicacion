@@ -1,18 +1,9 @@
 package com.omnicast.sender.ui.browser
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.omnicast.sender.ui.components.RemoteControlBar
 
 @Composable
@@ -24,69 +15,48 @@ fun BrowserBottomBarContainer(
     durMs: Long,
     volume: Float = 1.0f,
     detectedCount: Int,
+    streamSubtitle: String = "HLS • m3u8 stream directo",
     pageTitle: String,
-    onTransmitDirect: () -> Unit,
+    onTransmitLatest: () -> Unit,
+    onShowDetectedStreams: () -> Unit,
     onOpenQualities: () -> Unit,
     onPlayControl: (String, Long, Float) -> Unit,
     onStopCasting: () -> Unit,
     onClearStreams: () -> Unit = {},
+    onRescanStreams: () -> Unit = {},
     onSaveToPlaylist: (() -> Unit)? = null,
+    onDeleteFromSaved: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
-    Column(modifier = modifier.fillMaxWidth()) {
-        if (isCasting && detectedCount > 0) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color(0xFF065F46))
-                    .padding(horizontal = 12.dp, vertical = 6.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = "🎬 Nuevo flujo detectado ($detectedCount)",
-                    color = Color(0xFFA7F3D0),
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold
-                )
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(6.dp))
-                        .background(Color(0xFF10B981))
-                        .clickable { onTransmitDirect() }
-                        .padding(horizontal = 10.dp, vertical = 4.dp)
-                ) {
-                    Text("▶ Transmitir a TV", color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+    Box(modifier = modifier.fillMaxWidth()) {
+        RemoteControlBar(
+            title = if (isCasting) castTitle.ifBlank { pageTitle } else pageTitle,
+            streamCount = detectedCount,
+            streamSubtitle = streamSubtitle,
+            isPlaying = isPlaying,
+            positionMs = posMs,
+            durationMs = durMs,
+            volume = volume,
+            onShowDetectedStreams = onShowDetectedStreams,
+            onRescanStreams = onRescanStreams,
+            onClearStreams = onClearStreams,
+            onTransmitLatest = onTransmitLatest,
+            onPlayPause = {
+                val isNearEnd = durMs > 2000L && posMs >= (durMs - 1500L)
+                if (isPlaying) {
+                    onPlayControl("PAUSE", posMs, 1f)
+                } else {
+                    if (isNearEnd) onPlayControl("SEEK", 0L, 1f)
+                    onPlayControl("PLAY", if (isNearEnd) 0L else posMs, 1f)
                 }
-            }
-        }
-        if (isCasting) {
-            RemoteControlBar(
-                title = castTitle.ifBlank { pageTitle },
-                isPlaying = isPlaying, positionMs = posMs, durationMs = durMs, volume = volume,
-                onPlayPause = {
-                    val isNearEnd = durMs > 2000L && posMs >= (durMs - 1500L)
-                    if (isPlaying) {
-                        onPlayControl("PAUSE", posMs, 1f)
-                    } else {
-                        if (isNearEnd) onPlayControl("SEEK", 0L, 1f)
-                        onPlayControl("PLAY", if (isNearEnd) 0L else posMs, 1f)
-                    }
-                },
-                onSeekTo = { onPlayControl("SEEK", it, 1f) },
-                onSkip = { onPlayControl("SEEK", (posMs + it).coerceAtLeast(0L), 1f) },
-                onVolumeChange = { onPlayControl("VOLUME", 0L, it) },
-                onStop = onStopCasting,
-                onSelectQuality = onOpenQualities,
-                onSaveToPlaylist = onSaveToPlaylist
-            )
-        } else if (detectedCount > 0) {
-            DetectedStreamBar(
-                streamCount = detectedCount, title = pageTitle,
-                onTransmitDirect = onTransmitDirect, onOpenQualities = onOpenQualities,
-                onClearStreams = onClearStreams,
-                onSaveToPlaylist = onSaveToPlaylist
-            )
-        }
+            },
+            onSeekTo = { onPlayControl("SEEK", it, 1f) },
+            onSkip = { onPlayControl("SEEK", (posMs + it).coerceAtLeast(0L), 1f) },
+            onVolumeChange = { onPlayControl("VOLUME", 0L, it) },
+            onStop = onStopCasting,
+            onSelectQuality = onOpenQualities,
+            onSaveToPlaylist = onSaveToPlaylist,
+            onDeleteFromSaved = onDeleteFromSaved
+        )
     }
 }

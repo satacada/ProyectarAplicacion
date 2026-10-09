@@ -24,17 +24,24 @@ import androidx.compose.ui.unit.sp
 @Composable
 fun RemoteControlBar(
     title: String,
+    streamCount: Int = 1,
+    streamSubtitle: String = "HLS • m3u8 stream directo",
     isPlaying: Boolean,
     positionMs: Long,
     durationMs: Long,
     volume: Float,
+    onShowDetectedStreams: () -> Unit = {},
+    onRescanStreams: () -> Unit = {},
+    onClearStreams: () -> Unit = {},
+    onTransmitLatest: () -> Unit = {},
     onPlayPause: () -> Unit,
     onSeekTo: (Long) -> Unit,
     onSkip: (Long) -> Unit,
     onVolumeChange: (Float) -> Unit,
     onStop: () -> Unit,
     onSelectQuality: (() -> Unit)? = null,
-    onSaveToPlaylist: (() -> Unit)? = null
+    onSaveToPlaylist: (() -> Unit)? = null,
+    onDeleteFromSaved: (() -> Unit)? = null
 ) {
     var isExpanded by rememberSaveable { mutableStateOf(true) }
 
@@ -111,11 +118,11 @@ fun RemoteControlBar(
                         Box(
                             modifier = Modifier
                                 .size(34.dp)
-                                .background(Color(0xFF00B4D8), CircleShape)
+                                .background(Color(0xFFFF7A00), CircleShape)
                                 .clickable { onPlayPause() },
                             contentAlignment = Alignment.Center
                         ) {
-                            Text(if (isPlaying) "⏸" else "▶", fontSize = 14.sp, color = Color.White)
+                            Text(if (isPlaying) "❚❚" else "▶", fontSize = 14.sp, color = Color.White)
                         }
                         IconButton(onClick = onStop, modifier = Modifier.size(32.dp)) {
                             Text("🛑", fontSize = 15.sp)
@@ -131,17 +138,23 @@ fun RemoteControlBar(
                 ) {
                     RemoteExpandedControls(
                         title = title,
+                        streamCount = streamCount,
+                        streamSubtitle = streamSubtitle,
                         isPlaying = isPlaying,
                         positionMs = positionMs,
                         durationMs = durationMs,
                         volume = volume,
+                        onShowDetectedStreams = onShowDetectedStreams,
+                        onRescanStreams = onRescanStreams,
+                        onClearStreams = onClearStreams,
+                        onTransmitLatest = onTransmitLatest,
                         onPlayPause = onPlayPause,
                         onSeekTo = onSeekTo,
                         onSkip = onSkip,
                         onVolumeChange = onVolumeChange,
-                        onStop = onStop,
-                        onSelectQuality = onSelectQuality,
-                        onSaveToPlaylist = onSaveToPlaylist
+                        onSaveToPlaylist = onSaveToPlaylist,
+                        onDeleteFromSaved = onDeleteFromSaved,
+                        onSelectQuality = onSelectQuality
                     )
                 }
             }

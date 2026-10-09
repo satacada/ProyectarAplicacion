@@ -32,6 +32,8 @@ fun BrowserTopBar(
     onNavigate: (String) -> Unit,
     onClose: () -> Unit,
     onBack: () -> Unit,
+    onForward: () -> Unit = {},
+    canGoForward: Boolean = false,
     onReload: () -> Unit,
     isDesktopMode: Boolean,
     onToggleDesktopMode: () -> Unit,
@@ -40,12 +42,11 @@ fun BrowserTopBar(
     onForceRescan: () -> Unit,
     onClearData: () -> Unit,
     detectedStreamsCount: Int = 0,
-    onOpenVideoList: () -> Unit = {},
+    onToggleBottomControls: () -> Unit = {},
     onOpenHistory: () -> Unit = {},
     onOpenPlaylists: () -> Unit = {},
     onOpenDrawer: () -> Unit = {},
-    onOpenWhitelist: () -> Unit = {},
-    isTvConnected: Boolean = true
+    onOpenWhitelist: () -> Unit = {}
 ) {
     val focusManager = LocalFocusManager.current
     var showMenu by remember { mutableStateOf(false) }
@@ -70,14 +71,19 @@ fun BrowserTopBar(
             IconButton(onClick = onOpenDrawer, modifier = Modifier.size(32.dp)) {
                 Text("☰", color = Color(0xFF94A3B8), fontSize = 18.sp, fontWeight = FontWeight.Bold)
             }
-            IconButton(onClick = onClose, modifier = Modifier.size(32.dp)) {
-                Text("✕", color = Color(0xFF94A3B8), fontSize = 16.sp, fontWeight = FontWeight.Bold)
-            }
             IconButton(onClick = onBack, modifier = Modifier.size(32.dp)) {
-                Text("◀", color = Color(0xFFCBD5E1), fontSize = 15.sp)
+                Text("<", color = Color(0xFFCBD5E1), fontSize = 18.sp, fontWeight = FontWeight.Bold)
+            }
+            IconButton(onClick = onForward, enabled = canGoForward, modifier = Modifier.size(32.dp)) {
+                Text(
+                    ">",
+                    color = if (canGoForward) Color(0xFFCBD5E1) else Color(0xFF475569),
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold
+                )
             }
             IconButton(onClick = onReload, modifier = Modifier.size(32.dp)) {
-                Text("↻", color = Color(0xFFCBD5E1), fontSize = 16.sp)
+                Text("⟳", color = Color(0xFFCBD5E1), fontSize = 18.sp, fontWeight = FontWeight.Bold)
             }
 
             Row(
@@ -133,14 +139,14 @@ fun BrowserTopBar(
                 }
             }
 
-            // Botón Naranja Circular de Transmisión con Insignia Contadora
+            // Botón Naranja Circular de Transmisión con Insignia Contadora (Web Video Caster)
             Box(contentAlignment = Alignment.TopEnd) {
                 IconButton(
-                    onClick = onOpenVideoList,
+                    onClick = onToggleBottomControls,
                     modifier = Modifier
                         .size(38.dp)
                         .background(
-                            if (detectedStreamsCount > 0) Color(0xFFF97316) else Color(0xFF1E293B),
+                            if (detectedStreamsCount > 0) Color(0xFFFF7A00) else Color(0xFF334155),
                             CircleShape
                         )
                 ) {
@@ -169,16 +175,6 @@ fun BrowserTopBar(
                     }
                 }
             }
-
-            // Indicador de Cast a la TV Box
-            Box(
-                modifier = Modifier
-                    .size(10.dp)
-                    .background(
-                        if (isTvConnected) Color(0xFF10B981) else Color(0xFFEF4444),
-                        CircleShape
-                    )
-            )
 
             Box {
                 IconButton(onClick = { showMenu = true }, modifier = Modifier.size(32.dp)) {
@@ -219,6 +215,10 @@ fun BrowserTopBar(
                         onClick = { onOpenDrawer(); showMenu = false }
                     )
                     HorizontalDivider(color = Color(0xFF334155))
+                    DropdownMenuItem(
+                        text = { Text("🚪 Cerrar Navegador", color = Color(0xFFCBD5E1)) },
+                        onClick = { onClose(); showMenu = false }
+                    )
                     DropdownMenuItem(
                         text = { Text("🗑 Limpiar caché y datos", color = Color(0xFFF87171)) },
                         onClick = { onClearData(); showMenu = false }

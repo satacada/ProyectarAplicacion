@@ -1,7 +1,7 @@
 # 📊 PROJECT DASHBOARD — OmniCast Pro
 
 **Última actualización:** 2026-10-09  
-**Versión de producción actual:** v3.32.8 (Sender) / v3.31.6 (Receiver)  
+**Versión de producción actual:** v3.32.9 (Sender) / v3.31.6 (Receiver)  
 **Estándar de calidad:** AGENTS.md (Archivos <= 300 líneas, Clean Architecture, 100% Offline/Local)
 
 ---
@@ -36,7 +36,7 @@
 
 | Versión | Funcionalidades Aprobadas y Validadas por el Usuario | Estado |
 |---|---|---|
-| **v3.32.8** | • **Blindaje Anti-Cierre por Concurrencia (`InAppBrowserScreen`):** Extracción de copia defensiva inmutable (`detectedStreams.toList()`) y protección con `runCatching`, eliminando por completo el crash fatal `ConcurrentModificationException` al abrir calidades mientras llegan nuevos flujos.<br>• **Persistencia Estricta de Título de Transmisión (`ActiveStreamHolder`):** El título del video transmitido a TV solo se establece al pulsar *"Transmitir"* (`startCasting`) y queda blindado; nunca más se sobreescribe cuando el usuario navega a otras páginas o buscadores (ej. Yandex/Google) mientras la película sigue en TV.<br>• **Habilitación de Navegación a Servidores Externos ("LIVE"):** Limpieza de la condición de bloqueo de redirección en `BrowserWebView` para permitir enlaces legítimos a servidores de streaming externos en vivo sin ser interceptados erróneamente como publicidad. | 🟢 Aprobado |
+| **v3.32.9** | • **Desacoplamiento Total de Título Web en Mando Remoto (`BrowserBottomBarContainer`):** Eliminada por completo la variable `pageTitle` de la tarjeta de control; el título en los controles queda blindado exclusivamente al video transmitido (`castTitle`) o *"Transmisión Web"*, garantizando que nunca más cambie a nombres de buscadores o páginas visitadas (ej. Yandex, Google). | 🟢 Aprobado |
 | **v3.32.7** | • **Corrección de Formato de Duración en Lista de Flujos (`WvcVideoListSheet`):** Desacoplamiento de la duración de video colocándola en un renglón dedicado e independiente debajo de la resolución (`⏱ Duración: 1h 18m`), eliminando por completo el apretujamiento o deformación vertical de texto letra por letra y economizando el espacio en pantalla con espaciado vertical mínimo (2.dp). | 🟢 Aprobado |
 | **v3.32.6** | • **Eliminación Permanente de la Palabra "ESTADO:":** Se retiró definitivamente el texto redundante en la tarjeta de proyección principal, dejando una sola línea no truncada.<br>• **Subtítulo Compacto en Diálogo de Ajustes (`⚙️`):** Texto de Anti-Tirones simplificado a *"Activado (Buffer 100ms)"* sin desbordamiento.<br>• **Reubicación de Preset Zoom ("Fit 100%"):** Etiqueta ubicada debajo de *"PROPORCIÓN Y ZOOM EN TV"* eliminando deformaciones en pantallas estrechas. | 🟢 Aprobado |
 | **v3.32.4** | • **Filtro Estricto Anti-Comerciales de Preroll:** Descarte garantizado de cualquier video cuya duración sea menor a 60 segundos (ej. comerciales de 15-30s de Vidhide/Embed69 en Pelismart), evitando que reemplacen a la película real tanto en MP4 como en HLS.<br>• **Ampliación de Filtros en Telemetría:** Incorporados patrones de redes de anuncios de video (`spotx`, `doubleclick`, `ad-delivery`, `cat-bolt`, `imasdk`) en `TelemetryFilterAdapter`. | 🟢 Aprobado |

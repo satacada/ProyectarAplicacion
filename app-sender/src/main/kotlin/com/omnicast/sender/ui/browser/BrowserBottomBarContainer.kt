@@ -30,7 +30,7 @@ fun BrowserBottomBarContainer(
 ) {
     Box(modifier = modifier.fillMaxWidth()) {
         RemoteControlBar(
-            title = if (isCasting && castTitle.isNotBlank()) castTitle else pageTitle,
+            title = if (castTitle.isNotBlank()) castTitle else "Transmisión Web",
             streamCount = detectedCount,
             streamSubtitle = streamSubtitle,
             isPlaying = isPlaying,

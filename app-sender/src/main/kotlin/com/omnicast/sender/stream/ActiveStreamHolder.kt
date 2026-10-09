@@ -61,6 +61,7 @@ object ActiveStreamHolder {
         _durationMs.value = 0L
         _currentMediaTitle.value = ""
         _tracksInfo.value = null
+        com.omnicast.sender.overlay.FloatingIndicatorService.updateMode()
     }
 
     fun startCasting(url: String, videoTitle: String? = null, hdrs: Map<String, String> = emptyMap()) {
@@ -71,6 +72,7 @@ object ActiveStreamHolder {
         _positionMs.value = 0L
         _durationMs.value = 0L
         _tracksInfo.value = null
+        com.omnicast.sender.overlay.FloatingIndicatorService.updateMode()
     }
 
     fun updatePlayback(playing: Boolean, pos: Long, dur: Long) {
@@ -94,6 +96,7 @@ object ActiveStreamHolder {
         _isCasting.value = false
         _isPlaying.value = false
         _tracksInfo.value = null
+        com.omnicast.sender.overlay.FloatingIndicatorService.updateMode()
         onSendPlayControl?.invoke("STOP", 0L, 1.0f, null)
     }
 

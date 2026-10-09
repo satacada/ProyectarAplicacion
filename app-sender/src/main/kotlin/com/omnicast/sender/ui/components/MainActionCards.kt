@@ -77,7 +77,7 @@ fun MainActionCards(
                                 .border(1.dp, Color(0xFF8B5CF6).copy(alpha = 0.5f), RoundedCornerShape(10.dp)),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text("📺", fontSize = 18.sp)
+                            VectorTvIcon(modifier = Modifier.size(22.dp), color = Color(0xFFA78BFA))
                         }
                         Text(
                             text = "Casteo a Tv",
@@ -94,18 +94,21 @@ fun MainActionCards(
                         Button(
                             onClick = { if (isStreaming) onStopProjection() else onStartProjection() },
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = if (isStreaming) Color(0xFFDC2626) else Color(0xFF6366F1)
+                                containerColor = if (isStreaming) Color(0xFFDC2626) else Color(0xFF7C3AED)
                             ),
                             shape = RoundedCornerShape(10.dp),
                             contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp),
                             modifier = Modifier.height(36.dp)
                         ) {
-                            Text(
-                                text = if (isStreaming) "⏹ Detener" else "⛶ Proyectar",
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Color.White
-                            )
+                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+                                if (!isStreaming) CastTvIcon(modifier = Modifier.size(15.dp), color = Color.White)
+                                Text(
+                                    text = if (isStreaming) "⏹ Detener" else "Proyectar",
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White
+                                )
+                            }
                         }
 
                         Box(
@@ -116,12 +119,12 @@ fun MainActionCards(
                                 .clickable { onOpenProjectionConfig() },
                             contentAlignment = Alignment.Center
                         ) {
-                            Text("⚙️", fontSize = 16.sp)
+                            VectorGearIcon(modifier = Modifier.size(19.dp), color = Color(0xFFDDD6FE))
                         }
                     }
                 }
 
-                // Barra de información inferior estilizada (sin la palabra ESTADO)
+                // Barra de información inferior estilizada
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -132,7 +135,7 @@ fun MainActionCards(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
-                        Text("$rfShort • Zoom: $zoomDisplayLabel •", fontSize = 10.sp, color = Color(0xFFCBD5E1))
+                        Text("ESTADO: $rfShort • Zoom: $zoomDisplayLabel •", fontSize = 10.sp, color = Color(0xFFCBD5E1))
                         Text(
                             text = "Anti-Tirones: ${if (smoothBufferEnabled) "Si" else "No"}",
                             fontSize = 10.sp,
@@ -173,20 +176,20 @@ fun MainActionCards(
                     Row(
                         modifier = Modifier
                             .background(Color(0xFF332510), RoundedCornerShape(8.dp))
-                            .padding(horizontal = 8.dp, vertical = 4.dp),
+                            .padding(horizontal = 8.dp, vertical = 5.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
-                        Text("🌐", fontSize = 14.sp)
-                        Text("➔", fontSize = 10.sp, color = Color(0xFFFBBF24))
-                        Text("📺", fontSize = 14.sp)
+                        VectorGlobeIcon(modifier = Modifier.size(16.dp), color = Color(0xFFFBBF24))
+                        VectorArrowRightIcon(modifier = Modifier.size(14.dp), color = Color(0xFFFBBF24))
+                        VectorTvIcon(modifier = Modifier.size(16.dp), color = Color(0xFFFBBF24))
                     }
 
                     Text(
                         text = "Captura Web",
                         fontSize = 14.sp,
                         fontWeight = FontWeight.ExtraBold,
-                        color = Color(0xFFFBBF24)
+                        color = Color.White
                     )
                     Text(
                         text = "Navegador embebido para streaming",
@@ -205,7 +208,10 @@ fun MainActionCards(
                         contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp),
                         modifier = Modifier.fillMaxWidth().height(36.dp)
                     ) {
-                        Text("🌐 Abrir Web", fontSize = 12.sp, fontWeight = FontWeight.ExtraBold, color = Color.Black)
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            VectorGlobeIcon(modifier = Modifier.size(15.dp), color = Color.Black)
+                            Text("Abrir Web", fontSize = 12.sp, fontWeight = FontWeight.ExtraBold, color = Color.Black)
+                        }
                     }
                 }
             }
@@ -224,20 +230,20 @@ fun MainActionCards(
                     Row(
                         modifier = Modifier
                             .background(Color(0xFF38142C), RoundedCornerShape(8.dp))
-                            .padding(horizontal = 8.dp, vertical = 4.dp),
+                            .padding(horizontal = 8.dp, vertical = 5.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
-                        Text("🖼️", fontSize = 14.sp)
-                        Text("➔", fontSize = 10.sp, color = Color(0xFFF43F5E))
-                        Text("📺", fontSize = 14.sp)
+                        VectorImageIcon(modifier = Modifier.size(16.dp), color = Color(0xFFF43F5E))
+                        VectorArrowRightIcon(modifier = Modifier.size(14.dp), color = Color(0xFFF43F5E))
+                        VectorTvIcon(modifier = Modifier.size(16.dp), color = Color(0xFFF43F5E))
                     }
 
                     Text(
                         text = "Galería",
                         fontSize = 14.sp,
                         fontWeight = FontWeight.ExtraBold,
-                        color = Color(0xFFF43F5E)
+                        color = Color.White
                     )
                     Text(
                         text = "Fotos locales y archivos multimedia",
@@ -260,7 +266,10 @@ fun MainActionCards(
                             contentPadding = PaddingValues(horizontal = 6.dp, vertical = 4.dp),
                             modifier = Modifier.weight(1f).height(36.dp)
                         ) {
-                            Text("🖼️ Fotos", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                VectorImageIcon(modifier = Modifier.size(14.dp), color = Color.White)
+                                Text("Fotos", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                            }
                         }
 
                         Button(

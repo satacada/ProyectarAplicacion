@@ -43,7 +43,7 @@ fun InAppBrowserScreen(
     var isAdBlockEnabled by remember { mutableStateOf(true) }
     val detectedStreams = remember { mutableStateListOf<String>() }
     val streamHeaders = remember { mutableStateMapOf<String, Map<String, String>>() }
-    val streamLabels = remember { mutableStateMapOf<String, String>() }
+    val streamLabels = remember { mutableStateMapOf<String, String>() }; val streamDurations = remember { mutableStateMapOf<String, Float>() }
     var qualityOptions by remember { mutableStateOf<List<StreamQualityOption>>(emptyList()) }
     var showOptionsSheet by remember { mutableStateOf(false) }
     var showSideDrawer by remember { mutableStateOf(false) }
@@ -117,7 +117,7 @@ fun InAppBrowserScreen(
     }
 
     fun navigateTo(url: String) {
-        detectedStreams.clear(); streamHeaders.clear(); streamLabels.clear(); qualityOptions = emptyList()
+        detectedStreams.clear(); streamHeaders.clear(); streamLabels.clear(); streamDurations.clear(); qualityOptions = emptyList()
         ActiveStreamHolder.clearDetectedStream(); pageTitle = "Cargando..."
         val target = BrowserUrlHelper.normalizeUrl(url)
         inputUrl = target; currentUrl = target; isHome = false
@@ -136,10 +136,12 @@ fun InAppBrowserScreen(
         qualityOptions = detectedStreams.mapIndexed { index, url ->
             val ytId = BrowserUrlHelper.extractYouTubeId(url)
             val num = detectedStreams.size - index
-            if (ytId != null) StreamQualityOption("🎬 $prefix YouTube #$num", "YouTube", "1080p / 720p", url)
+            val dur = streamDurations[url] ?: (durMs / 1000f).coerceAtLeast(0f)
+            val isMovie = dur >= 2400f || (dur == 0f && url.contains(".m3u8", true)) || cleanTitle.contains("pelicula", true)
+            if (ytId != null) StreamQualityOption("🎬 $prefix YouTube #$num", "YouTube", "1080p / 720p", url, durationSeconds = dur, isMovie = isMovie)
             else {
                 val qLabel = streamLabels[url] ?: if (url.contains(".m3u8", true)) "HLS Adaptativo" else "Video Directo"
-                StreamQualityOption("🎬 $prefix$qLabel #$num", qLabel, "Máxima Calidad", url, isMaster = qLabel.contains("HLS"))
+                StreamQualityOption("🎬 $prefix$qLabel #$num", qLabel, "Máxima Calidad", url, isMaster = qLabel.contains("HLS"), durationSeconds = dur, isMovie = isMovie)
             }
         }.distinctBy { it.streamUrl }
         showOptionsSheet = true
@@ -214,7 +216,7 @@ fun InAppBrowserScreen(
                     onStreamIntercepted = { sUrl, hdrs, isM -> registerStream(sUrl, hdrs, isPrimary = isM) },
                     onSniffedVideo = { sniffed ->
                         if (AdBlocker.isAd(sniffed.src) || sniffed.duration in 0.1f..59.9f) return@BrowserWebView
-                        val hdrs = BrowserUrlHelper.buildSafeHeaders(sniffed.src, currentUrl, UA_MOBILE)
+                        val hdrs = BrowserUrlHelper.buildSafeHeaders(sniffed.src, currentUrl, UA_MOBILE); if (sniffed.duration > 0f) streamDurations[sniffed.src] = sniffed.duration
                         if (sniffed.title.isNotBlank() && sniffed.title != "Video Web" && sniffed.title != "Transmisión Web") {
                             pageTitle = sniffed.title
                         }
@@ -251,7 +253,7 @@ fun InAppBrowserScreen(
                         },
                         onStopCasting = { ActiveStreamHolder.stopCasting(); Toast.makeText(context, "🛑 Transmisión detenida", Toast.LENGTH_SHORT).show() },
                         onClearStreams = {
-                            detectedStreams.clear(); streamHeaders.clear(); streamLabels.clear(); qualityOptions = emptyList()
+                            detectedStreams.clear(); streamHeaders.clear(); streamLabels.clear(); streamDurations.clear(); qualityOptions = emptyList()
                             ActiveStreamHolder.clearDetectedStream()
                             webViewInstance?.let { wv ->
                                 wv.evaluateJavascript(WvcDomSniffer.getInjectionScript(context), null)

@@ -102,7 +102,8 @@ class FloatingIndicatorService : Service() {
         ).apply { gravity = Gravity.TOP or Gravity.END; x = builder.dpToPx(16f); y = builder.dpToPx(120f) }
 
         rootLayout = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; gravity = Gravity.END }
-        val pillText = TextView(this).apply { text = "OmniCast v3.29"; setTextColor(Color.WHITE); setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f); typeface = Typeface.DEFAULT_BOLD }
+        val ver = try { packageManager.getPackageInfo(packageName, 0).versionName } catch (_: Throwable) { "3.32" }
+        val pillText = TextView(this).apply { text = "OmniCast v$ver"; setTextColor(Color.WHITE); setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f); typeface = Typeface.DEFAULT_BOLD }
         val prefs = getSharedPreferences("omnicast_prefs", Context.MODE_PRIVATE)
         val tvIp = prefs.getString("saved_tv_ip", "192.168.0.136") ?: "192.168.0.136"
         val statusFeedbackText = TextView(this).apply {

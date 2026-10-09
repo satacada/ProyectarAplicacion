@@ -72,8 +72,10 @@ object WvcDomSniffer {
                     }
                     "video" -> {
                         val src = json.optString("src")
+                        val dur = json.optDouble("duration", 0.0).toFloat()
+                        if (dur in 0.1f..59.9f) return emptyList()
                         if (isValidMediaUrl(src)) {
-                            list.add(SniffedVideo(src, json.optString("title", "Transmisión Web"), json.optString("poster", "")))
+                            list.add(SniffedVideo(src, json.optString("title", "Transmisión Web"), json.optString("poster", ""), duration = dur))
                         }
                     }
                 }
@@ -81,8 +83,10 @@ object WvcDomSniffer {
                 val jsonStr = message.removePrefix(CONSOLE_PREFIX).trim()
                 val json = JSONObject(jsonStr)
                 val src = json.optString("src")
+                val dur = json.optDouble("duration", 0.0).toFloat()
+                if (dur in 0.1f..59.9f) return emptyList()
                 if (isValidMediaUrl(src)) {
-                    list.add(SniffedVideo(src, json.optString("title", "Transmisión Web"), json.optString("poster", "")))
+                    list.add(SniffedVideo(src, json.optString("title", "Transmisión Web"), json.optString("poster", ""), duration = dur))
                 }
             }
         } catch (_: Throwable) {}

@@ -128,22 +128,45 @@ fun WvcVideoListItem(
     pageTitle: String,
     onTransmit: () -> Unit
 ) {
+    val isMovie = option.isMovie
+    val cardBg = if (isMovie) Color(0xFF0D251D) else Color(0xFF1E293B)
+    val cardBorder = if (isMovie) Color(0xFF10B981) else Color(0xFF334155)
+    val titleColor = if (isMovie) Color(0xFF34D399) else Color(0xFFFDE68A)
+    val durStr = formatStreamDuration(option.durationSeconds)
+
     Card(
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF1E293B)),
+        colors = CardDefaults.cardColors(containerColor = cardBg),
         shape = RoundedCornerShape(14.dp),
         modifier = Modifier
             .fillMaxWidth()
-            .border(1.dp, Color(0xFF334155), RoundedCornerShape(14.dp))
+            .border(if (isMovie) 1.5.dp else 1.dp, cardBorder, RoundedCornerShape(14.dp))
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
-            Text(
-                text = "🎬 ${pageTitle.ifBlank { "Video detectado" }}",
-                color = Color(0xFFFDE68A),
-                fontWeight = FontWeight.Bold,
-                fontSize = 13.sp,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = "🎬 ${pageTitle.ifBlank { "Video detectado" }}",
+                    color = titleColor,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 13.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f, fill = false)
+                )
+                if (isMovie) {
+                    Box(
+                        modifier = Modifier
+                            .background(Color(0xFF10B981).copy(alpha = 0.2f), RoundedCornerShape(6.dp))
+                            .border(1.dp, Color(0xFF10B981), RoundedCornerShape(6.dp))
+                            .padding(horizontal = 6.dp, vertical = 2.dp)
+                    ) {
+                        Text("🎬 Película", color = Color(0xFF34D399), fontSize = 10.sp, fontWeight = FontWeight.ExtraBold)
+                    }
+                }
+            }
             Spacer(Modifier.height(4.dp))
 
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -173,18 +196,30 @@ fun WvcVideoListItem(
 
             Spacer(Modifier.height(4.dp))
 
-            Text(
-                if (option.resolution != "Auto") "Resolución: ${option.resolution} • Tasa: ${option.bitrate}"
-                else "Reproducción Automática Adaptativa (Máxima fluidez sin cortes)",
-                color = Color(0xFF94A3B8),
-                fontSize = 11.sp
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    if (option.resolution != "Auto") "Resolución: ${option.resolution} • ${option.bitrate}"
+                    else "Adaptativo Auto (Flujo Completo)",
+                    color = Color(0xFF94A3B8),
+                    fontSize = 11.sp
+                )
+                Text(
+                    text = "⏱ $durStr",
+                    color = if (isMovie) Color(0xFF34D399) else Color(0xFFCBD5E1),
+                    fontSize = 11.sp,
+                    fontWeight = if (isMovie) FontWeight.Bold else FontWeight.Normal
+                )
+            }
 
             Spacer(Modifier.height(10.dp))
 
             Button(
                 onClick = onTransmit,
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF59E0B)),
+                colors = ButtonDefaults.buttonColors(containerColor = if (isMovie) Color(0xFF10B981) else Color(0xFFF59E0B)),
                 shape = RoundedCornerShape(10.dp),
                 modifier = Modifier.fillMaxWidth().height(42.dp)
             ) {
@@ -192,4 +227,13 @@ fun WvcVideoListItem(
             }
         }
     }
+}
+
+fun formatStreamDuration(durationSeconds: Float): String {
+    if (durationSeconds <= 0f) return "En vivo / Desconocida"
+    val totalSec = durationSeconds.toInt()
+    val hours = totalSec / 3600
+    val minutes = (totalSec % 3600) / 60
+    val seconds = totalSec % 60
+    return if (hours > 0) "${hours}h ${minutes}m" else "${minutes}m ${seconds}s"
 }

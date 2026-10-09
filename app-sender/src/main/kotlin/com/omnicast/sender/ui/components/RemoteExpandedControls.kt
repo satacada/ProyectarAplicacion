@@ -74,8 +74,9 @@ fun RemoteExpandedControls(
                     Text(
                         text = "flujos detectados ($streamCount)",
                         color = Color.White,
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Bold
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 1
                     )
                 }
 
@@ -162,23 +163,6 @@ fun RemoteExpandedControls(
                                 .border(1.dp, Color(0xFF4C1D24), RoundedCornerShape(8.dp))
                         ) {
                             BookmarkRemoveIcon(modifier = Modifier.size(17.dp))
-                        }
-                    }
-                    if (onSelectQuality != null) {
-                        Surface(
-                            color = Color(0xFF162030),
-                            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF28354E)),
-                            shape = RoundedCornerShape(8.dp),
-                            modifier = Modifier.clickable { onSelectQuality() }
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(4.dp)
-                            ) {
-                                Text("🎛️", fontSize = 11.sp)
-                                Text("Calidad", color = Color(0xFFCBD5E1), fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                            }
                         }
                     }
                 }

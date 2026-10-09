@@ -46,14 +46,11 @@
         // 1. Descarte inmediato si la URL contiene patrones explícitos de anuncios
         if (s.indexOf('preroll') !== -1 || s.indexOf('ad-delivery') !== -1 ||
             s.indexOf('/ads/') !== -1 || s.indexOf('imasdk') !== -1 ||
-            s.indexOf('cat-bolt') !== -1 || s.indexOf('ad.mp4') !== -1 || s.indexOf('vast') !== -1) {
+            s.indexOf('cat-bolt') !== -1 || s.indexOf('ad.mp4') !== -1 || s.indexOf('vast') !== -1 ||
+            s.indexOf('commercial') !== -1 || s.indexOf('spotx') !== -1 || s.indexOf('doubleclick') !== -1) {
             return true;
         }
-        // 2. Transmisiones en vivo o adaptativas (.m3u8, .mpd, chunklist, live) NUNCA son anuncios cortos
-        if (s.indexOf('.m3u8') !== -1 || s.indexOf('.mpd') !== -1 || s.indexOf('chunklist') !== -1 || s.indexOf('/live') !== -1) {
-            return false;
-        }
-        // 3. Para archivos MP4 o clips simples: si dura menos de 60 segundos es comercial
+        // 2. Para cualquier video con duración finita menor a 60 segundos es un comercial (prerolls de 15s/18s/30s)
         var d = v.duration;
         if (typeof d === 'number' && !isNaN(d) && d > 0 && d < 60) return true;
         return false;
@@ -62,7 +59,18 @@
     function reportMedia(src, title, duration, isPlaying) {
         if (!src || !isMediaUrl(src)) return;
         var t = title || document.title || 'Transmisión Web';
-        var dur = duration || 0;
+        var dur = (typeof duration === 'number' && !isNaN(duration)) ? duration : 0;
+        if (dur <= 0) {
+            try {
+                var vids = document.getElementsByTagName('video');
+                for (var k = 0; k < vids.length; k++) {
+                    if (vids[k].duration && !isNaN(vids[k].duration) && vids[k].duration > 0) {
+                        dur = vids[k].duration;
+                        break;
+                    }
+                }
+            } catch(e) {}
+        }
         console.log(PREFIX + JSON.stringify({
             type: isPlaying ? 'videoPlaying' : 'video',
             video: src,

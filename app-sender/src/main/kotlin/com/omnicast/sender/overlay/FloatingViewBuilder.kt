@@ -88,24 +88,24 @@ class FloatingViewBuilder(private val context: Context) {
         }
         innerMenu.addView(menuTitle)
 
-        val btnOpenOmni = createBtn("⚙️ Abrir OmniCast", "#1E2738", onOpenOmniCast)
-        val btnDisableOverlay = createBtn("❌ Desactivar Asistente", "#334155", onDisableOverlay)
         val btnStopCast = createBtn("🛑 Detener Transmisión", "#DC2626", onStopCast)
-        val btnStartMirror = createBtn("📱 Proyectar Pantalla", "#7C3AED", onStartScreenMirror)
         val btnZoomTv = createBtn("🔍 Zoom TV", "#6D28D9", onToggleTvScale)
+        val btnDetectVideo = createBtn("🔍 Detectar Flujo de Video", "#00B4D8", onDetectVideo)
+        val btnOpenOmni = createBtn("⚙️ Abrir OmniCast", "#1E2738", onOpenOmniCast)
+        val btnStartMirror = createBtn("📱 Proyectar Pantalla", "#7C3AED", onStartScreenMirror)
         val btnGallery = createBtn("🖼️ Galería (Fotos)", "#E11D48", onCastGallery)
         val btnOpenBrowser = createBtn("🌐 Captura Web", "#D97706", onOpenBrowser)
-        val btnDetectVideo = createBtn("🔍 Detectar Flujo de Video", "#00B4D8", onDetectVideo)
+        val btnDisableOverlay = createBtn("❌ Desactivar Asistente", "#334155", onDisableOverlay)
 
-        innerMenu.addView(btnOpenOmni)
-        innerMenu.addView(btnDisableOverlay)
         innerMenu.addView(btnStopCast)
-        innerMenu.addView(btnStartMirror)
         innerMenu.addView(btnZoomTv)
+        innerMenu.addView(btnDetectVideo)
+        innerMenu.addView(btnOpenOmni)
+        innerMenu.addView(btnStartMirror)
         innerMenu.addView(btnGallery)
         innerMenu.addView(btnOpenBrowser)
+        innerMenu.addView(btnDisableOverlay)
         innerMenu.addView(statusFeedbackText)
-        innerMenu.addView(btnDetectVideo)
 
         val scrollView = object : android.widget.ScrollView(context) {
             override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
@@ -124,46 +124,44 @@ class FloatingViewBuilder(private val context: Context) {
 
         fun applyMode(mode: com.omnicast.sender.service.ActiveCastMode, zoomLabel: String) {
             btnZoomTv.text = "🔍 Zoom TV: $zoomLabel"
+            btnZoomTv.visibility = View.VISIBLE
             when (mode) {
                 com.omnicast.sender.service.ActiveCastMode.SCREEN_MIRROR -> {
+                    btnStopCast.visibility = View.VISIBLE
                     btnOpenOmni.visibility = View.VISIBLE
                     btnDisableOverlay.visibility = View.VISIBLE
-                    btnZoomTv.visibility = View.VISIBLE
-                    btnStopCast.visibility = View.VISIBLE
                     btnDetectVideo.visibility = View.GONE
                     btnStartMirror.visibility = View.GONE
                     btnGallery.visibility = View.GONE
                     btnOpenBrowser.visibility = View.GONE
                 }
                 com.omnicast.sender.service.ActiveCastMode.GALLERY -> {
+                    btnStopCast.visibility = View.VISIBLE
                     btnOpenOmni.visibility = View.VISIBLE
                     btnDisableOverlay.visibility = View.VISIBLE
-                    btnStopCast.visibility = View.VISIBLE
-                    btnZoomTv.visibility = View.GONE
                     btnDetectVideo.visibility = View.GONE
                     btnStartMirror.visibility = View.GONE
                     btnGallery.visibility = View.GONE
                     btnOpenBrowser.visibility = View.GONE
                 }
                 com.omnicast.sender.service.ActiveCastMode.WEB_STREAM -> {
+                    btnStopCast.visibility = View.VISIBLE
+                    btnDetectVideo.visibility = View.VISIBLE
                     btnOpenOmni.visibility = View.VISIBLE
                     btnDisableOverlay.visibility = View.VISIBLE
-                    btnDetectVideo.visibility = View.VISIBLE
-                    btnZoomTv.visibility = View.VISIBLE
-                    btnStopCast.visibility = View.VISIBLE
                     btnStartMirror.visibility = View.GONE
                     btnGallery.visibility = View.GONE
                     btnOpenBrowser.visibility = View.GONE
                 }
                 com.omnicast.sender.service.ActiveCastMode.IDLE -> {
+                    val casting = com.omnicast.sender.stream.ActiveStreamHolder.isCasting.value
+                    btnStopCast.visibility = if (casting) View.VISIBLE else View.GONE
+                    btnDetectVideo.visibility = View.VISIBLE
                     btnOpenOmni.visibility = View.VISIBLE
                     btnStartMirror.visibility = View.VISIBLE
                     btnOpenBrowser.visibility = View.VISIBLE
                     btnGallery.visibility = View.VISIBLE
                     btnDisableOverlay.visibility = View.VISIBLE
-                    btnStopCast.visibility = View.GONE
-                    btnZoomTv.visibility = View.GONE
-                    btnDetectVideo.visibility = View.GONE
                 }
             }
         }

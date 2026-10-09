@@ -114,7 +114,7 @@ fun RemoteControlBar(
                         }
                     }
 
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
                         Box(
                             modifier = Modifier
                                 .size(34.dp)
@@ -123,9 +123,6 @@ fun RemoteControlBar(
                             contentAlignment = Alignment.Center
                         ) {
                             Text(if (isPlaying) "❚❚" else "▶", fontSize = 14.sp, color = Color.White)
-                        }
-                        IconButton(onClick = onStop, modifier = Modifier.size(32.dp)) {
-                            Text("🛑", fontSize = 15.sp)
                         }
                     }
                 }

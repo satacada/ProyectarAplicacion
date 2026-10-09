@@ -154,24 +154,28 @@ fun ProjectionConfigDialog(
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.weight(1f).padding(end = 6.dp)
                         ) {
                             Box(
                                 modifier = Modifier
-                                    .size(36.dp)
+                                    .size(34.dp)
                                     .background(Color(0xFF13362E), CircleShape)
                                     .border(1.dp, Color(0xFF10B981).copy(alpha = 0.5f), CircleShape),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Text("🛡️", fontSize = 16.sp)
+                                Text("🛡️", fontSize = 15.sp)
                             }
-                            Column {
-                                Text("Suavizado Anti-Tirones", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text("Suavizado Anti-Tirones", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold, maxLines = 1)
                                 Text(
-                                    text = if (tempSmoothBuffer) "Activado • Buffer de 100 ms en TV" else "Desactivado • Ultra-baja latencia cruda",
+                                    text = if (tempSmoothBuffer) "Activado (Buffer 100ms TV)" else "Desactivado (Baja latencia)",
                                     color = if (tempSmoothBuffer) Color(0xFF34D399) else Color(0xFF94A3B8),
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.Medium
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    maxLines = 1,
+                                    softWrap = false,
+                                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                                 )
                             }
                         }

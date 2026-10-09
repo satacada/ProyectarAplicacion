@@ -27,7 +27,7 @@ val PROFILE_OPTIONS = listOf(
     ProfileOption(
         profile = StreamProfile.MAX_60FPS,
         resLabel = "1280p @ 60 fps",
-        badgeText = "EXPERIMENTAL",
+        badgeText = "Beta",
         badgeIsPrimary = false,
         badgeIsWarning = true,
         infoTip = "Alta exigencia de CPU/GPU. Para teléfonos de gama alta con señal Wi-Fi 5GHz limpia."
@@ -35,7 +35,7 @@ val PROFILE_OPTIONS = listOf(
     ProfileOption(
         profile = StreamProfile.BALANCED_30FPS,
         resLabel = "1280p @ 30 fps",
-        badgeText = "• Estable • Recomendado",
+        badgeText = "Recomendado",
         badgeIsPrimary = true,
         badgeIsWarning = false,
         infoTip = "Configuración recomendada. Máxima estabilidad de transmisión sin cortes."
@@ -59,7 +59,7 @@ val PROFILE_OPTIONS = listOf(
     ProfileOption(
         profile = StreamProfile.ULTRA_60FPS,
         resLabel = "540p @ 60 fps",
-        badgeText = "Bajo Consumo",
+        badgeText = "Ahorro",
         badgeIsPrimary = false,
         badgeIsWarning = false,
         infoTip = "60 cuadros por segundo reales. Menor consumo de batería y ancho de banda."

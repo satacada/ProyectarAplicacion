@@ -87,7 +87,8 @@ fun ProfileSelectionSection(
                         }
                         Text(
                             text = opt.resLabel,
-                            fontSize = 13.sp,
+                            fontSize = 12.sp,
+                            maxLines = 1,
                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                             color = if (isSelected) Color.White else Color(0xFFCBD5E1)
                         )
@@ -111,14 +112,16 @@ fun ProfileSelectionSection(
                     ) {
                         Text(
                             text = opt.badgeText,
-                            fontSize = 10.sp,
+                            fontSize = 9.5.sp,
                             fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            softWrap = false,
                             color = when {
                                 opt.badgeIsWarning -> Color(0xFFFBBF24)
                                 opt.badgeIsPrimary -> Color(0xFF60A5FA)
                                 else -> Color(0xFF94A3B8)
                             },
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                            modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp)
                         )
                     }
                 }

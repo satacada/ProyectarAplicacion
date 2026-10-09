@@ -196,26 +196,27 @@ fun WvcVideoListItem(
 
             Spacer(Modifier.height(4.dp))
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    if (option.resolution != "Auto") "Resolución: ${option.resolution} • ${option.bitrate}"
-                    else "Adaptativo Auto (Flujo Completo)",
-                    color = Color(0xFF94A3B8),
-                    fontSize = 11.sp
-                )
-                Text(
-                    text = "⏱ $durStr",
-                    color = if (isMovie) Color(0xFF34D399) else Color(0xFFCBD5E1),
-                    fontSize = 11.sp,
-                    fontWeight = if (isMovie) FontWeight.Bold else FontWeight.Normal
-                )
-            }
+            Text(
+                text = if (option.resolution != "Auto") "Resolución: ${option.resolution} • ${option.bitrate}"
+                else "Adaptativo Auto (Flujo Completo)",
+                color = Color(0xFF94A3B8),
+                fontSize = 11.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
 
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(2.dp))
+
+            Text(
+                text = "⏱ Duración: $durStr",
+                color = if (isMovie) Color(0xFF34D399) else Color(0xFFCBD5E1),
+                fontSize = 11.sp,
+                fontWeight = if (isMovie) FontWeight.Bold else FontWeight.Normal,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+
+            Spacer(Modifier.height(8.dp))
 
             Button(
                 onClick = onTransmit,

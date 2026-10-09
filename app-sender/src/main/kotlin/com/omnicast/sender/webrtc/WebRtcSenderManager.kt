@@ -36,15 +36,11 @@ class WebRtcSenderManager(
     private var videoTrack: VideoTrack? = null; private var videoSource: VideoSource? = null
     private val queuedRemoteCandidates = mutableListOf<IceCandidate>()
     private var isRemoteDescriptionSet = false
-    private var displayListener: DisplayManager.DisplayListener? = null
-    private var lastCaptureWidth = 0
-    private var lastCaptureHeight = 0
 
     var tvScaleMode: String = "EXTEND_16_9"
 
     override fun initialize() {
         Log.i(TAG, "🚀 OmniCast Sender v3.25 Inicializado (Universal WebRTC)")
-        setupDisplayListener()
         PeerConnectionFactory.initialize(
             PeerConnectionFactory.InitializationOptions.builder(context)
                 .setEnableInternalTracer(true).createInitializationOptions()
@@ -78,11 +74,8 @@ class WebRtcSenderManager(
                 Log.i(TAG, "ICE Emisor: $newState")
                 when (newState) {
                     PeerConnection.IceConnectionState.CONNECTED -> _connectionState.value = P2PConnectionState.CONNECTED
-                    PeerConnection.IceConnectionState.DISCONNECTED, PeerConnection.IceConnectionState.CLOSED -> {
-                        _connectionState.value = P2PConnectionState.DISCONNECTED
-                        onIceConnectionClosed?.invoke()
-                    }
-                    PeerConnection.IceConnectionState.FAILED -> {
+                    PeerConnection.IceConnectionState.DISCONNECTED -> _connectionState.value = P2PConnectionState.CONNECTING
+                    PeerConnection.IceConnectionState.FAILED, PeerConnection.IceConnectionState.CLOSED -> {
                         _connectionState.value = P2PConnectionState.FAILED
                         onIceConnectionClosed?.invoke()
                     }
@@ -104,43 +97,9 @@ class WebRtcSenderManager(
         _connectionState.value = P2PConnectionState.CONNECTING
     }
 
-    private fun setupDisplayListener() {
-        val dm = context.getSystemService(Context.DISPLAY_SERVICE) as? DisplayManager ?: return
-        displayListener = object : DisplayManager.DisplayListener {
-            override fun onDisplayAdded(displayId: Int) = Unit
-            override fun onDisplayRemoved(displayId: Int) = Unit
-            override fun onDisplayChanged(displayId: Int) {
-                if (displayId == Display.DEFAULT_DISPLAY) {
-                    checkAndApplyOrientationChange()
-                }
-            }
-        }
-        dm.registerDisplayListener(displayListener, Handler(Looper.getMainLooper()))
-    }
-
-    fun checkAndApplyOrientationChange() {
-        val capturer = screenCapturer ?: return
-        val dims = calcCaptureDimensions()
-        val w = dims.first
-        val h = dims.second
-        if (w != lastCaptureWidth || h != lastCaptureHeight) {
-            val fps = (activeProfile?.frameRate ?: 30).coerceIn(15, 60)
-            Log.i(TAG, "🔄 Orientación adaptativa detectada: ${w}x${h} @ ${fps}fps (previo: ${lastCaptureWidth}x${lastCaptureHeight})")
-            lastCaptureWidth = w
-            lastCaptureHeight = h
-            try {
-                capturer.changeCaptureFormat(w, h, fps)
-            } catch (e: Throwable) {
-                Log.w(TAG, "Error cambiando formato de captura: ${e.message}")
-            }
-        }
-    }
-
     /** Inicia la captura real de pantalla DESPUÉS de haber enviado la oferta SDP (v3.11 / v3.4 estable). */
     fun beginCapture() {
         val dims = calcCaptureDimensions()
-        lastCaptureWidth = dims.first
-        lastCaptureHeight = dims.second
         val fps = (activeProfile?.frameRate ?: 30).coerceIn(15, 60)
         Log.i(TAG, "🎬 Iniciando captura: ${dims.first}x${dims.second} @ ${fps}fps (modo: $tvScaleMode, perfil: ${activeProfile?.label})")
         screenCapturer?.startCapture(dims.first, dims.second, fps)
@@ -239,11 +198,6 @@ class WebRtcSenderManager(
             surfaceTextureHelper?.dispose(); surfaceTextureHelper = null
             peerConnection?.close(); peerConnection = null
             peerConnectionFactory = null
-            displayListener?.let {
-                val dm = context.getSystemService(Context.DISPLAY_SERVICE) as? DisplayManager
-                dm?.unregisterDisplayListener(it)
-                displayListener = null
-            }
             eglBase?.release(); eglBase = null
             isRemoteDescriptionSet = false; queuedRemoteCandidates.clear()
         } catch (e: Exception) { Log.e(TAG, "Error cerrando WebRtcSenderManager", e) }

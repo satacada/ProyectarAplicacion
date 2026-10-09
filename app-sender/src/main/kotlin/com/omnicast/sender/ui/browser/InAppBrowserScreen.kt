@@ -73,11 +73,9 @@ fun InAppBrowserScreen(
             val cleanLive = res?.trim('"', ' ', '\\')?.takeIf { it.startsWith("http") && it != "null" }
             val finalUrl = if (cleanLive != null && (url.contains(".m3u8") || cleanLive.contains(".m3u8"))) cleanLive else url
             val finalHdrs = if (finalUrl != url) BrowserUrlHelper.buildSafeHeaders(finalUrl, currentUrl, UA_MOBILE, hdrs) else hdrs
-            historyManager.addOrUpdate(finalUrl, cleanT, currentUrl, finalHdrs)
-            onSendStreamToTv(finalUrl, cleanT, finalHdrs)
+            historyManager.addOrUpdate(finalUrl, cleanT, currentUrl, finalHdrs); onSendStreamToTv(finalUrl, cleanT, finalHdrs)
         } ?: run {
-            historyManager.addOrUpdate(url, cleanT, currentUrl, hdrs)
-            onSendStreamToTv(url, cleanT, hdrs)
+            historyManager.addOrUpdate(url, cleanT, currentUrl, hdrs); onSendStreamToTv(url, cleanT, hdrs)
         }
     }
 
@@ -275,8 +273,7 @@ fun InAppBrowserScreen(
                                 videoToSave = HistoryItem(url = primary, title = t, pageUrl = currentUrl, headers = streamHeaders[primary] ?: emptyMap())
                             }
                         },
-                        onDeleteFromSaved = { deleteMovieFromSaved() },
-                        modifier = Modifier.align(Alignment.BottomCenter)
+                        onDeleteFromSaved = { deleteMovieFromSaved() }, modifier = Modifier.align(Alignment.BottomCenter)
                     )
                 }
                 popupWebView?.let { pView -> BrowserPopupOverlay(popupView = pView, onDismiss = { popupWebView?.destroy(); popupWebView = null }) }
@@ -286,9 +283,11 @@ fun InAppBrowserScreen(
 
     BrowserModalSheets(
         showOptionsSheet = showOptionsSheet, showHistorySheet = false, showSavedPlaylistsSheet = false,
-        videoToSave = videoToSave, playlistManager = playlistManager, pageTitle = pageTitle,
-        qualityOptions = qualityOptions, historyList = emptyList(),
-        onTransmitOption = { opt -> showOptionsSheet = false; val bestT = webViewInstance?.title?.takeIf { it.isNotBlank() && !it.contains("about:blank") && it != "Transmisión" } ?: pageTitle; transmitWithHistory(opt.streamUrl, bestT, streamHeaders[opt.streamUrl] ?: emptyMap()) },
+        videoToSave = videoToSave, playlistManager = playlistManager, pageTitle = pageTitle, qualityOptions = qualityOptions, historyList = emptyList(),
+        onTransmitOption = { opt ->
+            showOptionsSheet = false; val bestT = webViewInstance?.title?.takeIf { it.isNotBlank() && !it.contains("about:blank") && it != "Transmisión" } ?: pageTitle
+            transmitWithHistory(opt.streamUrl, bestT, streamHeaders[opt.streamUrl] ?: emptyMap())
+        },
         onTransmitHistory = { transmitWithHistory(it.url, it.title, it.headers) }, onDismissOptions = { showOptionsSheet = false },
         onClearOptions = { detectedStreams.clear(); qualityOptions = emptyList(); showOptionsSheet = false },
         onDeleteHistory = { historyManager.remove(it) }, onClearHistory = { historyManager.clear() },

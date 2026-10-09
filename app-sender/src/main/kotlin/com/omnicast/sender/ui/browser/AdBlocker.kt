@@ -110,6 +110,10 @@ object AdBlocker {
     fun getAdHidingScript(): String = """
         (function() {
             try {
+                var h = (window.location.hostname || '').toLowerCase();
+                if (h.indexOf('dailymotion.com') !== -1 || h.indexOf('youtube.com') !== -1 || h.indexOf('google.') !== -1 || h.indexOf('bing.') !== -1 || h.indexOf('yandex.') !== -1) {
+                    return;
+                }
                 function cleanDoc(doc) {
                     if (!doc) return;
                     var selectors = [
@@ -117,15 +121,14 @@ object AdBlocker {
                         'div[class*="ad-banner"]', 'a[href*="bet365"]', 'a[href*="1xbet"]',
                         'div[class*="popunder"]', 'div[id*="popunder"]', '.ad-overlay', '#ad-overlay',
                         'div[class*="click-shield"]', 'div[class*="video-click-shield"]',
-                        '.vp_layer_fake', 'div[class*="fake-player"]', 'div[class*="play-overlay"]',
-                        'div[id*="overlay-container"]', 'div[class*="backdrop-pop"]', 'div[class*="click-layer"]'
+                        '.vp_layer_fake', 'div[class*="fake-player"]', 'div[class*="play-overlay"]'
                     ];
                     for (var s = 0; s < selectors.length; s++) {
                         try {
                             var found = doc.querySelectorAll(selectors[s]);
                             for (var f = 0; f < found.length; f++) {
                                 var item = found[f];
-                                if (!item.querySelector('video') && !item.querySelector('iframe')) item.remove();
+                                if (!item.querySelector('video, iframe, input, form, textarea, select')) item.remove();
                             }
                         } catch(e) {}
                     }
@@ -149,6 +152,8 @@ object AdBlocker {
                 document.addEventListener('click', function(e) {
                     var el = e.target;
                     if (!el) return;
+                    if (el.closest && el.closest('input, textarea, select, button, form, a, [contenteditable="true"], [role="search"], [role="textbox"], [role="combobox"]')) return;
+                    if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT' || el.tagName === 'BUTTON' || el.tagName === 'FORM') return;
                     if (el !== document.body && el !== document.documentElement) {
                         var cs = window.getComputedStyle(el);
                         if (cs && (cs.position === 'fixed' || cs.position === 'absolute')) {

@@ -216,11 +216,14 @@ class FloatingIndicatorService : Service() {
             },
             onStopCast = {
                 menuLayoutRef?.visibility = View.GONE; isExpanded = false
-                ProjectionForegroundService.stopService(this); SenderMainActivity.sendDisconnectStatic(this)
+                ProjectionForegroundService.stopService(this)
+                SenderMainActivity.sendPlayControlStatic(this, "STOP")
+                com.omnicast.sender.service.CastMediaNotificationService.stop(this)
+                com.omnicast.sender.stream.ActiveStreamHolder.stopCasting()
                 com.omnicast.sender.stream.ActiveStreamHolder.clear()
-                pillText.text = "OmniCast"; statusFeedbackText.text = "🛑 Detenido y capturas limpiadas."
+                pillText.text = "OmniCast"; statusFeedbackText.text = "🛑 Transmisión detenida."
                 statusFeedbackText.setTextColor(Color.parseColor("#EF4444"))
-                Toast.makeText(this, "🛑 Transmisión detenida y capturas limpiadas", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "🛑 Transmisión detenida", Toast.LENGTH_SHORT).show()
             },
             onDisableOverlay = {
                 menuLayoutRef?.visibility = View.GONE; isExpanded = false

@@ -53,3 +53,15 @@ Este repositorio sigue el estándar abierto AGENTS.md para el desarrollo de la a
   Ningún pilar puede invadir, depender o alterar el ciclo de vida de los otros tres.
 - **Prohibición en WebViews:** PROHIBIDO usar bucles 'MutationObserver' o 'querySelectorAll' masivos que saturen el hilo de JavaScript. Toda neutralización de trampas debe ser reactiva al evento del usuario.
 
+---
+
+## 7. LEYES TÉCNICAS INVIOLABLES DE HARDWARE (PROHIBICIÓN ESTRICTA DE REGRESIONES)
+1. **Prohibido `changeCaptureFormat()` o `DisplayListener` en caliente durante Screen Mirroring:**
+   El encoder por hardware H.264 (MediaCodec) y el `VirtualDisplay` de Android 14 no admiten redimensionamiento en caliente sin reinicializar el pipeline WebRTC. Llamar a `changeCaptureFormat` al rotar colapsa el capturador y desconecta la TV Box. La rotación de pantalla fluye nativamente dentro del `VirtualDisplay` sin alterar dimensiones negociadas en el SDP.
+2. **Tolerancia a Desconexión Temporal ICE (`IceConnectionState.DISCONNECTED`):**
+   `DISCONNECTED` es un estado transitorio de red; queda TERMINANTEMENTE PROHIBIDO cerrar la sesión WebRTC o expulsar la pantalla de TV ante este estado. Únicamente `FAILED` o `CLOSED` son causales de cierre.
+3. **Intocabilidad de Foco en `BrowserWebView`:**
+   PROHIBIDO asignar `setOnTouchListener` con `requestFocus()` al `WebView`. Chromium y el `InputMethodManager` de Android gestionan el foco y la posición del cursor de forma nativa; manipularlo en eventos táctiles reinicia la conexión IME en el índice 0 y genera escritura inversa o bloqueo del teclado virtual.
+4. **Protección de Elementos de Entrada y Dominios Oficiales en `AdBlocker`:**
+   El script de limpieza y neutralización de capas NUNCA debe ejecutarse en plataformas oficiales (`dailymotion.com`, `youtube.com`, buscadores) y NUNCA debe remover elementos que contengan formularios (`form`, `input`, `textarea`, `select`).
+

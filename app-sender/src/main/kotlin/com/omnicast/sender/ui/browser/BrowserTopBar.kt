@@ -12,6 +12,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.TextRange
@@ -51,12 +52,13 @@ fun BrowserTopBar(
     val focusManager = LocalFocusManager.current
     var showMenu by remember { mutableStateOf(false) }
     var showHelpDialog by remember { mutableStateOf(false) }
+    var isFocused by remember { mutableStateOf(false) }
     var textFieldValue by remember {
         mutableStateOf(TextFieldValue(inputUrl, TextRange(inputUrl.length)))
     }
 
     LaunchedEffect(inputUrl) {
-        if (inputUrl != textFieldValue.text) {
+        if (!isFocused && inputUrl != textFieldValue.text) {
             textFieldValue = TextFieldValue(inputUrl, TextRange(inputUrl.length))
         }
     }
@@ -106,7 +108,10 @@ fun BrowserTopBar(
                             onInputUrlChange(newValue.text)
                         }
                     },
-                    modifier = Modifier.weight(1f).fillMaxHeight(),
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .onFocusChanged { isFocused = it.isFocused },
                     singleLine = true,
                     cursorBrush = androidx.compose.ui.graphics.SolidColor(Color(0xFF38BDF8)),
                     textStyle = androidx.compose.ui.text.TextStyle(

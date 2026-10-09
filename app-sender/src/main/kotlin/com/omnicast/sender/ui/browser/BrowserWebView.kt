@@ -69,12 +69,6 @@ fun BrowserWebView(
             WebView(ctx).apply {
                 isFocusable = true
                 isFocusableInTouchMode = true
-                setOnTouchListener { v, event ->
-                    if (event.action == android.view.MotionEvent.ACTION_DOWN || event.action == android.view.MotionEvent.ACTION_UP) {
-                        if (!v.hasFocus()) v.requestFocus()
-                    }
-                    false
-                }
                 CookieManager.getInstance().setAcceptCookie(true)
                 CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
                 settings.javaScriptEnabled = true
@@ -169,33 +163,8 @@ fun BrowserWebView(
                     }
                     override fun onCreateWindow(v: WebView?, isDialog: Boolean, isUserGesture: Boolean, resultMsg: Message?): Boolean {
                         if (resultMsg == null) return false
-                        val curHost = try { v?.url?.let { java.net.URI(it).host } } catch (_: Throwable) { null }
-                        val isSearchEngine = AdBlocker.isSearchEngine(curHost)
+                        val curHost = try { v?.url?.let { java.net.URI(it).host?.lowercase() } } catch (_: Throwable) { null }
                         val isWhitelisted = curHost?.let { AdBlockWhitelistManager.isWhitelistedHost(it) } ?: false
-
-                        if (!isSearchEngine) {
-                            if (isAdBlockEnabled && !isWhitelisted) {
-                                android.util.Log.d("BrowserWebView", "🛑 Popup publicitario bloqueado en sitio de streaming: $curHost")
-                                return false
-                            }
-                            val popup = WebView(ctx).apply {
-                                CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
-                                settings.javaScriptEnabled = true
-                                settings.domStorageEnabled = true
-                                settings.userAgentString = UA_MOBILE
-                                webViewClient = object : WebViewClient() {
-                                    override fun shouldOverrideUrlLoading(view: WebView?, req: WebResourceRequest?): Boolean =
-                                        req?.url?.toString()?.let { AdBlocker.isExternalRedirect(it) || AdBlocker.isAd(it) } ?: false
-                                }
-                                webChromeClient = object : WebChromeClient() {
-                                    override fun onCloseWindow(window: WebView?) { onClosePopup() }
-                                }
-                            }
-                            (resultMsg.obj as? WebView.WebViewTransport)?.webView = popup
-                            resultMsg.sendToTarget()
-                            onOpenPopup(popup)
-                            return true
-                        }
 
                         if (isAdBlockEnabled && !isUserGesture && !isWhitelisted) {
                             android.util.Log.d("BrowserWebView", "🛑 Popup publicitario automático sin interacción bloqueado")
@@ -210,10 +179,13 @@ fun BrowserWebView(
                                 override fun shouldOverrideUrlLoading(view: WebView?, req: WebResourceRequest?): Boolean {
                                     val targetUrl = req?.url?.toString() ?: return false
                                     if (AdBlocker.isExternalRedirect(targetUrl)) return true
-                                    if (isAdBlockEnabled && !isWhitelisted && (AdBlocker.isAd(targetUrl) || NativeAdBlockEngine.shouldBlock(targetUrl))) {
+                                    val targetHost = try { java.net.URI(targetUrl).host?.lowercase() } catch (_: Throwable) { null }
+                                    val isSameSite = curHost != null && targetHost != null && (targetHost == curHost || targetHost.endsWith(".$curHost") || curHost.endsWith(".$targetHost"))
+                                    if (isAdBlockEnabled && !isWhitelisted && !isSameSite && (AdBlocker.isAd(targetUrl) || NativeAdBlockEngine.shouldBlock(targetUrl))) {
                                         android.util.Log.w("BrowserWebView", "🛑 Enlace emergente publicitario bloqueado: $targetUrl")
                                         return true
                                     }
+                                    // Si es del mismo sitio o enlace legítimo no publicitario navega en el WebView principal
                                     v?.loadUrl(targetUrl)
                                     return true
                                 }

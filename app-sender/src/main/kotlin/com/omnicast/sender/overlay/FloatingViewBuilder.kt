@@ -145,6 +145,7 @@ class FloatingViewBuilder(private val context: Context) {
                     btnOpenBrowser.visibility = View.GONE
                 }
                 com.omnicast.sender.service.ActiveCastMode.WEB_STREAM -> {
+                    btnStopCast.text = "🛑 Detener Flujo"
                     btnStopCast.visibility = View.VISIBLE
                     btnDetectVideo.visibility = View.VISIBLE
                     btnOpenOmni.visibility = View.VISIBLE
@@ -154,7 +155,8 @@ class FloatingViewBuilder(private val context: Context) {
                     btnOpenBrowser.visibility = View.GONE
                 }
                 com.omnicast.sender.service.ActiveCastMode.IDLE -> {
-                    val casting = com.omnicast.sender.stream.ActiveStreamHolder.isCasting.value
+                    val casting = com.omnicast.sender.stream.ActiveStreamHolder.isCasting.value || !com.omnicast.sender.stream.ActiveStreamHolder.streamUrl.isNullOrBlank()
+                    btnStopCast.text = "🛑 Detener Flujo"
                     btnStopCast.visibility = if (casting) View.VISIBLE else View.GONE
                     btnDetectVideo.visibility = View.VISIBLE
                     btnOpenOmni.visibility = View.VISIBLE

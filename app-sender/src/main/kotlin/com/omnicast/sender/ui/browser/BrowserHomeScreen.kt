@@ -85,35 +85,31 @@ fun BrowserHomeScreen(
                 }
 
                 Column(modifier = Modifier.weight(1f)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "Bloqueo de Publicidad Activo",
-                            color = Color.White,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 13.sp
-                        )
+                    Text(
+                        text = "Bloqueo de Publicidad Activo",
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 13.sp
+                    )
 
-                        Surface(
-                            color = Color(0xFF09291D),
-                            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF10B981)),
-                            shape = RoundedCornerShape(12.dp)
+                    Spacer(Modifier.height(4.dp))
+
+                    Surface(
+                        color = Color(0xFF09291D),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF10B981)),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(3.dp)
-                            ) {
-                                Box(modifier = Modifier.size(5.dp).background(Color(0xFF34D399), androidx.compose.foundation.shape.CircleShape))
-                                Text("Protegido", color = Color(0xFF6EE7B7), fontSize = 10.sp, fontWeight = FontWeight.Bold)
-                            }
+                            Box(modifier = Modifier.size(6.dp).background(Color(0xFF34D399), androidx.compose.foundation.shape.CircleShape))
+                            Text("Protegido", color = Color(0xFF6EE7B7), fontSize = 10.sp, fontWeight = FontWeight.Bold, maxLines = 1)
                         }
                     }
 
-                    Spacer(Modifier.height(3.dp))
+                    Spacer(Modifier.height(4.dp))
                     Text(
                         text = "Los anuncios invasivos y redirecciones se bloquean automáticamente.",
                         color = Color(0xFF94A3B8),

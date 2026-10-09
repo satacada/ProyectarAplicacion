@@ -67,6 +67,14 @@ fun BrowserWebView(
                 } catch (_: Throwable) {}
             }
             WebView(ctx).apply {
+                isFocusable = true
+                isFocusableInTouchMode = true
+                setOnTouchListener { v, event ->
+                    if (event.action == android.view.MotionEvent.ACTION_DOWN || event.action == android.view.MotionEvent.ACTION_UP) {
+                        if (!v.hasFocus()) v.requestFocus()
+                    }
+                    false
+                }
                 CookieManager.getInstance().setAcceptCookie(true)
                 CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
                 settings.javaScriptEnabled = true

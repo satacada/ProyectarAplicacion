@@ -118,7 +118,7 @@ fun SaveToPlaylistSheet(
                     .padding(bottom = 16.dp)
             ) {
                 items(playlists, key = { it.id }) { pl ->
-                    val isChecked = pl.items.any { it.url == videoItem.url }
+                    val isChecked = playlistManager.isVideoInPlaylist(pl.id, videoItem)
                     Card(
                         colors = CardDefaults.cardColors(
                             containerColor = if (isChecked) Color(0xFF1E293B) else Color(0xFF131D31)

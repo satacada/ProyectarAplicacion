@@ -242,7 +242,7 @@ fun InAppBrowserScreen(
                     onWebViewCreated = { webViewInstance = it; if (!isHome && currentUrl.isNotBlank() && it.url == null) it.loadUrl(currentUrl) }
                 )
 
-                if ((showBottomControls || isCasting) && (!isHome && (detectedStreams.isNotEmpty() || isCasting))) {
+                if (showBottomControls && (!isHome || isCasting)) {
                     BrowserBottomBarContainer(
                         isCasting = isCasting, castTitle = castTitle, isPlaying = isPlaying,
                         posMs = posMs, durMs = durMs, volume = volume, detectedCount = detectedStreams.size,

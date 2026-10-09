@@ -103,13 +103,56 @@ class PlaylistManager(context: Context) {
         return true
     }
 
+    fun isSameVideo(a: HistoryItem, b: HistoryItem): Boolean {
+        if (a.url.isNotBlank() && b.url.isNotBlank()) {
+            if (a.url == b.url) return true
+            val cleanA = a.url.substringBefore('?')
+            val cleanB = b.url.substringBefore('?')
+            if (cleanA.length > 15 && cleanA == cleanB) return true
+        }
+        val tA = cleanTitleForMatch(a.title)
+        val tB = cleanTitleForMatch(b.title)
+        if (tA.isNotBlank() && tB.isNotBlank() && isNonGenericTitle(tA) && isNonGenericTitle(tB)) {
+            if (tA == tB) return true
+            if (tA.contains(tB) || tB.contains(tA)) return true
+            if (calculateTitleSimilarity(tA, tB) >= 0.75) return true
+        }
+        return false
+    }
+
+    private fun cleanTitleForMatch(t: String): String =
+        t.lowercase().replace(Regex("[^a-z0-9áéíóúüñ\\s]"), " ").trim().replace(Regex("\\s+"), " ")
+
+    private fun isNonGenericTitle(t: String): Boolean =
+        t.length >= 4 && t !in setOf("video", "pelicula", "transmision", "cargando", "dailymotion", "video web", "stream")
+
+    private fun calculateTitleSimilarity(s1: String, s2: String): Double {
+        val w1 = s1.split(" ").filter { it.length >= 2 }.toSet()
+        val w2 = s2.split(" ").filter { it.length >= 2 }.toSet()
+        if (w1.isEmpty() || w2.isEmpty()) return 0.0
+        val intersection = w1.intersect(w2).size
+        val union = w1.union(w2).size
+        return if (union == 0) 0.0 else intersection.toDouble() / union.toDouble()
+    }
+
     fun addItemToPlaylist(playlistId: String, item: HistoryItem) {
         if (item.url.isBlank()) return
         val current = getPlaylists().map { pl ->
             if (pl.id == playlistId) {
-                val updatedItems = pl.items.filterNot { it.url == item.url }.toMutableList()
+                val updatedItems = pl.items.filterNot { isSameVideo(it, item) }.toMutableList()
                 updatedItems.add(0, item)
                 pl.copy(items = updatedItems)
+            } else {
+                pl
+            }
+        }
+        savePlaylists(current)
+    }
+
+    fun removeItemFromPlaylist(playlistId: String, item: HistoryItem) {
+        val current = getPlaylists().map { pl ->
+            if (pl.id == playlistId) {
+                pl.copy(items = pl.items.filterNot { isSameVideo(it, item) })
             } else {
                 pl
             }
@@ -120,7 +163,7 @@ class PlaylistManager(context: Context) {
     fun removeItemFromPlaylist(playlistId: String, url: String) {
         val current = getPlaylists().map { pl ->
             if (pl.id == playlistId) {
-                pl.copy(items = pl.items.filterNot { it.url == url })
+                pl.copy(items = pl.items.filterNot { it.url == url || it.url.substringBefore('?') == url.substringBefore('?') })
             } else {
                 pl
             }
@@ -128,15 +171,20 @@ class PlaylistManager(context: Context) {
         savePlaylists(current)
     }
 
+    fun isVideoInPlaylist(playlistId: String, item: HistoryItem): Boolean {
+        val target = getPlaylists().firstOrNull { it.id == playlistId } ?: return false
+        return target.items.any { isSameVideo(it, item) }
+    }
+
     fun isVideoInPlaylist(playlistId: String, url: String): Boolean {
         val target = getPlaylists().firstOrNull { it.id == playlistId } ?: return false
-        return target.items.any { it.url == url }
+        return target.items.any { it.url == url || it.url.substringBefore('?') == url.substringBefore('?') }
     }
 
     fun toggleVideoInPlaylist(playlistId: String, item: HistoryItem): Boolean {
-        val inList = isVideoInPlaylist(playlistId, item.url)
+        val inList = isVideoInPlaylist(playlistId, item)
         if (inList) {
-            removeItemFromPlaylist(playlistId, item.url)
+            removeItemFromPlaylist(playlistId, item)
             return false
         } else {
             addItemToPlaylist(playlistId, item)

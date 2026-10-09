@@ -14,10 +14,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.omnicast.core.domain.models.StreamProfile
+import com.omnicast.sender.ui.theme.OmniThemeColors
 
 /**
- * Las tres opciones principales (Captura Web, Casteo-TV, Galería) con colores distintivos,
- * diseño compacto y descripciones detalladas condicionadas al foco de ayuda.
+ * Las tres opciones principales en Cyber-Dark:
+ * 1. Casteo a Tv (tarjeta violeta con estado inferior).
+ * 2. Fila de dos columnas: Captura Web (ámbar) y Galería (magenta: Fotos y Videos).
  */
 @Composable
 fun MainActionCards(
@@ -34,7 +36,7 @@ fun MainActionCards(
     onPickExternalFile: () -> Unit
 ) {
     val zoomDisplayLabel = when (tvScaleMode) {
-        "FIT_100", "ORIGINAL_FIT" -> "Fit 100%"
+        "FIT_100", "ORIGINAL_FIT" -> "100%"
         "ZOOM_85" -> "85%"
         "ZOOM_75" -> "75%"
         "ZOOM_115" -> "115%"
@@ -44,73 +46,20 @@ fun MainActionCards(
     }
     val rfShort = selectedProfile.label.replace(" @ ", "@")
 
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
 
         // ==========================================
-        // 1. CAPTURA WEB — DISTINTIVO CYAN EN PLOMO
-        // ==========================================
-        Surface(
-            color = Color(0xFF202C3D), // Plomo slate tintado en azul/cyan
-            shape = RoundedCornerShape(12.dp),
-            border = androidx.compose.foundation.BorderStroke(1.2.dp, Color(0xFF0284C7)),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Column(modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Text("🌐", fontSize = 20.sp)
-                        Text(
-                            text = "Captura Web",
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = Color(0xFF38BDF8)
-                        )
-                    }
-
-                    Button(
-                        onClick = onOpenBrowser,
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0284C7)),
-                        shape = RoundedCornerShape(8.dp),
-                        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 5.dp),
-                        modifier = Modifier.height(34.dp)
-                    ) {
-                        Text("🚀 Abrir Web", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                    }
-                }
-
-                if (tooltipsEnabled) {
-                    Text(
-                        text = "? Navega sitios de fútbol o películas, bloquea anuncios y envía el stream directo a la TV sin gastar batería.",
-                        color = Color(0xFFBAE6FD),
-                        fontSize = 11.sp,
-                        modifier = Modifier.padding(top = 4.dp)
-                    )
-                }
-            }
-        }
-
-        // ==========================================
-        // 2. CASTEO-TV — DISTINTIVO VIOLETA EN PLOMO
+        // 1. CASTEO A TV — VIOLETA CYBER-DARK
         // ==========================================
         Surface(
-            color = Color(0xFF282542), // Plomo slate tintado en violeta/índigo
-            shape = RoundedCornerShape(12.dp),
-            border = androidx.compose.foundation.BorderStroke(
-                1.2.dp,
-                if (isStreaming) Color(0xFF10B981) else Color(0xFF6366F1)
-            ),
+            color = Color(0xFF1D1730),
+            shape = RoundedCornerShape(16.dp),
+            border = androidx.compose.foundation.BorderStroke(1.2.dp, Color(0xFF6D28D9)),
             modifier = Modifier.fillMaxWidth()
         ) {
             Column(
-                modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                modifier = Modifier.padding(14.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -119,32 +68,40 @@ fun MainActionCards(
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        Text("📱", fontSize = 20.sp)
+                        Box(
+                            modifier = Modifier
+                                .size(38.dp)
+                                .background(Color(0xFF2B1F47), RoundedCornerShape(10.dp))
+                                .border(1.dp, Color(0xFF8B5CF6).copy(alpha = 0.5f), RoundedCornerShape(10.dp)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("📱", fontSize = 18.sp)
+                        }
                         Text(
-                            text = "Casteo-TV",
-                            fontSize = 15.sp,
+                            text = "Casteo a Tv",
+                            fontSize = 16.sp,
                             fontWeight = FontWeight.ExtraBold,
-                            color = Color(0xFFA5B4FC)
+                            color = Color(0xFFF1F5F9)
                         )
                     }
 
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Button(
-                            onClick = if (!isStreaming) onStartProjection else onStopProjection,
+                            onClick = { if (isStreaming) onStopProjection() else onStartProjection() },
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = if (!isStreaming) Color(0xFF4F46E5) else Color(0xFFDC2626)
+                                containerColor = if (isStreaming) Color(0xFFDC2626) else Color(0xFF7C3AED)
                             ),
-                            shape = RoundedCornerShape(8.dp),
-                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 5.dp),
-                            modifier = Modifier.height(34.dp)
+                            shape = RoundedCornerShape(10.dp),
+                            contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp),
+                            modifier = Modifier.height(36.dp)
                         ) {
                             Text(
-                                text = if (!isStreaming) "📺 Proyectar" else "🛑 Detener",
+                                text = if (isStreaming) "⏹ Detener" else "📡 Proyectar",
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White
@@ -153,53 +110,43 @@ fun MainActionCards(
 
                         Box(
                             modifier = Modifier
-                                .size(34.dp)
-                                .background(Color(0xFF1E1C33), RoundedCornerShape(8.dp))
-                                .border(1.dp, Color(0xFF4B4673), RoundedCornerShape(8.dp))
+                                .size(36.dp)
+                                .background(Color(0xFF281C44), RoundedCornerShape(10.dp))
+                                .border(1.dp, Color(0xFF6D28D9), RoundedCornerShape(10.dp))
                                 .clickable { onOpenProjectionConfig() },
                             contentAlignment = Alignment.Center
                         ) {
-                            Text("⚙️", fontSize = 15.sp)
+                            Text("⚙️", fontSize = 16.sp)
                         }
                     }
                 }
 
-                // Resumen en vivo nítido sobre plomo
-                Row(
+                // Barra de Estado inferior estilizada
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(Color(0xFF1E1C33), RoundedCornerShape(8.dp))
-                        .border(1.dp, Color(0xFF3E395E), RoundedCornerShape(8.dp))
-                        .padding(horizontal = 10.dp, vertical = 4.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                        .background(Color(0xFF100C1C), RoundedCornerShape(8.dp))
+                        .padding(horizontal = 10.dp, vertical = 6.dp)
                 ) {
-                    Text(
-                        text = "Anti-Tirones: ${if (smoothBufferEnabled) "Sí" else "No"}",
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = if (smoothBufferEnabled) Color(0xFF34D399) else Color(0xFF94A3B8)
-                    )
-                    Text("•", color = Color(0xFF4B4673), fontSize = 11.sp)
-                    Text(
-                        text = "R/F: $rfShort",
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF818CF8)
-                    )
-                    Text("•", color = Color(0xFF4B4673), fontSize = 11.sp)
-                    Text(
-                        text = "Zoom: $zoomDisplayLabel",
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFFFBBF24)
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Text("ESTADO:", fontSize = 10.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFF94A3B8))
+                        Text("$rfShort • Zoom: $zoomDisplayLabel •", fontSize = 10.sp, color = Color(0xFFCBD5E1))
+                        Text(
+                            text = "Anti-Tirones: ${if (smoothBufferEnabled) "Si" else "No"}",
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = if (smoothBufferEnabled) Color(0xFF34D399) else Color(0xFFF87171)
+                        )
+                    }
                 }
 
                 if (tooltipsEnabled) {
                     Text(
-                        text = "? Duplica la pantalla por hardware a 60 FPS con audio interno. Toca la tuerca ⚙️ para cambiar resolución o zoom.",
-                        color = Color(0xFFC7D2FE),
+                        text = "? Proyecta la pantalla y el audio interno con baja latencia y sin micrófono.",
+                        color = Color(0xFFDDD6FE),
                         fontSize = 11.sp
                     )
                 }
@@ -207,63 +154,127 @@ fun MainActionCards(
         }
 
         // ==========================================
-        // 3. GALERÍA — DISTINTIVO ESMERALDA EN PLOMO
+        // 2. FILA DE 2 COLUMNAS: CAPTURA WEB Y GALERÍA
         // ==========================================
-        Surface(
-            color = Color(0xFF1B2F27), // Plomo slate tintado en verde esmeralda
-            shape = RoundedCornerShape(12.dp),
-            border = androidx.compose.foundation.BorderStroke(1.2.dp, Color(0xFF059669)),
-            modifier = Modifier.fillMaxWidth()
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            Column(modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
+            // COLUMNA IZQUIERDA: CAPTURA WEB (ÁMBAR)
+            Surface(
+                color = Color(0xFF221B0F),
+                shape = RoundedCornerShape(16.dp),
+                border = androidx.compose.foundation.BorderStroke(1.2.dp, Color(0xFFD97706)),
+                modifier = Modifier.weight(1f)
+            ) {
+                Column(
+                    modifier = Modifier.padding(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Row(
+                        modifier = Modifier
+                            .background(Color(0xFF332510), RoundedCornerShape(8.dp))
+                            .padding(horizontal = 8.dp, vertical = 4.dp),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
-                        Text("🖼️", fontSize = 20.sp)
-                        Text(
-                            text = "Galería",
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = Color(0xFF6EE7B7)
-                        )
+                        Text("🌐", fontSize = 14.sp)
+                        Text("➔", fontSize = 10.sp, color = Color(0xFFFBBF24))
+                        Text("📺", fontSize = 14.sp)
                     }
 
-                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Button(
-                            onClick = onOpenGallery,
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF059669)),
-                            shape = RoundedCornerShape(8.dp),
-                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 5.dp),
-                            modifier = Modifier.height(34.dp)
-                        ) {
-                            Text("📷 Fotos", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                        }
+                    Text(
+                        text = "Captura Web",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = Color(0xFFFBBF24)
+                    )
+                    Text(
+                        text = "Navegador embebido para streaming",
+                        fontSize = 10.sp,
+                        color = Color(0xFF94A3B8),
+                        lineHeight = 13.sp,
+                        maxLines = 2
+                    )
 
-                        FilledTonalButton(
-                            onClick = onPickExternalFile,
-                            colors = ButtonDefaults.filledTonalButtonColors(containerColor = Color(0xFF123B2A)),
-                            shape = RoundedCornerShape(8.dp),
-                            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 5.dp),
-                            modifier = Modifier.height(34.dp)
-                        ) {
-                            Text("📁 Otros", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color(0xFFA7F3D0))
-                        }
+                    Spacer(modifier = Modifier.height(2.dp))
+
+                    Button(
+                        onClick = onOpenBrowser,
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF59E0B)),
+                        shape = RoundedCornerShape(10.dp),
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp),
+                        modifier = Modifier.fillMaxWidth().height(36.dp)
+                    ) {
+                        Text("🌐 Abrir Web", fontSize = 12.sp, fontWeight = FontWeight.ExtraBold, color = Color.Black)
                     }
                 }
+            }
 
-                if (tooltipsEnabled) {
+            // COLUMNA DERECHA: GALERÍA (MAGENTA / BERRY)
+            Surface(
+                color = Color(0xFF24121F),
+                shape = RoundedCornerShape(16.dp),
+                border = androidx.compose.foundation.BorderStroke(1.2.dp, Color(0xFFBE185D)),
+                modifier = Modifier.weight(1f)
+            ) {
+                Column(
+                    modifier = Modifier.padding(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .background(Color(0xFF38142C), RoundedCornerShape(8.dp))
+                            .padding(horizontal = 8.dp, vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Text("🖼️", fontSize = 14.sp)
+                        Text("➔", fontSize = 10.sp, color = Color(0xFFF43F5E))
+                        Text("📺", fontSize = 14.sp)
+                    }
+
                     Text(
-                        text = "? Transmite tus fotos en alta definición con zoom táctil y rotación sincronizada en tiempo real con la TV Box.",
-                        color = Color(0xFFA7F3D0),
-                        fontSize = 11.sp,
-                        modifier = Modifier.padding(top = 4.dp)
+                        text = "Galería",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = Color(0xFFF43F5E)
                     )
+                    Text(
+                        text = "Fotos locales y archivos multimedia",
+                        fontSize = 10.sp,
+                        color = Color(0xFF94A3B8),
+                        lineHeight = 13.sp,
+                        maxLines = 2
+                    )
+
+                    Spacer(modifier = Modifier.height(2.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Button(
+                            onClick = onOpenGallery,
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE11D48)),
+                            shape = RoundedCornerShape(8.dp),
+                            contentPadding = PaddingValues(horizontal = 6.dp, vertical = 4.dp),
+                            modifier = Modifier.weight(1f).height(36.dp)
+                        ) {
+                            Text("📷 Fotos", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                        }
+
+                        Button(
+                            onClick = onPickExternalFile,
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF381328)),
+                            shape = RoundedCornerShape(8.dp),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF9D174D)),
+                            contentPadding = PaddingValues(horizontal = 4.dp, vertical = 4.dp),
+                            modifier = Modifier.weight(1f).height(36.dp)
+                        ) {
+                            Text("🎬 Videos", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFBCFE8))
+                        }
+                    }
                 }
             }
         }

@@ -10,10 +10,13 @@ import androidx.activity.result.contract.ActivityResultContracts
 import com.omnicast.core.protocol.SignalingMessage
 import com.omnicast.sender.media.LocalImageServer
 import com.omnicast.sender.network.QuickSignalingHelper
-import com.omnicast.sender.network.SignalingClient
 import com.omnicast.sender.ui.SenderMainActivity
 
 class GalleryPickerActivity : ComponentActivity() {
+
+    companion object {
+        const val EXTRA_MIME_FILTER = "EXTRA_MIME_FILTER"
+    }
 
     private fun resolveMime(uri: Uri): String {
         val type = contentResolver.getType(uri)
@@ -60,11 +63,12 @@ class GalleryPickerActivity : ComponentActivity() {
     }
 
     private fun launchExplorer() {
+        val filter = intent.getStringExtra(EXTRA_MIME_FILTER) ?: "*/*"
         try {
-            picker.launch("*/*")
+            picker.launch(filter)
         } catch (_: Throwable) {
             try {
-                picker.launch("image/*")
+                picker.launch("*/*")
             } catch (_: Throwable) {
                 Toast.makeText(this, "No se encontró explorador de archivos", Toast.LENGTH_SHORT).show()
                 finish()
@@ -90,7 +94,7 @@ class GalleryPickerActivity : ComponentActivity() {
             videoLauncher.launch(videoIntent)
             @Suppress("DEPRECATION")
             overridePendingTransition(0, 0)
-        } else {
+        } else if (mime.startsWith("image/")) {
             val photoItems = listOf(com.omnicast.sender.gallery.GalleryPhotoItem(0L, uri, "Foto", "Selección", System.currentTimeMillis()))
             com.omnicast.sender.gallery.GallerySessionHolder.setPhotos(photoItems, 0)
             val viewerIntent = Intent(this, PhotoCastViewerActivity::class.java).apply {
@@ -100,6 +104,9 @@ class GalleryPickerActivity : ComponentActivity() {
                 putExtra("IMAGE_URI", uri.toString())
             }
             viewerLauncher.launch(viewerIntent)
+        } else {
+            Toast.makeText(this, "Formato no compatible. Por favor selecciona una foto o un video.", Toast.LENGTH_LONG).show()
+            finish()
         }
     }
 

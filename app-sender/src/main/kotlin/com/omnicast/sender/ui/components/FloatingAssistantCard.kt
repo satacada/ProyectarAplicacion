@@ -5,8 +5,8 @@ import android.net.Uri
 import android.os.Build
 import android.provider.Settings
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -24,7 +24,7 @@ import com.omnicast.sender.overlay.FloatingIndicatorService
 import com.omnicast.sender.ui.theme.OmniThemeColors
 
 /**
- * Tarjeta armónica para activar o desactivar el Asistente Flotante con superposición.
+ * Tarjeta verde esmeralda con iluminación neón para el Asistente Flotante sobre otras apps.
  */
 @Composable
 fun FloatingAssistantCard(
@@ -62,36 +62,40 @@ fun FloatingAssistantCard(
         enabled = tooltipsEnabled
     ) {
         Surface(
-            color = OmniThemeColors.CardSurface,
-            shape = RoundedCornerShape(12.dp),
+            color = Color(0xFF0C201C),
+            shape = RoundedCornerShape(16.dp),
             border = androidx.compose.foundation.BorderStroke(
-                1.dp,
-                if (isServiceActive) OmniThemeColors.EmeraldAccent.copy(alpha = 0.6f) else OmniThemeColors.CardBorder
+                1.2.dp,
+                if (isServiceActive) Color(0xFF10B981) else Color(0xFF1B3D34)
             ),
             modifier = Modifier.fillMaxWidth()
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 14.dp, vertical = 10.dp),
+                    .padding(horizontal = 14.dp, vertical = 12.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(34.dp)
+                            .size(38.dp)
                             .background(
-                                color = if (isServiceActive) OmniThemeColors.EmeraldAccent.copy(alpha = 0.2f)
-                                else OmniThemeColors.InputBackground,
-                                shape = CircleShape
+                                color = if (isServiceActive) Color(0xFF0F362C) else Color(0xFF142420),
+                                shape = RoundedCornerShape(10.dp)
+                            )
+                            .border(
+                                1.dp,
+                                if (isServiceActive) Color(0xFF10B981).copy(alpha = 0.6f) else Color(0xFF26423A),
+                                RoundedCornerShape(10.dp)
                             ),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(if (isServiceActive) "🫧" else "⚪", fontSize = 16.sp)
+                        Text(if (isServiceActive) "🫧" else "⚪", fontSize = 18.sp)
                     }
 
                     Column {
@@ -101,11 +105,24 @@ fun FloatingAssistantCard(
                             fontWeight = FontWeight.Bold,
                             color = OmniThemeColors.TextPrimary
                         )
-                        Text(
-                            text = if (isServiceActive) "🟢 Activo sobre otras apps" else "⚪ Inactivo — Toca para activar",
-                            fontSize = 11.sp,
-                            color = if (isServiceActive) OmniThemeColors.EmeraldAccent else OmniThemeColors.TextSecondary
-                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(6.dp)
+                                    .background(
+                                        if (isServiceActive) Color(0xFF10B981) else Color(0xFF94A3B8),
+                                        shape = androidx.compose.foundation.shape.CircleShape
+                                    )
+                            )
+                            Text(
+                                text = if (isServiceActive) "Activo sobre otras apps" else "Inactivo — Toca para activar",
+                                fontSize = 11.sp,
+                                color = if (isServiceActive) Color(0xFF6EE7B7) else Color(0xFF94A3B8)
+                            )
+                        }
                     }
                 }
 
@@ -122,7 +139,7 @@ fun FloatingAssistantCard(
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = OmniThemeColors.AmberAccent),
                         shape = RoundedCornerShape(8.dp),
-                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp)
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 5.dp)
                     ) {
                         Text("Permitir", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 11.sp)
                     }
@@ -140,9 +157,9 @@ fun FloatingAssistantCard(
                         },
                         colors = SwitchDefaults.colors(
                             checkedThumbColor = Color.White,
-                            checkedTrackColor = OmniThemeColors.EmeraldAccent,
+                            checkedTrackColor = Color(0xFF10B981),
                             uncheckedThumbColor = OmniThemeColors.TextSecondary,
-                            uncheckedTrackColor = OmniThemeColors.InputBackground
+                            uncheckedTrackColor = Color(0xFF1B2824)
                         )
                     )
                 }

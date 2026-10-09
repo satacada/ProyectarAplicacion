@@ -123,9 +123,10 @@ fun GallerySection(onPickExternalFile: () -> Unit) {
                     Button(
                         onClick = onPickExternalFile,
                         contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF334155))
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF381328)),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF9D174D))
                     ) {
-                        Text("📁 Otros", fontSize = 11.sp, color = Color.White)
+                        Text("🎬 Videos", fontSize = 11.sp, color = Color(0xFFFBCFE8), fontWeight = FontWeight.Bold)
                     }
                 }
             }

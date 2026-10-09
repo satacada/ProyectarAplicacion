@@ -17,7 +17,7 @@ import androidx.compose.ui.unit.sp
 import com.omnicast.sender.ui.theme.OmniThemeColors
 
 /**
- * Cabecera con foco de ayuda visual por color (Verde = ON, Plomo = OFF, sin texto) y título.
+ * Cabecera con menú lateral, título con badge de versión ámbar e icono de ayuda circular '?'.
  */
 @Composable
 fun SenderHeaderBar(
@@ -29,72 +29,75 @@ fun SenderHeaderBar(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 2.dp),
+            .padding(vertical = 4.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             if (onOpenDrawer != null) {
-                IconButton(onClick = onOpenDrawer, modifier = Modifier.size(34.dp)) {
-                    Text("☰", color = OmniThemeColors.CyanAccent, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                Box(
+                    modifier = Modifier
+                        .size(38.dp)
+                        .background(Color(0xFF19202E), RoundedCornerShape(10.dp))
+                        .border(1.dp, Color(0xFF2E3A4E), RoundedCornerShape(10.dp))
+                        .clickable { onOpenDrawer() },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("☰", color = Color(0xFF94A3B8), fontSize = 18.sp, fontWeight = FontWeight.Bold)
                 }
             }
+
             Text(
                 text = "OmniCast Pro",
-                fontSize = 19.sp,
+                fontSize = 20.sp,
                 fontWeight = FontWeight.ExtraBold,
                 color = OmniThemeColors.TextPrimary
             )
+
             Surface(
-                color = OmniThemeColors.BlueAccent.copy(alpha = 0.2f),
-                border = androidx.compose.foundation.BorderStroke(1.dp, OmniThemeColors.BlueAccent.copy(alpha = 0.6f)),
-                shape = RoundedCornerShape(6.dp)
+                color = Color(0xFF382910),
+                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFD97706)),
+                shape = RoundedCornerShape(12.dp)
             ) {
                 Text(
-                    text = "v3.31",
-                    modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp),
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = OmniThemeColors.CyanAccent
+                    text = "v3.32",
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = Color(0xFFFBBF24)
                 )
             }
         }
 
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        OmniTooltip(
+            text = if (tooltipsEnabled) "Ayuda Activa: Descripciones y consejos habilitados."
+            else "Ayuda Inactiva: Toca '?' para ver consejos explicativos.",
+            enabled = true
         ) {
-            // Indicador de Ayuda por color (Verde = ON, Plomo = OFF, con signo '?')
-            OmniTooltip(
-                text = if (tooltipsEnabled) "Ayuda Activa: Descripciones detalladas habilitadas."
-                else "Ayuda Inactiva: Toca para ver descripciones y consejos detallados.",
-                enabled = true
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(36.dp)
-                        .background(
-                            color = if (tooltipsEnabled) Color(0xFF064E3B) else Color(0xFF333D52),
-                            shape = CircleShape
-                        )
-                        .border(
-                            width = 1.5.dp,
-                            color = if (tooltipsEnabled) Color(0xFF10B981) else Color(0xFF52607D),
-                            shape = CircleShape
-                        )
-                        .clickable { onToggleTooltips(!tooltipsEnabled) },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "?",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = if (tooltipsEnabled) Color(0xFF6EE7B7) else Color(0xFFCBD5E1)
+            Box(
+                modifier = Modifier
+                    .size(38.dp)
+                    .background(
+                        color = if (tooltipsEnabled) Color(0xFF09291D) else Color(0xFF19202E),
+                        shape = CircleShape
                     )
-                }
+                    .border(
+                        width = 1.2.dp,
+                        color = if (tooltipsEnabled) Color(0xFF10B981) else Color(0xFF334155),
+                        shape = CircleShape
+                    )
+                    .clickable { onToggleTooltips(!tooltipsEnabled) },
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "?",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = if (tooltipsEnabled) Color(0xFF34D399) else Color(0xFF94A3B8)
+                )
             }
         }
     }

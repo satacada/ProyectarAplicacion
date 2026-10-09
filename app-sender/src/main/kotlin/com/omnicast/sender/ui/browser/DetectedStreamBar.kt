@@ -4,7 +4,9 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -17,8 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 /**
- * Barra inferior prominente que aparece inmediatamente al detectar videos en la web.
- * Permite transmitir a la TV con 1 solo toque o desplegar opciones de calidad.
+ * Barra inferior Cyber-Dark que aparece al detectar streams de video en la web.
  */
 @Composable
 fun DetectedStreamBar(
@@ -38,8 +39,9 @@ fun DetectedStreamBar(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(12.dp),
-            color = Color(0xFF1E293B),
-            shape = RoundedCornerShape(16.dp),
+            color = Color(0xF8111624),
+            shape = RoundedCornerShape(18.dp),
+            border = androidx.compose.foundation.BorderStroke(1.2.dp, Color(0xFF28354E)),
             shadowElevation = 8.dp
         ) {
             Column(
@@ -53,72 +55,75 @@ fun DetectedStreamBar(
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("🎬", fontSize = 20.sp)
+                        Box(
+                            modifier = Modifier
+                                .size(36.dp)
+                                .background(Color(0xFF132F26), RoundedCornerShape(8.dp))
+                                .border(1.dp, Color(0xFF10B981).copy(alpha = 0.5f), RoundedCornerShape(8.dp)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("⚡", fontSize = 16.sp)
+                        }
                         Column {
                             Text(
-                                text = "¡Video Detectado! ($streamCount)",
-                                color = Color(0xFF38BDF8),
+                                text = "Flujos detectados ($streamCount)",
+                                color = Color.White,
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
-                                text = title.ifBlank { "Transmisión Web" },
-                                color = Color.White,
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.SemiBold,
+                                text = title.ifBlank { "HLS • m3u8 stream directo" },
+                                color = Color(0xFF94A3B8),
+                                fontSize = 11.sp,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
                             )
                         }
                     }
+
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
                         if (onSaveToPlaylist != null) {
                             IconButton(
                                 onClick = onSaveToPlaylist,
-                                modifier = Modifier.size(36.dp).background(Color(0xFF38BDF8).copy(alpha = 0.2f), shape = androidx.compose.foundation.shape.CircleShape)
+                                modifier = Modifier.size(34.dp).background(Color(0xFF1E283D), CircleShape)
                             ) {
-                                Text("💾", fontSize = 16.sp)
+                                Text("🔖", fontSize = 13.sp)
                             }
                         }
                         IconButton(
                             onClick = onClearStreams,
-                            modifier = Modifier.size(36.dp).background(Color(0xFFEF4444).copy(alpha = 0.2f), shape = androidx.compose.foundation.shape.CircleShape)
+                            modifier = Modifier.size(34.dp).background(Color(0xFF2A1B24), CircleShape)
                         ) {
-                            Text("🗑️", fontSize = 16.sp)
+                            Text("✕", fontSize = 13.sp, color = Color(0xFFF43F5E), fontWeight = FontWeight.Bold)
                         }
                     }
                 }
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Button(
                         onClick = onTransmitDirect,
-                        modifier = Modifier.weight(1f).height(44.dp),
+                        modifier = Modifier.weight(1.5f).height(42.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF10B981)),
                         shape = RoundedCornerShape(10.dp)
                     ) {
-                        Text("▶ Transmitir a TV", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = Color.White)
+                        Text("📺 Transmitir a TV", fontWeight = FontWeight.ExtraBold, fontSize = 13.sp, color = Color.White)
                     }
-                    OutlinedButton(
-                        onClick = onOpenQualities,
-                        modifier = Modifier.height(44.dp),
+
+                    Surface(
+                        color = Color(0xFF162030),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF28354E)),
                         shape = RoundedCornerShape(10.dp),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF38BDF8))
+                        modifier = Modifier.height(42.dp)
                     ) {
-                        Text("Calidades", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
-                    }
-                    Button(
-                        onClick = onClearStreams,
-                        modifier = Modifier.height(44.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDC2626)),
-                        shape = RoundedCornerShape(10.dp),
-                        contentPadding = PaddingValues(horizontal = 12.dp)
-                    ) {
-                        Text("🗑️ Borrar", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                        TextButton(onClick = onOpenQualities) {
+                            Text("🎛️ Calidad", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color(0xFFCBD5E1))
+                        }
                     }
                 }
             }

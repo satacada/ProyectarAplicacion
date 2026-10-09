@@ -5,6 +5,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
@@ -16,11 +17,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import com.omnicast.core.domain.models.QualityMode
 import com.omnicast.core.domain.models.StreamProfile
 import kotlin.math.roundToInt
-
-
 
 @Composable
 fun ProjectionConfigDialog(
@@ -34,11 +32,15 @@ fun ProjectionConfigDialog(
     onDismiss: () -> Unit
 ) {
     var dialogTooltipsEnabled by remember { mutableStateOf(tooltipsEnabled) }
-    val initialZoomIdx = remember(tvScaleMode) {
+    var tempProfile by remember { mutableStateOf(selectedProfile) }
+    var tempSmoothBuffer by remember { mutableStateOf(smoothBufferEnabled) }
+    var tempScaleMode by remember { mutableStateOf(tvScaleMode) }
+
+    val initialZoomIdx = remember(tempScaleMode) {
         val found = ZOOM_STEPS.indexOfFirst {
-            it.id == tvScaleMode ||
-                    (tvScaleMode == "EXTEND_16_9" && it.id == "FILL_16_9") ||
-                    (tvScaleMode == "ORIGINAL_FIT" && it.id == "FIT_100")
+            it.id == tempScaleMode ||
+                    (tempScaleMode == "EXTEND_16_9" && it.id == "FILL_16_9") ||
+                    (tempScaleMode == "ORIGINAL_FIT" && it.id == "FIT_100")
         }
         if (found >= 0) found.toFloat() else 2f
     }
@@ -46,249 +48,180 @@ fun ProjectionConfigDialog(
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(
-            shape = RoundedCornerShape(16.dp),
-            color = Color(0xFF262D3D), // Plomo grafito oscuro, cómodo a la vista
-            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF434E66)),
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 6.dp)
+            shape = RoundedCornerShape(20.dp),
+            color = Color(0xFF111622),
+            border = androidx.compose.foundation.BorderStroke(1.2.dp, Color(0xFF28354E)),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp)
         ) {
             Column(
                 modifier = Modifier
-                    .padding(16.dp)
+                    .padding(18.dp)
                     .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
-                // Cabecera con Título, Indicador de Ayuda '?' y Cerrar
+                // Cabecera: Icono tuerca, Título, Subtítulo y Botones (?, ✕)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = "⚙️ Ajustes de Proyección",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = Color(0xFFF1F5F9)
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(38.dp)
+                                .background(Color(0xFF18233C), CircleShape)
+                                .border(1.dp, Color(0xFF3B82F6).copy(alpha = 0.5f), CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("⚙️", fontSize = 18.sp)
+                        }
+
+                        Column {
+                            Text(
+                                text = "Ajustes de Proyección",
+                                fontSize = 17.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = Color.White
+                            )
+                            Text(
+                                text = "Calidad de pantalla en tiempo real",
+                                fontSize = 11.sp,
+                                color = Color(0xFF94A3B8)
+                            )
+                        }
+                    }
 
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
-                        // Indicador de Ayuda interno '?' (Verde = ON, Plomo = OFF)
                         Box(
                             modifier = Modifier
                                 .size(32.dp)
                                 .background(
-                                    color = if (dialogTooltipsEnabled) Color(0xFF064E3B) else Color(0xFF333D52),
-                                    shape = androidx.compose.foundation.shape.CircleShape
+                                    color = if (dialogTooltipsEnabled) Color(0xFF09291D) else Color(0xFF19202E),
+                                    shape = CircleShape
                                 )
                                 .border(
-                                    width = 1.2.dp,
-                                    color = if (dialogTooltipsEnabled) Color(0xFF10B981) else Color(0xFF52607D),
-                                    shape = androidx.compose.foundation.shape.CircleShape
+                                    1.dp,
+                                    if (dialogTooltipsEnabled) Color(0xFF10B981) else Color(0xFF334155),
+                                    CircleShape
                                 )
                                 .clickable { dialogTooltipsEnabled = !dialogTooltipsEnabled },
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
                                 text = "?",
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.ExtraBold,
-                                color = if (dialogTooltipsEnabled) Color(0xFF6EE7B7) else Color(0xFFCBD5E1)
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = if (dialogTooltipsEnabled) Color(0xFF34D399) else Color(0xFF94A3B8)
                             )
                         }
 
-                        IconButton(onClick = onDismiss, modifier = Modifier.size(32.dp)) {
-                            Text("✕", color = Color(0xFF94A3B8), fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                        }
-                    }
-                }
-
-                // 1. Perfil de Transmisión con Radio Buttons compactos
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text(
-                        text = "Perfil de Transmisión (Resolución y FPS)",
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFFCBD5E1)
-                    )
-
-                    PROFILE_OPTIONS.forEach { opt ->
-                        val isSelected = selectedProfile.mode == opt.profile.mode ||
-                                (opt.profile.mode == QualityMode.BALANCED_30FPS && selectedProfile.mode == QualityMode.BALANCED)
-                        Column(
+                        Box(
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .background(
-                                    color = if (isSelected) Color(0xFF333D56) else Color(0xFF1E2430),
-                                    shape = RoundedCornerShape(8.dp)
-                                )
-                                .border(
-                                    1.dp,
-                                    if (isSelected) Color(0xFF6366F1) else Color(0xFF333D52),
-                                    shape = RoundedCornerShape(8.dp)
-                                )
-                                .clickable { onSelectProfile(opt.profile) }
-                                .padding(horizontal = 8.dp, vertical = 5.dp)
+                                .size(32.dp)
+                                .background(Color(0xFF19202E), CircleShape)
+                                .border(1.dp, Color(0xFF334155), CircleShape)
+                                .clickable { onDismiss() },
+                            contentAlignment = Alignment.Center
                         ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(6.dp)
-                            ) {
-                                RadioButton(
-                                    selected = isSelected,
-                                    onClick = { onSelectProfile(opt.profile) },
-                                    modifier = Modifier.size(20.dp),
-                                    colors = RadioButtonDefaults.colors(
-                                        selectedColor = Color(0xFF818CF8),
-                                        unselectedColor = Color(0xFF64748B)
-                                    )
-                                )
-                                Text(
-                                    text = opt.displayLabel,
-                                    fontSize = 12.sp,
-                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                    color = if (isSelected) Color(0xFFF1F5F9) else Color(0xFFCBD5E1)
-                                )
-                            }
-                            if (dialogTooltipsEnabled) {
-                                Text(
-                                    text = "? ${opt.infoTip}",
-                                    fontSize = 10.sp,
-                                    color = Color(0xFF94A3B8),
-                                    modifier = Modifier.padding(start = 26.dp, top = 2.dp, bottom = 2.dp)
-                                )
-                            }
+                            Text("✕", color = Color(0xFF94A3B8), fontSize = 14.sp, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
+
+                // 1. Perfil de Transmisión
+                ProfileSelectionSection(
+                    tempProfile = tempProfile,
+                    onSelectProfile = { tempProfile = it }
+                )
 
                 // 2. Suavizado Anti-Tirones
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(Color(0xFF1E2430), RoundedCornerShape(10.dp))
-                        .border(1.dp, Color(0xFF333D52), RoundedCornerShape(10.dp))
-                        .padding(10.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                Surface(
+                    color = Color(0xFF0C1F1C),
+                    shape = RoundedCornerShape(14.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF183D36)),
+                    modifier = Modifier.fillMaxWidth()
                 ) {
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier.padding(12.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = "🛡️ Suavizado Anti-Tirones",
-                                color = Color(0xFFF1F5F9),
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Text(
-                                text = if (smoothBufferEnabled) "Activado (Buffer 100ms en TV)" else "Desactivado (Ultra-baja latencia cruda)",
-                                color = if (smoothBufferEnabled) Color(0xFF10B981) else Color(0xFF94A3B8),
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.SemiBold
-                            )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(36.dp)
+                                    .background(Color(0xFF13362E), CircleShape)
+                                    .border(1.dp, Color(0xFF10B981).copy(alpha = 0.5f), CircleShape),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text("🛡️", fontSize = 16.sp)
+                            }
+                            Column {
+                                Text("Suavizado Anti-Tirones", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                                Text(
+                                    text = if (tempSmoothBuffer) "Activado • Buffer de 100 ms en TV" else "Desactivado • Ultra-baja latencia cruda",
+                                    color = if (tempSmoothBuffer) Color(0xFF34D399) else Color(0xFF94A3B8),
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
                         }
+
                         Switch(
-                            checked = smoothBufferEnabled,
-                            onCheckedChange = onToggleSmoothBuffer,
+                            checked = tempSmoothBuffer,
+                            onCheckedChange = { tempSmoothBuffer = it },
                             colors = SwitchDefaults.colors(
                                 checkedThumbColor = Color.White,
                                 checkedTrackColor = Color(0xFF10B981),
                                 uncheckedThumbColor = Color(0xFF94A3B8),
-                                uncheckedTrackColor = Color(0xFF333D52)
+                                uncheckedTrackColor = Color(0xFF142420)
                             )
                         )
                     }
-                    if (dialogTooltipsEnabled) {
-                        Text(
-                            text = "? Buffer elástico en la TV para evitar micro-cortes y tirones de imagen en redes Wi-Fi con interferencia.",
-                            color = Color(0xFF94A3B8),
-                            fontSize = 10.sp
-                        )
-                    }
                 }
 
-                // 3. Proporción y Zoom en TV reducido con opción activa resaltada
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(Color(0xFF1E2430), RoundedCornerShape(10.dp))
-                        .border(1.dp, Color(0xFF333D52), RoundedCornerShape(10.dp))
-                        .padding(10.dp),
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                // 3. Proporción y Zoom en TV
+                TvScaleZoomSection(
+                    sliderValue = sliderValue,
+                    onSliderChange = { sliderValue = it },
+                    onSelectStepId = { tempScaleMode = it }
+                )
+
+                // Botón Guardar y Aplicar
+                Button(
+                    onClick = {
+                        onSelectProfile(tempProfile)
+                        onToggleSmoothBuffer(tempSmoothBuffer)
+                        onSelectTvScaleMode(tempScaleMode)
+                        onDismiss()
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4F46E5)),
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth().height(46.dp)
                 ) {
-                    val activeStep = ZOOM_STEPS.getOrElse(sliderValue.roundToInt().coerceIn(0, ZOOM_STEPS.size - 1)) { ZOOM_STEPS[2] }
+                    Text("✓ Guardar y Aplicar", fontWeight = FontWeight.ExtraBold, fontSize = 14.sp, color = Color.White)
+                }
+
+                // Cerrar sin guardar
+                Box(
+                    modifier = Modifier.fillMaxWidth().clickable { onDismiss() },
+                    contentAlignment = Alignment.Center
+                ) {
                     Text(
-                        text = "Proporción y Zoom en TV",
-                        color = Color(0xFFF1F5F9),
+                        text = "Cerrar sin guardar",
+                        color = Color(0xFF94A3B8),
                         fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Medium
                     )
-
-                    Slider(
-                        value = sliderValue,
-                        onValueChange = { newVal ->
-                            sliderValue = newVal
-                            val step = ZOOM_STEPS[newVal.roundToInt().coerceIn(0, ZOOM_STEPS.size - 1)]
-                            onSelectTvScaleMode(step.id)
-                        },
-                        valueRange = 0f..(ZOOM_STEPS.size - 1).toFloat(),
-                        steps = ZOOM_STEPS.size - 2,
-                        colors = SliderDefaults.colors(
-                            thumbColor = Color(0xFF6366F1),
-                            activeTrackColor = Color(0xFF6366F1),
-                            inactiveTrackColor = Color(0xFF333D52)
-                        )
-                    )
-
-                    // Opciones de zoom resaltando visiblemente la activa
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        ZOOM_STEPS.forEachIndexed { idx, step ->
-                            val isCurrent = step.id == activeStep.id
-                            Surface(
-                                color = if (isCurrent) Color(0xFF4F46E5) else Color.Transparent,
-                                shape = RoundedCornerShape(6.dp),
-                                border = if (isCurrent) androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF818CF8)) else null,
-                                modifier = Modifier.clickable {
-                                    sliderValue = idx.toFloat()
-                                    onSelectTvScaleMode(step.id)
-                                }
-                            ) {
-                                Text(
-                                    text = step.label,
-                                    fontSize = if (isCurrent) 10.sp else 9.sp,
-                                    color = if (isCurrent) Color.White else Color(0xFF94A3B8),
-                                    fontWeight = if (isCurrent) FontWeight.ExtraBold else FontWeight.Normal,
-                                    modifier = Modifier.padding(horizontal = if (isCurrent) 5.dp else 2.dp, vertical = 2.dp)
-                                )
-                            }
-                        }
-                    }
-
-                    if (dialogTooltipsEnabled) {
-                        Text(
-                            text = "? Ajusta el tamaño y encuadre en la TV: desde reducir al 75% hasta 16:9 pantalla completa.",
-                            color = Color(0xFF94A3B8),
-                            fontSize = 10.sp
-                        )
-                    }
-                }
-
-                // Botón neutral de cerrar
-                FilledTonalButton(
-                    onClick = onDismiss,
-                    colors = ButtonDefaults.filledTonalButtonColors(containerColor = Color(0xFF333D52)),
-                    shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier.fillMaxWidth().height(38.dp)
-                ) {
-                    Text("Cerrar", fontWeight = FontWeight.SemiBold, fontSize = 13.sp, color = Color(0xFFF1F5F9))
                 }
             }
         }

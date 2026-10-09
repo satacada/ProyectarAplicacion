@@ -59,7 +59,7 @@ fun BrowserTopBar(
         }
     }
 
-    Surface(color = Color(0xFF0F172A), tonalElevation = 4.dp) {
+    Surface(color = Color(0xFF0D111A), tonalElevation = 4.dp) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -68,10 +68,10 @@ fun BrowserTopBar(
             horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             IconButton(onClick = onOpenDrawer, modifier = Modifier.size(32.dp)) {
-                Text("☰", color = Color(0xFF38BDF8), fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                Text("☰", color = Color(0xFF94A3B8), fontSize = 18.sp, fontWeight = FontWeight.Bold)
             }
             IconButton(onClick = onClose, modifier = Modifier.size(32.dp)) {
-                Text("✕", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                Text("✕", color = Color(0xFF94A3B8), fontSize = 16.sp, fontWeight = FontWeight.Bold)
             }
             IconButton(onClick = onBack, modifier = Modifier.size(32.dp)) {
                 Text("◀", color = Color(0xFFCBD5E1), fontSize = 15.sp)
@@ -83,9 +83,9 @@ fun BrowserTopBar(
             Row(
                 modifier = Modifier
                     .weight(1f)
-                    .height(46.dp)
-                    .background(Color(0xFF1E293B), RoundedCornerShape(24.dp))
-                    .border(1.dp, Color(0xFF334155), RoundedCornerShape(24.dp))
+                    .height(44.dp)
+                    .background(Color(0xFF141C2B), RoundedCornerShape(24.dp))
+                    .border(1.dp, Color(0xFF24334C), RoundedCornerShape(24.dp))
                     .padding(horizontal = 12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -117,7 +117,7 @@ fun BrowserTopBar(
                     decorationBox = { innerTextField ->
                         Box(contentAlignment = Alignment.CenterStart, modifier = Modifier.fillMaxSize()) {
                             if (textFieldValue.text.isEmpty()) {
-                                Text("Buscar o escribir URL...", color = Color(0xFF94A3B8), fontSize = 13.sp)
+                                Text("Buscar o escribir URL...", color = Color(0xFF64748B), fontSize = 13.sp)
                             }
                             innerTextField()
                         }
@@ -133,20 +133,20 @@ fun BrowserTopBar(
                 }
             }
 
-            // Botón Amarillo Icónico Web Video Caster con Insignia Contadora
+            // Botón Naranja Circular de Transmisión con Insignia Contadora
             Box(contentAlignment = Alignment.TopEnd) {
                 IconButton(
                     onClick = onOpenVideoList,
                     modifier = Modifier
                         .size(38.dp)
                         .background(
-                            if (detectedStreamsCount > 0) Color(0xFFF59E0B) else Color(0xFF334155),
-                            RoundedCornerShape(10.dp)
+                            if (detectedStreamsCount > 0) Color(0xFFF97316) else Color(0xFF1E293B),
+                            CircleShape
                         )
                 ) {
                     Text(
                         "▶",
-                        color = if (detectedStreamsCount > 0) Color.Black else Color(0xFF94A3B8),
+                        color = if (detectedStreamsCount > 0) Color.White else Color(0xFF94A3B8),
                         fontSize = 17.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -157,7 +157,7 @@ fun BrowserTopBar(
                         modifier = Modifier
                             .offset(x = 4.dp, y = (-4).dp)
                             .background(Color(0xFFEF4444), CircleShape)
-                            .padding(horizontal = 4.dp, vertical = 1.dp),
+                            .padding(horizontal = 5.dp, vertical = 1.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(

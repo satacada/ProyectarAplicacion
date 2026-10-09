@@ -20,7 +20,7 @@ class FloatingViewBuilder(private val context: Context) {
 
     fun buildPill(pillText: TextView): LinearLayout {
         val pillDrawable = GradientDrawable().apply {
-            setColor(Color.parseColor("#E60F172A")); cornerRadius = dpToPx(20f).toFloat(); setStroke(dpToPx(1f), Color.parseColor("#38BDF8"))
+            setColor(Color.parseColor("#E60D111A")); cornerRadius = dpToPx(20f).toFloat(); setStroke(dpToPx(1.2f), Color.parseColor("#10B981"))
         }
         val dotView = View(context).apply {
             background = GradientDrawable().apply { shape = GradientDrawable.OVAL; setColor(Color.parseColor("#10B981")); setSize(dpToPx(10f), dpToPx(10f)) }
@@ -77,7 +77,7 @@ class FloatingViewBuilder(private val context: Context) {
         onDisableOverlay: () -> Unit
     ): FloatingMenuController {
         val menuDrawable = GradientDrawable().apply {
-            setColor(Color.parseColor("#F80F172A")); cornerRadius = dpToPx(14f).toFloat(); setStroke(dpToPx(1f), Color.parseColor("#334155"))
+            setColor(Color.parseColor("#F80D111A")); cornerRadius = dpToPx(16f).toFloat(); setStroke(dpToPx(1.2f), Color.parseColor("#28354E"))
         }
         val innerMenu = LinearLayout(context).apply {
             orientation = LinearLayout.VERTICAL
@@ -88,14 +88,14 @@ class FloatingViewBuilder(private val context: Context) {
         }
         innerMenu.addView(menuTitle)
 
-        val btnOpenOmni = createBtn("⚙️ Abrir OmniCast", "#334155", onOpenOmniCast)
-        val btnDisableOverlay = createBtn("❌ Desactivar Asistente", "#475569", onDisableOverlay)
+        val btnOpenOmni = createBtn("⚙️ Abrir OmniCast", "#1E2738", onOpenOmniCast)
+        val btnDisableOverlay = createBtn("❌ Desactivar Asistente", "#334155", onDisableOverlay)
         val btnStopCast = createBtn("🛑 Detener Transmisión", "#DC2626", onStopCast)
-        val btnStartMirror = createBtn("📱 Proyectar Pantalla (Toda)", "#2563EB", onStartScreenMirror)
-        val btnZoomTv = createBtn("🔍 Zoom TV", "#8B5CF6", onToggleTvScale)
-        val btnGallery = createBtn("🖼️ Enviar Foto (Galería)", "#059669", onCastGallery)
-        val btnOpenBrowser = createBtn("🌐 Abrir Browser Omni", "#0D9488", onOpenBrowser)
-        val btnDetectVideo = createBtn("🔍 Detectar Flujo de Video", "#0284C7", onDetectVideo)
+        val btnStartMirror = createBtn("📱 Proyectar Pantalla", "#7C3AED", onStartScreenMirror)
+        val btnZoomTv = createBtn("🔍 Zoom TV", "#6D28D9", onToggleTvScale)
+        val btnGallery = createBtn("🖼️ Galería (Fotos)", "#E11D48", onCastGallery)
+        val btnOpenBrowser = createBtn("🌐 Captura Web", "#D97706", onOpenBrowser)
+        val btnDetectVideo = createBtn("🔍 Detectar Flujo de Video", "#00B4D8", onDetectVideo)
 
         innerMenu.addView(btnOpenOmni)
         innerMenu.addView(btnDisableOverlay)

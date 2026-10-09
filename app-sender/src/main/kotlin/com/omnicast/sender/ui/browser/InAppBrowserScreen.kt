@@ -252,16 +252,15 @@ fun InAppBrowserScreen(
                         onStopCasting = { ActiveStreamHolder.stopCasting(); Toast.makeText(context, "🛑 Transmisión detenida", Toast.LENGTH_SHORT).show() },
                         onClearStreams = {
                             detectedStreams.clear(); streamHeaders.clear(); streamLabels.clear(); qualityOptions = emptyList()
-                            ActiveStreamHolder.clearDetectedStream(); Toast.makeText(context, "🗑️ Flujos reseteados", Toast.LENGTH_SHORT).show()
-                        },
-                        onRescanStreams = {
+                            ActiveStreamHolder.clearDetectedStream()
                             webViewInstance?.let { wv ->
                                 wv.evaluateJavascript(WvcDomSniffer.getInjectionScript(context), null)
                                 wv.evaluateJavascript(WvcSnifferScripts.buildAggressiveRescanScript(WvcDomSniffer.CONSOLE_PREFIX), null)
                                 checkPlatformUrls(wv.url, wv.title)
                             }
-                            Toast.makeText(context, "🔍 Re-escaneando flujos...", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "🗑️ Reiniciando y recapturando video...", Toast.LENGTH_SHORT).show()
                         },
+                        onRescanStreams = {},
                         onSaveToPlaylist = {
                             val active = ActiveStreamHolder.streamUrl ?: ""
                             val primary = if (active.isNotBlank()) active else detectedStreams.firstOrNull() ?: ""

@@ -39,7 +39,7 @@ fun RemoteExpandedControls(
     onSelectQuality: (() -> Unit)? = null
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.padding(top = 4.dp)) {
-        // Cabecera: Flujos detectados (Click para ver en orden descendente) + Re-escanear + Reset + Transmitir a TV
+        // Cabecera: Rayo + Flujos (N) [Click para ver descendente] + Reset/Recapturar + Transmitir (Icono Casteo)
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
@@ -52,7 +52,7 @@ fun RemoteExpandedControls(
                     .weight(1f, fill = false)
                     .clip(RoundedCornerShape(8.dp))
                     .clickable { onShowDetectedStreams() }
-                    .padding(vertical = 2.dp, horizontal = 2.dp)
+                    .padding(vertical = 4.dp, horizontal = 4.dp)
             ) {
                 Box(
                     modifier = Modifier
@@ -63,47 +63,39 @@ fun RemoteExpandedControls(
                 ) {
                     Text("⚡", fontSize = 16.sp)
                 }
-                Column {
-                    Text("Flujos detectados ($streamCount)", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold)
-                    Text(streamSubtitle, color = Color(0xFF94A3B8), fontSize = 10.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                }
+                Text(
+                    text = "Flujos ($streamCount)",
+                    color = Color.White,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold
+                )
             }
 
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                IconButton(
-                    onClick = onRescanStreams,
-                    modifier = Modifier
-                        .size(32.dp)
-                        .background(Color(0xFF182234), CircleShape)
-                        .border(1.dp, Color(0xFF28354E), CircleShape)
-                ) {
-                    Text("🔍", fontSize = 13.sp)
-                }
                 IconButton(
                     onClick = onClearStreams,
                     modifier = Modifier
-                        .size(32.dp)
+                        .size(36.dp)
                         .background(Color(0xFF2A1B24), CircleShape)
                         .border(1.dp, Color(0xFF4C1D24), CircleShape)
                 ) {
-                    Text("🗑️", fontSize = 12.sp)
+                    ModernTrashIcon(modifier = Modifier.size(18.dp), color = Color(0xFFF87171))
                 }
-                Button(
+                IconButton(
                     onClick = onTransmitLatest,
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF10B981)),
-                    shape = RoundedCornerShape(10.dp),
-                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
-                    modifier = Modifier.height(34.dp)
+                    modifier = Modifier
+                        .size(38.dp)
+                        .background(Color(0xFF10B981), CircleShape)
                 ) {
-                    Text("▶ Transmitir a TV", fontSize = 11.sp, fontWeight = FontWeight.ExtraBold, color = Color.White)
+                    CastTvIcon(modifier = Modifier.size(20.dp), color = Color.White)
                 }
             }
         }
 
-        // Título de la película + Botones intuitivos (Guardar y Borrar de guardados sin nombres de texto)
+        // Título de la película + Botones intuitivos modernos (Bookmark y Borrar)
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
@@ -129,22 +121,22 @@ fun RemoteExpandedControls(
                     IconButton(
                         onClick = onSaveToPlaylist,
                         modifier = Modifier
-                            .size(34.dp)
+                            .size(36.dp)
                             .background(Color(0xFF1A2335), RoundedCornerShape(10.dp))
                             .border(1.dp, Color(0xFF2C3B59), RoundedCornerShape(10.dp))
                     ) {
-                        Text("🔖", fontSize = 14.sp)
+                        BookmarkOutlineIcon(modifier = Modifier.size(19.dp), color = Color(0xFF38BDF8))
                     }
                 }
                 if (onDeleteFromSaved != null) {
                     IconButton(
                         onClick = onDeleteFromSaved,
                         modifier = Modifier
-                            .size(34.dp)
+                            .size(36.dp)
                             .background(Color(0xFF251A22), RoundedCornerShape(10.dp))
                             .border(1.dp, Color(0xFF3F212E), RoundedCornerShape(10.dp))
                     ) {
-                        Text("🗑️", fontSize = 13.sp)
+                        ModernTrashIcon(modifier = Modifier.size(18.dp), color = Color(0xFFF87171))
                     }
                 }
             }

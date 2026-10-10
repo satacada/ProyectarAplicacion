@@ -18,7 +18,10 @@ object AdBlockWhitelistManager {
         "yandex.ru",
         "ya.ru",
         "dzen.ru",
-        "yastatic.net"
+        "yastatic.net",
+        "dailymotion.com",
+        "geo.dailymotion.com",
+        "youtube.com"
     )
 
     private val cachedDomains = mutableSetOf<String>()

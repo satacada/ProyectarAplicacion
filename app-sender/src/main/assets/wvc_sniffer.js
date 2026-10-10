@@ -36,20 +36,7 @@ function isES6() {
 
 
 function DomMonitor(document) {
-    var _this = this;
     this.monitors = {};
-    var observer = new MutationObserver(function (mutations) {
-        var newNodes = mutations.map(function (mutation) { return [].slice.call(mutation.addedNodes); }).reduce(function (all, current) { return all.concat(current); }, []).filter(function (e) { return e.tagName; });
-        Object.keys(_this.monitors).forEach(function (monitorKey) {
-            var monitorNodes = newNodes.filter(function (n) { return n.tagName === monitorKey.toUpperCase(); });
-            var subMonitorNodes = newNodes.reduce(function (all, current) { return all.concat([].slice.call(current.getElementsByTagName(monitorKey))); }, []);
-            var allNodes = monitorNodes.concat(subMonitorNodes);
-            if (allNodes.length > 0) {
-                _this.monitors[monitorKey](allNodes);
-            }
-        });
-    });
-    observer.observe(document.body, { childList: true, subtree: true, attributes: false, attributeOldValue: false, characterDataOldValue: false });
 }
 
 

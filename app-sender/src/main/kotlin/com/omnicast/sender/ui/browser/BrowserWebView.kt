@@ -69,12 +69,15 @@ fun BrowserWebView(
             WebView(ctx).apply {
                 isFocusable = true
                 isFocusableInTouchMode = true
+                isClickable = true
                 CookieManager.getInstance().setAcceptCookie(true)
                 CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
                 settings.javaScriptEnabled = true
                 settings.domStorageEnabled = true
                 settings.databaseEnabled = true
                 settings.allowFileAccess = true
+                settings.useWideViewPort = true
+                settings.loadWithOverviewMode = true
                 settings.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
                 settings.mediaPlaybackRequiresUserGesture = false
                 settings.setSupportMultipleWindows(true)

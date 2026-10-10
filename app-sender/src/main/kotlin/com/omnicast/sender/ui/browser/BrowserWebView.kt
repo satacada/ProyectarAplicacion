@@ -78,21 +78,39 @@ fun BrowserWebView(
                 settings.allowFileAccess = true
                 settings.useWideViewPort = true
                 settings.loadWithOverviewMode = true
+                settings.textZoom = 100
+                settings.layoutAlgorithm = WebSettings.LayoutAlgorithm.NORMAL
                 settings.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
                 settings.mediaPlaybackRequiresUserGesture = false
                 settings.setSupportMultipleWindows(true)
                 settings.javaScriptCanOpenWindowsAutomatically = true
                 settings.userAgentString = UA_MOBILE
+                val inputViewportScript = """
+                    (function() {
+                        if (window.__omniInputFixInjected) return;
+                        window.__omniInputFixInjected = true;
+                        document.addEventListener('focusin', function(e) {
+                            var el = e.target;
+                            if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable)) {
+                                setTimeout(function() {
+                                    try { el.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch(_) { el.scrollIntoView(); }
+                                }, 150);
+                            }
+                        }, true);
+                    })();
+                """.trimIndent()
                 webViewClient = object : WebViewClient() {
                     override fun onPageStarted(v: WebView?, u: String?, f: Bitmap?) {
                         u?.let { if (!it.startsWith("about:") && !it.contains("favicon")) onPageStarted(it) }
                         if (isAdBlockEnabled) v?.evaluateJavascript(AdBlocker.getAdHidingScript(), null)
+                        v?.evaluateJavascript(inputViewportScript, null)
                     }
                     override fun onPageFinished(v: WebView?, u: String?) {
                         val title = v?.title ?: "Transmisión"
                         currentKnownTitle = title
                         onPageFinished(title, u)
                         if (isAdBlockEnabled) v?.evaluateJavascript(AdBlocker.getAdHidingScript(), null)
+                        v?.evaluateJavascript(inputViewportScript, null)
                         v?.evaluateJavascript(WvcDomSniffer.getInjectionScript(ctx), null)
                     }
                     override fun doUpdateVisitedHistory(v: WebView?, u: String?, isR: Boolean) {

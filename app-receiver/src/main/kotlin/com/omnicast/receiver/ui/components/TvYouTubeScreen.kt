@@ -134,7 +134,7 @@ fun TvYouTubeScreen(
                                 </head>
                                 <body>
                                   <iframe id="ytplayer"
-                                    src="https://www.youtube-nocookie.com/embed/$videoId?autoplay=1&controls=1&fs=1&rel=0&iv_load_policy=3&modestbranding=1&cc_load_policy=0&enablejsapi=1"
+                                    src="https://www.youtube-nocookie.com/embed/$videoId?autoplay=1&controls=1&fs=1&rel=0&iv_load_policy=3&modestbranding=1&cc_load_policy=3&cc_lang_pref=none&enablejsapi=1"
                                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
                                     allowfullscreen>
                                   </iframe>
@@ -153,12 +153,27 @@ fun TvYouTubeScreen(
                                     }
 
                                     function disableCaptions() {
+                                      if (captionsOn) return;
+                                      try {
+                                        var iframe = document.getElementById('ytplayer');
+                                        if (iframe && iframe.contentDocument) {
+                                          var doc = iframe.contentDocument;
+                                          var style = doc.getElementById('omni-no-cc');
+                                          if (!style) {
+                                            style = doc.createElement('style');
+                                            style.id = 'omni-no-cc';
+                                            style.textContent = '.ytp-caption-window-bottom, .caption-window, .ytp-caption-segment, .ytp-subtitles-player-content, .captions-text, .ytp-caption-window-container { display: none !important; opacity: 0 !important; visibility: hidden !important; height: 0 !important; }';
+                                            (doc.head || doc.body).appendChild(style);
+                                          }
+                                          var ccBtn = doc.querySelector('.ytp-subtitles-button');
+                                          if (ccBtn && ccBtn.getAttribute('aria-pressed') === 'true') ccBtn.click();
+                                        }
+                                      } catch(_) {}
                                       try {
                                         sendYtCommand('unloadModule', ['captions']);
                                         sendYtCommand('unloadModule', ['cc']);
                                         sendYtCommand('setOption', ['captions', 'track', {}]);
                                         sendYtCommand('setOption', ['cc', 'track', {}]);
-                                        sendYtCommand('setOption', ['captions', 'reload', true]);
                                         sendYtCommand('setOption', ['captions', 'fontSize', 0]);
                                       } catch(_) {}
                                     }
@@ -166,6 +181,15 @@ fun TvYouTubeScreen(
                                     function toggleYtCaptions() {
                                       captionsOn = !captionsOn;
                                       if (captionsOn) {
+                                        try {
+                                          var iframe = document.getElementById('ytplayer');
+                                          if (iframe && iframe.contentDocument) {
+                                            var style = iframe.contentDocument.getElementById('omni-no-cc');
+                                            if (style) style.remove();
+                                            var ccBtn = iframe.contentDocument.querySelector('.ytp-subtitles-button');
+                                            if (ccBtn && ccBtn.getAttribute('aria-pressed') !== 'true') ccBtn.click();
+                                          }
+                                        } catch(_) {}
                                         sendYtCommand('loadModule', ['captions']);
                                       } else {
                                         disableCaptions();
@@ -200,11 +224,12 @@ fun TvYouTubeScreen(
                                       }
                                     }
 
-                                    setTimeout(disableCaptions, 600);
-                                    setTimeout(disableCaptions, 1500);
-                                    setTimeout(disableCaptions, 3000);
+                                    setTimeout(disableCaptions, 500);
+                                    setTimeout(disableCaptions, 1200);
+                                    setTimeout(disableCaptions, 2500);
 
                                     setInterval(function() {
+                                      if (!captionsOn) disableCaptions();
                                       var iframe = document.getElementById('ytplayer');
                                       if (iframe && iframe.contentWindow) {
                                         iframe.contentWindow.postMessage(JSON.stringify({

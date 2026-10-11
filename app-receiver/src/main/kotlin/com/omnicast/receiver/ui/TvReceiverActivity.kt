@@ -75,7 +75,13 @@ class TvReceiverActivity : ComponentActivity() {
         lifecycleScope.launch {
             signalingServer.clientStatus.collect { st ->
                 when (st) {
-                    is ClientStatus.Connected -> if (receiverState.value is ReceiverUiState.Standby) receiverState.value = ReceiverUiState.ClientConnectedStandby(st.clientAddress)
+                    is ClientStatus.Connected -> {
+                        if (receiverState.value is ReceiverUiState.Standby) receiverState.value = ReceiverUiState.ClientConnectedStandby(st.clientAddress)
+                        (receiverState.value as? ReceiverUiState.DirectStreamPlaying)?.let { cur ->
+                            val pState = if (exoPlayerManager.isPlaying) "PLAYING" else "PAUSED"
+                            signalingServer.sendMessage(SignalingMessage.PlaybackStatus(pState, exoPlayerManager.currentPositionMs, exoPlayerManager.durationMs, cur.streamUrl, cur.title))
+                        }
+                    }
                     is ClientStatus.Disconnected -> {
                         digitalAudioReceiver?.stop(); webRtcReceiver.resetConnection()
                         if (receiverState.value !is ReceiverUiState.Standby && receiverState.value !is ReceiverUiState.DirectStreamPlaying) {
@@ -226,7 +232,7 @@ class TvReceiverActivity : ComponentActivity() {
                     val pos = exoPlayerManager.currentPositionMs
                     val dur = exoPlayerManager.durationMs
                     val st = if (isPlaying) "PLAYING" else "PAUSED"
-                    signalingServer.sendMessage(SignalingMessage.PlaybackStatus(st, pos, dur))
+                    signalingServer.sendMessage(SignalingMessage.PlaybackStatus(st, pos, dur, cur.streamUrl, cur.title))
                     historyManager.updateProgress(cur.streamUrl, pos, dur)
                 } else {
                     signalingServer.sendMessage(SignalingMessage.PlaybackStatus("STOPPED", 0L, 0L))
@@ -261,17 +267,12 @@ class TvReceiverActivity : ComponentActivity() {
                 context = this,
                 keyCode = keyCode,
                 event = event,
-                currentState = receiverState.value,
-                exoPlayerManager = exoPlayerManager,
-                webRtcReceiver = webRtcReceiver,
-                digitalAudioReceiver = digitalAudioReceiver,
-                youTubeControlFlow = youTubeControlFlow,
-                scope = lifecycleScope,
+                currentState = receiverState.value, exoPlayerManager = exoPlayerManager,
+                webRtcReceiver = webRtcReceiver, digitalAudioReceiver = digitalAudioReceiver,
+                youTubeControlFlow = youTubeControlFlow, scope = lifecycleScope,
                 sendSignaling = { lifecycleScope.launch { signalingServer.sendMessage(it) } },
                 onResetToStandby = { receiverState.value = ReceiverUiState.Standby }
-            )) {
-            return true
-        }
+            )) return true
         return super.onKeyDown(keyCode, event)
     }
 

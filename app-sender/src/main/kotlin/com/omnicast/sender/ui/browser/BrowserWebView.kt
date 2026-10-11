@@ -89,12 +89,31 @@ fun BrowserWebView(
                     (function() {
                         if (window.__omniInputFixInjected) return;
                         window.__omniInputFixInjected = true;
+                        function fixCaret(el) {
+                            if (!el || (el.tagName !== 'INPUT' && el.tagName !== 'TEXTAREA')) return;
+                            if (!el.getAttribute('dir')) el.setAttribute('dir', 'ltr');
+                            if (el.selectionStart === 0 && el.value && el.value.length > 0) {
+                                try { var len = el.value.length; el.setSelectionRange(len, len); } catch(_) {}
+                            }
+                        }
+                        document.addEventListener('input', function(e) { fixCaret(e.target); }, true);
                         document.addEventListener('focusin', function(e) {
                             var el = e.target;
-                            if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable)) {
-                                setTimeout(function() {
-                                    try { el.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch(_) { el.scrollIntoView(); }
-                                }, 150);
+                            if (!el) return;
+                            fixCaret(el);
+                            var isDm = (window.location.hostname || '').indexOf('dailymotion.com') !== -1;
+                            if (isDm) {
+                                try { window.scrollTo({ top: 0, behavior: 'instant' }); } catch(_) { window.scrollTo(0, 0); }
+                                return;
+                            }
+                            if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable) {
+                                var rect = el.getBoundingClientRect();
+                                if (rect.top <= 140) return;
+                                if (rect.bottom > (window.innerHeight || 400)) {
+                                    setTimeout(function() {
+                                        try { el.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } catch(_) { el.scrollIntoView(); }
+                                    }, 150);
+                                }
                             }
                         }, true);
                     })();

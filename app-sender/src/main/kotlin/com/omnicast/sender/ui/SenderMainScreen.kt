@@ -56,6 +56,11 @@ fun SenderMainScreen(
     var showHelpDialog by remember { mutableStateOf(false) }
     var showSideDrawer by remember { mutableStateOf(false) }
     var tooltipsEnabled by remember { mutableStateOf(prefs.getBoolean("saved_tooltips_enabled", false)) }
+    val isCasting by com.omnicast.sender.stream.ActiveStreamHolder.isCasting.collectAsState()
+    val isPlaying by com.omnicast.sender.stream.ActiveStreamHolder.isPlaying.collectAsState()
+    val posMs by com.omnicast.sender.stream.ActiveStreamHolder.positionMs.collectAsState()
+    val durMs by com.omnicast.sender.stream.ActiveStreamHolder.durationMs.collectAsState()
+    val castTitle by com.omnicast.sender.stream.ActiveStreamHolder.currentMediaTitle.collectAsState()
 
     LaunchedEffect(initialOpenBrowser) { if (initialOpenBrowser) showInAppBrowser = true }
     LaunchedEffect(initialOpenGallery) {
@@ -180,6 +185,28 @@ fun SenderMainScreen(
                             onConnectToTv(manualIp.trim(), manualPort.toIntOrNull() ?: 8088)
                         }
                     )
+                }
+
+                if (isCasting) {
+                    item {
+                        MoviePlaybackControlCard(
+                            title = castTitle, isPlaying = isPlaying, positionMs = posMs, durationMs = durMs,
+                            onPlayPause = {
+                                val act = if (isPlaying) "PAUSE" else "PLAY"
+                                com.omnicast.sender.stream.ActiveStreamHolder.onSendPlayControl?.invoke(act, posMs, 1f, null)
+                                com.omnicast.sender.stream.ActiveStreamHolder.updatePlayback(!isPlaying, posMs, durMs)
+                            },
+                            onSeek = { targetMs ->
+                                com.omnicast.sender.stream.ActiveStreamHolder.onSendPlayControl?.invoke("SEEK", targetMs, 1f, null)
+                                com.omnicast.sender.stream.ActiveStreamHolder.updatePlayback(isPlaying, targetMs, durMs)
+                            },
+                            onStop = {
+                                com.omnicast.sender.stream.ActiveStreamHolder.stopCasting()
+                                com.omnicast.sender.service.CastMediaNotificationService.stop(context)
+                            },
+                            onOpenBrowser = { showInAppBrowser = true }
+                        )
+                    }
                 }
 
                 // 4. Las TRES opciones para poder elegirlas: Captura Web, Casteo-TV y Galería

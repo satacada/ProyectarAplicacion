@@ -94,7 +94,9 @@ sealed class SignalingMessage {
     data class PlaybackStatus(
         val state: String,
         val positionMs: Long = 0L,
-        val durationMs: Long = 0L
+        val durationMs: Long = 0L,
+        val mediaUrl: String? = null,
+        val title: String? = null
     ) : SignalingMessage()
 
     @Serializable

@@ -133,14 +133,42 @@ class SenderMainActivity : ComponentActivity() {
         handleIncomingSharedIntent(intent)
     }
 
+    private var inactivityJob: kotlinx.coroutines.Job? = null
+    private var isAppResumed = false
+
     override fun onResume() {
         super.onResume()
+        isAppResumed = true
+        resetInactivityTimer()
         if (signalingClient?.isConnected != true) {
             val prefs = getSharedPreferences("omnicast_prefs", Context.MODE_PRIVATE)
             connectToTv(prefs.getString("saved_tv_ip", "192.168.0.136") ?: "192.168.0.136", prefs.getInt("saved_tv_port", 8088))
         }
     }
 
+    override fun onPause() {
+        super.onPause()
+        isAppResumed = false
+        checkInactivityAutoExit()
+    }
+
+    private fun resetInactivityTimer() {
+        inactivityJob?.cancel(); inactivityJob = null
+    }
+
+    private fun checkInactivityAutoExit() {
+        if (isTvConnected.value || ProjectionForegroundService.isProjecting || ActiveStreamHolder.isCasting.value) {
+            resetInactivityTimer(); return
+        }
+        if (inactivityJob?.isActive == true) return
+        inactivityJob = lifecycleScope.launch {
+            val waitSec = if (!isAppResumed) 60L else 180L
+            kotlinx.coroutines.delay(waitSec * 1000L)
+            if (!isTvConnected.value && !ProjectionForegroundService.isProjecting && !ActiveStreamHolder.isCasting.value) {
+                exitCompletely(this@SenderMainActivity)
+            }
+        }
+    }
 
     private fun checkAutoMirroring(intent: Intent?) {
         if (intent?.getBooleanExtra("EXTRA_START_MIRRORING_AUTO", false) == true) {
@@ -158,17 +186,34 @@ class SenderMainActivity : ComponentActivity() {
         try {
             signalingClient.connect(ipAddress, port, {
                 isTvConnected.value = true
+                resetInactivityTimer()
                 signalingClient.sendMessage(SignalingMessage.SyncPlaylists(playlistManager.getRawJson()))
                 listenToPlaybackStatus()
                 if (!isFinishing && !isDestroyed) Toast.makeText(this@SenderMainActivity, "🟢 Conectado con TV ($ipAddress)", Toast.LENGTH_SHORT).show()
-            }, { isTvConnected.value = false })
-        } catch (e: Throwable) { isTvConnected.value = false }
+            }, {
+                isTvConnected.value = false
+                if (!ProjectionForegroundService.isProjecting) {
+                    ActiveStreamHolder.stopCasting()
+                    com.omnicast.sender.service.CastMediaNotificationService.stop(this@SenderMainActivity)
+                }
+                checkInactivityAutoExit()
+            })
+        } catch (e: Throwable) { isTvConnected.value = false; checkInactivityAutoExit() }
     }
 
     private fun listenToPlaybackStatus() {
         lifecycleScope.launch {
             signalingClient?.messages?.collect { msg ->
                 if (msg is SignalingMessage.PlaybackStatus) {
+                    val mUrl = msg.mediaUrl
+                    if ((msg.state == "PLAYING" || msg.state == "PAUSED") && !mUrl.isNullOrBlank()) {
+                        if (!ActiveStreamHolder.isCasting.value || ActiveStreamHolder.streamUrl != mUrl) {
+                            val streamTitle = msg.title?.ifBlank { "Película en TV" } ?: "Película en TV"
+                            ActiveStreamHolder.startCasting(mUrl, streamTitle, emptyMap())
+                            ActiveStreamHolder.onSendPlayControl = { act, pos, vol, par -> sendPlayControl(act, pos, vol, par) }
+                            com.omnicast.sender.service.CastMediaNotificationService.start(this@SenderMainActivity)
+                        }
+                    }
                     ActiveStreamHolder.updatePlayback(msg.state == "PLAYING", msg.positionMs, msg.durationMs)
                     if (msg.positionMs > 5000L) {
                         com.omnicast.sender.stream.StreamResumeManager.savePosition(this@SenderMainActivity, ActiveStreamHolder.streamUrl, msg.positionMs)

@@ -270,6 +270,7 @@ class CastMediaNotificationService : Service() {
         mediaSession?.release()
         mediaSession = null
         stopForeground(STOP_FOREGROUND_REMOVE)
+        (getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager)?.cancel(NOTIFICATION_ID)
         stopSelf()
     }
 

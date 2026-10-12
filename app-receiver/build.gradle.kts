@@ -13,7 +13,7 @@ android {
         minSdk = 24 // Android 7.0+ (Soporte para TV Boxes AOSP, Rockchip, Amlogic y Android TV)
         targetSdk = 34
         versionCode = 47
-        versionName = "3.32.18"
+        versionName = "3.32.19"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {

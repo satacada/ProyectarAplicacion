@@ -75,14 +75,12 @@ class WebRtcReceiverManager(private val context: Context) {
             val tvH = tvMetrics.heightPixels.toFloat().coerceAtLeast(720f)
             val tvAspect = tvW / tvH
             val frameAspect = frameW.toFloat() / frameH.toFloat()
+            val isLandscape = frameW > frameH
 
-            // Compensación de aspecto para pantalla horizontal (landscape)
-            // Si el frame es horizontal o tiene relación diferente a la TV (ej. 20:9 vs 16:9),
-            // el factor de llenado adapta la cobertura para eliminar barras negras
-            val aspectFillFactor = if (frameAspect > tvAspect) {
-                frameAspect / tvAspect
-            } else if (frameAspect < tvAspect && frameW > frameH) {
-                tvAspect / frameAspect
+            // Si el frame es horizontal o tiene relación de aspecto apaisada (ej. 20:9 vs 16:9),
+            // calculamos el factor de llenado para expandir la imagen y eliminar márgenes negros
+            val aspectFillFactor = if (isLandscape) {
+                if (frameAspect > tvAspect) (frameAspect / tvAspect) else (tvAspect / frameAspect)
             } else {
                 1.0f
             }
@@ -91,26 +89,34 @@ class WebRtcReceiverManager(private val context: Context) {
 
             when (currentMode) {
                 "ZOOM" -> {
-                    val scale = if (frameW > frameH && aspectFillFactor > 1.0f) currentZoom * aspectFillFactor else currentZoom
+                    val scale = if (isLandscape && aspectFillFactor > 1.0f) currentZoom * aspectFillFactor else currentZoom
                     renderer.scaleX = scale
                     renderer.scaleY = scale
                     renderer.translationY = currentPanY
                     ReceiverLogger.log(TAG, "🔍 Zoom gradual TV: ${String.format(java.util.Locale.US, "%.2f", currentZoom)}x -> escala $scale (panY=$currentPanY, frame=${frameW}x${frameH})")
                 }
                 "FILL", "16:9", "EXTEND_16_9" -> {
-                    val factor = if (frameW > frameH) aspectFillFactor else 1.0f
+                    val factor = if (isLandscape) aspectFillFactor else 1.0f
                     renderer.scaleX = factor
                     renderer.scaleY = factor
                     renderer.translationY = 0f
                     ReceiverLogger.log(TAG, "📺 Modo 16:9 EXPANDIDO (FILL): factor=$factor frame=${frameW}x${frameH} rot=$lastRot")
                 }
                 else -> {
+                    // Modo FIT: En horizontal, si el frame capturado tiene relación alargada de teléfono (20:9 o similar),
+                    // ajustamos suavemente para que no se vea una caja minúscula en el centro de la TV
                     val baseScale = if (currentZoom > 0f) currentZoom else 1.0f
-                    val scale = if (frameW > frameH && aspectFillFactor > 1.0f && currentZoom > 1.0f) baseScale * aspectFillFactor else baseScale
+                    val scale = if (isLandscape && currentZoom <= 1.0f && aspectFillFactor > 1.0f) {
+                        aspectFillFactor
+                    } else if (isLandscape && aspectFillFactor > 1.0f && currentZoom > 1.0f) {
+                        baseScale * aspectFillFactor
+                    } else {
+                        baseScale
+                    }
                     renderer.scaleX = scale
                     renderer.scaleY = scale
                     renderer.translationY = currentPanY
-                    ReceiverLogger.log(TAG, "📱 Modo FIT ORIGINAL: escala $scale (frame=${frameW}x${frameH} rot=$lastRot)")
+                    ReceiverLogger.log(TAG, "📱 Modo FIT: escala $scale (frame=${frameW}x${frameH} rot=$lastRot)")
                 }
             }
         }

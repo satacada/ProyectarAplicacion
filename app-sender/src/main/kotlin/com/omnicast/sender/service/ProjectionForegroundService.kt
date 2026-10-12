@@ -11,6 +11,8 @@ import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import android.content.res.Configuration
+import android.view.OrientationEventListener
 import com.omnicast.core.domain.models.QualityMode
 import com.omnicast.core.domain.models.StreamProfile
 import com.omnicast.sender.ui.SenderMainActivity
@@ -140,6 +142,7 @@ class ProjectionForegroundService : Service() {
                         start()
                     }
                     isProjecting = true
+                    startOrientationMonitoring()
                     com.omnicast.sender.overlay.FloatingIndicatorService.start(this)
                     com.omnicast.sender.overlay.FloatingIndicatorService.updateMode()
                 } else {
@@ -150,8 +153,50 @@ class ProjectionForegroundService : Service() {
         return START_STICKY
     }
 
+    private var orientationListener: OrientationEventListener? = null
+    private var lastReportedLandscape: Boolean? = null
+
+    private fun startOrientationMonitoring() {
+        stopOrientationMonitoring()
+        orientationListener = object : OrientationEventListener(this) {
+            override fun onOrientationChanged(orientation: Int) {
+                if (orientation == ORIENTATION_UNKNOWN) return
+                val isLandscape = (orientation in 60..120) || (orientation in 240..300)
+                if (lastReportedLandscape != isLandscape) {
+                    lastReportedLandscape = isLandscape
+                    onDeviceOrientationChanged(isLandscape)
+                }
+            }
+        }
+        if (orientationListener?.canDetectOrientation() == true) {
+            orientationListener?.enable()
+        }
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        val isLandscape = (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE)
+        if (lastReportedLandscape != isLandscape) {
+            lastReportedLandscape = isLandscape
+            onDeviceOrientationChanged(isLandscape)
+        }
+    }
+
+    private fun onDeviceOrientationChanged(isLandscape: Boolean) {
+        val mode = if (isLandscape) "FILL" else "FIT"
+        Log.i(TAG, "🔄 Orientación del teléfono cambiada: landscape=$isLandscape -> modo TV: $mode")
+        currentSession?.setDisplayMode(mode)
+    }
+
+    private fun stopOrientationMonitoring() {
+        try { orientationListener?.disable() } catch (_: Throwable) {}
+        orientationListener = null
+        lastReportedLandscape = null
+    }
+
     override fun onDestroy() {
         super.onDestroy()
+        stopOrientationMonitoring()
         currentSession?.stop()
         currentSession = null
         isProjecting = false

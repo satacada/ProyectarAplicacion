@@ -175,6 +175,14 @@ object FloatingCalibrationOverlay {
                     }
                 }
                 MotionEvent.ACTION_POINTER_DOWN -> isDragging = false
+                MotionEvent.ACTION_POINTER_UP -> {
+                    val remainingIdx = if (event.actionIndex == 0) 1 else 0
+                    if (event.pointerCount > 1) {
+                        lastTouchX = event.getX(remainingIdx)
+                        lastTouchY = event.getY(remainingIdx)
+                        isDragging = true
+                    }
+                }
                 MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> isDragging = false
             }
             true

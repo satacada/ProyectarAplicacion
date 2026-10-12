@@ -91,7 +91,7 @@ class FloatingViewBuilder(private val context: Context) {
 
         val btnStopCast = createBtn("🛑 Detener Transmisión", "#DC2626", onStopCast)
         val btnZoomTv = createBtn("🔍 Zoom TV", "#6D28D9", onToggleTvScale)
-        val btnCalibrate = createBtn("🎛️ Calibrar Pantalla", "#0284C7", onCalibrateTv)
+        val btnCalibrate = createBtn("🤏 Calibrar Pantalla (Zoom/Arrastre)", "#0284C7", onCalibrateTv)
         val btnDetectVideo = createBtn("🔍 Detectar Flujo de Video", "#00B4D8", onDetectVideo)
         val btnOpenOmni = createBtn("⚙️ Abrir OmniCast", "#1E2738", onOpenOmniCast)
         val btnStartMirror = createBtn("📱 Proyectar Pantalla", "#7C3AED", onStartScreenMirror)

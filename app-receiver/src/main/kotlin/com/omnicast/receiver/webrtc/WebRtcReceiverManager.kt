@@ -24,11 +24,11 @@ class WebRtcReceiverManager(private val context: Context) {
     private var isRemoteDescriptionSet = false
     private var isResetting = false
     private var currentScalingType = RendererCommon.ScalingType.SCALE_ASPECT_FIT
-    private var currentMode = "FIT"
+    var currentMode: String = "FIT"; private set
     private var currentZoom = 1.0f
     private var currentPanY = 0.0f
-    private var lastFrameW = 0
-    private var lastFrameH = 0
+    var lastFrameW: Int = 0; private set
+    var lastFrameH: Int = 0; private set
     private var lastRot = 0
 
     fun initialize() {
@@ -57,7 +57,7 @@ class WebRtcReceiverManager(private val context: Context) {
                 }
             })
             setScalingType(RendererCommon.ScalingType.SCALE_ASPECT_FIT)
-            setEnableHardwareScaler(true)
+            setEnableHardwareScaler(false)
             setZOrderMediaOverlay(true)
         }
     }

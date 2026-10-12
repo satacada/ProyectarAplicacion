@@ -27,6 +27,7 @@ class WebRtcReceiverManager(private val context: Context) {
     var currentMode: String = "FIT"; private set
     private var currentZoom = 1.0f
     private var currentPanY = 0.0f
+    private var currentPanX = 0.0f
     var lastFrameW: Int = 0; private set
     var lastFrameH: Int = 0; private set
     private var lastRot = 0
@@ -97,19 +98,19 @@ class WebRtcReceiverManager(private val context: Context) {
                     val scale = if (isLandscape && aspectFillFactor > 1.0f) currentZoom * aspectFillFactor else currentZoom
                     renderer.scaleX = scale
                     renderer.scaleY = scale
+                    renderer.translationX = currentPanX
                     renderer.translationY = currentPanY
-                    ReceiverLogger.log(TAG, "🔍 Zoom gradual TV: ${String.format(java.util.Locale.US, "%.2f", currentZoom)}x -> escala $scale (panY=$currentPanY, frame=${frameW}x${frameH})")
+                    ReceiverLogger.log(TAG, "🔍 Zoom gradual TV: ${String.format(java.util.Locale.US, "%.2f", currentZoom)}x -> escala $scale (panX=$currentPanX, panY=$currentPanY, frame=${frameW}x${frameH})")
                 }
                 "FILL", "16:9", "EXTEND_16_9" -> {
                     val factor = if (isLandscape) aspectFillFactor else 1.0f
                     renderer.scaleX = factor
                     renderer.scaleY = factor
+                    renderer.translationX = 0f
                     renderer.translationY = 0f
                     ReceiverLogger.log(TAG, "📺 Modo 16:9 (FILL): factor=$factor frame=${frameW}x${frameH} rot=$lastRot")
                 }
                 else -> {
-                    // Modo FIT: En horizontal, si el frame capturado tiene relación alargada de teléfono (20:9 o similar),
-                    // ajustamos suavemente para que no se vea una caja minúscula en el centro de la TV
                     val baseScale = if (currentZoom > 0f) currentZoom else 1.0f
                     val scale = if (isLandscape && currentZoom <= 1.0f && aspectFillFactor > 1.0f) {
                         aspectFillFactor
@@ -120,6 +121,7 @@ class WebRtcReceiverManager(private val context: Context) {
                     }
                     renderer.scaleX = scale
                     renderer.scaleY = scale
+                    renderer.translationX = 0f
                     renderer.translationY = currentPanY
                     ReceiverLogger.log(TAG, "📱 Modo FIT: escala $scale (frame=${frameW}x${frameH} rot=$lastRot)")
                 }
@@ -212,10 +214,11 @@ class WebRtcReceiverManager(private val context: Context) {
         return currentScalingType
     }
 
-    fun setDisplayMode(mode: String, zoom: Float = 1f, panY: Float = 0f) {
+    fun setDisplayMode(mode: String, zoom: Float = 1f, panY: Float = 0f, panX: Float = 0f) {
         currentMode = mode.uppercase()
         currentZoom = zoom
         currentPanY = panY
+        currentPanX = panX
         when (currentMode) {
             "FILL", "16:9", "EXTEND_16_9" -> {
                 currentScalingType = RendererCommon.ScalingType.SCALE_ASPECT_FILL
@@ -224,6 +227,7 @@ class WebRtcReceiverManager(private val context: Context) {
                 currentScalingType = RendererCommon.ScalingType.SCALE_ASPECT_FIT
                 currentZoom = 1.0f
                 currentPanY = 0.0f
+                currentPanX = 0.0f
             }
             "ZOOM" -> {
                 currentScalingType = RendererCommon.ScalingType.SCALE_ASPECT_FIT

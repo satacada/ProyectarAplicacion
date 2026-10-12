@@ -42,10 +42,10 @@ class ProjectionSession(
         }
     }
 
-    fun setDisplayMode(mode: String, zoom: Float = 1.0f, panY: Float = 0.0f) {
+    fun setDisplayMode(mode: String, zoom: Float = 1.0f, panY: Float = 0.0f, panX: Float = 0.0f) {
         tvScaleMode = mode
         webRtcManager?.tvScaleMode = mode
-        signalingClient?.sendMessage(SignalingMessage.SetDisplayMode(mode, zoom, panY))
+        signalingClient?.sendMessage(SignalingMessage.SetDisplayMode(mode, zoom, panY, panX))
     }
 
     fun toggleTvScaleMode(): String {

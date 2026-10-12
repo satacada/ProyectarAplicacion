@@ -77,7 +77,8 @@ sealed class SignalingMessage {
     data class SetDisplayMode(
         val mode: String,
         val zoom: Float = 1.0f,
-        val panY: Float = 0.0f
+        val panY: Float = 0.0f,
+        val panX: Float = 0.0f
     ) : SignalingMessage()
 
     @Serializable

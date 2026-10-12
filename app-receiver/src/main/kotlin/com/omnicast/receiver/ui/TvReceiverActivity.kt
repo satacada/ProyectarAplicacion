@@ -204,7 +204,7 @@ class TvReceiverActivity : ComponentActivity() {
                 if (cur is ReceiverUiState.ImageDisplaying) receiverState.value = cur.copy(scale = message.scale, panX = message.panX, panY = message.panY, rotation = message.rotation)
             }
             is SignalingMessage.SetDisplayMode -> {
-                webRtcReceiver.setDisplayMode(message.mode, message.zoom, message.panY)
+                webRtcReceiver.setDisplayMode(message.mode, message.zoom, message.panY, message.panX)
                 exoPlayerManager.setDisplayMode(message.mode, message.zoom)
             }
             is SignalingMessage.ShowImage -> {

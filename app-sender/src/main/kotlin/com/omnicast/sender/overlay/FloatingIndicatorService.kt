@@ -204,6 +204,10 @@ class FloatingIndicatorService : Service() {
                 menuControllerRef?.updateZoomLabel(preset.label)
                 Toast.makeText(this, preset.label, Toast.LENGTH_SHORT).show()
             },
+            onCalibrateTv = {
+                menuLayoutRef?.visibility = View.GONE; isExpanded = false
+                FloatingCalibrationOverlay.show(this)
+            },
             onOpenOmniCast = {
                 menuLayoutRef?.visibility = View.GONE; isExpanded = false
                 launchIntentSafely(Intent(this, SenderMainActivity::class.java).apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP) }, 102)

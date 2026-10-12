@@ -58,7 +58,7 @@ class WebRtcReceiverManager(private val context: Context) {
                 }
             })
             setScalingType(RendererCommon.ScalingType.SCALE_ASPECT_FIT)
-            setEnableHardwareScaler(false)
+            setEnableHardwareScaler(true)
             setZOrderMediaOverlay(true)
         }
     }

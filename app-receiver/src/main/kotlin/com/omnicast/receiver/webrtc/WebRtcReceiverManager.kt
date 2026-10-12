@@ -70,23 +70,43 @@ class WebRtcReceiverManager(private val context: Context) {
             val frameH = if (isRotated) lastFrameW else lastFrameH
             if (frameW <= 0 || frameH <= 0) return@post
 
+            val tvMetrics = context.resources.displayMetrics
+            val tvW = tvMetrics.widthPixels.toFloat().coerceAtLeast(1280f)
+            val tvH = tvMetrics.heightPixels.toFloat().coerceAtLeast(720f)
+            val tvAspect = tvW / tvH
+            val frameAspect = frameW.toFloat() / frameH.toFloat()
+
+            // Compensación de aspecto para pantalla horizontal (landscape)
+            // Si el frame es horizontal o tiene relación diferente a la TV (ej. 20:9 vs 16:9),
+            // el factor de llenado adapta la cobertura para eliminar barras negras
+            val aspectFillFactor = if (frameAspect > tvAspect) {
+                frameAspect / tvAspect
+            } else if (frameAspect < tvAspect && frameW > frameH) {
+                tvAspect / frameAspect
+            } else {
+                1.0f
+            }
+
             renderer.setScalingType(currentScalingType)
 
             when (currentMode) {
                 "ZOOM" -> {
-                    renderer.scaleX = currentZoom
-                    renderer.scaleY = currentZoom
+                    val scale = if (frameW > frameH && aspectFillFactor > 1.0f) currentZoom * aspectFillFactor else currentZoom
+                    renderer.scaleX = scale
+                    renderer.scaleY = scale
                     renderer.translationY = currentPanY
-                    ReceiverLogger.log(TAG, "🔍 Zoom gradual TV: ${String.format(java.util.Locale.US, "%.2f", currentZoom)}x (panY=$currentPanY, frame=${frameW}x${frameH})")
+                    ReceiverLogger.log(TAG, "🔍 Zoom gradual TV: ${String.format(java.util.Locale.US, "%.2f", currentZoom)}x -> escala $scale (panY=$currentPanY, frame=${frameW}x${frameH})")
                 }
                 "FILL", "16:9", "EXTEND_16_9" -> {
-                    renderer.scaleX = 1.0f
-                    renderer.scaleY = 1.0f
+                    val factor = if (frameW > frameH) aspectFillFactor else 1.0f
+                    renderer.scaleX = factor
+                    renderer.scaleY = factor
                     renderer.translationY = 0f
-                    ReceiverLogger.log(TAG, "📺 Modo 16:9 EXPANDIDO (FILL): frame=${frameW}x${frameH} rot=$lastRot")
+                    ReceiverLogger.log(TAG, "📺 Modo 16:9 EXPANDIDO (FILL): factor=$factor frame=${frameW}x${frameH} rot=$lastRot")
                 }
                 else -> {
-                    val scale = if (currentZoom > 0f) currentZoom else 1.0f
+                    val baseScale = if (currentZoom > 0f) currentZoom else 1.0f
+                    val scale = if (frameW > frameH && aspectFillFactor > 1.0f && currentZoom > 1.0f) baseScale * aspectFillFactor else baseScale
                     renderer.scaleX = scale
                     renderer.scaleY = scale
                     renderer.translationY = currentPanY

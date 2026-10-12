@@ -59,17 +59,11 @@ class FloatingIndicatorService : Service() {
     private var pollRunnable: Runnable? = null
 
     fun refreshDisplayMode() {
-        val projecting = ProjectionForegroundService.isProjecting
         val pill = pillLayoutRef ?: return
         val dot = dotViewRef ?: return
         var changed = false
-        if (projecting) {
-            if (pill.visibility != View.GONE) { pill.visibility = View.GONE; changed = true }
-            if (dot.visibility != View.VISIBLE) { dot.visibility = View.VISIBLE; changed = true }
-        } else {
-            if (pill.visibility != View.VISIBLE) { pill.visibility = View.VISIBLE; changed = true }
-            if (dot.visibility != View.GONE) { dot.visibility = View.GONE; changed = true }
-        }
+        if (pill.visibility != View.VISIBLE) { pill.visibility = View.VISIBLE; changed = true }
+        if (dot.visibility != View.GONE) { dot.visibility = View.GONE; changed = true }
         if (changed) {
             try { windowManager?.updateViewLayout(rootLayout, layoutParamsRef) } catch (_: Throwable) {}
         }

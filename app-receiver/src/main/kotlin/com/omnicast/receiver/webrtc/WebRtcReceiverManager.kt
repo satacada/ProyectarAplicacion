@@ -85,7 +85,12 @@ class WebRtcReceiverManager(private val context: Context) {
                 1.0f
             }
 
-            renderer.setScalingType(currentScalingType)
+            val targetScalingType = if (!isLandscape) {
+                RendererCommon.ScalingType.SCALE_ASPECT_FIT
+            } else {
+                currentScalingType
+            }
+            renderer.setScalingType(targetScalingType)
 
             when (currentMode) {
                 "ZOOM" -> {
@@ -100,7 +105,7 @@ class WebRtcReceiverManager(private val context: Context) {
                     renderer.scaleX = factor
                     renderer.scaleY = factor
                     renderer.translationY = 0f
-                    ReceiverLogger.log(TAG, "📺 Modo 16:9 EXPANDIDO (FILL): factor=$factor frame=${frameW}x${frameH} rot=$lastRot")
+                    ReceiverLogger.log(TAG, "📺 Modo 16:9 (FILL): factor=$factor frame=${frameW}x${frameH} rot=$lastRot")
                 }
                 else -> {
                     // Modo FIT: En horizontal, si el frame capturado tiene relación alargada de teléfono (20:9 o similar),

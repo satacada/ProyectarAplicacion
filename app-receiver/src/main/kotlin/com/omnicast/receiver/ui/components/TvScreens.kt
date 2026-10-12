@@ -31,10 +31,18 @@ fun TvStandbyScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp),
             modifier = Modifier.padding(vertical = 20.dp)
         ) {
+            val context = androidx.compose.ui.platform.LocalContext.current
+            val ver = androidx.compose.runtime.remember {
+                try {
+                    "v" + context.packageManager.getPackageInfo(context.packageName, 0).versionName
+                } catch (_: Throwable) {
+                    "v3.32.25"
+                }
+            }
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text("OmniCast Pro TV", fontSize = 38.sp, fontWeight = FontWeight.Bold, color = Color.White)
                 androidx.compose.material3.Surface(color = Color(0xFF0284C7), shape = RoundedCornerShape(8.dp)) {
-                    Text("v3.29", modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp), fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    Text(ver, modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp), fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Color.White)
                 }
             }
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {

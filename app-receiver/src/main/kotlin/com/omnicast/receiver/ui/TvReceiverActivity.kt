@@ -47,9 +47,10 @@ class TvReceiverActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-        localIpAddress.value = getLocalIpAddress()
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON); localIpAddress.value = getLocalIpAddress()
         com.omnicast.receiver.log.ReceiverLogger.init(this)
+        val ver = try { packageManager.getPackageInfo(packageName, 0).versionName } catch (_: Throwable) { "?" }
+        com.omnicast.receiver.log.ReceiverLogger.log("TV_RECEIVER", "🚀 OmniCast Receiver v$ver en ${localIpAddress.value}:8088")
         lifecycleScope.launch(kotlinx.coroutines.Dispatchers.IO) {
             com.omnicast.receiver.directstream.TvMediaCacheManager.clearDiskCache(this@TvReceiverActivity)
         }

@@ -57,13 +57,21 @@ fun SenderHeaderBar(
                 color = OmniThemeColors.TextPrimary
             )
 
+            val context = androidx.compose.ui.platform.LocalContext.current
+            val ver = androidx.compose.runtime.remember {
+                try {
+                    "v" + context.packageManager.getPackageInfo(context.packageName, 0).versionName
+                } catch (_: Throwable) {
+                    "v3.32.25"
+                }
+            }
             Surface(
                 color = Color(0xFF382910),
                 border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFD97706)),
                 shape = RoundedCornerShape(12.dp)
             ) {
                 Text(
-                    text = "v3.32.9",
+                    text = ver,
                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
                     fontSize = 11.sp,
                     fontWeight = FontWeight.ExtraBold,

@@ -1,24 +1,32 @@
 package com.omnicast.receiver.log
 
 import android.content.Context
+import android.os.Build
 import android.os.Environment
 import android.util.Log
 import java.io.File
+import java.net.HttpURLConnection
 import java.net.ServerSocket
+import java.net.URL
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
 import kotlin.concurrent.thread
+import org.json.JSONObject
 
 /**
- * Sistema de telemetría y diagnóstico en vivo para la TV Box.
- * 1. Mantiene buffer circular de logs en memoria.
- * 2. Guarda archivo en /sdcard/Download/omnicast_receiver.log para volcado a USB.
- * 3. Expone servidor HTTP en puerto 8087 (GET http://<tv_ip>:8087/logs) para consulta remota desde PC.
+ * Sistema de telemetría y diagnóstico para la TV Box (Caja Negra).
+ * 1. Mantiene buffer circular de 1000 logs en memoria.
+ * 2. Guarda archivo local en /sdcard/Download/omnicast_receiver.log.
+ * 3. Expone servidor HTTP en puerto 8087 (GET http://<tv_ip>:8087/logs) para depuración en LAN.
+ * 4. Despacha eventos clave y fallos a Supabase en la nube para soporte remoto a testers.
  */
 object ReceiverLogger {
     private const val TAG = "ReceiverLogger"
     const val HTTP_PORT = 8087
+    private const val SUPABASE_URL = "https://pfhjrplnfuupftgzdnop.supabase.co/rest/v1/omnicast_system_logs"
+    private const val SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBmaGpycGxuZnV1cGZ0Z3pkbm9wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg5NTc4NDEsImV4cCI6MjEwNDUzMzg0MX0.u2ysI-hTvT7LczA7QL2YS2mudW8pSI644Ig8gyvTs7o"
+
     private val logBuffer = ConcurrentLinkedQueue<String>()
     private const val MAX_LOGS = 1000
     private var logFile: File? = null
@@ -26,9 +34,17 @@ object ReceiverLogger {
     private var isRunning = false
     private val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.US)
 
+    private var appVersion: String = "v3.32.29"
+    private var deviceModel: String = "${Build.MANUFACTURER} ${Build.MODEL}"
+    private var androidVersion: String = "Android ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})"
+
     fun init(context: Context) {
         if (isRunning) return
         isRunning = true
+        runCatching {
+            val pInfo = context.packageManager.getPackageInfo(context.packageName, 0)
+            appVersion = "v${pInfo.versionName ?: "3.32.28"}"
+        }
         try {
             val downloadDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
             logFile = if (downloadDir.exists() || downloadDir.mkdirs()) {
@@ -36,7 +52,7 @@ object ReceiverLogger {
             } else {
                 File(context.filesDir, "omnicast_receiver.log")
             }
-            log("INIT", "=== OmniCast TV Box Receiver v3.25 Iniciado ===")
+            log("INIT", "=== OmniCast TV Box Receiver $appVersion Iniciado en $deviceModel ($androidVersion) ===")
         } catch (e: Throwable) {
             Log.e(TAG, "Error inicializando archivo de log", e)
         }
@@ -52,19 +68,47 @@ object ReceiverLogger {
         logBuffer.add(line)
         while (logBuffer.size > MAX_LOGS) { logBuffer.poll() }
 
+        val isErrorOrWarning = throwable != null || message.contains("❌") || message.contains("Error", ignoreCase = true) || message.contains("⚠️") || message.contains("warning", ignoreCase = true)
+        val isMilestone = tag == "INIT" || tag == "TV_RECEIVER" || tag == "ICE" || tag.contains("WebRtc", ignoreCase = true)
+
         thread(isDaemon = true) {
-            try {
-                logFile?.appendText("$line\n")
-                val url = java.net.URL("http://192.168.0.3:8000/api/tv_log")
-                val conn = url.openConnection() as java.net.HttpURLConnection
-                conn.requestMethod = "POST"
-                conn.connectTimeout = 1000
-                conn.readTimeout = 1000
-                conn.doOutput = true
-                conn.outputStream.use { it.write(line.toByteArray(Charsets.UTF_8)) }
-                conn.responseCode
-                conn.disconnect()
-            } catch (_: Throwable) {}
+            runCatching { logFile?.appendText("$line\n") }
+            if (isErrorOrWarning || isMilestone) {
+                dispatchToSupabase(tag, message, errStr, if (isErrorOrWarning) "error" else "info")
+            }
+        }
+    }
+
+    private fun dispatchToSupabase(tag: String, message: String, errStr: String, level: String) {
+        runCatching {
+            val detailsObj = JSONObject().apply {
+                if (errStr.isNotBlank()) put("stack_trace", errStr.take(1500))
+            }
+            val payload = JSONObject().apply {
+                put("role", "tv")
+                put("app_version", appVersion)
+                put("device_model", deviceModel)
+                put("android_version", androidVersion)
+                put("level", level)
+                put("event", tag)
+                put("message", message.take(1000))
+                put("details", detailsObj)
+            }
+
+            val conn = (URL(SUPABASE_URL).openConnection() as HttpURLConnection).apply {
+                requestMethod = "POST"
+                connectTimeout = 3000
+                readTimeout = 3000
+                doOutput = true
+                setRequestProperty("apikey", SUPABASE_ANON_KEY)
+                setRequestProperty("Authorization", "Bearer $SUPABASE_ANON_KEY")
+                setRequestProperty("Content-Type", "application/json")
+                setRequestProperty("Prefer", "return=minimal")
+            }
+
+            conn.outputStream.use { it.write(payload.toString().toByteArray(Charsets.UTF_8)) }
+            conn.responseCode
+            conn.disconnect()
         }
     }
 
@@ -79,8 +123,7 @@ object ReceiverLogger {
                         try {
                             client.use { s ->
                                 val reader = java.io.BufferedReader(java.io.InputStreamReader(s.getInputStream()))
-                                val reqLine = reader.readLine()
-                                var headerLine: String? = reqLine
+                                var headerLine: String? = reader.readLine()
                                 while (!headerLine.isNullOrBlank()) {
                                     headerLine = reader.readLine()
                                 }

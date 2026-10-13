@@ -89,8 +89,7 @@ class SenderMainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         instance = this; historyManager = PlayHistoryManager(this)
-        val ver = try { packageManager.getPackageInfo(packageName, 0).versionName } catch (_: Throwable) { "?" }
-        Log.i("SenderMain", "🚀 OmniCast Sender v$ver iniciado")
+        com.omnicast.sender.log.SenderLogger.init(this)
         playlistManager = com.omnicast.sender.playlist.PlaylistManager(this).apply {
             onPlaylistsChanged = { jsonStr ->
                 if (signalingClient.isConnected) signalingClient.sendMessage(SignalingMessage.SyncPlaylists(jsonStr))

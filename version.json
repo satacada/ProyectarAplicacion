@@ -1,0 +1,9 @@
+{
+  "versionCodeSender": 74,
+  "versionCodeReceiver": 57,
+  "versionName": "3.32.29",
+  "releaseTag": "v3.32.29",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.29/omnicast-sender-v3.32.29.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.29/omnicast-receiver-v3.32.29.apk",
+  "changelog": "v3.32.29: Telemetría remota Supabase (Caja Negra) en TV y Celular, buffer circular, diagnóstico remoto de hardware."
+}

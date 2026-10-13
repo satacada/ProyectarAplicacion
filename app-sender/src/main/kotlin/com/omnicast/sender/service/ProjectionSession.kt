@@ -57,13 +57,13 @@ class ProjectionSession(
     fun getTvScaleMode(): String = tvScaleMode
 
     fun start() {
-        Log.i("ProjectionSession", "Iniciando proyección en segundo plano a $targetIp:$targetPort (modo: $tvScaleMode)")
+        com.omnicast.sender.log.SenderLogger.log("INFO", "PROJECTION_START", "Iniciando proyección a $targetIp:$targetPort (modo: $tvScaleMode)")
         webRtcManager = WebRtcSenderManager(context, permissionData).apply {
             this.tvScaleMode = this@ProjectionSession.tvScaleMode
             initialize()
             startScreenStreaming(profile)
             onIceConnectionClosed = {
-                Log.w("ProjectionSession", "Conexión WebRTC cerrada o fallida en red. Finalizando servicio.")
+                com.omnicast.sender.log.SenderLogger.w("ProjectionSession", "Conexión WebRTC cerrada o fallida en red. Finalizando servicio.")
                 ProjectionForegroundService.stopService(context)
             }
         }
@@ -135,7 +135,7 @@ class ProjectionSession(
                     }
                 }
             },
-            onError = { e -> Log.e("ProjectionSession", "Error conectando TV ($targetIp:$targetPort): ${e.message}") }
+            onError = { e -> com.omnicast.sender.log.SenderLogger.e("ProjectionSession", "Error conectando TV ($targetIp:$targetPort): ${e.message}", e) }
         )
     }
 

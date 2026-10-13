@@ -50,7 +50,7 @@ object MediaPlatformResolver {
                 }
                 conn.disconnect()
             } catch (e: Throwable) {
-                Log.w(TAG, "No se pudo resolver Dailymotion vía API: ${e.message}")
+                com.omnicast.sender.log.SenderLogger.w(TAG, "No se pudo resolver Dailymotion vía API: ${e.message}", e)
             }
         }
     }

@@ -21,6 +21,8 @@ references/decompiled/
 *.py
 *.ps1
 !app-sender/src/main/assets/**
+!scripts/**
+!supabase/**
 
 # IDE
 .idea/

@@ -51,10 +51,7 @@ class TvReceiverActivity : ComponentActivity() {
         com.omnicast.receiver.log.ReceiverLogger.init(this)
         val ver = try { packageManager.getPackageInfo(packageName, 0).versionName } catch (_: Throwable) { "?" }
         com.omnicast.receiver.log.ReceiverLogger.log("TV_RECEIVER", "🚀 OmniCast Receiver v$ver en ${localIpAddress.value}:8088")
-        lifecycleScope.launch(kotlinx.coroutines.Dispatchers.IO) {
-            com.omnicast.receiver.directstream.TvMediaCacheManager.clearDiskCache(this@TvReceiverActivity)
-        }
-
+        lifecycleScope.launch(kotlinx.coroutines.Dispatchers.IO) { com.omnicast.receiver.directstream.TvMediaCacheManager.clearDiskCache(this@TvReceiverActivity) }
         webRtcReceiver = WebRtcReceiverManager(this).apply {
             initialize()
             onLocalIceCandidate = { c ->
@@ -66,6 +63,7 @@ class TvReceiverActivity : ComponentActivity() {
         }
         exoPlayerManager = ExoPlayerTvManager(this).apply {
             onTracksChanged = { info -> lifecycleScope.launch { signalingServer.sendMessage(info) } }
+            onPlaybackFailed = { runOnUiThread { if (receiverState.value is ReceiverUiState.DirectStreamPlaying) { receiverState.value = ReceiverUiState.Standby; lifecycleScope.launch { signalingServer.sendMessage(SignalingMessage.PlaybackStatus("STOPPED", 0L, 0L)) } } } }
         }
         digitalAudioReceiver = DigitalAudioReceiver()
         historyManager = com.omnicast.receiver.directstream.TvPlaybackHistoryManager(this)

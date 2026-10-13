@@ -4,6 +4,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.*
@@ -215,12 +217,14 @@ fun DeviceSelectionCard(
 
                 if (discoveredDevices.isNotEmpty()) {
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState()),
                         horizontalArrangement = Arrangement.spacedBy(6.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text("Detectadas:", color = OmniThemeColors.TextMuted, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
-                        discoveredDevices.take(2).forEach { dev ->
+                        discoveredDevices.forEach { dev ->
                             val isSel = selectedDevice?.id == dev.id
                             Surface(
                                 color = if (isSel) Color(0xFF1E3A5F) else Color(0xFF0D1424),
@@ -236,7 +240,8 @@ fun DeviceSelectionCard(
                                 }
                             ) {
                                 Text(
-                                    text = "${dev.name} (${dev.ipAddress})",
+                                    text = "${dev.name.take(15)} (${dev.ipAddress})",
+                                    maxLines = 1,
                                     fontSize = 11.sp,
                                     fontWeight = if (isSel) FontWeight.Bold else FontWeight.Normal,
                                     color = if (isSel) Color(0xFF38BDF8) else Color(0xFF94A3B8),

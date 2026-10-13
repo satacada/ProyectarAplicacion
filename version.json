@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 74,
-  "versionCodeReceiver": 57,
-  "versionName": "3.32.29",
-  "releaseTag": "v3.32.29",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.29/omnicast-sender-v3.32.29.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.29/omnicast-receiver-v3.32.29.apk",
-  "changelog": "v3.32.29: Telemetría remota Supabase (Caja Negra) en TV y Celular, buffer circular, diagnóstico remoto de hardware."
+  "versionCodeSender": 75,
+  "versionCodeReceiver": 58,
+  "versionName": "3.32.30",
+  "releaseTag": "v3.32.30",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.30/omnicast-sender-v3.32.30.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.30/omnicast-receiver-v3.32.30.apk",
+  "changelog": "v3.32.30: Corrección de cabeceras CORS en Cloudflare/Dailymotion (HTTP 403 resuelto), auto-recuperación de estado zombi en TV y prevención de deformación en tarjeta TV Receptora con scroll horizontal."
 }

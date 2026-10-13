@@ -34,7 +34,7 @@ object ReceiverLogger {
     private var isRunning = false
     private val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.US)
 
-    private var appVersion: String = "v3.32.29"
+    private var appVersion: String = "v3.32.30"
     private var deviceModel: String = "${Build.MANUFACTURER} ${Build.MODEL}"
     private var androidVersion: String = "Android ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})"
 

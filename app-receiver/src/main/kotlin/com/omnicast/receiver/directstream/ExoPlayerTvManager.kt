@@ -27,6 +27,7 @@ class ExoPlayerTvManager(private val context: Context) {
     var player: ExoPlayer? = null; private set
     var trackManager: TvTrackManager? = null; private set
     var onTracksChanged: ((com.omnicast.core.protocol.SignalingMessage.TracksInfo) -> Unit)? = null
+    var onPlaybackFailed: (() -> Unit)? = null
     val recoveryManager = PlaybackRecoveryManager()
     val aspectRatioHelper = TvAspectRatioHelper()
     private var currentUrl: String? = null
@@ -82,6 +83,8 @@ class ExoPlayerTvManager(private val context: Context) {
                             if (!handled && !isRetryingClean && currentUrl != null) {
                                 isRetryingClean = true
                                 playClean(currentUrl!!, currentTitle)
+                            } else if (isRetryingClean) {
+                                onPlaybackFailed?.invoke()
                             }
                         }
 
@@ -195,10 +198,20 @@ class ExoPlayerTvManager(private val context: Context) {
                 k.equals("user-agent", true) -> allowed["User-Agent"] = v
                 k.equals("cookie", true) -> allowed["Cookie"] = v
                 k.equals("authorization", true) -> allowed["Authorization"] = v
+                k.equals("sec-fetch-mode", true) -> allowed["Sec-Fetch-Mode"] = v
+                k.equals("sec-fetch-dest", true) -> allowed["Sec-Fetch-Dest"] = v
+                k.equals("sec-fetch-site", true) -> allowed["Sec-Fetch-Site"] = v
             }
         }
         if (!allowed.containsKey("User-Agent")) allowed["User-Agent"] = DEFAULT_UA
         if (url.contains("mycdn.me", true) || url.contains("ok.ru", true)) allowed["Referer"] = "https://ok.ru/"
+        if (url.contains("dailymotion.com", true) || url.contains("dmcdn.net", true)) {
+            allowed["Origin"] = "https://www.dailymotion.com"
+            allowed["Referer"] = "https://www.dailymotion.com/"
+            allowed["Sec-Fetch-Mode"] = "cors"
+            allowed["Sec-Fetch-Dest"] = "empty"
+            allowed["Sec-Fetch-Site"] = "cross-site"
+        }
         return allowed
     }
 

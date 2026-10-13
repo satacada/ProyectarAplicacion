@@ -40,7 +40,11 @@ object MediaPlatformResolver {
                     if (!streamUrl.isNullOrBlank()) {
                         val hdrs = mapOf(
                             "Referer" to "https://www.dailymotion.com/",
-                            "User-Agent" to UA_MOBILE
+                            "Origin" to "https://www.dailymotion.com",
+                            "User-Agent" to UA_MOBILE,
+                            "Sec-Fetch-Mode" to "cors",
+                            "Sec-Fetch-Dest" to "empty",
+                            "Sec-Fetch-Site" to "cross-site"
                         )
                         Log.i(TAG, "🎬 Dailymotion resuelto con éxito ($videoId): $title -> $streamUrl")
                         withContext(Dispatchers.Main) {

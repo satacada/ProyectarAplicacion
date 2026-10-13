@@ -56,6 +56,10 @@ object BrowserUrlHelper {
                 headers["Referer"] = "https://ok.ru/"
             } else if (streamUrl.contains("dailymotion.com", ignoreCase = true) || streamUrl.contains("dmcdn.net", ignoreCase = true)) {
                 headers["Referer"] = "https://www.dailymotion.com/"
+                headers["Origin"] = "https://www.dailymotion.com"
+                headers["Sec-Fetch-Mode"] = "cors"
+                headers["Sec-Fetch-Dest"] = "empty"
+                headers["Sec-Fetch-Site"] = "cross-site"
             } else if (streamUrl.contains("mail.ru", ignoreCase = true)) {
                 headers.remove("Referer")
             } else if (streamUrl.contains("morencius.com", ignoreCase = true) && !headers.containsKey("Referer")) {

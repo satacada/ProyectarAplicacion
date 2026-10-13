@@ -15,7 +15,8 @@ data class StreamQualityOption(
     val streamUrl: String,
     val isMaster: Boolean = false,
     val durationSeconds: Float = 0f,
-    val isMovie: Boolean = false
+    val isMovie: Boolean = false,
+    val isSuggested: Boolean = false
 )
 
 object StreamQualityDetector {

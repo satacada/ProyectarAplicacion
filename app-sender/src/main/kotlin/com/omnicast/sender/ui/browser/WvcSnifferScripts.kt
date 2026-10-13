@@ -119,9 +119,14 @@ object WvcSnifferScripts {
     fun buildAggressiveRescanScript(consolePrefix: String): String = """
         (function() {
             try {
+                if (typeof window.__omniResetAndRescan === 'function') {
+                    window.__omniResetAndRescan();
+                }
                 var vids = document.querySelectorAll('video');
                 for (var i = 0; i < vids.length; i++) {
                     var v = vids[i];
+                    v.__omniMonitored = false;
+                    v.__omni = false;
                     var d = v.duration || 0;
                     if (d > 0 && d < 60) continue;
                     var s = v.currentSrc || v.src;

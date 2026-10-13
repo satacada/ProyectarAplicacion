@@ -211,4 +211,25 @@
         sniffOkRuDom();
     }, 3000);
 
+    // 8. Función global de reset y rescaneo profundo para el botón del trueno
+    window.__omniResetAndRescan = function() {
+        try {
+            var vids = document.getElementsByTagName('video');
+            for (var k = 0; k < vids.length; k++) {
+                var v = vids[k];
+                v.__omniMonitored = false;
+                v.__omni = false;
+                monitorVideo(v);
+                var s = v.currentSrc || v.src;
+                if (s && isMediaUrl(s)) {
+                    reportMedia(s, document.title, v.duration || 0, !v.paused);
+                }
+            }
+            if (typeof window.ibFindAllVideos === 'function') {
+                window.ibFindAllVideos();
+            }
+            sniffOkRuDom();
+        } catch(e) {}
+    };
+
 })();

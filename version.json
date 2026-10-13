@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 75,
-  "versionCodeReceiver": 58,
-  "versionName": "3.32.30",
-  "releaseTag": "v3.32.30",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.30/omnicast-sender-v3.32.30.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.30/omnicast-receiver-v3.32.30.apk",
-  "changelog": "v3.32.30: Corrección de cabeceras CORS en Cloudflare/Dailymotion (HTTP 403 resuelto), auto-recuperación de estado zombi en TV y prevención de deformación en tarjeta TV Receptora con scroll horizontal."
+  "versionCodeSender": 77,
+  "versionCodeReceiver": 60,
+  "versionName": "3.32.32",
+  "releaseTag": "v3.32.32",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.32/omnicast-sender-v3.32.32.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.32/omnicast-receiver-v3.32.32.apk",
+  "changelog": "v3.32.32: Lista inteligente de calidades estilo WVC con resoluciones (1080p, 720p, etc.), insignia verde '🟢 En Reproducción', eliminación de enlaces web falsos y recaptura profunda con trueno restaurando streams activos."
 }

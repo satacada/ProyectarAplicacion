@@ -87,10 +87,7 @@ fun InAppBrowserScreen(
     }
 
     DisposableEffect(webViewInstance) {
-        SenderMainActivity.onBrowserRescanRequested = {
-            webViewInstance?.evaluateJavascript(WvcDomSniffer.getInjectionScript(context), null)
-            webViewInstance?.evaluateJavascript(WvcSnifferScripts.buildAggressiveRescanScript(WvcDomSniffer.CONSOLE_PREFIX), null)
-        }
+        SenderMainActivity.onBrowserRescanRequested = { webViewInstance?.evaluateJavascript(WvcSnifferScripts.buildAggressiveRescanScript(WvcDomSniffer.CONSOLE_PREFIX), null) }
         onDispose { SenderMainActivity.onBrowserRescanRequested = null }
     }
 
@@ -101,8 +98,7 @@ fun InAppBrowserScreen(
         if (hdrs.isNotEmpty()) streamHeaders[url] = hdrs; if (!label.isNullOrBlank()) streamLabels[url] = label
         val primaryUrl = detectedStreams.firstOrNull() ?: url
         val cleanT = if (pageTitle.isNotBlank() && pageTitle != "Cargando..." && pageTitle != "Transmisión") pageTitle else "Video Web"
-        ActiveStreamHolder.update(primaryUrl, cleanT, streamHeaders[primaryUrl] ?: hdrs)
-        showBottomControls = true
+        ActiveStreamHolder.update(primaryUrl, cleanT, streamHeaders[primaryUrl] ?: hdrs); showBottomControls = true
     }
 
     fun checkPlatformUrls(url: String?, title: String? = null) {
@@ -133,29 +129,31 @@ fun InAppBrowserScreen(
     }
 
     fun openOptionsSheet() {
-        val currentStreams = detectedStreams.toList()
+        val currentStreams = detectedStreams.filter { s -> !s.contains("/video/") && !s.contains("/embed/") }
         if (currentStreams.isEmpty()) {
             Toast.makeText(context, "Reproduce el video en la página para capturar el flujo", Toast.LENGTH_SHORT).show()
-            webViewInstance?.evaluateJavascript(WvcDomSniffer.getInjectionScript(context), null)
+            webViewInstance?.evaluateJavascript(WvcSnifferScripts.buildAggressiveRescanScript(WvcDomSniffer.CONSOLE_PREFIX), null)
             return
         }
+        val activeStream = ActiveStreamHolder.streamUrl
         val cleanTitle = pageTitle.replace(" - YouTube", "").replace(" | OK", "").trim().take(22)
         val prefix = if (cleanTitle.isNotBlank() && cleanTitle != "Transmisión" && cleanTitle != "OmniCast Browser") "[$cleanTitle] " else ""
         qualityOptions = currentStreams.mapIndexed { index, url ->
             val ytId = BrowserUrlHelper.extractYouTubeId(url); val num = currentStreams.size - index
             val dur = streamDurations[url] ?: (durMs / 1000f).coerceAtLeast(0f)
             val isMovie = dur >= 2400f || (dur == 0f && url.contains(".m3u8", true)) || cleanTitle.contains("pelicula", true)
-            if (ytId != null) StreamQualityOption("🎬 $prefix YouTube #$num", "YouTube", "1080p / 720p", url, durationSeconds = dur, isMovie = isMovie)
+            val isSugg = (url == activeStream) || (index == 0 && activeStream.isNullOrBlank())
+            if (ytId != null) StreamQualityOption("🎬 $prefix YouTube #$num", "YouTube", "1080p / 720p", url, durationSeconds = dur, isMovie = isMovie, isSuggested = isSugg)
             else {
                 val qLabel = streamLabels[url] ?: if (url.contains(".m3u8", true)) "HLS Adaptativo" else "Video Directo"
-                StreamQualityOption("🎬 $prefix$qLabel #$num", qLabel, "Máxima Calidad", url, isMaster = qLabel.contains("HLS"), durationSeconds = dur, isMovie = isMovie)
+                StreamQualityOption("🎬 $prefix$qLabel #$num", qLabel, "Máxima Calidad", url, isMaster = qLabel.contains("HLS"), durationSeconds = dur, isMovie = isMovie, isSuggested = isSugg)
             }
-        }.distinctBy { it.streamUrl }
+        }.sortedByDescending { it.isSuggested }.distinctBy { it.streamUrl }
         showOptionsSheet = true
         scope.launch {
             runCatching {
                 val deep = currentStreams.flatMap { u -> StreamQualityDetector.detectQualities(u, streamHeaders[u] ?: emptyMap(), cleanTitle) }
-                if (deep.isNotEmpty()) qualityOptions = (qualityOptions + deep).distinctBy { it.label }
+                if (deep.isNotEmpty()) qualityOptions = (qualityOptions + deep).sortedByDescending { it.isSuggested }.distinctBy { it.label }
             }
         }
     }
@@ -174,11 +172,10 @@ fun InAppBrowserScreen(
                 isDesktopMode = isDesktopMode,
                 onToggleDesktopMode = { isDesktopMode = !isDesktopMode; webViewInstance?.settings?.userAgentString = if (isDesktopMode) UA_DESKTOP else UA_MOBILE; webViewInstance?.reload() },
                 isAdBlockEnabled = isAdBlockEnabled, onToggleAdBlock = { isAdBlockEnabled = !isAdBlockEnabled },
-                onForceRescan = { webViewInstance?.evaluateJavascript(WvcDomSniffer.getInjectionScript(context), null); webViewInstance?.evaluateJavascript(WvcSnifferScripts.buildAggressiveRescanScript(WvcDomSniffer.CONSOLE_PREFIX), null) },
+                onForceRescan = { webViewInstance?.evaluateJavascript(WvcSnifferScripts.buildAggressiveRescanScript(WvcDomSniffer.CONSOLE_PREFIX), null) },
                 onClearData = {
-                    webViewInstance?.clearCache(true); webViewInstance?.clearHistory()
-                    detectedStreams.clear(); qualityOptions = emptyList(); isHome = true; inputUrl = ""; currentUrl = ""
-                    ActiveStreamHolder.clear(); prefs.edit().remove("saved_browser_last_url").apply()
+                    webViewInstance?.clearCache(true); webViewInstance?.clearHistory(); detectedStreams.clear(); qualityOptions = emptyList()
+                    isHome = true; inputUrl = ""; currentUrl = ""; ActiveStreamHolder.clear(); prefs.edit().remove("saved_browser_last_url").apply()
                 },
                 detectedStreamsCount = detectedStreams.size, onToggleBottomControls = { showBottomControls = !showBottomControls },
                 onOpenHistory = { showSideDrawer = true }, onOpenPlaylists = { showSideDrawer = true },
@@ -235,37 +232,39 @@ fun InAppBrowserScreen(
                         }
                     },
                     onTitleReceived = { t -> if (t.isNotBlank() && t != "Transmisión" && !t.contains("about:blank")) pageTitle = t },
-                    onOpenPopup = { pView -> popupWebView = pView },
-                    onClosePopup = { popupWebView?.destroy(); popupWebView = null },
+                    onOpenPopup = { pView -> popupWebView = pView }, onClosePopup = { popupWebView?.destroy(); popupWebView = null },
                     onWebViewCreated = { webViewInstance = it; if (!isHome && currentUrl.isNotBlank() && it.url == null) it.loadUrl(currentUrl) }
                 )
 
                 if (showBottomControls && (!isHome || isCasting)) {
                     BrowserBottomBarContainer(
-                        isCasting = isCasting, castTitle = castTitle, isPlaying = isPlaying,
-                        posMs = posMs, durMs = durMs, volume = volume, detectedCount = detectedStreams.size,
-                        streamSubtitle = streamLabels[detectedStreams.firstOrNull() ?: ""] ?: "HLS • m3u8 stream directo",
+                        isCasting = isCasting, castTitle = castTitle, isPlaying = isPlaying, posMs = posMs, durMs = durMs, volume = volume,
+                        detectedCount = detectedStreams.size, streamSubtitle = streamLabels[detectedStreams.firstOrNull() ?: ""] ?: "HLS • m3u8 stream directo",
                         pageTitle = pageTitle,
                         onTransmitLatest = {
                             val first = detectedStreams.firstOrNull() ?: return@BrowserBottomBarContainer
-                            if (!isTvConnected) {
-                                Toast.makeText(context, "⚠️ Conecta la TV Box antes de transmitir", Toast.LENGTH_SHORT).show()
-                            }
+                            if (!isTvConnected) Toast.makeText(context, "⚠️ Conecta la TV Box antes de transmitir", Toast.LENGTH_SHORT).show()
                             val bestT = webViewInstance?.title?.takeIf { it.isNotBlank() && !it.contains("about:blank") && it != "Transmisión" } ?: pageTitle
                             transmitWithHistory(first, bestT, streamHeaders[first] ?: emptyMap())
                         },
-                        onShowDetectedStreams = { openOptionsSheet() },
-                        onOpenQualities = { openOptionsSheet() },
+                        onShowDetectedStreams = { openOptionsSheet() }, onOpenQualities = { openOptionsSheet() },
                         onPlayControl = { act, pos, vol ->
                             if (act == "VOLUME") ActiveStreamHolder.setVolume(vol)
                             ActiveStreamHolder.onSendPlayControl?.invoke(act, pos, vol, null)
                         },
                         onStopCasting = { ActiveStreamHolder.stopCasting(); Toast.makeText(context, "🛑 Transmisión detenida", Toast.LENGTH_SHORT).show() },
                         onClearStreams = {
+                            val activeLive = ActiveStreamHolder.streamUrl
                             detectedStreams.clear(); streamHeaders.clear(); streamLabels.clear(); streamDurations.clear(); qualityOptions = emptyList()
                             ActiveStreamHolder.clearDetectedStream()
-                            webViewInstance?.let { wv -> wv.evaluateJavascript(WvcDomSniffer.getInjectionScript(context), null); wv.evaluateJavascript(WvcSnifferScripts.buildAggressiveRescanScript(WvcDomSniffer.CONSOLE_PREFIX), null); checkPlatformUrls(wv.url, wv.title) }
-                            Toast.makeText(context, "🗑️ Reiniciando y recapturando video...", Toast.LENGTH_SHORT).show()
+                            webViewInstance?.let { wv ->
+                                wv.evaluateJavascript(WvcSnifferScripts.buildAggressiveRescanScript(WvcDomSniffer.CONSOLE_PREFIX), null)
+                                wv.evaluateJavascript("window.__omniGetLiveStream ? window.__omniGetLiveStream() : null") { res ->
+                                    val clean = res?.replace("\"", "")?.trim() ?: ""
+                                    if (clean.isNotBlank() && clean != "null" && BrowserUrlHelper.isPlayableStream(clean)) registerStream(clean, BrowserUrlHelper.buildSafeHeaders(clean, currentUrl, UA_MOBILE), isPrimary = true, label = "En Reproducción Directa")
+                                }
+                            }
+                            Toast.makeText(context, "⚡ Recapturando flujos activos...", Toast.LENGTH_SHORT).show()
                         },
                         onRescanStreams = {},
                         onSaveToPlaylist = {

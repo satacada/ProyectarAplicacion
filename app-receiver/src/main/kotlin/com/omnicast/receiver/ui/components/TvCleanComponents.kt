@@ -29,7 +29,10 @@ import java.util.Locale
 @Composable
 fun TvCleanTopBar(
     selectedTab: Int,
-    onSelectTab: (Int) -> Unit
+    onSelectTab: (Int) -> Unit,
+    updateState: com.omnicast.receiver.update.TvUpdateState = com.omnicast.receiver.update.TvUpdateState.Idle,
+    onCheckUpdate: () -> Unit = {},
+    onDownloadAndInstall: (String) -> Unit = {}
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -61,21 +64,18 @@ fun TvCleanTopBar(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Surface(color = Color(0xFF251C35), shape = RoundedCornerShape(14.dp)) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    Box(modifier = Modifier.size(16.dp).background(Color(0xFF10B981), CircleShape), contentAlignment = Alignment.Center) {
-                        Text("D", fontSize = 10.sp, color = Color.White, fontWeight = FontWeight.Bold)
-                    }
-                    Text("David Tab...", fontSize = 12.sp, color = Color(0xFFCBD5E1), fontWeight = FontWeight.Medium)
-                }
+            val context = androidx.compose.ui.platform.LocalContext.current
+            val currentVersion = remember {
+                try {
+                    "v" + context.packageManager.getPackageInfo(context.packageName, 0).versionName
+                } catch (_: Throwable) { "v3.32.31" }
             }
-            Surface(color = Color(0xFF0284C7), shape = RoundedCornerShape(6.dp)) {
-                Text("v3.29", modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp), fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.White)
-            }
+            TvUpdateStatusBadge(
+                updateState = updateState,
+                currentVersion = currentVersion,
+                onCheckUpdate = onCheckUpdate,
+                onDownloadAndInstall = onDownloadAndInstall
+            )
         }
     }
 }

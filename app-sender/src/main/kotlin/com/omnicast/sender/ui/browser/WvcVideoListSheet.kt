@@ -156,14 +156,25 @@ fun WvcVideoListItem(
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f, fill = false)
                 )
-                if (isMovie) {
-                    Box(
-                        modifier = Modifier
-                            .background(Color(0xFF10B981).copy(alpha = 0.2f), RoundedCornerShape(6.dp))
-                            .border(1.dp, Color(0xFF10B981), RoundedCornerShape(6.dp))
-                            .padding(horizontal = 6.dp, vertical = 2.dp)
-                    ) {
-                        Text("🎬 Película", color = Color(0xFF34D399), fontSize = 10.sp, fontWeight = FontWeight.ExtraBold)
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
+                    if (option.isSuggested) {
+                        Box(
+                            modifier = Modifier
+                                .background(Color(0xFF059669), RoundedCornerShape(6.dp))
+                                .padding(horizontal = 6.dp, vertical = 2.dp)
+                        ) {
+                            Text("🟢 En Reproducción", color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                    if (isMovie) {
+                        Box(
+                            modifier = Modifier
+                                .background(Color(0xFF10B981).copy(alpha = 0.2f), RoundedCornerShape(6.dp))
+                                .border(1.dp, Color(0xFF10B981), RoundedCornerShape(6.dp))
+                                .padding(horizontal = 6.dp, vertical = 2.dp)
+                        ) {
+                            Text("🎬 Película", color = Color(0xFF34D399), fontSize = 10.sp, fontWeight = FontWeight.ExtraBold)
+                        }
                     }
                 }
             }

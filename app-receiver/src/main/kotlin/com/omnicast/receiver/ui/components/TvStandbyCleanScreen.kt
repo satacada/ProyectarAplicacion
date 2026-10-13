@@ -24,7 +24,10 @@ fun TvStandbyCleanScreen(
     history: List<TvHistoryItem> = emptyList(),
     playlists: List<TvPlaylist> = emptyList(),
     onPlayHistory: (TvHistoryItem) -> Unit = {},
-    onPlayPlaylist: (TvPlaylistItem) -> Unit = {}
+    onPlayPlaylist: (TvPlaylistItem) -> Unit = {},
+    updateState: com.omnicast.receiver.update.TvUpdateState = com.omnicast.receiver.update.TvUpdateState.Idle,
+    onCheckUpdate: () -> Unit = {},
+    onDownloadAndInstall: (String) -> Unit = {}
 ) {
     var selectedTab by remember { mutableIntStateOf(1) } // 0: Recientes, 1: Todo, 2: Favoritos
     var expandedPlaylistId by remember { mutableStateOf<String?>(null) }
@@ -59,7 +62,10 @@ fun TvStandbyCleanScreen(
         ) {
             TvCleanTopBar(
                 selectedTab = selectedTab,
-                onSelectTab = { selectedTab = it }
+                onSelectTab = { selectedTab = it },
+                updateState = updateState,
+                onCheckUpdate = onCheckUpdate,
+                onDownloadAndInstall = onDownloadAndInstall
             )
 
             Spacer(modifier = Modifier.height(18.dp))

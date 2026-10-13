@@ -95,6 +95,8 @@ object WvcDomSniffer {
 
     fun isValidMediaUrl(url: String?): Boolean {
         if (url.isNullOrBlank()) return false
+        val l = url.lowercase()
+        if (l.contains("dailymotion.com/video/") || l.contains("dai.ly/") || l.contains("/embed/")) return false
         return BrowserUrlHelper.isPlayableStream(url)
     }
 }

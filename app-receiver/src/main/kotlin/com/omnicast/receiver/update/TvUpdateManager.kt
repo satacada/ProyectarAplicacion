@@ -32,19 +32,33 @@ class TvUpdateManager(private val context: Context) {
 
     companion object {
         private const val TAG = "TV_UPDATE"
-        private const val VERSION_JSON_URL = "https://raw.githubusercontent.com/satacada/ProyectarAplicacion/main/version.json"
+        private const val VERSION_JSON_URL = "https://github.com/satacada/ProyectarAplicacion/releases/latest/download/version.json"
     }
 
     suspend fun checkForUpdates() = withContext(Dispatchers.IO) {
         _updateState.value = TvUpdateState.Checking
         try {
             ReceiverLogger.log(TAG, "🔍 Consultando actualizaciones en GitHub...")
-            val url = URL(VERSION_JSON_URL)
-            val conn = (url.openConnection() as HttpURLConnection).apply {
-                connectTimeout = 7000
-                readTimeout = 7000
-                useCaches = false
-                setRequestProperty("User-Agent", "OmniCast-Receiver-OTA")
+            var curUrl = VERSION_JSON_URL
+            var conn: HttpURLConnection
+            var redirects = 0
+            while (true) {
+                conn = (URL(curUrl).openConnection() as HttpURLConnection).apply {
+                    connectTimeout = 7000
+                    readTimeout = 7000
+                    instanceFollowRedirects = true
+                    useCaches = false
+                    setRequestProperty("User-Agent", "OmniCast-Receiver-OTA")
+                }
+                val code = conn.responseCode
+                if (code in 300..399) {
+                    val loc = conn.getHeaderField("Location") ?: break
+                    curUrl = loc
+                    redirects++
+                    if (redirects > 5) break
+                } else {
+                    break
+                }
             }
             if (conn.responseCode !in 200..299) {
                 _updateState.value = TvUpdateState.Error("Error HTTP ${conn.responseCode}")

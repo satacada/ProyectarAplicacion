@@ -248,6 +248,9 @@ fun InAppBrowserScreen(
                         pageTitle = pageTitle,
                         onTransmitLatest = {
                             val first = detectedStreams.firstOrNull() ?: return@BrowserBottomBarContainer
+                            if (!isTvConnected) {
+                                Toast.makeText(context, "⚠️ Conecta la TV Box antes de transmitir", Toast.LENGTH_SHORT).show()
+                            }
                             val bestT = webViewInstance?.title?.takeIf { it.isNotBlank() && !it.contains("about:blank") && it != "Transmisión" } ?: pageTitle
                             transmitWithHistory(first, bestT, streamHeaders[first] ?: emptyMap())
                         },
@@ -280,10 +283,9 @@ fun InAppBrowserScreen(
             }
         }
     }
-
     BrowserModalSheets(
-        showOptionsSheet = showOptionsSheet, showHistorySheet = false, showSavedPlaylistsSheet = false,
-        videoToSave = videoToSave, playlistManager = playlistManager, pageTitle = pageTitle, qualityOptions = qualityOptions, historyList = emptyList(),
+        showOptionsSheet = showOptionsSheet, showHistorySheet = false, showSavedPlaylistsSheet = false, videoToSave = videoToSave,
+        playlistManager = playlistManager, pageTitle = pageTitle, qualityOptions = qualityOptions, historyList = emptyList(),
         onTransmitOption = { opt ->
             showOptionsSheet = false; val bestT = webViewInstance?.title?.takeIf { it.isNotBlank() && !it.contains("about:blank") && it != "Transmisión" } ?: pageTitle
             transmitWithHistory(opt.streamUrl, bestT, streamHeaders[opt.streamUrl] ?: emptyMap())
@@ -293,7 +295,6 @@ fun InAppBrowserScreen(
         onDeleteHistory = { historyManager.remove(it) }, onClearHistory = { historyManager.clear() },
         onToggleFavorite = { historyManager.toggleFavorite(it) }, onDismissHistory = {}, onDismissPlaylists = {},
         onDismissSaveDialog = { videoToSave = null }, onSavedToPlaylist = { Toast.makeText(context, "💾 Guardado en $it", Toast.LENGTH_SHORT).show() },
-        showWhitelistDialog = showWhitelistDialog, currentUrl = currentUrl,
-        onDismissWhitelist = { showWhitelistDialog = false }, onWhitelistUpdated = { webViewInstance?.reload() }
+        showWhitelistDialog = showWhitelistDialog, currentUrl = currentUrl, onDismissWhitelist = { showWhitelistDialog = false }, onWhitelistUpdated = { webViewInstance?.reload() }
     )
 }

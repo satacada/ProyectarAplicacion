@@ -125,15 +125,15 @@ fun DeviceSelectionCard(
                     )
                 }
 
-                // Campos de Entrada: IP y Puerto
+                // Fila de Entrada: IP, Puerto y Botón Conectar alineados armónicamente
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    verticalAlignment = Alignment.Bottom,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Column(modifier = Modifier.weight(2f)) {
+                    Column(modifier = Modifier.weight(1.8f)) {
                         Text(
-                            text = "Dirección IP de la TV",
+                            text = "Dirección IP",
                             fontSize = 11.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = Color(0xFF94A3B8)
@@ -142,12 +142,13 @@ fun DeviceSelectionCard(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .background(Color(0xFF0D1424), RoundedCornerShape(10.dp))
-                                .border(1.dp, Color(0xFF24324E), RoundedCornerShape(10.dp))
-                                .padding(horizontal = 10.dp, vertical = 9.dp),
+                                .height(40.dp)
+                                .background(Color(0xFF0D1424), RoundedCornerShape(8.dp))
+                                .border(1.dp, Color(0xFF24324E), RoundedCornerShape(8.dp))
+                                .padding(horizontal = 8.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text("✛", color = Color(0xFF64748B), fontSize = 12.sp, modifier = Modifier.padding(end = 6.dp))
+                            Text("✛", color = Color(0xFF64748B), fontSize = 11.sp, modifier = Modifier.padding(end = 4.dp))
                             BasicTextField(
                                 value = manualIp,
                                 onValueChange = onManualIpChange,
@@ -155,14 +156,14 @@ fun DeviceSelectionCard(
                                 modifier = Modifier.fillMaxWidth(),
                                 textStyle = TextStyle(
                                     color = OmniThemeColors.TextPrimary,
-                                    fontSize = 14.sp,
+                                    fontSize = 13.sp,
                                     fontWeight = FontWeight.Bold
                                 )
                             )
                         }
                     }
 
-                    Column(modifier = Modifier.weight(1f)) {
+                    Column(modifier = Modifier.weight(1.0f)) {
                         Text(
                             text = "Puerto",
                             fontSize = 11.sp,
@@ -170,42 +171,46 @@ fun DeviceSelectionCard(
                             color = Color(0xFF94A3B8)
                         )
                         Spacer(modifier = Modifier.height(4.dp))
-                        BasicTextField(
-                            value = manualPort,
-                            onValueChange = onManualPortChange,
-                            singleLine = true,
+                        Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .background(Color(0xFF0D1424), RoundedCornerShape(10.dp))
-                                .border(1.dp, Color(0xFF24324E), RoundedCornerShape(10.dp))
-                                .padding(horizontal = 12.dp, vertical = 9.dp),
-                            textStyle = TextStyle(
-                                color = OmniThemeColors.TextPrimary,
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Bold
+                                .height(40.dp)
+                                .background(Color(0xFF0D1424), RoundedCornerShape(8.dp))
+                                .border(1.dp, Color(0xFF24324E), RoundedCornerShape(8.dp))
+                                .padding(horizontal = 8.dp),
+                            contentAlignment = Alignment.CenterStart
+                        ) {
+                            BasicTextField(
+                                value = manualPort,
+                                onValueChange = onManualPortChange,
+                                singleLine = true,
+                                modifier = Modifier.fillMaxWidth(),
+                                textStyle = TextStyle(
+                                    color = OmniThemeColors.TextPrimary,
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
                             )
+                        }
+                    }
+
+                    Button(
+                        onClick = onConnect,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (isConnected) Color(0xFF059669) else Color(0xFF4F46E5)
+                        ),
+                        shape = RoundedCornerShape(8.dp),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
+                        modifier = Modifier
+                            .height(40.dp)
+                    ) {
+                        Text(
+                            text = if (isConnected) "✓ Listo" else "⚡ Conectar",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
                         )
                     }
-                }
-
-                // Botón Conectar Ancho Completo
-                Button(
-                    onClick = onConnect,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = if (isConnected) Color(0xFF059669) else Color(0xFF4F46E5)
-                    ),
-                    shape = RoundedCornerShape(12.dp),
-                    contentPadding = PaddingValues(vertical = 10.dp),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(46.dp)
-                ) {
-                    Text(
-                        text = if (isConnected) "✓ TV Conectada" else "⚡ Conectar",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = Color.White
-                    )
                 }
 
                 if (discoveredDevices.isNotEmpty()) {

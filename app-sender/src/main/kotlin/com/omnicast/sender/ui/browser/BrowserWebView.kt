@@ -101,19 +101,14 @@ fun BrowserWebView(
                             var el = e.target;
                             if (!el) return;
                             fixCaret(el);
-                            var isDm = (window.location.hostname || '').indexOf('dailymotion.com') !== -1;
-                            if (isDm) {
-                                try { window.scrollTo({ top: 0, behavior: 'instant' }); } catch(_) { window.scrollTo(0, 0); }
-                                return;
-                            }
                             if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable) {
-                                var rect = el.getBoundingClientRect();
-                                if (rect.top <= 140) return;
-                                if (rect.bottom > (window.innerHeight || 400)) {
-                                    setTimeout(function() {
-                                        try { el.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } catch(_) { el.scrollIntoView(); }
-                                    }, 150);
-                                }
+                                setTimeout(function() {
+                                    try {
+                                        el.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'smooth' });
+                                    } catch(_) {
+                                        try { el.scrollIntoView(); } catch(__) {}
+                                    }
+                                }, 50);
                             }
                         }, true);
                     })();

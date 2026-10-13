@@ -46,10 +46,12 @@ class CastMediaNotificationService : Service() {
         }
 
         fun stop(context: Context) {
-            val intent = Intent(context, CastMediaNotificationService::class.java).apply {
-                action = ACTION_STOP
+            runCatching {
+                val intent = Intent(context, CastMediaNotificationService::class.java).apply {
+                    action = ACTION_STOP
+                }
+                context.startService(intent)
             }
-            context.startService(intent)
         }
     }
 

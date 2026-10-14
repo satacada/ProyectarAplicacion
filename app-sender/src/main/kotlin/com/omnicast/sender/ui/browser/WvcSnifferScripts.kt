@@ -152,6 +152,11 @@ object WvcSnifferScripts {
                         console.log('$consolePrefix' + JSON.stringify({type:'video', src:isrc, title:document.title}));
                     }
                 }
+                if (window.__omniCapturedMedia && window.__omniCapturedMedia.length > 0) {
+                    for (var m = 0; m < window.__omniCapturedMedia.length; m++) {
+                        console.log('$consolePrefix' + JSON.stringify({type: m === 0 ? 'videoPlaying' : 'video', video: window.__omniCapturedMedia[m], src: window.__omniCapturedMedia[m], title: document.title}));
+                    }
+                }
             } catch(_) {}
         })();
     """.trimIndent()

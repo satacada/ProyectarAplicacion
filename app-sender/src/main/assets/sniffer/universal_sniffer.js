@@ -120,8 +120,18 @@
 
     // 5. Intercepción de Fetch y XHR con registro de Token Fresco en Tiempo Real
     window.__omniActiveLiveStream = window.__omniActiveLiveStream || null;
+    window.__omniCapturedMedia = window.__omniCapturedMedia || [];
+    function recordCapturedMedia(u) {
+        if (!u || typeof u !== 'string') return;
+        if (!isMediaUrl(u)) return;
+        if (window.__omniCapturedMedia.indexOf(u) === -1) {
+            window.__omniCapturedMedia.unshift(u);
+            if (window.__omniCapturedMedia.length > 25) window.__omniCapturedMedia.pop();
+        }
+    }
     function updateLiveStreamIfFresher(u) {
         if (!u || typeof u !== 'string') return;
+        recordCapturedMedia(u);
         if (u.indexOf('.m3u8') !== -1 || u.indexOf('/hls') !== -1 || u.indexOf('.mpd') !== -1) {
             window.__omniActiveLiveStream = { url: u, timestamp: Date.now() };
         }
@@ -161,12 +171,15 @@
             var vids = document.getElementsByTagName('video');
             for (var vi = 0; vi < vids.length; vi++) {
                 var v = vids[vi];
-                if (v && !v.paused && v.currentSrc && isMediaUrl(v.currentSrc)) {
+                if (v && v.currentSrc && isMediaUrl(v.currentSrc)) {
                     return v.currentSrc;
                 }
             }
-            if (window.__omniActiveLiveStream && (Date.now() - window.__omniActiveLiveStream.timestamp < 120000)) {
+            if (window.__omniActiveLiveStream && (Date.now() - window.__omniActiveLiveStream.timestamp < 180000)) {
                 return window.__omniActiveLiveStream.url;
+            }
+            if (window.__omniCapturedMedia && window.__omniCapturedMedia.length > 0) {
+                return window.__omniCapturedMedia[0];
             }
         } catch(e) {}
         return null;
@@ -223,6 +236,11 @@
                 var s = v.currentSrc || v.src;
                 if (s && isMediaUrl(s)) {
                     reportMedia(s, document.title, v.duration || 0, !v.paused);
+                }
+            }
+            if (window.__omniCapturedMedia && window.__omniCapturedMedia.length > 0) {
+                for (var ci = 0; ci < window.__omniCapturedMedia.length; ci++) {
+                    reportMedia(window.__omniCapturedMedia[ci], document.title, 0, ci === 0);
                 }
             }
             if (typeof window.ibFindAllVideos === 'function') {

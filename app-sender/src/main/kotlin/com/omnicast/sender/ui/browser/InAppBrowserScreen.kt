@@ -258,6 +258,7 @@ fun InAppBrowserScreen(
                             detectedStreams.clear(); streamHeaders.clear(); streamLabels.clear(); streamDurations.clear(); qualityOptions = emptyList()
                             ActiveStreamHolder.clearDetectedStream()
                             webViewInstance?.let { wv ->
+                                checkPlatformUrls(currentUrl, pageTitle)
                                 wv.evaluateJavascript(WvcSnifferScripts.buildAggressiveRescanScript(WvcDomSniffer.CONSOLE_PREFIX), null)
                                 wv.evaluateJavascript("window.__omniGetLiveStream ? window.__omniGetLiveStream() : null") { res ->
                                     val clean = res?.replace("\"", "")?.trim() ?: ""

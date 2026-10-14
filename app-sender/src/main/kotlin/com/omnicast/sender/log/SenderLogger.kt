@@ -24,7 +24,7 @@ object SenderLogger {
     private const val MAX_LOGS = 500
     private val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.US)
 
-    private var appVersion: String = "v3.32.32"
+    private var appVersion: String = "v3.32.33"
     private var deviceModel: String = "${Build.MANUFACTURER} ${Build.MODEL}"
     private var androidVersion: String = "Android ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})"
     private var isInitialized = false

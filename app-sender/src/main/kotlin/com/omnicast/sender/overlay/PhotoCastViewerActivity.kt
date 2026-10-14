@@ -102,14 +102,14 @@ class PhotoCastViewerActivity : ComponentActivity() {
         }
 
         val prefs = getSharedPreferences("omnicast_prefs", Context.MODE_PRIVATE)
-        val ip = prefs.getString("saved_tv_ip", "192.168.0.136") ?: "192.168.0.136"
+        val ip = prefs.getString("saved_tv_ip", null)?.takeIf { it.isNotBlank() }
         val port = prefs.getInt("saved_tv_port", 8088)
 
         lifecycleScope.launch(Dispatchers.IO) {
             signalingClient = SignalingClientHolder.get()
-            if (signalingClient?.isConnected != true) {
+            if (signalingClient?.isConnected != true && ip != null) {
                 signalingClient?.connect(ip, port, { transmitCurrentPhoto() }, {})
-            } else {
+            } else if (signalingClient?.isConnected == true) {
                 transmitCurrentPhoto()
             }
             signalingClient?.messages?.collect { msg ->
@@ -164,7 +164,7 @@ class PhotoCastViewerActivity : ComponentActivity() {
             client.sendMessage(msg)
         } else {
             val prefs = getSharedPreferences("omnicast_prefs", Context.MODE_PRIVATE)
-            val ip = prefs.getString("saved_tv_ip", "192.168.0.136") ?: "192.168.0.136"
+            val ip = prefs.getString("saved_tv_ip", null)?.takeIf { it.isNotBlank() } ?: return
             val port = prefs.getInt("saved_tv_port", 8088)
             client.connect(ip, port, { client.sendMessage(msg) }, {})
         }

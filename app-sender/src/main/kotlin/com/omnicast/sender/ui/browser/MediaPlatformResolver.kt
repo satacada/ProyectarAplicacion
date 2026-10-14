@@ -50,9 +50,25 @@ object MediaPlatformResolver {
                             "Sec-Fetch-Site" to "cross-site"
                         )
                         if (combinedCookie.isNotBlank()) hdrs["Cookie"] = combinedCookie
-                        Log.i(TAG, "🎬 Dailymotion resuelto con éxito ($videoId): $title -> $streamUrl")
-                        withContext(Dispatchers.Main) {
-                            onResolved(streamUrl, title, hdrs)
+                        var isReachable = true
+                        try {
+                            val testConn = (URL(streamUrl).openConnection() as HttpURLConnection).apply {
+                                connectTimeout = 2500
+                                readTimeout = 2500
+                                requestMethod = "GET"
+                                hdrs.forEach { (k, v) -> setRequestProperty(k, v) }
+                            }
+                            val rCode = testConn.responseCode
+                            val isHtml = testConn.contentType?.lowercase()?.contains("text/html") == true
+                            if (rCode !in 200..299 || isHtml) isReachable = false
+                            testConn.disconnect()
+                        } catch (_: Throwable) { isReachable = false }
+
+                        if (isReachable) {
+                            Log.i(TAG, "🎬 Dailymotion resuelto y verificado ($videoId): $title -> $streamUrl")
+                            withContext(Dispatchers.Main) { onResolved(streamUrl, title, hdrs) }
+                        } else {
+                            Log.w(TAG, "⚠️ Dailymotion cdndirector protegido o bloqueado (403/HTML). Se usarán flujos directos CDN.")
                         }
                     }
                 }

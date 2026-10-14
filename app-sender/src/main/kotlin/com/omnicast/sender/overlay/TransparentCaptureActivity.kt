@@ -1,4 +1,4 @@
-﻿package com.omnicast.sender.overlay
+package com.omnicast.sender.overlay
 
 import android.app.Activity
 import android.content.Context
@@ -23,7 +23,11 @@ class TransparentCaptureActivity : ComponentActivity() {
     ) { result ->
         if (result.resultCode == Activity.RESULT_OK && result.data != null) {
             val prefs = getSharedPreferences("omnicast_prefs", Context.MODE_PRIVATE)
-            val ip = prefs.getString("saved_tv_ip", "192.168.0.136")?.takeIf { it.isNotBlank() && it != "192.168.1.100" } ?: "192.168.0.136"
+            val ip = prefs.getString("saved_tv_ip", "")?.takeIf { it.isNotBlank() && it != "192.168.1.100" }
+            if (ip == null) {
+                Toast.makeText(this, "⚠️ Conecta la TV Box antes de proyectar", Toast.LENGTH_SHORT).show()
+                finish(); return@registerForActivityResult
+            }
             val port = prefs.getInt("saved_tv_port", 8088)
             val target = DeviceTarget("direct-tv", "OmniCast TV Box", ip, port)
 

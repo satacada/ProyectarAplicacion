@@ -33,10 +33,13 @@ object BrowserUrlHelper {
 
     fun isPlayableStream(url: String): Boolean {
         if (url.isBlank()) return false
-        val lower = url.lowercase()
-        if (lower.contains("dmxleo.dailymotion.com") || lower.contains("geo.dailymotion.com")) return false
-        val isWebPage = (lower.contains("dailymotion.com/video/") || lower.contains("ok.ru/video/")) &&
-                        !lower.contains(".m3u8") && !lower.contains(".mpd") && !lower.contains(".mp4") && !lower.contains("cmd=video")
+        val lower = url.lowercase().substringBefore('?')
+        if (lower.endsWith(".html") || lower.endsWith(".htm") || lower.endsWith(".php") || lower.endsWith(".jsp")) return false
+        val fullLower = url.lowercase()
+        if (fullLower.contains("dmxleo.dailymotion.com") || fullLower.contains("geo.dailymotion.com")) return false
+        if (fullLower.contains("/embed/") || fullLower.contains("/embed69") || fullLower.contains("/widget/")) return false
+        val isWebPage = (fullLower.contains("dailymotion.com/video/") || fullLower.contains("ok.ru/video/")) &&
+                        !fullLower.contains(".m3u8") && !fullLower.contains(".mpd") && !fullLower.contains(".mp4") && !fullLower.contains("cmd=video")
         if (isWebPage) return false
         return com.omnicast.sender.ui.browser.extractors.StreamExtractorRegistry.useCase.isStreamCandidate(url)
     }

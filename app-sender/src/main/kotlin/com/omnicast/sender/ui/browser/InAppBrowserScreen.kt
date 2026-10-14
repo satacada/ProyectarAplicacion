@@ -76,6 +76,8 @@ fun InAppBrowserScreen(
 
     fun isRealMedia(s: String): Boolean {
         if (s.isBlank() || s.contains("dmxleo.dailymotion.com") || AdBlocker.isAd(s)) return false
+        val clean = s.substringBefore('?').lowercase()
+        if (clean.endsWith(".html") || clean.endsWith(".htm") || clean.endsWith(".php") || clean.endsWith(".jsp") || clean.endsWith(".js") || clean.endsWith(".css")) return false
         val isWeb = (s.contains("dailymotion.com/video/") || s.contains("ok.ru/video/")) &&
                     !s.contains(".m3u8") && !s.contains(".mpd") && !s.contains(".mp4") && !s.contains("cmd=video")
         return !isWeb && (s.contains(".m3u8", true) || s.contains(".mp4", true) || s.contains(".mpd", true) ||
@@ -97,11 +99,12 @@ fun InAppBrowserScreen(
     fun registerStream(url: String, hdrs: Map<String, String>, isPrimary: Boolean = false, label: String? = null) {
         if (url.isBlank() || AdBlocker.isAd(url) || !isRealMedia(url)) return
         if (detectedStreams.contains(url)) detectedStreams.remove(url)
-        detectedStreams.add(0, url)
+        if (isPrimary) detectedStreams.add(0, url) else detectedStreams.add(url)
         if (hdrs.isNotEmpty()) streamHeaders[url] = hdrs; if (!label.isNullOrBlank()) streamLabels[url] = label
-        val primaryUrl = detectedStreams.firstOrNull() ?: url
+        val primaryUrl = detectedStreams.firstOrNull { isRealMedia(it) } ?: url
         val cleanT = if (pageTitle.isNotBlank() && pageTitle != "Cargando..." && pageTitle != "Transmisión") pageTitle else "Video Web"
         ActiveStreamHolder.update(primaryUrl, cleanT, streamHeaders[primaryUrl] ?: hdrs); showBottomControls = true
+        android.util.Log.i("StreamDetection", "🎬 Flujo registrado [${if (isPrimary) "PRIMARY" else "ADDED"}]: $url (Total activos: ${detectedStreams.count { isRealMedia(it) }})")
     }
 
     fun checkPlatformUrls(url: String?, title: String? = null) {
@@ -249,13 +252,16 @@ fun InAppBrowserScreen(
                         onStopCasting = { ActiveStreamHolder.stopCasting(); Toast.makeText(context, "🛑 Transmisión detenida", Toast.LENGTH_SHORT).show() },
                         onClearStreams = {
                             val cur = currentUrl
-                            detectedStreams.clear(); streamHeaders.clear(); streamLabels.clear(); streamDurations.clear(); qualityOptions = emptyList()
-                            ActiveStreamHolder.clearDetectedStream()
+                            val before = detectedStreams.size
+                            detectedStreams.retainAll { isRealMedia(it) && !it.contains("cdndirector") }
+                            qualityOptions = emptyList()
+                            val after = detectedStreams.size
+                            android.util.Log.i("StreamDetection", "⚡ Recaptura solicitada. Flujos conservados: $after (depurados: ${before - after})")
                             webViewInstance?.let { wv ->
                                 checkPlatformUrls(cur, pageTitle)
                                 wv.evaluateJavascript(WvcSnifferScripts.buildAggressiveRescanScript(WvcDomSniffer.CONSOLE_PREFIX), null)
                             }
-                            Toast.makeText(context, "⚡ Recapturando flujos activos...", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "⚡ Recapturando y sincronizando flujos...", Toast.LENGTH_SHORT).show()
                         },
                         onRescanStreams = {},
                         onSaveToPlaylist = {

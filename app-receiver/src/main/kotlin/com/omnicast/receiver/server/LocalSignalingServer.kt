@@ -49,6 +49,7 @@ class LocalSignalingServer(private val port: Int = 8088) {
             internalServer = InternalWebSocketServer(address).apply {
                 isReuseAddr = true
                 isTcpNoDelay = true
+                connectionLostTimeout = 10
                 start()
             }
             Log.i(TAG, "Servidor de señalización Java-WebSocket iniciado en 0.0.0.0:$port")

@@ -41,7 +41,7 @@ fun SenderMainScreen(
     val prefs = remember { context.getSharedPreferences("omnicast_prefs", Context.MODE_PRIVATE) }
     val devices by nsdScanner.discoveredDevices.collectAsState()
     var selectedDevice by remember { mutableStateOf<DeviceTarget?>(null) }
-    var manualIp by remember { mutableStateOf(prefs.getString("saved_tv_ip", "192.168.0.136") ?: "192.168.0.136") }
+    var manualIp by remember { mutableStateOf(prefs.getString("saved_tv_ip", "") ?: "") }
     var manualPort by remember { mutableStateOf(prefs.getInt("saved_tv_port", 8088).toString()) }
     val savedProfileName = prefs.getString("saved_stream_profile", StreamProfile.BALANCED_30FPS.mode.name)
     var selectedProfile by remember {
@@ -64,18 +64,22 @@ fun SenderMainScreen(
 
     LaunchedEffect(initialOpenBrowser) { if (initialOpenBrowser) showInAppBrowser = true }
     LaunchedEffect(initialOpenGallery) {
-        if (initialOpenGallery) {
-            context.startActivity(
-                Intent(context, com.omnicast.sender.overlay.GalleryPickerActivity::class.java).apply {
-                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                }
-            )
-        }
+        if (initialOpenGallery) context.startActivity(Intent(context, com.omnicast.sender.overlay.GalleryPickerActivity::class.java).apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) })
     }
 
     fun saveTarget(ip: String, portStr: String) {
         val port = portStr.toIntOrNull() ?: 8088
         prefs.edit().putString("saved_tv_ip", ip).putInt("saved_tv_port", port).apply()
+    }
+
+    fun clearTarget() {
+        prefs.edit().remove("saved_tv_ip").remove("saved_tv_port").apply()
+        manualIp = ""; selectedDevice = null
+        devices.firstOrNull()?.let {
+            selectedDevice = it; manualIp = it.ipAddress; manualPort = it.port.toString()
+            saveTarget(it.ipAddress, manualPort); onConnectToTv(it.ipAddress, it.port)
+        }
+        Toast.makeText(context, "🧹 IP limpiada. Auto-detectando TV...", Toast.LENGTH_SHORT).show()
     }
 
     fun getSafeCaptureIntent(): Intent {
@@ -84,13 +88,15 @@ fun SenderMainScreen(
     }
 
     LaunchedEffect(devices) {
-        if (selectedDevice == null && devices.isNotEmpty()) {
-            val first = devices.first()
-            selectedDevice = first
-            manualIp = first.ipAddress
-            manualPort = first.port.toString()
-            saveTarget(first.ipAddress, manualPort)
-            onConnectToTv(first.ipAddress, first.port)
+        if (devices.isNotEmpty()) {
+            val matching = devices.firstOrNull { it.ipAddress == manualIp }
+            if (matching != null) {
+                selectedDevice = matching
+            } else if (!isTvConnected || manualIp.isBlank()) {
+                val first = devices.first()
+                selectedDevice = first; manualIp = first.ipAddress; manualPort = first.port.toString()
+                saveTarget(first.ipAddress, manualPort); onConnectToTv(first.ipAddress, first.port)
+            }
         }
     }
 
@@ -165,25 +171,16 @@ fun SenderMainScreen(
                 // 3. IP del TV al que se conecta (TV Receptora)
                 item {
                     DeviceSelectionCard(
-                        discoveredDevices = devices,
-                        selectedDevice = selectedDevice,
-                        manualIp = manualIp,
-                        manualPort = manualPort,
-                        isConnected = isTvConnected,
-                        tooltipsEnabled = tooltipsEnabled,
+                        discoveredDevices = devices, selectedDevice = selectedDevice, manualIp = manualIp, manualPort = manualPort,
+                        isConnected = isTvConnected, tooltipsEnabled = tooltipsEnabled,
                         onManualIpChange = { manualIp = it; saveTarget(it, manualPort) },
                         onManualPortChange = { manualPort = it; saveTarget(manualIp, it) },
                         onSelectDevice = {
-                            selectedDevice = it
-                            manualIp = it.ipAddress
-                            manualPort = it.port.toString()
-                            saveTarget(it.ipAddress, manualPort)
-                            onConnectToTv(it.ipAddress, it.port)
+                            selectedDevice = it; manualIp = it.ipAddress; manualPort = it.port.toString()
+                            saveTarget(it.ipAddress, manualPort); onConnectToTv(it.ipAddress, it.port)
                         },
-                        onConnect = {
-                            saveTarget(manualIp.trim(), manualPort)
-                            onConnectToTv(manualIp.trim(), manualPort.toIntOrNull() ?: 8088)
-                        }
+                        onClearIp = { clearTarget() },
+                        onConnect = { saveTarget(manualIp.trim(), manualPort); onConnectToTv(manualIp.trim(), manualPort.toIntOrNull() ?: 8088) }
                     )
                 }
 

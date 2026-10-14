@@ -117,7 +117,8 @@ class ProjectionForegroundService : Service() {
                 }
 
                 val prefs = getSharedPreferences("omnicast_prefs", Context.MODE_PRIVATE)
-                val ip = intent.getStringExtra("EXTRA_IP") ?: prefs.getString("saved_tv_ip", "192.168.0.136") ?: "192.168.0.136"
+                val ip = intent.getStringExtra("EXTRA_IP") ?: prefs.getString("saved_tv_ip", "") ?: ""
+                if (ip.isBlank()) { stopSelf(); return START_NOT_STICKY }
                 val port = intent.getIntExtra("EXTRA_PORT", prefs.getInt("saved_tv_port", 8088))
                 val width = intent.getIntExtra("EXTRA_WIDTH", 1920)
                 val height = intent.getIntExtra("EXTRA_HEIGHT", 1280)

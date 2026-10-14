@@ -99,7 +99,7 @@ class FloatingIndicatorService : Service() {
         val ver = try { packageManager.getPackageInfo(packageName, 0).versionName } catch (_: Throwable) { "3.32" }
         val pillText = TextView(this).apply { text = "OmniCast v$ver"; setTextColor(Color.WHITE); setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f); typeface = Typeface.DEFAULT_BOLD }
         val prefs = getSharedPreferences("omnicast_prefs", Context.MODE_PRIVATE)
-        val tvIp = prefs.getString("saved_tv_ip", "192.168.0.136") ?: "192.168.0.136"
+        val tvIp = prefs.getString("saved_tv_ip", "Desconectado")?.takeIf { it.isNotBlank() } ?: "Desconectado"
         val statusFeedbackText = TextView(this).apply {
             text = "TV: $tvIp"
             setTextColor(Color.parseColor("#94A3B8"))

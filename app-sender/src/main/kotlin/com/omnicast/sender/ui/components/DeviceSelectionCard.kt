@@ -34,6 +34,7 @@ fun DeviceSelectionCard(
     onManualIpChange: (String) -> Unit,
     onManualPortChange: (String) -> Unit,
     onSelectDevice: (DeviceTarget) -> Unit,
+    onClearIp: () -> Unit = {},
     onConnect: () -> Unit = {}
 ) {
     OmniTooltip(
@@ -155,13 +156,22 @@ fun DeviceSelectionCard(
                                 value = manualIp,
                                 onValueChange = onManualIpChange,
                                 singleLine = true,
-                                modifier = Modifier.fillMaxWidth(),
+                                modifier = Modifier.weight(1f),
                                 textStyle = TextStyle(
                                     color = OmniThemeColors.TextPrimary,
                                     fontSize = 13.sp,
                                     fontWeight = FontWeight.Bold
                                 )
                             )
+                            if (manualIp.isNotBlank()) {
+                                Text(
+                                    "✕",
+                                    color = Color(0xFFEF4444),
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.clickable { onClearIp() }.padding(horizontal = 4.dp)
+                                )
+                            }
                         }
                     }
 

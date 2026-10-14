@@ -35,8 +35,6 @@ object StreamQualityDetector {
         }
 
         val safeHeaders = BrowserUrlHelper.buildSafeHeaders(mediaUrl, "https://www.dailymotion.com", UA_MOBILE, headers)
-        // Siempre incluimos la opción Adaptativa con el Master Playlist original
-        options.add(StreamQualityOption("⚡ ${prefix}Adaptativa Automática", "Auto", "Adaptativa", mediaUrl, isMaster = true, isSuggested = true))
 
         try {
             var currentUrlStr = mediaUrl
@@ -58,8 +56,11 @@ object StreamQualityDetector {
                     break
                 }
             }
-            if (conn != null && conn.responseCode in 200..299) {
-                val reader = BufferedReader(InputStreamReader(conn.inputStream))
+            val respCode = conn?.responseCode ?: -1
+            val cType = conn?.contentType?.lowercase() ?: ""
+            if (respCode in 200..299 && !cType.contains("text/html")) {
+                options.add(StreamQualityOption("⚡ ${prefix}Adaptativa Automática", "Auto", "Adaptativa", mediaUrl, isMaster = true, isSuggested = true))
+                val reader = BufferedReader(InputStreamReader(conn!!.inputStream))
                 var line: String?
                 var pendingInf: String? = null
                 val baseUri = URI(currentUrlStr)
@@ -88,6 +89,8 @@ object StreamQualityDetector {
                 }
                 reader.close()
                 conn.disconnect()
+            } else {
+                android.util.Log.w("StreamQualityDetector", "⚠️ Flujo descartado (HTTP $respCode, Content-Type: $cType): $mediaUrl")
             }
         } catch (e: Throwable) {
             android.util.Log.w("StreamQualityDetector", "No se pudo leer playlist HLS: ${e.message}")

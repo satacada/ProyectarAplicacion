@@ -61,14 +61,11 @@ class SenderMainActivity : ComponentActivity() {
                 com.omnicast.sender.overlay.FloatingIndicatorService.stop(context)
                 com.omnicast.sender.service.CastMediaNotificationService.stop(context)
                 com.omnicast.sender.service.ProjectionForegroundService.stopService(context)
-                com.omnicast.sender.stream.ActiveStreamHolder.clear()
-                com.omnicast.sender.stream.ActiveStreamHolder.stopCasting()
+                com.omnicast.sender.stream.ActiveStreamHolder.clear(); com.omnicast.sender.stream.ActiveStreamHolder.stopCasting()
                 sendDisconnectStatic(context)
                 (context.getSystemService(Context.NOTIFICATION_SERVICE) as? android.app.NotificationManager)?.cancelAll()
                 instance?.let { act -> act.runOnUiThread { act.finishAffinity() } }
-            } catch (e: Throwable) {
-                Log.e("Sender", "exitCompletely", e)
-            }
+            } catch (e: Throwable) { Log.e("Sender", "exitCompletely", e) }
         }
     }
 
@@ -120,12 +117,20 @@ class SenderMainActivity : ComponentActivity() {
         }
 
         lifecycleScope.launch {
-            nsdScanner.discoveredDevices.collect { list -> list.firstOrNull()?.let { connectToTv(it.ipAddress, it.port) } }
+            nsdScanner.discoveredDevices.collect { list ->
+                list.firstOrNull()?.let { dev ->
+                    val curIp = getSharedPreferences("omnicast_prefs", Context.MODE_PRIVATE).getString("saved_tv_ip", "") ?: ""
+                    Log.i("TvConnection", "🔍 TV detectada por NSD: ${dev.name} (${dev.ipAddress}:${dev.port})")
+                    if (!isTvConnected.value || curIp.isBlank() || curIp != dev.ipAddress) {
+                        connectToTv(dev.ipAddress, dev.port)
+                    }
+                }
+            }
         }
 
         com.omnicast.sender.media.LocalImageServer.start(this)
         val prefs = getSharedPreferences("omnicast_prefs", Context.MODE_PRIVATE)
-        connectToTv(prefs.getString("saved_tv_ip", "192.168.0.136") ?: "192.168.0.136", prefs.getInt("saved_tv_port", 8088))
+        prefs.getString("saved_tv_ip", null)?.takeIf { it.isNotBlank() }?.let { connectToTv(it, prefs.getInt("saved_tv_port", 8088)) }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && Settings.canDrawOverlays(this)) {
             FloatingIndicatorService.start(this)
@@ -142,7 +147,7 @@ class SenderMainActivity : ComponentActivity() {
         resetInactivityTimer()
         if (signalingClient?.isConnected != true) {
             val prefs = getSharedPreferences("omnicast_prefs", Context.MODE_PRIVATE)
-            connectToTv(prefs.getString("saved_tv_ip", "192.168.0.136") ?: "192.168.0.136", prefs.getInt("saved_tv_port", 8088))
+            prefs.getString("saved_tv_ip", null)?.takeIf { it.isNotBlank() }?.let { connectToTv(it, prefs.getInt("saved_tv_port", 8088)) }
         }
     }
 
@@ -174,24 +179,22 @@ class SenderMainActivity : ComponentActivity() {
         if (intent?.getBooleanExtra("EXTRA_START_MIRRORING_AUTO", false) == true) {
             intent.removeExtra("EXTRA_START_MIRRORING_AUTO"); autoPromptCapture.value = true
         }
-        if (intent?.getBooleanExtra("EXTRA_OPEN_BROWSER", false) == true) {
-            intent.removeExtra("EXTRA_OPEN_BROWSER"); openBrowserDirectly.value = true
-        }
-        if (intent?.getBooleanExtra("EXTRA_OPEN_GALLERY", false) == true) {
-            intent.removeExtra("EXTRA_OPEN_GALLERY"); openGalleryDirectly.value = true
-        }
+        if (intent?.getBooleanExtra("EXTRA_OPEN_BROWSER", false) == true) { intent.removeExtra("EXTRA_OPEN_BROWSER"); openBrowserDirectly.value = true }
+        if (intent?.getBooleanExtra("EXTRA_OPEN_GALLERY", false) == true) { intent.removeExtra("EXTRA_OPEN_GALLERY"); openGalleryDirectly.value = true }
     }
 
     fun connectToTv(ipAddress: String, port: Int) {
+        if (ipAddress.isBlank()) return
         try {
             signalingClient.connect(ipAddress, port, {
-                isTvConnected.value = true
-                resetInactivityTimer()
+                isTvConnected.value = true; resetInactivityTimer()
+                getSharedPreferences("omnicast_prefs", Context.MODE_PRIVATE).edit().putString("saved_tv_ip", ipAddress).putInt("saved_tv_port", port).apply()
+                Log.i("TvConnection", "🟢 Conectado con TV: $ipAddress:$port")
                 signalingClient.sendMessage(SignalingMessage.SyncPlaylists(playlistManager.getRawJson()))
                 listenToPlaybackStatus()
                 if (!isFinishing && !isDestroyed) Toast.makeText(this@SenderMainActivity, "🟢 Conectado con TV ($ipAddress)", Toast.LENGTH_SHORT).show()
             }, {
-                isTvConnected.value = false
+                isTvConnected.value = false; Log.w("TvConnection", "🔴 Desconectado de TV: $ipAddress:$port")
                 if (!ProjectionForegroundService.isProjecting) {
                     ActiveStreamHolder.stopCasting()
                     com.omnicast.sender.service.CastMediaNotificationService.stop(this@SenderMainActivity)
@@ -235,12 +238,7 @@ class SenderMainActivity : ComponentActivity() {
     }
 
     private fun handleIncomingSharedIntent(intent: Intent) {
-        SharedIntentHandler.handle(
-            context = this, intent = intent, clipboardExtractor = clipboardExtractor,
-            onSendStream = { u, t -> sendDirectStreamToTv(u, t) },
-            onSendImage = { u, t -> sendImageToTv(u, t) },
-            onMoveToBack = { moveTaskToBack(true) }
-        )
+        SharedIntentHandler.handle(this, intent, clipboardExtractor, { u, t -> sendDirectStreamToTv(u, t) }, { u, t -> sendImageToTv(u, t) }, { moveTaskToBack(true) })
     }
 
     fun sendDirectStreamToTv(url: String, title: String? = null, headers: Map<String, String> = emptyMap(), resumePositionMs: Long? = null) {
@@ -272,8 +270,8 @@ class SenderMainActivity : ComponentActivity() {
     private fun sendSignalingMessage(msg: SignalingMessage) {
         val client = signalingClient
         if (client.isConnected) client.sendMessage(msg) else {
-            val prefs = getSharedPreferences("omnicast_prefs", Context.MODE_PRIVATE)
-            client.connect(prefs.getString("saved_tv_ip", "192.168.0.136") ?: "192.168.0.136", prefs.getInt("saved_tv_port", 8088), { client.sendMessage(msg) }, {})
+            val ip = getSharedPreferences("omnicast_prefs", Context.MODE_PRIVATE).getString("saved_tv_ip", "") ?: ""
+            if (ip.isNotBlank()) client.connect(ip, 8088, { client.sendMessage(msg) }, {})
         }
     }
 

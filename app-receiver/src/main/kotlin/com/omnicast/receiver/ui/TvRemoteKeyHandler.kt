@@ -36,6 +36,11 @@ object TvRemoteKeyHandler {
                         keyCode == KeyEvent.KEYCODE_MEDIA_STOP ||
                         keyCode == KeyEvent.KEYCODE_DEL
         if (isExitKey && currentState !is ReceiverUiState.Standby) {
+            val pv = exoPlayerManager.playerView
+            if (currentState is ReceiverUiState.DirectStreamPlaying && pv != null && pv.isControllerFullyVisible) {
+                pv.hideController()
+                return true
+            }
             digitalAudioReceiver?.stop(); exoPlayerManager.stop("Mando TV (Atrás/Stop)"); webRtcReceiver.resetConnection()
             onResetToStandby()
             return true
@@ -52,32 +57,46 @@ object TvRemoteKeyHandler {
 
         when (currentState) {
             is ReceiverUiState.DirectStreamPlaying -> {
+                val pv = exoPlayerManager.playerView
+                if (pv != null && pv.isControllerFullyVisible && event != null) {
+                    if (pv.dispatchKeyEvent(event)) return true
+                }
+
                 when (keyCode) {
-                    KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER,
+                    KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER -> {
+                        if (pv != null && !pv.isControllerFullyVisible) {
+                            pv.showController()
+                            return true
+                        }
+                        if (exoPlayerManager.isPlaying) exoPlayerManager.pause() else exoPlayerManager.resume()
+                        pv?.showController()
+                        return true
+                    }
                     KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE, KeyEvent.KEYCODE_MEDIA_PLAY, KeyEvent.KEYCODE_MEDIA_PAUSE,
                     KeyEvent.KEYCODE_SPACE -> {
-                        if (exoPlayerManager.isPlaying) {
-                            exoPlayerManager.pause()
-                            Toast.makeText(context, "⏸️ Pausado", Toast.LENGTH_SHORT).show()
-                        } else {
-                            exoPlayerManager.resume()
-                            Toast.makeText(context, "▶️ Reproduciendo", Toast.LENGTH_SHORT).show()
-                        }
+                        if (exoPlayerManager.isPlaying) exoPlayerManager.pause() else exoPlayerManager.resume()
+                        pv?.showController()
                         return true
                     }
                     KeyEvent.KEYCODE_DPAD_RIGHT, KeyEvent.KEYCODE_MEDIA_FAST_FORWARD, KeyEvent.KEYCODE_MEDIA_NEXT -> {
                         val newPos = (exoPlayerManager.currentPositionMs + 10_000L).coerceAtMost(exoPlayerManager.durationMs)
                         exoPlayerManager.seekTo(newPos)
-                        Toast.makeText(context, "⏩ +10s", Toast.LENGTH_SHORT).show()
+                        pv?.showController()
                         return true
                     }
                     KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.KEYCODE_MEDIA_REWIND, KeyEvent.KEYCODE_MEDIA_PREVIOUS -> {
                         val newPos = (exoPlayerManager.currentPositionMs - 10_000L).coerceAtLeast(0L)
                         exoPlayerManager.seekTo(newPos)
-                        Toast.makeText(context, "⏪ -10s", Toast.LENGTH_SHORT).show()
+                        pv?.showController()
                         return true
                     }
-                    KeyEvent.KEYCODE_DPAD_UP, KeyEvent.KEYCODE_DPAD_DOWN, KeyEvent.KEYCODE_MENU -> {
+                    KeyEvent.KEYCODE_DPAD_UP, KeyEvent.KEYCODE_DPAD_DOWN -> {
+                        if (pv != null && !pv.isControllerFullyVisible) {
+                            pv.showController()
+                            return true
+                        }
+                    }
+                    KeyEvent.KEYCODE_MENU -> {
                         exoPlayerManager.toggleResizeMode()
                         val mode = exoPlayerManager.aspectRatioHelper.currentMode.value
                         Toast.makeText(context, "📺 Escala: ${mode.label}", Toast.LENGTH_SHORT).show()

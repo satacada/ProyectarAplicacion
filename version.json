@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 83,
-  "versionCodeReceiver": 66,
-  "versionName": "3.32.38",
-  "releaseTag": "v3.32.38",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.38/omnicast-sender-v3.32.38.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.38/omnicast-receiver-v3.32.38.apk",
-  "changelog": "v3.32.38: Corrección crítica de cierres en TV; blindado NSD para no interrumpir conexiones activas ni enviar STOP ante desconexiones de red; cabeceras seguras para fastream.to y feedback visual de error de servidor."
+  "versionCodeSender": 84,
+  "versionCodeReceiver": 67,
+  "versionName": "3.32.39",
+  "releaseTag": "v3.32.39",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.39/omnicast-sender-v3.32.39.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.39/omnicast-receiver-v3.32.39.apk",
+  "changelog": "v3.32.39: Controles multimedia de ExoPlayer en TV accesibles con tecla OK del mando; línea de tiempo interactiva con punto/scrubber para adelantar y retroceder; blindado el botón de salir para no robar foco D-pad."
 }

@@ -265,10 +265,10 @@ class TvReceiverActivity : ComponentActivity() {
     private fun extractYouTubeId(url: String): String? =
         Regex("(?:watch\\?v=|shorts/|youtu\\.be/|embed/)([a-zA-Z0-9_-]{11})").find(url)?.groupValues?.get(1)
 
-    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
-        if (TvRemoteKeyHandler.handleKeyDown(
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        if (event.action == KeyEvent.ACTION_DOWN && TvRemoteKeyHandler.handleKeyDown(
                 context = this,
-                keyCode = keyCode,
+                keyCode = event.keyCode,
                 event = event,
                 currentState = receiverState.value, exoPlayerManager = exoPlayerManager,
                 webRtcReceiver = webRtcReceiver, digitalAudioReceiver = digitalAudioReceiver,
@@ -276,7 +276,7 @@ class TvReceiverActivity : ComponentActivity() {
                 sendSignaling = { lifecycleScope.launch { signalingServer.sendMessage(it) } },
                 onResetToStandby = { receiverState.value = ReceiverUiState.Standby }
             )) return true
-        return super.onKeyDown(keyCode, event)
+        return super.dispatchKeyEvent(event)
     }
 
     private fun playHistoryItem(item: com.omnicast.receiver.directstream.TvHistoryItem) {

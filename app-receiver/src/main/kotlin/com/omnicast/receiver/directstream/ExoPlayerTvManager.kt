@@ -25,6 +25,7 @@ class ExoPlayerTvManager(private val context: Context) {
     }
 
     var player: ExoPlayer? = null; private set
+    var playerView: androidx.media3.ui.PlayerView? = null
     var trackManager: TvTrackManager? = null; private set
     var onTracksChanged: ((com.omnicast.core.protocol.SignalingMessage.TracksInfo) -> Unit)? = null
     var onPlaybackFailed: (() -> Unit)? = null
@@ -276,5 +277,5 @@ class ExoPlayerTvManager(private val context: Context) {
         player?.stop()
         player?.clearMediaItems()
     }
-    fun release() { stop("release"); player?.release(); player = null; TvMediaCacheManager.release() }
+    fun release() { stop("release"); playerView = null; player?.release(); player = null; TvMediaCacheManager.release() }
 }

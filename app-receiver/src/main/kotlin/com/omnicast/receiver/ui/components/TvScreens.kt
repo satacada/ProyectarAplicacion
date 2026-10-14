@@ -1,6 +1,7 @@
 package com.omnicast.receiver.ui.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
@@ -202,13 +203,14 @@ fun TvDirectStreamScreen(
         contentAlignment = Alignment.Center
     ) {
         // Botón en pantalla pequeño y no invasivo para salir a la principal de OmniCast
-        androidx.compose.material3.IconButton(
-            onClick = onCloseClick,
+        Box(
             modifier = Modifier
                 .align(Alignment.TopStart)
                 .padding(start = 24.dp, top = 24.dp)
                 .size(38.dp)
                 .background(Color(0x990F172A), RoundedCornerShape(10.dp))
+                .clickable { onCloseClick() },
+            contentAlignment = Alignment.Center
         ) {
             Text("🚪", fontSize = 18.sp)
         }
@@ -221,6 +223,7 @@ fun TvDirectStreamScreen(
             onDispose {
                 exoPlayerManager.onResizeModeChanged = null
                 exoPlayerManager.onZoomChanged = null
+                exoPlayerManager.playerView = null
             }
         }
         if (player != null) {
@@ -229,6 +232,8 @@ fun TvDirectStreamScreen(
                     androidx.media3.ui.PlayerView(ctx).apply {
                         this.player = player
                         useController = true
+                        controllerShowTimeoutMs = 5000
+                        controllerAutoShow = true
                         resizeMode = currentResizeMode.value
                         subtitleView?.visibility = android.view.View.VISIBLE
                         setShowBuffering(androidx.media3.ui.PlayerView.SHOW_BUFFERING_ALWAYS)
@@ -236,6 +241,9 @@ fun TvDirectStreamScreen(
                             android.view.ViewGroup.LayoutParams.MATCH_PARENT,
                             android.view.ViewGroup.LayoutParams.MATCH_PARENT
                         )
+                        exoPlayerManager.playerView = this
+                        isFocusable = true
+                        isFocusableInTouchMode = true
                     }
                 },
                 update = { pv ->

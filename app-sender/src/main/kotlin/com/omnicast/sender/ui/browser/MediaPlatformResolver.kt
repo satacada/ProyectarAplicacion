@@ -31,6 +31,7 @@ object MediaPlatformResolver {
                     setRequestProperty("Referer", "https://www.dailymotion.com/")
                 }
                 if (conn.responseCode == 200) {
+                    val cookieHeader = conn.headerFields["Set-Cookie"]?.joinToString("; ") { it.substringBefore(";") }
                     val body = conn.inputStream.bufferedReader().use { it.readText() }
                     val json = JSONObject(body)
                     val title = json.optString("title").takeIf { it.isNotBlank() }
@@ -38,7 +39,9 @@ object MediaPlatformResolver {
                     val autoArr = qualities?.optJSONArray("auto")
                     val streamUrl = autoArr?.optJSONObject(0)?.optString("url")
                     if (!streamUrl.isNullOrBlank()) {
-                        val hdrs = mapOf(
+                        val cookieMgr = runCatching { android.webkit.CookieManager.getInstance().getCookie("https://www.dailymotion.com") }.getOrNull()
+                        val combinedCookie = listOfNotNull(cookieMgr, cookieHeader).filter { it.isNotBlank() }.joinToString("; ")
+                        val hdrs = mutableMapOf(
                             "Referer" to "https://www.dailymotion.com/",
                             "Origin" to "https://www.dailymotion.com",
                             "User-Agent" to UA_MOBILE,
@@ -46,6 +49,7 @@ object MediaPlatformResolver {
                             "Sec-Fetch-Dest" to "empty",
                             "Sec-Fetch-Site" to "cross-site"
                         )
+                        if (combinedCookie.isNotBlank()) hdrs["Cookie"] = combinedCookie
                         Log.i(TAG, "🎬 Dailymotion resuelto con éxito ($videoId): $title -> $streamUrl")
                         withContext(Dispatchers.Main) {
                             onResolved(streamUrl, title, hdrs)

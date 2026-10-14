@@ -34,35 +34,47 @@ object StreamQualityDetector {
             return@withContext listOf(StreamQualityOption(label, "Nativa", "Original", mediaUrl))
         }
 
+        val safeHeaders = BrowserUrlHelper.buildSafeHeaders(mediaUrl, "https://www.dailymotion.com", UA_MOBILE, headers)
         // Siempre incluimos la opción Adaptativa con el Master Playlist original
-        options.add(StreamQualityOption("⚡ ${prefix}Adaptativa Automática", "Auto", "Adaptativa", mediaUrl, isMaster = true))
+        options.add(StreamQualityOption("⚡ ${prefix}Adaptativa Automática", "Auto", "Adaptativa", mediaUrl, isMaster = true, isSuggested = true))
 
         try {
-            val url = URL(mediaUrl)
-            val conn = (url.openConnection() as HttpURLConnection).apply {
-                connectTimeout = 3500
-                readTimeout = 3500
-                setRequestProperty("User-Agent", headers["User-Agent"] ?: "Mozilla/5.0 (Linux; Android 14; Mobile) AppleWebKit/537.36 Chrome/124.0.0.0 Mobile Safari/537.36")
-                headers.forEach { (k, v) ->
-                    if (!k.equals("User-Agent", ignoreCase = true)) setRequestProperty(k, v)
+            var currentUrlStr = mediaUrl
+            var conn: HttpURLConnection? = null
+            for (redirect in 0..3) {
+                val url = URL(currentUrlStr)
+                conn = (url.openConnection() as HttpURLConnection).apply {
+                    connectTimeout = 3500
+                    readTimeout = 3500
+                    instanceFollowRedirects = false
+                    safeHeaders.forEach { (k, v) -> setRequestProperty(k, v) }
+                }
+                val code = conn.responseCode
+                if (code in listOf(301, 302, 303, 307, 308)) {
+                    val loc = conn.getHeaderField("Location") ?: break
+                    currentUrlStr = try { URI(currentUrlStr).resolve(loc).toString() } catch (_: Throwable) { loc }
+                    conn.disconnect()
+                } else {
+                    break
                 }
             }
-            if (conn.responseCode in 200..299) {
+            if (conn != null && conn.responseCode in 200..299) {
                 val reader = BufferedReader(InputStreamReader(conn.inputStream))
                 var line: String?
                 var pendingInf: String? = null
-                val baseUri = URI(mediaUrl)
+                val baseUri = URI(currentUrlStr)
 
                 while (reader.readLine().also { line = it } != null) {
                     val trimmed = line!!.trim()
                     if (trimmed.startsWith("#EXT-X-STREAM-INF:")) {
                         pendingInf = trimmed
                     } else if (pendingInf != null && trimmed.isNotBlank() && !trimmed.startsWith("#")) {
-                        val resolvedUrl = try { baseUri.resolve(trimmed).toString() } catch (e: Exception) { trimmed }
+                        val resolvedUrl = try { baseUri.resolve(trimmed).toString() } catch (_: Exception) { trimmed }
                         val res = extractAttr(pendingInf, "RESOLUTION") ?: "Video"
                         val bw = extractAttr(pendingInf, "BANDWIDTH")?.toLongOrNull()
-                        val bwStr = if (bw != null) "${String.format("%.1f", bw / 1_000_000.0)} Mbps" else "Variable"
+                        val bwStr = if (bw != null) "${String.format(java.util.Locale.US, "%.1f", bw / 1_000_000.0)} Mbps" else "Variable"
                         val height = res.substringAfter("x").toIntOrNull() ?: 0
+                        val resBadge = if (height > 0) "${height}p" else res
                         val name = when {
                             height >= 1080 -> "🎬 ${prefix}1080p Full HD ($bwStr)"
                             height >= 720 -> "📺 ${prefix}720p HD ($bwStr)"
@@ -70,17 +82,20 @@ object StreamQualityDetector {
                             height >= 360 -> "📱 ${prefix}360p ($bwStr)"
                             else -> "▶ ${prefix}$res ($bwStr)"
                         }
-                        options.add(StreamQualityOption(name, res, bwStr, resolvedUrl))
+                        options.add(StreamQualityOption(name, resBadge, bwStr, resolvedUrl, isMaster = false, isSuggested = false))
                         pendingInf = null
                     }
                 }
                 reader.close()
+                conn.disconnect()
             }
-            conn.disconnect()
         } catch (e: Throwable) {
             android.util.Log.w("StreamQualityDetector", "No se pudo leer playlist HLS: ${e.message}")
         }
-        return@withContext options.distinctBy { it.streamUrl }
+        return@withContext options.distinctBy { it.streamUrl }.sortedWith(
+            compareByDescending<StreamQualityOption> { it.isSuggested }
+                .thenByDescending { it.resolution.removeSuffix("p").toIntOrNull() ?: 0 }
+        )
     }
 
     private fun extractAttr(inf: String, key: String): String? {

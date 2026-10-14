@@ -31,8 +31,15 @@ object BrowserUrlHelper {
         )
     }
 
-    fun isPlayableStream(url: String): Boolean =
-        com.omnicast.sender.ui.browser.extractors.StreamExtractorRegistry.useCase.isStreamCandidate(url)
+    fun isPlayableStream(url: String): Boolean {
+        if (url.isBlank()) return false
+        val lower = url.lowercase()
+        if (lower.contains("dmxleo.dailymotion.com") || lower.contains("geo.dailymotion.com")) return false
+        val isWebPage = (lower.contains("dailymotion.com/video/") || lower.contains("ok.ru/video/")) &&
+                        !lower.contains(".m3u8") && !lower.contains(".mpd") && !lower.contains(".mp4") && !lower.contains("cmd=video")
+        if (isWebPage) return false
+        return com.omnicast.sender.ui.browser.extractors.StreamExtractorRegistry.useCase.isStreamCandidate(url)
+    }
 
     fun buildSafeHeaders(
         streamUrl: String,
@@ -49,7 +56,8 @@ object BrowserUrlHelper {
                 if (k.equals("cookie", ignoreCase = true) && v.isNotBlank()) headers["Cookie"] = v
             }
             val cookie = CookieManager.getInstance().getCookie(streamUrl)
-                ?: CookieManager.getInstance().getCookie(currentUrl) ?: ""
+                ?: CookieManager.getInstance().getCookie(currentUrl)
+                ?: (if (streamUrl.contains("dailymotion.com") || streamUrl.contains("dmcdn.net")) CookieManager.getInstance().getCookie("https://www.dailymotion.com") else null) ?: ""
             if (cookie.isNotBlank() && !headers.containsKey("Cookie")) headers["Cookie"] = cookie
 
             if (streamUrl.contains("mycdn.me", ignoreCase = true) || streamUrl.contains("okcdn.ru", ignoreCase = true) || streamUrl.contains("ok.ru", ignoreCase = true)) {

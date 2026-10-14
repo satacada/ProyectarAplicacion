@@ -19,14 +19,16 @@ class TelemetryFilterAdapter : IStreamTelemetryFilterPort {
     private val baseTelemetryKeywords = listOf(
         "videostat", "statnew", "telemetry",
         "analytics", "beacon", "heartbeat", "logger", "tracking",
-        "/ping", "/event", "report", "collect", "metric", "counter"
+        "/ping", "/event", "report", "collect", "metric", "counter",
+        "geo.dailymotion.com"
     )
 
     private val baseAdSegmentKeywords = listOf(
         "preroll", "midroll", "commercial", "/vast", "vast.",
         "stub.mp4", "dummy.mp4", "blank.mp4", "ad.mp4",
         "ad-delivery", "imasdk", "cat-bolt", "spotx", "doubleclick",
-        "/ads/", "/ad/", "popunder", "sponsor"
+        "/ads/", "/ad/", "popunder", "sponsor",
+        "dmxleo.dailymotion.com", "/vmap/"
     )
 
     override fun isTelemetryOrGarbage(url: String): Boolean {

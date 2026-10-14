@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 79,
-  "versionCodeReceiver": 62,
-  "versionName": "3.32.34",
-  "releaseTag": "v3.32.34",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.34/omnicast-sender-v3.32.34.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.34/omnicast-receiver-v3.32.34.apk",
-  "changelog": "v3.32.34: Recaptura aislada a la página actual con retención de flujos al pulsar trueno; eliminación del vaciado destructivo en videos activos y rescate automático de streams existentes."
+  "versionCodeSender": 80,
+  "versionCodeReceiver": 63,
+  "versionName": "3.32.35",
+  "releaseTag": "v3.32.35",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.35/omnicast-sender-v3.32.35.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.35/omnicast-receiver-v3.32.35.apk",
+  "changelog": "v3.32.35: Detección profunda de resoluciones HLS (1080p, 720p, 480p, 360p) y velocidad adaptativa Auto estilo WVC; sincronización exacta de contadores de flujos y eliminación del descarte erróneo de URLs de video con /video/."
 }

@@ -192,7 +192,25 @@ fun WvcVideoListItem(
                     Text(badgeText, color = badgeColor, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                 }
 
-                Spacer(Modifier.width(8.dp))
+                Spacer(Modifier.width(6.dp))
+
+                // Placa prominente de Resolución Numérica / Velocidad Automática estilo WVC
+                val resColor = if (option.resolution == "Auto") Color(0xFFF59E0B) else Color(0xFF10B981)
+                Box(
+                    modifier = Modifier
+                        .background(resColor.copy(alpha = 0.2f), RoundedCornerShape(6.dp))
+                        .border(1.dp, resColor.copy(alpha = 0.6f), RoundedCornerShape(6.dp))
+                        .padding(horizontal = 6.dp, vertical = 2.dp)
+                ) {
+                    Text(
+                        text = if (option.resolution == "Auto") "⚡ AUTO" else "📊 ${option.resolution}",
+                        color = resColor,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.ExtraBold
+                    )
+                }
+
+                Spacer(Modifier.width(6.dp))
 
                 Text(
                     option.label,
@@ -208,10 +226,11 @@ fun WvcVideoListItem(
             Spacer(Modifier.height(4.dp))
 
             Text(
-                text = if (option.resolution != "Auto") "Resolución: ${option.resolution} • ${option.bitrate}"
-                else "Adaptativo Auto (Flujo Completo)",
-                color = Color(0xFF94A3B8),
+                text = if (option.resolution == "Auto") "⚡ Calidad adaptativa según velocidad de red (Automático)"
+                else "Resolución fija: ${option.resolution} • Bitrate: ${option.bitrate}",
+                color = if (option.resolution == "Auto") Color(0xFFFDE68A) else Color(0xFF94A3B8),
                 fontSize = 11.sp,
+                fontWeight = if (option.resolution == "Auto") FontWeight.SemiBold else FontWeight.Normal,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )

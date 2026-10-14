@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 78,
-  "versionCodeReceiver": 61,
-  "versionName": "3.32.33",
-  "releaseTag": "v3.32.33",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.33/omnicast-sender-v3.32.33.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.33/omnicast-receiver-v3.32.33.apk",
-  "changelog": "v3.32.33: Recaptura garantizada en reseteo de flujos guardando streams de red capturados en memoria JS y re-resolviendo metadatos de plataformas (Dailymotion/YouTube) al pulsar el trueno."
+  "versionCodeSender": 79,
+  "versionCodeReceiver": 62,
+  "versionName": "3.32.34",
+  "releaseTag": "v3.32.34",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.34/omnicast-sender-v3.32.34.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.34/omnicast-receiver-v3.32.34.apk",
+  "changelog": "v3.32.34: Recaptura aislada a la página actual con retención de flujos al pulsar trueno; eliminación del vaciado destructivo en videos activos y rescate automático de streams existentes."
 }

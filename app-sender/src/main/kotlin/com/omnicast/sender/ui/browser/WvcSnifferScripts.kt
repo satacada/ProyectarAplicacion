@@ -131,7 +131,7 @@ object WvcSnifferScripts {
                     if (d > 0 && d < 60) continue;
                     var s = v.currentSrc || v.src;
                     if (s && s.indexOf('blob:') !== 0 && s.indexOf('data:') !== 0) {
-                        console.log('$consolePrefix' + JSON.stringify({type:'videoPlaying', video:s, title:document.title, duration:d}));
+                        console.log('$consolePrefix' + JSON.stringify({type: (!v.paused && i === 0) ? 'videoPlaying' : 'video', video: s, src: s, title: document.title, duration: d}));
                     }
                 }
                 if (typeof window.jwplayer === 'function') {
@@ -140,7 +140,7 @@ object WvcSnifferScripts {
                         for (var pi = 0; pi < pl.length; pi++) {
                             var f = pl[pi].file || (pl[pi].sources && pl[pi].sources[0] && pl[pi].sources[0].file);
                             if (f && typeof f === 'string') {
-                                console.log('$consolePrefix' + JSON.stringify({type:'video', src:f, title:pl[pi].title || document.title}));
+                                console.log('$consolePrefix' + JSON.stringify({type: 'video', src: f, title: pl[pi].title || document.title}));
                             }
                         }
                     }
@@ -149,12 +149,12 @@ object WvcSnifferScripts {
                 for (var j = 0; j < ifrs.length; j++) {
                     var isrc = ifrs[j].src || ifrs[j].getAttribute('data-src') || '';
                     if (isrc && (isrc.indexOf('.m3u8') !== -1 || isrc.indexOf('.mp4') !== -1 || isrc.indexOf('/stream/') !== -1)) {
-                        console.log('$consolePrefix' + JSON.stringify({type:'video', src:isrc, title:document.title}));
+                        console.log('$consolePrefix' + JSON.stringify({type: 'video', src: isrc, title: document.title}));
                     }
                 }
                 if (window.__omniCapturedMedia && window.__omniCapturedMedia.length > 0) {
                     for (var m = 0; m < window.__omniCapturedMedia.length; m++) {
-                        console.log('$consolePrefix' + JSON.stringify({type: m === 0 ? 'videoPlaying' : 'video', video: window.__omniCapturedMedia[m], src: window.__omniCapturedMedia[m], title: document.title}));
+                        console.log('$consolePrefix' + JSON.stringify({type: 'video', video: window.__omniCapturedMedia[m], src: window.__omniCapturedMedia[m], title: document.title}));
                     }
                 }
             } catch(_) {}

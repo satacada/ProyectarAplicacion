@@ -220,16 +220,9 @@ fun InAppBrowserScreen(
                     onSniffedVideo = { sniffed ->
                         if (AdBlocker.isAd(sniffed.src) || sniffed.duration in 0.1f..59.9f) return@BrowserWebView
                         val hdrs = BrowserUrlHelper.buildSafeHeaders(sniffed.src, currentUrl, UA_MOBILE); if (sniffed.duration > 0f) streamDurations[sniffed.src] = sniffed.duration
-                        if (sniffed.title.isNotBlank() && sniffed.title != "Video Web" && sniffed.title != "Transmisión Web") {
-                            pageTitle = sniffed.title
-                        }
-                        if (sniffed.isPlaying) {
-                            detectedStreams.clear()
-                            registerStream(sniffed.src, hdrs, isPrimary = true, label = sniffed.label ?: pageTitle)
-                            Toast.makeText(context, "▶ Video detectado: " + pageTitle.take(24), Toast.LENGTH_SHORT).show()
-                        } else if (detectedStreams.size < 10) {
-                            registerStream(sniffed.src, hdrs, isPrimary = false, label = sniffed.label ?: pageTitle)
-                        }
+                        if (sniffed.title.isNotBlank() && sniffed.title != "Video Web" && sniffed.title != "Transmisión Web") pageTitle = sniffed.title
+                        registerStream(sniffed.src, hdrs, isPrimary = sniffed.isPlaying, label = sniffed.label ?: pageTitle)
+                        if (sniffed.isPlaying) Toast.makeText(context, "▶ Video activo: " + pageTitle.take(24), Toast.LENGTH_SHORT).show()
                     },
                     onTitleReceived = { t -> if (t.isNotBlank() && t != "Transmisión" && !t.contains("about:blank")) pageTitle = t },
                     onOpenPopup = { pView -> popupWebView = pView }, onClosePopup = { popupWebView?.destroy(); popupWebView = null },
@@ -254,15 +247,20 @@ fun InAppBrowserScreen(
                         },
                         onStopCasting = { ActiveStreamHolder.stopCasting(); Toast.makeText(context, "🛑 Transmisión detenida", Toast.LENGTH_SHORT).show() },
                         onClearStreams = {
-                            val activeLive = ActiveStreamHolder.streamUrl
+                            val cur = currentUrl
+                            val currentList = detectedStreams.toList()
                             detectedStreams.clear(); streamHeaders.clear(); streamLabels.clear(); streamDurations.clear(); qualityOptions = emptyList()
                             ActiveStreamHolder.clearDetectedStream()
                             webViewInstance?.let { wv ->
-                                checkPlatformUrls(currentUrl, pageTitle)
+                                checkPlatformUrls(cur, pageTitle)
                                 wv.evaluateJavascript(WvcSnifferScripts.buildAggressiveRescanScript(WvcDomSniffer.CONSOLE_PREFIX), null)
                                 wv.evaluateJavascript("window.__omniGetLiveStream ? window.__omniGetLiveStream() : null") { res ->
                                     val clean = res?.replace("\"", "")?.trim() ?: ""
-                                    if (clean.isNotBlank() && clean != "null" && BrowserUrlHelper.isPlayableStream(clean)) registerStream(clean, BrowserUrlHelper.buildSafeHeaders(clean, currentUrl, UA_MOBILE), isPrimary = true, label = "En Reproducción Directa")
+                                    if (clean.isNotBlank() && clean != "null" && BrowserUrlHelper.isPlayableStream(clean)) {
+                                        registerStream(clean, BrowserUrlHelper.buildSafeHeaders(clean, cur, UA_MOBILE), isPrimary = true, label = "En Reproducción Directa")
+                                    } else if (detectedStreams.isEmpty() && currentList.isNotEmpty()) {
+                                        currentList.forEach { registerStream(it, BrowserUrlHelper.buildSafeHeaders(it, cur, UA_MOBILE)) }
+                                    }
                                 }
                             }
                             Toast.makeText(context, "⚡ Recapturando flujos activos...", Toast.LENGTH_SHORT).show()

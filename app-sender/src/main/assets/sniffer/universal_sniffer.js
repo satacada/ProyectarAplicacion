@@ -240,7 +240,7 @@
             }
             if (window.__omniCapturedMedia && window.__omniCapturedMedia.length > 0) {
                 for (var ci = 0; ci < window.__omniCapturedMedia.length; ci++) {
-                    reportMedia(window.__omniCapturedMedia[ci], document.title, 0, ci === 0);
+                    reportMedia(window.__omniCapturedMedia[ci], document.title, 0, false);
                 }
             }
             if (typeof window.ibFindAllVideos === 'function') {

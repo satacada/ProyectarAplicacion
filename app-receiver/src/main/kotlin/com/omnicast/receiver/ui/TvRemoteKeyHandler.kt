@@ -36,7 +36,7 @@ object TvRemoteKeyHandler {
                         keyCode == KeyEvent.KEYCODE_MEDIA_STOP ||
                         keyCode == KeyEvent.KEYCODE_DEL
         if (isExitKey && currentState !is ReceiverUiState.Standby) {
-            digitalAudioReceiver?.stop(); exoPlayerManager.stop(); webRtcReceiver.resetConnection()
+            digitalAudioReceiver?.stop(); exoPlayerManager.stop("Mando TV (Atrás/Stop)"); webRtcReceiver.resetConnection()
             onResetToStandby()
             return true
         }

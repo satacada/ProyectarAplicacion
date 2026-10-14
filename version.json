@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 81,
-  "versionCodeReceiver": 64,
-  "versionName": "3.32.36",
-  "releaseTag": "v3.32.36",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.36/omnicast-sender-v3.32.36.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.36/omnicast-receiver-v3.32.36.apk",
-  "changelog": "v3.32.36: Fusión ('juntar') inteligente de flujos reales capturados al actualizar y recapturar; descarte estricto de respuestas 403 y páginas HTML; auto-detección y enlace reactivo con la TV Box en su IP real (limpieza de IPs obsoletas) y heartbeat de desconexión en el receiver."
+  "versionCodeSender": 82,
+  "versionCodeReceiver": 65,
+  "versionName": "3.32.37",
+  "releaseTag": "v3.32.37",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.37/omnicast-sender-v3.32.37.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.37/omnicast-receiver-v3.32.37.apk",
+  "changelog": "v3.32.37: Corrección de reproducción HLS en OK.ru/mycdn.me evitando fallo de contenedor 3003 en ExoPlayer TV; etiquetas de resolución numérica (720p HD, 480p, etc.) y telemetría de motivos de parada de reproductor."
 }

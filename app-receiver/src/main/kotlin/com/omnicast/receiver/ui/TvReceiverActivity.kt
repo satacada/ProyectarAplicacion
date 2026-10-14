@@ -118,7 +118,7 @@ class TvReceiverActivity : ComponentActivity() {
                     )
                     is ReceiverUiState.DirectStreamPlaying -> TvDirectStreamScreen(
                         exoPlayerManager, state.title, state.streamUrl,
-                        onCloseClick = { exoPlayerManager.stop(); receiverState.value = ReceiverUiState.Standby }
+                        onCloseClick = { exoPlayerManager.stop("Botón Cerrar TV"); receiverState.value = ReceiverUiState.Standby }
                     )
                     is ReceiverUiState.YouTubePlaying -> TvYouTubeScreen(
                         videoId = state.videoId,
@@ -193,7 +193,7 @@ class TvReceiverActivity : ComponentActivity() {
                         exoPlayerManager.resume()
                     }
                     "PAUSE" -> exoPlayerManager.pause()
-                    "STOP" -> { exoPlayerManager.stop(); receiverState.value = ReceiverUiState.Standby }
+                    "STOP" -> { exoPlayerManager.stop("Comando STOP celular"); receiverState.value = ReceiverUiState.Standby }
                     "SEEK" -> exoPlayerManager.seekTo(message.positionMs)
                     "VOLUME" -> applySystemAndPlayerVolume(message.volume)
                     "SUBTITLE_TOGGLE", "TOGGLE_SUBTITLES" -> exoPlayerManager.toggleSubtitles()
@@ -211,14 +211,14 @@ class TvReceiverActivity : ComponentActivity() {
                 exoPlayerManager.setDisplayMode(message.mode, message.zoom)
             }
             is SignalingMessage.ShowImage -> {
-                digitalAudioReceiver?.stop(); exoPlayerManager.stop(); webRtcReceiver.resetConnection()
+                digitalAudioReceiver?.stop(); exoPlayerManager.stop("Casteo Foto"); webRtcReceiver.resetConnection()
                 receiverState.value = ReceiverUiState.ImageDisplaying(message.imageUrl, message.title ?: "Foto de Galería")
             }
             is SignalingMessage.SyncPlaylists -> {
                 lifecycleScope.launch { playlistManager.syncPlaylistsJson(message.playlistsJson) }
             }
             is SignalingMessage.Disconnect -> {
-                digitalAudioReceiver?.stop(); exoPlayerManager.stop(); webRtcReceiver.resetConnection(); receiverState.value = ReceiverUiState.Standby
+                digitalAudioReceiver?.stop(); exoPlayerManager.stop("Desconexión"); webRtcReceiver.resetConnection(); receiverState.value = ReceiverUiState.Standby
             }
             else -> Unit
         }

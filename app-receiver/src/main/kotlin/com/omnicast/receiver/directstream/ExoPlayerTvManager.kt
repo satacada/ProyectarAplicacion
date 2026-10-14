@@ -180,11 +180,14 @@ class ExoPlayerTvManager(private val context: Context) {
         val metadata = MediaMetadata.Builder().setTitle(title ?: "Transmisión Web").setDisplayTitle(title ?: "Transmisión Web").build()
         val builder = MediaItem.Builder().setUri(url).setMediaMetadata(metadata)
         val lower = url.lowercase()
+        val isOkHls = (lower.contains("mycdn.me") || lower.contains("okcdn.ru")) &&
+                      (lower.contains("/type/") || lower.contains("type=") || lower.contains("/video/") || lower.contains("sig=") || lower.contains("expires="))
         when {
-            lower.contains(".m3u8") || lower.contains("m3u8") || lower.contains("/hls/") || lower.contains("type=4") -> builder.setMimeType(androidx.media3.common.MimeTypes.APPLICATION_M3U8)
+            lower.contains(".m3u8") || lower.contains("m3u8") || lower.contains("/hls") || isOkHls ->
+                builder.setMimeType(androidx.media3.common.MimeTypes.APPLICATION_M3U8)
             lower.contains(".mpd") || lower.contains("dash") -> builder.setMimeType(androidx.media3.common.MimeTypes.APPLICATION_MPD)
             lower.contains(".webm") -> builder.setMimeType(androidx.media3.common.MimeTypes.VIDEO_WEBM)
-            else -> builder.setMimeType(androidx.media3.common.MimeTypes.APPLICATION_MP4)
+            lower.contains(".mp4") || lower.contains("/mp4") -> builder.setMimeType(androidx.media3.common.MimeTypes.APPLICATION_MP4)
         }
         return builder.build()
     }
@@ -264,6 +267,10 @@ class ExoPlayerTvManager(private val context: Context) {
     val currentPositionMs: Long get() = player?.currentPosition?.coerceAtLeast(0L) ?: 0L
     val durationMs: Long get() = player?.duration?.coerceAtLeast(0L) ?: 0L
     val isPlaying: Boolean get() = player?.isPlaying ?: false
-    fun stop() { player?.stop(); player?.clearMediaItems() }
-    fun release() { stop(); player?.release(); player = null; TvMediaCacheManager.release() }
+    fun stop(reason: String = "desconocido") {
+        com.omnicast.receiver.log.ReceiverLogger.log(TAG, "⏹️ Deteniendo ExoPlayer (motivo: $reason)")
+        player?.stop()
+        player?.clearMediaItems()
+    }
+    fun release() { stop("release"); player?.release(); player = null; TvMediaCacheManager.release() }
 }

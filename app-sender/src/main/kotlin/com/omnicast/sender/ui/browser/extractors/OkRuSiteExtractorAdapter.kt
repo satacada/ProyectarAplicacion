@@ -35,10 +35,24 @@ class OkRuSiteExtractorAdapter : IMediaStreamExtractorPort {
 
     override fun extract(candidate: StreamCandidate): MediaStream {
         val lower = candidate.url.lowercase()
-        val isHls = lower.contains(".m3u8") || lower.contains("/hls")
-        val isMaster = isHls && (lower.contains("master") || lower.contains("manifest"))
+        val isOkHls = (lower.contains("mycdn.me") || lower.contains("okcdn.ru")) &&
+                      (lower.contains("/type/") || lower.contains("type=") || lower.contains("/video/") || lower.contains(".m3u8"))
+        val isHls = lower.contains(".m3u8") || lower.contains("/hls") || isOkHls
+        val isMaster = isHls && (lower.contains("master") || lower.contains("manifest") || (lower.contains("video.m3u8") && !lower.contains("type=")))
         val format = if (isHls) "HLS" else "MP4"
         val title = candidate.pageTitle ?: "Video OK.ru"
+
+        val quality = when {
+            lower.contains("/type/5") || lower.contains("type=5") -> "1080p FHD"
+            lower.contains("/type/4") || lower.contains("type=4") -> "720p HD"
+            lower.contains("/type/3") || lower.contains("type=3") -> "480p"
+            lower.contains("/type/2") || lower.contains("type=2") -> "360p"
+            lower.contains("/type/1") || lower.contains("type=1") -> "240p"
+            lower.contains("/type/0") || lower.contains("type=0") -> "144p Móvil"
+            isMaster -> "Adaptativo HLS"
+            isHls -> "HLS Stream"
+            else -> "Calidad Original"
+        }
 
         // OK.ru requiere Referer a su dominio para autorizar los bloques CDN
         val safeHeaders = candidate.headers.toMutableMap().apply {
@@ -50,7 +64,7 @@ class OkRuSiteExtractorAdapter : IMediaStreamExtractorPort {
             format = format,
             title = title,
             isMaster = isMaster,
-            qualityLabel = if (isMaster) "Adaptativo HD" else "Calidad Original",
+            qualityLabel = quality,
             headers = safeHeaders
         )
     }

@@ -215,6 +215,10 @@ class ExoPlayerTvManager(private val context: Context) {
             allowed["Sec-Fetch-Dest"] = "empty"
             allowed["Sec-Fetch-Site"] = "cross-site"
         }
+        if (url.contains("fastream.to", true)) {
+            allowed["Origin"] = "https://fastream.to"
+            allowed["Referer"] = "https://fastream.to/"
+        }
         return allowed
     }
 

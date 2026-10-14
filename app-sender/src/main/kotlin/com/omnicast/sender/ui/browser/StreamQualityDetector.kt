@@ -34,7 +34,7 @@ object StreamQualityDetector {
             return@withContext listOf(StreamQualityOption(label, "Nativa", "Original", mediaUrl))
         }
 
-        val safeHeaders = BrowserUrlHelper.buildSafeHeaders(mediaUrl, "https://www.dailymotion.com", UA_MOBILE, headers)
+        val safeHeaders = BrowserUrlHelper.buildSafeHeaders(mediaUrl, headers["Referer"] ?: "", UA_MOBILE, headers)
 
         try {
             var currentUrlStr = mediaUrl

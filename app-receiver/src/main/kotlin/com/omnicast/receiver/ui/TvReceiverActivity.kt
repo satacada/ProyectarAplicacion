@@ -62,7 +62,7 @@ class TvReceiverActivity : ComponentActivity() {
         }
         exoPlayerManager = ExoPlayerTvManager(this).apply {
             onTracksChanged = { info -> lifecycleScope.launch { signalingServer.sendMessage(info) } }
-            onPlaybackFailed = { runOnUiThread { if (receiverState.value is ReceiverUiState.DirectStreamPlaying) { receiverState.value = ReceiverUiState.Standby; lifecycleScope.launch { signalingServer.sendMessage(SignalingMessage.PlaybackStatus("STOPPED", 0L, 0L)) } } } }
+            onPlaybackFailed = { runOnUiThread { Toast.makeText(this@TvReceiverActivity, "⚠️ Servidor no disponible o bloqueado (Error HTTP)", Toast.LENGTH_SHORT).show(); if (receiverState.value is ReceiverUiState.DirectStreamPlaying) { receiverState.value = ReceiverUiState.Standby; lifecycleScope.launch { signalingServer.sendMessage(SignalingMessage.PlaybackStatus("STOPPED", 0L, 0L)) } } } }
         }
         digitalAudioReceiver = DigitalAudioReceiver()
         historyManager = com.omnicast.receiver.directstream.TvPlaybackHistoryManager(this)

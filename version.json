@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 82,
-  "versionCodeReceiver": 65,
-  "versionName": "3.32.37",
-  "releaseTag": "v3.32.37",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.37/omnicast-sender-v3.32.37.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.37/omnicast-receiver-v3.32.37.apk",
-  "changelog": "v3.32.37: Corrección de reproducción HLS en OK.ru/mycdn.me evitando fallo de contenedor 3003 en ExoPlayer TV; etiquetas de resolución numérica (720p HD, 480p, etc.) y telemetría de motivos de parada de reproductor."
+  "versionCodeSender": 83,
+  "versionCodeReceiver": 66,
+  "versionName": "3.32.38",
+  "releaseTag": "v3.32.38",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.38/omnicast-sender-v3.32.38.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.38/omnicast-receiver-v3.32.38.apk",
+  "changelog": "v3.32.38: Corrección crítica de cierres en TV; blindado NSD para no interrumpir conexiones activas ni enviar STOP ante desconexiones de red; cabeceras seguras para fastream.to y feedback visual de error de servidor."
 }

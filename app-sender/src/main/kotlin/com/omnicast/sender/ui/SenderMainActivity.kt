@@ -118,10 +118,11 @@ class SenderMainActivity : ComponentActivity() {
 
         lifecycleScope.launch {
             nsdScanner.discoveredDevices.collect { list ->
+                if (isTvConnected.value) return@collect
                 list.firstOrNull()?.let { dev ->
                     val curIp = getSharedPreferences("omnicast_prefs", Context.MODE_PRIVATE).getString("saved_tv_ip", "") ?: ""
                     Log.i("TvConnection", "🔍 TV detectada por NSD: ${dev.name} (${dev.ipAddress}:${dev.port})")
-                    if (!isTvConnected.value || curIp.isBlank() || curIp != dev.ipAddress) {
+                    if (!isTvConnected.value && (curIp.isBlank() || curIp == dev.ipAddress)) {
                         connectToTv(dev.ipAddress, dev.port)
                     }
                 }
@@ -195,10 +196,6 @@ class SenderMainActivity : ComponentActivity() {
                 if (!isFinishing && !isDestroyed) Toast.makeText(this@SenderMainActivity, "🟢 Conectado con TV ($ipAddress)", Toast.LENGTH_SHORT).show()
             }, {
                 isTvConnected.value = false; Log.w("TvConnection", "🔴 Desconectado de TV: $ipAddress:$port")
-                if (!ProjectionForegroundService.isProjecting) {
-                    ActiveStreamHolder.stopCasting()
-                    com.omnicast.sender.service.CastMediaNotificationService.stop(this@SenderMainActivity)
-                }
                 checkInactivityAutoExit()
             })
         } catch (e: Throwable) { isTvConnected.value = false; checkInactivityAutoExit() }

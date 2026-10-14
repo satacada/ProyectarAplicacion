@@ -73,6 +73,9 @@ object BrowserUrlHelper {
                 headers["Sec-Fetch-Site"] = "cross-site"
             } else if (streamUrl.contains("mail.ru", ignoreCase = true)) {
                 headers.remove("Referer")
+            } else if (streamUrl.contains("fastream.to", ignoreCase = true)) {
+                headers["Referer"] = "https://fastream.to/"
+                headers["Origin"] = "https://fastream.to"
             } else if (streamUrl.contains("morencius.com", ignoreCase = true) && !headers.containsKey("Referer")) {
                 headers["Referer"] = "https://embed69.org/"
             } else if (!headers.containsKey("Referer") && currentUrl.isNotBlank()) {

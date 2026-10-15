@@ -78,6 +78,8 @@ private fun DrawerSheetContent(
     var selectedTab by remember { mutableIntStateOf(0) }
     var historyList by remember { mutableStateOf(historyManager.getHistory()) }
     var playlists by remember { mutableStateOf(playlistManager.getPlaylists()) }
+    var searchQuery by remember { mutableStateOf("") }
+    var selectedSort by remember { mutableStateOf(VideoSortOrder.NEWEST) }
 
     Column(modifier = Modifier.fillMaxSize().padding(14.dp)) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
@@ -92,7 +94,16 @@ private fun DrawerSheetContent(
             Tab(selected = selectedTab == 0, onClick = { selectedTab = 0; historyList = historyManager.getHistory() }, text = { Text("🕒 Historial (" + historyList.size + ")", fontSize = 12.sp) })
             Tab(selected = selectedTab == 1, onClick = { selectedTab = 1; playlists = playlistManager.getPlaylists() }, text = { Text("⭐ Guardadas (" + playlists.sumOf { it.items.size } + " pelis)", fontSize = 11.sp) })
         }
-        Spacer(modifier = Modifier.height(10.dp))
+        Spacer(modifier = Modifier.height(8.dp))
+
+        VideoSortFilterBar(
+            searchQuery = searchQuery,
+            onSearchQueryChange = { searchQuery = it },
+            selectedSort = selectedSort,
+            onSortChange = { selectedSort = it },
+            modifier = Modifier.padding(bottom = 6.dp)
+        )
+
         if (selectedTab == 0) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 Text("Vistos recientemente", fontSize = 11.sp, color = Color(0xFF64748B))
@@ -102,177 +113,23 @@ private fun DrawerSheetContent(
                     }
                 }
             }
-
-            if (historyList.isEmpty()) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("No hay videos en el historial", color = Color(0xFF64748B), fontSize = 13.sp)
-                }
-            } else {
-                LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    items(historyList, key = { it.url }) { item ->
-                        HistoryTextCard(
-                            item = item,
-                            onPlay = { onPlayOnTv(item.url, item.title, item.headers, item.lastPositionMs); onClose() },
-                            onOpenWeb = { onOpenInBrowser(item.pageUrl ?: item.url); onClose() },
-                            onDelete = { historyManager.remove(item.url); historyList = historyManager.getHistory() }
-                        )
-                    }
-                }
-            }
+            Spacer(modifier = Modifier.height(4.dp))
+            DrawerHistoryList(
+                historyList = historyList,
+                searchQuery = searchQuery,
+                selectedSort = selectedSort,
+                onPlay = { item -> onPlayOnTv(item.url, item.title, item.headers ?: emptyMap(), item.lastPositionMs); onClose() },
+                onOpenWeb = { url -> onOpenInBrowser(url); onClose() },
+                onDelete = { url -> historyManager.remove(url); historyList = historyManager.getHistory() }
+            )
         } else {
-            SavedPlaylistsTextList(
+            DrawerSavedPlaylistsList(
                 playlists = playlists,
+                searchQuery = searchQuery,
+                selectedSort = selectedSort,
                 onPlay = { url, title, hdrs, pos -> onPlayOnTv(url, title, hdrs, pos); onClose() },
                 onOpenWeb = { url -> onOpenInBrowser(url); onClose() },
                 onRemoveItem = { plId, u -> playlistManager.removeItemFromPlaylist(plId, u); playlists = playlistManager.getPlaylists() }
-            )
-        }
-    }
-}
-
-@Composable
-private fun HistoryTextCard(
-    item: HistoryItem,
-    onPlay: () -> Unit,
-    onOpenWeb: () -> Unit,
-    onDelete: () -> Unit
-) {
-    Card(
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF1E293B)),
-        shape = RoundedCornerShape(10.dp),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Column(modifier = Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(
-                item.title,
-                color = Color.White,
-                fontWeight = FontWeight.Bold,
-                fontSize = 13.sp,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
-            )
-
-            val posStr = ShareUtils.formatTime(item.lastPositionMs)
-            val durStr = if (item.durationMs > 0L) ShareUtils.formatTime(item.durationMs) else null
-            val progressText = if (durStr != null) "▶ $posStr / $durStr" else if (item.lastPositionMs > 0L) "▶ $posStr" else "▶ 0:00"
-
-            Text(
-                progressText,
-                color = if (item.lastPositionMs > 0L) Color(0xFF38BDF8) else Color(0xFF94A3B8),
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Medium
-            )
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    val context = LocalContext.current
-                    IconButton(
-                        onClick = onPlay,
-                        modifier = Modifier.size(32.dp).background(Color(0xFF6366F1), RoundedCornerShape(8.dp))
-                    ) {
-                        Text("📺", fontSize = 14.sp)
-                    }
-                    IconButton(
-                        onClick = onOpenWeb,
-                        modifier = Modifier.size(32.dp).background(Color(0xFF334155), RoundedCornerShape(8.dp))
-                    ) {
-                        Text("🌐", fontSize = 14.sp)
-                    }
-                    if (com.omnicast.sender.ui.utils.ShareUtils.canShare(item.url, item.pageUrl)) {
-                        IconButton(
-                            onClick = { com.omnicast.sender.ui.utils.ShareUtils.shareVideo(context, item.title, item.url, item.pageUrl) },
-                            modifier = Modifier.size(32.dp).background(Color(0xFF0284C7), RoundedCornerShape(8.dp))
-                        ) {
-                            Text("🔗", fontSize = 14.sp)
-                        }
-                    }
-                }
-                IconButton(onClick = onDelete, modifier = Modifier.size(28.dp)) {
-                    Text("✕", color = Color(0xFF94A3B8), fontSize = 13.sp)
-                }
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-private fun SavedPlaylistsTextList(
-    playlists: List<Playlist>,
-    onPlay: (String, String, Map<String, String>, Long) -> Unit,
-    onOpenWeb: (String) -> Unit,
-    onRemoveItem: (String, String) -> Unit
-) {
-    val context = LocalContext.current
-    var actionItem by remember { mutableStateOf<Pair<String, HistoryItem>?>(null) }
-
-    if (playlists.isEmpty() || playlists.all { it.items.isEmpty() }) {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text("No tienes videos guardados aún.\nUsa '⭐ Guardar' en el navegador.", color = Color(0xFF64748B), fontSize = 12.sp)
-        }
-    } else {
-        LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            playlists.filter { it.items.isNotEmpty() }.forEach { pl ->
-                item {
-                    Text("📁 ${pl.name} (${pl.items.size} películas)", color = Color(0xFF38BDF8), fontWeight = FontWeight.Bold, fontSize = 13.sp)
-                }
-                items(pl.items, key = { pl.id + "_" + it.url }) { video ->
-                    Card(
-                        colors = CardDefaults.cardColors(containerColor = Color(0xFF1E293B)),
-                        shape = RoundedCornerShape(8.dp),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .combinedClickable(
-                                onClick = { onPlay(video.url, video.title, video.headers, video.lastPositionMs) },
-                                onLongClick = { actionItem = pl.id to video }
-                            )
-                    ) {
-                        Column(modifier = Modifier.padding(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                            Text(video.title, color = Color.White, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                            val posText = if (video.lastPositionMs > 0L) "▶ " + ShareUtils.formatTime(video.lastPositionMs) else "▶ 0:00"
-                            Text(posText, color = Color(0xFF10B981), fontSize = 10.sp)
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                    IconButton(
-                                        onClick = { onPlay(video.url, video.title, video.headers, video.lastPositionMs) },
-                                        modifier = Modifier.size(30.dp).background(Color(0xFF6366F1), RoundedCornerShape(6.dp))
-                                    ) { Text("📺", fontSize = 13.sp) }
-                                    IconButton(
-                                        onClick = { onOpenWeb(video.pageUrl ?: video.url) },
-                                        modifier = Modifier.size(30.dp).background(Color(0xFF334155), RoundedCornerShape(6.dp))
-                                    ) { Text("🌐", fontSize = 13.sp) }
-                                    if (ShareUtils.canShare(video.url, video.pageUrl)) {
-                                        IconButton(
-                                            onClick = { ShareUtils.shareVideo(context, video.title, video.url, video.pageUrl) },
-                                            modifier = Modifier.size(30.dp).background(Color(0xFF0284C7), RoundedCornerShape(6.dp))
-                                        ) { Text("🔗", fontSize = 13.sp) }
-                                    }
-                                }
-                                IconButton(onClick = { onRemoveItem(pl.id, video.url) }, modifier = Modifier.size(24.dp)) {
-                                    Text("✕", color = Color(0xFF94A3B8), fontSize = 12.sp)
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        actionItem?.let { (plId, v) ->
-            SavedVideoActionSheet(
-                item = v,
-                onPlay = { onPlay(v.url, v.title, v.headers, v.lastPositionMs) },
-                onShare = { ShareUtils.shareVideo(context, v.title, v.url, v.pageUrl) },
-                onDelete = { onRemoveItem(plId, v.url) },
-                onDismiss = { actionItem = null }
             )
         }
     }

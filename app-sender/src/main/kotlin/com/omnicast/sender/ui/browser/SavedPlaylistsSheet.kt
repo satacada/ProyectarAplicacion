@@ -1,12 +1,11 @@
 package com.omnicast.sender.ui.browser
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -20,7 +19,7 @@ import androidx.compose.ui.unit.sp
 import com.omnicast.sender.history.HistoryItem
 import com.omnicast.sender.playlist.Playlist
 import com.omnicast.sender.playlist.PlaylistManager
-import com.omnicast.sender.ui.components.SavedVideoActionSheet
+import com.omnicast.sender.ui.components.VerticalScrollbar
 
 /**
  * Pantalla modal para explorar y administrar Listas de Reproducción y Marcadores Guardados.
@@ -152,131 +151,58 @@ private fun PlaylistFolderListView(
     onOpenPlaylist: (Playlist) -> Unit,
     onDeletePlaylist: (String) -> Unit
 ) {
+    val folderListState = rememberLazyListState()
+
     if (playlists.isEmpty()) {
         Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
             Text("No hay listas creadas aún.", color = Color(0xFF94A3B8), fontSize = 13.sp)
         }
     } else {
-        LazyColumn(modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) {
-            items(playlists, key = { it.id }) { pl ->
-                Card(
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFF1E293B)),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp)
-                        .clickable { onOpenPlaylist(pl) }
-                ) {
-                    Row(
+        Row(modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) {
+            LazyColumn(
+                state = folderListState,
+                modifier = Modifier.weight(1f).padding(end = 4.dp)
+            ) {
+                items(playlists, key = { it.id }) { pl ->
+                    Card(
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFF1E293B)),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(14.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
+                            .padding(vertical = 4.dp)
+                            .clickable { onOpenPlaylist(pl) }
                     ) {
                         Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(14.dp),
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(12.dp),
-                            modifier = Modifier.weight(1f)
+                            horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Text(if (pl.isDefault) "📁" else "🎬", fontSize = 22.sp)
-                            Column {
-                                Text(pl.name, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
-                                Text(
-                                    text = "${pl.items.size} película${if (pl.items.size != 1) "s" else ""} guardada${if (pl.items.size != 1) "s" else ""}",
-                                    color = Color(0xFF94A3B8),
-                                    fontSize = 11.sp
-                                )
-                            }
-                        }
-                        if (!pl.isDefault) {
-                            IconButton(onClick = { onDeletePlaylist(pl.id) }, modifier = Modifier.size(28.dp)) {
-                                Text("🗑️", fontSize = 14.sp)
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-private fun PlaylistDetailView(
-    playlist: Playlist,
-    onTransmit: (HistoryItem) -> Unit,
-    onRemoveItem: (String) -> Unit
-) {
-    val context = androidx.compose.ui.platform.LocalContext.current
-    var actionItem by remember { mutableStateOf<HistoryItem?>(null) }
-
-    if (playlist.items.isEmpty()) {
-        Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
-            Text("Esta lista está vacía. Guarda videos desde el explorador.", color = Color(0xFF94A3B8), fontSize = 13.sp)
-        }
-    } else {
-        LazyColumn(modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) {
-            items(playlist.items, key = { it.url }) { item ->
-                Card(
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFF1E293B)),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp)
-                        .combinedClickable(
-                            onClick = { onTransmit(item) },
-                            onLongClick = { actionItem = item }
-                        )
-                ) {
-                    Row(
-                        modifier = Modifier.padding(12.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = item.title,
-                                color = Color.White,
-                                fontSize = 13.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                            Text(item.url, color = Color(0xFF64748B), fontSize = 10.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                        }
-                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                            if (com.omnicast.sender.ui.utils.ShareUtils.canShare(item.url, item.pageUrl)) {
-                                IconButton(
-                                    onClick = { com.omnicast.sender.ui.utils.ShareUtils.shareVideo(context, item.title, item.url, item.pageUrl) },
-                                    modifier = Modifier.size(28.dp)
-                                ) {
-                                    Text("🔗", fontSize = 13.sp)
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text(if (pl.isDefault) "📁" else "🎬", fontSize = 22.sp)
+                                Column {
+                                    Text(pl.name, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                                    Text(
+                                        text = "${pl.items.size} película${if (pl.items.size != 1) "s" else ""} guardada${if (pl.items.size != 1) "s" else ""}",
+                                        color = Color(0xFF94A3B8),
+                                        fontSize = 11.sp
+                                    )
                                 }
                             }
-                            Button(
-                                onClick = { onTransmit(item) },
-                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF10B981)),
-                                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
-                                modifier = Modifier.height(30.dp)
-                            ) {
-                                Text("▶ TV", fontSize = 11.sp, color = Color.White, fontWeight = FontWeight.Bold)
-                            }
-                            IconButton(onClick = { onRemoveItem(item.url) }, modifier = Modifier.size(28.dp)) {
-                                Text("✕", color = Color(0xFF94A3B8), fontSize = 12.sp)
+                            if (!pl.isDefault) {
+                                IconButton(onClick = { onDeletePlaylist(pl.id) }, modifier = Modifier.size(28.dp)) {
+                                    Text("🗑️", fontSize = 14.sp)
+                                }
                             }
                         }
                     }
                 }
             }
-        }
-
-        actionItem?.let { itm ->
-            SavedVideoActionSheet(
-                item = itm,
-                onPlay = { onTransmit(itm) },
-                onShare = { com.omnicast.sender.ui.utils.ShareUtils.shareVideo(context, itm.title, itm.url, itm.pageUrl) },
-                onDelete = { onRemoveItem(itm.url) },
-                onDismiss = { actionItem = null }
-            )
+            VerticalScrollbar(lazyListState = folderListState)
         }
     }
 }

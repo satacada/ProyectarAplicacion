@@ -177,11 +177,15 @@ fun TvPlaylistItemRow(
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
                 modifier = Modifier.weight(1f)
             ) {
-                Text(if (item.isFavorite) "⭐" else "🎬", fontSize = 18.sp)
-                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text("↳", color = if (isFocused) Color(0xFF38BDF8) else Color(0xFF64748B), fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                Text(if (item.isFavorite) "⭐" else "🎬", fontSize = 17.sp)
+                Column(
+                    modifier = Modifier.padding(start = 4.dp),
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                ) {
                     Text(
                         text = item.title.ifBlank { "Película guardada" },
                         color = if (isFocused) Color.White else Color(0xFFE2E8F0),

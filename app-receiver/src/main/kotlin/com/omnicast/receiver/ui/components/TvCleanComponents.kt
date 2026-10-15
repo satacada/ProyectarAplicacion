@@ -149,8 +149,13 @@ fun TvFolderRow(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
-                    Box(modifier = Modifier.size(38.dp).background(Color(0xFFF59E0B), RoundedCornerShape(8.dp)), contentAlignment = Alignment.Center) {
-                        Text("📁", fontSize = 20.sp)
+                    Box(
+                        modifier = Modifier
+                            .size(38.dp)
+                            .background(if (isExpanded) Color(0xFFD97706) else Color(0xFFF59E0B), RoundedCornerShape(8.dp)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(if (isExpanded) "📂" else "📁", fontSize = 20.sp)
                     }
                     Text(text = name, color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
                 }
@@ -164,8 +169,10 @@ fun TvFolderRow(
 
         AnimatedVisibility(visible = isExpanded && items.isNotEmpty()) {
             Column(
-                verticalArrangement = Arrangement.spacedBy(4.dp),
-                modifier = Modifier.fillMaxWidth().padding(top = 2.dp, bottom = 6.dp)
+                verticalArrangement = Arrangement.spacedBy(5.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 32.dp, top = 4.dp, bottom = 8.dp)
             ) {
                 items.forEach { item ->
                     TvPlaylistItemRow(

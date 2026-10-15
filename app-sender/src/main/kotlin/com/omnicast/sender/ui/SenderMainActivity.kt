@@ -214,6 +214,9 @@ class SenderMainActivity : ComponentActivity() {
                     }
                 } else if (msg is SignalingMessage.TracksInfo) {
                     ActiveStreamHolder.updateTracksInfo(msg)
+                } else if (msg is SignalingMessage.SyncPlaylists) {
+                    val synced = playlistManager.syncFromTv(msg.playlistsJson)
+                    if (synced) runOnUiThread { Toast.makeText(this@SenderMainActivity, "🎬 Lista sincronizada desde la TV", Toast.LENGTH_SHORT).show() }
                 }
             }
         }

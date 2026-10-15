@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 99,
-  "versionCodeReceiver": 82,
-  "versionName": "3.32.54",
-  "releaseTag": "v3.32.54",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.54/omnicast-sender-v3.32.54.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.54/omnicast-receiver-v3.32.54.apk",
-  "changelog": "v3.32.54: Tuerca de opciones en reproductor de TV para guardar películas en Ver más tarde y salir, auto-renovación de enlaces expirados por QR con sustitución de token TTL en listas guardadas, y documento canónico doc/DESIGN.md."
+  "versionCodeSender": 100,
+  "versionCodeReceiver": 83,
+  "versionName": "3.32.55",
+  "releaseTag": "v3.32.55",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.55/omnicast-sender-v3.32.55.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.55/omnicast-receiver-v3.32.55.apk",
+  "changelog": "v3.32.55: Sincronización bidireccional automática de listas guardadas desde TV hacia el celular vinculado, tuerca de ajustes en reproductor de TV (Ver más tarde y Salir), y auto-renovación de enlaces expirados por QR."
 }

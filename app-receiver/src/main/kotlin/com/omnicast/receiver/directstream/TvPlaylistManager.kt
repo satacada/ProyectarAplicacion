@@ -42,6 +42,9 @@ class TvPlaylistManager(private val context: Context) {
     private val json = Json { ignoreUnknownKeys = true; prettyPrint = true }
     private val file by lazy { File(context.filesDir, FILE_NAME) }
 
+    var onPlaylistsChanged: ((String) -> Unit)? = null
+    fun getRawJson(): String = try { json.encodeToString(_playlists.value) } catch (_: Throwable) { "[]" }
+
     private val _playlists = MutableStateFlow<List<TvPlaylist>>(emptyList())
     val playlists: StateFlow<List<TvPlaylist>> = _playlists.asStateFlow()
 
@@ -147,7 +150,11 @@ class TvPlaylistManager(private val context: Context) {
             current.add(0, newPl)
         }
         _playlists.value = current
-        try { file.writeText(json.encodeToString(current)) } catch (_: Throwable) {}
+        val raw = try { json.encodeToString(current) } catch (_: Throwable) { "" }
+        if (raw.isNotBlank()) {
+            try { file.writeText(raw) } catch (_: Throwable) {}
+            onPlaylistsChanged?.invoke(raw)
+        }
         return true
     }
 
@@ -195,6 +202,10 @@ class TvPlaylistManager(private val context: Context) {
             pl.copy(items = pl.items.filterNot { it.url == url || it.url.substringBefore('?') == cleanUrl })
         }
         _playlists.value = updated
-        try { file.writeText(json.encodeToString(updated)) } catch (_: Throwable) {}
+        val raw = try { json.encodeToString(updated) } catch (_: Throwable) { "" }
+        if (raw.isNotBlank()) {
+            try { file.writeText(raw) } catch (_: Throwable) {}
+            onPlaylistsChanged?.invoke(raw)
+        }
     }
 }

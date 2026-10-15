@@ -69,7 +69,9 @@ class TvReceiverActivity : ComponentActivity() {
         }
         digitalAudioReceiver = DigitalAudioReceiver()
         historyManager = com.omnicast.receiver.directstream.TvPlaybackHistoryManager(this)
-        playlistManager = com.omnicast.receiver.directstream.TvPlaylistManager(this)
+        playlistManager = com.omnicast.receiver.directstream.TvPlaylistManager(this).apply {
+            onPlaylistsChanged = { jsonStr -> lifecycleScope.launch { signalingServer.sendMessage(SignalingMessage.SyncPlaylists(jsonStr)) } }
+        }
         updateManager = com.omnicast.receiver.update.TvUpdateManager(this)
         signalingServer = LocalSignalingServer(port = 8088).apply { start() }
         nsdAdvertiser = NsdAdvertiserManager(this).apply { registerService(port = 8088) }

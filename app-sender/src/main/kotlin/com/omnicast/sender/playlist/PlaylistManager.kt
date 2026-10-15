@@ -225,4 +225,46 @@ class PlaylistManager(context: Context) {
         }
         return 0L
     }
+
+    fun syncFromTv(jsonStr: String): Boolean {
+        if (jsonStr.isBlank()) return false
+        return try {
+            val incoming = json.decodeFromString<List<Playlist>>(jsonStr)
+            if (incoming.isEmpty()) return false
+            val current = getPlaylists().toMutableList()
+            var changed = false
+            for (inPl in incoming) {
+                val targetIdx = current.indexOfFirst { it.id == inPl.id || (it.isDefault && inPl.isDefault) || it.name.equals(inPl.name, ignoreCase = true) }
+                if (targetIdx >= 0) {
+                    val pl = current[targetIdx]
+                    val updatedItems = pl.items.toMutableList()
+                    for (item in inPl.items) {
+                        val existIdx = updatedItems.indexOfFirst { isSameVideo(it, item) }
+                        if (existIdx >= 0) {
+                            if (item.lastPositionMs > updatedItems[existIdx].lastPositionMs || item.timestamp > updatedItems[existIdx].timestamp) {
+                                updatedItems[existIdx] = updatedItems[existIdx].copy(
+                                    url = item.url,
+                                    lastPositionMs = if (item.lastPositionMs > 0L) item.lastPositionMs else updatedItems[existIdx].lastPositionMs,
+                                    pageUrl = item.pageUrl ?: updatedItems[existIdx].pageUrl
+                                )
+                                changed = true
+                            }
+                        } else {
+                            updatedItems.add(0, item)
+                            changed = true
+                        }
+                    }
+                    current[targetIdx] = pl.copy(items = updatedItems)
+                } else {
+                    current.add(inPl)
+                    changed = true
+                }
+            }
+            if (changed) {
+                val encoded = json.encodeToString(current)
+                prefs.edit().putString(KEY_PLAYLISTS, encoded).apply()
+            }
+            changed
+        } catch (_: Throwable) { false }
+    }
 }

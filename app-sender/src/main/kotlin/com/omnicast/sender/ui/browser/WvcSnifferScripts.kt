@@ -20,6 +20,7 @@ object WvcSnifferScripts {
                     return l.indexOf('.m3u8') !== -1 || l.indexOf('.mp4') !== -1 || l.indexOf('.mpd') !== -1 ||
                            l.indexOf('/hls') !== -1 || l.indexOf('/stream/') !== -1 || l.indexOf('/manifest') !== -1 ||
                            l.indexOf('chunklist') !== -1 || l.indexOf('vd.mycdn') !== -1 ||
+                           l.indexOf('p.php?url=') !== -1 || (l.indexOf('/p.php') !== -1 && l.indexOf('sig=') !== -1) ||
                            (l.indexOf('master.txt') !== -1 && l.indexOf('/hls') !== -1);
                 }
                 function isShortCommercial(v) {
@@ -139,7 +140,7 @@ object WvcSnifferScripts {
                         for (var r = 0; r < res.length; r++) {
                             var ru = res[r].name || '';
                             var lru = ru.toLowerCase();
-                            if (lru.indexOf('.m3u8') !== -1 || lru.indexOf('.mp4') !== -1 || lru.indexOf('.mpd') !== -1 || lru.indexOf('/hls') !== -1 || lru.indexOf('/stream/') !== -1) {
+                            if (lru.indexOf('.m3u8') !== -1 || lru.indexOf('.mp4') !== -1 || lru.indexOf('.mpd') !== -1 || lru.indexOf('/hls') !== -1 || lru.indexOf('/stream/') !== -1 || lru.indexOf('p.php?url=') !== -1) {
                                 console.log('$consolePrefix' + JSON.stringify({type: 'video', video: ru, src: ru, title: document.title}));
                             }
                         }
@@ -187,7 +188,8 @@ object WvcSnifferScripts {
                     if (lsrc.indexOf('google') !== -1 || lsrc.indexOf('recaptcha') !== -1 || lsrc.indexOf('facebook') !== -1) continue;
                     if (lsrc.indexOf('.m3u8') !== -1 || lsrc.indexOf('.mp4') !== -1 || lsrc.indexOf('/stream/') !== -1 ||
                         lsrc.indexOf('fastream') !== -1 || lsrc.indexOf('ok.ru') !== -1 || lsrc.indexOf('streamwish') !== -1 ||
-                        lsrc.indexOf('filemoon') !== -1 || lsrc.indexOf('vidhide') !== -1 || lsrc.indexOf('pelismart') !== -1) {
+                        lsrc.indexOf('filemoon') !== -1 || lsrc.indexOf('vidhide') !== -1 || lsrc.indexOf('pelismart') !== -1 ||
+                        lsrc.indexOf('pelisserieshoy') !== -1 || lsrc.indexOf('embed69') !== -1) {
                         console.log('$consolePrefix' + JSON.stringify({type: 'video', src: isrc, title: document.title}));
                     }
                 }

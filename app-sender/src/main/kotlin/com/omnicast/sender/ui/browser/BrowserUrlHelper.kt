@@ -34,7 +34,8 @@ object BrowserUrlHelper {
     fun isPlayableStream(url: String): Boolean {
         if (url.isBlank()) return false
         val lower = url.lowercase().substringBefore('?')
-        if (lower.endsWith(".html") || lower.endsWith(".htm") || lower.endsWith(".php") || lower.endsWith(".jsp")) return false
+        val isPhpStream = lower.endsWith(".php") && (url.contains(".m3u8", true) || url.contains(".mp4", true) || url.contains("p.php?", true) || url.contains("url=", true) || url.contains("stream", true))
+        if (lower.endsWith(".html") || lower.endsWith(".htm") || (lower.endsWith(".php") && !isPhpStream) || lower.endsWith(".jsp")) return false
         val fullLower = url.lowercase()
         if (fullLower.contains("dmxleo.dailymotion.com") || fullLower.contains("geo.dailymotion.com")) return false
         if (fullLower.contains("/embed/") || fullLower.contains("/embed69") || fullLower.contains("/widget/")) return false
@@ -48,11 +49,12 @@ object BrowserUrlHelper {
         if (s.isBlank() || s.contains("dmxleo.dailymotion.com") || AdBlocker.isAd(s)) return false
         if (dur in 0.1f..59.9f) return false
         val clean = s.substringBefore('?').lowercase()
-        if (clean.endsWith(".html") || clean.endsWith(".htm") || clean.endsWith(".php") || clean.endsWith(".jsp") || clean.endsWith(".js") || clean.endsWith(".css")) return false
+        val isPhpStream = clean.endsWith(".php") && (s.contains(".m3u8", true) || s.contains(".mp4", true) || s.contains("p.php?", true) || s.contains("url=", true) || s.contains("stream", true) || s.contains("hls", true))
+        if (clean.endsWith(".html") || clean.endsWith(".htm") || (clean.endsWith(".php") && !isPhpStream) || clean.endsWith(".jsp") || clean.endsWith(".js") || clean.endsWith(".css")) return false
         val isWeb = (s.contains("dailymotion.com/video/") || s.contains("ok.ru/video/")) &&
                     !s.contains(".m3u8") && !s.contains(".mpd") && !s.contains(".mp4") && !s.contains("cmd=video")
         return !isWeb && (s.contains(".m3u8", true) || s.contains(".mp4", true) || s.contains(".mpd", true) ||
-                          s.contains("/hls", true) || s.contains("chunklist", true) || extractYouTubeId(s) != null)
+                          s.contains("/hls", true) || s.contains("chunklist", true) || s.contains("p.php?", true) || extractYouTubeId(s) != null)
     }
 
     fun isMovieOrVideoPage(url: String?): Boolean {
@@ -98,6 +100,12 @@ object BrowserUrlHelper {
                 val fastreamId = Regex("(?:/hls\\d*/\\d+/\\d+/|/embed-|/)([a-zA-Z0-9]{10,12})(?:[_,.]|$)").find(streamUrl)?.groupValues?.get(1)
                 headers["Referer"] = if (!fastreamId.isNullOrBlank()) "https://fastream.to/embed-$fastreamId.html" else "https://fastream.to/embed-video.html"
                 headers["Origin"] = "https://fastream.to"
+                headers["Sec-Fetch-Mode"] = "cors"
+                headers["Sec-Fetch-Dest"] = "empty"
+                headers["Sec-Fetch-Site"] = "cross-site"
+            } else if (streamUrl.contains("pelisserieshoy.com", ignoreCase = true) || streamUrl.contains("p.php?url=", ignoreCase = true)) {
+                headers["Referer"] = "https://player.pelisserieshoy.com/"
+                headers["Origin"] = "https://player.pelisserieshoy.com"
                 headers["Sec-Fetch-Mode"] = "cors"
                 headers["Sec-Fetch-Dest"] = "empty"
                 headers["Sec-Fetch-Site"] = "cross-site"

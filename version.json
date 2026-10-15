@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 93,
-  "versionCodeReceiver": 76,
-  "versionName": "3.32.48",
-  "releaseTag": "v3.32.48",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.48/omnicast-sender-v3.32.48.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.48/omnicast-receiver-v3.32.48.apk",
-  "changelog": "v3.32.48: Boton '🏠 Principal' en asistente flotante para retorno directo a pantalla principal. Deteccion y auto-enlace inteligente al encender TV Box. Receptores secundarios seleccionables para casteo simultaneo (video/fotos/control). Sustitucion de iconos antiguos por ModernExitIcon vectorial. Version dinamica en standby de TV."
+  "versionCodeSender": 94,
+  "versionCodeReceiver": 77,
+  "versionName": "3.32.49",
+  "releaseTag": "v3.32.49",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.49/omnicast-sender-v3.32.49.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.49/omnicast-receiver-v3.32.49.apk",
+  "changelog": "v3.32.49: Soporte y captura de flujos HLS proxy (p.php) para sololatino.net y servidores pelisserieshoy / embed69. Bypass de camuflaje de reproductor y cabeceras de origen seguras para casteo."
 }

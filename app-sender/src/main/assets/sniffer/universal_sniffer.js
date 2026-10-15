@@ -38,6 +38,7 @@
         return l.indexOf('.m3u8') !== -1 || l.indexOf('.mp4') !== -1 || l.indexOf('.mpd') !== -1 ||
                l.indexOf('/hls') !== -1 || l.indexOf('/stream/') !== -1 || l.indexOf('/manifest') !== -1 ||
                l.indexOf('/live') !== -1 || l.indexOf('chunklist') !== -1 ||
+               l.indexOf('p.php?url=') !== -1 || (l.indexOf('/p.php') !== -1 && l.indexOf('sig=') !== -1) ||
                ((l.indexOf('mycdn.me') !== -1 || l.indexOf('okcdn.ru') !== -1) && (l.indexOf('vd') !== -1 || l.indexOf('video') !== -1 || l.indexOf('cmd=video') !== -1 || l.indexOf('/cmd/') !== -1 || l.indexOf('sig=') !== -1)) ||
                (l.indexOf('master.txt') !== -1 && l.indexOf('/hls') !== -1);
     }
@@ -136,7 +137,7 @@
     function updateLiveStreamIfFresher(u) {
         if (!u || typeof u !== 'string') return;
         recordCapturedMedia(u);
-        if (u.indexOf('.m3u8') !== -1 || u.indexOf('/hls') !== -1 || u.indexOf('.mpd') !== -1) {
+        if (u.indexOf('.m3u8') !== -1 || u.indexOf('/hls') !== -1 || u.indexOf('.mpd') !== -1 || u.indexOf('p.php?url=') !== -1) {
             window.__omniActiveLiveStream = { url: u, timestamp: Date.now() };
         }
     }

@@ -20,13 +20,8 @@ object DynamicSnifferManager {
 
         val dynamicFile = File(context.filesDir, "sniffer/$SCRIPT_FILE_NAME")
         val scriptContent = if (dynamicFile.exists() && dynamicFile.length() > 0) {
-            try {
-                Log.i(TAG, "Cargando sniffer actualizado desde almacenamiento local (${dynamicFile.length()} bytes)")
-                dynamicFile.readText(Charsets.UTF_8)
-            } catch (e: Throwable) {
-                Log.w(TAG, "Error leyendo sniffer local: ${e.message}, usando assets")
-                loadFromAssets(context)
-            }
+            val text = try { dynamicFile.readText(Charsets.UTF_8) } catch (_: Throwable) { "" }
+            if (text.contains("p.php?url=")) text else { runCatching { dynamicFile.delete() }; loadFromAssets(context) }
         } else {
             loadFromAssets(context)
         }

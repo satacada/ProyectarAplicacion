@@ -20,15 +20,22 @@ class UniversalHlsExtractorAdapter : IMediaStreamExtractorPort {
                (lower.contains("master.txt") && lower.contains("/hls")) ||
                lower.contains("/stream/") || lower.contains("/manifest") ||
                lower.contains("/live") || lower.contains("live.m3u8") ||
-               lower.contains("swdyu.com") || lower.contains("cloudemb.com") || lower.contains("morencius.com")
+               lower.contains("swdyu.com") || lower.contains("cloudemb.com") || lower.contains("morencius.com") ||
+               lower.contains("p.php?url=") || (lower.contains("/p.php") && lower.contains("sig=")) ||
+               lower.contains("pelisserieshoy.com/p.php") || lower.contains("embed69.org/p.php")
     }
 
     override fun extract(candidate: StreamCandidate): MediaStream {
         val lower = candidate.url.lowercase()
         val isLive = lower.contains("live") || lower.contains("chunklist")
-        val isMaster = lower.contains("master") || lower.contains("manifest") || lower.contains("playlist") || isLive
+        val isMaster = lower.contains("master") || lower.contains("manifest") || lower.contains("playlist") || isLive || lower.contains("p.php")
         val title = candidate.pageTitle ?: if (isLive) "🔴 Transmisión En Vivo" else "Transmisión HLS"
         val quality = if (isLive) "En Vivo" else if (isMaster) "Auto Adaptativo" else "HLS Estándar"
+        val hdrs = candidate.headers.toMutableMap()
+        if (lower.contains("pelisserieshoy.com") || lower.contains("p.php")) {
+            hdrs["Referer"] = "https://player.pelisserieshoy.com/"
+            hdrs["Origin"] = "https://player.pelisserieshoy.com"
+        }
 
         return MediaStream(
             url = candidate.url,
@@ -36,7 +43,7 @@ class UniversalHlsExtractorAdapter : IMediaStreamExtractorPort {
             title = title,
             isMaster = isMaster,
             qualityLabel = quality,
-            headers = candidate.headers
+            headers = hdrs
         )
     }
 }

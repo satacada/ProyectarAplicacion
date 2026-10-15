@@ -19,7 +19,9 @@ import com.omnicast.sender.playlist.PlaylistManager
 import com.omnicast.sender.stream.ActiveStreamHolder
 import com.omnicast.sender.ui.SenderMainActivity
 import com.omnicast.sender.ui.components.SideMediaDrawer
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @Composable
 fun InAppBrowserScreen(
@@ -34,13 +36,11 @@ fun InAppBrowserScreen(
     val savedLastUrl = remember { prefs.getString("saved_browser_last_url", "") ?: "" }
     val initialIsHome = savedLastUrl.isBlank() || savedLastUrl == "about:blank"
 
-    var inputUrl by rememberSaveable { mutableStateOf(if (initialIsHome) "" else savedLastUrl) }
-    var currentUrl by rememberSaveable { mutableStateOf(if (initialIsHome) "" else savedLastUrl) }
+    var inputUrl by rememberSaveable { mutableStateOf(if (initialIsHome) "" else savedLastUrl) }; var currentUrl by rememberSaveable { mutableStateOf(if (initialIsHome) "" else savedLastUrl) }
     var isHome by rememberSaveable { mutableStateOf(initialIsHome) }
     var pageTitle by rememberSaveable { mutableStateOf("OmniCast Browser") }
     var progress by remember { mutableIntStateOf(0) }
-    var isDesktopMode by remember { mutableStateOf(false) }
-    var isAdBlockEnabled by remember { mutableStateOf(true) }
+    var isDesktopMode by remember { mutableStateOf(false) }; var isAdBlockEnabled by remember { mutableStateOf(true) }
     val detectedStreams = remember { mutableStateListOf<String>() }
     val streamHeaders = remember { mutableStateMapOf<String, Map<String, String>>() }
     val streamLabels = remember { mutableStateMapOf<String, String>() }; val streamDurations = remember { mutableStateMapOf<String, Float>() }
@@ -70,8 +70,10 @@ fun InAppBrowserScreen(
         if (url.isBlank()) return
         val cleanT = if (title.isNotBlank() && title != "Cargando..." && title != "Transmisión") title else pageTitle
         pageTitle = cleanT
-        val finalHdrs = BrowserUrlHelper.buildSafeHeaders(url, currentUrl, UA_MOBILE, hdrs)
-        historyManager.addOrUpdate(url, cleanT, currentUrl, finalHdrs); onSendStreamToTv(url, cleanT, finalHdrs)
+        scope.launch(Dispatchers.IO) {
+            val (finalUrl, finalHdrs) = MediaPlatformResolver.prepareStreamForPlayback(url, currentUrl, hdrs)
+            withContext(Dispatchers.Main) { historyManager.addOrUpdate(finalUrl, cleanT, currentUrl, finalHdrs); onSendStreamToTv(finalUrl, cleanT, finalHdrs) }
+        }
     }
 
     fun isRealMedia(s: String): Boolean {

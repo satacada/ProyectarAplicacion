@@ -94,4 +94,86 @@ object MediaPlatformResolver {
             resolveDailymotion(u, onDailymotion)
         }
     }
+
+    fun extractFastreamId(url: String): String? {
+        if (!url.contains("fastream.to", ignoreCase = true)) return null
+        return Regex("(?:/hls\\d*/\\d+/\\d+/|/embed-|/)([a-zA-Z0-9]{10,12})(?:[_,.]|$)").find(url)?.groupValues?.get(1)
+    }
+
+    fun resolveFastreamSync(url: String, referer: String? = null): Triple<String, String?, Map<String, String>>? {
+        val id = extractFastreamId(url) ?: return null
+        return try {
+            val embedUrl = "https://fastream.to/embed-$id.html"
+            val conn = (URL(embedUrl).openConnection() as HttpURLConnection).apply {
+                connectTimeout = 4000
+                readTimeout = 4000
+                setRequestProperty("User-Agent", UA_MOBILE)
+                setRequestProperty("Referer", referer?.takeIf { it.isNotBlank() } ?: "https://reypelis.net/")
+            }
+            if (conn.responseCode !in 200..299) {
+                conn.disconnect()
+                return null
+            }
+            val html = conn.inputStream.bufferedReader().use { it.readText() }
+            conn.disconnect()
+            val unpacked = unpackDeanEdwards(html) ?: html
+            val streamUrlMatch = Regex("file:\\s*\"([^\"]+)\"").find(unpacked)
+                ?: Regex("https?://[^\\s\"',]+\\.m3u8[^\\s\"',]*").find(unpacked)
+            val streamUrl = streamUrlMatch?.groupValues?.get(1) ?: streamUrlMatch?.value ?: return null
+            val hdrs = mapOf(
+                "User-Agent" to UA_MOBILE,
+                "Referer" to embedUrl,
+                "Origin" to "https://fastream.to",
+                "Sec-Fetch-Mode" to "cors",
+                "Sec-Fetch-Dest" to "empty",
+                "Sec-Fetch-Site" to "cross-site"
+            )
+            Log.i(TAG, "🎬 Fastream resuelto exitosamente: $id -> $streamUrl")
+            Triple(streamUrl, null, hdrs)
+        } catch (e: Throwable) {
+            Log.w(TAG, "No se pudo resolver Fastream ($id): ${e.message}")
+            null
+        }
+    }
+
+    fun prepareStreamForPlayback(streamUrl: String, pageUrl: String, rawHeaders: Map<String, String>): Pair<String, Map<String, String>> {
+        var finalUrl = streamUrl
+        var hdrs = rawHeaders
+        if (streamUrl.contains("fastream.to", ignoreCase = true)) {
+            val resolved = resolveFastreamSync(streamUrl, pageUrl)
+            if (resolved != null) {
+                finalUrl = resolved.first
+                hdrs = resolved.third
+            }
+        }
+        val safeHeaders = BrowserUrlHelper.buildSafeHeaders(finalUrl, pageUrl, UA_MOBILE, hdrs)
+        return Pair(finalUrl, safeHeaders)
+    }
+
+    fun unpackDeanEdwards(html: String): String? {
+        val pos = html.indexOf(".split('|')")
+        if (pos == -1) return null
+        val start = html.lastIndexOf("eval(function(", pos)
+        if (start == -1) return null
+        val chunk = html.substring(start, pos + 20)
+        val callPart = chunk.substringAfter("}(")
+        val kEnd = callPart.lastIndexOf("'.split")
+        if (kEnd == -1) return null
+        val kStart = callPart.lastIndexOf('\'', kEnd - 1)
+        if (kStart == -1) return null
+        val kStr = callPart.substring(kStart + 1, kEnd)
+        val numbersAndP = callPart.substring(0, kStart).trim().trimEnd(',')
+        val matchNums = Regex(",\\s*(\\d+)\\s*,\\s*(\\d+)\\s*$").find(numbersAndP) ?: return null
+        val a = matchNums.groupValues[1].toIntOrNull() ?: 36
+        val c = matchNums.groupValues[2].toIntOrNull() ?: return null
+        var p = numbersAndP.substring(0, matchNums.range.first).trim().trim('\'', '"', ' ')
+        val kList = kStr.split('|')
+        for (idx in c - 1 downTo 0) {
+            if (idx < kList.size && kList[idx].isNotEmpty()) {
+                val key = idx.toString(a)
+                p = p.replace(Regex("\\b$key\\b")) { kList[idx] }
+            }
+        }
+        return p
+    }
 }

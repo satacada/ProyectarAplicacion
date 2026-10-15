@@ -34,10 +34,18 @@ object StreamQualityDetector {
             return@withContext listOf(StreamQualityOption(label, "Nativa", "Original", mediaUrl))
         }
 
-        val safeHeaders = BrowserUrlHelper.buildSafeHeaders(mediaUrl, headers["Referer"] ?: "", UA_MOBILE, headers)
+        var currentMediaUrl = mediaUrl
+        var safeHeaders = BrowserUrlHelper.buildSafeHeaders(currentMediaUrl, headers["Referer"] ?: "", UA_MOBILE, headers)
+        if (currentMediaUrl.contains("fastream.to", ignoreCase = true)) {
+            val resolved = MediaPlatformResolver.resolveFastreamSync(currentMediaUrl, headers["Referer"])
+            if (resolved != null) {
+                currentMediaUrl = resolved.first
+                safeHeaders = BrowserUrlHelper.buildSafeHeaders(currentMediaUrl, headers["Referer"] ?: "", UA_MOBILE, resolved.third)
+            }
+        }
 
         try {
-            var currentUrlStr = mediaUrl
+            var currentUrlStr = currentMediaUrl
             var conn: HttpURLConnection? = null
             for (redirect in 0..3) {
                 val url = URL(currentUrlStr)
@@ -59,7 +67,7 @@ object StreamQualityDetector {
             val respCode = conn?.responseCode ?: -1
             val cType = conn?.contentType?.lowercase() ?: ""
             if (respCode in 200..299 && !cType.contains("text/html")) {
-                options.add(StreamQualityOption("⚡ ${prefix}Adaptativa Automática", "Auto", "Adaptativa", mediaUrl, isMaster = true, isSuggested = true))
+                options.add(StreamQualityOption("⚡ ${prefix}Adaptativa Automática", "Auto", "Adaptativa", currentMediaUrl, isMaster = true, isSuggested = true))
                 val reader = BufferedReader(InputStreamReader(conn!!.inputStream))
                 var line: String?
                 var pendingInf: String? = null

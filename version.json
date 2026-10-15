@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 85,
-  "versionCodeReceiver": 68,
-  "versionName": "3.32.40",
-  "releaseTag": "v3.32.40",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.40/omnicast-sender-v3.32.40.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.40/omnicast-receiver-v3.32.40.apk",
-  "changelog": "v3.32.40: Solución al error HTTP 403 Forbidden en fastream.to inyectando Referer embed dinámico y cabeceras CORS en ExoPlayer y detector de calidades."
+  "versionCodeSender": 86,
+  "versionCodeReceiver": 69,
+  "versionName": "3.32.41",
+  "releaseTag": "v3.32.41",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.41/omnicast-sender-v3.32.41.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.41/omnicast-receiver-v3.32.41.apk",
+  "changelog": "v3.32.41: Implementación del extractor modular FastreamExtractorAdapter y resolución dinámica Dean Edwards en MediaPlatformResolver para generación en caliente de tokens criptográficos legítimos con User-Agent unificado."
 }

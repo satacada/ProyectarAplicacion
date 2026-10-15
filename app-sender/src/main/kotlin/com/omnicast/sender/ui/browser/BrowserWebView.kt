@@ -152,7 +152,6 @@ fun BrowserWebView(
                         val isSourceWhitelisted = curHost?.let { AdBlockWhitelistManager.isWhitelistedHost(it) } ?: false
                         if (isAdBlockEnabled && !isSourceWhitelisted && (AdBlocker.isAd(reqUrl) || NativeAdBlockEngine.shouldBlock(reqUrl, liveUrl))) {
                             android.util.Log.w("BrowserWebView", "🛑 Redirección publicitaria bloqueada silenciosamente: ${r.url.host}")
-                            AdBlocker.learnAndBlockAdHost(reqUrl)
                             showBlockedToast(ctx)
                             return true
                         }
@@ -234,7 +233,6 @@ fun BrowserWebView(
                                     val isSameSite = curHost != null && targetHost != null && (targetHost == curHost || targetHost.endsWith(".$curHost") || curHost.endsWith(".$targetHost"))
                                     if (isAdBlockEnabled && !isWhitelisted && !isSameSite && (AdBlocker.isAd(targetUrl) || NativeAdBlockEngine.shouldBlock(targetUrl))) {
                                         android.util.Log.w("BrowserWebView", "🛑 Enlace emergente publicitario bloqueado: $targetUrl")
-                                        AdBlocker.learnAndBlockAdHost(targetUrl)
                                         showBlockedToast(ctx)
                                         return true
                                     }

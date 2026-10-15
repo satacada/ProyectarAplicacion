@@ -61,6 +61,16 @@ fun SenderMainScreen(
     val posMs by com.omnicast.sender.stream.ActiveStreamHolder.positionMs.collectAsState()
     val durMs by com.omnicast.sender.stream.ActiveStreamHolder.durationMs.collectAsState()
     val castTitle by com.omnicast.sender.stream.ActiveStreamHolder.currentMediaTitle.collectAsState()
+    var lastBackPressTime by remember { mutableLongStateOf(0L) }
+    androidx.activity.compose.BackHandler(enabled = !showInAppBrowser) {
+        val now = System.currentTimeMillis()
+        if (now - lastBackPressTime < 2000L) {
+            (context as? Activity)?.finishAffinity()
+        } else {
+            lastBackPressTime = now
+            Toast.makeText(context, "Presione nuevamente para salir", Toast.LENGTH_SHORT).show()
+        }
+    }
 
     LaunchedEffect(initialOpenBrowser) { if (initialOpenBrowser) showInAppBrowser = true }
     LaunchedEffect(initialOpenGallery) {

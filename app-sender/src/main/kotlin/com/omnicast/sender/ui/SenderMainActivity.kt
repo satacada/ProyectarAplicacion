@@ -78,6 +78,7 @@ class SenderMainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         instance = this; historyManager = PlayHistoryManager(this)
         com.omnicast.sender.log.SenderLogger.init(this)
+        com.omnicast.sender.ui.browser.AdBlocker.init(this)
         playlistManager = com.omnicast.sender.playlist.PlaylistManager(this).apply {
             onPlaylistsChanged = { jsonStr ->
                 if (signalingClient.isConnected) signalingClient.sendMessage(SignalingMessage.SyncPlaylists(jsonStr))

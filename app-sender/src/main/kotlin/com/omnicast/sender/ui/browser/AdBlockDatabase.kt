@@ -19,7 +19,7 @@ class AdBlockDatabase private constructor(private val appContext: Context) :
     companion object {
         private const val TAG = "AdBlockDatabase"
         private const val DATABASE_NAME = "omnicast_adblock.db"
-        private const val DATABASE_VERSION = 1
+        private const val DATABASE_VERSION = 2
 
         private const val TABLE_DOMAINS = "ad_domains"
         private const val TABLE_KEYWORDS = "ad_keywords"
@@ -99,7 +99,14 @@ class AdBlockDatabase private constructor(private val appContext: Context) :
         seedInitialData(db)
     }
 
-    override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {}
+    override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
+        if (oldVersion < 2) {
+            db.execSQL("DROP TABLE IF EXISTS $TABLE_DOMAINS")
+            db.execSQL("DROP TABLE IF EXISTS $TABLE_KEYWORDS")
+            onCreate(db)
+            Log.i(TAG, "Base de datos AdBlock restablecida a v2 limpia.")
+        }
+    }
 
     private fun seedInitialData(db: SQLiteDatabase) {
         try {
@@ -161,6 +168,12 @@ class AdBlockDatabase private constructor(private val appContext: Context) :
                 while (cursor.moveToNext()) {
                     keywordsList.add(cursor.getString(colIdx).lowercase())
                 }
+            }
+
+            val falsePositives = listOf("reypelis.net", "tioplus.app")
+            for (fp in falsePositives) {
+                domainsSet.remove(fp)
+                try { writableDatabase.delete(TABLE_DOMAINS, "$COL_VALUE = ?", arrayOf(fp)) } catch (_: Throwable) {}
             }
 
             cachedDomains.clear()

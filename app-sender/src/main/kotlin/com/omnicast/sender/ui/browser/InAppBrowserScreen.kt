@@ -92,13 +92,10 @@ fun InAppBrowserScreen(
     BackHandler(enabled = true) {
         if (showSideDrawer) showSideDrawer = false else if (showWhitelistDialog) showWhitelistDialog = false
         else if (popupWebView != null) {
-            popupWebView?.url?.let { if (AdBlocker.learnAndBlockAdHost(it)) Toast.makeText(context, "🚫 Publicidad bloqueada para siempre", Toast.LENGTH_SHORT).show() }
             popupWebView?.destroy(); popupWebView = null
         }
         else if (videoToSave != null) videoToSave = null else if (showOptionsSheet) showOptionsSheet = false
         else if (webViewInstance?.canGoBack() == true) {
-            val cur = webViewInstance?.url
-            if (AdBlocker.learnAndBlockAdHost(cur)) Toast.makeText(context, "🚫 Publicidad rechazada y bloqueada", Toast.LENGTH_SHORT).show()
             webViewInstance?.goBack()
         } else if (!isHome) isHome = true else onCloseBrowser()
     }
@@ -276,7 +273,12 @@ fun InAppBrowserScreen(
                     )
                 }
                 popupWebView?.let { pView -> BrowserPopupOverlay(popupView = pView, onDismiss = {
-                    pView.url?.let { if (AdBlocker.learnAndBlockAdHost(it)) Toast.makeText(context, "🚫 Publicidad bloqueada", Toast.LENGTH_SHORT).show() }
+                    val isMovie = detectedStreams.isNotEmpty() || ActiveStreamHolder.isCasting.value
+                    val curHost = try { java.net.URI(currentUrl).host?.lowercase() } catch (_: Throwable) { null }
+                    val pHost = try { java.net.URI(pView.url).host?.lowercase() } catch (_: Throwable) { null }
+                    if (isMovie && pHost != null && curHost != null && pHost != curHost) {
+                        if (AdBlocker.learnAndBlockAdHost(pHost, curHost)) Toast.makeText(context, "🚫 Publicidad emergente bloqueada: $pHost", Toast.LENGTH_SHORT).show()
+                    }
                     popupWebView?.destroy(); popupWebView = null
                 }) }
             }

@@ -54,12 +54,15 @@ object WvcSnifferScripts {
                 document.addEventListener('play', function(e) { if (e.target && e.target.tagName === 'VIDEO') attachVid(e.target); }, true);
                 document.addEventListener('playing', function(e) { if (e.target && e.target.tagName === 'VIDEO') attachVid(e.target); }, true);
 
+                window.__omniCapturedMedia = window.__omniCapturedMedia || [];
                 var origFetch = window.fetch;
                 if (origFetch) {
                     window.fetch = function() {
                         var a = arguments[0];
                         var u = (typeof a === 'string') ? a : (a && a.url ? a.url : '');
                         if (isMediaStr(u)) {
+                            window.__omniCapturedMedia = window.__omniCapturedMedia || [];
+                            if (window.__omniCapturedMedia.indexOf(u) === -1) window.__omniCapturedMedia.push(u);
                             console.log('$consolePrefix' + JSON.stringify({type:'video', src:u, title:document.title}));
                         }
                         return origFetch.apply(this, arguments);
@@ -69,6 +72,8 @@ object WvcSnifferScripts {
                 if (origOpen) {
                     XMLHttpRequest.prototype.open = function(m, u) {
                         if (isMediaStr(u)) {
+                            window.__omniCapturedMedia = window.__omniCapturedMedia || [];
+                            if (window.__omniCapturedMedia.indexOf(u) === -1) window.__omniCapturedMedia.push(u);
                             console.log('$consolePrefix' + JSON.stringify({type:'video', src:u, title:document.title}));
                         }
                         return origOpen.apply(this, arguments);
@@ -122,6 +127,24 @@ object WvcSnifferScripts {
                 if (typeof window.__omniResetAndRescan === 'function') {
                     window.__omniResetAndRescan();
                 }
+                if (window.__omniCapturedMedia && window.__omniCapturedMedia.length > 0) {
+                    for (var m = 0; m < window.__omniCapturedMedia.length; m++) {
+                        var cu = window.__omniCapturedMedia[m];
+                        console.log('$consolePrefix' + JSON.stringify({type: 'video', video: cu, src: cu, title: document.title}));
+                    }
+                }
+                try {
+                    if (window.performance && typeof window.performance.getEntriesByType === 'function') {
+                        var res = window.performance.getEntriesByType('resource');
+                        for (var r = 0; r < res.length; r++) {
+                            var ru = res[r].name || '';
+                            var lru = ru.toLowerCase();
+                            if (lru.indexOf('.m3u8') !== -1 || lru.indexOf('.mp4') !== -1 || lru.indexOf('.mpd') !== -1 || lru.indexOf('/hls') !== -1 || lru.indexOf('/stream/') !== -1) {
+                                console.log('$consolePrefix' + JSON.stringify({type: 'video', video: ru, src: ru, title: document.title}));
+                            }
+                        }
+                    }
+                } catch(_) {}
                 var vids = document.querySelectorAll('video');
                 for (var i = 0; i < vids.length; i++) {
                     var v = vids[i];
@@ -132,6 +155,17 @@ object WvcSnifferScripts {
                     var s = v.currentSrc || v.src;
                     if (s && s.indexOf('blob:') !== 0 && s.indexOf('data:') !== 0) {
                         console.log('$consolePrefix' + JSON.stringify({type: (!v.paused && i === 0) ? 'videoPlaying' : 'video', video: s, src: s, title: document.title, duration: d}));
+                    }
+                    var chSrcs = v.querySelectorAll('source');
+                    for (var cs = 0; cs < chSrcs.length; cs++) {
+                        var cUrl = chSrcs[cs].src;
+                        if (cUrl && cUrl.indexOf('blob:') !== 0 && cUrl.indexOf('data:') !== 0) {
+                            console.log('$consolePrefix' + JSON.stringify({type: 'video', video: cUrl, src: cUrl, title: document.title, duration: d}));
+                        }
+                    }
+                    var hlsObj = (v.__hls && v.__hls.url) || (v._hls && v._hls.url) || (window.hls && window.hls.url);
+                    if (hlsObj && typeof hlsObj === 'string' && hlsObj.indexOf('blob:') !== 0) {
+                        console.log('$consolePrefix' + JSON.stringify({type: 'videoPlaying', video: hlsObj, src: hlsObj, title: document.title, duration: d}));
                     }
                 }
                 if (typeof window.jwplayer === 'function') {
@@ -148,13 +182,13 @@ object WvcSnifferScripts {
                 var ifrs = document.querySelectorAll('iframe');
                 for (var j = 0; j < ifrs.length; j++) {
                     var isrc = ifrs[j].src || ifrs[j].getAttribute('data-src') || '';
-                    if (isrc && (isrc.indexOf('.m3u8') !== -1 || isrc.indexOf('.mp4') !== -1 || isrc.indexOf('/stream/') !== -1)) {
+                    if (!isrc || isrc.indexOf('http') !== 0) continue;
+                    var lsrc = isrc.toLowerCase();
+                    if (lsrc.indexOf('google') !== -1 || lsrc.indexOf('recaptcha') !== -1 || lsrc.indexOf('facebook') !== -1) continue;
+                    if (lsrc.indexOf('.m3u8') !== -1 || lsrc.indexOf('.mp4') !== -1 || lsrc.indexOf('/stream/') !== -1 ||
+                        lsrc.indexOf('fastream') !== -1 || lsrc.indexOf('ok.ru') !== -1 || lsrc.indexOf('streamwish') !== -1 ||
+                        lsrc.indexOf('filemoon') !== -1 || lsrc.indexOf('vidhide') !== -1 || lsrc.indexOf('pelismart') !== -1) {
                         console.log('$consolePrefix' + JSON.stringify({type: 'video', src: isrc, title: document.title}));
-                    }
-                }
-                if (window.__omniCapturedMedia && window.__omniCapturedMedia.length > 0) {
-                    for (var m = 0; m < window.__omniCapturedMedia.length; m++) {
-                        console.log('$consolePrefix' + JSON.stringify({type: 'video', video: window.__omniCapturedMedia[m], src: window.__omniCapturedMedia[m], title: document.title}));
                     }
                 }
             } catch(_) {}

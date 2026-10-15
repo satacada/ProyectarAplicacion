@@ -44,6 +44,27 @@ object BrowserUrlHelper {
         return com.omnicast.sender.ui.browser.extractors.StreamExtractorRegistry.useCase.isStreamCandidate(url)
     }
 
+    fun isRealMedia(s: String, dur: Float = 0f): Boolean {
+        if (s.isBlank() || s.contains("dmxleo.dailymotion.com") || AdBlocker.isAd(s)) return false
+        if (dur in 0.1f..59.9f) return false
+        val clean = s.substringBefore('?').lowercase()
+        if (clean.endsWith(".html") || clean.endsWith(".htm") || clean.endsWith(".php") || clean.endsWith(".jsp") || clean.endsWith(".js") || clean.endsWith(".css")) return false
+        val isWeb = (s.contains("dailymotion.com/video/") || s.contains("ok.ru/video/")) &&
+                    !s.contains(".m3u8") && !s.contains(".mpd") && !s.contains(".mp4") && !s.contains("cmd=video")
+        return !isWeb && (s.contains(".m3u8", true) || s.contains(".mp4", true) || s.contains(".mpd", true) ||
+                          s.contains("/hls", true) || s.contains("chunklist", true) || extractYouTubeId(s) != null)
+    }
+
+    fun isMovieOrVideoPage(url: String?): Boolean {
+        if (url.isNullOrBlank()) return false
+        val l = url.lowercase()
+        if (l.startsWith("about:") || l.contains("google.") || l.contains("yandex.") || l.contains("bing.")) return false
+        return l.contains("/pelicula/") || l.contains("/pelis/") || l.contains("/movie/") ||
+               l.contains("/ver-") || l.contains("/ver/") || l.contains("/watch/") ||
+               l.contains("/video/") || l.contains("/serie/") || l.contains("/episode/") ||
+               l.contains("/ep-") || l.contains("/stream/") || l.contains("/play")
+    }
+
     fun buildSafeHeaders(
         streamUrl: String,
         currentUrl: String,

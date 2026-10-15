@@ -35,6 +35,7 @@ fun BrowserWebView(
     isHome: Boolean,
     isAdBlockEnabled: Boolean,
     currentUrl: String,
+    hasStreams: Boolean = false,
     onProgress: (Int) -> Unit,
     onPageStarted: (String) -> Unit,
     onPageFinished: (title: String, url: String?) -> Unit,
@@ -149,11 +150,23 @@ fun BrowserWebView(
                         if (AdBlocker.isExternalRedirect(reqUrl)) return true
                         val liveUrl = v?.url ?: currentUrl
                         val curHost = try { java.net.URI(liveUrl).host?.lowercase() } catch (_: Throwable) { null }
+                        val targetHost = try { r.url.host?.lowercase() } catch (_: Throwable) { null }
+                        val isSameSite = curHost != null && targetHost != null && (targetHost == curHost || targetHost.endsWith(".$curHost") || curHost.endsWith(".$targetHost"))
                         val isSourceWhitelisted = curHost?.let { AdBlockWhitelistManager.isWhitelistedHost(it) } ?: false
-                        if (isAdBlockEnabled && !isSourceWhitelisted && (AdBlocker.isAd(reqUrl) || NativeAdBlockEngine.shouldBlock(reqUrl, liveUrl))) {
-                            android.util.Log.w("BrowserWebView", "🛑 Redirección publicitaria bloqueada silenciosamente: ${r.url.host}")
-                            showBlockedToast(ctx)
-                            return true
+                        val inMovie = hasStreams || BrowserUrlHelper.isMovieOrVideoPage(liveUrl)
+
+                        if (isAdBlockEnabled && !isSourceWhitelisted) {
+                            if (AdBlocker.isAd(reqUrl) || NativeAdBlockEngine.shouldBlock(reqUrl, liveUrl)) {
+                                android.util.Log.w("BrowserWebView", "🛑 Redirección publicitaria bloqueada: $targetHost")
+                                showBlockedToast(ctx)
+                                return true
+                            }
+                            if (inMovie && !isSameSite && targetHost != null) {
+                                android.util.Log.w("BrowserWebView", "🛑 Secuestro de pantalla en película bloqueado hacia: $targetHost")
+                                AdBlocker.learnAndBlockAdHost(targetHost, curHost)
+                                showBlockedToast(ctx)
+                                return true
+                            }
                         }
                         return false
                     }
@@ -231,13 +244,22 @@ fun BrowserWebView(
                                     if (AdBlocker.isExternalRedirect(targetUrl)) return true
                                     val targetHost = try { java.net.URI(targetUrl).host?.lowercase() } catch (_: Throwable) { null }
                                     val isSameSite = curHost != null && targetHost != null && (targetHost == curHost || targetHost.endsWith(".$curHost") || curHost.endsWith(".$targetHost"))
-                                    if (isAdBlockEnabled && !isWhitelisted && !isSameSite && (AdBlocker.isAd(targetUrl) || NativeAdBlockEngine.shouldBlock(targetUrl))) {
-                                        android.util.Log.w("BrowserWebView", "🛑 Enlace emergente publicitario bloqueado: $targetUrl")
-                                        showBlockedToast(ctx)
-                                        return true
+                                    val inMovie = hasStreams || BrowserUrlHelper.isMovieOrVideoPage(v?.url ?: currentUrl)
+
+                                    if (isAdBlockEnabled && !isWhitelisted && !isSameSite) {
+                                        if (inMovie || AdBlocker.isAd(targetUrl) || NativeAdBlockEngine.shouldBlock(targetUrl)) {
+                                            android.util.Log.w("BrowserWebView", "🛑 Popup publicitario bloqueado: $targetUrl")
+                                            if (targetHost != null) AdBlocker.learnAndBlockAdHost(targetHost, curHost)
+                                            showBlockedToast(ctx)
+                                            return true
+                                        }
                                     }
-                                    // Si es del mismo sitio o enlace legítimo no publicitario navega en el WebView principal
-                                    v?.loadUrl(targetUrl)
+                                    if (isSameSite) {
+                                        v?.loadUrl(targetUrl)
+                                    } else {
+                                        onOpenPopup(transportWebView)
+                                        view?.loadUrl(targetUrl)
+                                    }
                                     return true
                                 }
                             }

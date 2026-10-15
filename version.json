@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 88,
-  "versionCodeReceiver": 71,
-  "versionName": "3.32.43",
-  "releaseTag": "v3.32.43",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.43/omnicast-sender-v3.32.43.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.43/omnicast-receiver-v3.32.43.apk",
-  "changelog": "v3.32.43: Migración de dominios y palabras clave de bloqueo a base de datos dinámica SQLite (AdBlockDatabase) con sincronización remota en caliente y erradicación de listas estáticas en duro."
+  "versionCodeSender": 89,
+  "versionCodeReceiver": 72,
+  "versionName": "3.32.44",
+  "releaseTag": "v3.32.44",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.44/omnicast-sender-v3.32.44.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.44/omnicast-receiver-v3.32.44.apk",
+  "changelog": "v3.32.44: Anclaje y persistencia estricta del foco de control remoto D-Pad en el botón de actualización OTA del receptor de TV. Evita la pérdida de foco durante la verificación, descarga e instalación."
 }

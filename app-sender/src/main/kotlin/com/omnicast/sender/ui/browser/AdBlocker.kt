@@ -59,6 +59,23 @@ object AdBlocker {
         return lower.contains("embed") || lower.contains("player") || lower.contains("video") || lower.contains("stream") || lower.contains("cdn")
     }
 
+    fun learnAndBlockAdHost(urlOrHost: String?): Boolean {
+        if (urlOrHost.isNullOrBlank()) return false
+        val host = if (urlOrHost.contains("://")) {
+            try { java.net.URI(urlOrHost).host?.lowercase() } catch (_: Throwable) { null }
+        } else {
+            urlOrHost.lowercase().trim()
+        } ?: return false
+        if (host.isBlank() || host.length < 4 || !host.contains(".")) return false
+        if (AdBlockWhitelistManager.isWhitelistedHost(host) || isSearchEngine(host) || isKnownMediaHost(host)) return false
+        if (AdBlockDatabase.isAdDomain(host)) return false
+        val added = addAdDomain(host)
+        if (added) {
+            android.util.Log.i("AdBlocker", "🧠 [Auto-Learning] Dominio publicitario aprendido por rechazo y guardado en SQLite: $host")
+        }
+        return added
+    }
+
     fun isExternalRedirect(url: String): Boolean {
         val lower = url.lowercase()
         return lower.startsWith("intent://") || lower.startsWith("market://") ||

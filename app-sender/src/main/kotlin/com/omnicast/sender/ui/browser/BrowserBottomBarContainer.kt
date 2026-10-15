@@ -26,6 +26,7 @@ fun BrowserBottomBarContainer(
     onRescanStreams: () -> Unit = {},
     onSaveToPlaylist: (() -> Unit)? = null,
     onDeleteFromSaved: (() -> Unit)? = null,
+    isSaved: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     Box(modifier = modifier.fillMaxWidth()) {
@@ -56,7 +57,8 @@ fun BrowserBottomBarContainer(
             onStop = onStopCasting,
             onSelectQuality = onOpenQualities,
             onSaveToPlaylist = onSaveToPlaylist,
-            onDeleteFromSaved = onDeleteFromSaved
+            onDeleteFromSaved = onDeleteFromSaved,
+            isSaved = isSaved
         )
     }
 }

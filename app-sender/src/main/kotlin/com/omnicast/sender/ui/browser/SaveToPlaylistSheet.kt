@@ -34,15 +34,19 @@ fun SaveToPlaylistSheet(
     var isCreatingNew by remember { mutableStateOf(false) }
     var newListName by remember { mutableStateOf("") }
 
+    val sheetState = rememberModalBottomSheetState()
+
     ModalBottomSheet(
         onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        dragHandle = { BottomSheetDefaults.DragHandle(color = Color(0xFF64748B)) },
         containerColor = Color(0xFF0F172A),
         shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 18.dp, vertical = 10.dp)
+                .padding(horizontal = 18.dp, vertical = 6.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -55,13 +59,23 @@ fun SaveToPlaylistSheet(
                     fontSize = 17.sp,
                     fontWeight = FontWeight.Bold
                 )
-                TextButton(onClick = { isCreatingNew = !isCreatingNew }) {
-                    Text(
-                        text = if (isCreatingNew) "Cancelar" else "+ Nueva Lista",
-                        color = Color(0xFF38BDF8),
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    TextButton(onClick = { isCreatingNew = !isCreatingNew }) {
+                        Text(
+                            text = if (isCreatingNew) "Cancelar" else "+ Nueva Lista",
+                            color = Color(0xFF38BDF8),
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                    IconButton(
+                        onClick = onDismiss,
+                        modifier = Modifier
+                            .size(32.dp)
+                            .background(Color(0xFF1E293B), RoundedCornerShape(8.dp))
+                    ) {
+                        Text("✕", color = Color(0xFF94A3B8), fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                    }
                 }
             }
 
@@ -170,6 +184,23 @@ fun SaveToPlaylistSheet(
                             )
                         }
                     }
+                }
+            }
+            Button(
+                onClick = onDismiss,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 12.dp)
+                    .height(44.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1E293B)),
+                shape = RoundedCornerShape(10.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text("✕", fontSize = 14.sp, color = Color(0xFF94A3B8), fontWeight = FontWeight.Bold)
+                    Text("Cerrar y volver a controles", fontSize = 13.sp, color = Color.White, fontWeight = FontWeight.SemiBold)
                 }
             }
         }

@@ -191,4 +191,12 @@ class PlaylistManager(context: Context) {
             return true
         }
     }
+
+    fun isVideoSaved(url: String, title: String = ""): Boolean {
+        if (url.isBlank() && title.isBlank()) return false
+        val item = HistoryItem(url = url, title = title)
+        return getPlaylists().any { pl ->
+            pl.items.any { isSameVideo(it, item) }
+        }
+    }
 }

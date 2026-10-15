@@ -19,7 +19,8 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun BookmarkOutlineIcon(
     modifier: Modifier = Modifier,
-    color: Color = Color.White
+    color: Color = Color.White,
+    isFilled: Boolean = false
 ) {
     Canvas(modifier = modifier) {
         val w = size.width
@@ -33,11 +34,15 @@ fun BookmarkOutlineIcon(
             lineTo(w * 0.22f, h * 0.85f)
             close()
         }
-        drawPath(
-            path = path,
-            color = color,
-            style = Stroke(width = stroke, cap = StrokeCap.Round, join = StrokeJoin.Round)
-        )
+        if (isFilled) {
+            drawPath(path = path, color = color, style = androidx.compose.ui.graphics.drawscope.Fill)
+        } else {
+            drawPath(
+                path = path,
+                color = color,
+                style = Stroke(width = stroke, cap = StrokeCap.Round, join = StrokeJoin.Round)
+            )
+        }
     }
 }
 

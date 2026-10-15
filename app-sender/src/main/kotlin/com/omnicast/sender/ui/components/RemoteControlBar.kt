@@ -41,7 +41,8 @@ fun RemoteControlBar(
     onStop: () -> Unit,
     onSelectQuality: (() -> Unit)? = null,
     onSaveToPlaylist: (() -> Unit)? = null,
-    onDeleteFromSaved: (() -> Unit)? = null
+    onDeleteFromSaved: (() -> Unit)? = null,
+    isSaved: Boolean = false
 ) {
     var isExpanded by rememberSaveable { mutableStateOf(true) }
 
@@ -151,7 +152,8 @@ fun RemoteControlBar(
                         onVolumeChange = onVolumeChange,
                         onSaveToPlaylist = onSaveToPlaylist,
                         onDeleteFromSaved = onDeleteFromSaved,
-                        onSelectQuality = onSelectQuality
+                        onSelectQuality = onSelectQuality,
+                        isSaved = isSaved
                     )
                 }
             }

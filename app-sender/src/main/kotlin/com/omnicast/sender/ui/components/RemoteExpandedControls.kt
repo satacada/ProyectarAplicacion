@@ -36,7 +36,8 @@ fun RemoteExpandedControls(
     onVolumeChange: (Float) -> Unit,
     onSaveToPlaylist: (() -> Unit)? = null,
     onDeleteFromSaved: (() -> Unit)? = null,
-    onSelectQuality: (() -> Unit)? = null
+    onSelectQuality: (() -> Unit)? = null,
+    isSaved: Boolean = false
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 2.dp)) {
 
@@ -148,10 +149,14 @@ fun RemoteExpandedControls(
                             onClick = onSaveToPlaylist,
                             modifier = Modifier
                                 .size(34.dp)
-                                .background(Color(0xFF1A2335), RoundedCornerShape(8.dp))
-                                .border(1.dp, Color(0xFF2C3B59), RoundedCornerShape(8.dp))
+                                .background(if (isSaved) Color(0xFF064E3B) else Color(0xFF1A2335), RoundedCornerShape(8.dp))
+                                .border(1.dp, if (isSaved) Color(0xFF10B981) else Color(0xFF2C3B59), RoundedCornerShape(8.dp))
                         ) {
-                            BookmarkOutlineIcon(modifier = Modifier.size(17.dp), color = Color(0xFF38BDF8))
+                            BookmarkOutlineIcon(
+                                modifier = Modifier.size(17.dp),
+                                color = if (isSaved) Color(0xFF10B981) else Color(0xFF38BDF8),
+                                isFilled = isSaved
+                            )
                         }
                     }
                     if (onDeleteFromSaved != null) {

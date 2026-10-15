@@ -72,7 +72,7 @@ object AdBlocker {
             if (host == cur || host.endsWith(".$cur") || cur.endsWith(".$host")) return false
         }
         if (AdBlockWhitelistManager.isWhitelistedHost(host) || isSearchEngine(host) || isKnownMediaHost(host)) return false
-        if (host.contains("yandex.") || host.contains("google.") || host.contains("bing.") || host.contains("duckduckgo.")) return false
+        if (host.contains("movie") || host.contains("pelis") || host.contains("cine") || host.contains("series") || host.contains("film") || host.contains("stream")) return false
         if (host.endsWith("reypelis.net") || host.endsWith("tioplus.app") || host.contains("sololatino") || host.contains("pelisserieshoy")) return false
         if (AdBlockDatabase.isAdDomain(host)) return false
         val added = addAdDomain(host)

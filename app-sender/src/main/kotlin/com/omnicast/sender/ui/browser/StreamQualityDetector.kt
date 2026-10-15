@@ -98,10 +98,14 @@ object StreamQualityDetector {
                 reader.close()
                 conn.disconnect()
             } else {
-                android.util.Log.w("StreamQualityDetector", "⚠️ Flujo descartado (HTTP $respCode, Content-Type: $cType): $mediaUrl")
+                android.util.Log.w("StreamQualityDetector", "⚠️ Respuesta HTTP $respCode para $mediaUrl, habilitando contingencia")
+                StreamRuleSyncManager.reportStreamFailure(headers["Referer"] ?: "", currentMediaUrl, respCode, "HTTP_PROBE_ERROR")
+                options.add(StreamQualityOption("🎬 ${prefix}Reproducción Directa", "Auto", "Directo", currentMediaUrl, isMaster = true, isSuggested = true))
             }
         } catch (e: Throwable) {
-            android.util.Log.w("StreamQualityDetector", "No se pudo leer playlist HLS: ${e.message}")
+            android.util.Log.w("StreamQualityDetector", "No se pudo leer playlist HLS (${e.message}), habilitando contingencia: $mediaUrl")
+            StreamRuleSyncManager.reportStreamFailure(headers["Referer"] ?: "", currentMediaUrl, 500, e.message ?: "UNKNOWN_EXCEPTION")
+            options.add(StreamQualityOption("🎬 ${prefix}Reproducción Directa", "Auto", "Directo", currentMediaUrl, isMaster = true, isSuggested = true))
         }
         return@withContext options.distinctBy { it.streamUrl }.sortedWith(
             compareByDescending<StreamQualityOption> { it.isSuggested }

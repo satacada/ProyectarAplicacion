@@ -224,6 +224,13 @@ class ExoPlayerTvManager(private val context: Context) {
             allowed["Sec-Fetch-Dest"] = "empty"
             allowed["Sec-Fetch-Site"] = "cross-site"
         }
+        if (url.contains("tnmr.org", true) || url.contains("luluvdo.com", true) || url.contains("lulustream.com", true)) {
+            allowed["Origin"] = "https://luluvdo.com"
+            allowed["Referer"] = "https://luluvdo.com/"
+            allowed["Sec-Fetch-Mode"] = "cors"
+            allowed["Sec-Fetch-Dest"] = "empty"
+            allowed["Sec-Fetch-Site"] = "cross-site"
+        }
         return allowed
     }
 

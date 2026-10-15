@@ -21,6 +21,20 @@
                 }
             };
         }
+    // 1b. Intercepción segura de window.open contra popups publicitarios
+    try {
+        var origOpen = window.open;
+        window.open = function(u, t, f) {
+            if (!u || u === 'about:blank') return null;
+            var l = (typeof u === 'string') ? u.toLowerCase() : '';
+            if (l.indexOf('bet') !== -1 || l.indexOf('click') !== -1 || l.indexOf('track') !== -1 ||
+                l.indexOf('pop') !== -1 || l.indexOf('ad') !== -1 || l.indexOf('redirect') !== -1 ||
+                l.indexOf('traffic') !== -1 || l.indexOf('syndication') !== -1) {
+                console.warn('OMNICAST_AD_POPUP_BLOCKED: ' + u);
+                return null;
+            }
+            return origOpen ? origOpen.apply(window, arguments) : null;
+        };
     } catch(e) {}
 
     // 2. Filtro de URLs de medios
@@ -91,17 +105,29 @@
         if (!v || v.__omniMonitored) return;
         v.__omniMonitored = true;
 
+        function skipIfCommercial() {
+            if (isCommercial(v)) {
+                try {
+                    v.muted = true;
+                    if (v.duration && !isNaN(v.duration) && v.duration > 0 && v.duration < 60) {
+                        v.currentTime = v.duration;
+                    }
+                } catch(_) {}
+            }
+        }
+
         function checkAndReport(playing) {
-            if (isCommercial(v)) return;
+            if (isCommercial(v)) { skipIfCommercial(); return; }
             var s = v.currentSrc || v.src;
             if (s) reportMedia(s, document.title, v.duration || 0, playing);
         }
 
-        v.addEventListener('loadedmetadata', function() { checkAndReport(false); }, true);
-        v.addEventListener('durationchange', function() { checkAndReport(false); }, true);
-        v.addEventListener('play', function() { checkAndReport(true); }, true);
-        v.addEventListener('playing', function() { checkAndReport(true); }, true);
-        if (v.readyState >= 1) checkAndReport(!v.paused);
+        v.addEventListener('loadedmetadata', function() { skipIfCommercial(); checkAndReport(false); }, true);
+        v.addEventListener('durationchange', function() { skipIfCommercial(); checkAndReport(false); }, true);
+        v.addEventListener('play', function() { skipIfCommercial(); checkAndReport(true); }, true);
+        v.addEventListener('playing', function() { skipIfCommercial(); checkAndReport(true); }, true);
+        v.addEventListener('timeupdate', function() { skipIfCommercial(); }, true);
+        if (v.readyState >= 1) { skipIfCommercial(); checkAndReport(!v.paused); }
     }
 
     var vids = document.getElementsByTagName('video');

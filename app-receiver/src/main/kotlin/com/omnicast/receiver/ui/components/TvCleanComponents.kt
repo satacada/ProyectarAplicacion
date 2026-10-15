@@ -115,72 +115,58 @@ fun TvFolderRow(
     name: String,
     date: String,
     itemCount: Int,
-    isExpanded: Boolean,
-    items: List<TvPlaylistItem>,
-    onClick: () -> Unit,
-    onPlayItem: (TvPlaylistItem) -> Unit,
-    onMenuItem: (TvPlaylistItem) -> Unit = {}
+    onClick: () -> Unit
 ) {
     var isFocused by remember { mutableStateOf(false) }
 
-    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        Card(
-            colors = CardDefaults.cardColors(
-                containerColor = if (isFocused) Color(0xFF2E2442) else Color(0xFF1E182A)
-            ),
-            shape = RoundedCornerShape(12.dp),
-            modifier = Modifier
-                .fillMaxWidth()
-                .onFocusChanged { isFocused = it.isFocused }
-                .focusable()
-                .clickable(onClick = onClick)
-                .border(
-                    width = if (isFocused) 2.dp else 1.dp,
-                    color = if (isFocused) Color(0xFF38BDF8) else Color(0xFF2D223F),
-                    shape = RoundedCornerShape(12.dp)
-                )
+    Card(
+        colors = CardDefaults.cardColors(
+            containerColor = if (isFocused) Color(0xFF2E2442) else Color(0xFF1E182A)
+        ),
+        shape = RoundedCornerShape(12.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .onFocusChanged { isFocused = it.isFocused }
+            .focusable()
+            .clickable(onClick = onClick)
+            .border(
+                width = if (isFocused) 2.dp else 1.dp,
+                color = if (isFocused) Color(0xFF38BDF8) else Color(0xFF2D223F),
+                shape = RoundedCornerShape(12.dp)
+            )
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 14.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.spacedBy(14.dp)
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(14.dp)
+                Box(
+                    modifier = Modifier
+                        .size(38.dp)
+                        .background(if (isFocused) Color(0xFFD97706) else Color(0xFFF59E0B), RoundedCornerShape(8.dp)),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(38.dp)
-                            .background(if (isExpanded) Color(0xFFD97706) else Color(0xFFF59E0B), RoundedCornerShape(8.dp)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(if (isExpanded) "📂" else "📁", fontSize = 20.sp)
-                    }
-                    Text(text = name, color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                    Text("📁", fontSize = 20.sp)
                 }
-                Text(
-                    text = if (itemCount > 0) "$itemCount película${if (itemCount != 1) "s" else ""} guardada${if (itemCount != 1) "s" else ""} • $date" else date,
-                    color = Color(0xFF94A3B8),
-                    fontSize = 12.sp
-                )
-            }
-        }
-
-        AnimatedVisibility(visible = isExpanded && items.isNotEmpty()) {
-            Column(
-                verticalArrangement = Arrangement.spacedBy(5.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 32.dp, top = 4.dp, bottom = 8.dp)
-            ) {
-                items.forEach { item ->
-                    TvPlaylistItemRow(
-                        item = item,
-                        onPlay = { onPlayItem(item) },
-                        onMenu = { onMenuItem(item) }
+                Column {
+                    Text(text = name, color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                    Text(
+                        text = if (itemCount > 0) "$itemCount película${if (itemCount != 1) "s" else ""} guardada${if (itemCount != 1) "s" else ""}" else "Sin películas",
+                        color = Color(0xFF94A3B8),
+                        fontSize = 12.sp
                     )
                 }
+            }
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(text = date, color = Color(0xFF64748B), fontSize = 11.sp)
+                Text("▶", color = if (isFocused) Color(0xFF38BDF8) else Color(0xFF64748B), fontSize = 13.sp)
             }
         }
     }

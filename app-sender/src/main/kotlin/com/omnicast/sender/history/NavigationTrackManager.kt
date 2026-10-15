@@ -51,6 +51,57 @@ object NavigationTrackManager {
         } catch (_: Throwable) {}
     }
 
+    private const val KEY_PERSISTENT_STACK = "browser_persistent_stack"
+    private const val KEY_STACK_INDEX = "browser_stack_index"
+
+    fun pushBrowserHistory(context: Context, url: String, title: String) {
+        if (url.isBlank() || url.startsWith("about:") || url.contains("favicon")) return
+        try {
+            val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            val raw = prefs.getString(KEY_PERSISTENT_STACK, null)
+            val stack = if (!raw.isNullOrBlank()) {
+                runCatching { json.decodeFromString<MutableList<NavigationStep>>(raw) }.getOrDefault(mutableListOf())
+            } else mutableListOf()
+            val curIdx = prefs.getInt(KEY_STACK_INDEX, -1)
+            val newStack = if (curIdx in 0 until stack.size - 1) {
+                stack.subList(0, curIdx + 1).toMutableList()
+            } else stack
+
+            if (newStack.lastOrNull()?.url != url) {
+                val cleanTitle = if (title.isNotBlank() && title != "Cargando..." && title != "Transmisión") title else url
+                newStack.add(NavigationStep(url, cleanTitle))
+                if (newStack.size > MAX_STEPS) newStack.removeAt(0)
+            }
+            prefs.edit()
+                .putString(KEY_PERSISTENT_STACK, json.encodeToString(newStack))
+                .putInt(KEY_STACK_INDEX, newStack.size - 1)
+                .apply()
+        } catch (_: Throwable) {}
+    }
+
+    fun popPreviousBrowserUrl(context: Context): String? {
+        try {
+            val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            val raw = prefs.getString(KEY_PERSISTENT_STACK, null) ?: return null
+            val stack = runCatching { json.decodeFromString<List<NavigationStep>>(raw) }.getOrNull() ?: return null
+            val curIdx = prefs.getInt(KEY_STACK_INDEX, stack.size - 1)
+            if (curIdx > 0 && curIdx - 1 < stack.size) {
+                val newIdx = curIdx - 1
+                prefs.edit().putInt(KEY_STACK_INDEX, newIdx).apply()
+                return stack[newIdx].url
+            }
+        } catch (_: Throwable) {}
+        return null
+    }
+
+    fun canGoBackPersistent(context: Context): Boolean {
+        try {
+            val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            val curIdx = prefs.getInt(KEY_STACK_INDEX, -1)
+            return curIdx > 0
+        } catch (_: Throwable) { return false }
+    }
+
     fun getTrackFor(context: Context, key: String): List<NavigationStep> {
         return try {
             val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)

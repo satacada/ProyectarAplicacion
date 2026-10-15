@@ -19,7 +19,7 @@ class AdBlockDatabase private constructor(private val appContext: Context) :
     companion object {
         private const val TAG = "AdBlockDatabase"
         private const val DATABASE_NAME = "omnicast_adblock.db"
-        private const val DATABASE_VERSION = 2
+        private const val DATABASE_VERSION = 3
 
         private const val TABLE_DOMAINS = "ad_domains"
         private const val TABLE_KEYWORDS = "ad_keywords"
@@ -106,6 +106,12 @@ class AdBlockDatabase private constructor(private val appContext: Context) :
             onCreate(db)
             Log.i(TAG, "Base de datos AdBlock restablecida a v2 limpia.")
         }
+        if (oldVersion < 3) {
+            try {
+                db.execSQL("DELETE FROM $TABLE_DOMAINS WHERE $COL_VALUE LIKE '%movie%' OR $COL_VALUE LIKE '%pelis%' OR $COL_VALUE LIKE '%cine%' OR $COL_VALUE LIKE '%series%' OR $COL_VALUE LIKE '%film%' OR $COL_VALUE LIKE '%stream%'")
+                Log.i(TAG, "Base de datos AdBlock purgada de dominios de streaming en v3.")
+            } catch (_: Throwable) {}
+        }
     }
 
     private fun seedInitialData(db: SQLiteDatabase) {
@@ -170,7 +176,7 @@ class AdBlockDatabase private constructor(private val appContext: Context) :
                 }
             }
 
-            val falsePositives = listOf("reypelis.net", "tioplus.app", "sololatino.net", "solo-latino.net")
+            val falsePositives = listOf("reypelis.net", "tioplus.app", "sololatino.net", "solo-latino.net", "lamovie.org", "lamovie.tv", "pelisgo.com", "pelisplus.lat", "pelisplus.to")
             for (fp in falsePositives) {
                 domainsSet.remove(fp)
                 try { writableDatabase.delete(TABLE_DOMAINS, "$COL_VALUE = ?", arrayOf(fp)) } catch (_: Throwable) {}
@@ -190,6 +196,10 @@ class AdBlockDatabase private constructor(private val appContext: Context) :
     fun addDomain(domain: String, category: String = "ad"): Boolean {
         val clean = domain.trim().lowercase()
         if (clean.isBlank()) return false
+        if (clean.contains("movie") || clean.contains("pelis") || clean.contains("cine") || clean.contains("series") || clean.contains("film") || clean.contains("stream")) {
+            Log.w(TAG, "Dominio cinematográfico protegido contra bloqueo: $clean")
+            return false
+        }
         return try {
             val db = writableDatabase
             insertItem(db, TABLE_DOMAINS, clean, category)

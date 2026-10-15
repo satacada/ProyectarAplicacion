@@ -73,14 +73,8 @@ object BrowserUrlHelper {
         userAgent: String,
         rawHeaders: Map<String, String>? = null
     ): Map<String, String> {
-        val headers = mutableMapOf<String, String>()
+        val headers = StreamIntelligenceEngine.resolveDynamicHeaders(streamUrl, currentUrl, rawHeaders).toMutableMap()
         try {
-            rawHeaders?.forEach { (k, v) ->
-                if (k.equals("referer", ignoreCase = true) && v.isNotBlank()) headers["Referer"] = v
-                if (k.equals("origin", ignoreCase = true) && v.isNotBlank()) headers["Origin"] = v
-                if (k.equals("user-agent", ignoreCase = true) && v.isNotBlank()) headers["User-Agent"] = v
-                if (k.equals("cookie", ignoreCase = true) && v.isNotBlank()) headers["Cookie"] = v
-            }
             val cookie = CookieManager.getInstance().getCookie(streamUrl)
                 ?: CookieManager.getInstance().getCookie(currentUrl)
                 ?: (if (streamUrl.contains("dailymotion.com") || streamUrl.contains("dmcdn.net")) CookieManager.getInstance().getCookie("https://www.dailymotion.com") else null) ?: ""
@@ -91,24 +85,18 @@ object BrowserUrlHelper {
             } else if (streamUrl.contains("dailymotion.com", ignoreCase = true) || streamUrl.contains("dmcdn.net", ignoreCase = true)) {
                 headers["Referer"] = "https://www.dailymotion.com/"
                 headers["Origin"] = "https://www.dailymotion.com"
-                headers["Sec-Fetch-Mode"] = "cors"
-                headers["Sec-Fetch-Dest"] = "empty"
-                headers["Sec-Fetch-Site"] = "cross-site"
+            } else if (streamUrl.contains("tnmr.org", ignoreCase = true) || streamUrl.contains("luluvdo.com", ignoreCase = true) || streamUrl.contains("lulustream.com", ignoreCase = true)) {
+                headers["Origin"] = "https://luluvdo.com"
+                headers["Referer"] = "https://luluvdo.com/"
             } else if (streamUrl.contains("mail.ru", ignoreCase = true)) {
                 headers.remove("Referer")
             } else if (streamUrl.contains("fastream.to", ignoreCase = true)) {
                 val fastreamId = Regex("(?:/hls\\d*/\\d+/\\d+/|/embed-|/)([a-zA-Z0-9]{10,12})(?:[_,.]|$)").find(streamUrl)?.groupValues?.get(1)
                 headers["Referer"] = if (!fastreamId.isNullOrBlank()) "https://fastream.to/embed-$fastreamId.html" else "https://fastream.to/embed-video.html"
                 headers["Origin"] = "https://fastream.to"
-                headers["Sec-Fetch-Mode"] = "cors"
-                headers["Sec-Fetch-Dest"] = "empty"
-                headers["Sec-Fetch-Site"] = "cross-site"
             } else if (streamUrl.contains("pelisserieshoy.com", ignoreCase = true) || streamUrl.contains("p.php?url=", ignoreCase = true)) {
                 headers["Referer"] = "https://player.pelisserieshoy.com/"
                 headers["Origin"] = "https://player.pelisserieshoy.com"
-                headers["Sec-Fetch-Mode"] = "cors"
-                headers["Sec-Fetch-Dest"] = "empty"
-                headers["Sec-Fetch-Site"] = "cross-site"
             } else if (streamUrl.contains("morencius.com", ignoreCase = true) && !headers.containsKey("Referer")) {
                 headers["Referer"] = "https://embed69.org/"
             } else if (!headers.containsKey("Referer") && currentUrl.isNotBlank()) {

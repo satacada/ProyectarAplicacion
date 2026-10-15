@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 100,
-  "versionCodeReceiver": 83,
-  "versionName": "3.32.55",
-  "releaseTag": "v3.32.55",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.55/omnicast-sender-v3.32.55.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.55/omnicast-receiver-v3.32.55.apk",
-  "changelog": "v3.32.55: Sincronización bidireccional automática de listas guardadas desde TV hacia el celular vinculado, tuerca de ajustes en reproductor de TV (Ver más tarde y Salir), y auto-renovación de enlaces expirados por QR."
+  "versionCodeSender": 101,
+  "versionCodeReceiver": 84,
+  "versionName": "3.32.56",
+  "releaseTag": "v3.32.56",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.56/omnicast-sender-v3.32.56.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.56/omnicast-receiver-v3.32.56.apk",
+  "changelog": "v3.32.56: Motor heurístico dinámico StreamIntelligenceEngine contra trampas/anuncios, resolución autónoma de cabeceras/embeds (Lulustream/tnmr), protección contra cierres por Chromium (onRenderProcessGone), Swipe-to-refresh en navegador, Yandex dial, historial persistente con breadcrumbs offline, y buscador por carpeta en TV con retorno en 1 clic."
 }

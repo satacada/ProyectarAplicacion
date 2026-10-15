@@ -28,12 +28,13 @@ fun BrowserHomeScreen(
     onSelectUrl: (String) -> Unit
 ) {
     val shortcuts = listOf(
+        SpeedDialBookmark("Yandex", "https://yandex.com", "🔴", "Búsqueda"),
         SpeedDialBookmark("Fútbol Libre", "https://www.google.com/search?q=futbol+libre+en+vivo", "⚽", "Deportes"),
         SpeedDialBookmark("Rojadirecta", "https://www.google.com/search?q=rojadirecta+online+en+vivo", "🏆", "Deportes"),
         SpeedDialBookmark("Win Sports", "https://www.google.com/search?q=win+sports+online+en+vivo", "⚡", "Deportes"),
+        SpeedDialBookmark("Películas", "https://www.google.com/search?q=ver+peliculas+online+gratis", "🎯", "Cine"),
         SpeedDialBookmark("YouTube", "https://m.youtube.com", "▶", "Video"),
         SpeedDialBookmark("Dailymotion", "https://www.dailymotion.com", "📹", "Video"),
-        SpeedDialBookmark("Películas", "https://www.google.com/search?q=ver+peliculas+online+gratis", "🎯", "Cine"),
         SpeedDialBookmark("Twitch TV", "https://m.twitch.tv", "💬", "Streams"),
         SpeedDialBookmark("Google", "https://www.google.com", "🔍", "Búsqueda")
     )

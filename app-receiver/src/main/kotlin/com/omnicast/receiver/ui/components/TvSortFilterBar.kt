@@ -180,3 +180,23 @@ fun filterAndSortTvHistory(
         )
     }
 }
+
+fun filterAndSortTvPlaylistItems(
+    items: List<TvPlaylistItem>,
+    query: String,
+    sort: TvVideoSortOrder
+): List<TvPlaylistItem> {
+    val q = query.trim().lowercase()
+    val filtered = if (q.isBlank()) items else items.filter {
+        it.title.lowercase().contains(q) || it.url.lowercase().contains(q)
+    }
+    return when (sort) {
+        TvVideoSortOrder.NEWEST -> filtered.sortedByDescending { it.timestamp }
+        TvVideoSortOrder.OLDEST -> filtered.sortedBy { it.timestamp }
+        TvVideoSortOrder.NAME_AZ -> filtered.sortedBy { it.title.lowercase() }
+        TvVideoSortOrder.IN_PROGRESS -> filtered.sortedWith(
+            compareByDescending<TvPlaylistItem> { it.lastPositionMs >= 5000L }
+                .thenByDescending { it.timestamp }
+        )
+    }
+}

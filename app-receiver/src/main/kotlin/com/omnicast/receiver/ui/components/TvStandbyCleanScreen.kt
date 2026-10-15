@@ -1,15 +1,22 @@
 package com.omnicast.receiver.ui.components
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -32,14 +39,20 @@ fun TvStandbyCleanScreen(
     expiredItemForRenew: TvPlaylistItem? = null,
     onClearExpiredRenew: () -> Unit = {}
 ) {
-    var selectedTab by remember { mutableIntStateOf(1) } // 0: Recientes, 1: Todo, 2: Favoritos
-    var expandedPlaylistId by remember { mutableStateOf<String?>(null) }
+    var selectedTab by remember { mutableIntStateOf(1) } // 0: Recientes, 1: Guardados, 2: Favoritos
+    var enteredPlaylistId by remember { mutableStateOf<String?>(null) }
     var menuItem by remember { mutableStateOf<TvPlaylistItem?>(null) }
     var sharingItem by remember { mutableStateOf<TvPlaylistItem?>(null) }
     var renewItem by remember { mutableStateOf<TvPlaylistItem?>(null) }
     var searchQuery by remember { mutableStateOf("") }
     var selectedSort by remember { mutableStateOf(TvVideoSortOrder.NEWEST) }
     val listState = androidx.compose.foundation.lazy.rememberLazyListState()
+
+    // Regreso en 1 solo clic al nivel de carpetas desde el video 60
+    BackHandler(enabled = enteredPlaylistId != null) {
+        enteredPlaylistId = null
+        searchQuery = ""
+    }
 
     LaunchedEffect(expiredItemForRenew) {
         if (expiredItemForRenew != null) {
@@ -50,33 +63,26 @@ fun TvStandbyCleanScreen(
     val activePlaylists = remember(playlists) {
         if (playlists.isEmpty()) {
             listOf(
-                TvPlaylist("from_website", "FromWebSite", emptyList(), false, System.currentTimeMillis()),
+                TvPlaylist("from_website", "Ver más tarde", emptyList(), false, System.currentTimeMillis()),
                 TvPlaylist("favoritos", "⭐ Favoritos", emptyList(), true, System.currentTimeMillis())
             )
         } else {
-            playlists
+            playlists.map {
+                if (it.name == "FromWebSite") it.copy(name = "Ver más tarde") else it
+            }
         }
     }
 
-    val filteredPlaylists = remember(activePlaylists, searchQuery, selectedSort) {
-        filterAndSortTvPlaylists(activePlaylists, searchQuery, selectedSort)
+    val currentPlaylist = remember(activePlaylists, enteredPlaylistId) {
+        activePlaylists.find { it.id == enteredPlaylistId }
+    }
+
+    val playlistFilteredItems = remember(currentPlaylist, searchQuery, selectedSort) {
+        currentPlaylist?.let { filterAndSortTvPlaylistItems(it.items, searchQuery, selectedSort) } ?: emptyList()
     }
 
     val filteredHistory = remember(history, searchQuery, selectedSort) {
         filterAndSortTvHistory(history, searchQuery, selectedSort)
-    }
-
-    val totalMoviesInPlaylists = remember(filteredPlaylists) { filteredPlaylists.sumOf { it.items.size } }
-
-    val headerText = when (selectedTab) {
-        0 -> "${filteredHistory.size} video${if (filteredHistory.size != 1) "s" else ""} reciente${if (filteredHistory.size != 1) "s" else ""}"
-        1 -> "$totalMoviesInPlaylists película${if (totalMoviesInPlaylists != 1) "s" else ""} en guardados (${filteredPlaylists.size} listas)"
-        2 -> {
-            val favs = filteredPlaylists.filter { it.isDefault || it.name.contains("Favorito", ignoreCase = true) }
-            val favCount = favs.sumOf { it.items.size }
-            "$favCount película${if (favCount != 1) "s" else ""} en favoritos"
-        }
-        else -> ""
     }
 
     Box(
@@ -89,84 +95,90 @@ fun TvStandbyCleanScreen(
                 .fillMaxSize()
                 .padding(top = 20.dp, start = 36.dp, end = 36.dp, bottom = 80.dp)
         ) {
-            TvCleanTopBar(
-                selectedTab = selectedTab,
-                onSelectTab = { selectedTab = it },
-                updateState = updateState,
-                onCheckUpdate = onCheckUpdate,
-                onDownloadAndInstall = onDownloadAndInstall
-            )
-
-            Spacer(modifier = Modifier.height(14.dp))
-
-            TvSortFilterBar(
-                searchQuery = searchQuery,
-                onSearchQueryChange = { searchQuery = it },
-                selectedSort = selectedSort,
-                onSortChange = { selectedSort = it },
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            Text(
-                text = headerText,
-                color = Color(0xFF94A3B8),
-                fontSize = 13.sp,
-                fontWeight = FontWeight.Medium
-            )
-
-            Spacer(modifier = Modifier.height(10.dp))
+            if (enteredPlaylistId == null) {
+                TvCleanTopBar(
+                    selectedTab = selectedTab,
+                    onSelectTab = { selectedTab = it; searchQuery = "" },
+                    updateState = updateState,
+                    onCheckUpdate = onCheckUpdate,
+                    onDownloadAndInstall = onDownloadAndInstall
+                )
+                Spacer(modifier = Modifier.height(14.dp))
+            } else {
+                // Cabecera interna de la carpeta con botón de retorno y buscador superior exclusivo
+                TvFolderDetailHeader(
+                    folderName = currentPlaylist?.name ?: "Carpeta",
+                    itemCount = currentPlaylist?.items?.size ?: 0,
+                    onBack = { enteredPlaylistId = null; searchQuery = "" }
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+                TvSortFilterBar(
+                    searchQuery = searchQuery,
+                    onSearchQueryChange = { searchQuery = it },
+                    selectedSort = selectedSort,
+                    onSortChange = { selectedSort = it },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+            }
 
             Row(modifier = Modifier.weight(1f).fillMaxWidth()) {
                 Box(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
-                    when (selectedTab) {
-                        0 -> {
-                            if (filteredHistory.isEmpty()) {
-                                TvEmptyState(if (searchQuery.isNotBlank()) "No se encontraron videos para \"$searchQuery\"" else "No hay videos reproducidos recientemente.")
-                            } else {
-                                LazyColumn(
-                                    state = listState,
-                                    verticalArrangement = Arrangement.spacedBy(10.dp),
-                                    modifier = Modifier.fillMaxSize()
-                                ) {
-                                    items(filteredHistory, key = { it.id }) { item ->
-                                        TvRecentItemRow(item = item, onClick = { onPlayHistory(item) })
-                                    }
+                    if (enteredPlaylistId != null) {
+                        // Vista detallada de películas dentro de la carpeta
+                        if (playlistFilteredItems.isEmpty()) {
+                            TvEmptyState(if (searchQuery.isNotBlank()) "No se encontraron videos para \"$searchQuery\"" else "Esta carpeta no contiene películas.")
+                        } else {
+                            LazyColumn(
+                                state = listState,
+                                verticalArrangement = Arrangement.spacedBy(10.dp),
+                                modifier = Modifier.fillMaxSize()
+                            ) {
+                                items(playlistFilteredItems, key = { it.url }) { item ->
+                                    TvPlaylistItemRow(
+                                        item = item,
+                                        onPlay = { onPlayPlaylist(item) },
+                                        onMenu = { menuItem = item }
+                                    )
                                 }
                             }
                         }
-                        1 -> {
-                            if (filteredPlaylists.isEmpty() || filteredPlaylists.all { it.items.isEmpty() }) {
-                                TvEmptyState(if (searchQuery.isNotBlank()) "No se encontraron películas para \"$searchQuery\"" else "No hay películas guardadas aún.")
-                            } else {
+                    } else {
+                        // Vista raíz: Solo las 2 carpetas principales o historial
+                        when (selectedTab) {
+                            0 -> {
+                                if (filteredHistory.isEmpty()) {
+                                    TvEmptyState("No hay videos reproducidos recientemente.")
+                                } else {
+                                    LazyColumn(
+                                        state = listState,
+                                        verticalArrangement = Arrangement.spacedBy(10.dp),
+                                        modifier = Modifier.fillMaxSize()
+                                    ) {
+                                        items(filteredHistory, key = { it.id }) { item ->
+                                            TvRecentItemRow(item = item, onClick = { onPlayHistory(item) })
+                                        }
+                                    }
+                                }
+                            }
+                            1 -> {
                                 LazyColumn(
                                     state = listState,
                                     verticalArrangement = Arrangement.spacedBy(10.dp),
                                     modifier = Modifier.fillMaxSize()
                                 ) {
-                                    items(filteredPlaylists, key = { it.id }) { pl ->
+                                    items(activePlaylists, key = { it.id }) { pl ->
                                         TvFolderRow(
                                             name = pl.name,
                                             date = formatFolderDate(pl.createdAt),
                                             itemCount = pl.items.size,
-                                            isExpanded = expandedPlaylistId == pl.id || searchQuery.isNotBlank(),
-                                            items = pl.items,
-                                            onClick = {
-                                                expandedPlaylistId = if (expandedPlaylistId == pl.id) null else pl.id
-                                            },
-                                            onPlayItem = onPlayPlaylist,
-                                            onMenuItem = { menuItem = it }
+                                            onClick = { enteredPlaylistId = pl.id; searchQuery = "" }
                                         )
                                     }
                                 }
                             }
-                        }
-                        2 -> {
-                            val favs = filteredPlaylists.filter { it.isDefault || it.name.contains("Favorito", ignoreCase = true) }
-                            if (favs.isEmpty() || favs.all { it.items.isEmpty() }) {
-                                TvEmptyState(if (searchQuery.isNotBlank()) "No se encontraron favoritos para \"$searchQuery\"" else "No tienes carpetas ni videos en Favoritos.")
-                            } else {
+                            2 -> {
+                                val favs = activePlaylists.filter { it.isDefault || it.name.contains("Favorito", ignoreCase = true) }
                                 LazyColumn(
                                     state = listState,
                                     verticalArrangement = Arrangement.spacedBy(10.dp),
@@ -177,13 +189,7 @@ fun TvStandbyCleanScreen(
                                             name = pl.name,
                                             date = formatFolderDate(pl.createdAt),
                                             itemCount = pl.items.size,
-                                            isExpanded = expandedPlaylistId == pl.id || searchQuery.isNotBlank(),
-                                            items = pl.items,
-                                            onClick = {
-                                                expandedPlaylistId = if (expandedPlaylistId == pl.id) null else pl.id
-                                            },
-                                            onPlayItem = onPlayPlaylist,
-                                            onMenuItem = { menuItem = it }
+                                            onClick = { enteredPlaylistId = pl.id; searchQuery = "" }
                                         )
                                     }
                                 }
@@ -201,7 +207,7 @@ fun TvStandbyCleanScreen(
                     modifier = Modifier.padding(vertical = 4.dp)
                 ) {
                     Text(
-                        "¿No encuentras tus archivos? Actualiza o envía desde tu celular",
+                        if (enteredPlaylistId != null) "Pulsa [Atrás] en el control para volver a las carpetas" else "¿No encuentras tus archivos? Actualiza o envía desde tu celular",
                         color = Color(0xFF38BDF8),
                         fontSize = 12.sp,
                         modifier = Modifier.padding(horizontal = 18.dp, vertical = 6.dp)
@@ -243,11 +249,24 @@ fun TvStandbyCleanScreen(
 }
 
 @Composable
+private fun TvFolderDetailHeader(folderName: String, itemCount: Int, onBack: () -> Unit) {
+    var isBackFocused by remember { mutableStateOf(false) }
+    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+        Card(
+            colors = CardDefaults.cardColors(containerColor = if (isBackFocused) Color(0xFF38BDF8) else Color(0xFF251C35)),
+            shape = RoundedCornerShape(8.dp),
+            modifier = Modifier.onFocusChanged { isBackFocused = it.isFocused }.focusable().clickable(onClick = onBack)
+                .border(1.dp, if (isBackFocused) Color.White else Color(0xFF38BDF8), RoundedCornerShape(8.dp))
+        ) {
+            Text("◀ Volver a carpetas", color = if (isBackFocused) Color.Black else Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp))
+        }
+        Text("📂 $folderName ($itemCount película${if (itemCount != 1) "s" else ""})", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+    }
+}
+
+@Composable
 private fun TvEmptyState(msg: String) {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Text(msg, color = Color(0xFF64748B), fontSize = 14.sp)
     }
 }

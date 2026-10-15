@@ -25,6 +25,7 @@
 - **[HU-003: Menú Lateral Móvil con Historial y Tiempo Exacto](file:///d:/APLICACIONES/proyectarAplicacion/doc/historias-usuario/HU-003-menu-lateral-historial.md):** Cajón lateral activado exclusivamente por botón (sin gestos accidentales de scroll), con historial y guardadas.
 - **[HU-004: Detección Limpia y Anti-Duplicados en Streams Web](file:///d:/APLICACIONES/proyectarAplicacion/doc/historias-usuario/HU-004-deduplicacion-streams-web.md):** Extracción dinámica de título real del DOM y sincronización instantánea de títulos al proyectar nuevos flujos.
 - **[HU-005: Detección Hexagonal y Principio "Poner y Sacar"](file:///d:/APLICACIONES/proyectarAplicacion/doc/historias-usuario/HU-005-extraccion-hexagonal-streams.md):** Arquitectura Ports & Adapters; extractores universales intocables y plugins modulares por sitio sin código spaghetti.
+- **[HU-006: Auto-Renovación de Flujos Expirados en la TV Box](file:///d:/APLICACIONES/proyectarAplicacion/doc/historias-usuario/HU-006-renovacion-enlaces-expirados-tv.md):** Recuperación autónoma de videos guardados caducados (HTTP 403/404) mediante extractor nativo/WebView headless en TV, sincronización silenciosa por socket y respaldo por QR (ADR-003).
 
 ---
 

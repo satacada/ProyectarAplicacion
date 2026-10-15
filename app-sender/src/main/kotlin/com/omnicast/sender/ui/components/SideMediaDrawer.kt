@@ -1,7 +1,9 @@
 package com.omnicast.sender.ui.components
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -20,6 +22,7 @@ import com.omnicast.sender.history.HistoryItem
 import com.omnicast.sender.history.PlayHistoryManager
 import com.omnicast.sender.playlist.Playlist
 import com.omnicast.sender.playlist.PlaylistManager
+import com.omnicast.sender.ui.utils.ShareUtils
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -77,53 +80,24 @@ private fun DrawerSheetContent(
     var playlists by remember { mutableStateOf(playlistManager.getPlaylists()) }
 
     Column(modifier = Modifier.fillMaxSize().padding(14.dp)) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
             Column {
                 Text("📺 Mis Videos", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
                 Text("Historial y Guardadas", fontSize = 11.sp, color = Color(0xFF94A3B8))
             }
-            IconButton(onClick = onClose) {
-                Text("✕", color = Color(0xFF94A3B8), fontSize = 16.sp, fontWeight = FontWeight.Bold)
-            }
+            IconButton(onClick = onClose) { Text("✕", color = Color(0xFF94A3B8), fontSize = 16.sp, fontWeight = FontWeight.Bold) }
         }
-
         Spacer(modifier = Modifier.height(10.dp))
-
-        TabRow(
-            selectedTabIndex = selectedTab,
-            containerColor = Color(0xFF1E293B),
-            contentColor = Color(0xFF38BDF8)
-        ) {
-            Tab(
-                selected = selectedTab == 0,
-                onClick = { selectedTab = 0; historyList = historyManager.getHistory() },
-                text = { Text("🕒 Historial (" + historyList.size + ")", fontSize = 12.sp) }
-            )
-            Tab(
-                selected = selectedTab == 1,
-                onClick = { selectedTab = 1; playlists = playlistManager.getPlaylists() },
-                text = { Text("⭐ Guardadas (" + playlists.sumOf { it.items.size } + ")", fontSize = 12.sp) }
-            )
+        TabRow(selectedTabIndex = selectedTab, containerColor = Color(0xFF1E293B), contentColor = Color(0xFF38BDF8)) {
+            Tab(selected = selectedTab == 0, onClick = { selectedTab = 0; historyList = historyManager.getHistory() }, text = { Text("🕒 Historial (" + historyList.size + ")", fontSize = 12.sp) })
+            Tab(selected = selectedTab == 1, onClick = { selectedTab = 1; playlists = playlistManager.getPlaylists() }, text = { Text("⭐ Guardadas (" + playlists.sumOf { it.items.size } + " pelis)", fontSize = 11.sp) })
         }
-
         Spacer(modifier = Modifier.height(10.dp))
-
         if (selectedTab == 0) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 Text("Vistos recientemente", fontSize = 11.sp, color = Color(0xFF64748B))
                 if (historyList.isNotEmpty()) {
-                    TextButton(
-                        onClick = { historyManager.clear(keepFavorites = false); historyList = emptyList() },
-                        contentPadding = PaddingValues(horizontal = 6.dp, vertical = 2.dp)
-                    ) {
+                    TextButton(onClick = { historyManager.clear(keepFavorites = false); historyList = emptyList() }, contentPadding = PaddingValues(horizontal = 6.dp, vertical = 2.dp)) {
                         Text("🗑 Limpiar", fontSize = 11.sp, color = Color(0xFFEF4444))
                     }
                 }
@@ -178,8 +152,8 @@ private fun HistoryTextCard(
                 overflow = TextOverflow.Ellipsis
             )
 
-            val posStr = formatTime(item.lastPositionMs)
-            val durStr = if (item.durationMs > 0L) formatTime(item.durationMs) else null
+            val posStr = ShareUtils.formatTime(item.lastPositionMs)
+            val durStr = if (item.durationMs > 0L) ShareUtils.formatTime(item.durationMs) else null
             val progressText = if (durStr != null) "▶ $posStr / $durStr" else if (item.lastPositionMs > 0L) "▶ $posStr" else "▶ 0:00"
 
             Text(
@@ -225,6 +199,7 @@ private fun HistoryTextCard(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun SavedPlaylistsTextList(
     playlists: List<Playlist>,
@@ -233,6 +208,8 @@ private fun SavedPlaylistsTextList(
     onRemoveItem: (String, String) -> Unit
 ) {
     val context = LocalContext.current
+    var actionItem by remember { mutableStateOf<Pair<String, HistoryItem>?>(null) }
+
     if (playlists.isEmpty() || playlists.all { it.items.isEmpty() }) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text("No tienes videos guardados aún.\nUsa '⭐ Guardar' en el navegador.", color = Color(0xFF64748B), fontSize = 12.sp)
@@ -241,17 +218,22 @@ private fun SavedPlaylistsTextList(
         LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             playlists.filter { it.items.isNotEmpty() }.forEach { pl ->
                 item {
-                    Text("📁 " + pl.name + " (" + pl.items.size + ")", color = Color(0xFF38BDF8), fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                    Text("📁 ${pl.name} (${pl.items.size} películas)", color = Color(0xFF38BDF8), fontWeight = FontWeight.Bold, fontSize = 13.sp)
                 }
                 items(pl.items, key = { pl.id + "_" + it.url }) { video ->
                     Card(
                         colors = CardDefaults.cardColors(containerColor = Color(0xFF1E293B)),
                         shape = RoundedCornerShape(8.dp),
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .combinedClickable(
+                                onClick = { onPlay(video.url, video.title, video.headers, video.lastPositionMs) },
+                                onLongClick = { actionItem = pl.id to video }
+                            )
                     ) {
                         Column(modifier = Modifier.padding(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                             Text(video.title, color = Color.White, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                            val posText = if (video.lastPositionMs > 0L) "▶ " + formatTime(video.lastPositionMs) else "▶ 0:00"
+                            val posText = if (video.lastPositionMs > 0L) "▶ " + ShareUtils.formatTime(video.lastPositionMs) else "▶ 0:00"
                             Text(posText, color = Color(0xFF10B981), fontSize = 10.sp)
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -267,9 +249,9 @@ private fun SavedPlaylistsTextList(
                                         onClick = { onOpenWeb(video.pageUrl ?: video.url) },
                                         modifier = Modifier.size(30.dp).background(Color(0xFF334155), RoundedCornerShape(6.dp))
                                     ) { Text("🌐", fontSize = 13.sp) }
-                                    if (com.omnicast.sender.ui.utils.ShareUtils.canShare(video.url, video.pageUrl)) {
+                                    if (ShareUtils.canShare(video.url, video.pageUrl)) {
                                         IconButton(
-                                            onClick = { com.omnicast.sender.ui.utils.ShareUtils.shareVideo(context, video.title, video.url, video.pageUrl) },
+                                            onClick = { ShareUtils.shareVideo(context, video.title, video.url, video.pageUrl) },
                                             modifier = Modifier.size(30.dp).background(Color(0xFF0284C7), RoundedCornerShape(6.dp))
                                         ) { Text("🔗", fontSize = 13.sp) }
                                     }
@@ -283,11 +265,15 @@ private fun SavedPlaylistsTextList(
                 }
             }
         }
-    }
-}
 
-private fun formatTime(ms: Long): String {
-    if (ms <= 0L) return "0:00"
-    val s = (ms / 1000) % 60; val m = (ms / 60000) % 60; val h = ms / 3600000
-    return if (h > 0) "%d:%02d:%02d".format(h, m, s) else "%d:%02d".format(m, s)
+        actionItem?.let { (plId, v) ->
+            SavedVideoActionSheet(
+                item = v,
+                onPlay = { onPlay(v.url, v.title, v.headers, v.lastPositionMs) },
+                onShare = { ShareUtils.shareVideo(context, v.title, v.url, v.pageUrl) },
+                onDelete = { onRemoveItem(plId, v.url) },
+                onDismiss = { actionItem = null }
+            )
+        }
+    }
 }

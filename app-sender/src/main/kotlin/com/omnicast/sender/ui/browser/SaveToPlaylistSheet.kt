@@ -163,20 +163,14 @@ fun SaveToPlaylistSheet(
                                     fontWeight = FontWeight.SemiBold
                                 )
                                 Text(
-                                    text = "${pl.items.size} videos guardados",
+                                    text = "${pl.items.size} película${if (pl.items.size != 1) "s" else ""} guardada${if (pl.items.size != 1) "s" else ""}",
                                     color = Color(0xFF64748B),
                                     fontSize = 11.sp
                                 )
                             }
                             Checkbox(
                                 checked = isChecked,
-                                onCheckedChange = {
-                                    val added = playlistManager.toggleVideoInPlaylist(pl.id, videoItem)
-                                    playlists = playlistManager.getPlaylists()
-                                    if (added) {
-                                        onSaved(pl.name)
-                                    }
-                                },
+                                onCheckedChange = null,
                                 colors = CheckboxDefaults.colors(
                                     checkedColor = Color(0xFF10B981),
                                     checkmarkColor = Color.White

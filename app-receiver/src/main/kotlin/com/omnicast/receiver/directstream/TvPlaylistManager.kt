@@ -102,4 +102,13 @@ class TvPlaylistManager(private val context: Context) {
         }
         return 0L
     }
+
+    fun removeItem(url: String) {
+        val cleanUrl = url.substringBefore('?')
+        val updated = _playlists.value.map { pl ->
+            pl.copy(items = pl.items.filterNot { it.url == url || it.url.substringBefore('?') == cleanUrl })
+        }
+        _playlists.value = updated
+        try { file.writeText(json.encodeToString(updated)) } catch (_: Throwable) {}
+    }
 }

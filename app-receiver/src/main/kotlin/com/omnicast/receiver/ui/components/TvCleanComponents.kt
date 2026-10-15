@@ -119,7 +119,7 @@ fun TvFolderRow(
     items: List<TvPlaylistItem>,
     onClick: () -> Unit,
     onPlayItem: (TvPlaylistItem) -> Unit,
-    onShareItem: (TvPlaylistItem) -> Unit = {}
+    onMenuItem: (TvPlaylistItem) -> Unit = {}
 ) {
     var isFocused by remember { mutableStateOf(false) }
 
@@ -155,7 +155,7 @@ fun TvFolderRow(
                     Text(text = name, color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
                 }
                 Text(
-                    text = if (itemCount > 0) "$itemCount video${if (itemCount != 1) "s" else ""} • $date" else date,
+                    text = if (itemCount > 0) "$itemCount película${if (itemCount != 1) "s" else ""} guardada${if (itemCount != 1) "s" else ""} • $date" else date,
                     color = Color(0xFF94A3B8),
                     fontSize = 12.sp
                 )
@@ -163,20 +163,16 @@ fun TvFolderRow(
         }
 
         AnimatedVisibility(visible = isExpanded && items.isNotEmpty()) {
-            LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
+            Column(
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+                modifier = Modifier.fillMaxWidth().padding(top = 2.dp, bottom = 6.dp)
             ) {
-                items(items, key = { it.url + it.title }) { item ->
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        TvPlaylistVideoCard(item = item, onClick = { onPlayItem(item) })
-                        if (TvShareHelper.canShare(item)) {
-                            TvShareButton(onClick = { onShareItem(item) })
-                        }
-                    }
+                items.forEach { item ->
+                    TvPlaylistItemRow(
+                        item = item,
+                        onPlay = { onPlayItem(item) },
+                        onMenu = { onMenuItem(item) }
+                    )
                 }
             }
         }

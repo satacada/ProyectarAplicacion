@@ -114,8 +114,7 @@ class PlaylistManager(context: Context) {
         val tB = cleanTitleForMatch(b.title)
         if (tA.isNotBlank() && tB.isNotBlank() && isNonGenericTitle(tA) && isNonGenericTitle(tB)) {
             if (tA == tB) return true
-            if (tA.contains(tB) || tB.contains(tA)) return true
-            if (calculateTitleSimilarity(tA, tB) >= 0.75) return true
+            if (calculateTitleSimilarity(tA, tB) >= 0.85) return true
         }
         return false
     }

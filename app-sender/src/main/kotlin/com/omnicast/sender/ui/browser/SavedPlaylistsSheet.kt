@@ -1,7 +1,9 @@
 package com.omnicast.sender.ui.browser
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -18,6 +20,7 @@ import androidx.compose.ui.unit.sp
 import com.omnicast.sender.history.HistoryItem
 import com.omnicast.sender.playlist.Playlist
 import com.omnicast.sender.playlist.PlaylistManager
+import com.omnicast.sender.ui.components.SavedVideoActionSheet
 
 /**
  * Pantalla modal para explorar y administrar Listas de Reproducción y Marcadores Guardados.
@@ -178,7 +181,11 @@ private fun PlaylistFolderListView(
                             Text(if (pl.isDefault) "📁" else "🎬", fontSize = 22.sp)
                             Column {
                                 Text(pl.name, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
-                                Text("${pl.items.size} videos guardados", color = Color(0xFF94A3B8), fontSize = 11.sp)
+                                Text(
+                                    text = "${pl.items.size} película${if (pl.items.size != 1) "s" else ""} guardada${if (pl.items.size != 1) "s" else ""}",
+                                    color = Color(0xFF94A3B8),
+                                    fontSize = 11.sp
+                                )
                             }
                         }
                         if (!pl.isDefault) {
@@ -193,6 +200,7 @@ private fun PlaylistFolderListView(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun PlaylistDetailView(
     playlist: Playlist,
@@ -200,6 +208,8 @@ private fun PlaylistDetailView(
     onRemoveItem: (String) -> Unit
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
+    var actionItem by remember { mutableStateOf<HistoryItem?>(null) }
+
     if (playlist.items.isEmpty()) {
         Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
             Text("Esta lista está vacía. Guarda videos desde el explorador.", color = Color(0xFF94A3B8), fontSize = 13.sp)
@@ -209,7 +219,13 @@ private fun PlaylistDetailView(
             items(playlist.items, key = { it.url }) { item ->
                 Card(
                     colors = CardDefaults.cardColors(containerColor = Color(0xFF1E293B)),
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp)
+                        .combinedClickable(
+                            onClick = { onTransmit(item) },
+                            onLongClick = { actionItem = item }
+                        )
                 ) {
                     Row(
                         modifier = Modifier.padding(12.dp),
@@ -251,6 +267,16 @@ private fun PlaylistDetailView(
                     }
                 }
             }
+        }
+
+        actionItem?.let { itm ->
+            SavedVideoActionSheet(
+                item = itm,
+                onPlay = { onTransmit(itm) },
+                onShare = { com.omnicast.sender.ui.utils.ShareUtils.shareVideo(context, itm.title, itm.url, itm.pageUrl) },
+                onDelete = { onRemoveItem(itm.url) },
+                onDismiss = { actionItem = null }
+            )
         }
     }
 }

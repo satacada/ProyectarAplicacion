@@ -25,12 +25,14 @@ fun TvStandbyCleanScreen(
     playlists: List<TvPlaylist> = emptyList(),
     onPlayHistory: (TvHistoryItem) -> Unit = {},
     onPlayPlaylist: (TvPlaylistItem) -> Unit = {},
+    onDeletePlaylist: (TvPlaylistItem) -> Unit = {},
     updateState: com.omnicast.receiver.update.TvUpdateState = com.omnicast.receiver.update.TvUpdateState.Idle,
     onCheckUpdate: () -> Unit = {},
     onDownloadAndInstall: (String) -> Unit = {}
 ) {
     var selectedTab by remember { mutableIntStateOf(1) } // 0: Recientes, 1: Todo, 2: Favoritos
     var expandedPlaylistId by remember { mutableStateOf<String?>(null) }
+    var menuItem by remember { mutableStateOf<TvPlaylistItem?>(null) }
     var sharingItem by remember { mutableStateOf<TvPlaylistItem?>(null) }
 
     val activePlaylists = remember(playlists) {
@@ -44,11 +46,17 @@ fun TvStandbyCleanScreen(
         }
     }
 
-    val displayCount = when (selectedTab) {
-        0 -> history.size
-        1 -> activePlaylists.size
-        2 -> activePlaylists.filter { it.isDefault || it.name.contains("Favorito", ignoreCase = true) }.size
-        else -> 0
+    val totalMoviesInPlaylists = remember(playlists) { playlists.sumOf { it.items.size } }
+
+    val headerText = when (selectedTab) {
+        0 -> "${history.size} video${if (history.size != 1) "s" else ""} reciente${if (history.size != 1) "s" else ""}"
+        1 -> "$totalMoviesInPlaylists película${if (totalMoviesInPlaylists != 1) "s" else ""} en guardados (${activePlaylists.size} listas)"
+        2 -> {
+            val favs = activePlaylists.filter { it.isDefault || it.name.contains("Favorito", ignoreCase = true) }
+            val favCount = favs.sumOf { it.items.size }
+            "$favCount película${if (favCount != 1) "s" else ""} en favoritos"
+        }
+        else -> ""
     }
 
     Box(
@@ -72,7 +80,7 @@ fun TvStandbyCleanScreen(
             Spacer(modifier = Modifier.height(18.dp))
 
             Text(
-                text = "$displayCount elemento${if (displayCount != 1) "s" else ""}",
+                text = headerText,
                 color = Color(0xFF94A3B8),
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Medium
@@ -112,7 +120,7 @@ fun TvStandbyCleanScreen(
                                         expandedPlaylistId = if (expandedPlaylistId == pl.id) null else pl.id
                                     },
                                     onPlayItem = onPlayPlaylist,
-                                    onShareItem = { sharingItem = it }
+                                    onMenuItem = { menuItem = it }
                                 )
                             }
                         }
@@ -137,7 +145,7 @@ fun TvStandbyCleanScreen(
                                             expandedPlaylistId = if (expandedPlaylistId == pl.id) null else pl.id
                                         },
                                         onPlayItem = onPlayPlaylist,
-                                        onShareItem = { sharingItem = it }
+                                        onMenuItem = { menuItem = it }
                                     )
                                 }
                             }
@@ -166,6 +174,16 @@ fun TvStandbyCleanScreen(
             ipAddress = ipAddress,
             modifier = Modifier.align(Alignment.BottomCenter)
         )
+
+        menuItem?.let { item ->
+            TvVideoActionDialog(
+                item = item,
+                onPlay = { onPlayPlaylist(item) },
+                onShare = { sharingItem = item },
+                onDelete = { onDeletePlaylist(item) },
+                onDismiss = { menuItem = null }
+            )
+        }
 
         sharingItem?.let { item ->
             TvShareDialog(item = item, onDismiss = { sharingItem = null })

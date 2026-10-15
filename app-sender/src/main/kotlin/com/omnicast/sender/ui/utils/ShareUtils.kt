@@ -39,4 +39,10 @@ object ShareUtils {
             Toast.makeText(context, "No se pudo compartir el video", Toast.LENGTH_SHORT).show()
         }
     }
+
+    fun formatTime(ms: Long): String {
+        if (ms <= 0L) return "0:00"
+        val s = (ms / 1000) % 60; val m = (ms / 60000) % 60; val h = ms / 3600000
+        return if (h > 0) "%d:%02d:%02d".format(h, m, s) else "%d:%02d".format(m, s)
+    }
 }

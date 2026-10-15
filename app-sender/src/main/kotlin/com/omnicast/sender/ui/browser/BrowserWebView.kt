@@ -48,6 +48,7 @@ fun BrowserWebView(
 ) {
     AndroidView(
         factory = { ctx ->
+            AdBlocker.init(ctx)
             NativeAdBlockEngine.init(ctx)
             AdBlockRuleSyncManager.syncIfNeeded(ctx)
             AdBlockWhitelistManager.init(ctx)

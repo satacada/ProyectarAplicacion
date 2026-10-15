@@ -5,42 +5,6 @@ import java.io.ByteArrayInputStream
 
 object AdBlocker {
 
-    private val AD_DOMAINS = hashSetOf(
-        "doubleclick.net", "googleads.g.doubleclick.net", "googlesyndication.com",
-        "adservice.google.com", "adnxs.com", "adsterra.com", "popads.net",
-        "propellerads.com", "exoclick.com", "juicyads.com", "trafficfactory.biz",
-        "onclickmega.com", "onclickalgo.com", "monetag.com", "adsco.re", "histats.com",
-        "adcolony.com", "inmobi.com", "taboola.com", "outbrain.com", "mgid.com",
-        "clksite.com", "hilltopads.com", "a-ads.com", "adtrue.com", "richaudience.com",
-        "creativecdn.com", "adkernel.com", "smartadserver.com", "rubiconproject.com",
-        "pubmatic.com", "openx.net", "criteo.com", "contextweb.com", "casalemedia.com",
-        "popcash.net", "adcash.com", "alwingulla.com", "amung.us", "yllix.com",
-        "zeroredirect.com", "ptads.com", "syndication.exoclick.com", "eclkmpbn.com",
-        "admob.com", "applovin.com", "unity3d.ads", "vungle.com", "chartboost.com",
-        "bet365.com", "1xbet.com", "melbet.com", "betano.com", "stake.com", "wplay.co",
-        "playdoit.mx", "caliente.mx", "rushbet.co", "betsson.com", "coolbet.com",
-        "ad-maven.com", "admaven.com", "clickadu.com", "deloton.com", "dolohen.com",
-        "evadav.com", "galaksion.com", "streamcrypt.net", "trafficstars.com",
-        "shein.com", "shein.top", "temu.com", "aliexpress.com", "shopee.com", "lazada.com",
-        "amazon.com", "ebay.com", "alibaba.com", "sh.st", "ouo.io", "linkvertise.com",
-        "tsyndicate.com", "popmyads.com", "directrev.com", "revenuehits.com",
-        "giggle.com", "giggles.com", "giggleclick.com", "giggletrack.com", "giggleredirect.com",
-        "cat-bolt.com", "imasdk.googleapis.com", "securepubads.g.doubleclick.net",
-        "pagead2.googlesyndication.com", "ad-delivery.net", "adkeeper.com", "trafficjunky.com",
-        "whocares.club", "pemsrv.com", "gdtcdn.com", "mc.yandex.ru", "an.yandex.ru", "luugy.com",
-        "google-analytics.com", "googletagmanager.com", "holdbitter.com", "cdn.holdbitter.com"
-    )
-
-    private val AD_KEYWORDS = listOf(
-        "/ads/", "/banner/", "adsystem", "advertisement", "popunder",
-        "popup.js", "floating_ad", "adserver", "ads.js", "tracker.js", "/affiliate/",
-        "zoneid=", "iclick-v", "ad_unit", "promoted", "sponsor", "partnerize", "tradedoubler",
-        "s.click.aliexpress", "c.lazada", "shp.ee", "aff_c", "clickalgo", "giggle",
-        "/creatives/", "/creative/", "cat-bolt", "imasdk", "securepubads",
-        "preroll", "pre-roll", "midroll", "postroll", "/vast", "/vpaid", "ad-delivery",
-        "clmap", "metrika", "analytics", "/gambling/", "/notifications/", "bonus-", "bonus_"
-    )
-
     private val KNOWN_MEDIA_HOSTS = hashSetOf(
         "ok.ru", "mycdn.me", "vk.com", "dailymotion.com", "youtube.com", "youtu.be",
         "yandex.com", "yandex.ru", "ya.ru", "dzen.ru", "yastatic.net",
@@ -49,11 +13,14 @@ object AdBlocker {
         "waaw.to", "netu.tv", "vidguard.to", "uqload.com", "luluvdo.com",
         "streamlare.com", "wolfstream.tv", "streamcloud.club", "embedgram.com",
         "vidhide.com", "vidhidepro.com", "vidhidepre.com", "embed69.org",
-        // Pelismart y sus players embebidos
         "pelismart.mov", "pelismart.com", "pelismart.online", "pelismart.vip", "pelismart.net", "pelismart.lat", "pelismart.app", "pelismart.org",
         "vidurl.to", "fembed.com", "fplayer.info", "swdyu.com",
         "doo.la", "ds2play.com", "ds2video.com"
     )
+
+    fun init(context: android.content.Context) {
+        AdBlockDatabase.init(context)
+    }
 
     fun isSearchEngine(host: String?): Boolean {
         if (host == null) return false
@@ -74,21 +41,15 @@ object AdBlocker {
             if (lower.contains("an.yandex.") || lower.contains("mc.yandex.")) return true
             return false
         }
-        if (lower.contains("cat-bolt") || lower.contains("/creatives/") || lower.contains("securepubads") ||
-            lower.contains("imasdk") || lower.contains("doubleclick") || lower.contains("/vast") ||
-            lower.contains("/vpaid") || lower.contains("preroll") || lower.contains("ad-delivery") ||
-            lower.contains("holdbitter") || lower.contains("/gambling/") || lower.contains("bonus-")
-        ) return true
         val host = try { java.net.URI(url).host?.lowercase() } catch (_: Throwable) { null }
-        if (host != null) {
-            for (domain in AD_DOMAINS) {
-                if (host == domain || host.endsWith(".$domain")) return true
-            }
-        }
-        for (domain in AD_DOMAINS) { if (lower.contains(domain)) return true }
-        for (keyword in AD_KEYWORDS) { if (lower.contains(keyword)) return true }
+        if (AdBlockDatabase.isAdDomain(host)) return true
+        if (AdBlockDatabase.matchesKeyword(lower)) return true
         return false
     }
+
+    fun addAdDomain(domain: String) = AdBlockDatabase.get().addDomain(domain)
+    fun addAdKeyword(keyword: String) = AdBlockDatabase.get().addKeyword(keyword)
+    fun removeAdDomain(domain: String) = AdBlockDatabase.get().removeDomain(domain)
 
     fun isKnownMediaHost(host: String): Boolean {
         val lower = host.lowercase()

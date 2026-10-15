@@ -24,6 +24,8 @@ object AdBlockRuleSyncManager {
         "https://raw.githubusercontent.com/easylist/easylist/master/easylist/easylist_general_block.txt"
     private const val EASYLIST_FALLBACK_URL =
         "https://easylist.to/easylist/easylist.txt"
+    private const val DYNAMIC_RULES_URL =
+        "https://raw.githubusercontent.com/satacada/ProyectarAplicacion/main/app-sender/src/main/assets/adblock/default_ad_rules.json"
 
     private val scope = CoroutineScope(Dispatchers.IO)
     private val dynamicAdKeywords = mutableSetOf<String>()
@@ -37,6 +39,7 @@ object AdBlockRuleSyncManager {
 
     fun syncIfNeeded(context: Context) {
         val appContext = context.applicationContext
+        AdBlockDatabase.init(appContext)
         loadLocalCustomKeywords(appContext)
 
         if (isSyncing) return
@@ -52,7 +55,7 @@ object AdBlockRuleSyncManager {
         isSyncing = true
         scope.launch {
             try {
-                Log.i(TAG, "Iniciando sincronización de reglas vivas de EasyList...")
+                Log.i(TAG, "Iniciando sincronización de reglas vivas...")
                 val downloaded = downloadRuleFile(EASYLIST_PRIMARY_URL) ?: downloadRuleFile(EASYLIST_FALLBACK_URL)
                 if (downloaded != null && downloaded.isNotEmpty()) {
                     val adblockDir = File(appContext.filesDir, "adblock")
@@ -65,6 +68,20 @@ object AdBlockRuleSyncManager {
                         Log.i(TAG, "Lista viva EasyList actualizada con éxito (${downloaded.size} bytes). Recargando motor C++...")
                         NativeAdBlockEngine.reload(appContext)
                     }
+                }
+                val dynamicBytes = downloadRuleFile(DYNAMIC_RULES_URL)
+                if (dynamicBytes != null && dynamicBytes.isNotEmpty()) {
+                    val root = org.json.JSONObject(String(dynamicBytes, Charsets.UTF_8))
+                    val dList = mutableListOf<String>()
+                    val kList = mutableListOf<String>()
+                    root.optJSONArray("domains")?.let { arr ->
+                        for (i in 0 until arr.length()) dList.add(arr.optString(i))
+                    }
+                    root.optJSONArray("keywords")?.let { arr ->
+                        for (j in 0 until arr.length()) kList.add(arr.optString(j))
+                    }
+                    AdBlockDatabase.get().bulkInsert(dList, kList)
+                    Log.i(TAG, "Sincronizados ${dList.size} dominios y ${kList.size} palabras clave en SQLite AdBlock.")
                 }
             } catch (e: Throwable) {
                 Log.w(TAG, "No se pudo actualizar la lista viva remota (usando reglas locales/cacheadas): ${e.message}")

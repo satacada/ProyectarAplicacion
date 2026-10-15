@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 87,
-  "versionCodeReceiver": 70,
-  "versionName": "3.32.42",
-  "releaseTag": "v3.32.42",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.42/omnicast-sender-v3.32.42.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.42/omnicast-receiver-v3.32.42.apk",
-  "changelog": "v3.32.42: Filtrado estricto de anuncios cortos (<60s) en DOM y red, bloqueo de redirecciones publicitarias con retroalimentación visual, y sincronización del ciclo de vida del Web Caster con el receptor de TV e inactividad."
+  "versionCodeSender": 88,
+  "versionCodeReceiver": 71,
+  "versionName": "3.32.43",
+  "releaseTag": "v3.32.43",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.43/omnicast-sender-v3.32.43.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.43/omnicast-receiver-v3.32.43.apk",
+  "changelog": "v3.32.43: Migración de dominios y palabras clave de bloqueo a base de datos dinámica SQLite (AdBlockDatabase) con sincronización remota en caliente y erradicación de listas estáticas en duro."
 }

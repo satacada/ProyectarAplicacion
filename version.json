@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 98,
-  "versionCodeReceiver": 81,
-  "versionName": "3.32.53",
-  "releaseTag": "v3.32.53",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.53/omnicast-sender-v3.32.53.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.53/omnicast-receiver-v3.32.53.apk",
-  "changelog": "v3.32.53: Scroll lateral, buscador y ordenamiento en guardados, sangria a la derecha de peliculas con icono de carpeta abierta en Ver mas tarde, y no-duplicacion de TV receptora enlazada en pantalla principal."
+  "versionCodeSender": 99,
+  "versionCodeReceiver": 82,
+  "versionName": "3.32.54",
+  "releaseTag": "v3.32.54",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.54/omnicast-sender-v3.32.54.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.54/omnicast-receiver-v3.32.54.apk",
+  "changelog": "v3.32.54: Tuerca de opciones en reproductor de TV para guardar películas en Ver más tarde y salir, auto-renovación de enlaces expirados por QR con sustitución de token TTL en listas guardadas, y documento canónico doc/DESIGN.md."
 }

@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 90,
-  "versionCodeReceiver": 73,
-  "versionName": "3.32.45",
-  "releaseTag": "v3.32.45",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.45/omnicast-sender-v3.32.45.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.45/omnicast-receiver-v3.32.45.apk",
-  "changelog": "v3.32.45: Indicador verde en icono de guardar cuando la película ya está almacenada. Botón de cierre y deslizamiento táctil en opciones de guardado. Controles de reproducción desplegados exclusivamente al pulsar el botón de capturas. Auto-aprendizaje heurístico de publicidad al retroceder o rechazar ventanas con persistencia dinámica en SQLite."
+  "versionCodeSender": 91,
+  "versionCodeReceiver": 74,
+  "versionName": "3.32.46",
+  "releaseTag": "v3.32.46",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.46/omnicast-sender-v3.32.46.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.46/omnicast-receiver-v3.32.46.apk",
+  "changelog": "v3.32.46: Purga de falsos positivos en base de datos AdBlock SQLite (desbloqueo de reypelis.net y tioplus.app). Eliminacion de aprendizaje al pulsar Atras. Aislamiento de bloqueo de ventanas emergentes unicamente durante la reproduccion activa de una pelicula, protegiendo siempre el sitio web emisor y buscadores. Proteccion de doble toque al salir en la pantalla principal."
 }

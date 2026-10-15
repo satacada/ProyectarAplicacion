@@ -199,6 +199,7 @@ private fun PlaylistDetailView(
     onTransmit: (HistoryItem) -> Unit,
     onRemoveItem: (String) -> Unit
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     if (playlist.items.isEmpty()) {
         Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
             Text("Esta lista está vacía. Guarda videos desde el explorador.", color = Color(0xFF94A3B8), fontSize = 13.sp)
@@ -227,6 +228,14 @@ private fun PlaylistDetailView(
                             Text(item.url, color = Color(0xFF64748B), fontSize = 10.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         }
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                            if (com.omnicast.sender.ui.utils.ShareUtils.canShare(item.url, item.pageUrl)) {
+                                IconButton(
+                                    onClick = { com.omnicast.sender.ui.utils.ShareUtils.shareVideo(context, item.title, item.url, item.pageUrl) },
+                                    modifier = Modifier.size(28.dp)
+                                ) {
+                                    Text("🔗", fontSize = 13.sp)
+                                }
+                            }
                             Button(
                                 onClick = { onTransmit(item) },
                                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF10B981)),

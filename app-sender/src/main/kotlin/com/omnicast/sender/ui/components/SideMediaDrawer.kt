@@ -195,21 +195,26 @@ private fun HistoryTextCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    val context = LocalContext.current
                     IconButton(
                         onClick = onPlay,
-                        modifier = Modifier
-                            .size(32.dp)
-                            .background(Color(0xFF6366F1), RoundedCornerShape(8.dp))
+                        modifier = Modifier.size(32.dp).background(Color(0xFF6366F1), RoundedCornerShape(8.dp))
                     ) {
                         Text("📺", fontSize = 14.sp)
                     }
                     IconButton(
                         onClick = onOpenWeb,
-                        modifier = Modifier
-                            .size(32.dp)
-                            .background(Color(0xFF334155), RoundedCornerShape(8.dp))
+                        modifier = Modifier.size(32.dp).background(Color(0xFF334155), RoundedCornerShape(8.dp))
                     ) {
                         Text("🌐", fontSize = 14.sp)
+                    }
+                    if (com.omnicast.sender.ui.utils.ShareUtils.canShare(item.url, item.pageUrl)) {
+                        IconButton(
+                            onClick = { com.omnicast.sender.ui.utils.ShareUtils.shareVideo(context, item.title, item.url, item.pageUrl) },
+                            modifier = Modifier.size(32.dp).background(Color(0xFF0284C7), RoundedCornerShape(8.dp))
+                        ) {
+                            Text("🔗", fontSize = 14.sp)
+                        }
                     }
                 }
                 IconButton(onClick = onDelete, modifier = Modifier.size(28.dp)) {
@@ -227,6 +232,7 @@ private fun SavedPlaylistsTextList(
     onOpenWeb: (String) -> Unit,
     onRemoveItem: (String, String) -> Unit
 ) {
+    val context = LocalContext.current
     if (playlists.isEmpty() || playlists.all { it.items.isEmpty() }) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text("No tienes videos guardados aún.\nUsa '⭐ Guardar' en el navegador.", color = Color(0xFF64748B), fontSize = 12.sp)
@@ -261,6 +267,12 @@ private fun SavedPlaylistsTextList(
                                         onClick = { onOpenWeb(video.pageUrl ?: video.url) },
                                         modifier = Modifier.size(30.dp).background(Color(0xFF334155), RoundedCornerShape(6.dp))
                                     ) { Text("🌐", fontSize = 13.sp) }
+                                    if (com.omnicast.sender.ui.utils.ShareUtils.canShare(video.url, video.pageUrl)) {
+                                        IconButton(
+                                            onClick = { com.omnicast.sender.ui.utils.ShareUtils.shareVideo(context, video.title, video.url, video.pageUrl) },
+                                            modifier = Modifier.size(30.dp).background(Color(0xFF0284C7), RoundedCornerShape(6.dp))
+                                        ) { Text("🔗", fontSize = 13.sp) }
+                                    }
                                 }
                                 IconButton(onClick = { onRemoveItem(pl.id, video.url) }, modifier = Modifier.size(24.dp)) {
                                     Text("✕", color = Color(0xFF94A3B8), fontSize = 12.sp)
@@ -276,14 +288,6 @@ private fun SavedPlaylistsTextList(
 
 private fun formatTime(ms: Long): String {
     if (ms <= 0L) return "0:00"
-    val totalSec = ms / 1000
-    val min = totalSec / 60
-    val sec = totalSec % 60
-    return if (min >= 60) {
-        val hr = min / 60
-        val remMin = min % 60
-        String.format(java.util.Locale.US, "%d:%02d:%02d", hr, remMin, sec)
-    } else {
-        String.format(java.util.Locale.US, "%d:%02d", min, sec)
-    }
+    val s = (ms / 1000) % 60; val m = (ms / 60000) % 60; val h = ms / 3600000
+    return if (h > 0) "%d:%02d:%02d".format(h, m, s) else "%d:%02d".format(m, s)
 }

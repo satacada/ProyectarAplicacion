@@ -31,6 +31,7 @@ fun TvStandbyCleanScreen(
 ) {
     var selectedTab by remember { mutableIntStateOf(1) } // 0: Recientes, 1: Todo, 2: Favoritos
     var expandedPlaylistId by remember { mutableStateOf<String?>(null) }
+    var sharingItem by remember { mutableStateOf<TvPlaylistItem?>(null) }
 
     val activePlaylists = remember(playlists) {
         if (playlists.isEmpty()) {
@@ -110,7 +111,8 @@ fun TvStandbyCleanScreen(
                                     onClick = {
                                         expandedPlaylistId = if (expandedPlaylistId == pl.id) null else pl.id
                                     },
-                                    onPlayItem = onPlayPlaylist
+                                    onPlayItem = onPlayPlaylist,
+                                    onShareItem = { sharingItem = it }
                                 )
                             }
                         }
@@ -134,7 +136,8 @@ fun TvStandbyCleanScreen(
                                         onClick = {
                                             expandedPlaylistId = if (expandedPlaylistId == pl.id) null else pl.id
                                         },
-                                        onPlayItem = onPlayPlaylist
+                                        onPlayItem = onPlayPlaylist,
+                                        onShareItem = { sharingItem = it }
                                     )
                                 }
                             }
@@ -163,6 +166,10 @@ fun TvStandbyCleanScreen(
             ipAddress = ipAddress,
             modifier = Modifier.align(Alignment.BottomCenter)
         )
+
+        sharingItem?.let { item ->
+            TvShareDialog(item = item, onDismiss = { sharingItem = null })
+        }
     }
 }
 

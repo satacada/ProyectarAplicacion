@@ -27,10 +27,12 @@ import com.omnicast.receiver.directstream.TvPlaylistItem
 fun TvPlaylistsSection(
     playlists: List<TvPlaylist>,
     onPlayItem: (TvPlaylistItem) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onShareItem: ((TvPlaylistItem) -> Unit)? = null
 ) {
     val activePlaylists = remember(playlists) { playlists.filter { it.items.isNotEmpty() } }
     if (activePlaylists.isEmpty()) return
+    var internalSharingItem by remember { mutableStateOf<TvPlaylistItem?>(null) }
 
     Column(
         modifier = modifier.fillMaxWidth().padding(horizontal = 24.dp),
@@ -55,10 +57,24 @@ fun TvPlaylistsSection(
                     contentPadding = PaddingValues(horizontal = 4.dp)
                 ) {
                     items(playlist.items, key = { it.url + it.title }) { item ->
-                        TvPlaylistVideoCard(item = item, onClick = { onPlayItem(item) })
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            TvPlaylistVideoCard(item = item, onClick = { onPlayItem(item) })
+                            if (TvShareHelper.canShare(item)) {
+                                TvShareButton(onClick = {
+                                    if (onShareItem != null) onShareItem(item) else internalSharingItem = item
+                                })
+                            }
+                        }
                     }
                 }
             }
+        }
+
+        internalSharingItem?.let { item ->
+            TvShareDialog(item = item, onDismiss = { internalSharingItem = null })
         }
     }
 }

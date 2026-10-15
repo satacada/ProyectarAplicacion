@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 95,
-  "versionCodeReceiver": 78,
-  "versionName": "3.32.50",
-  "releaseTag": "v3.32.50",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.50/omnicast-sender-v3.32.50.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.50/omnicast-receiver-v3.32.50.apk",
-  "changelog": "v3.32.50: Lista de receptores TV detectados en renglones independientes con checkboxes multi-casteo y tipografia compacta. Navegacion directa de resultados de busqueda en Yandex sin popups publicitarios ni bloqueos indebidos."
+  "versionCodeSender": 96,
+  "versionCodeReceiver": 79,
+  "versionName": "3.32.51",
+  "releaseTag": "v3.32.51",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.51/omnicast-sender-v3.32.51.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.51/omnicast-receiver-v3.32.51.apk",
+  "changelog": "v3.32.51: Opcion de compartir enlace del video en Ver mas tarde y listas guardadas para el emisor movil y receptor TV Box (con codigo QR en pantalla y menu de compartir)."
 }

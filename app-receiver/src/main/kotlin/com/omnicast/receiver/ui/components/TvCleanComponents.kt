@@ -118,7 +118,8 @@ fun TvFolderRow(
     isExpanded: Boolean,
     items: List<TvPlaylistItem>,
     onClick: () -> Unit,
-    onPlayItem: (TvPlaylistItem) -> Unit
+    onPlayItem: (TvPlaylistItem) -> Unit,
+    onShareItem: (TvPlaylistItem) -> Unit = {}
 ) {
     var isFocused by remember { mutableStateOf(false) }
 
@@ -167,7 +168,15 @@ fun TvFolderRow(
                 contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
             ) {
                 items(items, key = { it.url + it.title }) { item ->
-                    TvPlaylistVideoCard(item = item, onClick = { onPlayItem(item) })
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        TvPlaylistVideoCard(item = item, onClick = { onPlayItem(item) })
+                        if (TvShareHelper.canShare(item)) {
+                            TvShareButton(onClick = { onShareItem(item) })
+                        }
+                    }
                 }
             }
         }

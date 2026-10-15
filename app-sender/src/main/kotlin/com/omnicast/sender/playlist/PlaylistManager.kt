@@ -199,4 +199,31 @@ class PlaylistManager(context: Context) {
             pl.items.any { isSameVideo(it, item) }
         }
     }
+
+    fun updateProgress(url: String, positionMs: Long, durationMs: Long) {
+        if (url.isBlank() || positionMs < 5000L) return
+        val current = getPlaylists()
+        var changed = false
+        val cleanUrl = url.substringBefore('?')
+        val updated = current.map { pl ->
+            val idx = pl.items.indexOfFirst { it.url == url || it.url.substringBefore('?') == cleanUrl }
+            if (idx >= 0) {
+                changed = true
+                val list = pl.items.toMutableList()
+                val old = list[idx]
+                list[idx] = old.copy(lastPositionMs = positionMs, durationMs = if (durationMs > 0L) durationMs else old.durationMs)
+                pl.copy(items = list)
+            } else pl
+        }
+        if (changed) savePlaylists(updated)
+    }
+
+    fun getLastPosition(url: String): Long {
+        val cleanUrl = url.substringBefore('?')
+        for (pl in getPlaylists()) {
+            val found = pl.items.firstOrNull { it.url == url || it.url.substringBefore('?') == cleanUrl }
+            if (found != null && found.lastPositionMs >= 5000L) return found.lastPositionMs
+        }
+        return 0L
+    }
 }

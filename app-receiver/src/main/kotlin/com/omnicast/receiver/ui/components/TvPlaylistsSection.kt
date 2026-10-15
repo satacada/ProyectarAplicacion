@@ -111,11 +111,16 @@ fun TvPlaylistVideoCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                val posLabel = if (item.lastPositionMs >= 5000L) {
+                    val m = (item.lastPositionMs / 1000) / 60
+                    val s = (item.lastPositionMs / 1000) % 60
+                    "%02d:%02d".format(m, s)
+                } else null
                 Text(
-                    text = if (isFocused) "▶ Presiona OK" else "Guardado",
-                    color = if (isFocused) Color(0xFF7DD3FC) else Color(0xFF64748B),
+                    text = if (isFocused) (if (posLabel != null) "▶ Reanudar en $posLabel" else "▶ Presiona OK") else (if (posLabel != null) "En $posLabel" else "Guardado"),
+                    color = if (isFocused) Color(0xFF7DD3FC) else (if (posLabel != null) Color(0xFF10B981) else Color(0xFF64748B)),
                     fontSize = 10.sp,
-                    fontWeight = if (isFocused) FontWeight.Bold else FontWeight.Normal
+                    fontWeight = if (isFocused || posLabel != null) FontWeight.Bold else FontWeight.Normal
                 )
             }
         }

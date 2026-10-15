@@ -236,7 +236,7 @@ class TvReceiverActivity : ComponentActivity() {
                     val dur = exoPlayerManager.durationMs
                     val st = if (isPlaying) "PLAYING" else "PAUSED"
                     signalingServer.sendMessage(SignalingMessage.PlaybackStatus(st, pos, dur, cur.streamUrl, cur.title))
-                    historyManager.updateProgress(cur.streamUrl, pos, dur)
+                    historyManager.updateProgress(cur.streamUrl, pos, dur); playlistManager.updateProgress(cur.streamUrl, pos)
                 } else {
                     signalingServer.sendMessage(SignalingMessage.PlaybackStatus("STOPPED", 0L, 0L))
                     break
@@ -288,7 +288,7 @@ class TvReceiverActivity : ComponentActivity() {
     private fun playPlaylistItem(item: com.omnicast.receiver.directstream.TvPlaylistItem) {
         digitalAudioReceiver?.stop(); webRtcReceiver.resetConnection()
         receiverState.value = ReceiverUiState.DirectStreamPlaying(item.url, item.title)
-        exoPlayerManager.playStream(item.url, item.headers, item.title, item.lastPositionMs); startPlaybackStatusReporting()
+        exoPlayerManager.playStream(item.url, item.headers, item.title, playlistManager.getResumePosition(item)); startPlaybackStatusReporting()
     }
 
     override fun onDestroy() {

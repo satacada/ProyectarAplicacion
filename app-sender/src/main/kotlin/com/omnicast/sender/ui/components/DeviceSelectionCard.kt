@@ -4,8 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.*
@@ -219,61 +217,43 @@ fun DeviceSelectionCard(
                 }
 
                 if (discoveredDevices.isNotEmpty()) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .horizontalScroll(rememberScrollState()),
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(5.dp)
                     ) {
-                        Text("Detectadas:", color = OmniThemeColors.TextMuted, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
-                        discoveredDevices.forEach { dev ->
-                            val isSel = selectedDevice?.id == dev.id
-                            Surface(
-                                color = if (isSel) Color(0xFF1E3A5F) else Color(0xFF0D1424),
-                                border = androidx.compose.foundation.BorderStroke(1.dp, if (isSel) Color(0xFF38BDF8) else Color(0xFF24324E)),
-                                shape = RoundedCornerShape(6.dp),
-                                modifier = Modifier.clickable {
-                                    onSelectDevice(dev); onManualIpChange(dev.ipAddress); onManualPortChange(dev.port.toString())
-                                }
-                            ) {
-                                Text(
-                                    text = "${dev.name.take(15)} (${dev.ipAddress})",
-                                    maxLines = 1, fontSize = 11.sp,
-                                    fontWeight = if (isSel) FontWeight.Bold else FontWeight.Normal,
-                                    color = if (isSel) Color(0xFF38BDF8) else Color(0xFF94A3B8),
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                                )
-                            }
-                        }
-                    }
-
-                    if (discoveredDevices.size > 1) {
                         Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .horizontalScroll(rememberScrollState()),
-                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text("Transmitir también a:", color = OmniThemeColors.TextMuted, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
-                            discoveredDevices.filter { it.ipAddress != manualIp }.forEach { dev ->
-                                val isSec = secondaryIps.contains(dev.ipAddress)
-                                Surface(
-                                    color = if (isSec) Color(0xFF064E3B) else Color(0xFF0D1424),
-                                    border = androidx.compose.foundation.BorderStroke(1.dp, if (isSec) Color(0xFF10B981) else Color(0xFF24324E)),
-                                    shape = RoundedCornerShape(6.dp),
-                                    modifier = Modifier.clickable { onToggleSecondaryIp(dev.ipAddress) }
-                                ) {
-                                    Text(
-                                        text = "${if (isSec) "☑" else "☐"} ${dev.name.take(12)} (${dev.ipAddress})",
-                                        maxLines = 1, fontSize = 11.sp,
-                                        fontWeight = if (isSec) FontWeight.Bold else FontWeight.Normal,
-                                        color = if (isSec) Color(0xFF6EE7B7) else Color(0xFF94A3B8),
-                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                                    )
+                            Text(
+                                "Dispositivos Receptores Detectados:",
+                                color = OmniThemeColors.TextMuted,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                "Elegir receptores para casteo",
+                                color = Color(0xFF64748B),
+                                fontSize = 9.sp
+                            )
+                        }
+
+                        discoveredDevices.forEachIndexed { index, dev ->
+                            val isPrimary = (selectedDevice?.ipAddress == dev.ipAddress) ||
+                                (manualIp.isNotBlank() && dev.ipAddress == manualIp) ||
+                                (selectedDevice == null && manualIp.isBlank() && index == 0)
+                            ReceiverDeviceRow(
+                                device = dev,
+                                isPrimary = isPrimary,
+                                isChecked = isPrimary || secondaryIps.contains(dev.ipAddress),
+                                onToggleCheck = { onToggleSecondaryIp(dev.ipAddress) },
+                                onSetPrimary = {
+                                    onSelectDevice(dev)
+                                    onManualIpChange(dev.ipAddress)
+                                    onManualPortChange(dev.port.toString())
                                 }
-                            }
+                            )
                         }
                     }
                 }

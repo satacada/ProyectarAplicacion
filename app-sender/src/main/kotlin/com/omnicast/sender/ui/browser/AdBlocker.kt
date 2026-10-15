@@ -73,7 +73,7 @@ object AdBlocker {
         }
         if (AdBlockWhitelistManager.isWhitelistedHost(host) || isSearchEngine(host) || isKnownMediaHost(host)) return false
         if (host.contains("yandex.") || host.contains("google.") || host.contains("bing.") || host.contains("duckduckgo.")) return false
-        if (host.endsWith("reypelis.net") || host.endsWith("tioplus.app")) return false
+        if (host.endsWith("reypelis.net") || host.endsWith("tioplus.app") || host.contains("sololatino") || host.contains("pelisserieshoy")) return false
         if (AdBlockDatabase.isAdDomain(host)) return false
         val added = addAdDomain(host)
         if (added) {

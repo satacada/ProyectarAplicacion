@@ -209,6 +209,7 @@ class SenderMainActivity : ComponentActivity() {
                         com.omnicast.sender.stream.StreamResumeManager.savePosition(this@SenderMainActivity, ActiveStreamHolder.streamUrl, msg.positionMs)
                         ActiveStreamHolder.streamUrl?.let { sUrl ->
                             com.omnicast.sender.history.PlayHistoryManager(this@SenderMainActivity).updateProgress(sUrl, msg.positionMs, msg.durationMs)
+                            playlistManager.updateProgress(sUrl, msg.positionMs, msg.durationMs)
                         }
                     }
                 } else if (msg is SignalingMessage.TracksInfo) {
@@ -230,8 +231,7 @@ class SenderMainActivity : ComponentActivity() {
 
     fun sendDirectStreamToTv(url: String, title: String? = null, headers: Map<String, String> = emptyMap(), resumePositionMs: Long? = null) {
         val safeTitle = title?.ifBlank { "Transmisión Web" } ?: "Transmisión Web"
-        val isFirstPlay = !historyManager.getHistory().any { it.url == url || it.url.substringBefore('?') == url.substringBefore('?') }
-        val savedPos = if (isFirstPlay) 0L else (resumePositionMs ?: com.omnicast.sender.stream.StreamResumeManager.getPosition(this, url))
+        val savedPos = resumePositionMs ?: com.omnicast.sender.stream.StreamResumeManager.getPosition(this, url).takeIf { it > 0 } ?: playlistManager.getLastPosition(url)
         historyManager.addOrUpdate(url, safeTitle, headers = headers)
         ActiveStreamHolder.startCasting(url, safeTitle, headers)
         com.omnicast.sender.service.CastMediaNotificationService.start(this)

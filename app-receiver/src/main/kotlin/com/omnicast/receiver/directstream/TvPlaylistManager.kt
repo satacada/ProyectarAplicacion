@@ -1,4 +1,4 @@
-﻿package com.omnicast.receiver.directstream
+package com.omnicast.receiver.directstream
 
 import android.content.Context
 import android.util.Log
@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.io.File
 
@@ -70,5 +71,35 @@ class TvPlaylistManager(private val context: Context) {
         } catch (e: Throwable) {
             Log.e(TAG, "Error procesando sincronización de listas: ${e.message}", e)
         }
+    }
+
+    fun updateProgress(url: String, posMs: Long) {
+        if (url.isBlank() || posMs < 5000L) return
+        val current = _playlists.value
+        var changed = false
+        val cleanUrl = url.substringBefore('?')
+        val updated = current.map { pl ->
+            val idx = pl.items.indexOfFirst { it.url == url || it.url.substringBefore('?') == cleanUrl }
+            if (idx >= 0) {
+                changed = true
+                val list = pl.items.toMutableList()
+                list[idx] = list[idx].copy(lastPositionMs = posMs)
+                pl.copy(items = list)
+            } else pl
+        }
+        if (changed) {
+            _playlists.value = updated
+            try { file.writeText(json.encodeToString(updated)) } catch (_: Throwable) {}
+        }
+    }
+
+    fun getResumePosition(item: TvPlaylistItem): Long {
+        if (item.lastPositionMs >= 5000L) return item.lastPositionMs
+        val cleanUrl = item.url.substringBefore('?')
+        for (pl in _playlists.value) {
+            val found = pl.items.firstOrNull { it.url == item.url || it.url.substringBefore('?') == cleanUrl }
+            if (found != null && found.lastPositionMs >= 5000L) return found.lastPositionMs
+        }
+        return 0L
     }
 }

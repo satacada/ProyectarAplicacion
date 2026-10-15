@@ -244,9 +244,15 @@ fun BrowserWebView(
                                     if (AdBlocker.isExternalRedirect(targetUrl)) return true
                                     val targetHost = try { java.net.URI(targetUrl).host?.lowercase() } catch (_: Throwable) { null }
                                     val isSameSite = curHost != null && targetHost != null && (targetHost == curHost || targetHost.endsWith(".$curHost") || curHost.endsWith(".$targetHost"))
+                                    val isSearch = curHost != null && (AdBlocker.isSearchEngine(curHost) || isWhitelisted)
                                     val inMovie = hasStreams || BrowserUrlHelper.isMovieOrVideoPage(v?.url ?: currentUrl)
 
-                                    if (isAdBlockEnabled && !isWhitelisted && !isSameSite) {
+                                    if (isSearch || isSameSite) {
+                                        v?.loadUrl(targetUrl)
+                                        return true
+                                    }
+
+                                    if (isAdBlockEnabled && !isWhitelisted) {
                                         if (inMovie || AdBlocker.isAd(targetUrl) || NativeAdBlockEngine.shouldBlock(targetUrl)) {
                                             android.util.Log.w("BrowserWebView", "🛑 Popup publicitario bloqueado: $targetUrl")
                                             if (targetHost != null) AdBlocker.learnAndBlockAdHost(targetHost, curHost)
@@ -254,12 +260,8 @@ fun BrowserWebView(
                                             return true
                                         }
                                     }
-                                    if (isSameSite) {
-                                        v?.loadUrl(targetUrl)
-                                    } else {
-                                        if (view != null) onOpenPopup(view)
-                                        view?.loadUrl(targetUrl)
-                                    }
+                                    if (view != null) onOpenPopup(view)
+                                    view?.loadUrl(targetUrl)
                                     return true
                                 }
                             }

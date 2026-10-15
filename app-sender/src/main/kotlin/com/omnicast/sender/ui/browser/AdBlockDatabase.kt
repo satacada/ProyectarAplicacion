@@ -170,7 +170,7 @@ class AdBlockDatabase private constructor(private val appContext: Context) :
                 }
             }
 
-            val falsePositives = listOf("reypelis.net", "tioplus.app")
+            val falsePositives = listOf("reypelis.net", "tioplus.app", "sololatino.net", "solo-latino.net")
             for (fp in falsePositives) {
                 domainsSet.remove(fp)
                 try { writableDatabase.delete(TABLE_DOMAINS, "$COL_VALUE = ?", arrayOf(fp)) } catch (_: Throwable) {}

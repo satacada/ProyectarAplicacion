@@ -210,7 +210,10 @@ class FloatingIndicatorService : Service() {
             },
             onOpenOmniCast = {
                 menuLayoutRef?.visibility = View.GONE; isExpanded = false
-                launchIntentSafely(Intent(this, SenderMainActivity::class.java).apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP) }, 102)
+                launchIntentSafely(Intent(this, SenderMainActivity::class.java).apply {
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                    putExtra("EXTRA_GO_TO_MAIN", true)
+                }, 102)
             },
             onStopCast = {
                 menuLayoutRef?.visibility = View.GONE; isExpanded = false

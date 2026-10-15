@@ -85,7 +85,7 @@ fun TvImageScreen(
                     .size(38.dp)
                     .background(Color(0xBB0F172A), RoundedCornerShape(10.dp))
             ) {
-                Text("🚪", fontSize = 18.sp)
+                ModernExitIcon()
             }
 
             // Botón en pantalla pequeño y no invasivo para rotar la foto

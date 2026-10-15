@@ -227,7 +227,7 @@ fun BrowserTopBar(
                     )
                     HorizontalDivider(color = Color(0xFF334155))
                     DropdownMenuItem(
-                        text = { Text("🚪 Cerrar Navegador", color = Color(0xFFCBD5E1)) },
+                        text = { Text("✕ Cerrar Navegador", color = Color(0xFFCBD5E1)) },
                         onClick = { onClose(); showMenu = false }
                     )
                     DropdownMenuItem(

@@ -31,6 +31,7 @@ class SenderMainActivity : ComponentActivity() {
 
     companion object {
         private var instance: SenderMainActivity? = null
+        var onRequestReturnToMain: (() -> Unit)? = null
 
         fun sendDirectStreamStatic(context: Context, url: String, title: String? = null, headers: Map<String, String> = emptyMap()) {
             val savedPos = com.omnicast.sender.stream.StreamResumeManager.getPosition(context, url)
@@ -79,6 +80,7 @@ class SenderMainActivity : ComponentActivity() {
         instance = this; historyManager = PlayHistoryManager(this)
         com.omnicast.sender.log.SenderLogger.init(this)
         com.omnicast.sender.ui.browser.AdBlocker.init(this)
+        com.omnicast.sender.discovery.MultiReceiverManager.init(this)
         playlistManager = com.omnicast.sender.playlist.PlaylistManager(this).apply {
             onPlaylistsChanged = { jsonStr ->
                 if (signalingClient.isConnected) signalingClient.sendMessage(SignalingMessage.SyncPlaylists(jsonStr))
@@ -110,24 +112,18 @@ class SenderMainActivity : ComponentActivity() {
 
         lifecycleScope.launch {
             nsdScanner.discoveredDevices.collect { list ->
-                if (isTvConnected.value) return@collect
-                list.firstOrNull()?.let { dev ->
-                    val curIp = getSharedPreferences("omnicast_prefs", Context.MODE_PRIVATE).getString("saved_tv_ip", "") ?: ""
-                    Log.i("TvConnection", "🔍 TV detectada por NSD: ${dev.name} (${dev.ipAddress}:${dev.port})")
-                    if (!isTvConnected.value && (curIp.isBlank() || curIp == dev.ipAddress)) {
-                        connectToTv(dev.ipAddress, dev.port)
-                    }
-                }
+                if (isTvConnected.value || list.isEmpty()) return@collect
+                val curIp = getSharedPreferences("omnicast_prefs", Context.MODE_PRIVATE).getString("saved_tv_ip", "") ?: ""
+                val target = list.firstOrNull { it.ipAddress == curIp } ?: list.first()
+                Log.i("TvConnection", "🔍 Auto-enlazando TV detectada: ${target.name} (${target.ipAddress}:${target.port})")
+                connectToTv(target.ipAddress, target.port)
             }
         }
 
         com.omnicast.sender.media.LocalImageServer.start(this)
         val prefs = getSharedPreferences("omnicast_prefs", Context.MODE_PRIVATE)
         prefs.getString("saved_tv_ip", null)?.takeIf { it.isNotBlank() }?.let { connectToTv(it, prefs.getInt("saved_tv_port", 8088)) }
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && Settings.canDrawOverlays(this)) {
-            FloatingIndicatorService.start(this)
-        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && Settings.canDrawOverlays(this)) FloatingIndicatorService.start(this)
         handleIncomingSharedIntent(intent)
     }
 
@@ -135,24 +131,15 @@ class SenderMainActivity : ComponentActivity() {
     private var isAppResumed = false
 
     override fun onResume() {
-        super.onResume()
-        isAppResumed = true
-        resetInactivityTimer()
+        super.onResume(); isAppResumed = true; resetInactivityTimer()
         if (signalingClient?.isConnected != true) {
             val prefs = getSharedPreferences("omnicast_prefs", Context.MODE_PRIVATE)
             prefs.getString("saved_tv_ip", null)?.takeIf { it.isNotBlank() }?.let { connectToTv(it, prefs.getInt("saved_tv_port", 8088)) }
         }
     }
 
-    override fun onPause() {
-        super.onPause()
-        isAppResumed = false
-        checkInactivityAutoExit()
-    }
-
-    private fun resetInactivityTimer() {
-        inactivityJob?.cancel(); inactivityJob = null
-    }
+    override fun onPause() { super.onPause(); isAppResumed = false; checkInactivityAutoExit() }
+    private fun resetInactivityTimer() { inactivityJob?.cancel(); inactivityJob = null }
 
     private fun checkInactivityAutoExit() {
         if (isTvConnected.value || ProjectionForegroundService.isProjecting || ActiveStreamHolder.isCasting.value) {
@@ -174,6 +161,9 @@ class SenderMainActivity : ComponentActivity() {
         }
         if (intent?.getBooleanExtra("EXTRA_OPEN_BROWSER", false) == true) { intent.removeExtra("EXTRA_OPEN_BROWSER"); openBrowserDirectly.value = true }
         if (intent?.getBooleanExtra("EXTRA_OPEN_GALLERY", false) == true) { intent.removeExtra("EXTRA_OPEN_GALLERY"); openGalleryDirectly.value = true }
+        if (intent?.getBooleanExtra("EXTRA_GO_TO_MAIN", false) == true) {
+            intent.removeExtra("EXTRA_GO_TO_MAIN"); onRequestReturnToMain?.invoke()
+        }
     }
 
     fun connectToTv(ipAddress: String, port: Int) {
@@ -246,21 +236,27 @@ class SenderMainActivity : ComponentActivity() {
         ActiveStreamHolder.startCasting(url, safeTitle, headers)
         com.omnicast.sender.service.CastMediaNotificationService.start(this)
         ActiveStreamHolder.onSendPlayControl = { act, pos, vol, par -> sendPlayControl(act, pos, vol, par) }
-        sendSignalingMessage(SignalingMessage.DirectStreamHandoff(mediaUrl = url, title = safeTitle, headers = headers, startPositionMs = savedPos))
+        val msg = SignalingMessage.DirectStreamHandoff(mediaUrl = url, title = safeTitle, headers = headers, startPositionMs = savedPos)
+        sendSignalingMessage(msg)
+        com.omnicast.sender.discovery.MultiReceiverManager.broadcastToSecondary(msg, nsdScanner.discoveredDevices.value)
         if (savedPos > 0L) {
             val formatted = com.omnicast.sender.stream.StreamResumeManager.formatTime(savedPos)
             Toast.makeText(this, "▶ Reanudando en $formatted", Toast.LENGTH_SHORT).show()
         } else {
-            Toast.makeText(this, "Enviando video directo a la TV Box...", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Enviando video a receptores...", Toast.LENGTH_SHORT).show()
         }
     }
 
     fun sendPlayControl(action: String, positionMs: Long = 0L, volume: Float = 1.0f, param: String? = null) {
-        sendSignalingMessage(SignalingMessage.PlayControl(action, positionMs, volume, param))
+        val msg = SignalingMessage.PlayControl(action, positionMs, volume, param)
+        sendSignalingMessage(msg)
+        com.omnicast.sender.discovery.MultiReceiverManager.broadcastToSecondary(msg, nsdScanner.discoveredDevices.value)
     }
 
     fun sendImageToTv(url: String, title: String? = null) {
-        sendSignalingMessage(SignalingMessage.ShowImage(imageUrl = url, title = title))
+        val msg = SignalingMessage.ShowImage(imageUrl = url, title = title)
+        sendSignalingMessage(msg)
+        com.omnicast.sender.discovery.MultiReceiverManager.broadcastToSecondary(msg, nsdScanner.discoveredDevices.value)
         Toast.makeText(this, "🖼️ Foto proyectada en la TV Box", Toast.LENGTH_SHORT).show()
     }
 

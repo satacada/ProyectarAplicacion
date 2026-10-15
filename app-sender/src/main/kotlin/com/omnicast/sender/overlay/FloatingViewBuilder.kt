@@ -93,7 +93,7 @@ class FloatingViewBuilder(private val context: Context) {
         val btnZoomTv = createBtn("🔍 Zoom TV", "#6D28D9", onToggleTvScale)
         val btnCalibrate = createBtn("🤏 Calibrar Pantalla (Zoom/Arrastre)", "#0284C7", onCalibrateTv)
         val btnDetectVideo = createBtn("🔍 Detectar Flujo de Video", "#00B4D8", onDetectVideo)
-        val btnOpenOmni = createBtn("⚙️ Abrir OmniCast", "#1E2738", onOpenOmniCast)
+        val btnOpenOmni = createBtn("🏠 Principal", "#1E2738", onOpenOmniCast)
         val btnStartMirror = createBtn("📱 Proyectar Pantalla", "#7C3AED", onStartScreenMirror)
         val btnGallery = createBtn("🖼️ Galería (Fotos)", "#E11D48", onCastGallery)
         val btnOpenBrowser = createBtn("🌐 Captura Web", "#D97706", onOpenBrowser)
@@ -192,7 +192,7 @@ class FloatingViewBuilder(private val context: Context) {
             layoutParams = LinearLayout.LayoutParams(dpToPx(240f), LinearLayout.LayoutParams.WRAP_CONTENT).apply { topMargin = dpToPx(8f) }
             addView(TextView(context).apply { text = "¿Opciones de Cierre?"; setTextColor(Color.WHITE); setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f); typeface = Typeface.DEFAULT_BOLD })
             addView(createBtn("❌ Solo Ocultar Asistente", "#334155", onConfirmHideOverlay))
-            addView(createBtn("🚪 Cerrar App Totalmente", "#DC2626", onExitCompletely))
+            addView(createBtn("⏹ Salir de la App", "#DC2626", onExitCompletely))
             addView(createBtn("↩ Continuar", "#1E293B", onCancel))
         }
     }

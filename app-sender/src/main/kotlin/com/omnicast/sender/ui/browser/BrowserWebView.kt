@@ -257,7 +257,7 @@ fun BrowserWebView(
                                     if (isSameSite) {
                                         v?.loadUrl(targetUrl)
                                     } else {
-                                        onOpenPopup(transportWebView)
+                                        if (view != null) onOpenPopup(view)
                                         view?.loadUrl(targetUrl)
                                     }
                                     return true

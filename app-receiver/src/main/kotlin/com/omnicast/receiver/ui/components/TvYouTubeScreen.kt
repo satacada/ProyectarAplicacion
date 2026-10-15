@@ -95,7 +95,7 @@ fun TvYouTubeScreen(
                 .size(38.dp)
                 .background(Color(0x990F172A), RoundedCornerShape(10.dp))
         ) {
-            Text("🚪", fontSize = 18.sp)
+            ModernExitIcon()
         }
         if (customView != null) {
             AndroidView(factory = { customView!! }, modifier = Modifier.fillMaxSize())

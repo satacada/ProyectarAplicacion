@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 92,
-  "versionCodeReceiver": 75,
-  "versionName": "3.32.47",
-  "releaseTag": "v3.32.47",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.47/omnicast-sender-v3.32.47.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.47/omnicast-receiver-v3.32.47.apk",
-  "changelog": "v3.32.47: Bloqueo automatico de secuestro de ventana principal en modo pelicula (impide que popups o redirecciones sustituyan la pantalla del video). Recaptura agresiva con soporte de recursos cargados (performance.getEntriesByType), sources y resolucion directa de iframes Fastream. Guardado local en el dispositivo de rutas de navegacion (breadcrumbs) 100% offline."
+  "versionCodeSender": 93,
+  "versionCodeReceiver": 76,
+  "versionName": "3.32.48",
+  "releaseTag": "v3.32.48",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.48/omnicast-sender-v3.32.48.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.48/omnicast-receiver-v3.32.48.apk",
+  "changelog": "v3.32.48: Boton '🏠 Principal' en asistente flotante para retorno directo a pantalla principal. Deteccion y auto-enlace inteligente al encender TV Box. Receptores secundarios seleccionables para casteo simultaneo (video/fotos/control). Sustitucion de iconos antiguos por ModernExitIcon vectorial. Version dinamica en standby de TV."
 }

@@ -31,6 +31,8 @@ fun DeviceSelectionCard(
     manualPort: String,
     isConnected: Boolean = false,
     tooltipsEnabled: Boolean = true,
+    secondaryIps: Set<String> = emptySet(),
+    onToggleSecondaryIp: (String) -> Unit = {},
     onManualIpChange: (String) -> Unit,
     onManualPortChange: (String) -> Unit,
     onSelectDevice: (DeviceTarget) -> Unit,
@@ -93,19 +95,10 @@ fun DeviceSelectionCard(
 
                     Surface(
                         color = if (isConnected) Color(0xFF09291D) else Color(0xFF0E1424),
-                        border = androidx.compose.foundation.BorderStroke(
-                            1.dp,
-                            if (isConnected) Color(0xFF10B981) else Color(0xFF28354E)
-                        ),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, if (isConnected) Color(0xFF10B981) else Color(0xFF28354E)),
                         shape = RoundedCornerShape(20.dp)
                     ) {
-                        Text(
-                            text = if (isConnected) "● En Línea" else "○ Desconectado",
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = if (isConnected) Color(0xFF6EE7B7) else Color(0xFF94A3B8)
-                        )
+                        Text(if (isConnected) "● En Línea" else "○ Desconectado", modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp), fontSize = 11.sp, fontWeight = FontWeight.Bold, color = if (isConnected) Color(0xFF6EE7B7) else Color(0xFF94A3B8))
                     }
                 }
 
@@ -238,25 +231,48 @@ fun DeviceSelectionCard(
                             val isSel = selectedDevice?.id == dev.id
                             Surface(
                                 color = if (isSel) Color(0xFF1E3A5F) else Color(0xFF0D1424),
-                                border = androidx.compose.foundation.BorderStroke(
-                                    1.dp,
-                                    if (isSel) Color(0xFF38BDF8) else Color(0xFF24324E)
-                                ),
+                                border = androidx.compose.foundation.BorderStroke(1.dp, if (isSel) Color(0xFF38BDF8) else Color(0xFF24324E)),
                                 shape = RoundedCornerShape(6.dp),
                                 modifier = Modifier.clickable {
-                                    onSelectDevice(dev)
-                                    onManualIpChange(dev.ipAddress)
-                                    onManualPortChange(dev.port.toString())
+                                    onSelectDevice(dev); onManualIpChange(dev.ipAddress); onManualPortChange(dev.port.toString())
                                 }
                             ) {
                                 Text(
                                     text = "${dev.name.take(15)} (${dev.ipAddress})",
-                                    maxLines = 1,
-                                    fontSize = 11.sp,
+                                    maxLines = 1, fontSize = 11.sp,
                                     fontWeight = if (isSel) FontWeight.Bold else FontWeight.Normal,
                                     color = if (isSel) Color(0xFF38BDF8) else Color(0xFF94A3B8),
                                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                                 )
+                            }
+                        }
+                    }
+
+                    if (discoveredDevices.size > 1) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .horizontalScroll(rememberScrollState()),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("Transmitir también a:", color = OmniThemeColors.TextMuted, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                            discoveredDevices.filter { it.ipAddress != manualIp }.forEach { dev ->
+                                val isSec = secondaryIps.contains(dev.ipAddress)
+                                Surface(
+                                    color = if (isSec) Color(0xFF064E3B) else Color(0xFF0D1424),
+                                    border = androidx.compose.foundation.BorderStroke(1.dp, if (isSec) Color(0xFF10B981) else Color(0xFF24324E)),
+                                    shape = RoundedCornerShape(6.dp),
+                                    modifier = Modifier.clickable { onToggleSecondaryIp(dev.ipAddress) }
+                                ) {
+                                    Text(
+                                        text = "${if (isSec) "☑" else "☐"} ${dev.name.take(12)} (${dev.ipAddress})",
+                                        maxLines = 1, fontSize = 11.sp,
+                                        fontWeight = if (isSec) FontWeight.Bold else FontWeight.Normal,
+                                        color = if (isSec) Color(0xFF6EE7B7) else Color(0xFF94A3B8),
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                    )
+                                }
                             }
                         }
                     }

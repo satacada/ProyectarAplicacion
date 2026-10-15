@@ -61,15 +61,16 @@ fun SenderMainScreen(
     val posMs by com.omnicast.sender.stream.ActiveStreamHolder.positionMs.collectAsState()
     val durMs by com.omnicast.sender.stream.ActiveStreamHolder.durationMs.collectAsState()
     val castTitle by com.omnicast.sender.stream.ActiveStreamHolder.currentMediaTitle.collectAsState()
+    val secondaryIps by com.omnicast.sender.discovery.MultiReceiverManager.secondaryIps.collectAsState()
+    DisposableEffect(Unit) {
+        SenderMainActivity.onRequestReturnToMain = { showInAppBrowser = false }
+        onDispose { SenderMainActivity.onRequestReturnToMain = null }
+    }
     var lastBackPressTime by remember { mutableLongStateOf(0L) }
     androidx.activity.compose.BackHandler(enabled = !showInAppBrowser) {
         val now = System.currentTimeMillis()
-        if (now - lastBackPressTime < 2000L) {
-            (context as? Activity)?.finishAffinity()
-        } else {
-            lastBackPressTime = now
-            Toast.makeText(context, "Presione nuevamente para salir", Toast.LENGTH_SHORT).show()
-        }
+        if (now - lastBackPressTime < 2000L) (context as? Activity)?.finishAffinity()
+        else { lastBackPressTime = now; Toast.makeText(context, "Presione nuevamente para salir", Toast.LENGTH_SHORT).show() }
     }
 
     LaunchedEffect(initialOpenBrowser) { if (initialOpenBrowser) showInAppBrowser = true }
@@ -77,10 +78,7 @@ fun SenderMainScreen(
         if (initialOpenGallery) context.startActivity(Intent(context, com.omnicast.sender.overlay.GalleryPickerActivity::class.java).apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) })
     }
 
-    fun saveTarget(ip: String, portStr: String) {
-        val port = portStr.toIntOrNull() ?: 8088
-        prefs.edit().putString("saved_tv_ip", ip).putInt("saved_tv_port", port).apply()
-    }
+    fun saveTarget(ip: String, portStr: String) = prefs.edit().putString("saved_tv_ip", ip).putInt("saved_tv_port", portStr.toIntOrNull() ?: 8088).apply()
 
     fun clearTarget() {
         prefs.edit().remove("saved_tv_ip").remove("saved_tv_port").apply()
@@ -92,10 +90,7 @@ fun SenderMainScreen(
         Toast.makeText(context, "🧹 IP limpiada. Auto-detectando TV...", Toast.LENGTH_SHORT).show()
     }
 
-    fun getSafeCaptureIntent(): Intent {
-        val mpm = context.getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
-        return mpm.createScreenCaptureIntent()
-    }
+    fun getSafeCaptureIntent(): Intent = (context.getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager).createScreenCaptureIntent()
 
     LaunchedEffect(devices) {
         if (devices.isNotEmpty()) {
@@ -182,7 +177,8 @@ fun SenderMainScreen(
                 item {
                     DeviceSelectionCard(
                         discoveredDevices = devices, selectedDevice = selectedDevice, manualIp = manualIp, manualPort = manualPort,
-                        isConnected = isTvConnected, tooltipsEnabled = tooltipsEnabled,
+                        isConnected = isTvConnected, tooltipsEnabled = tooltipsEnabled, secondaryIps = secondaryIps,
+                        onToggleSecondaryIp = { com.omnicast.sender.discovery.MultiReceiverManager.toggleIp(context, it) },
                         onManualIpChange = { manualIp = it; saveTarget(it, manualPort) },
                         onManualPortChange = { manualPort = it; saveTarget(manualIp, it) },
                         onSelectDevice = {

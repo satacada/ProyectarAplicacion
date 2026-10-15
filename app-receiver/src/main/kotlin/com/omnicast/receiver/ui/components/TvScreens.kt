@@ -98,10 +98,14 @@ fun TvConnectedStandbyScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(22.dp)
         ) {
+            val ctx = androidx.compose.ui.platform.LocalContext.current
+            val ver = androidx.compose.runtime.remember {
+                try { "v" + ctx.packageManager.getPackageInfo(ctx.packageName, 0).versionName } catch (_: Throwable) { "v3.32" }
+            }
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text("OmniCast Pro TV", fontSize = 42.sp, fontWeight = FontWeight.Bold, color = Color.White)
                 androidx.compose.material3.Surface(color = Color(0xFF059669), shape = RoundedCornerShape(8.dp)) {
-                    Text("v3.30", modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp), fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    Text(ver, modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp), fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
                 }
             }
             Row(
@@ -186,7 +190,7 @@ fun TvMirroringActiveScreen(
                 .size(38.dp)
                 .background(Color(0x990F172A), RoundedCornerShape(10.dp))
         ) {
-            Text("🚪", fontSize = 18.sp)
+            ModernExitIcon()
         }
     }
 }
@@ -212,7 +216,7 @@ fun TvDirectStreamScreen(
                 .clickable { onCloseClick() },
             contentAlignment = Alignment.Center
         ) {
-            Text("🚪", fontSize = 18.sp)
+            ModernExitIcon()
         }
         val player = exoPlayerManager.player
         val currentResizeMode = remember { mutableStateOf(exoPlayerManager.resizeMode) }

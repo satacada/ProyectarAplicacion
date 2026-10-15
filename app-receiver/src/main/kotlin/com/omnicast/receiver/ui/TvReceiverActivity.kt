@@ -33,6 +33,7 @@ class TvReceiverActivity : ComponentActivity() {
 
     private val receiverState = mutableStateOf<ReceiverUiState>(ReceiverUiState.Standby)
     private val localIpAddress = mutableStateOf("127.0.0.1")
+    private val expiredItemForRenew = mutableStateOf<com.omnicast.receiver.directstream.TvPlaylistItem?>(null)
     private val youTubeControlFlow = MutableSharedFlow<SignalingMessage.PlayControl>(extraBufferCapacity = 16)
     private lateinit var webRtcReceiver: WebRtcReceiverManager
     private lateinit var exoPlayerManager: ExoPlayerTvManager
@@ -53,16 +54,18 @@ class TvReceiverActivity : ComponentActivity() {
         lifecycleScope.launch(kotlinx.coroutines.Dispatchers.IO) { com.omnicast.receiver.directstream.TvMediaCacheManager.clearDiskCache(this@TvReceiverActivity) }
         webRtcReceiver = WebRtcReceiverManager(this).apply {
             initialize()
-            onLocalIceCandidate = { c ->
-                lifecycleScope.launch {
-                    signalingServer.sendMessage(SignalingMessage.IceCandidate(c.sdpMid, c.sdpMLineIndex, c.sdp))
-                }
-            }
+            onLocalIceCandidate = { c -> lifecycleScope.launch { signalingServer.sendMessage(SignalingMessage.IceCandidate(c.sdpMid, c.sdpMLineIndex, c.sdp)) } }
             onConnectionClosed = { runOnUiThread { if (receiverState.value is ReceiverUiState.ScreenMirroring) receiverState.value = ReceiverUiState.Standby } }
         }
         exoPlayerManager = ExoPlayerTvManager(this).apply {
             onTracksChanged = { info -> lifecycleScope.launch { signalingServer.sendMessage(info) } }
-            onPlaybackFailed = { runOnUiThread { Toast.makeText(this@TvReceiverActivity, "⚠️ Servidor no disponible o bloqueado (Error HTTP)", Toast.LENGTH_SHORT).show(); if (receiverState.value is ReceiverUiState.DirectStreamPlaying) { receiverState.value = ReceiverUiState.Standby; lifecycleScope.launch { signalingServer.sendMessage(SignalingMessage.PlaybackStatus("STOPPED", 0L, 0L)) } } } }
+            onPlaybackFailed = { runOnUiThread {
+                (receiverState.value as? ReceiverUiState.DirectStreamPlaying)?.let { cur ->
+                    val found = playlistManager.findItemByUrlOrTitle(cur.streamUrl, cur.title)
+                    if (found != null) expiredItemForRenew.value = found else Toast.makeText(this@TvReceiverActivity, "⚠️ Servidor no disponible (HTTP)", Toast.LENGTH_SHORT).show()
+                }
+                receiverState.value = ReceiverUiState.Standby; lifecycleScope.launch { signalingServer.sendMessage(SignalingMessage.PlaybackStatus("STOPPED", 0L, 0L)) }
+            } }
         }
         digitalAudioReceiver = DigitalAudioReceiver()
         historyManager = com.omnicast.receiver.directstream.TvPlaybackHistoryManager(this)
@@ -109,7 +112,9 @@ class TvReceiverActivity : ComponentActivity() {
                                     (otaState as com.omnicast.receiver.update.TvUpdateState.ReadyToInstall).apkFile.let { updateManager.triggerApkInstall(it) }
                                 } else updateManager.downloadAndInstall(url)
                             }
-                        }
+                        },
+                        expiredItemForRenew = expiredItemForRenew.value,
+                        onClearExpiredRenew = { expiredItemForRenew.value = null }
                     )
                     is ReceiverUiState.ClientConnectedStandby -> TvConnectedStandbyScreen(state.clientAddress) { receiverState.value = ReceiverUiState.Standby }
                     is ReceiverUiState.ScreenMirroring -> TvMirroringActiveScreen(
@@ -118,6 +123,11 @@ class TvReceiverActivity : ComponentActivity() {
                     )
                     is ReceiverUiState.DirectStreamPlaying -> TvDirectStreamScreen(
                         exoPlayerManager, state.title, state.streamUrl,
+                        isSaved = playlistManager.isMovieSaved(state.streamUrl, state.title),
+                        onSaveToWatchLater = {
+                            playlistManager.saveMovie(state.title, state.streamUrl, exoPlayerManager.currentPositionMs)
+                            Toast.makeText(this@TvReceiverActivity, "✅ Guardada en Ver más tarde", Toast.LENGTH_SHORT).show()
+                        },
                         onCloseClick = { exoPlayerManager.stop("Botón Cerrar TV"); receiverState.value = ReceiverUiState.Standby }
                     )
                     is ReceiverUiState.YouTubePlaying -> TvYouTubeScreen(
@@ -169,6 +179,9 @@ class TvReceiverActivity : ComponentActivity() {
                 runCatching {
                     digitalAudioReceiver?.stop(); webRtcReceiver.resetConnection()
                     val title = message.title?.ifBlank { "Transmisión Web" } ?: "Transmisión Web"
+                    val exp = expiredItemForRenew.value
+                    if (exp != null) { playlistManager.replaceExpiredUrl(exp.url, message.mediaUrl, message.headers); expiredItemForRenew.value = null }
+                    else playlistManager.replaceExpiredUrl(message.mediaUrl, message.mediaUrl, message.headers)
                     val ytId = message.headers["X-YouTube-Id"] ?: extractYouTubeId(message.mediaUrl)
                     if (!ytId.isNullOrBlank()) {
                         exoPlayerManager.stop(); receiverState.value = ReceiverUiState.YouTubePlaying(ytId, title, System.currentTimeMillis())
@@ -202,24 +215,11 @@ class TvReceiverActivity : ComponentActivity() {
                     "ROTATE" -> (receiverState.value as? ReceiverUiState.ImageDisplaying)?.let { receiverState.value = it.copy(rotation = (it.rotation + 90f) % 360f) }
                 }
             }
-            is SignalingMessage.ImageTransform -> {
-                val cur = receiverState.value
-                if (cur is ReceiverUiState.ImageDisplaying) receiverState.value = cur.copy(scale = message.scale, panX = message.panX, panY = message.panY, rotation = message.rotation)
-            }
-            is SignalingMessage.SetDisplayMode -> {
-                webRtcReceiver.setDisplayMode(message.mode, message.zoom, message.panY, message.panX)
-                exoPlayerManager.setDisplayMode(message.mode, message.zoom)
-            }
-            is SignalingMessage.ShowImage -> {
-                digitalAudioReceiver?.stop(); exoPlayerManager.stop("Casteo Foto"); webRtcReceiver.resetConnection()
-                receiverState.value = ReceiverUiState.ImageDisplaying(message.imageUrl, message.title ?: "Foto de Galería")
-            }
-            is SignalingMessage.SyncPlaylists -> {
-                lifecycleScope.launch { playlistManager.syncPlaylistsJson(message.playlistsJson) }
-            }
-            is SignalingMessage.Disconnect -> {
-                digitalAudioReceiver?.stop(); exoPlayerManager.stop("Desconexión"); webRtcReceiver.resetConnection(); receiverState.value = ReceiverUiState.Standby
-            }
+            is SignalingMessage.ImageTransform -> (receiverState.value as? ReceiverUiState.ImageDisplaying)?.let { receiverState.value = it.copy(scale = message.scale, panX = message.panX, panY = message.panY, rotation = message.rotation) }
+            is SignalingMessage.SetDisplayMode -> { webRtcReceiver.setDisplayMode(message.mode, message.zoom, message.panY, message.panX); exoPlayerManager.setDisplayMode(message.mode, message.zoom) }
+            is SignalingMessage.ShowImage -> { digitalAudioReceiver?.stop(); exoPlayerManager.stop("Casteo Foto"); webRtcReceiver.resetConnection(); receiverState.value = ReceiverUiState.ImageDisplaying(message.imageUrl, message.title ?: "Foto de Galería") }
+            is SignalingMessage.SyncPlaylists -> lifecycleScope.launch { playlistManager.syncPlaylistsJson(message.playlistsJson) }
+            is SignalingMessage.Disconnect -> { digitalAudioReceiver?.stop(); exoPlayerManager.stop("Desconexión"); webRtcReceiver.resetConnection(); receiverState.value = ReceiverUiState.Standby }
             else -> Unit
         }
     }
@@ -267,27 +267,20 @@ class TvReceiverActivity : ComponentActivity() {
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
         if (event.action == KeyEvent.ACTION_DOWN && TvRemoteKeyHandler.handleKeyDown(
-                context = this,
-                keyCode = event.keyCode,
-                event = event,
-                currentState = receiverState.value, exoPlayerManager = exoPlayerManager,
-                webRtcReceiver = webRtcReceiver, digitalAudioReceiver = digitalAudioReceiver,
-                youTubeControlFlow = youTubeControlFlow, scope = lifecycleScope,
-                sendSignaling = { lifecycleScope.launch { signalingServer.sendMessage(it) } },
-                onResetToStandby = { receiverState.value = ReceiverUiState.Standby }
+                this, event.keyCode, event, receiverState.value, exoPlayerManager,
+                webRtcReceiver, digitalAudioReceiver, youTubeControlFlow, lifecycleScope,
+                { lifecycleScope.launch { signalingServer.sendMessage(it) } }, { receiverState.value = ReceiverUiState.Standby }
             )) return true
         return super.dispatchKeyEvent(event)
     }
 
     private fun playHistoryItem(item: com.omnicast.receiver.directstream.TvHistoryItem) {
-        digitalAudioReceiver?.stop(); webRtcReceiver.resetConnection()
-        receiverState.value = ReceiverUiState.DirectStreamPlaying(item.mediaUrl, item.title)
+        digitalAudioReceiver?.stop(); webRtcReceiver.resetConnection(); receiverState.value = ReceiverUiState.DirectStreamPlaying(item.mediaUrl, item.title)
         exoPlayerManager.playStream(item.mediaUrl, item.headers, item.title, item.lastPositionMs); startPlaybackStatusReporting()
     }
 
     private fun playPlaylistItem(item: com.omnicast.receiver.directstream.TvPlaylistItem) {
-        digitalAudioReceiver?.stop(); webRtcReceiver.resetConnection()
-        receiverState.value = ReceiverUiState.DirectStreamPlaying(item.url, item.title)
+        digitalAudioReceiver?.stop(); webRtcReceiver.resetConnection(); receiverState.value = ReceiverUiState.DirectStreamPlaying(item.url, item.title)
         exoPlayerManager.playStream(item.url, item.headers, item.title, playlistManager.getResumePosition(item)); startPlaybackStatusReporting()
     }
 

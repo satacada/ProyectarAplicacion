@@ -1,10 +1,10 @@
-﻿# ARQUITECTURA DEL SISTEMA: MAPA MENTAL Y FLUJO DE DATOS
-## Proyecto: [NOMBRE_DEL_PROYECTO]
-
----
+# ARQUITECTURA DEL SISTEMA: OMNICAST PRO
 
 ## 1. Visión General de Alto Nivel
-Este documento plasma la topología, los componentes clave y las fronteras de integración del sistema, sirviendo como plano de referencia para humanos e Inteligencias Artificiales.
+OmniCast Pro es un sistema cliente-servidor nativo de Android diseñado bajo los principios de Clean Architecture y Arquitectura Hexagonal (Ports & Adapters).
+
+El plano completo de diseño y los requerimientos funcionales aprobados se encuentran centralizados en el documento canónico:
+👉 [**`doc/DESIGN.md`**](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/DESIGN.md)
 
 ---
 
@@ -12,44 +12,43 @@ Este documento plasma la topología, los componentes clave y las fronteras de in
 
 ```mermaid
 graph TD
-    Client["Cliente / Usuario Final<br/>(Navegador / App Móvil / Webhook)"]
-    
-    subgraph Plataforma ["Plataforma del Proyecto"]
-        Gateway["API Gateway / Servidor HTTP<br/>(Fastify / Express / Next.js)"]
-        Domain["Capa de Dominio & Reglas de Negocio<br/>(Lógica Pura sin dependencias)"]
-        Infra["Capa de Infraestructura<br/>(Repositorios, Adaptadores, Clientes)"]
+    User["Usuario Móvil"] -->|Control Táctil| SenderApp[":app-sender (Emisor Móvil)"]
+    TVUser["Usuario TV Box"] -->|Control D-Pad| ReceiverApp[":app-receiver (Receptor Android TV)"]
+
+    subgraph Emisor Móvil
+        SenderApp --> MediaProj["MediaProjection HW (H.264)"]
+        SenderApp --> WebBrowser["InAppBrowser + AdBlocker C++"]
+        SenderApp --> PhotoServer["LocalImageServer :8087"]
+        SenderApp --> MultiCastMgr["MultiReceiverManager"]
     end
-    
-    subgraph ServiciosExternos ["Servicios Externos y Almacenamiento"]
-        DB[(Base de Datos Principal<br/>PostgreSQL / Supabase)]
-        Cache[(Caché / Colas<br/>Redis / BullMQ)]
-        AIProvider["Proveedor de Inteligencia Artificial<br/>(Gemini / OpenAI / Claude)"]
-        ExternalAPI["APIs Terceros / Pasarelas de Pago<br/>(Stripe, Meta, etc.)"]
+
+    subgraph Transporte LAN Local Cero-Internet
+        MediaProj -->|WebRTC P2P Video/Audio <60ms| ReceiverApp
+        PhotoServer -->|HTTP Rango 206 / WebSocket Base64| ReceiverApp
+        SenderApp -->|Señalización WebSocket :8088| LocalSigServer["LocalSignalingServer :8088"]
     end
-    
-    Client -->|HTTPS / WSS| Gateway
-    Gateway -->|Valida Schemas con Zod| Domain
-    Domain -->|Invoca Contratos| Infra
-    Infra -->|TCP / SQL| DB
-    Infra -->|Comandos / PubSub| Cache
-    Infra -->|SDK HTTPS| AIProvider
-    Infra -->|REST Webhooks| ExternalAPI
+
+    subgraph Receptor TV Box
+        LocalSigServer --> ReceiverApp
+        ReceiverApp --> HWDecoder["MediaCodec Hardware Decoder"]
+        ReceiverApp --> ExoPlayerTV["ExoPlayer Direct Stream Handoff"]
+        ReceiverApp --> TVPlaylists["TvPlaylistsManager (Ver Más Tarde / Guardados)"]
+    end
 ```
 
 ---
 
 ## 3. Catálogo de Puertos y Servicios Locales
 
-| Componente / Servicio | Puerto Local | Protocolo | Endpoint de Salud |
+| Componente / Servicio | Puerto Local | Protocolo | Propósito |
 |---|---|---|---|
-| API Backend Principal | `3000` | HTTP/REST | `/health` |
-| Frontend Web | `5173` o `3001` | HTTP | `/` |
-| Base de Datos Local | `5432` | TCP/PostgreSQL | Ping nativo |
-| Redis Cache | `6379` | TCP/Redis | Ping nativo |
+| Servidor de Señalización TV Box | `:8088` | WebSocket / TCP | Control P2P, estado de reproducción, comandos remotos. |
+| Servidor Multimedia Móvil | `:8087` | HTTP / TCP | Servicio de videos de galería local con cabeceras `206 Partial Content`. |
+| Descubrimiento de Red (NSD/mDNS) | Dinámico | UDP (`_omnicast._tcp`) | Detección automática cero-configuración de TVs en LAN. |
 
 ---
 
-## 4. Fronteras de Validación y Manejo de Errores
-1. **Entrada de Datos:** Toda solicitud HTTP pasa por middleware de validación antes de alcanzar los controladores. Si la validación falla, se retorna error estándar `400 Bad Request` con detalles estructurados.
-2. **Capa de Dominio:** Ningún modelo de base de datos se expone directamente a la interfaz pública (DTOs obligatorios).
-3. **Manejo Centralizado de Excepciones:** Errores no controlados son interceptados, registrados con identificador de traza (`traceId`) y devueltos como `500 Internal Server Error` sin filtrar detalles sensibles.
+## 4. Registro de Decisiones de Arquitectura (ADRs)
+- [ADR-001: Stack Tecnológico Inicial](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/adr/ADR-001-stack-inicial.md)
+- [ADR-002: Telemetría y Logs en TV Box](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/adr/ADR-002-telemetria-tv-logs.md)
+- [ADR-003: Estrategia de Renovación de Enlaces Expirados en TV (QR + Sustitución TTL)](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/adr/ADR-003-estrategia-renovacion-enlaces-tv.md)

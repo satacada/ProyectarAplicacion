@@ -28,15 +28,24 @@ fun TvStandbyCleanScreen(
     onDeletePlaylist: (TvPlaylistItem) -> Unit = {},
     updateState: com.omnicast.receiver.update.TvUpdateState = com.omnicast.receiver.update.TvUpdateState.Idle,
     onCheckUpdate: () -> Unit = {},
-    onDownloadAndInstall: (String) -> Unit = {}
+    onDownloadAndInstall: (String) -> Unit = {},
+    expiredItemForRenew: TvPlaylistItem? = null,
+    onClearExpiredRenew: () -> Unit = {}
 ) {
     var selectedTab by remember { mutableIntStateOf(1) } // 0: Recientes, 1: Todo, 2: Favoritos
     var expandedPlaylistId by remember { mutableStateOf<String?>(null) }
     var menuItem by remember { mutableStateOf<TvPlaylistItem?>(null) }
     var sharingItem by remember { mutableStateOf<TvPlaylistItem?>(null) }
+    var renewItem by remember { mutableStateOf<TvPlaylistItem?>(null) }
     var searchQuery by remember { mutableStateOf("") }
     var selectedSort by remember { mutableStateOf(TvVideoSortOrder.NEWEST) }
     val listState = androidx.compose.foundation.lazy.rememberLazyListState()
+
+    LaunchedEffect(expiredItemForRenew) {
+        if (expiredItemForRenew != null) {
+            renewItem = expiredItemForRenew
+        }
+    }
 
     val activePlaylists = remember(playlists) {
         if (playlists.isEmpty()) {
@@ -211,6 +220,7 @@ fun TvStandbyCleanScreen(
                 item = item,
                 onPlay = { onPlayPlaylist(item) },
                 onShare = { sharingItem = item },
+                onRenew = { renewItem = item },
                 onDelete = { onDeletePlaylist(item) },
                 onDismiss = { menuItem = null }
             )
@@ -218,6 +228,16 @@ fun TvStandbyCleanScreen(
 
         sharingItem?.let { item ->
             TvShareDialog(item = item, onDismiss = { sharingItem = null })
+        }
+
+        renewItem?.let { item ->
+            TvRenewQrDialog(
+                item = item,
+                onDismiss = {
+                    renewItem = null
+                    onClearExpiredRenew()
+                }
+            )
         }
     }
 }

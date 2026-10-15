@@ -1,7 +1,9 @@
 package com.omnicast.receiver.ui.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
@@ -10,80 +12,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-@Composable
-fun TvStandbyScreen(
-    ipAddress: String,
-    history: List<com.omnicast.receiver.directstream.TvHistoryItem> = emptyList(),
-    playlists: List<com.omnicast.receiver.directstream.TvPlaylist> = emptyList(),
-    onPlayHistory: (com.omnicast.receiver.directstream.TvHistoryItem) -> Unit = {},
-    onPlayPlaylist: (com.omnicast.receiver.directstream.TvPlaylistItem) -> Unit = {}
-) {
-    Box(
-        modifier = Modifier.fillMaxSize().background(Color(0xFF0F172A)),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            modifier = Modifier.padding(vertical = 20.dp)
-        ) {
-            val context = androidx.compose.ui.platform.LocalContext.current
-            val ver = androidx.compose.runtime.remember {
-                try {
-                    "v" + context.packageManager.getPackageInfo(context.packageName, 0).versionName
-                } catch (_: Throwable) {
-                    "v3.32.25"
-                }
-            }
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text("OmniCast Pro TV", fontSize = 38.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                androidx.compose.material3.Surface(color = Color(0xFF0284C7), shape = RoundedCornerShape(8.dp)) {
-                    Text(ver, modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp), fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                }
-            }
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                Box(modifier = Modifier.size(12.dp).background(Color(0xFF38BDF8), RoundedCornerShape(6.dp)))
-                Text("Listo para conectar", fontSize = 18.sp, color = Color(0xFF94A3B8))
-            }
-            Card(
-                colors = CardDefaults.cardColors(containerColor = Color(0xFF1E293B)),
-                shape = RoundedCornerShape(16.dp),
-                modifier = Modifier.padding(horizontal = 16.dp)
-            ) {
-                Column(
-                    modifier = Modifier.padding(horizontal = 32.dp, vertical = 18.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Text("Dirección de Red Local", color = Color.LightGray, fontSize = 14.sp)
-                    Text("$ipAddress:8088", color = Color(0xFF38BDF8), fontSize = 24.sp, fontWeight = FontWeight.SemiBold)
-                    Text("Abre OmniCast en tu celular o reproduce un video guardado abajo", color = Color.Gray, fontSize = 13.sp)
-                }
-            }
-
-            if (history.isNotEmpty()) {
-                TvHistorySection(
-                    history = history,
-                    onPlayItem = onPlayHistory,
-                    modifier = Modifier.padding(top = 8.dp)
-                )
-            }
-
-            if (playlists.isNotEmpty()) {
-                TvPlaylistsSection(
-                    playlists = playlists,
-                    onPlayItem = onPlayPlaylist,
-                    modifier = Modifier.padding(top = 8.dp)
-                )
-            }
-        }
-    }
-}
 
 @Composable
 fun TvConnectedStandbyScreen(
@@ -200,23 +134,45 @@ fun TvDirectStreamScreen(
     exoPlayerManager: com.omnicast.receiver.directstream.ExoPlayerTvManager,
     title: String,
     streamUrl: String,
+    isSaved: Boolean = false,
+    onSaveToWatchLater: () -> Unit = {},
     onCloseClick: () -> Unit = {}
 ) {
+    var showSettingsDialog by remember { mutableStateOf(false) }
+    var isGearFocused by remember { mutableStateOf(false) }
+
     Box(
         modifier = Modifier.fillMaxSize().background(Color.Black),
         contentAlignment = Alignment.Center
     ) {
-        // Botón en pantalla pequeño y no invasivo para salir a la principal de OmniCast
+        // Tuerca pequeña en la parte superior izquierda
         Box(
             modifier = Modifier
                 .align(Alignment.TopStart)
                 .padding(start = 24.dp, top = 24.dp)
                 .size(38.dp)
-                .background(Color(0x990F172A), RoundedCornerShape(10.dp))
-                .clickable { onCloseClick() },
+                .background(if (isGearFocused) Color(0xFF38BDF8) else Color(0x990F172A), RoundedCornerShape(10.dp))
+                .border(
+                    width = if (isGearFocused) 2.dp else 1.dp,
+                    color = if (isGearFocused) Color.White else Color(0x6638BDF8),
+                    shape = RoundedCornerShape(10.dp)
+                )
+                .onFocusChanged { isGearFocused = it.isFocused }
+                .focusable()
+                .clickable { showSettingsDialog = true },
             contentAlignment = Alignment.Center
         ) {
-            ModernExitIcon()
+            Text("⚙", fontSize = 18.sp, color = if (isGearFocused) Color.Black else Color.White)
+        }
+
+        if (showSettingsDialog) {
+            TvPlayerSettingsDialog(
+                title = title,
+                isSaved = isSaved,
+                onSaveToWatchLater = onSaveToWatchLater,
+                onExitPlayback = onCloseClick,
+                onDismiss = { showSettingsDialog = false }
+            )
         }
         val player = exoPlayerManager.player
         val currentResizeMode = remember { mutableStateOf(exoPlayerManager.resizeMode) }

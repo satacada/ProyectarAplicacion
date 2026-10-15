@@ -30,6 +30,7 @@ fun TvVideoActionDialog(
     item: TvPlaylistItem,
     onPlay: () -> Unit,
     onShare: () -> Unit,
+    onRenew: () -> Unit = {},
     onDelete: () -> Unit,
     onDismiss: () -> Unit
 ) {
@@ -72,6 +73,12 @@ fun TvVideoActionDialog(
                     text = "▶️ Reproducir película",
                     isPrimary = true,
                     onClick = { onPlay(); onDismiss() }
+                )
+
+                TvDialogButton(
+                    text = "🔄 Renovar enlace (QR móvil)",
+                    isPrimary = false,
+                    onClick = { onRenew(); onDismiss() }
                 )
 
                 if (TvShareHelper.canShare(item)) {

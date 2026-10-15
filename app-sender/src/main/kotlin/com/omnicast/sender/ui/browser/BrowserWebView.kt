@@ -13,6 +13,18 @@ import androidx.compose.ui.viewinterop.AndroidView
 const val UA_MOBILE = "Mozilla/5.0 (Linux; Android 14; Mobile) AppleWebKit/537.36 Chrome/124.0.0.0 Mobile Safari/537.36"
 const val UA_DESKTOP = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/124.0.0.0 Safari/537.36"
 
+private var lastBlockedToastTime = 0L
+
+private fun showBlockedToast(ctx: android.content.Context) {
+    val now = System.currentTimeMillis()
+    if (now - lastBlockedToastTime > 2500L) {
+        lastBlockedToastTime = now
+        android.os.Handler(android.os.Looper.getMainLooper()).post {
+            android.widget.Toast.makeText(ctx, "🚫 Ventana publicitaria bloqueada", android.widget.Toast.LENGTH_SHORT).show()
+        }
+    }
+}
+
 /**
  * Componente AndroidView para encapsular WebView con soporte de cookies de terceros y contenido mixto.
  * Permite la carga fluida de sitios complejos como ok.ru, VK, Dailymotion y reproductores de películas.
@@ -139,6 +151,7 @@ fun BrowserWebView(
                         val isSourceWhitelisted = curHost?.let { AdBlockWhitelistManager.isWhitelistedHost(it) } ?: false
                         if (isAdBlockEnabled && !isSourceWhitelisted && (AdBlocker.isAd(reqUrl) || NativeAdBlockEngine.shouldBlock(reqUrl, liveUrl))) {
                             android.util.Log.w("BrowserWebView", "🛑 Redirección publicitaria bloqueada silenciosamente: ${r.url.host}")
+                            showBlockedToast(ctx)
                             return true
                         }
                         return false
@@ -203,6 +216,7 @@ fun BrowserWebView(
 
                         if (isAdBlockEnabled && !isUserGesture && !isWhitelisted) {
                             android.util.Log.d("BrowserWebView", "🛑 Popup publicitario automático sin interacción bloqueado")
+                            showBlockedToast(ctx)
                             return false
                         }
                         val transportWebView = WebView(ctx).apply {
@@ -218,6 +232,7 @@ fun BrowserWebView(
                                     val isSameSite = curHost != null && targetHost != null && (targetHost == curHost || targetHost.endsWith(".$curHost") || curHost.endsWith(".$targetHost"))
                                     if (isAdBlockEnabled && !isWhitelisted && !isSameSite && (AdBlocker.isAd(targetUrl) || NativeAdBlockEngine.shouldBlock(targetUrl))) {
                                         android.util.Log.w("BrowserWebView", "🛑 Enlace emergente publicitario bloqueado: $targetUrl")
+                                        showBlockedToast(ctx)
                                         return true
                                     }
                                     // Si es del mismo sitio o enlace legítimo no publicitario navega en el WebView principal

@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 86,
-  "versionCodeReceiver": 69,
-  "versionName": "3.32.41",
-  "releaseTag": "v3.32.41",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.41/omnicast-sender-v3.32.41.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.41/omnicast-receiver-v3.32.41.apk",
-  "changelog": "v3.32.41: Implementación del extractor modular FastreamExtractorAdapter y resolución dinámica Dean Edwards en MediaPlatformResolver para generación en caliente de tokens criptográficos legítimos con User-Agent unificado."
+  "versionCodeSender": 87,
+  "versionCodeReceiver": 70,
+  "versionName": "3.32.42",
+  "releaseTag": "v3.32.42",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.42/omnicast-sender-v3.32.42.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.42/omnicast-receiver-v3.32.42.apk",
+  "changelog": "v3.32.42: Filtrado estricto de anuncios cortos (<60s) en DOM y red, bloqueo de redirecciones publicitarias con retroalimentación visual, y sincronización del ciclo de vida del Web Caster con el receptor de TV e inactividad."
 }

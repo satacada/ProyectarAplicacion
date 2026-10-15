@@ -53,6 +53,8 @@ object WvcDomSniffer {
                             for (i in 0 until vList.length()) {
                                 if (list.size >= 25) break
                                 val item = vList.optJSONObject(i) ?: continue
+                                val itemDur = item.optDouble("duration", 0.0).toFloat()
+                                if (itemDur in 0.1f..59.9f) continue
                                 val poster = item.optString("poster", "")
                                 val itemTitle = item.optString("title").takeIf { it.isNotBlank() } ?: pageTitle
                                 val sources = item.optJSONArray("sources")
@@ -60,10 +62,12 @@ object WvcDomSniffer {
                                     for (j in 0 until sources.length()) {
                                         if (list.size >= 25) break
                                         val sObj = sources.optJSONObject(j) ?: continue
+                                        val sDur = sObj.optDouble("duration", itemDur.toDouble()).toFloat()
+                                        if (sDur in 0.1f..59.9f) continue
                                         val sUrl = sObj.optString("source")
                                         val label = sObj.optString("label", "Calidad Original")
                                         if (isValidMediaUrl(sUrl)) {
-                                            list.add(SniffedVideo(sUrl, itemTitle, poster, false, label))
+                                            list.add(SniffedVideo(sUrl, itemTitle, poster, false, label, sDur))
                                         }
                                     }
                                 }
@@ -97,6 +101,7 @@ object WvcDomSniffer {
         if (url.isNullOrBlank()) return false
         val l = url.lowercase()
         if (l.contains("dailymotion.com/video/") || l.contains("dai.ly/") || l.contains("/embed/")) return false
+        if (AdBlocker.isAd(url)) return false
         return BrowserUrlHelper.isPlayableStream(url)
     }
 }

@@ -34,6 +34,7 @@
         if (l.indexOf('/embed/') !== -1 || l.indexOf('/embed69') !== -1 || l.indexOf('/vidurl/') !== -1) return false;
         if (l.indexOf('init.mp4') !== -1 || l.indexOf('/init-') !== -1 || l.indexOf('.m4s') !== -1) return false;
         if (l.indexOf('.ts') !== -1 && l.indexOf('.m3u8') === -1) return false;
+        if (l.indexOf('holdbitter') !== -1 || l.indexOf('/gambling/') !== -1 || l.indexOf('bonus-') !== -1 || l.indexOf('bonus_') !== -1) return false;
         return l.indexOf('.m3u8') !== -1 || l.indexOf('.mp4') !== -1 || l.indexOf('.mpd') !== -1 ||
                l.indexOf('/hls') !== -1 || l.indexOf('/stream/') !== -1 || l.indexOf('/manifest') !== -1 ||
                l.indexOf('/live') !== -1 || l.indexOf('chunklist') !== -1 ||
@@ -48,7 +49,8 @@
         if (s.indexOf('preroll') !== -1 || s.indexOf('ad-delivery') !== -1 ||
             s.indexOf('/ads/') !== -1 || s.indexOf('imasdk') !== -1 ||
             s.indexOf('cat-bolt') !== -1 || s.indexOf('ad.mp4') !== -1 || s.indexOf('vast') !== -1 ||
-            s.indexOf('commercial') !== -1 || s.indexOf('spotx') !== -1 || s.indexOf('doubleclick') !== -1) {
+            s.indexOf('commercial') !== -1 || s.indexOf('spotx') !== -1 || s.indexOf('doubleclick') !== -1 ||
+            s.indexOf('holdbitter') !== -1 || s.indexOf('/gambling/') !== -1 || s.indexOf('bonus-') !== -1) {
             return true;
         }
         // 2. Para cualquier video con duración finita menor a 60 segundos es un comercial (prerolls de 15s/18s/30s)
@@ -59,13 +61,15 @@
 
     function reportMedia(src, title, duration, isPlaying) {
         if (!src || !isMediaUrl(src)) return;
-        var t = title || document.title || 'Transmisión Web';
         var dur = (typeof duration === 'number' && !isNaN(duration)) ? duration : 0;
+        if (dur > 0 && dur < 60) return;
+        var t = title || document.title || 'Transmisión Web';
         if (dur <= 0) {
             try {
                 var vids = document.getElementsByTagName('video');
                 for (var k = 0; k < vids.length; k++) {
                     if (vids[k].duration && !isNaN(vids[k].duration) && vids[k].duration > 0) {
+                        if (vids[k].duration < 60) return;
                         dur = vids[k].duration;
                         break;
                     }

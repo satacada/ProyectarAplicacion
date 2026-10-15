@@ -37,20 +37,13 @@ fun InAppBrowserScreen(
     val initialIsHome = savedLastUrl.isBlank() || savedLastUrl == "about:blank"
 
     var inputUrl by rememberSaveable { mutableStateOf(if (initialIsHome) "" else savedLastUrl) }; var currentUrl by rememberSaveable { mutableStateOf(if (initialIsHome) "" else savedLastUrl) }
-    var isHome by rememberSaveable { mutableStateOf(initialIsHome) }
-    var pageTitle by rememberSaveable { mutableStateOf("OmniCast Browser") }
-    var progress by remember { mutableIntStateOf(0) }
+    var isHome by rememberSaveable { mutableStateOf(initialIsHome) }; var pageTitle by rememberSaveable { mutableStateOf("OmniCast Browser") }; var progress by remember { mutableIntStateOf(0) }
     var isDesktopMode by remember { mutableStateOf(false) }; var isAdBlockEnabled by remember { mutableStateOf(true) }
-    val detectedStreams = remember { mutableStateListOf<String>() }
-    val streamHeaders = remember { mutableStateMapOf<String, Map<String, String>>() }
+    val detectedStreams = remember { mutableStateListOf<String>() }; val streamHeaders = remember { mutableStateMapOf<String, Map<String, String>>() }
     val streamLabels = remember { mutableStateMapOf<String, String>() }; val streamDurations = remember { mutableStateMapOf<String, Float>() }
-    var qualityOptions by remember { mutableStateOf<List<StreamQualityOption>>(emptyList()) }
-    var showOptionsSheet by remember { mutableStateOf(false) }
-    var showSideDrawer by remember { mutableStateOf(false) }
-    var showWhitelistDialog by remember { mutableStateOf(false) }
-    var showBottomControls by rememberSaveable { mutableStateOf(false) }
-    var videoToSave by remember { mutableStateOf<HistoryItem?>(null) }
-    var webViewInstance by remember { mutableStateOf<WebView?>(null); }; var popupWebView by remember { mutableStateOf<WebView?>(null) }
+    var qualityOptions by remember { mutableStateOf<List<StreamQualityOption>>(emptyList()) }; var showOptionsSheet by remember { mutableStateOf(false) }
+    var showSideDrawer by remember { mutableStateOf(false) }; var showWhitelistDialog by remember { mutableStateOf(false) }; var showBottomControls by rememberSaveable { mutableStateOf(false) }
+    var videoToSave by remember { mutableStateOf<HistoryItem?>(null) }; var webViewInstance by remember { mutableStateOf<WebView?>(null) }; var popupWebView by remember { mutableStateOf<WebView?>(null) }
     val scope = rememberCoroutineScope()
     val isCasting by ActiveStreamHolder.isCasting.collectAsState(); val isPlaying by ActiveStreamHolder.isPlaying.collectAsState()
     val posMs by ActiveStreamHolder.positionMs.collectAsState(); val durMs by ActiveStreamHolder.durationMs.collectAsState()
@@ -78,6 +71,8 @@ fun InAppBrowserScreen(
 
     fun isRealMedia(s: String): Boolean {
         if (s.isBlank() || s.contains("dmxleo.dailymotion.com") || AdBlocker.isAd(s)) return false
+        val dur = streamDurations[s] ?: 0f
+        if (dur in 0.1f..59.9f) return false
         val clean = s.substringBefore('?').lowercase()
         if (clean.endsWith(".html") || clean.endsWith(".htm") || clean.endsWith(".php") || clean.endsWith(".jsp") || clean.endsWith(".js") || clean.endsWith(".css")) return false
         val isWeb = (s.contains("dailymotion.com/video/") || s.contains("ok.ru/video/")) &&
@@ -251,7 +246,11 @@ fun InAppBrowserScreen(
                             if (act == "VOLUME") ActiveStreamHolder.setVolume(vol)
                             ActiveStreamHolder.onSendPlayControl?.invoke(act, pos, vol, null)
                         },
-                        onStopCasting = { ActiveStreamHolder.stopCasting(); Toast.makeText(context, "🛑 Transmisión detenida", Toast.LENGTH_SHORT).show() },
+                        onStopCasting = {
+                            ActiveStreamHolder.stopCasting()
+                            com.omnicast.sender.service.CastMediaNotificationService.stop(context)
+                            Toast.makeText(context, "🛑 Transmisión detenida", Toast.LENGTH_SHORT).show()
+                        },
                         onClearStreams = {
                             val cur = currentUrl
                             val before = detectedStreams.size

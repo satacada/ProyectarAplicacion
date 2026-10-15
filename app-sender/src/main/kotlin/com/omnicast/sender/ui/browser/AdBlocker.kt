@@ -28,7 +28,7 @@ object AdBlocker {
         "cat-bolt.com", "imasdk.googleapis.com", "securepubads.g.doubleclick.net",
         "pagead2.googlesyndication.com", "ad-delivery.net", "adkeeper.com", "trafficjunky.com",
         "whocares.club", "pemsrv.com", "gdtcdn.com", "mc.yandex.ru", "an.yandex.ru", "luugy.com",
-        "google-analytics.com", "googletagmanager.com"
+        "google-analytics.com", "googletagmanager.com", "holdbitter.com", "cdn.holdbitter.com"
     )
 
     private val AD_KEYWORDS = listOf(
@@ -38,7 +38,7 @@ object AdBlocker {
         "s.click.aliexpress", "c.lazada", "shp.ee", "aff_c", "clickalgo", "giggle",
         "/creatives/", "/creative/", "cat-bolt", "imasdk", "securepubads",
         "preroll", "pre-roll", "midroll", "postroll", "/vast", "/vpaid", "ad-delivery",
-        "clmap", "metrika", "analytics"
+        "clmap", "metrika", "analytics", "/gambling/", "/notifications/", "bonus-", "bonus_"
     )
 
     private val KNOWN_MEDIA_HOSTS = hashSetOf(
@@ -76,7 +76,8 @@ object AdBlocker {
         }
         if (lower.contains("cat-bolt") || lower.contains("/creatives/") || lower.contains("securepubads") ||
             lower.contains("imasdk") || lower.contains("doubleclick") || lower.contains("/vast") ||
-            lower.contains("/vpaid") || lower.contains("preroll") || lower.contains("ad-delivery")
+            lower.contains("/vpaid") || lower.contains("preroll") || lower.contains("ad-delivery") ||
+            lower.contains("holdbitter") || lower.contains("/gambling/") || lower.contains("bonus-")
         ) return true
         val host = try { java.net.URI(url).host?.lowercase() } catch (_: Throwable) { null }
         if (host != null) {

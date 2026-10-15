@@ -43,17 +43,12 @@ class SenderMainActivity : ComponentActivity() {
             instance?.sendPlayControl(action, positionMs, volume) ?: QuickSignalingHelper.sendQuickMessage(context, msg)
         }
 
-        fun sendDisconnectStatic(context: Context) {
-            SignalingClientHolder.get().sendMessage(SignalingMessage.Disconnect())
-        }
+        fun sendDisconnectStatic(context: Context) { SignalingClientHolder.get().sendMessage(SignalingMessage.Disconnect()) }
 
         var onBrowserRescanRequested: (() -> Unit)? = null
 
         fun requestBrowserRescan(context: Context) {
-            val inst = instance
-            if (inst != null && onBrowserRescanRequested != null) {
-                inst.runOnUiThread { onBrowserRescanRequested?.invoke() }
-            }
+            instance?.let { inst -> onBrowserRescanRequested?.let { req -> inst.runOnUiThread { req.invoke() } } }
         }
 
         fun exitCompletely(context: Context) {
@@ -69,15 +64,11 @@ class SenderMainActivity : ComponentActivity() {
         }
     }
 
-    private lateinit var nsdScanner: NsdScannerManager
-    private lateinit var clipboardExtractor: ClipboardStreamExtractor
+    private lateinit var nsdScanner: NsdScannerManager; private lateinit var clipboardExtractor: ClipboardStreamExtractor
     private val signalingClient: SignalingClient get() = SignalingClientHolder.get()
-    private val autoPromptCapture = androidx.compose.runtime.mutableStateOf(false)
-    private val isTvConnected = androidx.compose.runtime.mutableStateOf(false)
-    private val openBrowserDirectly = androidx.compose.runtime.mutableStateOf(false)
-    private val openGalleryDirectly = androidx.compose.runtime.mutableStateOf(false)
-    private lateinit var historyManager: PlayHistoryManager
-    private lateinit var playlistManager: com.omnicast.sender.playlist.PlaylistManager
+    private val autoPromptCapture = androidx.compose.runtime.mutableStateOf(false); private val isTvConnected = androidx.compose.runtime.mutableStateOf(false)
+    private val openBrowserDirectly = androidx.compose.runtime.mutableStateOf(false); private val openGalleryDirectly = androidx.compose.runtime.mutableStateOf(false)
+    private lateinit var historyManager: PlayHistoryManager; private lateinit var playlistManager: com.omnicast.sender.playlist.PlaylistManager
 
     private val audioPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         if (!granted) Toast.makeText(this, "Audio interno desactivado. Transmitirá solo video.", Toast.LENGTH_SHORT).show()
@@ -196,9 +187,13 @@ class SenderMainActivity : ComponentActivity() {
                 if (!isFinishing && !isDestroyed) Toast.makeText(this@SenderMainActivity, "🟢 Conectado con TV ($ipAddress)", Toast.LENGTH_SHORT).show()
             }, {
                 isTvConnected.value = false; Log.w("TvConnection", "🔴 Desconectado de TV: $ipAddress:$port")
+                ActiveStreamHolder.stopCasting(); com.omnicast.sender.service.CastMediaNotificationService.stop(this@SenderMainActivity)
                 checkInactivityAutoExit()
             })
-        } catch (e: Throwable) { isTvConnected.value = false; checkInactivityAutoExit() }
+        } catch (e: Throwable) {
+            isTvConnected.value = false; ActiveStreamHolder.stopCasting()
+            com.omnicast.sender.service.CastMediaNotificationService.stop(this@SenderMainActivity); checkInactivityAutoExit()
+        }
     }
 
     private fun listenToPlaybackStatus() {
@@ -213,6 +208,10 @@ class SenderMainActivity : ComponentActivity() {
                             ActiveStreamHolder.onSendPlayControl = { act, pos, vol, par -> sendPlayControl(act, pos, vol, par) }
                             com.omnicast.sender.service.CastMediaNotificationService.start(this@SenderMainActivity)
                         }
+                    } else if (msg.state in listOf("STOPPED", "ENDED", "IDLE")) {
+                        ActiveStreamHolder.stopCasting()
+                        com.omnicast.sender.service.CastMediaNotificationService.stop(this@SenderMainActivity)
+                        checkInactivityAutoExit()
                     }
                     ActiveStreamHolder.updatePlayback(msg.state == "PLAYING", msg.positionMs, msg.durationMs)
                     if (msg.positionMs > 5000L) {

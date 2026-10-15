@@ -217,8 +217,12 @@ class ExoPlayerTvManager(private val context: Context) {
             allowed["Sec-Fetch-Site"] = "cross-site"
         }
         if (url.contains("fastream.to", true)) {
+            val fastreamId = Regex("(?:/hls\\d*/\\d+/\\d+/|/embed-|/)([a-zA-Z0-9]{10,12})(?:[_,.]|$)").find(url)?.groupValues?.get(1)
             allowed["Origin"] = "https://fastream.to"
-            allowed["Referer"] = "https://fastream.to/"
+            allowed["Referer"] = if (!fastreamId.isNullOrBlank()) "https://fastream.to/embed-$fastreamId.html" else "https://fastream.to/embed-video.html"
+            allowed["Sec-Fetch-Mode"] = "cors"
+            allowed["Sec-Fetch-Dest"] = "empty"
+            allowed["Sec-Fetch-Site"] = "cross-site"
         }
         return allowed
     }

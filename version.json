@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 84,
-  "versionCodeReceiver": 67,
-  "versionName": "3.32.39",
-  "releaseTag": "v3.32.39",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.39/omnicast-sender-v3.32.39.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.39/omnicast-receiver-v3.32.39.apk",
-  "changelog": "v3.32.39: Controles multimedia de ExoPlayer en TV accesibles con tecla OK del mando; línea de tiempo interactiva con punto/scrubber para adelantar y retroceder; blindado el botón de salir para no robar foco D-pad."
+  "versionCodeSender": 85,
+  "versionCodeReceiver": 68,
+  "versionName": "3.32.40",
+  "releaseTag": "v3.32.40",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.40/omnicast-sender-v3.32.40.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.40/omnicast-receiver-v3.32.40.apk",
+  "changelog": "v3.32.40: Solución al error HTTP 403 Forbidden en fastream.to inyectando Referer embed dinámico y cabeceras CORS en ExoPlayer y detector de calidades."
 }

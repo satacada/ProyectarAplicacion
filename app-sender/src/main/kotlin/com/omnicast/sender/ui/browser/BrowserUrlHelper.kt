@@ -74,8 +74,12 @@ object BrowserUrlHelper {
             } else if (streamUrl.contains("mail.ru", ignoreCase = true)) {
                 headers.remove("Referer")
             } else if (streamUrl.contains("fastream.to", ignoreCase = true)) {
-                headers["Referer"] = "https://fastream.to/"
+                val fastreamId = Regex("(?:/hls\\d*/\\d+/\\d+/|/embed-|/)([a-zA-Z0-9]{10,12})(?:[_,.]|$)").find(streamUrl)?.groupValues?.get(1)
+                headers["Referer"] = if (!fastreamId.isNullOrBlank()) "https://fastream.to/embed-$fastreamId.html" else "https://fastream.to/embed-video.html"
                 headers["Origin"] = "https://fastream.to"
+                headers["Sec-Fetch-Mode"] = "cors"
+                headers["Sec-Fetch-Dest"] = "empty"
+                headers["Sec-Fetch-Site"] = "cross-site"
             } else if (streamUrl.contains("morencius.com", ignoreCase = true) && !headers.containsKey("Referer")) {
                 headers["Referer"] = "https://embed69.org/"
             } else if (!headers.containsKey("Referer") && currentUrl.isNotBlank()) {

@@ -7,24 +7,29 @@
 
 ---
 
-## 1. Decisión de Diseño
+## 1. Decisión de Diseño Definitiva
 
-Se adopta una arquitectura de resolución en **tres niveles escalonados**, priorizando la **autonomía total de la APK en la TV**:
+Se descarta la extracción ciega en segundo plano por WebView en la TV para evitar la captura de videos basura (anuncios preroll de 15s, banners de casinos o desvíos de idioma). La resolución se fundamenta en el **criterio humano asistido por Código QR dinámico con sustitución en caliente de enlace**:
 
-### Nivel 1: Resolución Autónoma en la TV (Headless / HTTP Extractor)
-- La APK de la TV detecta fallos `ERROR_CODE_IO_BAD_HTTP_STATUS` (HTTP 403 / 404 / 410) emitidos por `ExoPlayer`.
-- La TV ejecuta de forma autónoma una de dos técnicas:
-  1. **Extractor HTTP nativo:** Para servidores estándar, descarga el HTML/JS del embed en milisegundos, aplica regex y desempaqueta el script JS para obtener el nuevo `.m3u8`/`.mp4`.
-  2. **WebView Headless temporal:** Si el reproductor requiere inicialización de scripts DOM, se instancia un `WebView` invisible en memoria durante 2-3 segundos con interceptor de peticiones de red (`shouldInterceptRequest`). Al capturar el stream, el `WebView` se destruye inmediatamente para evitar consumo de RAM en TV Boxes de 1GB/2GB.
-- Al obtener el stream fresco, se sobreescribe el campo `url` en `TvPlaylistsManager`, conservando intactos `lastPositionMs`, `title` y la carpeta contenedora, reanudando la reproducción en el segundo exacto.
+### Paso 1: Detección y Presentación de QR
+- Al intentar reproducir una película guardada cuyo token web haya expirado (HTTP 403 / 404 / 410):
+- `ExoPlayerTvManager` intercepta la excepción sin cerrar la app ni dejar pantalla negra.
+- La TV despliega un diálogo modal:
+  - Título: 🎬 **Enlace de video caducado en la web**
+  - Subtítulo: *"Escanea con tu celular para reactivar la película con 1 toque"*
+  - **Código QR dinámico:** Contiene la `pageUrl` de la película y el parámetro temporal `posMs=lastPositionMs`.
 
-### Nivel 2: Asistencia por Red Local (Fallback Online con Móvil)
-- Si la TV está enlazada al emisor móvil (`LocalSignalingServer` :8088) y el extractor local de la TV detecta un bloqueo complejo, envía un mensaje de socket: `RenewStreamRequest(videoId, pageUrl, lastPositionMs)`.
-- El móvil, que dispone de un motor de extracción completo y AdBlocker avanzado en C++, resuelve el flujo fresco y lo devuelve a la TV en segundo plano.
+### Paso 2: Elección Humana en Celular y Re-Transmisión
+- Al escanear con el móvil, se abre la página en el navegador interno de OmniCast.
+- El usuario humano selecciona con precisión el reproductor e idioma deseado (evitando cualquier video basura publicitario).
+- Al pulsar *"Transmitir a TV"*, el móvil envía el flujo con el token fresco y el timestamp guardado.
 
-### Nivel 3: Respaldo Manual por Código QR (Fallback Anti-Bot/Captcha)
-- Si el sitio web requiere interacción humana obligatoria (ej. resolución de Cloudflare Turnstile o Captcha), la TV despliega el diálogo modal de error enriquecido con un **Código QR dinámico**.
-- Al escanear el QR con el móvil, se abre la `pageUrl` en el navegador interno de OmniCast con el tiempo preseleccionado para reenviar el flujo en 1 toque.
+### Paso 3: Sustitución Automática del Enlace en la TV (Token TTL)
+- La TV recibe el nuevo flujo y ejecuta una actualización en `TvPlaylistsManager`:
+  - **Sustituye la URL expirada por la nueva URL activa.**
+  - **Preserva intactos:** Título, carpeta ("Ver más tarde", etc.) y posición de reproducción (`lastPositionMs`).
+  - La película arranca en el segundo exacto donde se quedó.
+- **Beneficio del TTL (6 a 12 horas):** Si el usuario pausa la película o apaga la TV y regresa más tarde ese mismo día, la TV puede reproducir directamente sin requerir escanear el QR nuevamente hasta que el nuevo token vuelva a caducar días después.
 
 ---
 

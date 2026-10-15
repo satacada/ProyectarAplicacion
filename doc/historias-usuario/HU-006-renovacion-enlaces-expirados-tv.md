@@ -12,17 +12,16 @@ Como usuario de Android TV con la aplicación OmniCast Receiver instalada de for
   - La aplicación NO debe cerrarse ni quedar en pantalla negra colgada.
   - Debe mostrar un estado visible: *"Renovando enlace de video..."*.
 
-### CA-02: Auto-Extracción Autónoma en la TV (Nivel 1)
-- La APK de la TV debe intentar refrescar el flujo mediante su propio extractor HTTP / WebView temporal efímero cargando la `pageUrl` guardada.
-- Una vez detectado el nuevo `.m3u8` o `.mp4`:
-  - Se actualiza la `url` en la lista guardada de la TV.
-  - Se mantiene inalterado `lastPositionMs`.
-  - La reproducción arranca de inmediato en la posición guardada.
+### CA-02: Asistencia por Código QR y Criterio Humano
+- Ante un error 403 / 404, la TV despliega un diálogo con **Código QR** dinámico apuntando a la `pageUrl` original de la película.
+- El usuario escanea el QR con su móvil, abriendo la página en OmniCast para seleccionar con criterio humano la opción de audio/servidor correcta, evitando al 100% anuncios o videos basura.
+- Al pulsar *"Transmitir a TV"*, el flujo se reenvía a la TV con el token activo.
 
-### CA-03: Asistencia de Red y Código QR de Respaldo (Niveles 2 y 3)
-- Si el sitio web cuenta con protección anti-bot infranqueable de manera automática:
-  - Si el emisor móvil está conectado a la red local, solicitar la renovación por socket.
-  - En caso contrario, mostrar un diálogo con **Código QR** hacia la `pageUrl` para resolver y castear desde el móvil en 1 toque.
+### CA-03: Sustitución Automática del Enlace en TV (Aprovechamiento de TTL)
+- Al recibir el nuevo flujo, la TV actualiza automáticamente el registro en la lista guardada (`TvPlaylistsManager`), sustituyendo la URL vieja caducada por la nueva.
+- Se mantiene inalterado el progreso exacto (`lastPositionMs`) y el título.
+- El usuario puede seguir viendo la película de inmediato.
+- Si apaga la TV o sale y vuelve durante la vigencia del nuevo token (6-12 horas), la película se reproduce directamente en la TV sin pedir QR.
 
 ### CA-04: Opción Manual en Menú de la TV
 - En el menú contextual de cada elemento de la lista en la TV (donde están Compartir y Eliminar), debe figurar la opción: `🔄 Renovar enlace`.

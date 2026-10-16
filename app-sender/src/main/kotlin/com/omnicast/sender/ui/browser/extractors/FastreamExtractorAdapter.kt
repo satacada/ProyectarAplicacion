@@ -17,7 +17,7 @@ class FastreamExtractorAdapter : IMediaStreamExtractorPort {
 
     override fun canHandle(candidate: StreamCandidate): Boolean {
         val lower = candidate.url.lowercase()
-        return lower.contains("fastream.to") || lower.contains("dropcdn.io") || lower.contains("/hls2/")
+        return lower.contains("fastream.to") || lower.contains("dropcdn.io") || lower.contains("dr0pstream.com") || lower.contains("/hls2/")
     }
 
     override fun extract(candidate: StreamCandidate): MediaStream? {
@@ -26,12 +26,23 @@ class FastreamExtractorAdapter : IMediaStreamExtractorPort {
         val fastreamId = fastreamIdRegex.find(url)?.groupValues?.get(1)
         val isMaster = lower.contains("master.m3u8") || lower.contains("urlset") || lower.contains(".m3u8")
         val title = candidate.pageTitle ?: "Fastream Video"
-        val embedUrl = if (!fastreamId.isNullOrBlank()) "https://fastream.to/embed-$fastreamId.html" else "https://fastream.to/embed-video.html"
+        val isDrop = lower.contains("dropcdn.io") || lower.contains("dr0pstream.com")
+        val baseHost = if (isDrop) "https://dr0pstream.com" else "https://fastream.to"
+        val embedUrl = if (!fastreamId.isNullOrBlank()) "$baseHost/embed-$fastreamId.html" else "$baseHost/embed-video.html"
 
         val headers = candidate.headers.toMutableMap()
         if (!headers.containsKey("User-Agent")) headers["User-Agent"] = UA_MOBILE
         if (!headers.containsKey("Referer")) headers["Referer"] = embedUrl
-        if (!headers.containsKey("Origin")) headers["Origin"] = "https://fastream.to"
+        val ref = headers["Referer"]
+        if (!headers.containsKey("Origin")) {
+            val origin = if (!ref.isNullOrBlank()) {
+                try {
+                    val u = java.net.URI(ref)
+                    if (!u.scheme.isNullOrBlank() && !u.host.isNullOrBlank()) "${u.scheme}://${u.host}" else baseHost
+                } catch (_: Throwable) { baseHost }
+            } else baseHost
+            headers["Origin"] = origin
+        }
         if (!headers.containsKey("Sec-Fetch-Mode")) headers["Sec-Fetch-Mode"] = "cors"
         if (!headers.containsKey("Sec-Fetch-Dest")) headers["Sec-Fetch-Dest"] = "empty"
         if (!headers.containsKey("Sec-Fetch-Site")) headers["Sec-Fetch-Site"] = "cross-site"

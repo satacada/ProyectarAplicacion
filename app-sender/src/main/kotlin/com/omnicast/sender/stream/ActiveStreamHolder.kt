@@ -33,6 +33,12 @@ object ActiveStreamHolder {
     private val _tracksInfo = MutableStateFlow<com.omnicast.core.protocol.SignalingMessage.TracksInfo?>(null)
     val tracksInfo = _tracksInfo.asStateFlow()
 
+    private val _playbackError = MutableStateFlow<String?>(null)
+    val playbackError = _playbackError.asStateFlow()
+
+    fun notifyPlaybackError(err: String?) { _playbackError.value = err }
+    fun clearPlaybackError() { _playbackError.value = null }
+
     var onSendPlayControl: ((action: String, posMs: Long, vol: Float, param: String?) -> Unit)? = null
 
     fun update(url: String, videoTitle: String? = null, hdrs: Map<String, String> = emptyMap()) {
@@ -58,6 +64,7 @@ object ActiveStreamHolder {
         _durationMs.value = 0L
         _currentMediaTitle.value = ""
         _tracksInfo.value = null
+        _playbackError.value = null
         com.omnicast.sender.overlay.FloatingIndicatorService.updateMode()
     }
 

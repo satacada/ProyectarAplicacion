@@ -192,7 +192,11 @@ class SenderMainActivity : ComponentActivity() {
             signalingClient?.messages?.collect { msg ->
                 if (msg is SignalingMessage.PlaybackStatus) {
                     val mUrl = msg.mediaUrl
-                    if ((msg.state == "PLAYING" || msg.state == "PAUSED") && !mUrl.isNullOrBlank()) {
+                    if (msg.state == "ERROR_FORBIDDEN_403") {
+                        ActiveStreamHolder.notifyPlaybackError("ERROR_FORBIDDEN_403")
+                        ActiveStreamHolder.stopCasting(notifyTv = false)
+                        com.omnicast.sender.service.CastMediaNotificationService.stop(this@SenderMainActivity)
+                    } else if ((msg.state == "PLAYING" || msg.state == "PAUSED") && !mUrl.isNullOrBlank()) {
                         if (!ActiveStreamHolder.isCasting.value || ActiveStreamHolder.streamUrl != mUrl) {
                             val streamTitle = msg.title?.ifBlank { "Película en TV" } ?: "Película en TV"
                             ActiveStreamHolder.startCasting(mUrl, streamTitle, emptyMap())
@@ -251,14 +255,12 @@ class SenderMainActivity : ComponentActivity() {
     }
 
     fun sendPlayControl(action: String, positionMs: Long = 0L, volume: Float = 1.0f, param: String? = null) {
-        val msg = SignalingMessage.PlayControl(action, positionMs, volume, param)
-        sendSignalingMessage(msg)
+        val msg = SignalingMessage.PlayControl(action, positionMs, volume, param); sendSignalingMessage(msg)
         com.omnicast.sender.discovery.MultiReceiverManager.broadcastToSecondary(msg, nsdScanner.discoveredDevices.value)
     }
 
     fun sendImageToTv(url: String, title: String? = null) {
-        val msg = SignalingMessage.ShowImage(imageUrl = url, title = title)
-        sendSignalingMessage(msg)
+        val msg = SignalingMessage.ShowImage(imageUrl = url, title = title); sendSignalingMessage(msg)
         com.omnicast.sender.discovery.MultiReceiverManager.broadcastToSecondary(msg, nsdScanner.discoveredDevices.value)
         Toast.makeText(this, "🖼️ Foto proyectada en la TV Box", Toast.LENGTH_SHORT).show()
     }

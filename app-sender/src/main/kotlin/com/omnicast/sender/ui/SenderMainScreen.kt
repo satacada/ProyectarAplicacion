@@ -225,22 +225,8 @@ fun SenderMainScreen(
                             onStopProjection()
                         },
                         onOpenProjectionConfig = { showConfigDialog = true },
-                        onOpenGallery = {
-                            context.startActivity(
-                                Intent(context, com.omnicast.sender.overlay.GalleryPickerActivity::class.java).apply {
-                                    putExtra(com.omnicast.sender.overlay.GalleryPickerActivity.EXTRA_MIME_FILTER, "image/*")
-                                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                                }
-                            )
-                        },
-                        onPickExternalFile = {
-                            context.startActivity(
-                                Intent(context, com.omnicast.sender.overlay.GalleryPickerActivity::class.java).apply {
-                                    putExtra(com.omnicast.sender.overlay.GalleryPickerActivity.EXTRA_MIME_FILTER, "video/*")
-                                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                                }
-                            )
-                        }
+                        onOpenGallery = { context.startActivity(Intent(context, com.omnicast.sender.overlay.GalleryPickerActivity::class.java).apply { putExtra(com.omnicast.sender.overlay.GalleryPickerActivity.EXTRA_MIME_FILTER, "image/*"); addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }) },
+                        onPickExternalFile = { context.startActivity(Intent(context, com.omnicast.sender.overlay.GalleryPickerActivity::class.java).apply { putExtra(com.omnicast.sender.overlay.GalleryPickerActivity.EXTRA_MIME_FILTER, "video/*"); addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }) }
                     )
                 }
             }
@@ -283,6 +269,10 @@ fun SenderMainScreen(
             onDismiss = { detectionResult = null }
         )
     }
+
+    com.omnicast.sender.ui.browser.StreamErrorRecoveryDialog(
+        onStartMirroring = { projectionLauncher.launch(getSafeCaptureIntent()) }
+    )
 
     if (showHelpDialog) {
         SenderHelpDialog(onDismiss = { showHelpDialog = false })

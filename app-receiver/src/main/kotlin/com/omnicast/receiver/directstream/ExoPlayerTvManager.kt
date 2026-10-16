@@ -90,7 +90,6 @@ class ExoPlayerTvManager(private val context: Context) {
                                                 isRetryingClean = true
                                             } else {
                                                 playClean(targetUrl, currentTitle)
-                                                onPlaybackFailed?.invoke()
                                             }
                                         }
                                     }

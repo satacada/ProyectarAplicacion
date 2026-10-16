@@ -1,0 +1,39 @@
+name: AI Stream Healer OTA
+
+on:
+  schedule:
+    - cron: '0 */4 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  heal-streams:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Run AI Healer
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          python scripts/ai_stream_healer.py
+
+      - name: Commit and Push Updated Rules
+        run: |
+          if [ -n "$(git status --porcelain rules/live_stream_rules.json)" ]; then
+            git config user.name "OmniCast AI Healer"
+            git config user.email "actions@github.com"
+            git add rules/live_stream_rules.json
+            git commit -m "fix(rules): auto-heal stream rules via Gemini AI [skip ci]"
+            git push origin main
+          else
+            echo "No stream rules updated. Rules are clean and up to date."
+          fi

@@ -68,3 +68,24 @@ OmniCast Pro es un ecosistema cliente-servidor (Emisor Móvil y Receptor Android
   - La TV recibe el nuevo flujo y **reemplaza la URL vieja caducada por la nueva URL activa** en su base de datos (`TvPlaylistsManager`), preservando el minuto exacto `lastPositionMs`, el título y la carpeta.
   - Durante la vigencia del nuevo token (6 a 12 horas), el usuario puede salir, apagar la TV y volver más tarde, y la película se reproducirá de inmediato **sin volver a pedir el código QR**.
 - **Opción Manual:** En el menú contextual de la TV (`TvVideoActionDialog`), el botón `🔄 Renovar enlace (QR)` permite generar el código QR en cualquier momento.
+
+### D. Arquitectura Colectiva de Auto-Recuperación y Auto-Curación por IA (OTA)
+- **Problema Abordado:** Los sitios de streaming y servidores CDN (ej. Lulustream, Fastream, Streamwish) cambian periódicamente sus cabeceras anti-hotlink (`Referer`, `Origin`, tokens de embed) provocando errores HTTP 403 Forbidden. Codificar parches manuales por cada sitio viola los principios de escalabilidad.
+- **Directiva de Costo Cero ($0) e Inteligencia Colectiva:**
+  1. No se invoca la IA en el teléfono del usuario ni se requiere que cada usuario configure claves de API.
+  2. La inteligencia es centralizada: una única inferencia en la nube resuelve el problema para **todos los usuarios del mundo**.
+- **Componentes del Ecosistema:**
+  1. **Motor Heurístico On-Device (`StreamIntelligenceEngine.kt`):**
+     - Discrimina dinámicamente entre flujos legítimos y anuncios según duración (<60s es penalizado), tipo de manifiesto (HLS/DASH) y resolución.
+     - Resuelve y asocia en caliente las cabeceras requeridas (`Referer`, `Origin`, `Sec-Fetch-*`) sin recompilar la app.
+  2. **Sincronizador Remoto y Telemetría (`StreamRuleSyncManager.kt`):**
+     - Descarga en segundo plano las reglas vivas desde `rules/live_stream_rules.json` en GitHub.
+     - Ante cualquier flujo desconocido o bloqueado con 403, despacha un reporte anónimo silencioso a Supabase (`UNRESOLVED_STREAM`).
+  3. **Auto-Sanador en la Nube (`scripts/ai_stream_healer.py` & `.github/workflows/ai_stream_healer.yml`):**
+     - Se ejecuta automáticamente cada 4 horas en GitHub Actions.
+     - Lee los reportes de Supabase y consulta a **Google Gemini 1.5 Flash** (usando el secret `GEMINI_API_KEY`).
+     - Gemini deduce la combinación exacta de CDN, Referer de embed y cabeceras necesarias.
+     - El workflow actualiza `rules/live_stream_rules.json` y hace commit directo a la rama `main`.
+  4. **Distribución Instantánea (Over The Air - OTA):**
+     - Todas las aplicaciones móviles en uso descargan el nuevo archivo JSON (~5 KB) en su siguiente inicio o navegación, restaurando la reproducción inmediatamente sin intervención del usuario.
+

@@ -64,6 +64,7 @@ object NativeAdBlockEngine {
     }
 
     fun shouldBlock(url: String, pageUrl: String? = null): Boolean {
+        if (AdBlocker.isVerificationOrCaptcha(url) || (pageUrl != null && AdBlocker.isVerificationOrCaptcha(pageUrl))) return false
         if (AdBlockWhitelistManager.isWhitelisted(url) || (pageUrl != null && AdBlockWhitelistManager.isWhitelisted(pageUrl))) {
             val lower = url.lowercase()
             if (lower.contains("an.yandex.") || lower.contains("mc.yandex.")) return true

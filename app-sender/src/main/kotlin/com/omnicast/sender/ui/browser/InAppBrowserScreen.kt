@@ -37,15 +37,13 @@ fun InAppBrowserScreen(
     val initialIsHome = savedLastUrl.isBlank() || savedLastUrl == "about:blank"
 
     var inputUrl by rememberSaveable { mutableStateOf(if (initialIsHome) "" else savedLastUrl) }; var currentUrl by rememberSaveable { mutableStateOf(if (initialIsHome) "" else savedLastUrl) }
-    var isHome by rememberSaveable { mutableStateOf(initialIsHome) }; var pageTitle by rememberSaveable { mutableStateOf("OmniCast Browser") }; var progress by remember { mutableIntStateOf(0) }
-    var isDesktopMode by remember { mutableStateOf(false) }; var isAdBlockEnabled by remember { mutableStateOf(true) }
+    var isHome by rememberSaveable { mutableStateOf(initialIsHome) }; var pageTitle by rememberSaveable { mutableStateOf("OmniCast Browser") }; var progress by remember { mutableIntStateOf(0) }; var isDesktopMode by remember { mutableStateOf(false) }; var isAdBlockEnabled by remember { mutableStateOf(true) }
     val detectedStreams = remember { mutableStateListOf<String>() }; val streamHeaders = remember { mutableStateMapOf<String, Map<String, String>>() }; val streamLabels = remember { mutableStateMapOf<String, String>() }; val streamDurations = remember { mutableStateMapOf<String, Float>() }
     var qualityOptions by remember { mutableStateOf<List<StreamQualityOption>>(emptyList()) }; var showOptionsSheet by remember { mutableStateOf(false) }; var showSideDrawer by remember { mutableStateOf(false) }; var showWhitelistDialog by remember { mutableStateOf(false) }; var showBottomControls by rememberSaveable { mutableStateOf(false) }
     var videoToSave by remember { mutableStateOf<HistoryItem?>(null) }; var webViewInstance by remember { mutableStateOf<WebView?>(null) }; var popupWebView by remember { mutableStateOf<WebView?>(null) }
-    var playlistsVersion by remember { mutableIntStateOf(0) }; val scope = rememberCoroutineScope()
+    var playlistsVersion by remember { mutableIntStateOf(0) }; val scope = rememberCoroutineScope(); var userDismissedSheetForUrl by rememberSaveable { mutableStateOf("") }; var autoOpenJob by remember { mutableStateOf<kotlinx.coroutines.Job?>(null) }
     val isCasting by ActiveStreamHolder.isCasting.collectAsState(); val isPlaying by ActiveStreamHolder.isPlaying.collectAsState()
-    val posMs by ActiveStreamHolder.positionMs.collectAsState(); val durMs by ActiveStreamHolder.durationMs.collectAsState()
-    val volume by ActiveStreamHolder.volume.collectAsState(); val castTitle by ActiveStreamHolder.currentMediaTitle.collectAsState()
+    val posMs by ActiveStreamHolder.positionMs.collectAsState(); val durMs by ActiveStreamHolder.durationMs.collectAsState(); val volume by ActiveStreamHolder.volume.collectAsState(); val castTitle by ActiveStreamHolder.currentMediaTitle.collectAsState()
 
     fun isRealMedia(s: String) = BrowserUrlHelper.isRealMedia(s, streamDurations[s] ?: 0f)
 
@@ -64,6 +62,37 @@ fun InAppBrowserScreen(
         }
     }
 
+    fun openOptionsSheet() {
+        val currentStreams = detectedStreams.filter { isRealMedia(it) }
+        val cleanTitle = pageTitle.replace(" - YouTube", "").replace(" | OK", "").trim().take(22)
+        if (currentStreams.isEmpty()) {
+            qualityOptions = emptyList(); showOptionsSheet = true
+            webViewInstance?.evaluateJavascript(WvcSnifferScripts.buildAggressiveRescanScript(WvcDomSniffer.CONSOLE_PREFIX), null)
+            return
+        }
+        qualityOptions = currentStreams.map { u ->
+            StreamQualityOption("▶ [${cleanTitle.take(16)}] Flujo Directo", "Auto", "Original", u, isMovie = true, isSuggested = true, healedHeaders = streamHeaders[u] ?: emptyMap())
+        }
+        showOptionsSheet = true
+        scope.launch {
+            val validParents = mutableSetOf<String>()
+            val deep = currentStreams.flatMap { u ->
+                val opts = StreamQualityDetector.detectQualities(u, streamHeaders[u] ?: emptyMap(), cleanTitle, currentUrl)
+                if (opts.isNotEmpty()) {
+                    validParents.add(u); opts.firstOrNull()?.healedHeaders?.takeIf { it.isNotEmpty() }?.let { streamHeaders[u] = it }
+                    opts.forEach { o -> if (o.healedHeaders.isNotEmpty()) streamHeaders[o.streamUrl] = o.healedHeaders }
+                }
+                opts
+            }
+            if (validParents.isNotEmpty()) detectedStreams.retainAll { validParents.contains(it) }
+            val finalOpts = if (deep.isNotEmpty()) deep else qualityOptions
+            val orderMap = currentStreams.withIndex().associate { it.value to it.index }
+            qualityOptions = finalOpts.distinctBy { it.streamUrl }.sortedBy { opt ->
+                orderMap[opt.streamUrl] ?: currentStreams.indexOfFirst { opt.streamUrl.startsWith(it.substringBefore('?')) }.takeIf { it >= 0 } ?: 999
+            }
+        }
+    }
+
     fun registerStream(url: String, hdrs: Map<String, String>, isPrimary: Boolean = false, label: String? = null) {
         if (url.isBlank() || AdBlocker.isAd(url) || !isRealMedia(url) || BrowserUrlHelper.extractYouTubeId(url) != null) return
         if (detectedStreams.contains(url)) detectedStreams.remove(url)
@@ -74,6 +103,13 @@ fun InAppBrowserScreen(
         val cleanT = if (pageTitle.isNotBlank() && pageTitle != "Cargando..." && pageTitle != "Transmisión") pageTitle else "Video Web"
         ActiveStreamHolder.update(primaryUrl, cleanT, streamHeaders[primaryUrl] ?: hdrs)
         android.util.Log.i("StreamDetection", "🎬 Flujo registrado [TOP/RECENT]: $url")
+        if (!showOptionsSheet && !isCasting && !showBottomControls && userDismissedSheetForUrl != currentUrl) {
+            autoOpenJob?.cancel()
+            autoOpenJob = scope.launch {
+                kotlinx.coroutines.delay(450)
+                if (!showOptionsSheet && !isCasting && !showBottomControls && userDismissedSheetForUrl != currentUrl && detectedStreams.any { isRealMedia(it) }) openOptionsSheet()
+            }
+        }
     }
 
     fun checkPlatformUrls(url: String?, title: String? = null) {
@@ -85,7 +121,7 @@ fun InAppBrowserScreen(
 
     fun navigateTo(url: String) {
         detectedStreams.clear(); streamHeaders.clear(); streamLabels.clear(); streamDurations.clear(); qualityOptions = emptyList()
-        ActiveStreamHolder.clearDetectedStream(); pageTitle = "Cargando..."; val target = BrowserUrlHelper.normalizeUrl(url)
+        userDismissedSheetForUrl = ""; autoOpenJob?.cancel(); ActiveStreamHolder.clearDetectedStream(); pageTitle = "Cargando..."; val target = BrowserUrlHelper.normalizeUrl(url)
         inputUrl = target; currentUrl = target; isHome = false; prefs.edit().putString("saved_browser_last_url", target).apply()
         checkPlatformUrls(target); webViewInstance?.loadUrl(target)
     }
@@ -129,7 +165,7 @@ fun InAppBrowserScreen(
     BackHandler(enabled = true) {
         if (showSideDrawer) showSideDrawer = false else if (showWhitelistDialog) showWhitelistDialog = false
         else if (popupWebView != null) { popupWebView?.destroy(); popupWebView = null }
-        else if (videoToSave != null) videoToSave = null else if (showOptionsSheet) showOptionsSheet = false
+        else if (videoToSave != null) videoToSave = null else if (showOptionsSheet) { showOptionsSheet = false; userDismissedSheetForUrl = currentUrl }
         else handleBrowserBack()
     }
 
@@ -138,36 +174,6 @@ fun InAppBrowserScreen(
         onDispose { SenderMainActivity.onBrowserRescanRequested = null }
     }
 
-    fun openOptionsSheet() {
-        val currentStreams = detectedStreams.filter { isRealMedia(it) }
-        val cleanTitle = pageTitle.replace(" - YouTube", "").replace(" | OK", "").trim().take(22)
-        if (currentStreams.isEmpty()) {
-            qualityOptions = emptyList(); showOptionsSheet = true
-            webViewInstance?.evaluateJavascript(WvcSnifferScripts.buildAggressiveRescanScript(WvcDomSniffer.CONSOLE_PREFIX), null)
-            return
-        }
-        qualityOptions = currentStreams.map { u ->
-            StreamQualityOption("▶ [${cleanTitle.take(16)}] Flujo Directo", "Auto", "Original", u, isMovie = true, isSuggested = true, healedHeaders = streamHeaders[u] ?: emptyMap())
-        }
-        showOptionsSheet = true
-        scope.launch {
-            val validParents = mutableSetOf<String>()
-            val deep = currentStreams.flatMap { u ->
-                val opts = StreamQualityDetector.detectQualities(u, streamHeaders[u] ?: emptyMap(), cleanTitle, currentUrl)
-                if (opts.isNotEmpty()) {
-                    validParents.add(u); opts.firstOrNull()?.healedHeaders?.takeIf { it.isNotEmpty() }?.let { streamHeaders[u] = it }
-                    opts.forEach { o -> if (o.healedHeaders.isNotEmpty()) streamHeaders[o.streamUrl] = o.healedHeaders }
-                }
-                opts
-            }
-            if (validParents.isNotEmpty()) detectedStreams.retainAll { validParents.contains(it) }
-            val finalOpts = if (deep.isNotEmpty()) deep else qualityOptions
-            val orderMap = currentStreams.withIndex().associate { it.value to it.index }
-            qualityOptions = finalOpts.distinctBy { it.streamUrl }.sortedBy { opt ->
-                orderMap[opt.streamUrl] ?: currentStreams.indexOfFirst { opt.streamUrl.startsWith(it.substringBefore('?')) }.takeIf { it >= 0 } ?: 999
-            }
-        }
-    }
 
     SideMediaDrawer(
         isOpen = showSideDrawer, onClose = { showSideDrawer = false },
@@ -206,7 +212,7 @@ fun InAppBrowserScreen(
                     onProgress = { progress = it },
                     onPageStarted = { newUrl ->
                         if (currentUrl.isNotBlank() && currentUrl != newUrl && !newUrl.startsWith("about:")) {
-                            detectedStreams.clear(); streamHeaders.clear(); streamLabels.clear(); qualityOptions = emptyList(); ActiveStreamHolder.clearDetectedStream(); pageTitle = "Cargando..."
+                            detectedStreams.clear(); streamHeaders.clear(); streamLabels.clear(); qualityOptions = emptyList(); ActiveStreamHolder.clearDetectedStream(); pageTitle = "Cargando..."; userDismissedSheetForUrl = ""; autoOpenJob?.cancel()
                         }
                         inputUrl = newUrl; currentUrl = newUrl; com.omnicast.sender.history.NavigationTrackManager.recordStep(newUrl, pageTitle)
                         if (!newUrl.startsWith("about:")) { prefs.edit().putString("saved_browser_last_url", newUrl).apply(); com.omnicast.sender.history.NavigationTrackManager.pushBrowserHistory(context, newUrl, pageTitle) }
@@ -218,7 +224,7 @@ fun InAppBrowserScreen(
                     },
                     onHistoryUpdated = { u, t ->
                         if (currentUrl.isNotBlank() && currentUrl != u && !u.startsWith("about:") && !u.contains("favicon")) {
-                            detectedStreams.clear(); streamHeaders.clear(); streamLabels.clear(); qualityOptions = emptyList(); ActiveStreamHolder.clearDetectedStream()
+                            detectedStreams.clear(); streamHeaders.clear(); streamLabels.clear(); qualityOptions = emptyList(); ActiveStreamHolder.clearDetectedStream(); userDismissedSheetForUrl = ""
                         }
                         currentUrl = u; if (!t.isNullOrBlank() && t != "Transmisión" && !t.contains("about:blank")) pageTitle = t
                         com.omnicast.sender.history.NavigationTrackManager.recordStep(u, pageTitle)
@@ -284,7 +290,7 @@ fun InAppBrowserScreen(
             val merged = (streamHeaders[opt.streamUrl] ?: emptyMap()) + opt.healedHeaders
             transmitWithHistory(opt.streamUrl, bT, merged)
         },
-        onTransmitHistory = { transmitWithHistory(it.url, it.title, it.headers, it.pageUrl) }, onDismissOptions = { showOptionsSheet = false },
+        onTransmitHistory = { transmitWithHistory(it.url, it.title, it.headers, it.pageUrl) }, onDismissOptions = { showOptionsSheet = false; userDismissedSheetForUrl = currentUrl },
         onClearOptions = { detectedStreams.clear(); qualityOptions = emptyList(); showOptionsSheet = false },
         onRescanOptions = { webViewInstance?.evaluateJavascript(WvcSnifferScripts.buildAggressiveRescanScript(WvcDomSniffer.CONSOLE_PREFIX), null); Toast.makeText(context, "🔍 Buscando videos...", Toast.LENGTH_SHORT).show() },
         onDeleteHistory = { historyManager.remove(it) }, onClearHistory = { historyManager.clear() }, onToggleFavorite = { historyManager.toggleFavorite(it) },

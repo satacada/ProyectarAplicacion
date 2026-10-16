@@ -11,19 +11,11 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 
-const val UA_MOBILE = "Mozilla/5.0 (Linux; Android 14; Mobile) AppleWebKit/537.36 Chrome/124.0.0.0 Mobile Safari/537.36"
+const val UA_MOBILE = "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36"
 const val UA_DESKTOP = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/124.0.0.0 Safari/537.36"
 
-private var lastBlockedToastTime = 0L
-
-private fun showBlockedToast(ctx: android.content.Context) {
-    val now = System.currentTimeMillis()
-    if (now - lastBlockedToastTime > 2500L) {
-        lastBlockedToastTime = now
-        android.os.Handler(android.os.Looper.getMainLooper()).post {
-            android.widget.Toast.makeText(ctx, "🚫 Ventana publicitaria bloqueada", android.widget.Toast.LENGTH_SHORT).show()
-        }
-    }
+private fun showBlockedToast(@Suppress("UNUSED_PARAMETER") ctx: android.content.Context) {
+    // Silencioso estilo Web Video Caster: bloquear sin interrumpir al usuario con Toasts
 }
 
 /**
@@ -245,7 +237,7 @@ fun BrowserWebView(
                         onProgress(p)
                         if (p >= 80) swipeRefresh.isRefreshing = false
                         if (isAdBlockEnabled && (p == 30 || p == 60 || p == 100)) v?.evaluateJavascript(AdBlocker.getAdHidingScript(), null)
-                        if (p == 70) v?.evaluateJavascript(WvcDomSniffer.getInjectionScript(ctx), null)
+                        if (p == 60 || p == 85 || p == 100) v?.evaluateJavascript(WvcDomSniffer.getInjectionScript(ctx), null)
                     }
 
                     override fun onReceivedTitle(v: WebView?, title: String?) {

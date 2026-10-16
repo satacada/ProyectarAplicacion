@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 124,
-  "versionCodeReceiver": 107,
-  "versionName": "3.32.79",
-  "releaseTag": "v3.32.79",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.79/omnicast-sender-v3.32.79.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.79/omnicast-receiver-v3.32.79.apk",
-  "changelog": "v3.32.79: Eliminación total de la ventana modal de Servidor Protegido 403; reducción del tamaño de los botones de la barra superior del navegador (botón de captura naranja a 26dp y botón de controles multimedia al mismo tamaño compacto de 26dp); eliminación de cabeceras prohibidas Sec-Fetch-* en ExoPlayer."
+  "versionCodeSender": 125,
+  "versionCodeReceiver": 108,
+  "versionName": "3.32.80",
+  "releaseTag": "v3.32.80",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.80/omnicast-sender-v3.32.80.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.80/omnicast-receiver-v3.32.80.apk",
+  "changelog": "v3.32.80: Apertura automática proactiva de la hoja de opciones de video al capturar flujos (fiel a Web Video Caster); resolución proactiva de Cloudflare Turnstile con secuencia de eventos puntero/ratón y bypass en motor de bloqueo C++; supresión silenciosa de avisos publicitarios; eliminación absoluta de la ventana 403 y cabeceras de fingerprinting."
 }

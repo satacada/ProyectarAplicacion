@@ -155,8 +155,8 @@ object AdBlocker {
                 document.addEventListener('click', function(e) {
                     var el = e.target;
                     if (!el) return;
-                    if (el.closest && el.closest('input, textarea, select, button, form, a, [role="button"], [contenteditable="true"], [role="search"], [role="textbox"], [role="combobox"]')) return;
-                    if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT' || el.tagName === 'FORM' || el.tagName === 'BUTTON' || el.tagName === 'A') return;
+                    if (el.closest && el.closest('input, textarea, select, button, form, [role="button"], [contenteditable="true"], [role="search"], [role="textbox"], [role="combobox"]')) return;
+                    if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT' || el.tagName === 'FORM' || el.tagName === 'BUTTON') return;
                     if (el !== document.body && el !== document.documentElement) {
                         var cs = window.getComputedStyle(el);
                         if (cs && (cs.position === 'fixed' || cs.position === 'absolute')) {

@@ -187,7 +187,7 @@ fun InAppBrowserScreen(
                     isHome = true; inputUrl = ""; currentUrl = ""; ActiveStreamHolder.clear(); prefs.edit().remove("saved_browser_last_url").apply()
                 },
                 detectedStreamsCount = detectedStreams.count { isRealMedia(it) }, onToggleBottomControls = { showBottomControls = !showBottomControls },
-                onOpenDetectedVideos = { openOptionsSheet() }, isCasting = isCasting, showBottomControls = showBottomControls,
+                onOpenDetectedVideos = { openOptionsSheet() }, isCasting = isCasting, isPlaying = isPlaying, showBottomControls = showBottomControls,
                 onOpenHistory = { showSideDrawer = true }, onOpenPlaylists = { showSideDrawer = true }, onOpenDrawer = { showSideDrawer = true }, onOpenWhitelist = { showWhitelistDialog = true }
             )
 
@@ -242,7 +242,7 @@ fun InAppBrowserScreen(
                     onWebViewCreated = { webViewInstance = it; if (!isHome && currentUrl.isNotBlank() && it.url == null) it.loadUrl(currentUrl) }
                 )
 
-                if (showBottomControls && isCasting) {
+                if (showBottomControls && isCasting && isPlaying) {
                     BrowserBottomBarContainer(
                         isCasting = isCasting, castTitle = castTitle, isPlaying = isPlaying, posMs = posMs, durMs = durMs, volume = volume,
                         onOpenQualities = { openOptionsSheet() },

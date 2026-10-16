@@ -1,7 +1,6 @@
 package com.omnicast.sender.ui.browser
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -19,7 +18,7 @@ import androidx.compose.ui.unit.sp
 
 /**
  * Hoja modal de lista de videos detectados inspirada fielmente en Web Video Caster.
- * Presenta el desglose real de flujos: master (adaptive), index-v1 (1920x800), iframes, audios y en vivo.
+ * Presenta el diseño limpio con thumbnail naranja y desglose de 4 líneas por flujo.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -37,69 +36,84 @@ fun WvcVideoListSheet(
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
-        containerColor = Color(0xFF0F172A),
-        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+        containerColor = Color(0xFF121212),
+        dragHandle = null,
+        shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 18.dp, vertical = 6.dp)
+                .fillMaxHeight(0.92f)
+                .background(Color(0xFF121212))
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(
-                    modifier = Modifier.size(38.dp).background(Color(0xFFF59E0B), RoundedCornerShape(10.dp)),
-                    contentAlignment = Alignment.Center
-                ) { Text("🎬", fontSize = 18.sp) }
-                Spacer(Modifier.width(12.dp))
-                Column(Modifier.weight(1f)) {
-                    Text("Lista de videos (${options.size})", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 17.sp)
-                    Text(pageTitle.ifBlank { "Transmisión Web" }, color = Color(0xFF94A3B8), fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                }
-                if (onRescan != null) {
-                    IconButton(onClick = onRescan) { Text("🔄", fontSize = 17.sp) }
-                }
-                IconButton(onClick = onClear) { Text("🗑", fontSize = 17.sp) }
-                IconButton(onClick = onDismiss) { Text("✕", color = Color.LightGray, fontSize = 17.sp) }
-            }
-
-            Spacer(Modifier.height(8.dp))
-
-            // Toggle fiel a Web Video Caster: "Emitir el video a través del teléfono"
+            // Barra superior estilo Web Video Caster: ←  Lista de videos   [🔄] 🗑
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(Color(0xFF1E293B), RoundedCornerShape(10.dp))
-                    .clickable { routeThroughPhone = !routeThroughPhone }
-                    .padding(horizontal = 10.dp, vertical = 6.dp),
+                    .padding(horizontal = 8.dp, vertical = 6.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Checkbox(
-                    checked = routeThroughPhone,
-                    onCheckedChange = { routeThroughPhone = it },
-                    colors = CheckboxDefaults.colors(checkedColor = Color(0xFFF59E0B), checkmarkColor = Color.Black)
-                )
+                IconButton(onClick = onDismiss, modifier = Modifier.size(36.dp)) {
+                    Text("←", color = Color.White, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+                }
                 Spacer(Modifier.width(8.dp))
-                Column(Modifier.weight(1f)) {
-                    Text("Emitir el video a través del teléfono", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
-                    Text("Enrutar por proxy local si el servidor bloquea la TV Box o da error 403", color = Color(0xFF94A3B8), fontSize = 10.sp)
+                Text(
+                    text = "Lista de videos",
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 19.sp,
+                    modifier = Modifier.weight(1f)
+                )
+                if (onRescan != null) {
+                    IconButton(onClick = onRescan, modifier = Modifier.size(36.dp)) {
+                        Text("🔄", fontSize = 16.sp)
+                    }
+                }
+                IconButton(onClick = onClear, modifier = Modifier.size(36.dp)) {
+                    Text("🗑", color = Color(0xFF9E9E9E), fontSize = 18.sp)
                 }
             }
 
-            Spacer(Modifier.height(10.dp))
+            // Fila: Emitir el video a través del teléfono       [ ]
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { routeThroughPhone = !routeThroughPhone }
+                    .padding(horizontal = 16.dp, vertical = 10.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Emitir el video a través del teléfono",
+                    color = Color.White,
+                    fontSize = 15.sp,
+                    modifier = Modifier.weight(1f)
+                )
+                Checkbox(
+                    checked = routeThroughPhone,
+                    onCheckedChange = { routeThroughPhone = it },
+                    colors = CheckboxDefaults.colors(
+                        checkedColor = Color(0xFFFF9800),
+                        checkmarkColor = Color.Black,
+                        uncheckedColor = Color(0xFFB0B0B0)
+                    )
+                )
+            }
+
+            HorizontalDivider(color = Color(0xFF262626), thickness = 0.8.dp)
 
             if (options.isEmpty()) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .weight(1f)
                         .padding(vertical = 36.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                    verticalArrangement = Arrangement.Center
                 ) {
                     Text("🔍", fontSize = 38.sp)
+                    Spacer(Modifier.height(8.dp))
                     Text("No se han detectado videos todavía", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                    Spacer(Modifier.height(4.dp))
                     Text(
                         "Reproduce el video en la página web o pulsa re-escanear para capturar el flujo.",
                         color = Color(0xFF94A3B8),
@@ -108,6 +122,7 @@ fun WvcVideoListSheet(
                         modifier = Modifier.padding(horizontal = 24.dp)
                     )
                     if (onRescan != null) {
+                        Spacer(Modifier.height(12.dp))
                         Button(
                             onClick = onRescan,
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF7A00)),
@@ -119,14 +134,14 @@ fun WvcVideoListSheet(
                 }
             } else {
                 LazyColumn(
-                    modifier = Modifier.fillMaxWidth().heightIn(max = 460.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
                 ) {
                     items(options) { opt ->
                         WvcVideoListItem(
                             option = opt,
                             pageTitle = pageTitle,
-                            routeThroughPhone = routeThroughPhone,
                             onTransmit = {
                                 val effectiveOpt = if (routeThroughPhone) opt.copy(
                                     healedHeaders = opt.healedHeaders.toMutableMap().apply { put("X-Force-Proxy", "true") }
@@ -137,7 +152,6 @@ fun WvcVideoListSheet(
                     }
                 }
             }
-            Spacer(Modifier.height(16.dp))
         }
     }
 }
@@ -146,87 +160,105 @@ fun WvcVideoListSheet(
 fun WvcVideoListItem(
     option: StreamQualityOption,
     pageTitle: String,
-    routeThroughPhone: Boolean,
     onTransmit: () -> Unit
 ) {
+    var showMenu by remember { mutableStateOf(false) }
     val isLive = option.isLive
-    val isMovie = option.isMovie
-    val cardBg = if (isLive) Color(0xFF241010) else (if (option.isSuggested) Color(0xFF11221A) else Color(0xFF1E293B))
-    val cardBorder = if (isLive) Color(0xFFEF4444) else (if (option.isSuggested) Color(0xFF10B981) else Color(0xFF334155))
+    val displayName = pageTitle.takeIf { it.isNotBlank() && it != "Cargando..." && it != "Transmisión Web" }
+        ?: option.fileName.ifBlank { "Video Web" }
 
-    val displayName = option.fileName.ifBlank {
-        if (option.isMaster) "master" else option.label.substringBefore(" (").replace("🎬 ", "").replace("▶ ", "")
+    val streamHostOrUrl = option.streamUrl
+    val variantName = option.fileName.ifBlank {
+        if (option.isMaster) "master" else "video"
     }
+
     val displayFormat = option.formatDetail.ifBlank {
         if (isLive) "m3u8 (en vivo)"
-        else if (option.isMaster) "m3u8 (adaptive)"
+        else if (option.isMaster) "m3u8"
         else if (option.resolution.isNotBlank()) "m3u8 (${option.resolution})"
         else "m3u8"
     }
 
-    Card(
-        colors = CardDefaults.cardColors(containerColor = cardBg),
-        shape = RoundedCornerShape(12.dp),
-        modifier = Modifier.fillMaxWidth().border(1.dp, cardBorder, RoundedCornerShape(12.dp))
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onTransmit() }
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 10.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+        // Thumbnail cuadrado naranja idéntico a Web Video Caster
+        Box(
+            modifier = Modifier
+                .size(60.dp)
+                .background(Color(0xFFFF9800), RoundedCornerShape(4.dp)),
+            contentAlignment = Alignment.Center
         ) {
-            Row(modifier = Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier.size(36.dp).background(if (isLive) Color(0xFFEF4444).copy(alpha = 0.2f) else Color(0xFFF59E0B).copy(alpha = 0.15f), RoundedCornerShape(8.dp)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(if (isLive) "🔴" else "🎬", fontSize = 16.sp)
-                }
-                Spacer(Modifier.width(10.dp))
-                Column(modifier = Modifier.weight(1f)) {
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Text(
-                            text = displayName,
-                            color = Color.White,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 14.sp,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                        if (option.isSuggested) {
-                            Box(modifier = Modifier.background(Color(0xFF059669), RoundedCornerShape(4.dp)).padding(horizontal = 5.dp, vertical = 1.dp)) {
-                                Text("Recomendado", color = Color.White, fontSize = 9.sp, fontWeight = FontWeight.Bold)
-                            }
-                        }
-                    }
-                    Spacer(Modifier.height(2.dp))
-                    Text(
-                        text = displayFormat,
-                        color = if (isLive) Color(0xFFFCA5A5) else Color(0xFF94A3B8),
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Medium
-                    )
-                    val host = remember(option.streamUrl) {
-                        try { java.net.URI(option.streamUrl).host?.removePrefix("www.") ?: "" } catch (_: Throwable) { "" }
-                    }
-                    if (host.isNotBlank()) {
-                        Text("🌐 " + host, color = Color(0xFF64748B), fontSize = 10.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    }
-                    if (option.audioTracksSummary.isNotBlank()) {
-                        Text("🔊 " + option.audioTracksSummary, color = Color(0xFF38BDF8), fontSize = 10.sp, maxLines = 1)
-                    }
-                    if (option.subtitleTracksSummary.isNotBlank()) {
-                        Text("💬 " + option.subtitleTracksSummary, color = Color(0xFFA78BFA), fontSize = 10.sp, maxLines = 1)
-                    }
-                }
-            }
-            Spacer(Modifier.width(8.dp))
-            Button(
-                onClick = onTransmit,
-                colors = ButtonDefaults.buttonColors(containerColor = if (isLive) Color(0xFFEF4444) else (if (isMovie) Color(0xFF10B981) else Color(0xFFF59E0B))),
-                shape = RoundedCornerShape(8.dp),
-                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+            Text("🎬", fontSize = 26.sp)
+        }
+
+        Spacer(Modifier.width(14.dp))
+
+        // Desglose de 4 líneas exactas de WVC
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = displayName,
+                color = Color.White,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 14.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                text = streamHostOrUrl,
+                color = Color(0xFF9E9E9E),
+                fontSize = 12.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                text = variantName,
+                color = Color(0xFF9E9E9E),
+                fontSize = 12.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                text = displayFormat,
+                color = Color(0xFF9E9E9E),
+                fontSize = 12.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+
+        Box {
+            IconButton(
+                onClick = { showMenu = true },
+                modifier = Modifier.size(32.dp)
             ) {
-                Text(if (routeThroughPhone) "Proxy 📱" else "Emitir ▶", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                Text("⋮", color = Color(0xFF9E9E9E), fontSize = 18.sp, fontWeight = FontWeight.Bold)
+            }
+            DropdownMenu(
+                expanded = showMenu,
+                onDismissRequest = { showMenu = false },
+                modifier = Modifier.background(Color(0xFF1E293B))
+            ) {
+                DropdownMenuItem(
+                    text = { Text("▶ Emitir ahora", color = Color.White) },
+                    onClick = { showMenu = false; onTransmit() }
+                )
+                if (option.audioTracksSummary.isNotBlank()) {
+                    DropdownMenuItem(
+                        text = { Text("🔊 Audio: ${option.audioTracksSummary}", color = Color(0xFF38BDF8)) },
+                        onClick = { showMenu = false }
+                    )
+                }
+                if (option.subtitleTracksSummary.isNotBlank()) {
+                    DropdownMenuItem(
+                        text = { Text("💬 Subtítulos: ${option.subtitleTracksSummary}", color = Color(0xFFA78BFA)) },
+                        onClick = { showMenu = false }
+                    )
+                }
             }
         }
     }

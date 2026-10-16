@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 120,
-  "versionCodeReceiver": 103,
-  "versionName": "3.32.75",
-  "releaseTag": "v3.32.75",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.75/omnicast-sender-v3.32.75.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.75/omnicast-receiver-v3.32.75.apk",
-  "changelog": "v3.32.75: Auto-resolución proactiva de Cloudflare Turnstile en universal_sniffer.js; exclusión total de Cloudflare y captchas en AdBlocker y BrowserWebView; purga en SQLite v4 de dominios de verificación erróneamente aprendidos; opción de renovación de token en navegador ante error 403; optimización de cookies y cabeceras en LocalStreamProxyServer."
+  "versionCodeSender": 121,
+  "versionCodeReceiver": 104,
+  "versionName": "3.32.76",
+  "releaseTag": "v3.32.76",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.76/omnicast-sender-v3.32.76.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.76/omnicast-receiver-v3.32.76.apk",
+  "changelog": "v3.32.76: Rediseño fiel a Web Video Caster de la hoja de 'Lista de videos' (presentación plana en fondo negro, icono cuadrado naranja y 4 líneas detalladas por flujo con selección directa); barra superior del navegador compacta con botón de recarga integrado dentro del cajón de búsqueda y controles de tamaño reducido; control multimedia condicionado estrictamente a reproducción activa en TV y conmutable mediante botón en la barra superior."
 }

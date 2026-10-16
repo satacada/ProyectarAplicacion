@@ -46,6 +46,7 @@ fun BrowserTopBar(
     onToggleBottomControls: () -> Unit = {},
     onOpenDetectedVideos: () -> Unit = {},
     isCasting: Boolean = false,
+    isPlaying: Boolean = false,
     showBottomControls: Boolean = false,
     onOpenHistory: () -> Unit = {},
     onOpenPlaylists: () -> Unit = {},
@@ -70,39 +71,36 @@ fun BrowserTopBar(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 6.dp, vertical = 6.dp),
+                .padding(horizontal = 4.dp, vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(4.dp)
+            horizontalArrangement = Arrangement.spacedBy(2.dp)
         ) {
-            IconButton(onClick = onOpenDrawer, modifier = Modifier.size(32.dp)) {
-                Text("☰", color = Color(0xFF94A3B8), fontSize = 18.sp, fontWeight = FontWeight.Bold)
+            IconButton(onClick = onOpenDrawer, modifier = Modifier.size(28.dp)) {
+                Text("☰", color = Color(0xFF94A3B8), fontSize = 16.sp, fontWeight = FontWeight.Bold)
             }
-            IconButton(onClick = onBack, modifier = Modifier.size(32.dp)) {
-                Text("<", color = Color(0xFFCBD5E1), fontSize = 18.sp, fontWeight = FontWeight.Bold)
+            IconButton(onClick = onBack, modifier = Modifier.size(28.dp)) {
+                Text("<", color = Color(0xFFCBD5E1), fontSize = 16.sp, fontWeight = FontWeight.Bold)
             }
-            IconButton(onClick = onForward, enabled = canGoForward, modifier = Modifier.size(32.dp)) {
+            IconButton(onClick = onForward, enabled = canGoForward, modifier = Modifier.size(28.dp)) {
                 Text(
                     ">",
                     color = if (canGoForward) Color(0xFFCBD5E1) else Color(0xFF475569),
-                    fontSize = 18.sp,
+                    fontSize = 16.sp,
                     fontWeight = FontWeight.Bold
                 )
-            }
-            IconButton(onClick = onReload, modifier = Modifier.size(32.dp)) {
-                Text("⟳", color = Color(0xFFCBD5E1), fontSize = 18.sp, fontWeight = FontWeight.Bold)
             }
 
             Row(
                 modifier = Modifier
                     .weight(1f)
-                    .height(44.dp)
-                    .background(Color(0xFF141C2B), RoundedCornerShape(24.dp))
-                    .border(1.dp, Color(0xFF24334C), RoundedCornerShape(24.dp))
-                    .padding(horizontal = 12.dp),
+                    .height(36.dp)
+                    .background(Color(0xFF141C2B), RoundedCornerShape(18.dp))
+                    .border(1.dp, Color(0xFF24334C), RoundedCornerShape(18.dp))
+                    .padding(horizontal = 10.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("🔒", fontSize = 11.sp)
-                Spacer(modifier = Modifier.width(6.dp))
+                Text("🔒", fontSize = 10.sp)
+                Spacer(modifier = Modifier.width(4.dp))
                 BasicTextField(
                     value = textFieldValue,
                     onValueChange = { newValue ->
@@ -119,8 +117,8 @@ fun BrowserTopBar(
                     cursorBrush = androidx.compose.ui.graphics.SolidColor(Color(0xFF38BDF8)),
                     textStyle = androidx.compose.ui.text.TextStyle(
                         color = Color.White,
-                        fontSize = 14.sp,
-                        lineHeight = 18.sp,
+                        fontSize = 13.sp,
+                        lineHeight = 16.sp,
                         fontWeight = FontWeight.Normal,
                         platformStyle = androidx.compose.ui.text.PlatformTextStyle(includeFontPadding = false)
                     ),
@@ -132,7 +130,7 @@ fun BrowserTopBar(
                     decorationBox = { innerTextField ->
                         Box(contentAlignment = Alignment.CenterStart, modifier = Modifier.fillMaxSize()) {
                             if (textFieldValue.text.isEmpty()) {
-                                Text("Buscar o escribir URL...", color = Color(0xFF64748B), fontSize = 13.sp)
+                                Text("Buscar o escribir URL...", color = Color(0xFF64748B), fontSize = 12.sp)
                             }
                             innerTextField()
                         }
@@ -142,22 +140,26 @@ fun BrowserTopBar(
                     IconButton(onClick = {
                         textFieldValue = TextFieldValue("")
                         onInputUrlChange("")
-                    }, modifier = Modifier.size(24.dp)) {
-                        Text("✕", color = Color(0xFF94A3B8), fontSize = 12.sp)
+                    }, modifier = Modifier.size(22.dp)) {
+                        Text("✕", color = Color(0xFF94A3B8), fontSize = 11.sp)
                     }
+                    Spacer(modifier = Modifier.width(2.dp))
+                }
+                IconButton(onClick = onReload, modifier = Modifier.size(22.dp)) {
+                    Text("⟳", color = Color(0xFFCBD5E1), fontSize = 14.sp, fontWeight = FontWeight.Bold)
                 }
             }
 
-            // Control multimedia toggle (solo visible cuando está reproduciendo/transmitiendo en la TV)
-            if (isCasting) {
+            // Control multimedia toggle (solo visible cuando está transmitiendo Y reproduciendo activamente en la TV)
+            if (isCasting && isPlaying) {
                 IconButton(
                     onClick = onToggleBottomControls,
                     modifier = Modifier
-                        .size(36.dp)
+                        .size(30.dp)
                         .background(if (showBottomControls) Color(0xFF0284C7) else Color(0xFF1E293B), CircleShape)
                         .border(1.dp, if (showBottomControls) Color(0xFF38BDF8) else Color(0xFF334155), CircleShape)
                 ) {
-                    Text("🎛️", fontSize = 15.sp)
+                    Text("🎛️", fontSize = 13.sp)
                 }
             }
 
@@ -166,7 +168,7 @@ fun BrowserTopBar(
                 IconButton(
                     onClick = onOpenDetectedVideos,
                     modifier = Modifier
-                        .size(38.dp)
+                        .size(32.dp)
                         .background(
                             if (detectedStreamsCount > 0) Color(0xFFFF7A00) else Color(0xFF334155),
                             CircleShape
@@ -175,7 +177,7 @@ fun BrowserTopBar(
                     Text(
                         "▶",
                         color = if (detectedStreamsCount > 0) Color.White else Color(0xFF94A3B8),
-                        fontSize = 17.sp,
+                        fontSize = 14.sp,
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -183,15 +185,15 @@ fun BrowserTopBar(
                 if (detectedStreamsCount > 0) {
                     Box(
                         modifier = Modifier
-                            .offset(x = 4.dp, y = (-4).dp)
+                            .offset(x = 3.dp, y = (-3).dp)
                             .background(Color(0xFFEF4444), CircleShape)
-                            .padding(horizontal = 5.dp, vertical = 1.dp),
+                            .padding(horizontal = 4.dp, vertical = 1.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
                             text = if (detectedStreamsCount > 9) "9+" else detectedStreamsCount.toString(),
                             color = Color.White,
-                            fontSize = 9.sp,
+                            fontSize = 8.sp,
                             fontWeight = FontWeight.ExtraBold
                         )
                     }
@@ -199,8 +201,8 @@ fun BrowserTopBar(
             }
 
             Box {
-                IconButton(onClick = { showMenu = true }, modifier = Modifier.size(32.dp)) {
-                    Text("⋮", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                IconButton(onClick = { showMenu = true }, modifier = Modifier.size(28.dp)) {
+                    Text("⋮", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
                 }
 
                 DropdownMenu(
@@ -262,21 +264,16 @@ fun BrowserTopBar(
             title = { Text("ℹ️ Detalle de Controles", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    HelpItem("⚡ Flujos (N)", "Servidores y fuentes de video capturados.")
-                    HelpItem("⚡✕ Reiniciar", "Borra flujos y recaptura el video en curso.")
-                    HelpItem("📺 Transmitir", "Envía el flujo de video activo a la TV Box.")
-                    HelpItem("🔖 Guardar", "Guarda la película en favoritos para ver después.")
-                    HelpItem("🔖✕ Quitar", "Elimina la película de tus listas guardadas.")
-                    HelpItem("🎛️ Calidad", "Cambia resolución (1080p, 720p, 480p).")
+                    HelpItem("▶ Flujos", "Muestra la lista de videos capturados para emitir a la TV.")
+                    HelpItem("🎛️ Control", "Muestra u oculta los controles de reproducción de la TV.")
+                    HelpItem("⟳ Recargar", "Actualiza la página actual dentro del buscador.")
                     HelpItem("❚❚ / ▶", "Pausa o reanuda la reproducción en el televisor.")
-                    HelpItem("↺ / ↻", "Adelanta o retrocede 10 segundos.")
+                    HelpItem("↺ / ↻", "Adelanta o retrocede 10 segundos en la película.")
                     HelpItem("🔊 Volumen", "Regula el volumen de sonido en el televisor.")
                 }
             },
             confirmButton = {
-                TextButton(onClick = { showHelpDialog = false }) {
-                    Text("Entendido", color = Color(0xFF38BDF8), fontWeight = FontWeight.Bold)
-                }
+                TextButton(onClick = { showHelpDialog = false }) { Text("Entendido", color = Color(0xFF38BDF8), fontWeight = FontWeight.Bold) }
             }
         )
     }

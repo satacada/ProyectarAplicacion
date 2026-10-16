@@ -216,7 +216,7 @@ class ExoPlayerTvManager(private val context: Context) {
             allowed["Sec-Fetch-Dest"] = "empty"
             allowed["Sec-Fetch-Site"] = "cross-site"
         }
-        if (url.contains("fastream.to", true)) {
+        if (url.contains("fastream.to", true) || url.contains("dropcdn.io", true)) {
             val fastreamId = Regex("(?:/hls\\d*/\\d+/\\d+/|/embed-|/)([a-zA-Z0-9]{10,12})(?:[_,.]|$)").find(url)?.groupValues?.get(1)
             allowed["Origin"] = "https://fastream.to"
             allowed["Referer"] = if (!fastreamId.isNullOrBlank()) "https://fastream.to/embed-$fastreamId.html" else "https://fastream.to/embed-video.html"

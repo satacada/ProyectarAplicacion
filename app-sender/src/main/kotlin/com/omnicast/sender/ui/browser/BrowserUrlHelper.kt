@@ -90,7 +90,7 @@ object BrowserUrlHelper {
                 headers["Referer"] = "https://luluvdo.com/"
             } else if (streamUrl.contains("mail.ru", ignoreCase = true)) {
                 headers.remove("Referer")
-            } else if (streamUrl.contains("fastream.to", ignoreCase = true)) {
+            } else if (streamUrl.contains("fastream.to", ignoreCase = true) || streamUrl.contains("dropcdn.io", ignoreCase = true)) {
                 val fastreamId = Regex("(?:/hls\\d*/\\d+/\\d+/|/embed-|/)([a-zA-Z0-9]{10,12})(?:[_,.]|$)").find(streamUrl)?.groupValues?.get(1)
                 headers["Referer"] = if (!fastreamId.isNullOrBlank()) "https://fastream.to/embed-$fastreamId.html" else "https://fastream.to/embed-video.html"
                 headers["Origin"] = "https://fastream.to"

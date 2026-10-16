@@ -52,7 +52,7 @@ Output ONLY a raw JSON object matching this schema without markdown fences:
   "enabled": true
 }}"""
 
-    endpoint = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
+    endpoint = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key={api_key}"
     payload = {
         "contents": [{"parts": [{"text": prompt}]}]
     }
@@ -62,9 +62,14 @@ Output ONLY a raw JSON object matching this schema without markdown fences:
         headers={"Content-Type": "application/json"}
     )
     try:
-        with urllib.request.urlopen(req, timeout=15) as resp:
+        with urllib.request.urlopen(req, timeout=25) as resp:
             res_json = json.loads(resp.read().decode("utf-8"))
-            text = res_json['candidates'][0]['content']['parts'][0]['text'].strip()
+            parts = res_json['candidates'][0]['content']['parts']
+            text = ""
+            for p in parts:
+                if 'text' in p:
+                    text += p['text']
+            text = text.strip()
             if text.startswith("```"):
                 text = text.split("\n", 1)[1].rsplit("```", 1)[0].strip()
             return json.loads(text)
@@ -108,11 +113,25 @@ def main():
         return
 
     reports = fetch_unresolved_reports()
-    print(f"Found {len(reports)} reports to process.")
+    print(f"Found {len(reports)} raw reports in Supabase.")
+
+    # Deduplicate reports by message content
+    seen_messages = set()
+    unique_reports = []
     for r in reports:
+        msg = r.get("message", "")
+        # Extract stream host if possible to group
+        host_key = msg.split("Flujo: ")[1].split("/")[2] if "Flujo: " in msg and len(msg.split("Flujo: ")[1].split("/")) > 2 else msg
+        if host_key not in seen_messages:
+            seen_messages.add(host_key)
+            unique_reports.append(r)
+
+    print(f"Deduplicated to {len(unique_reports)} unique stream incidents.")
+    for r in unique_reports:
         rule = analyze_with_gemini(api_key, r)
         if rule:
             update_rules(rule)
+        time.sleep(1)
 
 if __name__ == "__main__":
     main()

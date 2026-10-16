@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 101,
-  "versionCodeReceiver": 84,
-  "versionName": "3.32.56",
-  "releaseTag": "v3.32.56",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.56/omnicast-sender-v3.32.56.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.56/omnicast-receiver-v3.32.56.apk",
-  "changelog": "v3.32.56: Motor heurístico dinámico StreamIntelligenceEngine contra trampas/anuncios, resolución autónoma de cabeceras/embeds (Lulustream/tnmr), protección contra cierres por Chromium (onRenderProcessGone), Swipe-to-refresh en navegador, Yandex dial, historial persistente con breadcrumbs offline, y buscador por carpeta en TV con retorno en 1 clic."
+  "versionCodeSender": 102,
+  "versionCodeReceiver": 85,
+  "versionName": "3.32.57",
+  "releaseTag": "v3.32.57",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.57/omnicast-sender-v3.32.57.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.57/omnicast-receiver-v3.32.57.apk",
+  "changelog": "v3.32.57: Soporte para CDN Fastream / Dropcdn (dropcdn.io) auto-descubierto por IA de Gemini, inyección de cabeceras seguras embed en móvil y TV Box, deduplicación de telemetría en Supabase y modelo gemini-3.5-flash-lite."
 }

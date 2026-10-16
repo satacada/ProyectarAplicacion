@@ -78,6 +78,7 @@ object AdBlocker {
         val added = addAdDomain(host)
         if (added) {
             android.util.Log.i("AdBlocker", "🧠 [Auto-Learning] Dominio publicitario emergente guardado en SQLite: $host")
+            AdBlockRuleSyncManager.reportLearnedDomainToCloud(host, currentMovieHost)
         }
         return added
     }

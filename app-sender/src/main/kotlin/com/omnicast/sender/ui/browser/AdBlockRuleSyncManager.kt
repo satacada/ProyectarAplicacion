@@ -27,6 +27,11 @@ object AdBlockRuleSyncManager {
     private const val DYNAMIC_RULES_URL =
         "https://raw.githubusercontent.com/satacada/ProyectarAplicacion/main/app-sender/src/main/assets/adblock/default_ad_rules.json"
 
+    private const val SUPABASE_LOGS_URL = "https://pfhjrplnfuupftgzdnop.supabase.co/rest/v1/omnicast_system_logs"
+    private const val SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBmaGpycGxuZnV1cGZ0Z3pkbm9wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg5NTc4NDEsImV4cCI6MjEwNDUzMzg0MX0.u2ysI-hTvT7LczA7QL2YS2mudW8pSI644Ig8gyvTs7o"
+    private const val KEY_LAST_CROWD_SYNC = "last_crowd_sync_timestamp"
+    private const val CROWD_SYNC_INTERVAL_MS = 2 * 60 * 60 * 1000L // 2 horas
+
     private val scope = CoroutineScope(Dispatchers.IO)
     private val dynamicAdKeywords = mutableSetOf<String>()
     private val dynamicTelemetryKeywords = mutableSetOf<String>()
@@ -41,6 +46,7 @@ object AdBlockRuleSyncManager {
         val appContext = context.applicationContext
         AdBlockDatabase.init(appContext)
         loadLocalCustomKeywords(appContext)
+        syncCrowdLearnedDomains(appContext)
 
         if (isSyncing) return
         val prefs = appContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
@@ -87,6 +93,85 @@ object AdBlockRuleSyncManager {
                 Log.w(TAG, "No se pudo actualizar la lista viva remota (usando reglas locales/cacheadas): ${e.message}")
             } finally {
                 isSyncing = false
+            }
+        }
+    }
+
+    fun reportLearnedDomainToCloud(domain: String, sourceHost: String?) {
+        if (domain.isBlank() || domain.length < 4 || !domain.contains(".")) return
+        kotlin.concurrent.thread(isDaemon = true, name = "ReportAdCloud") {
+            try {
+                val details = org.json.JSONObject().apply {
+                    put("domain", domain)
+                    if (!sourceHost.isNullOrBlank()) put("source_host", sourceHost)
+                }
+                val payload = org.json.JSONObject().apply {
+                    put("role", "phone")
+                    put("level", "info")
+                    put("event", "ADBLOCK_LEARNED_DOMAIN")
+                    put("message", domain)
+                    put("details", details)
+                }
+                val conn = (URL(SUPABASE_LOGS_URL).openConnection() as HttpURLConnection).apply {
+                    requestMethod = "POST"
+                    connectTimeout = 4000
+                    readTimeout = 4000
+                    doOutput = true
+                    setRequestProperty("apikey", SUPABASE_ANON_KEY)
+                    setRequestProperty("Authorization", "Bearer $SUPABASE_ANON_KEY")
+                    setRequestProperty("Content-Type", "application/json")
+                    setRequestProperty("Prefer", "return=minimal")
+                }
+                conn.outputStream.use { it.write(payload.toString().toByteArray(Charsets.UTF_8)) }
+                val code = conn.responseCode
+                conn.disconnect()
+                if (code in 200..299) {
+                    Log.i(TAG, "☁️ Dominio publicitario '$domain' reportado a Supabase para inmunidad colectiva.")
+                }
+            } catch (e: Throwable) {
+                Log.w(TAG, "No se pudo reportar dominio a Supabase: ${e.message}")
+            }
+        }
+    }
+
+    fun syncCrowdLearnedDomains(context: Context) {
+        scope.launch {
+            try {
+                val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+                val lastCrowdSync = prefs.getLong(KEY_LAST_CROWD_SYNC, 0L)
+                val now = System.currentTimeMillis()
+                if (now - lastCrowdSync < CROWD_SYNC_INTERVAL_MS) return@launch
+
+                val queryUrl = "$SUPABASE_LOGS_URL?select=message&event=eq.ADBLOCK_LEARNED_DOMAIN&order=created_at.desc&limit=500"
+                val conn = (URL(queryUrl).openConnection() as HttpURLConnection).apply {
+                    requestMethod = "GET"
+                    connectTimeout = 5000
+                    readTimeout = 6000
+                    setRequestProperty("apikey", SUPABASE_ANON_KEY)
+                    setRequestProperty("Authorization", "Bearer $SUPABASE_ANON_KEY")
+                }
+                if (conn.responseCode in 200..299) {
+                    val body = conn.inputStream.bufferedReader().use { it.readText() }
+                    conn.disconnect()
+                    val arr = org.json.JSONArray(body)
+                    var count = 0
+                    for (i in 0 until arr.length()) {
+                        val d = arr.optJSONObject(i)?.optString("message")?.trim()?.lowercase() ?: continue
+                        if (d.length >= 4 && d.contains(".") && !AdBlockDatabase.isAdDomain(d)) {
+                            if (AdBlockDatabase.get().addDomain(d, "crowd_learned")) {
+                                count++
+                            }
+                        }
+                    }
+                    prefs.edit().putLong(KEY_LAST_CROWD_SYNC, now).apply()
+                    if (count > 0) {
+                        Log.i(TAG, "🧠 [Crowd-AdBlock] Sincronizados $count dominios publicitarios colectivos desde Supabase.")
+                    }
+                } else {
+                    conn.disconnect()
+                }
+            } catch (e: Throwable) {
+                Log.w(TAG, "Error sincronizando dominios colectivos de Supabase: ${e.message}")
             }
         }
     }

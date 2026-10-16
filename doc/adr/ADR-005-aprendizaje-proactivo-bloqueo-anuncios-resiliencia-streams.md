@@ -24,6 +24,11 @@ Aprobado
 - En lugar de devolver una lista vacía, `StreamQualityDetector` proveerá una opción de calidad de respaldo ("▶ Flujo Directo Nativo") con las cabeceras originales del navegador (Referer, Cookie, User-Agent, Origin, Sec-Fetch-*).
 - En `InAppBrowserScreen.kt`, la función `detectedStreams.retainAll` jamás eliminará flujos si la validación remota falla por razones de CDN, garantizando que el usuario siempre pueda transmitir el video activo a la TV Box.
 
+### 3. Inmunidad Colectiva Descentralizada mediante Supabase (Crowd-sourced AdBlock)
+- Todo nuevo dominio publicitario detectado en frío por un usuario se reporta asíncronamente en segundo plano a la tabla `omnicast_system_logs` en Supabase con el evento `ADBLOCK_LEARNED_DOMAIN`.
+- El gestor `AdBlockRuleSyncManager` consulta cada 2 horas los dominios reportados por otros dispositivos y los inyecta en la base SQLite local, propagando la protección a toda la base instalada sin esperar ciclos de actualización de EasyList o despliegues de APK.
+
+
 ## Consecuencias
 - **Positivas:** Cero anuncios repetidos tras el primer intento; bloqueo en frío de dominios no catalogados remotamente; disponibilidad ininterrumpida de reproducción en TV para CDNs protegidos como `dropcdn.io`.
 - **Negativas:** Pequeña probabilidad de bloquear dominios foráneos no multimedia si el usuario hace clic intencionalmente en un enlace externo dentro de una página de películas (resuelto mediante la Lista Blanca de Sitios Permitidos).

@@ -1,10 +1,10 @@
 {
-  "versionCodeSender": 108,
-  "versionCodeReceiver": 91,
-  "versionName": "3.32.63",
-  "releaseTag": "v3.32.63",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.63/omnicast-sender-v3.32.63.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.63/omnicast-receiver-v3.32.63.apk",
-  "changelog": "v3.32.63: Autoaprendizaje proactivo de anuncios en SQLite local (bloqueo instantáneo de secuestros); neutralización de click-shields transparentes; resiliencia de flujos activos ante HTTP 403 de CDN con fallback directo."
+  "versionCodeSender": 109,
+  "versionCodeReceiver": 92,
+  "versionName": "3.32.64",
+  "releaseTag": "v3.32.64",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.64/omnicast-sender-v3.32.64.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.64/omnicast-receiver-v3.32.64.apk",
+  "changelog": "v3.32.64: Inmunidad colectiva de bloqueo de anuncios descentralizada con Supabase (Crowd-sourced AdBlock); autoaprendizaje inmediato en SQLite local con replicación en la nube para proteger a todos los usuarios."
 }
 

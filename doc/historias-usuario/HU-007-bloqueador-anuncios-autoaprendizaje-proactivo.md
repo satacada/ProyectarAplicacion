@@ -31,3 +31,12 @@ y además, quiero que los flujos de video detectados que se están reproduciendo
   1. NUNCA debe borrar el flujo de la lista de `detectedStreams`.
   2. NUNCA debe mostrar "0 videos" si el video está activo en el navegador.
   3. Debe generar automáticamente una opción de calidad de respaldo ("▶ Flujo Directo Nativo") con las cabeceras originales del navegador, permitiendo al usuario transmitirlo a la TV Box sin interrupción.
+
+### Criterio 4: Inmunidad Colectiva Descentralizada (Crowd-sourced Cloud Learning)
+- **Dado** que un usuario detecta y aprende un nuevo dominio publicitario emergente en su SQLite local,
+- **Cuando** el dominio se almacena con éxito en `TABLE_DOMAINS`,
+- **Entonces** el sistema:
+  1. Despacha en segundo plano y de forma asíncrona dicho dominio a la base de datos centralizada de Supabase (`omnicast_system_logs` con evento `ADBLOCK_LEARNED_DOMAIN`).
+  2. En el inicio del navegador o sincronización periódica (`syncCrowdLearnedDomains`), todos los demás dispositivos consultan los dominios descubiertos por otros usuarios y los incorporan a su SQLite local.
+  3. Esto confiere inmunidad colectiva previa a toda la comunidad de usuarios antes de que el nuevo anuncio llegue a desplegarse en sus pantallas.
+

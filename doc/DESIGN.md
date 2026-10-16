@@ -57,35 +57,26 @@ OmniCast Pro es un ecosistema cliente-servidor (Emisor Móvil y Receptor Android
   - Móvil: Mantener pulsado el dedo sobre una película abre opciones: *Reproducir en TV*, *Compartir enlace* y *Eliminar*.
   - TV Box: Mantener pulsado OK en el control remoto abre `TvVideoActionDialog`: *Reproducir*, *Compartir enlace (con Código QR en pantalla)*, *Renovar enlace* y *Eliminar*.
 
-### C. Estrategia de Auto-Renovación de Enlaces Expirados en TV (HU-006 / ADR-003)
-- **Problema Abordado:** Enlaces de video que caducan en la web (tokens temporales HTTP 403 / 404 de Fastream, Streamtape, etc.).
-- **Directiva de Criterio Humano (Anti-Videos Basura):** Se descarta la resolución automática ciega por WebView en la TV para evitar la captura accidental de anuncios preroll de 15s o selección errónea de idioma.
-- **Mecanismo por Código QR:**
-  1. Si `ExoPlayer` en la TV detecta error HTTP 403 / 404 al reproducir un elemento guardado, despliega un diálogo modal amigable con un **Código QR dinámico** que apunta a la `pageUrl` original de la película con la posición guardada.
-  2. El usuario escanea el QR con su teléfono, abriendo OmniCast en la web de la película.
-  3. El usuario selecciona el reproductor e idioma correcto y presiona *"Transmitir a TV"*.
-- **Sustitución Automática del Enlace en TV (Aprovechamiento de TTL):**
-  - La TV recibe el nuevo flujo y **reemplaza la URL vieja caducada por la nueva URL activa** en su base de datos (`TvPlaylistsManager`), preservando el minuto exacto `lastPositionMs`, el título y la carpeta.
-  - Durante la vigencia del nuevo token (6 a 12 horas), el usuario puede salir, apagar la TV y volver más tarde, y la película se reproducirá de inmediato **sin volver a pedir el código QR**.
-- **Opción Manual:** En el menú contextual de la TV (`TvVideoActionDialog`), el botón `🔄 Renovar enlace (QR)` permite generar el código QR en cualquier momento.
+### C. Estrategia de Auto-Renovación de Enlaces Expirados y Streams en Vivo (Celular y TV)
+- **Persistencia de Origen (`pageUrl` y `headers`):** Tanto en el navegador del celular (`HistoryItem` / `PlaylistManager`) como en la TV (`TvPlaylistItem` / `TvPlaylistManager`), cada video guardado conserva su `url` directa, `pageUrl` (página exacta donde está publicada la película) y las `headers` reales capturadas.
+- **Manejo de Vencimiento de Token (En Celular y TV):**
+  1. **Intento Directo:** Al tocar "Reproducir" en *"Ver más tarde"* o *"Favoritos"*, se verifica si el flujo `.m3u8`/`.mp4` aún responde `HTTP 200` con sus cabeceras guardadas.
+  2. **Auto-Recuperación Local por Permutación y Re-Extracción (`$0` con Objetos/Clases):** Si el token expiró (`HTTP 403 / 404 / 410`), en el celular abre un extractor silencioso sobre `pageUrl` para capturar el nuevo token automáticamente.
+  3. **Respaldo Directo a la Página (`pageUrl`) sin Re-búsqueda:** Solo si falla la extracción y reproducción automática, en el celular se abre directamente la `pageUrl` guardada en el navegador (evitando que el usuario tenga que volver a buscar la película), y en la TV se presenta el **Código QR dinámico** hacia `pageUrl` (o re-extracción local asistida), reemplazando el enlace viejo por el nuevo y conservando `lastPositionMs`.
+- **Manejo de Streams en Vivo (TV / Deportes 24/7):**
+  - Se identifican de forma determinista leyendo el manifiesto `.m3u8` (ausencia de `#EXT-X-ENDLIST` o duración `0.0`).
+  - Nunca son descartados por el filtro de duración corta (<60s) ni almacenan minuto de reanudación antiguo; siempre enganchan en el borde en vivo (`seekToDefaultPosition`).
 
-### D. Arquitectura Colectiva de Auto-Recuperación y Auto-Curación por IA (OTA)
-- **Problema Abordado:** Los sitios de streaming y servidores CDN (ej. Lulustream, Fastream, Streamwish) cambian periódicamente sus cabeceras anti-hotlink (`Referer`, `Origin`, tokens de embed) provocando errores HTTP 403 Forbidden. Codificar parches manuales por cada sitio viola los principios de escalabilidad.
-- **Directiva de Costo Cero ($0) e Inteligencia Colectiva:**
-  1. No se invoca la IA en el teléfono del usuario ni se requiere que cada usuario configure claves de API.
-  2. La inteligencia es centralizada: una única inferencia en la nube resuelve el problema para **todos los usuarios del mundo**.
-- **Componentes del Ecosistema:**
-  1. **Motor Heurístico On-Device (`StreamIntelligenceEngine.kt`):**
-     - Discrimina dinámicamente entre flujos legítimos y anuncios según duración (<60s es penalizado), tipo de manifiesto (HLS/DASH) y resolución.
-     - Resuelve y asocia en caliente las cabeceras requeridas (`Referer`, `Origin`, `Sec-Fetch-*`) sin recompilar la app.
-  2. **Sincronizador Remoto y Telemetría (`StreamRuleSyncManager.kt`):**
-     - Descarga en segundo plano las reglas vivas desde `rules/live_stream_rules.json` en GitHub.
-     - Ante cualquier flujo desconocido o bloqueado con 403, despacha un reporte anónimo silencioso a Supabase (`UNRESOLVED_STREAM`).
-  3. **Auto-Sanador en la Nube (`scripts/ai_stream_healer.py` & `.github/workflows/ai_stream_healer.yml`):**
-     - Se ejecuta automáticamente cada 4 horas en GitHub Actions.
-     - Lee los reportes de Supabase y consulta a **Google Gemini 1.5 Flash** (usando el secret `GEMINI_API_KEY`).
-     - Gemini deduce la combinación exacta de CDN, Referer de embed y cabeceras necesarias.
-     - El workflow actualiza `rules/live_stream_rules.json` y hace commit directo a la rama `main`.
-  4. **Distribución Instantánea (Over The Air - OTA):**
-     - Todas las aplicaciones móviles en uso descargan el nuevo archivo JSON (~5 KB) en su siguiente inicio o navegación, restaurando la reproducción inmediatamente sin intervención del usuario.
+### D. Arquitectura Realista de Costo Cero ($0): Objetos/Clases Deterministas vs. IA Gratuita Acotada
+- **Principio de Realismo y Costo $0 Absoluto:**
+  El **90% de los problemas** se resuelven con **Objetos y Clases en Kotlin deterministas (0 tokens, 0 latencia, $0 costo)** dentro de la app, sin inventar fuentes en duro (`hardcoded`), reservando la **bolsa gratuita de IA (Gemini Flash Free Tier en GitHub Actions)** exclusivamente para el **10% de casos donde cambia la estructura de un sitio web desconocido**.
+
+| Necesidad del Aplicativo | ¿Requiere IA o Clases Kotlin? | Solución Realista de Costo $0 |
+| :--- | :--- | :--- |
+| **1. Saber la fuente real (`Referer`/`Origin`) del video** | **Clases Kotlin (`$0`)** | Capturar el `requestHeaders["Referer"]` real de Chromium y el `window.location.href` real del `<iframe>` en JS, **sin pisarlos con listas en duro**. |
+| **2. Evitar que enlaces corruptos cierren ExoPlayer y separar Tráiler vs. Película vs. Vivo** | **Clases Kotlin (`$0`)** | **Clase `StreamManifestProbe` (Sonda Pre-Cast):** Descarga los primeros 4 KB del `.m3u8`, verifica que sea video válido (`#EXTM3U`), detecta si es **En Vivo** (sin `#EXT-X-ENDLIST`) y suma `#EXTINF` para etiquetar **Tráiler (<3 min)** vs. **Película (>20 min)**. |
+| **3. Reparar error `403 Forbidden` al reproducir en TV o Celular** | **Clases Kotlin (`$0`)** | **Clase `HeaderSelfHealer`:** Prueba en <1s las 4 combinaciones lógicas de cabeceras (Iframe real $\rightarrow$ `pageUrl` $\rightarrow$ Propio CDN $\rightarrow$ Limpio sin Referer) y guarda en memoria local (`learned_rules.json`) la que dé `HTTP 200`. |
+| **4. Limpiar títulos sucios de películas guardadas** | **Clases Kotlin (`$0`)** | **Objeto `MediaTitleCleaner`:** Expresiones regulares (Regex) que limpian *"Ver Película X (2024) Online HD Gratis"* $\rightarrow$ *"X (2024)"*. |
+| **5. Sitios nuevos con ofuscación compleja que bloquean incluso al `HeaderSelfHealer`** | **IA Gratuita en Nube (`$0`)** | **Único punto con IA (`ai_stream_healer.py`):** Corre en lote cada 6h en GitHub Actions usando la **capa gratuita de Gemini Flash** (1,500 peticiones/día gratis) sobre dominios fallidos en Supabase y publica la regla en `live_stream_rules.json` (OTA). |
+
 

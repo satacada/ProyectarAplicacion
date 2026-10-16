@@ -96,7 +96,8 @@
             video: src,
             src: src,
             title: t,
-            duration: dur
+            duration: dur,
+            frameUrl: window.location.href || ''
         }));
     }
 

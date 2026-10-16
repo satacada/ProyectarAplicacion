@@ -4,35 +4,19 @@ import android.net.Uri
 import android.util.Log
 
 /**
- * Motor heurístico dinámico e inteligente para clasificación y auto-reparación de flujos multimedia.
- * Discrimina autónomamente entre flujos legítimos de películas/series y publicidad o trampas,
- * deduciendo dinámicamente orígenes y cabeceras de inserción (embed/referer) sin reglas rígidas.
+ * Clasificador determinista y constructor de cabeceras reales de flujo multimedia.
+ * Cero dominios en duro: respeta estrictamente las cabeceras entregadas por Chromium
+ * y el origen real del iframe reproductor que solicitó el recurso.
  */
 object StreamIntelligenceEngine {
 
     private const val TAG = "StreamIntelligence"
-
-    // Firmas conocidas de CDNs de video y sus portales de inserción
-    private val KNOWN_CDN_EMBED_MAP = mapOf(
-        "tnmr.org" to "https://luluvdo.com",
-        "luluvdo.com" to "https://luluvdo.com",
-        "lulustream.com" to "https://luluvdo.com",
-        "fastream.to" to "https://fastream.to",
-        "ok.ru" to "https://ok.ru",
-        "mycdn.me" to "https://ok.ru",
-        "okcdn.ru" to "https://ok.ru",
-        "dailymotion.com" to "https://www.dailymotion.com",
-        "dmcdn.net" to "https://www.dailymotion.com",
-        "pelisserieshoy.com" to "https://player.pelisserieshoy.com",
-        "morencius.com" to "https://embed69.org"
-    )
+    private const val DEFAULT_AD_MAX_DURATION_SEC = 60f
 
     fun isLikelyAdOrCommercial(url: String, duration: Float = 0f): Boolean {
         if (url.isBlank()) return true
-        val recipe = StreamRuleSyncManager.findMatchingRecipe(url)
-        val maxAdDuration = recipe?.skipAdsDuration ?: 60f
-        if (duration in 0.1f..(maxAdDuration - 0.1f)) {
-            Log.d(TAG, "🚫 Descarte heurístico: Video de duración publicitaria (${duration}s <= ${maxAdDuration}s)")
+        if (duration in 0.1f..(DEFAULT_AD_MAX_DURATION_SEC - 0.1f)) {
+            Log.d(TAG, "🚫 Descarte: Video de duración publicitaria (${duration}s < ${DEFAULT_AD_MAX_DURATION_SEC}s)")
             return true
         }
         val lower = url.lowercase()
@@ -43,7 +27,7 @@ object StreamIntelligenceEngine {
         )
         for (kw in adKeywords) {
             if (lower.contains(kw)) {
-                Log.d(TAG, "🚫 Descarte heurístico por firma publicitaria [$kw]: $url")
+                Log.d(TAG, "🚫 Descarte por firma publicitaria [$kw]: $url")
                 return true
             }
         }
@@ -60,73 +44,61 @@ object StreamIntelligenceEngine {
         else if (lower.contains(".mpd") || lower.contains("dash")) score += 25
         else if (lower.contains(".mp4")) score += 20
 
-        if (duration >= 300f) score += 35
-        else if (duration == 0f && lower.contains(".m3u8")) score += 20 // En vivo o adaptive sin metadata aún
+        if (duration >= 1200f) score += 50
+        else if (duration >= 300f) score += 35
+        else if (duration == 0f && lower.contains(".m3u8")) score += 20
 
-        val host = try { Uri.parse(url).host?.lowercase() } catch (_: Throwable) { null }
-        if (host != null) {
-            for (cdn in KNOWN_CDN_EMBED_MAP.keys) {
-                if (host.contains(cdn)) {
-                    score += 25
-                    break
-                }
-            }
-        }
         return score
     }
 
     fun resolveDynamicHeaders(
         streamUrl: String,
-        pageUrl: String,
+        sourceFrameOrPageUrl: String,
         rawHeaders: Map<String, String>? = null
     ): Map<String, String> {
         val result = mutableMapOf<String, String>()
         rawHeaders?.forEach { (k, v) ->
             if (v.isNotBlank()) {
-                val keyLower = k.lowercase()
-                if (keyLower == "referer" || keyLower == "origin" || keyLower == "user-agent" || keyLower == "cookie") {
-                    result[k.replaceFirstChar { it.uppercase() }] = v
+                when (k.lowercase()) {
+                    "referer" -> result["Referer"] = v
+                    "origin" -> result["Origin"] = v
+                    "user-agent" -> result["User-Agent"] = v
+                    "cookie" -> result["Cookie"] = v
+                    "authorization" -> result["Authorization"] = v
+                    "sec-fetch-mode" -> result["Sec-Fetch-Mode"] = v
+                    "sec-fetch-dest" -> result["Sec-Fetch-Dest"] = v
+                    "sec-fetch-site" -> result["Sec-Fetch-Site"] = v
                 }
             }
         }
 
-        val streamHost = try { Uri.parse(streamUrl).host?.lowercase() } catch (_: Throwable) { null }
-        var deducedOrigin: String? = null
-        var deducedReferer: String? = null
-
-        val recipe = StreamRuleSyncManager.findMatchingRecipe(streamUrl)
-        if (recipe != null) {
-            deducedOrigin = recipe.embedOrigin
-            deducedReferer = recipe.referer
-            result["Sec-Fetch-Mode"] = recipe.secFetchMode
-            result["Sec-Fetch-Dest"] = recipe.secFetchDest
-            result["Sec-Fetch-Site"] = recipe.secFetchSite
+        // Si Chromium ya proveyó Referer pero no Origin, deducir Origin del mismo Referer real
+        val existingReferer = result["Referer"]
+        if (!existingReferer.isNullOrBlank() && !result.containsKey("Origin")) {
+            try {
+                val rUri = Uri.parse(existingReferer)
+                if (!rUri.scheme.isNullOrBlank() && !rUri.host.isNullOrBlank()) {
+                    result["Origin"] = "${rUri.scheme}://${rUri.host}"
+                }
+            } catch (_: Throwable) {}
         }
 
-        if (deducedOrigin == null && streamHost != null) {
-            for ((cdn, embedOrigin) in KNOWN_CDN_EMBED_MAP) {
-                if (streamHost.contains(cdn)) {
-                    deducedOrigin = embedOrigin
-                    break
-                }
+        // Si no había Referer en rawHeaders (ej. capturado por DOM en un iframe), usar la URL real del iframe/página
+        if (!result.containsKey("Referer") && sourceFrameOrPageUrl.startsWith("http")) {
+            result["Referer"] = sourceFrameOrPageUrl
+            if (!result.containsKey("Origin")) {
+                try {
+                    val pUri = Uri.parse(sourceFrameOrPageUrl)
+                    if (!pUri.scheme.isNullOrBlank() && !pUri.host.isNullOrBlank()) {
+                        result["Origin"] = "${pUri.scheme}://${pUri.host}"
+                    }
+                } catch (_: Throwable) {}
             }
         }
 
-        if (deducedOrigin == null && pageUrl.startsWith("http")) {
-            deducedOrigin = try {
-                val pUri = Uri.parse(pageUrl)
-                "${pUri.scheme}://${pUri.host}"
-            } catch (_: Throwable) { null }
-        }
-
-        if (deducedOrigin != null) {
-            if (!result.containsKey("Origin")) result["Origin"] = deducedOrigin
-            if (!result.containsKey("Referer")) result["Referer"] = deducedReferer ?: "$deducedOrigin/"
-        }
-
-        result["Sec-Fetch-Mode"] = "cors"
-        result["Sec-Fetch-Dest"] = "empty"
-        result["Sec-Fetch-Site"] = "cross-site"
+        if (!result.containsKey("Sec-Fetch-Mode")) result["Sec-Fetch-Mode"] = "cors"
+        if (!result.containsKey("Sec-Fetch-Dest")) result["Sec-Fetch-Dest"] = "empty"
+        if (!result.containsKey("Sec-Fetch-Site")) result["Sec-Fetch-Site"] = "cross-site"
         if (!result.containsKey("User-Agent")) result["User-Agent"] = UA_MOBILE
         return result
     }

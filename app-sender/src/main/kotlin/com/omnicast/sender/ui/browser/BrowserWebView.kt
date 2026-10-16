@@ -10,9 +10,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 
 const val UA_MOBILE = "Mozilla/5.0 (Linux; Android 14; Mobile) AppleWebKit/537.36 Chrome/124.0.0.0 Mobile Safari/537.36"
 const val UA_DESKTOP = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/124.0.0.0 Safari/537.36"
@@ -56,10 +53,6 @@ fun BrowserWebView(
             NativeAdBlockEngine.init(ctx)
             AdBlockRuleSyncManager.syncIfNeeded(ctx)
             AdBlockWhitelistManager.init(ctx)
-            StreamRuleSyncManager.init(ctx)
-            CoroutineScope(Dispatchers.IO).launch {
-                StreamRuleSyncManager.syncIfNeeded(ctx)
-            }
             var currentKnownTitle: String? = null
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {

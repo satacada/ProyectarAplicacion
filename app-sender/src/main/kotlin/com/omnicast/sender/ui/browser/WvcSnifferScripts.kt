@@ -39,7 +39,7 @@ object WvcSnifferScripts {
                     if (!s || s.indexOf('blob:') === 0 || s.indexOf('data:') === 0) return;
                     if (!isMediaStr(s)) return;
                     var t = title || document.title || 'Video Web';
-                    console.log('$consolePrefix' + JSON.stringify({type:'videoPlaying', video:s, title:t, duration:d}));
+                    console.log('$consolePrefix' + JSON.stringify({type:'videoPlaying', video:s, title:t, duration:d, frameUrl:window.location.href || ''}));
                 }
                 function attachVid(v) {
                     if (!v || v.__omni) return;
@@ -64,7 +64,7 @@ object WvcSnifferScripts {
                         if (isMediaStr(u)) {
                             window.__omniCapturedMedia = window.__omniCapturedMedia || [];
                             if (window.__omniCapturedMedia.indexOf(u) === -1) window.__omniCapturedMedia.push(u);
-                            console.log('$consolePrefix' + JSON.stringify({type:'video', src:u, title:document.title}));
+                            console.log('$consolePrefix' + JSON.stringify({type:'video', src:u, title:document.title, frameUrl:window.location.href || ''}));
                         }
                         return origFetch.apply(this, arguments);
                     };
@@ -75,7 +75,7 @@ object WvcSnifferScripts {
                         if (isMediaStr(u)) {
                             window.__omniCapturedMedia = window.__omniCapturedMedia || [];
                             if (window.__omniCapturedMedia.indexOf(u) === -1) window.__omniCapturedMedia.push(u);
-                            console.log('$consolePrefix' + JSON.stringify({type:'video', src:u, title:document.title}));
+                            console.log('$consolePrefix' + JSON.stringify({type:'video', src:u, title:document.title, frameUrl:window.location.href || ''}));
                         }
                         return origOpen.apply(this, arguments);
                     };
@@ -101,7 +101,7 @@ object WvcSnifferScripts {
                                 for (var pi = 0; pi < pl.length; pi++) {
                                     var f = pl[pi].file || (pl[pi].sources && pl[pi].sources[0] && pl[pi].sources[0].file);
                                     if (f && isMediaStr(f)) {
-                                        console.log('$consolePrefix' + JSON.stringify({type:'video', src:f, title:pl[pi].title || document.title}));
+                                        console.log('$consolePrefix' + JSON.stringify({type:'video', src:f, title:pl[pi].title || document.title, frameUrl:window.location.href || ''}));
                                     }
                                 }
                             }
@@ -110,7 +110,7 @@ object WvcSnifferScripts {
                         for (var fi = 0; fi < ifrs.length; fi++) {
                             var isrc = ifrs[fi].src || ifrs[fi].getAttribute('data-src') || '';
                             if (isrc && isMediaStr(isrc)) {
-                                console.log('$consolePrefix' + JSON.stringify({type:'video', src:isrc, title:document.title}));
+                                console.log('$consolePrefix' + JSON.stringify({type:'video', src:isrc, title:document.title, frameUrl:window.location.href || ''}));
                             }
                         }
                     } catch(_) {}
@@ -125,13 +125,14 @@ object WvcSnifferScripts {
     fun buildAggressiveRescanScript(consolePrefix: String): String = """
         (function() {
             try {
+                var fUrl = window.location.href || '';
                 if (typeof window.__omniResetAndRescan === 'function') {
                     window.__omniResetAndRescan();
                 }
                 if (window.__omniCapturedMedia && window.__omniCapturedMedia.length > 0) {
                     for (var m = 0; m < window.__omniCapturedMedia.length; m++) {
                         var cu = window.__omniCapturedMedia[m];
-                        console.log('$consolePrefix' + JSON.stringify({type: 'video', video: cu, src: cu, title: document.title}));
+                        console.log('$consolePrefix' + JSON.stringify({type: 'video', video: cu, src: cu, title: document.title, frameUrl: fUrl}));
                     }
                 }
                 try {
@@ -141,7 +142,7 @@ object WvcSnifferScripts {
                             var ru = res[r].name || '';
                             var lru = ru.toLowerCase();
                             if (lru.indexOf('.m3u8') !== -1 || lru.indexOf('.mp4') !== -1 || lru.indexOf('.mpd') !== -1 || lru.indexOf('/hls') !== -1 || lru.indexOf('/stream/') !== -1 || lru.indexOf('p.php?url=') !== -1) {
-                                console.log('$consolePrefix' + JSON.stringify({type: 'video', video: ru, src: ru, title: document.title}));
+                                console.log('$consolePrefix' + JSON.stringify({type: 'video', video: ru, src: ru, title: document.title, frameUrl: fUrl}));
                             }
                         }
                     }
@@ -155,18 +156,18 @@ object WvcSnifferScripts {
                     if (d > 0 && d < 60) continue;
                     var s = v.currentSrc || v.src;
                     if (s && s.indexOf('blob:') !== 0 && s.indexOf('data:') !== 0) {
-                        console.log('$consolePrefix' + JSON.stringify({type: (!v.paused && i === 0) ? 'videoPlaying' : 'video', video: s, src: s, title: document.title, duration: d}));
+                        console.log('$consolePrefix' + JSON.stringify({type: (!v.paused && i === 0) ? 'videoPlaying' : 'video', video: s, src: s, title: document.title, duration: d, frameUrl: fUrl}));
                     }
                     var chSrcs = v.querySelectorAll('source');
                     for (var cs = 0; cs < chSrcs.length; cs++) {
                         var cUrl = chSrcs[cs].src;
                         if (cUrl && cUrl.indexOf('blob:') !== 0 && cUrl.indexOf('data:') !== 0) {
-                            console.log('$consolePrefix' + JSON.stringify({type: 'video', video: cUrl, src: cUrl, title: document.title, duration: d}));
+                            console.log('$consolePrefix' + JSON.stringify({type: 'video', video: cUrl, src: cUrl, title: document.title, duration: d, frameUrl: fUrl}));
                         }
                     }
                     var hlsObj = (v.__hls && v.__hls.url) || (v._hls && v._hls.url) || (window.hls && window.hls.url);
                     if (hlsObj && typeof hlsObj === 'string' && hlsObj.indexOf('blob:') !== 0) {
-                        console.log('$consolePrefix' + JSON.stringify({type: 'videoPlaying', video: hlsObj, src: hlsObj, title: document.title, duration: d}));
+                        console.log('$consolePrefix' + JSON.stringify({type: 'videoPlaying', video: hlsObj, src: hlsObj, title: document.title, duration: d, frameUrl: fUrl}));
                     }
                 }
                 if (typeof window.jwplayer === 'function') {
@@ -175,7 +176,7 @@ object WvcSnifferScripts {
                         for (var pi = 0; pi < pl.length; pi++) {
                             var f = pl[pi].file || (pl[pi].sources && pl[pi].sources[0] && pl[pi].sources[0].file);
                             if (f && typeof f === 'string') {
-                                console.log('$consolePrefix' + JSON.stringify({type: 'video', src: f, title: pl[pi].title || document.title}));
+                                console.log('$consolePrefix' + JSON.stringify({type: 'video', src: f, title: pl[pi].title || document.title, frameUrl: fUrl}));
                             }
                         }
                     }
@@ -190,7 +191,7 @@ object WvcSnifferScripts {
                         lsrc.indexOf('fastream') !== -1 || lsrc.indexOf('ok.ru') !== -1 || lsrc.indexOf('streamwish') !== -1 ||
                         lsrc.indexOf('filemoon') !== -1 || lsrc.indexOf('vidhide') !== -1 || lsrc.indexOf('pelismart') !== -1 ||
                         lsrc.indexOf('pelisserieshoy') !== -1 || lsrc.indexOf('embed69') !== -1) {
-                        console.log('$consolePrefix' + JSON.stringify({type: 'video', src: isrc, title: document.title}));
+                        console.log('$consolePrefix' + JSON.stringify({type: 'video', src: isrc, title: document.title, frameUrl: fUrl}));
                     }
                 }
             } catch(_) {}

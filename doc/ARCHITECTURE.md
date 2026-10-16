@@ -52,4 +52,21 @@ graph TD
 - [ADR-001: Stack Tecnológico Inicial](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/adr/ADR-001-stack-inicial.md)
 - [ADR-002: Telemetría y Logs en TV Box](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/adr/ADR-002-telemetria-tv-logs.md)
 - [ADR-003: Estrategia de Renovación de Enlaces Expirados en TV (QR + Sustitución TTL)](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/adr/ADR-003-estrategia-renovacion-enlaces-tv.md)
-- [ADR-004: Arquitectura Colectiva de Auto-Recuperación y Auto-Curación por IA (OTA)](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/adr/ADR-004-arquitectura-auto-recuperacion-ia-ota.md)
+- [ADR-004: Arquitectura Escalonada de Costo $0 (Clases Deterministas + Auto-Curación IA Gratuita OTA)](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/adr/ADR-004-arquitectura-auto-recuperacion-ia-ota.md)
+
+---
+
+## 5. Arquitectura de Decisión y Recuperación de Streams (Costo $0 Absoluto)
+
+```mermaid
+flowchart TD
+    A["Navegador / Lista Guardada"] --> B["Nivel 1: Captura Fiel (Clases Kotlin - $0)"]
+    B -->|"Referer real de Chromium + window.location.href del iframe"| C["Nivel 2: Sonda Pre-Cast y Auto-Reparador Local (Clases Kotlin - $0)"]
+    C -->|"StreamManifestProbe: Valida #EXTM3U, detecta Vivo vs Película vs Tráiler"| D{"¿Responde HTTP 200?"}
+    D -->|Sí| E["Reproducción Directa en ExoPlayer (Cero Crash)"]
+    D -->|"No (Error 403 / Token Expirado)"| F["HeaderSelfHealer: Permuta 4 orígenes reales en <1s"]
+    F -->|Éxito| G["Guarda en learned_rules.json local y Reproduce"]
+    F -->|"Token Vencido en Guardados"| H["Abre pageUrl para re-extraer sin volver a buscar"]
+    F -->|"Dominio Nuevo Desconocido"| I["Nivel 3: Reporte Anónimo -> GitHub Actions Gemini Free Tier ($0) -> OTA JSON"]
+```
+

@@ -15,6 +15,7 @@ import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
+import kotlinx.coroutines.launch
 
 @OptIn(UnstableApi::class)
 class ExoPlayerTvManager(private val context: Context) {
@@ -33,7 +34,9 @@ class ExoPlayerTvManager(private val context: Context) {
     val aspectRatioHelper = TvAspectRatioHelper()
     private var currentUrl: String? = null
     private var currentTitle: String? = null
+    private var currentHeaders: Map<String, String> = emptyMap()
     private var isRetryingClean = false
+    private val ioScope = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO)
 
     fun initialize() {
         if (player == null) {
@@ -74,19 +77,29 @@ class ExoPlayerTvManager(private val context: Context) {
                         }
                         override fun onPlayerError(error: PlaybackException) {
                             com.omnicast.receiver.log.ReceiverLogger.log(TAG, "❌ Error en ExoPlayer: ${error.errorCodeName} (${error.errorCode}): ${error.message}", error)
-                            val handled = recoveryManager.handlePlaybackError(error, player) {
-                                if (!isRetryingClean && currentUrl != null) {
-                                    com.omnicast.receiver.log.ReceiverLogger.log(TAG, "🔄 Reintentando con flujo limpio directo sin cabeceras...")
+                            val targetUrl = currentUrl
+                            val triggerSelfHeal: () -> Unit = {
+                                if (!isRetryingClean && targetUrl != null) {
                                     isRetryingClean = true
-                                    playClean(currentUrl!!, currentTitle)
+                                    ioScope.launch {
+                                        val probe = com.omnicast.core.domain.usecases.StreamManifestProbe.probeAndHeal(targetUrl, currentHeaders)
+                                        android.os.Handler(android.os.Looper.getMainLooper()).post {
+                                            if (probe.isPlayable) {
+                                                com.omnicast.receiver.log.ReceiverLogger.log(TAG, "✅ HeaderSelfHealer recuperó el flujo (live=${probe.isLiveStream})")
+                                                playStream(probe.resolvedUrl, probe.healedHeaders, currentTitle, if (probe.isLiveStream) 0L else currentPositionMs)
+                                                isRetryingClean = true
+                                            } else {
+                                                playClean(targetUrl, currentTitle)
+                                                onPlaybackFailed?.invoke()
+                                            }
+                                        }
+                                    }
+                                } else if (isRetryingClean) {
+                                    onPlaybackFailed?.invoke()
                                 }
                             }
-                            if (!handled && !isRetryingClean && currentUrl != null) {
-                                isRetryingClean = true
-                                playClean(currentUrl!!, currentTitle)
-                            } else if (isRetryingClean) {
-                                onPlaybackFailed?.invoke()
-                            }
+                            val handled = recoveryManager.handlePlaybackError(error, player) { triggerSelfHeal() }
+                            if (!handled) triggerSelfHeal()
                         }
 
                         override fun onPlaybackStateChanged(playbackState: Int) {
@@ -116,6 +129,7 @@ class ExoPlayerTvManager(private val context: Context) {
         initialize()
         currentUrl = url
         currentTitle = title
+        currentHeaders = headers
         isRetryingClean = false
 
         val safeHeaders = filterSafeHeaders(url, headers)
@@ -192,41 +206,28 @@ class ExoPlayerTvManager(private val context: Context) {
     private fun filterSafeHeaders(url: String, headers: Map<String, String>): Map<String, String> {
         val allowed = mutableMapOf<String, String>()
         headers.forEach { (k, v) ->
-            when {
-                k.equals("referer", true) -> allowed["Referer"] = v
-                k.equals("origin", true) -> allowed["Origin"] = v
-                k.equals("user-agent", true) -> allowed["User-Agent"] = v
-                k.equals("cookie", true) -> allowed["Cookie"] = v
-                k.equals("authorization", true) -> allowed["Authorization"] = v
-                k.equals("sec-fetch-mode", true) -> allowed["Sec-Fetch-Mode"] = v
-                k.equals("sec-fetch-dest", true) -> allowed["Sec-Fetch-Dest"] = v
-                k.equals("sec-fetch-site", true) -> allowed["Sec-Fetch-Site"] = v
+            if (v.isNotBlank()) {
+                when {
+                    k.equals("referer", true) -> allowed["Referer"] = v
+                    k.equals("origin", true) -> allowed["Origin"] = v
+                    k.equals("user-agent", true) -> allowed["User-Agent"] = v
+                    k.equals("cookie", true) -> allowed["Cookie"] = v
+                    k.equals("authorization", true) -> allowed["Authorization"] = v
+                    k.equals("sec-fetch-mode", true) -> allowed["Sec-Fetch-Mode"] = v
+                    k.equals("sec-fetch-dest", true) -> allowed["Sec-Fetch-Dest"] = v
+                    k.equals("sec-fetch-site", true) -> allowed["Sec-Fetch-Site"] = v
+                }
             }
         }
         if (!allowed.containsKey("User-Agent")) allowed["User-Agent"] = DEFAULT_UA
-        if (url.contains("mycdn.me", true) || url.contains("ok.ru", true)) allowed["Referer"] = "https://ok.ru/"
-        if (url.contains("dailymotion.com", true) || url.contains("dmcdn.net", true)) {
-            allowed["Origin"] = "https://www.dailymotion.com"
-            allowed["Referer"] = "https://www.dailymotion.com/"
-            allowed["Sec-Fetch-Mode"] = "cors"
-            allowed["Sec-Fetch-Dest"] = "empty"
-            allowed["Sec-Fetch-Site"] = "cross-site"
-        }
-        if (url.contains("fastream.to", true) || url.contains("dropcdn.io", true)) {
-            val fastreamId = Regex("(?:/hls\\d*/\\d+/\\d+/|/embed-|/)([a-zA-Z0-9]{10,12})(?:[_,.]|$)").find(url)?.groupValues?.get(1)
-            allowed["Origin"] = "https://fastream.to"
-            allowed["Referer"] = if (!fastreamId.isNullOrBlank()) "https://fastream.to/embed-$fastreamId.html" else "https://fastream.to/embed-video.html"
-            allowed["User-Agent"] = DEFAULT_UA
-            allowed["Sec-Fetch-Mode"] = "cors"
-            allowed["Sec-Fetch-Dest"] = "empty"
-            allowed["Sec-Fetch-Site"] = "cross-site"
-        }
-        if (url.contains("tnmr.org", true) || url.contains("luluvdo.com", true) || url.contains("lulustream.com", true)) {
-            allowed["Origin"] = "https://luluvdo.com"
-            allowed["Referer"] = "https://luluvdo.com/"
-            allowed["Sec-Fetch-Mode"] = "cors"
-            allowed["Sec-Fetch-Dest"] = "empty"
-            allowed["Sec-Fetch-Site"] = "cross-site"
+        val ref = allowed["Referer"]
+        if (!ref.isNullOrBlank() && !allowed.containsKey("Origin")) {
+            runCatching {
+                val u = java.net.URI(ref)
+                if (!u.scheme.isNullOrBlank() && !u.host.isNullOrBlank()) {
+                    allowed["Origin"] = "${u.scheme}://${u.host}"
+                }
+            }
         }
         return allowed
     }

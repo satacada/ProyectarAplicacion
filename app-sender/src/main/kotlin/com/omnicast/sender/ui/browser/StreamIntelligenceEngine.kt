@@ -72,7 +72,11 @@ object StreamIntelligenceEngine {
             }
         }
 
-        // Si Chromium ya proveyó Referer pero no Origin, deducir Origin del mismo Referer real
+        // Si sourceFrameOrPageUrl es una URL de embed o más específica que el Referer truncado por Chromium, priorizarla
+        if (sourceFrameOrPageUrl.startsWith("http") && (result["Referer"].isNullOrBlank() || sourceFrameOrPageUrl.contains("/e/") || sourceFrameOrPageUrl.contains("embed") || sourceFrameOrPageUrl.length > (result["Referer"]?.length ?: 0))) {
+            result["Referer"] = sourceFrameOrPageUrl
+        }
+
         val existingReferer = result["Referer"]
         if (!existingReferer.isNullOrBlank() && !result.containsKey("Origin")) {
             try {
@@ -81,19 +85,6 @@ object StreamIntelligenceEngine {
                     result["Origin"] = "${rUri.scheme}://${rUri.host}"
                 }
             } catch (_: Throwable) {}
-        }
-
-        // Si no había Referer en rawHeaders (ej. capturado por DOM en un iframe), usar la URL real del iframe/página
-        if (!result.containsKey("Referer") && sourceFrameOrPageUrl.startsWith("http")) {
-            result["Referer"] = sourceFrameOrPageUrl
-            if (!result.containsKey("Origin")) {
-                try {
-                    val pUri = Uri.parse(sourceFrameOrPageUrl)
-                    if (!pUri.scheme.isNullOrBlank() && !pUri.host.isNullOrBlank()) {
-                        result["Origin"] = "${pUri.scheme}://${pUri.host}"
-                    }
-                } catch (_: Throwable) {}
-            }
         }
 
         if (!result.containsKey("Sec-Fetch-Mode")) result["Sec-Fetch-Mode"] = "cors"

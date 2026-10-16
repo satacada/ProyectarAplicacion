@@ -105,7 +105,7 @@ object MediaPlatformResolver {
         val id = extractFastreamId(url) ?: return null
         return try {
             val isDrop = url.contains("dropcdn.io", true) || url.contains("dr0pstream.com", true)
-            val embedUrl = if (isDrop) "https://dr0pstream.com/embed-$id.html" else "https://fastream.to/embed-$id.html"
+            val embedUrl = if (isDrop) "https://dr0pstream.com/e/$id" else "https://fastream.to/embed-$id.html"
             val origin = if (isDrop) "https://dr0pstream.com" else "https://fastream.to"
             val conn = (URL(embedUrl).openConnection() as HttpURLConnection).apply {
                 connectTimeout = 4000
@@ -123,6 +123,7 @@ object MediaPlatformResolver {
             val streamUrlMatch = Regex("file:\\s*\"([^\"]+)\"").find(unpacked)
                 ?: Regex("https?://[^\\s\"',]+\\.m3u8[^\\s\"',]*").find(unpacked)
             val streamUrl = streamUrlMatch?.groupValues?.get(1) ?: streamUrlMatch?.value ?: return null
+            val cleanStreamUrl = BrowserUrlHelper.sanitizeMediaUrl(streamUrl)
             val hdrs = mapOf(
                 "User-Agent" to UA_MOBILE,
                 "Referer" to embedUrl,
@@ -131,8 +132,8 @@ object MediaPlatformResolver {
                 "Sec-Fetch-Dest" to "empty",
                 "Sec-Fetch-Site" to "cross-site"
             )
-            Log.i(TAG, "🎬 Fastream/DropCDN resuelto exitosamente: $id -> $streamUrl")
-            Triple(streamUrl, null, hdrs)
+            Log.i(TAG, "🎬 Fastream/DropCDN resuelto exitosamente: $id -> $cleanStreamUrl")
+            Triple(cleanStreamUrl, null, hdrs)
         } catch (e: Throwable) {
             Log.w(TAG, "No se pudo resolver Fastream ($id): ${e.message}")
             null
@@ -140,14 +141,18 @@ object MediaPlatformResolver {
     }
 
     fun prepareStreamForPlayback(streamUrl: String, pageUrl: String, rawHeaders: Map<String, String>): Pair<String, Map<String, String>> {
-        var finalUrl = streamUrl
-        var hdrs = rawHeaders
-        val lower = streamUrl.lowercase()
-        if (lower.contains("fastream.to") || lower.contains("dropcdn.io") || lower.contains("dr0pstream.com")) {
-            val resolved = resolveFastreamSync(streamUrl, pageUrl)
-            if (resolved != null) {
-                finalUrl = resolved.first
-                hdrs = resolved.third
+        var finalUrl = BrowserUrlHelper.sanitizeMediaUrl(streamUrl)
+        val hdrs = rawHeaders.toMutableMap()
+        val lower = finalUrl.lowercase()
+        val isDrop = lower.contains("dropcdn.io") || lower.contains("dr0pstream.com")
+        val isFastream = lower.contains("fastream.to")
+        if (isDrop || isFastream) {
+            val id = extractFastreamId(finalUrl)
+            if (id != null) {
+                val embed = if (isDrop) "https://dr0pstream.com/e/$id" else "https://fastream.to/embed-$id.html"
+                val origin = if (isDrop) "https://dr0pstream.com" else "https://fastream.to"
+                hdrs["Referer"] = embed
+                hdrs["Origin"] = origin
             }
         }
         val safeHeaders = BrowserUrlHelper.buildSafeHeaders(finalUrl, pageUrl, UA_MOBILE, hdrs)

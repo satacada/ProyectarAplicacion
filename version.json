@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 114,
-  "versionCodeReceiver": 97,
-  "versionName": "3.32.69",
-  "releaseTag": "v3.32.69",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.69/omnicast-sender-v3.32.69.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.69/omnicast-receiver-v3.32.69.apk",
-  "changelog": "v3.32.69: Preservación de cadena Referer/Origin de iframes y detección exhaustiva de flujos HLS/DASH/MP4 con nombres y resoluciones estilo Web Video Caster; toggle para forzar emisión vía proxy local; foco y resaltado visual con D-pad en checkbox de películas; apertura automática de teclado en buscador de TV."
+  "versionCodeSender": 115,
+  "versionCodeReceiver": 98,
+  "versionName": "3.32.70",
+  "releaseTag": "v3.32.70",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.70/omnicast-sender-v3.32.70.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.70/omnicast-receiver-v3.32.70.apk",
+  "changelog": "v3.32.70: Integración completa de la lista de bloqueo de 34,803 reglas de Web Video Caster en el motor C++ nativo; bloqueo estricto de ventanas emergentes/redirecciones publicitarias en WebChromeClient; desvío automático de nodos caídos de DropCDN (HTTP 502) al servidor edge activo (ds4.dropcdn.io) con Referer de iframe embed preservado."
 }

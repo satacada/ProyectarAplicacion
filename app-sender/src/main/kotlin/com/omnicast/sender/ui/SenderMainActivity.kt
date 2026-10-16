@@ -239,21 +239,24 @@ class SenderMainActivity : ComponentActivity() {
 
     fun sendDirectStreamToTv(url: String, title: String? = null, headers: Map<String, String> = emptyMap(), resumePositionMs: Long? = null) {
         val safeTitle = title?.ifBlank { "Transmisión Web" } ?: "Transmisión Web"
-        val savedPos = resumePositionMs ?: com.omnicast.sender.stream.StreamResumeManager.getPosition(this, url).takeIf { it > 0 } ?: playlistManager.getLastPosition(url)
-        val isKnownProxy = headers["X-Force-Proxy"] == "true" || historyManager.getHistory().firstOrNull { it.url == url }?.requiresProxy == true || playlistManager.getPlaylists().any { pl -> pl.items.any { it.url == url && it.requiresProxy } }
-        val effectiveUrl = if (isKnownProxy && !url.contains(":8092")) {
+        val (cleanUrl, preparedHeaders) = com.omnicast.sender.ui.browser.MediaPlatformResolver.prepareStreamForPlayback(url, headers["Referer"] ?: "", headers)
+        val savedPos = resumePositionMs ?: com.omnicast.sender.stream.StreamResumeManager.getPosition(this, cleanUrl).takeIf { it > 0 } ?: playlistManager.getLastPosition(cleanUrl)
+        val isExplicitProxy = headers["X-Force-Proxy"] == "true"
+        val effectiveUrl = if (isExplicitProxy && !cleanUrl.contains(":8092")) {
             Toast.makeText(this, "🔒 Contenido protegido: Enrutando por teléfono...", Toast.LENGTH_SHORT).show()
-            com.omnicast.sender.media.LocalStreamProxyServer.startAndGetProxyUrl(this, url, headers)
-        } else url
-        historyManager.addOrUpdate(url, safeTitle, headers = headers, requiresProxy = isKnownProxy); ActiveStreamHolder.startCasting(effectiveUrl, safeTitle, headers)
-        if (isKnownProxy) ActiveStreamHolder.setProxied(true); com.omnicast.sender.service.CastMediaNotificationService.start(this)
+            com.omnicast.sender.media.LocalStreamProxyServer.startAndGetProxyUrl(this, cleanUrl, preparedHeaders)
+        } else cleanUrl
+        historyManager.addOrUpdate(cleanUrl, safeTitle, headers = preparedHeaders, requiresProxy = isExplicitProxy)
+        ActiveStreamHolder.startCasting(effectiveUrl, safeTitle, preparedHeaders)
+        if (isExplicitProxy) ActiveStreamHolder.setProxied(true)
+        com.omnicast.sender.service.CastMediaNotificationService.start(this)
         ActiveStreamHolder.onSendPlayControl = { act, pos, vol, par -> sendPlayControl(act, pos, vol, par) }
-        val msg = SignalingMessage.DirectStreamHandoff(mediaUrl = effectiveUrl, title = safeTitle, headers = if (isKnownProxy) emptyMap() else headers, startPositionMs = savedPos)
+        val msg = SignalingMessage.DirectStreamHandoff(mediaUrl = effectiveUrl, title = safeTitle, headers = if (isExplicitProxy) emptyMap() else preparedHeaders, startPositionMs = savedPos)
         sendSignalingMessage(msg); com.omnicast.sender.discovery.MultiReceiverManager.broadcastToSecondary(msg, nsdScanner.discoveredDevices.value)
         if (savedPos > 0L) {
             val formatted = com.omnicast.sender.stream.StreamResumeManager.formatTime(savedPos)
             Toast.makeText(this, "▶ Reanudando en $formatted", Toast.LENGTH_SHORT).show()
-        } else if (!isKnownProxy) Toast.makeText(this, "Enviando video a receptores...", Toast.LENGTH_SHORT).show()
+        } else if (!isExplicitProxy) Toast.makeText(this, "Enviando video a receptores...", Toast.LENGTH_SHORT).show()
     }
 
     fun sendPlayControl(action: String, positionMs: Long = 0L, volume: Float = 1.0f, param: String? = null) {

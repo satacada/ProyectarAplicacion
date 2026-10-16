@@ -15,6 +15,8 @@ import java.net.URLDecoder
 import java.net.URLEncoder
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.concurrent.thread
+import com.omnicast.sender.ui.browser.BrowserUrlHelper
+import com.omnicast.sender.ui.browser.MediaPlatformResolver
 
 /**
  * Proxy HTTP local ultraligero y aislado para transmisiones protegidas (Cloudflare Turnstile, DropCDN, Fastream).
@@ -57,28 +59,36 @@ object LocalStreamProxyServer {
 
     fun startAndGetProxyUrl(context: Context, originalUrl: String, headers: Map<String, String>): String {
         start(context)
-        val sid = Integer.toHexString(originalUrl.hashCode())
+        val cleanUrl = BrowserUrlHelper.sanitizeMediaUrl(originalUrl)
+        val sid = Integer.toHexString(cleanUrl.hashCode())
         val mutableHeaders = headers.toMutableMap()
         if (!mutableHeaders.containsKey("User-Agent")) mutableHeaders["User-Agent"] = DEFAULT_UA
-        val ref = headers["Referer"]
-        if (!ref.isNullOrBlank() && !mutableHeaders.containsKey("Origin")) {
-            try { val u = URI(ref); mutableHeaders["Origin"] = "${u.scheme}://${u.authority}" } catch (_: Throwable) {}
+        val id = MediaPlatformResolver.extractFastreamId(cleanUrl)
+        val isDrop = cleanUrl.contains("dropcdn.io", true) || cleanUrl.contains("dr0pstream.com", true)
+        if (isDrop && id != null) {
+            mutableHeaders["Referer"] = "https://dr0pstream.com/e/$id"
+            mutableHeaders["Origin"] = "https://dr0pstream.com"
+        } else {
+            val ref = headers["Referer"]
+            if (!ref.isNullOrBlank() && !mutableHeaders.containsKey("Origin")) {
+                try { val u = URI(ref); mutableHeaders["Origin"] = "${u.scheme}://${u.authority}" } catch (_: Throwable) {}
+            }
         }
         if (!mutableHeaders.containsKey("Sec-Fetch-Mode")) mutableHeaders["Sec-Fetch-Mode"] = "cors"
         if (!mutableHeaders.containsKey("Sec-Fetch-Site")) mutableHeaders["Sec-Fetch-Site"] = "cross-site"
         if (!mutableHeaders.containsKey("Sec-Fetch-Dest")) mutableHeaders["Sec-Fetch-Dest"] = "empty"
         if (!mutableHeaders.containsKey("Accept")) mutableHeaders["Accept"] = "*/*"
         try {
-            val cookie = CookieManager.getInstance().getCookie(originalUrl)
-                ?: ref?.let { CookieManager.getInstance().getCookie(it) }
+            val cookie = CookieManager.getInstance().getCookie(cleanUrl)
+                ?: mutableHeaders["Referer"]?.let { CookieManager.getInstance().getCookie(it) }
             if (!cookie.isNullOrBlank() && !mutableHeaders.containsKey("Cookie")) {
                 mutableHeaders["Cookie"] = cookie
             }
         } catch (_: Throwable) {}
 
-        sessions[sid] = ProxySession(originalUrl, mutableHeaders)
+        sessions[sid] = ProxySession(cleanUrl, mutableHeaders)
         val ip = LocalImageServer.getLocalIpAddress()
-        val isHls = originalUrl.contains(".m3u8", ignoreCase = true) || originalUrl.contains("/hls", ignoreCase = true)
+        val isHls = cleanUrl.contains(".m3u8", ignoreCase = true) || cleanUrl.contains("/hls", ignoreCase = true)
         val endpoint = if (isHls) "master.m3u8" else "video.mp4"
         return "http://$ip:$PORT/$endpoint?sid=$sid"
     }
@@ -127,7 +137,7 @@ object LocalStreamProxyServer {
             out.write("HTTP/1.1 404 Session Not Found\r\n\r\n".toByteArray())
             return
         }
-        val targetUrl = rawUrl?.let { try { URLDecoder.decode(it, "UTF-8") } catch (_: Throwable) { it } } ?: session.originalUrl
+        val targetUrl = BrowserUrlHelper.sanitizeMediaUrl(rawUrl?.let { try { URLDecoder.decode(it, "UTF-8") } catch (_: Throwable) { it } } ?: session.originalUrl)
 
         try {
             val conn = (URL(targetUrl).openConnection() as HttpURLConnection).apply {
@@ -175,8 +185,8 @@ object LocalStreamProxyServer {
     }
 
     private fun serveChunk(rawUrl: String?, sid: String?, range: String?, out: OutputStream) {
-        val targetUrl = rawUrl?.let { try { URLDecoder.decode(it, "UTF-8") } catch (_: Throwable) { it } }
-        if (targetUrl.isNullOrBlank()) {
+        val targetUrl = BrowserUrlHelper.sanitizeMediaUrl(rawUrl?.let { try { URLDecoder.decode(it, "UTF-8") } catch (_: Throwable) { it } } ?: "")
+        if (targetUrl.isBlank()) {
             out.write("HTTP/1.1 400 Bad Request\r\n\r\n".toByteArray()); return
         }
         val session = sid?.let { sessions[it] }

@@ -133,7 +133,7 @@ fun BrowserWebView(
                 settings.layoutAlgorithm = WebSettings.LayoutAlgorithm.NORMAL
                 settings.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
                 settings.mediaPlaybackRequiresUserGesture = false
-                settings.setSupportMultipleWindows(false)
+                settings.setSupportMultipleWindows(true)
                 settings.javaScriptCanOpenWindowsAutomatically = false
                 settings.userAgentString = UA_MOBILE
 
@@ -172,7 +172,6 @@ fun BrowserWebView(
                         val targetHost = try { r.url.host?.lowercase() } catch (_: Throwable) { null }
                         val isSameSite = curHost != null && targetHost != null && (targetHost == curHost || targetHost.endsWith(".$curHost") || curHost.endsWith(".$targetHost"))
                         val isSourceWhitelisted = curHost?.let { AdBlockWhitelistManager.isWhitelistedHost(it) } ?: false
-                        val inMovie = hasStreams || BrowserUrlHelper.isMovieOrVideoPage(liveUrl)
 
                         if (isAdBlockEnabled && !isSourceWhitelisted) {
                             if (AdBlocker.isAd(reqUrl) || NativeAdBlockEngine.shouldBlock(reqUrl, liveUrl)) {
@@ -181,12 +180,12 @@ fun BrowserWebView(
                                 showBlockedToast(ctx)
                                 return true
                             }
-                            if (inMovie && !isSameSite && targetHost != null && r?.hasGesture() != true) {
+                            if (!isSameSite && targetHost != null) {
                                 val isAllowedExternal = AdBlocker.isSearchEngine(targetHost) ||
                                     AdBlocker.isKnownMediaHost(targetHost) ||
                                     AdBlockWhitelistManager.isWhitelistedHost(targetHost)
                                 if (!isAllowedExternal) {
-                                    android.util.Log.w("BrowserWebView", "🛑 Secuestro automático bloqueado hacia: $targetHost (aprendiendo dominio)")
+                                    android.util.Log.w("BrowserWebView", "🛑 Secuestro publicitario bloqueado hacia: $targetHost (aprendiendo dominio)")
                                     AdBlocker.learnAndBlockAdHost(targetHost, curHost)
                                     showBlockedToast(ctx)
                                     return true
@@ -236,6 +235,11 @@ fun BrowserWebView(
                 }
 
                 webChromeClient = object : WebChromeClient() {
+                    override fun onCreateWindow(view: WebView?, isDialog: Boolean, isUserGesture: Boolean, resultMsg: android.os.Message?): Boolean {
+                        android.util.Log.w("BrowserWebView", "🛑 Ventana emergente (popup) bloqueada de raíz")
+                        return false
+                    }
+
                     override fun onProgressChanged(v: WebView?, p: Int) {
                         onProgress(p)
                         if (p >= 80) swipeRefresh.isRefreshing = false

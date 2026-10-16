@@ -23,17 +23,9 @@
         }
     // 1b. Intercepción segura de window.open contra popups publicitarios
     try {
-        var origOpen = window.open;
         window.open = function(u, t, f) {
-            if (!u || u === 'about:blank') return null;
-            var l = (typeof u === 'string') ? u.toLowerCase() : '';
-            if (l.indexOf('bet') !== -1 || l.indexOf('click') !== -1 || l.indexOf('track') !== -1 ||
-                l.indexOf('pop') !== -1 || l.indexOf('ad') !== -1 || l.indexOf('redirect') !== -1 ||
-                l.indexOf('traffic') !== -1 || l.indexOf('syndication') !== -1) {
-                console.warn('OMNICAST_AD_POPUP_BLOCKED: ' + u);
-                return null;
-            }
-            return origOpen ? origOpen.apply(window, arguments) : null;
+            console.warn('OMNICAST_AD_POPUP_BLOCKED: ' + u);
+            return null;
         };
     } catch(e) {}
 

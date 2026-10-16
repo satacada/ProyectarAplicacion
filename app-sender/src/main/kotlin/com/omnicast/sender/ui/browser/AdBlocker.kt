@@ -100,8 +100,15 @@ object AdBlocker {
                 if (h.indexOf('dailymotion.com') !== -1 || h.indexOf('youtube.com') !== -1 || h.indexOf('google.') !== -1 || h.indexOf('bing.') !== -1 || h.indexOf('yandex.') !== -1) {
                     return;
                 }
+                try { window.open = function() { return null; }; } catch(_) {}
                 function cleanDoc(doc) {
                     if (!doc) return;
+                    try {
+                        var css = 'div[class*="popunder"], div[id*="popunder"], .ad-overlay, #ad-overlay, .click-shield, div[class*="click-shield"] { display: none !important; pointer-events: none !important; }';
+                        var st = doc.createElement('style');
+                        st.textContent = css;
+                        (doc.head || doc.documentElement).appendChild(st);
+                    } catch(__) {}
                     var selectors = [
                         'div[class*="ad-box"]', 'div[class*="ad-container"]', 'div[id*="ad-banner"]',
                         'div[class*="ad-banner"]', 'a[href*="bet365"]', 'a[href*="1xbet"]',

@@ -89,6 +89,18 @@ object BrowserUrlHelper {
         return headers
     }
 
+    fun sanitizeMediaUrl(url: String): String {
+        var u = url
+        if (u.contains(".dropcdn.io", true) && u.contains("srv=")) {
+            val srvMatch = Regex("[?&]srv=([a-zA-Z0-9]+)").find(u)
+            if (srvMatch != null) {
+                val srv = srvMatch.groupValues[1]
+                u = u.replace(Regex("https?://r\\d*\\.dropcdn\\.io"), "https://$srv.dropcdn.io")
+            }
+        }
+        return u
+    }
+
     fun normalizeUrl(input: String): String {
         val trimmed = input.trim()
         if (trimmed.isEmpty()) return "https://www.google.com"

@@ -32,7 +32,7 @@ object StreamQualityDetector {
     ): List<StreamQualityOption> = withContext(Dispatchers.IO) {
         val prefix = if (!title.isNullOrBlank() && title != "Transmisión") "[${title.take(20)}] " else ""
 
-        var currentMediaUrl = mediaUrl
+        var currentMediaUrl = BrowserUrlHelper.sanitizeMediaUrl(mediaUrl)
         var safeHeaders = BrowserUrlHelper.buildSafeHeaders(currentMediaUrl, headers["Referer"] ?: pageUrl ?: "", UA_MOBILE, headers)
         if (currentMediaUrl.contains("fastream.to", ignoreCase = true) && !currentMediaUrl.contains(".m3u8", ignoreCase = true)) {
             val resolved = MediaPlatformResolver.resolveFastreamSync(currentMediaUrl, headers["Referer"] ?: pageUrl)
@@ -48,6 +48,8 @@ object StreamQualityDetector {
             android.util.Log.w("StreamQualityDetector", "🛑 Flujo advertido por sonda (HTTP ${probe.httpCode}): $currentMediaUrl")
             if (BrowserUrlHelper.isRealMedia(currentMediaUrl) && probe.httpCode != 404 && probe.httpCode != 410) {
                 val label = if (currentMediaUrl.contains(".mp4", ignoreCase = true)) "🎬 ${prefix}Video MP4 Directo" else "▶ ${prefix}Flujo Directo (Nativo)"
+                val defName = extractFileName(currentMediaUrl, "master")
+                val defFmt = if (currentMediaUrl.contains(".mp4", true)) "mp4 (Directo)" else "m3u8 (adaptive)"
                 return@withContext listOf(
                     StreamQualityOption(
                         label = label,
@@ -56,7 +58,9 @@ object StreamQualityDetector {
                         streamUrl = currentMediaUrl,
                         isMovie = true,
                         isSuggested = true,
-                        healedHeaders = safeHeaders
+                        healedHeaders = safeHeaders,
+                        fileName = defName,
+                        formatDetail = defFmt
                     )
                 )
             }

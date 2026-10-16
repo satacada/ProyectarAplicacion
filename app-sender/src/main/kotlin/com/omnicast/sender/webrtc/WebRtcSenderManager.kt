@@ -147,7 +147,8 @@ class WebRtcSenderManager(
         peerConnection?.createOffer(object : SdpObserver {
             override fun onCreateSuccess(desc: SessionDescription?) {
                 desc?.let {
-                    val sdp = preferH264(it.description)
+                    val baseSdp = preferH264(it.description)
+                    val sdp = WebRtcSdpTuner.tuneForFluidMotion(baseSdp)
                     peerConnection?.setLocalDescription(this, SessionDescription(it.type, sdp))
                     onSdpCreated(sdp)
                 }
@@ -182,7 +183,7 @@ class WebRtcSenderManager(
                 val p = sender.parameters
                 p.encodings?.firstOrNull()?.let {
                     it.minBitrateBps = 500_000
-                    it.maxBitrateBps = (targetBitrateKbps * 1000).coerceIn(1_000_000, 5_000_000)
+                    it.maxBitrateBps = (targetBitrateKbps * 1000).coerceIn(1_000_000, 15_000_000)
                     it.maxFramerate = (activeProfile?.frameRate ?: 30).coerceIn(15, 60)
                 }
                 sender.parameters = p

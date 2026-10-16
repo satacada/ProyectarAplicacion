@@ -67,28 +67,8 @@ fun PhotoViewerContent(
 
     LaunchedEffect(currentUri) {
         if (currentUri != null && currentBitmap == null) {
-            withContext(Dispatchers.IO) {
-                try {
-                    val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-                    context.contentResolver.openInputStream(currentUri)?.use {
-                        BitmapFactory.decodeStream(it, null, bounds)
-                    }
-                    var inSample = 1
-                    val maxDim = 1920
-                    if (bounds.outWidth > maxDim || bounds.outHeight > maxDim) {
-                        val maxSide = maxOf(bounds.outWidth, bounds.outHeight)
-                        inSample = (maxSide / maxDim).coerceAtLeast(1)
-                    }
-                    val decodeOpts = BitmapFactory.Options().apply {
-                        inSampleSize = inSample
-                        inPreferredConfig = Bitmap.Config.RGB_565
-                    }
-                    val bmp = context.contentResolver.openInputStream(currentUri)?.use {
-                        BitmapFactory.decodeStream(it, null, decodeOpts)
-                    }
-                    if (bmp != null) localBitmap = bmp.asImageBitmap()
-                } catch (_: Throwable) {}
-            }
+            val bmp = com.omnicast.sender.gallery.GalleryBitmapDecoder.decodeBitmap(context, currentUri)
+            if (bmp != null) localBitmap = bmp.asImageBitmap()
         }
     }
 

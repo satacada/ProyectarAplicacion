@@ -142,14 +142,14 @@ class SenderMainActivity : ComponentActivity() {
     private fun resetInactivityTimer() { inactivityJob?.cancel(); inactivityJob = null }
 
     private fun checkInactivityAutoExit() {
-        if (isTvConnected.value || ProjectionForegroundService.isProjecting || ActiveStreamHolder.isCasting.value) {
+        if (isTvConnected.value || ProjectionForegroundService.isProjecting || ActiveStreamHolder.isCasting.value || com.omnicast.sender.service.CastSessionState.isGalleryCasting) {
             resetInactivityTimer(); return
         }
         if (inactivityJob?.isActive == true) return
         inactivityJob = lifecycleScope.launch {
             val waitSec = if (!isAppResumed) 60L else 180L
             kotlinx.coroutines.delay(waitSec * 1000L)
-            if (!isTvConnected.value && !ProjectionForegroundService.isProjecting && !ActiveStreamHolder.isCasting.value) {
+            if (!isTvConnected.value && !ProjectionForegroundService.isProjecting && !ActiveStreamHolder.isCasting.value && !com.omnicast.sender.service.CastSessionState.isGalleryCasting) {
                 exitCompletely(this@SenderMainActivity)
             }
         }

@@ -116,13 +116,22 @@ fun TvMirroringActiveScreen(
                 Text("$resolution @ ${fps}fps (Decodificación Hardware)", color = Color(0xFF10B981), fontSize = 18.sp)
             }
         }
-        androidx.compose.material3.IconButton(
-            onClick = onCloseClick,
+        var isExitFocused by remember { mutableStateOf(false) }
+        Box(
             modifier = Modifier
                 .align(Alignment.TopStart)
                 .padding(start = 24.dp, top = 24.dp)
                 .size(38.dp)
-                .background(Color(0x990F172A), RoundedCornerShape(10.dp))
+                .background(if (isExitFocused) Color(0xFFEF4444) else Color(0x990F172A), RoundedCornerShape(10.dp))
+                .border(
+                    width = if (isExitFocused) 2.dp else 1.dp,
+                    color = if (isExitFocused) Color.White else Color(0x66EF4444),
+                    shape = RoundedCornerShape(10.dp)
+                )
+                .onFocusChanged { isExitFocused = it.isFocused }
+                .focusable()
+                .clickable { onCloseClick() },
+            contentAlignment = Alignment.Center
         ) {
             ModernExitIcon()
         }

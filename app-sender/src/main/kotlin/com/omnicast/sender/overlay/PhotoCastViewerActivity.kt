@@ -168,6 +168,7 @@ class PhotoCastViewerActivity : ComponentActivity() {
             val port = prefs.getInt("saved_tv_port", 8088)
             client.connect(ip, port, { client.sendMessage(msg) }, {})
         }
+        com.omnicast.sender.discovery.MultiReceiverManager.broadcastToSecondary(msg, emptyList())
     }
 
     private fun changePhoto(delta: Int) {
@@ -186,34 +187,13 @@ class PhotoCastViewerActivity : ComponentActivity() {
         val count = photoUris.size
 
         lifecycleScope.launch(Dispatchers.IO) {
-            val bmp = try {
-                val opts = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-                contentResolver.openInputStream(uri)?.use { stream ->
-                    BitmapFactory.decodeStream(stream, null, opts)
-                }
-                var inSample = 1
-                val maxDim = 1920
-                if (opts.outWidth > maxDim || opts.outHeight > maxDim) {
-                    val maxSide = maxOf(opts.outWidth, opts.outHeight)
-                    inSample = (maxSide / maxDim).coerceAtLeast(1)
-                }
-                val decodeOpts = BitmapFactory.Options().apply {
-                    inSampleSize = inSample
-                    inPreferredConfig = Bitmap.Config.RGB_565
-                }
-                contentResolver.openInputStream(uri)?.use { s2 ->
-                    BitmapFactory.decodeStream(s2, null, decodeOpts)
-                }
-            } catch (_: Throwable) { null }
+            val bmp = com.omnicast.sender.gallery.GalleryBitmapDecoder.decodeBitmap(this@PhotoCastViewerActivity, uri)
 
             if (bmp != null) {
                 withContext(Dispatchers.Main) {
                     currentBitmapState.value = bmp.asImageBitmap()
                 }
-                val baos = ByteArrayOutputStream()
-                bmp.compress(Bitmap.CompressFormat.JPEG, 85, baos)
-                val b64 = Base64.encodeToString(baos.toByteArray(), Base64.NO_WRAP)
-                val photoUrl = "data:image/jpeg;base64,$b64"
+                val photoUrl = com.omnicast.sender.gallery.GalleryBitmapDecoder.toBase64Jpeg(bmp)
                 sendSignaling(SignalingMessage.ShowImage(photoUrl, "Foto (${idx + 1}/$count)"))
                 sendSignaling(SignalingMessage.ImageTransform(1f, 0f, 0f, 0f))
             } else {

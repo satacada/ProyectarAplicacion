@@ -99,6 +99,7 @@ class ProjectionForegroundService : Service() {
                 currentSession?.stop()
                 currentSession = null
                 isProjecting = false
+                CastSessionState.setProjecting(false)
                 com.omnicast.sender.overlay.FloatingIndicatorService.updateMode()
                 stopForeground(STOP_FOREGROUND_REMOVE)
                 stopSelf()
@@ -142,6 +143,7 @@ class ProjectionForegroundService : Service() {
                         start()
                     }
                     isProjecting = true
+                    CastSessionState.setProjecting(true)
                     com.omnicast.sender.overlay.FloatingIndicatorService.start(this)
                     com.omnicast.sender.overlay.FloatingIndicatorService.updateMode()
                 } else {
@@ -171,6 +173,7 @@ class ProjectionForegroundService : Service() {
         currentSession?.stop()
         currentSession = null
         isProjecting = false
+        CastSessionState.setProjecting(false)
         com.omnicast.sender.overlay.FloatingIndicatorService.updateMode()
     }
 

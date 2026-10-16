@@ -2,6 +2,9 @@ package com.omnicast.sender.service
 
 import com.omnicast.sender.overlay.FloatingIndicatorService
 import com.omnicast.sender.stream.ActiveStreamHolder
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 enum class ActiveCastMode {
     IDLE,
@@ -11,21 +14,33 @@ enum class ActiveCastMode {
 }
 
 /**
- * Gestor del modo activo de proyección para coordinar el menú contextual del asistente flotante.
+ * Gestor reactivo del modo activo de proyección para coordinar la UI y el asistente flotante.
  */
 object CastSessionState {
 
-    var isGalleryCasting: Boolean = false
+    private val _isProjectingFlow = MutableStateFlow(false)
+    val isProjectingFlow: StateFlow<Boolean> = _isProjectingFlow.asStateFlow()
+
+    private val _isGalleryCastingFlow = MutableStateFlow(false)
+    val isGalleryCastingFlow: StateFlow<Boolean> = _isGalleryCastingFlow.asStateFlow()
+
+    var isGalleryCasting: Boolean
+        get() = _isGalleryCastingFlow.value
         set(value) {
-            field = value
+            _isGalleryCastingFlow.value = value
             FloatingIndicatorService.updateMode()
         }
 
+    fun setProjecting(projecting: Boolean) {
+        _isProjectingFlow.value = projecting
+        FloatingIndicatorService.updateMode()
+    }
+
     fun getCurrentMode(): ActiveCastMode {
         return when {
-            ProjectionForegroundService.isProjecting -> ActiveCastMode.SCREEN_MIRROR
+            _isProjectingFlow.value || ProjectionForegroundService.isProjecting -> ActiveCastMode.SCREEN_MIRROR
             ActiveStreamHolder.isCasting.value -> ActiveCastMode.WEB_STREAM
-            isGalleryCasting -> ActiveCastMode.GALLERY
+            _isGalleryCastingFlow.value -> ActiveCastMode.GALLERY
             else -> ActiveCastMode.IDLE
         }
     }

@@ -49,7 +49,7 @@ fun SenderMainScreen(
     }
     var tvScaleMode by remember { mutableStateOf(prefs.getString("saved_tv_scale_mode", "FIT_100") ?: "FIT_100") }
     var smoothBufferEnabled by remember { mutableStateOf(prefs.getBoolean("saved_smooth_buffer", true)) }
-    var isStreaming by remember { mutableStateOf(ProjectionForegroundService.isProjecting) }
+    val isStreaming by com.omnicast.sender.service.CastSessionState.isProjectingFlow.collectAsState()
     var detectionResult by remember { mutableStateOf<StreamDetectionResult?>(null) }
     var showInAppBrowser by rememberSaveable { mutableStateOf(initialOpenBrowser) }
     var showConfigDialog by remember { mutableStateOf(false) }
@@ -111,7 +111,6 @@ fun SenderMainScreen(
         if (result.resultCode == Activity.RESULT_OK && result.data != null) {
             saveTarget(manualIp.trim(), manualPort)
             val target = selectedDevice ?: DeviceTarget("direct-tv", "OmniCast TV Box", manualIp.trim(), manualPort.toIntOrNull() ?: 8088)
-            isStreaming = true
             onStartProjection(target, selectedProfile, tvScaleMode, result.data!!)
         } else {
             Toast.makeText(context, "Permiso de captura de pantalla denegado", Toast.LENGTH_SHORT).show()
@@ -223,7 +222,6 @@ fun SenderMainScreen(
                         onOpenBrowser = { showInAppBrowser = true },
                         onStartProjection = { projectionLauncher.launch(getSafeCaptureIntent()) },
                         onStopProjection = {
-                            isStreaming = false
                             onStopProjection()
                         },
                         onOpenProjectionConfig = { showConfigDialog = true },

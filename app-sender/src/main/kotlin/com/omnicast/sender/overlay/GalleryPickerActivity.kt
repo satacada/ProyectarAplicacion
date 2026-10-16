@@ -123,6 +123,8 @@ class GalleryPickerActivity : ComponentActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        QuickSignalingHelper.sendQuickMessage(this, SignalingMessage.PlayControl("STOP"))
+        if (isFinishing && !com.omnicast.sender.service.CastSessionState.isGalleryCasting && !com.omnicast.sender.stream.ActiveStreamHolder.isCasting.value) {
+            QuickSignalingHelper.sendQuickMessage(this, SignalingMessage.PlayControl("STOP"))
+        }
     }
 }

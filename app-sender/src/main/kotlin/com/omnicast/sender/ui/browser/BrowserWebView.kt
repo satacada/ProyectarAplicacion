@@ -183,6 +183,7 @@ fun BrowserWebView(
                             if (!isSameSite && targetHost != null) {
                                 val isAllowedExternal = AdBlocker.isSearchEngine(targetHost) ||
                                     AdBlocker.isKnownMediaHost(targetHost) ||
+                                    AdBlocker.isVerificationOrCaptcha(targetHost) ||
                                     AdBlockWhitelistManager.isWhitelistedHost(targetHost)
                                 if (!isAllowedExternal) {
                                     android.util.Log.w("BrowserWebView", "🛑 Secuestro publicitario bloqueado hacia: $targetHost (aprendiendo dominio)")

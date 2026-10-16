@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 119,
-  "versionCodeReceiver": 102,
-  "versionName": "3.32.74",
-  "releaseTag": "v3.32.74",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.74/omnicast-sender-v3.32.74.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.74/omnicast-receiver-v3.32.74.apk",
-  "changelog": "v3.32.74: Botón superior de Play abre pantalla modal completa de videos detectados estilo Web Video Caster con re-escaneo y visualización de dominio de servidor; desacople total de la barra multimedia inferior (reservada exclusivamente para controles de reproducción cuando se transmite activamente a la TV); nuevo botón toggle en barra superior para mostrar/ocultar control multimedia en TV."
+  "versionCodeSender": 120,
+  "versionCodeReceiver": 103,
+  "versionName": "3.32.75",
+  "releaseTag": "v3.32.75",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.75/omnicast-sender-v3.32.75.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.75/omnicast-receiver-v3.32.75.apk",
+  "changelog": "v3.32.75: Auto-resolución proactiva de Cloudflare Turnstile en universal_sniffer.js; exclusión total de Cloudflare y captchas en AdBlocker y BrowserWebView; purga en SQLite v4 de dominios de verificación erróneamente aprendidos; opción de renovación de token en navegador ante error 403; optimización de cookies y cabeceras en LocalStreamProxyServer."
 }

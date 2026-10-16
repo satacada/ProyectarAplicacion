@@ -29,7 +29,16 @@ object AdBlocker {
                h.contains("google.") || h.contains("bing.") || h.contains("duckduckgo.")
     }
 
+    fun isVerificationOrCaptcha(urlOrHost: String?): Boolean {
+        if (urlOrHost.isNullOrBlank()) return false
+        val h = urlOrHost.lowercase()
+        return h.contains("cloudflare") || h.contains("turnstile") ||
+               h.contains("challenges") || h.contains("hcaptcha") ||
+               h.contains("recaptcha") || h.contains("captcha")
+    }
+
     fun isAd(url: String): Boolean {
+        if (isVerificationOrCaptcha(url)) return false
         if (AdBlockWhitelistManager.isWhitelisted(url)) {
             val lower = url.lowercase()
             if (lower.contains("an.yandex.") || lower.contains("mc.yandex.")) return true
@@ -71,6 +80,7 @@ object AdBlocker {
             val cur = currentMovieHost.lowercase().trim()
             if (host == cur || host.endsWith(".$cur") || cur.endsWith(".$host")) return false
         }
+        if (isVerificationOrCaptcha(host)) return false
         if (AdBlockWhitelistManager.isWhitelistedHost(host) || isSearchEngine(host) || isKnownMediaHost(host)) return false
         if (host.contains("movie") || host.contains("pelis") || host.contains("cine") || host.contains("series") || host.contains("film") || host.contains("stream")) return false
         if (host.endsWith("reypelis.net") || host.endsWith("tioplus.app") || host.contains("sololatino") || host.contains("pelisserieshoy")) return false

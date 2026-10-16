@@ -19,7 +19,7 @@ class AdBlockDatabase private constructor(private val appContext: Context) :
     companion object {
         private const val TAG = "AdBlockDatabase"
         private const val DATABASE_NAME = "omnicast_adblock.db"
-        private const val DATABASE_VERSION = 3
+        private const val DATABASE_VERSION = 4
 
         private const val TABLE_DOMAINS = "ad_domains"
         private const val TABLE_KEYWORDS = "ad_keywords"
@@ -54,6 +54,7 @@ class AdBlockDatabase private constructor(private val appContext: Context) :
         fun isAdDomain(host: String?): Boolean {
             if (host.isNullOrBlank()) return false
             val h = host.lowercase()
+            if (h.contains("cloudflare") || h.contains("turnstile") || h.contains("challenges") || h.contains("hcaptcha") || h.contains("recaptcha")) return false
             for (d in cachedDomains) {
                 if (h == d || h.endsWith(".$d")) return true
             }
@@ -62,6 +63,7 @@ class AdBlockDatabase private constructor(private val appContext: Context) :
 
         fun matchesKeyword(url: String): Boolean {
             val lower = url.lowercase()
+            if (lower.contains("cloudflare") || lower.contains("turnstile") || lower.contains("challenges")) return false
             for (kw in cachedKeywords) {
                 if (lower.contains(kw)) return true
             }
@@ -110,6 +112,12 @@ class AdBlockDatabase private constructor(private val appContext: Context) :
             try {
                 db.execSQL("DELETE FROM $TABLE_DOMAINS WHERE $COL_VALUE LIKE '%movie%' OR $COL_VALUE LIKE '%pelis%' OR $COL_VALUE LIKE '%cine%' OR $COL_VALUE LIKE '%series%' OR $COL_VALUE LIKE '%film%' OR $COL_VALUE LIKE '%stream%'")
                 Log.i(TAG, "Base de datos AdBlock purgada de dominios de streaming en v3.")
+            } catch (_: Throwable) {}
+        }
+        if (oldVersion < 4) {
+            try {
+                db.execSQL("DELETE FROM $TABLE_DOMAINS WHERE $COL_VALUE LIKE '%cloudflare%' OR $COL_VALUE LIKE '%turnstile%' OR $COL_VALUE LIKE '%challenges%' OR $COL_VALUE LIKE '%hcaptcha%' OR $COL_VALUE LIKE '%recaptcha%'")
+                Log.i(TAG, "Base de datos AdBlock purgada de dominios de verificación Cloudflare en v4.")
             } catch (_: Throwable) {}
         }
     }

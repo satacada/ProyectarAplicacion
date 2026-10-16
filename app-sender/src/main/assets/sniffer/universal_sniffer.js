@@ -248,6 +248,44 @@
         sniffOkRuDom();
     }, 3000);
 
+    // 7b. Auto-resolución proactiva de Cloudflare Turnstile / Verificación humana
+    function autoSolveTurnstile() {
+        try {
+            var ifrs = document.querySelectorAll('iframe[src*="challenges.cloudflare.com"], iframe[src*="turnstile"], iframe[src*="challenge-platform"]');
+            for (var i = 0; i < ifrs.length; i++) {
+                var ifr = ifrs[i];
+                if (!ifr.dataset.wvcClicked) {
+                    ifr.dataset.wvcClicked = 'true';
+                    var rect = ifr.getBoundingClientRect();
+                    if (rect.width > 0 && rect.height > 0) {
+                        ifr.focus();
+                        var evt = new MouseEvent('click', {
+                            bubbles: true, cancelable: true, view: window,
+                            clientX: rect.left + 35, clientY: rect.top + (rect.height / 2)
+                        });
+                        ifr.dispatchEvent(evt);
+                        if (ifr.parentElement) ifr.parentElement.dispatchEvent(evt);
+                    }
+                }
+            }
+            var cfInput = document.querySelector('input[type="checkbox"][name*="cf-turnstile"], input[name="cf-turnstile-response"]');
+            if (cfInput && cfInput.parentElement && !cfInput.dataset.wvcClicked) {
+                cfInput.dataset.wvcClicked = 'true';
+                cfInput.parentElement.click();
+            }
+            var captchaBoxes = document.querySelectorAll('.recaptcha-checkbox, .hcaptcha-box, #recaptcha-anchor, .cf-turnstile');
+            for (var j = 0; j < captchaBoxes.length; j++) {
+                var box = captchaBoxes[j];
+                if (!box.dataset.wvcClicked) {
+                    box.dataset.wvcClicked = 'true';
+                    box.click();
+                }
+            }
+        } catch(e) {}
+    }
+    setInterval(autoSolveTurnstile, 600);
+    autoSolveTurnstile();
+
     // 8. Función global de reset y rescaneo profundo para el botón del trueno
     window.__omniResetAndRescan = function() {
         try {

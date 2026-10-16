@@ -25,9 +25,10 @@ object NativeAdBlockEngine {
             try {
                 val c = AdBlockClient("omnicast_adblock")
                 val customFile = File(context.filesDir, "adblock/easylist.txt")
-                val rulesBytes = if (customFile.exists() && customFile.length() > 0) {
+                val rulesBytes = if (customFile.exists() && customFile.length() >= 500_000L) {
                     customFile.readBytes()
                 } else {
+                    if (customFile.exists()) customFile.delete()
                     try {
                         context.assets.open("adblock/easylist_min.txt").use { it.readBytes() }
                     } catch (_: Throwable) {
@@ -48,7 +49,7 @@ object NativeAdBlockEngine {
         scope.launch {
             try {
                 val customFile = File(context.filesDir, "adblock/easylist.txt")
-                if (customFile.exists() && customFile.length() > 0) {
+                if (customFile.exists() && customFile.length() >= 500_000L) {
                     val c = AdBlockClient("omnicast_adblock")
                     val rulesBytes = customFile.readBytes()
                     c.loadBasicData(rulesBytes, false)

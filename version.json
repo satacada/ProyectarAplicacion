@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 115,
-  "versionCodeReceiver": 98,
-  "versionName": "3.32.70",
-  "releaseTag": "v3.32.70",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.70/omnicast-sender-v3.32.70.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.70/omnicast-receiver-v3.32.70.apk",
-  "changelog": "v3.32.70: Integración completa de la lista de bloqueo de 34,803 reglas de Web Video Caster en el motor C++ nativo; bloqueo estricto de ventanas emergentes/redirecciones publicitarias en WebChromeClient; desvío automático de nodos caídos de DropCDN (HTTP 502) al servidor edge activo (ds4.dropcdn.io) con Referer de iframe embed preservado."
+  "versionCodeSender": 116,
+  "versionCodeReceiver": 99,
+  "versionName": "3.32.71",
+  "releaseTag": "v3.32.71",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.71/omnicast-sender-v3.32.71.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.71/omnicast-receiver-v3.32.71.apk",
+  "changelog": "v3.32.71: Actualizador automático en segundo plano para listas públicas de bloqueo de anuncios (StevenBlack Hosts con más de 73,000 dominios y baseline oficial OmniCast/WVC con 34,800 reglas); protección y recarga en caliente del motor C++ libadblock-client sin degradación."
 }

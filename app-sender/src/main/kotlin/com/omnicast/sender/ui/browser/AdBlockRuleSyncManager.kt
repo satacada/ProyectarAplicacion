@@ -17,13 +17,13 @@ object AdBlockRuleSyncManager {
     private const val TAG = "AdBlockRuleSync"
     private const val PREFS_NAME = "omnicast_adblock_sync"
     private const val KEY_LAST_SYNC = "last_sync_timestamp"
-    private const val SYNC_INTERVAL_MS = 3 * 24 * 60 * 60 * 1000L // 3 días
+    private const val SYNC_INTERVAL_MS = 7 * 24 * 60 * 60 * 1000L // 7 días (actualización semanal)
 
-    // Fuentes abiertas oficiales y espejos de alta disponibilidad
-    private const val EASYLIST_PRIMARY_URL =
-        "https://raw.githubusercontent.com/easylist/easylist/master/easylist/easylist_general_block.txt"
-    private const val EASYLIST_FALLBACK_URL =
-        "https://easylist.to/easylist/easylist.txt"
+    // Fuentes abiertas públicas actualizadas continuamente
+    private const val STEVENBLACK_HOSTS_URL =
+        "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts"
+    private const val OMNICAST_BASELINE_URL =
+        "https://raw.githubusercontent.com/satacada/ProyectarAplicacion/main/app-sender/src/main/assets/adblock/easylist_min.txt"
     private const val DYNAMIC_RULES_URL =
         "https://raw.githubusercontent.com/satacada/ProyectarAplicacion/main/app-sender/src/main/assets/adblock/default_ad_rules.json"
 
@@ -54,16 +54,16 @@ object AdBlockRuleSyncManager {
         val now = System.currentTimeMillis()
 
         val rulesFile = File(appContext.filesDir, "adblock/easylist.txt")
-        val needsSync = (now - lastSync > SYNC_INTERVAL_MS) || !rulesFile.exists() || rulesFile.length() == 0L
+        val needsSync = (now - lastSync > SYNC_INTERVAL_MS) || !rulesFile.exists() || rulesFile.length() < 500_000L
 
         if (!needsSync) return
 
         isSyncing = true
         scope.launch {
             try {
-                Log.i(TAG, "Iniciando sincronización de reglas vivas...")
-                val downloaded = downloadRuleFile(EASYLIST_PRIMARY_URL) ?: downloadRuleFile(EASYLIST_FALLBACK_URL)
-                if (downloaded != null && downloaded.isNotEmpty()) {
+                Log.i(TAG, "Iniciando sincronización de reglas vivas públicas...")
+                val downloaded = downloadAndProcessRules()
+                if (downloaded != null && downloaded.size >= 500_000) {
                     val adblockDir = File(appContext.filesDir, "adblock")
                     if (!adblockDir.exists()) adblockDir.mkdirs()
 
@@ -71,7 +71,7 @@ object AdBlockRuleSyncManager {
                     tempFile.writeBytes(downloaded)
                     if (tempFile.renameTo(rulesFile) || (rulesFile.delete() && tempFile.renameTo(rulesFile))) {
                         prefs.edit().putLong(KEY_LAST_SYNC, now).apply()
-                        Log.i(TAG, "Lista viva EasyList actualizada con éxito (${downloaded.size} bytes). Recargando motor C++...")
+                        Log.i(TAG, "Lista viva actualizada exitosamente desde repositorio público (${downloaded.size} bytes). Recargando motor C++...")
                         NativeAdBlockEngine.reload(appContext)
                     }
                 }
@@ -94,6 +94,44 @@ object AdBlockRuleSyncManager {
             } finally {
                 isSyncing = false
             }
+        }
+    }
+
+    private fun downloadAndProcessRules(): ByteArray? {
+        val hostsBytes = downloadRuleFile(STEVENBLACK_HOSTS_URL)
+        if (hostsBytes != null && hostsBytes.size >= 1_000_000) {
+            val parsed = parseHostsToAdblockRules(hostsBytes)
+            if (parsed != null && parsed.size >= 500_000) return parsed
+        }
+        val baselineBytes = downloadRuleFile(OMNICAST_BASELINE_URL)
+        if (baselineBytes != null && baselineBytes.size >= 500_000) {
+            return baselineBytes
+        }
+        return null
+    }
+
+    private fun parseHostsToAdblockRules(bytes: ByteArray): ByteArray? {
+        return try {
+            val reader = java.io.BufferedReader(java.io.InputStreamReader(bytes.inputStream(), Charsets.UTF_8))
+            val sb = java.lang.StringBuilder(bytes.size / 2)
+            val ignored = setOf("0.0.0.0", "localhost", "localhost.localdomain", "local", "broadcasthost")
+            var count = 0
+            reader.forEachLine { line ->
+                val trimmed = line.trim()
+                if (trimmed.startsWith("0.0.0.0 ") || trimmed.startsWith("127.0.0.1 ")) {
+                    val parts = trimmed.split("\\s+".toRegex())
+                    if (parts.size >= 2) {
+                        val domain = parts[1].trim().lowercase()
+                        if (domain.length >= 4 && domain.contains(".") && domain !in ignored) {
+                            sb.append("||").append(domain).append("^\n")
+                            count++
+                        }
+                    }
+                }
+            }
+            if (count >= 25_000) sb.toString().toByteArray(Charsets.UTF_8) else null
+        } catch (_: Throwable) {
+            null
         }
     }
 

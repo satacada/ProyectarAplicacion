@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 122,
-  "versionCodeReceiver": 105,
-  "versionName": "3.32.77",
-  "releaseTag": "v3.32.77",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.77/omnicast-sender-v3.32.77.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.77/omnicast-receiver-v3.32.77.apk",
-  "changelog": "v3.32.77: Ordenamiento LIFO estricto en lista de videos (los últimos flujos capturados se colocan primero en el tope y los antiguos abajo); eliminación de condición de carrera entre ERROR_FORBIDDEN_403 y señal STOPPED cancelando statusJob en TV y protegiendo el proxy en el emisor; cabeceras y cookies estrictas de embed para DropCDN y Fastream en LocalStreamProxyServer."
+  "versionCodeSender": 123,
+  "versionCodeReceiver": 106,
+  "versionName": "3.32.78",
+  "releaseTag": "v3.32.78",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.78/omnicast-sender-v3.32.78.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.78/omnicast-receiver-v3.32.78.apk",
+  "changelog": "v3.32.78: Eliminación definitiva del enrutamiento forzado por proxy automático; transmisión 100% directa y transparente de CDN a TV estilo Web Video Caster con cabeceras reales conservadas; eliminación de falso fallback de proxy ante error 403."
 }

@@ -182,18 +182,10 @@ class SenderMainActivity : ComponentActivity() {
                 if (msg is SignalingMessage.PlaybackStatus) {
                     val mUrl = msg.mediaUrl
                     if (msg.state == "ERROR_FORBIDDEN_403") {
-                        val fUrl = msg.mediaUrl ?: ActiveStreamHolder.streamUrl
-                        if (!fUrl.isNullOrBlank() && !fUrl.contains(":8092")) {
-                            lastHandoffTime = System.currentTimeMillis()
-                            val origUrl = com.omnicast.sender.media.LocalStreamProxyServer.getOriginalUrl(fUrl) ?: fUrl
-                            val proxyUrl = com.omnicast.sender.media.LocalStreamProxyServer.startAndGetProxyUrl(this@SenderMainActivity, origUrl, ActiveStreamHolder.headers)
-                            runOnUiThread { Toast.makeText(this@SenderMainActivity, "🔒 Servidor protegido: Transmitiendo vía teléfono. No desconectes WiFi.", Toast.LENGTH_LONG).show() }
-                            val sTitle = msg.title ?: ActiveStreamHolder.title ?: "Transmisión Protegida"
-                            historyManager.addOrUpdate(origUrl, sTitle, headers = ActiveStreamHolder.headers, requiresProxy = true); playlistManager.updateItemProxyRequirement(origUrl, true)
-                            ActiveStreamHolder.setProxied(true); sendSignalingMessage(SignalingMessage.DirectStreamHandoff(proxyUrl, title = sTitle, headers = emptyMap(), startPositionMs = msg.positionMs))
-                        } else {
-                            ActiveStreamHolder.notifyPlaybackError("ERROR_FORBIDDEN_403"); ActiveStreamHolder.stopCasting(notifyTv = false); com.omnicast.sender.service.CastMediaNotificationService.stop(this@SenderMainActivity)
-                        }
+                        runOnUiThread { Toast.makeText(this@SenderMainActivity, "⚠️ Error 403: Enlace o token expirado. Usa el video superior reciente.", Toast.LENGTH_LONG).show() }
+                        ActiveStreamHolder.notifyPlaybackError("ERROR_FORBIDDEN_403")
+                        ActiveStreamHolder.stopCasting(notifyTv = false)
+                        com.omnicast.sender.service.CastMediaNotificationService.stop(this@SenderMainActivity)
                     } else if ((msg.state == "PLAYING" || msg.state == "PAUSED") && !mUrl.isNullOrBlank()) {
                         if (!ActiveStreamHolder.isCasting.value || ActiveStreamHolder.streamUrl != mUrl) {
                             val streamTitle = msg.title?.ifBlank { "Película en TV" } ?: "Película en TV"

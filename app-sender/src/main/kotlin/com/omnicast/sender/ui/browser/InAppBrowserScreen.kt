@@ -96,7 +96,7 @@ fun InAppBrowserScreen(
         val refPage = savedPageUrl?.takeIf { it.isNotBlank() } ?: currentUrl
         pageTitle = cleanT; com.omnicast.sender.history.NavigationTrackManager.saveTrackLocally(context, refPage, cleanT)
         scope.launch(Dispatchers.IO) {
-            val isForceProxy = hdrs["X-Force-Proxy"] == "true" || url.contains("dropcdn.io") || url.contains("dr0pstream.com")
+            val isForceProxy = hdrs["X-Force-Proxy"] == "true"
             val (finalUrl, finalHdrs) = MediaPlatformResolver.prepareStreamForPlayback(url, refPage, hdrs)
             val probe = StreamQualityDetector.probeAndHealStream(finalUrl, finalHdrs, refPage)
             if (!probe.isPlayable && (probe.httpCode == 404 || probe.httpCode == 410)) {

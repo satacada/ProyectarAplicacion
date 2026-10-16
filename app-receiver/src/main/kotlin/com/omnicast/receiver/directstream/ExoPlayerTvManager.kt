@@ -194,8 +194,9 @@ class ExoPlayerTvManager(private val context: Context) {
         val lower = url.lowercase()
         val isOkHls = (lower.contains("mycdn.me") || lower.contains("okcdn.ru")) &&
                       (lower.contains("/type/") || lower.contains("type=") || lower.contains("/video/") || lower.contains("sig=") || lower.contains("expires="))
+        val isTxtHls = (lower.contains(".txt") || lower.contains(".txt?")) && (lower.contains("/hls") || lower.contains("master") || lower.contains("index"))
         when {
-            lower.contains(".m3u8") || lower.contains("m3u8") || lower.contains("/hls") || isOkHls ->
+            lower.contains(".m3u8") || lower.contains("m3u8") || lower.contains("/hls") || isOkHls || isTxtHls ->
                 builder.setMimeType(androidx.media3.common.MimeTypes.APPLICATION_M3U8)
             lower.contains(".mpd") || lower.contains("dash") -> builder.setMimeType(androidx.media3.common.MimeTypes.APPLICATION_MPD)
             lower.contains(".webm") -> builder.setMimeType(androidx.media3.common.MimeTypes.VIDEO_WEBM)

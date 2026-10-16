@@ -17,7 +17,7 @@ class UniversalHlsExtractorAdapter : IMediaStreamExtractorPort {
         return lower.contains(".m3u8") ||
                lower.contains("chunklist") ||
                (lower.contains("/hls") && !lower.endsWith(".ts")) ||
-               (lower.contains("master.txt") && lower.contains("/hls")) ||
+               ((lower.endsWith(".txt") || lower.contains(".txt?")) && (lower.contains("master") || lower.contains("index") || lower.contains("/hls"))) ||
                lower.contains("/stream/") || lower.contains("/manifest") ||
                lower.contains("/live") || lower.contains("live.m3u8") ||
                lower.contains("swdyu.com") || lower.contains("cloudemb.com") || lower.contains("morencius.com") ||

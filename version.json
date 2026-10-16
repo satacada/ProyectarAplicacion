@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 117,
-  "versionCodeReceiver": 100,
-  "versionName": "3.32.72",
-  "releaseTag": "v3.32.72",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.72/omnicast-sender-v3.32.72.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.72/omnicast-receiver-v3.32.72.apk",
-  "changelog": "v3.32.72: Corrección crítica en la extracción de IDs de DropCDN/dr0pstream (/e/ y /d/) para evitar que el nombre de dominio sea tomado como identificador; desvío automático universal de nodos caídos en TV Receiver y Core Domain (StreamManifestProbe y ExoPlayerTvManager); reproducción limpia de películas protegidas en TV Box."
+  "versionCodeSender": 118,
+  "versionCodeReceiver": 101,
+  "versionName": "3.32.73",
+  "releaseTag": "v3.32.73",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.73/omnicast-sender-v3.32.73.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.73/omnicast-receiver-v3.32.73.apk",
+  "changelog": "v3.32.73: Soporte para manifiestos HLS ofuscados (.txt) en UniversalHlsExtractorAdapter, BrowserUrlHelper y ExoPlayerTvManager; eliminación estricta de I-Frames como opciones de reproducción; apertura de selector estilo Web Video Caster ante múltiples servidores; debounce de transmisión y filtrado de IP principal en MultiReceiverManager para erradicar el eco destructivo de comandos."
 }

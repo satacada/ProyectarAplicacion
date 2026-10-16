@@ -31,17 +31,17 @@ class SenderMainActivity : ComponentActivity() {
 
     companion object {
         private var instance: SenderMainActivity? = null
+        private var lastHandoffTime = 0L
+        private var lastHandoffUrl: String? = null
         var onRequestReturnToMain: (() -> Unit)? = null
 
         fun sendDirectStreamStatic(context: Context, url: String, title: String? = null, headers: Map<String, String> = emptyMap()) {
-            val savedPos = com.omnicast.sender.stream.StreamResumeManager.getPosition(context, url)
-            val msg = SignalingMessage.DirectStreamHandoff(mediaUrl = url, title = title, headers = headers, startPositionMs = savedPos)
-            instance?.sendDirectStreamToTv(url, title, headers) ?: QuickSignalingHelper.sendQuickMessage(context, msg)
+            val pos = com.omnicast.sender.stream.StreamResumeManager.getPosition(context, url)
+            instance?.sendDirectStreamToTv(url, title, headers) ?: QuickSignalingHelper.sendQuickMessage(context, SignalingMessage.DirectStreamHandoff(mediaUrl = url, title = title, headers = headers, startPositionMs = pos))
         }
 
         fun sendPlayControlStatic(context: Context, action: String, positionMs: Long = 0L, volume: Float = 1.0f) {
-            val msg = SignalingMessage.PlayControl(action, positionMs, volume)
-            instance?.sendPlayControl(action, positionMs, volume) ?: QuickSignalingHelper.sendQuickMessage(context, msg)
+            instance?.sendPlayControl(action, positionMs, volume) ?: QuickSignalingHelper.sendQuickMessage(context, SignalingMessage.PlayControl(action, positionMs, volume))
         }
 
         fun sendDisconnectStatic(context: Context) { SignalingClientHolder.get().sendMessage(SignalingMessage.Disconnect()) }
@@ -238,6 +238,9 @@ class SenderMainActivity : ComponentActivity() {
     }
 
     fun sendDirectStreamToTv(url: String, title: String? = null, headers: Map<String, String> = emptyMap(), resumePositionMs: Long? = null) {
+        val now = System.currentTimeMillis()
+        if (now - lastHandoffTime < 1000L && url == lastHandoffUrl) return
+        lastHandoffTime = now; lastHandoffUrl = url
         val safeTitle = title?.ifBlank { "Transmisión Web" } ?: "Transmisión Web"
         val (cleanUrl, preparedHeaders) = com.omnicast.sender.ui.browser.MediaPlatformResolver.prepareStreamForPlayback(url, headers["Referer"] ?: "", headers)
         val savedPos = resumePositionMs ?: com.omnicast.sender.stream.StreamResumeManager.getPosition(this, cleanUrl).takeIf { it > 0 } ?: playlistManager.getLastPosition(cleanUrl)
@@ -254,8 +257,7 @@ class SenderMainActivity : ComponentActivity() {
         val msg = SignalingMessage.DirectStreamHandoff(mediaUrl = effectiveUrl, title = safeTitle, headers = if (isExplicitProxy) emptyMap() else preparedHeaders, startPositionMs = savedPos)
         sendSignalingMessage(msg); com.omnicast.sender.discovery.MultiReceiverManager.broadcastToSecondary(msg, nsdScanner.discoveredDevices.value)
         if (savedPos > 0L) {
-            val formatted = com.omnicast.sender.stream.StreamResumeManager.formatTime(savedPos)
-            Toast.makeText(this, "▶ Reanudando en $formatted", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "▶ Reanudando en ${com.omnicast.sender.stream.StreamResumeManager.formatTime(savedPos)}", Toast.LENGTH_SHORT).show()
         } else if (!isExplicitProxy) Toast.makeText(this, "Enviando video a receptores...", Toast.LENGTH_SHORT).show()
     }
 
@@ -271,10 +273,9 @@ class SenderMainActivity : ComponentActivity() {
     }
 
     private fun sendSignalingMessage(msg: SignalingMessage) {
-        val client = signalingClient
-        if (client.isConnected) client.sendMessage(msg) else {
+        if (signalingClient.isConnected) signalingClient.sendMessage(msg) else {
             val ip = getSharedPreferences("omnicast_prefs", Context.MODE_PRIVATE).getString("saved_tv_ip", "") ?: ""
-            if (ip.isNotBlank()) client.connect(ip, 8088, { client.sendMessage(msg) }, {})
+            if (ip.isNotBlank()) signalingClient.connect(ip, 8088, { signalingClient.sendMessage(msg) }, {})
         }
     }
 

@@ -247,9 +247,12 @@ fun InAppBrowserScreen(
                         detectedCount = detectedStreams.count { isRealMedia(it) }, streamSubtitle = streamLabels[detectedStreams.firstOrNull() ?: ""] ?: "HLS • m3u8 stream directo",
                         pageTitle = pageTitle,
                         onTransmitLatest = {
-                            val first = detectedStreams.firstOrNull { isRealMedia(it) } ?: return@BrowserBottomBarContainer
+                            val v = detectedStreams.filter { isRealMedia(it) }; if (v.isEmpty()) return@BrowserBottomBarContainer
                             if (!isTvConnected) Toast.makeText(context, "⚠️ Conecta la TV Box antes de transmitir", Toast.LENGTH_SHORT).show()
-                            val bestT = webViewInstance?.title?.takeIf { it.isNotBlank() && !it.contains("about:blank") && it != "Transmisión" } ?: pageTitle; transmitWithHistory(first, bestT, streamHeaders[first] ?: emptyMap())
+                            if (v.size > 1) openOptionsSheet() else {
+                                val bT = webViewInstance?.title?.takeIf { it.isNotBlank() && !it.contains("about:blank") && it != "Transmisión" } ?: pageTitle
+                                transmitWithHistory(v.first(), bT, streamHeaders[v.first()] ?: emptyMap())
+                            }
                         },
                         onShowDetectedStreams = { openOptionsSheet() }, onOpenQualities = { openOptionsSheet() },
                         onPlayControl = { act, pos, vol -> if (act == "VOLUME") ActiveStreamHolder.setVolume(vol); ActiveStreamHolder.onSendPlayControl?.invoke(act, pos, vol, null) },

@@ -47,7 +47,7 @@ object StreamQualityDetector {
         if (!probe.isPlayable) {
             android.util.Log.w("StreamQualityDetector", "🛑 Flujo advertido por sonda (HTTP ${probe.httpCode}): $currentMediaUrl")
             if (BrowserUrlHelper.isRealMedia(currentMediaUrl) && probe.httpCode != 404 && probe.httpCode != 410) {
-                val label = if (currentMediaUrl.contains(".mp4", ignoreCase = true)) "🎬 ${prefix}Video MP4 Directo" else "▶ ${prefix}Flujo Directo (Nativo)"
+                val label = if (currentMediaUrl.contains(".mp4", ignoreCase = true)) "🎬 ${prefix}Video MP4 Directo" else "⚠️ ${prefix}Flujo Directo (No Verificado)"
                 val defName = extractFileName(currentMediaUrl, "master")
                 val defFmt = if (currentMediaUrl.contains(".mp4", true)) "mp4 (Directo)" else "m3u8 (adaptive)"
                 return@withContext listOf(
@@ -56,8 +56,8 @@ object StreamQualityDetector {
                         resolution = "Auto",
                         bitrate = "Original",
                         streamUrl = currentMediaUrl,
-                        isMovie = true,
-                        isSuggested = true,
+                        isMovie = false,
+                        isSuggested = false,
                         healedHeaders = safeHeaders,
                         fileName = defName,
                         formatDetail = defFmt
@@ -143,28 +143,7 @@ object StreamQualityDetector {
                     )
                     pendingInf = null
                 } else if (trimmed.startsWith("#EXT-X-I-FRAME-STREAM-INF:")) {
-                    val uriVal = extractAttr(trimmed, "URI")?.replace("\"", "")
-                    val resVal = extractAttr(trimmed, "RESOLUTION") ?: "1920x800"
-                    if (!uriVal.isNullOrBlank()) {
-                        val resolvedIframe = try { baseUri.resolve(uriVal).toString() } catch (_: Throwable) { uriVal }
-                        val ifName = extractFileName(resolvedIframe, "iframes-v1-a1")
-                        options.add(
-                            StreamQualityOption(
-                                label = "🎞️ ${prefix}I-Frames ($resVal)",
-                                resolution = resVal,
-                                bitrate = "I-Frame",
-                                streamUrl = resolvedIframe,
-                                isMaster = false,
-                                durationSeconds = probe.durationSeconds,
-                                isMovie = isMovie,
-                                isSuggested = false,
-                                healedHeaders = healed,
-                                isLive = probe.isLiveStream,
-                                fileName = ifName,
-                                formatDetail = "m3u8 ($resVal)"
-                            )
-                        )
-                    }
+                    // Ignorado: Los I-Frames son solo miniaturas/seek sin audio y no son películas reproducibles
                 } else if (trimmed.startsWith("#EXT-X-MEDIA:TYPE=AUDIO")) {
                     val aName = extractAttr(trimmed, "NAME") ?: extractAttr(trimmed, "LANGUAGE")
                     if (!aName.isNullOrBlank() && !audioList.contains(aName)) audioList.add(aName)

@@ -53,7 +53,8 @@ object BrowserUrlHelper {
         if (clean.endsWith(".html") || clean.endsWith(".htm") || (clean.endsWith(".php") && !isPhpStream) || clean.endsWith(".jsp") || clean.endsWith(".js") || clean.endsWith(".css")) return false
         val isWeb = (s.contains("dailymotion.com/video/") || s.contains("ok.ru/video/")) &&
                     !s.contains(".m3u8") && !s.contains(".mpd") && !s.contains(".mp4") && !s.contains("cmd=video")
-        return !isWeb && (s.contains(".m3u8", true) || s.contains(".mp4", true) || s.contains(".mpd", true) ||
+        val isTxtHls = (clean.endsWith(".txt") || s.contains(".txt?", true)) && (s.contains("/hls", true) || s.contains("master", true) || s.contains("index", true))
+        return !isWeb && (s.contains(".m3u8", true) || s.contains(".mp4", true) || s.contains(".mpd", true) || isTxtHls ||
                           s.contains("/hls", true) || s.contains("chunklist", true) || s.contains("p.php?", true) || extractYouTubeId(s) != null)
     }
 

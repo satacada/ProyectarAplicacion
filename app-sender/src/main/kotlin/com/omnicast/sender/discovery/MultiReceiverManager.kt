@@ -17,7 +17,10 @@ object MultiReceiverManager {
     private val _secondaryIps = MutableStateFlow<Set<String>>(emptySet())
     val secondaryIps: StateFlow<Set<String>> = _secondaryIps.asStateFlow()
 
+    private var appContext: Context? = null
+
     fun init(context: Context) {
+        appContext = context.applicationContext
         val prefs = context.getSharedPreferences("omnicast_prefs", Context.MODE_PRIVATE)
         val saved = prefs.getStringSet(PREF_KEY, emptySet()) ?: emptySet()
         _secondaryIps.value = saved
@@ -40,7 +43,10 @@ object MultiReceiverManager {
     fun broadcastToSecondary(msg: SignalingMessage, discoveredDevices: List<DeviceTarget>) {
         val targets = _secondaryIps.value
         if (targets.isEmpty()) return
-        val list = targets.map { ip ->
+        val primaryIp = appContext?.getSharedPreferences("omnicast_prefs", Context.MODE_PRIVATE)?.getString("saved_tv_ip", "") ?: ""
+        val filtered = targets.filter { it.isNotBlank() && it != primaryIp }
+        if (filtered.isEmpty()) return
+        val list = filtered.map { ip ->
             discoveredDevices.firstOrNull { it.ipAddress == ip }
                 ?: DeviceTarget("secondary-$ip", "TV $ip", ip, 8088)
         }

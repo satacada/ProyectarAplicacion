@@ -15,7 +15,11 @@ data class StreamQualityOption(
     val isMovie: Boolean = false,
     val isSuggested: Boolean = false,
     val healedHeaders: Map<String, String> = emptyMap(),
-    val isLive: Boolean = false
+    val isLive: Boolean = false,
+    val fileName: String = "",
+    val formatDetail: String = "",
+    val audioTracksSummary: String = "",
+    val subtitleTracksSummary: String = ""
 )
 
 object StreamQualityDetector {
@@ -60,6 +64,13 @@ object StreamQualityDetector {
         }
 
         val healed = probe.healedHeaders
+        val defaultMasterName = extractFileName(currentMediaUrl, if (probe.isLiveStream) "stream" else "master")
+        val masterFormat = when {
+            probe.isLiveStream -> "m3u8 (en vivo)"
+            currentMediaUrl.contains(".mpd", true) -> "mpd (adaptive)"
+            currentMediaUrl.contains(".mp4", true) -> "mp4 (Directo)"
+            else -> "m3u8 (adaptive)"
+        }
         if (probe.manifestContent.isBlank()) {
             val label = if (currentMediaUrl.contains(".mp4", ignoreCase = true)) "🎬 ${prefix}Video MP4 Directo" else "▶ ${prefix}Flujo Directo"
             return@withContext listOf(
@@ -70,7 +81,9 @@ object StreamQualityDetector {
                     streamUrl = currentMediaUrl,
                     isMovie = true,
                     isSuggested = true,
-                    healedHeaders = healed
+                    healedHeaders = healed,
+                    fileName = defaultMasterName,
+                    formatDetail = masterFormat
                 )
             )
         }
@@ -82,20 +95,9 @@ object StreamQualityDetector {
             probe.durationSeconds in 1f..180f -> "🎞️ ${prefix}Tráiler / Clip (${probe.durationSeconds.toInt()}s)"
             else -> "⚡ ${prefix}Película Adaptativa (Auto)"
         }
-        options.add(
-            StreamQualityOption(
-                label = mainBadge,
-                resolution = if (probe.isLiveStream) "LIVE" else "Auto",
-                bitrate = "Adaptativa",
-                streamUrl = currentMediaUrl,
-                isMaster = true,
-                durationSeconds = probe.durationSeconds,
-                isMovie = isMovie,
-                isSuggested = isMovie,
-                healedHeaders = healed,
-                isLive = probe.isLiveStream
-            )
-        )
+
+        val audioList = mutableListOf<String>()
+        val subList = mutableListOf<String>()
 
         try {
             val baseUri = URI(probe.resolvedUrl)
@@ -111,6 +113,7 @@ object StreamQualityDetector {
                     val bwStr = if (bw != null) "${String.format(java.util.Locale.US, "%.1f", bw / 1_000_000.0)} Mbps" else "Variable"
                     val height = res.substringAfter("x").toIntOrNull() ?: 0
                     val resBadge = if (height > 0) "${height}p" else res
+                    val vName = extractFileName(resolvedUrl, "index-v1-a1")
                     val name = when {
                         height >= 1080 -> "🎬 ${prefix}1080p Full HD ($bwStr)"
                         height >= 720 -> "📺 ${prefix}720p HD ($bwStr)"
@@ -129,13 +132,64 @@ object StreamQualityDetector {
                             isMovie = isMovie,
                             isSuggested = false,
                             healedHeaders = healed,
-                            isLive = probe.isLiveStream
+                            isLive = probe.isLiveStream,
+                            fileName = vName,
+                            formatDetail = "m3u8 ($res)"
                         )
                     )
                     pendingInf = null
+                } else if (trimmed.startsWith("#EXT-X-I-FRAME-STREAM-INF:")) {
+                    val uriVal = extractAttr(trimmed, "URI")?.replace("\"", "")
+                    val resVal = extractAttr(trimmed, "RESOLUTION") ?: "1920x800"
+                    if (!uriVal.isNullOrBlank()) {
+                        val resolvedIframe = try { baseUri.resolve(uriVal).toString() } catch (_: Throwable) { uriVal }
+                        val ifName = extractFileName(resolvedIframe, "iframes-v1-a1")
+                        options.add(
+                            StreamQualityOption(
+                                label = "🎞️ ${prefix}I-Frames ($resVal)",
+                                resolution = resVal,
+                                bitrate = "I-Frame",
+                                streamUrl = resolvedIframe,
+                                isMaster = false,
+                                durationSeconds = probe.durationSeconds,
+                                isMovie = isMovie,
+                                isSuggested = false,
+                                healedHeaders = healed,
+                                isLive = probe.isLiveStream,
+                                fileName = ifName,
+                                formatDetail = "m3u8 ($resVal)"
+                            )
+                        )
+                    }
+                } else if (trimmed.startsWith("#EXT-X-MEDIA:TYPE=AUDIO")) {
+                    val aName = extractAttr(trimmed, "NAME") ?: extractAttr(trimmed, "LANGUAGE")
+                    if (!aName.isNullOrBlank() && !audioList.contains(aName)) audioList.add(aName)
+                } else if (trimmed.startsWith("#EXT-X-MEDIA:TYPE=SUBTITLES")) {
+                    val sName = extractAttr(trimmed, "NAME") ?: extractAttr(trimmed, "LANGUAGE")
+                    if (!sName.isNullOrBlank() && !subList.contains(sName)) subList.add(sName)
                 }
             }
         } catch (_: Throwable) {}
+
+        options.add(
+            0,
+            StreamQualityOption(
+                label = mainBadge,
+                resolution = if (probe.isLiveStream) "LIVE" else "Auto",
+                bitrate = "Adaptativa",
+                streamUrl = currentMediaUrl,
+                isMaster = true,
+                durationSeconds = probe.durationSeconds,
+                isMovie = isMovie,
+                isSuggested = isMovie,
+                healedHeaders = healed,
+                isLive = probe.isLiveStream,
+                fileName = defaultMasterName,
+                formatDetail = masterFormat,
+                audioTracksSummary = audioList.joinToString(", "),
+                subtitleTracksSummary = subList.joinToString(", ")
+            )
+        )
 
         return@withContext options.distinctBy { it.streamUrl }.sortedWith(
             compareByDescending<StreamQualityOption> { it.isSuggested }
@@ -150,6 +204,15 @@ object StreamQualityDetector {
         val sub = inf.substring(idx + key.length + 1)
         return if (sub.startsWith("\"")) sub.substring(1).substringBefore("\"")
         else sub.substringBefore(",").substringBefore("\n").trim()
+    }
+
+    fun extractFileName(url: String, defaultName: String = "video"): String {
+        return try {
+            val clean = url.substringBefore('?').substringBefore('#')
+            val lastSegment = clean.substringAfterLast('/')
+            val nameWithoutExt = lastSegment.substringBeforeLast('.')
+            if (nameWithoutExt.isNotBlank() && nameWithoutExt.length in 2..40) nameWithoutExt else defaultName
+        } catch (_: Throwable) { defaultName }
     }
 
     fun probeStreamPlayable(urlStr: String, safeHeaders: Map<String, String>, pageUrl: String? = null): Boolean {

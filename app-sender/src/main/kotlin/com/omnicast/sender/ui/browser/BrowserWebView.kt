@@ -219,13 +219,13 @@ fun BrowserWebView(
                                 return AdBlocker.createEmptyResponse()
                             }
                             val candidate = com.omnicast.core.domain.models.StreamCandidate(
-                                url = reqUrl, pageUrl = currentUrl,
+                                url = reqUrl, pageUrl = docUrl,
                                 headers = r.requestHeaders ?: emptyMap(),
                                 userAgent = UA_MOBILE, pageTitle = currentKnownTitle
                             )
                             val detectedStream = com.omnicast.sender.ui.browser.extractors.StreamExtractorRegistry.useCase.execute(candidate)
                             if (detectedStream != null) {
-                                val hdrs = BrowserUrlHelper.buildSafeHeaders(detectedStream.url, currentUrl, UA_MOBILE, detectedStream.headers)
+                                val hdrs = BrowserUrlHelper.buildSafeHeaders(detectedStream.url, docUrl, UA_MOBILE, detectedStream.headers)
                                 post { onStreamIntercepted(detectedStream.url, hdrs, detectedStream.isMaster) }
                             }
                             super.shouldInterceptRequest(v, r)

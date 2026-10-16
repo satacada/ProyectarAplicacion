@@ -240,7 +240,7 @@ class SenderMainActivity : ComponentActivity() {
     fun sendDirectStreamToTv(url: String, title: String? = null, headers: Map<String, String> = emptyMap(), resumePositionMs: Long? = null) {
         val safeTitle = title?.ifBlank { "Transmisión Web" } ?: "Transmisión Web"
         val savedPos = resumePositionMs ?: com.omnicast.sender.stream.StreamResumeManager.getPosition(this, url).takeIf { it > 0 } ?: playlistManager.getLastPosition(url)
-        val isKnownProxy = historyManager.getHistory().firstOrNull { it.url == url }?.requiresProxy == true || playlistManager.getPlaylists().any { pl -> pl.items.any { it.url == url && it.requiresProxy } }
+        val isKnownProxy = headers["X-Force-Proxy"] == "true" || historyManager.getHistory().firstOrNull { it.url == url }?.requiresProxy == true || playlistManager.getPlaylists().any { pl -> pl.items.any { it.url == url && it.requiresProxy } }
         val effectiveUrl = if (isKnownProxy && !url.contains(":8092")) {
             Toast.makeText(this, "🔒 Contenido protegido: Enrutando por teléfono...", Toast.LENGTH_SHORT).show()
             com.omnicast.sender.media.LocalStreamProxyServer.startAndGetProxyUrl(this, url, headers)

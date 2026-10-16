@@ -36,6 +36,10 @@ fun TvSortFilterBar(
     modifier: Modifier = Modifier
 ) {
     var isSearchFocused by remember { mutableStateOf(false) }
+    val keyboardController = androidx.compose.ui.platform.LocalSoftwareKeyboardController.current
+    LaunchedEffect(isSearchFocused) {
+        if (isSearchFocused) keyboardController?.show()
+    }
 
     Row(
         modifier = modifier.fillMaxWidth(),

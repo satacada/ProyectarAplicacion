@@ -220,24 +220,43 @@ fun TvPlaylistItemRow(
             }
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 if (onToggleSelect != null) {
+                    var isCheckFocused by remember { mutableStateOf(false) }
                     Box(
                         modifier = Modifier
                             .size(34.dp)
-                            .background(if (isSelected) Color(0xFFEF4444) else (if (isFocused) Color(0xFF38BDF8).copy(alpha = 0.3f) else Color(0xFF2D243F)), RoundedCornerShape(6.dp))
+                            .onFocusChanged { isCheckFocused = it.isFocused }
+                            .border(
+                                width = if (isCheckFocused) 2.dp else 1.dp,
+                                color = if (isCheckFocused) Color.White else (if (isSelected) Color(0xFFEF4444) else Color(0xFF475569)),
+                                shape = RoundedCornerShape(6.dp)
+                            )
+                            .background(
+                                if (isSelected) Color(0xFFEF4444) else (if (isCheckFocused) Color(0xFF38BDF8).copy(alpha = 0.4f) else Color(0xFF2D243F)),
+                                RoundedCornerShape(6.dp)
+                            )
+                            .focusable()
                             .clickable { onToggleSelect() },
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(if (isSelected) "✓" else "☐", fontSize = 14.sp, color = if (isSelected) Color.White else Color(0xFF94A3B8), fontWeight = FontWeight.Bold)
+                        Text(if (isSelected) "✓" else "☐", fontSize = 14.sp, color = if (isSelected || isCheckFocused) Color.White else Color(0xFF94A3B8), fontWeight = FontWeight.Bold)
                     }
                 }
+                var isMenuFocused by remember { mutableStateOf(false) }
                 Box(
                     modifier = Modifier
                         .size(34.dp)
-                        .background(if (isFocused) Color(0xFF38BDF8) else Color(0xFF2D243F), RoundedCornerShape(6.dp))
+                        .onFocusChanged { isMenuFocused = it.isFocused }
+                        .border(
+                            width = if (isMenuFocused) 2.dp else 1.dp,
+                            color = if (isMenuFocused) Color.White else Color.Transparent,
+                            shape = RoundedCornerShape(6.dp)
+                        )
+                        .background(if (isMenuFocused) Color(0xFF38BDF8) else Color(0xFF2D243F), RoundedCornerShape(6.dp))
+                        .focusable()
                         .clickable(onClick = onMenu),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("⚙", fontSize = 14.sp, color = if (isFocused) Color.Black else Color.White)
+                    Text("⚙", fontSize = 14.sp, color = if (isMenuFocused) Color.Black else Color.White)
                 }
             }
         }

@@ -66,8 +66,6 @@ fun InAppBrowserScreen(
 
     fun registerStream(url: String, hdrs: Map<String, String>, isPrimary: Boolean = false, label: String? = null) {
         if (url.isBlank() || AdBlocker.isAd(url) || !isRealMedia(url) || BrowserUrlHelper.extractYouTubeId(url) != null) return
-        val isSubStream = (url.contains("index-v") || url.contains("chunklist")) && detectedStreams.any { it.contains("master.m3u8") }
-        if (isSubStream) return
         if (detectedStreams.contains(url)) detectedStreams.remove(url)
         if (isPrimary) detectedStreams.add(0, url) else detectedStreams.add(url)
         if (hdrs.isNotEmpty()) streamHeaders[url] = hdrs; if (!label.isNullOrBlank()) streamLabels[url] = label

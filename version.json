@@ -1,10 +1,9 @@
 {
-  "versionCodeSender": 113,
-  "versionCodeReceiver": 96,
-  "versionName": "3.32.68",
-  "releaseTag": "v3.32.68",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.68/omnicast-sender-v3.32.68.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.68/omnicast-receiver-v3.32.68.apk",
-  "changelog": "v3.32.68: Soporte recursivo de sub-manifiestos HLS y cabeceras anti-bot en proxy HTTP local; gestión de foco en receptor tras eliminar película (primera fila o volver a carpetas si queda vacía); selección múltiple de videos y eliminación en lote con botón de papelera."
+  "versionCodeSender": 114,
+  "versionCodeReceiver": 97,
+  "versionName": "3.32.69",
+  "releaseTag": "v3.32.69",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.69/omnicast-sender-v3.32.69.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.69/omnicast-receiver-v3.32.69.apk",
+  "changelog": "v3.32.69: Preservación de cadena Referer/Origin de iframes y detección exhaustiva de flujos HLS/DASH/MP4 con nombres y resoluciones estilo Web Video Caster; toggle para forzar emisión vía proxy local; foco y resaltado visual con D-pad en checkbox de películas; apertura automática de teclado en buscador de TV."
 }
-

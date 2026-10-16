@@ -30,7 +30,7 @@ object WvcDomSniffer {
             val cleanMessage = if (message.startsWith(CONSOLE_PREFIX)) message.removePrefix(CONSOLE_PREFIX).trim() else message.trim()
             if (cleanMessage.contains("\"ibMessage\":") || cleanMessage.contains("\"type\":")) {
                 val json = JSONObject(cleanMessage)
-                val frameUrl = json.optString("frameUrl", "")
+                val frameUrl = json.optString("from").ifBlank { json.optString("frameUrl", "") }
                 when (json.optString("type")) {
                     "videoPlaying" -> {
                         val videoUrl = json.optString("video")
@@ -91,7 +91,7 @@ object WvcDomSniffer {
                 val json = JSONObject(jsonStr)
                 val src = json.optString("src")
                 val dur = json.optDouble("duration", 0.0).toFloat()
-                val frameUrl = json.optString("frameUrl", "")
+                val frameUrl = json.optString("from").ifBlank { json.optString("frameUrl", "") }
                 if (dur in 0.1f..59.9f) return emptyList()
                 if (isValidMediaUrl(src)) {
                     list.add(SniffedVideo(src, json.optString("title", "Transmisión Web"), json.optString("poster", ""), duration = dur, frameUrl = frameUrl))

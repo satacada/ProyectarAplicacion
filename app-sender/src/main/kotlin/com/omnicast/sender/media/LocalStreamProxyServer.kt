@@ -60,9 +60,17 @@ object LocalStreamProxyServer {
         val sid = Integer.toHexString(originalUrl.hashCode())
         val mutableHeaders = headers.toMutableMap()
         if (!mutableHeaders.containsKey("User-Agent")) mutableHeaders["User-Agent"] = DEFAULT_UA
+        val ref = headers["Referer"]
+        if (!ref.isNullOrBlank() && !mutableHeaders.containsKey("Origin")) {
+            try { val u = URI(ref); mutableHeaders["Origin"] = "${u.scheme}://${u.authority}" } catch (_: Throwable) {}
+        }
+        if (!mutableHeaders.containsKey("Sec-Fetch-Mode")) mutableHeaders["Sec-Fetch-Mode"] = "cors"
+        if (!mutableHeaders.containsKey("Sec-Fetch-Site")) mutableHeaders["Sec-Fetch-Site"] = "cross-site"
+        if (!mutableHeaders.containsKey("Sec-Fetch-Dest")) mutableHeaders["Sec-Fetch-Dest"] = "empty"
+        if (!mutableHeaders.containsKey("Accept")) mutableHeaders["Accept"] = "*/*"
         try {
             val cookie = CookieManager.getInstance().getCookie(originalUrl)
-                ?: headers["Referer"]?.let { CookieManager.getInstance().getCookie(it) }
+                ?: ref?.let { CookieManager.getInstance().getCookie(it) }
             if (!cookie.isNullOrBlank() && !mutableHeaders.containsKey("Cookie")) {
                 mutableHeaders["Cookie"] = cookie
             }
@@ -104,7 +112,8 @@ object LocalStreamProxyServer {
                 val params = parseQueryParams(query)
 
                 when {
-                    path.endsWith(".m3u8", ignoreCase = true) -> serveManifest(params["sid"], out)
+                    path.endsWith(".m3u8", ignoreCase = true) || path.contains("manifest", ignoreCase = true) ->
+                        serveManifest(params["url"], params["sid"], out)
                     path.startsWith("/chunk") -> serveChunk(params["url"], params["sid"], rangeHeader, out)
                     path.startsWith("/video.mp4") -> serveDirectMedia(params["sid"], rangeHeader, out)
                     else -> out.write("HTTP/1.1 404 Not Found\r\n\r\n".toByteArray())
@@ -113,14 +122,15 @@ object LocalStreamProxyServer {
         } catch (_: Throwable) {}
     }
 
-    private fun serveManifest(sid: String?, out: OutputStream) {
+    private fun serveManifest(rawUrl: String?, sid: String?, out: OutputStream) {
         val session = sid?.let { sessions[it] } ?: run {
             out.write("HTTP/1.1 404 Session Not Found\r\n\r\n".toByteArray())
             return
         }
+        val targetUrl = rawUrl?.let { try { URLDecoder.decode(it, "UTF-8") } catch (_: Throwable) { it } } ?: session.originalUrl
 
         try {
-            val conn = (URL(session.originalUrl).openConnection() as HttpURLConnection).apply {
+            val conn = (URL(targetUrl).openConnection() as HttpURLConnection).apply {
                 connectTimeout = 8000; readTimeout = 12000; requestMethod = "GET"
                 session.headers.forEach { (k, v) -> setRequestProperty(k, v) }
             }
@@ -131,7 +141,7 @@ object LocalStreamProxyServer {
             }
 
             val localIp = LocalImageServer.getLocalIpAddress()
-            val baseUri = URI(session.originalUrl)
+            val baseUri = URI(targetUrl)
             val lines = conn.inputStream.bufferedReader().readLines()
             conn.disconnect()
 
@@ -147,7 +157,9 @@ object LocalStreamProxyServer {
                     rewritten.append(trimmed.replace("URI=\"$keyUri\"", "URI=\"$proxyKey\"")).append("\n")
                 } else if (!trimmed.startsWith("#")) {
                     val absUrl = try { baseUri.resolve(trimmed).toString() } catch (_: Throwable) { trimmed }
-                    val proxyUrl = "http://$localIp:$PORT/chunk?sid=$sid&url=${URLEncoder.encode(absUrl, "UTF-8")}"
+                    val isSub = absUrl.contains(".m3u8", ignoreCase = true)
+                    val endpoint = if (isSub) "playlist.m3u8" else "chunk"
+                    val proxyUrl = "http://$localIp:$PORT/$endpoint?sid=$sid&url=${URLEncoder.encode(absUrl, "UTF-8")}"
                     rewritten.append(proxyUrl).append("\n")
                 } else {
                     rewritten.append(line).append("\n")
@@ -155,7 +167,7 @@ object LocalStreamProxyServer {
             }
 
             val bytes = rewritten.toString().toByteArray(Charsets.UTF_8)
-            val header = "HTTP/1.1 200 OK\r\nContent-Type: application/vnd.apple.mpegurl\r\nContent-Length: ${bytes.size}\r\nAccess-Control-Allow-Origin: *\r\nConnection: close\r\n\r\n"
+            val header = "HTTP/1.1 200 OK\r\nContent-Type: application/vnd.apple.mpegurl\r\nContent-Length: ${bytes.size}\r\nCache-Control: no-cache, no-store, must-revalidate\r\nPragma: no-cache\r\nAccess-Control-Allow-Origin: *\r\nConnection: close\r\n\r\n"
             out.write(header.toByteArray()); out.write(bytes); out.flush()
         } catch (e: Throwable) {
             out.write("HTTP/1.1 502 Bad Gateway\r\n\r\n".toByteArray())

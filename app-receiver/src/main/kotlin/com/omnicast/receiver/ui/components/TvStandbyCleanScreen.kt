@@ -1,6 +1,7 @@
 package com.omnicast.receiver.ui.components
 
 import androidx.activity.compose.BackHandler
+import kotlinx.coroutines.launch
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -36,6 +37,7 @@ fun TvStandbyCleanScreen(
     onPlayHistory: (TvHistoryItem) -> Unit = {},
     onPlayPlaylist: (TvPlaylistItem) -> Unit = {},
     onDeletePlaylist: (TvPlaylistItem) -> Unit = {},
+    onDeleteMultiple: (Set<String>) -> Unit = {},
     updateState: com.omnicast.receiver.update.TvUpdateState = com.omnicast.receiver.update.TvUpdateState.Idle,
     onCheckUpdate: () -> Unit = {},
     onDownloadAndInstall: (String) -> Unit = {},
@@ -51,6 +53,9 @@ fun TvStandbyCleanScreen(
     var selectedSort by remember { mutableStateOf(TvVideoSortOrder.NEWEST) }
     val listState = androidx.compose.foundation.lazy.rememberLazyListState()
     val firstItemFocusRequester = remember { FocusRequester() }
+    val backButtonFocusRequester = remember { FocusRequester() }
+    val selectedUrls = remember { mutableStateListOf<String>() }
+    val scope = rememberCoroutineScope()
 
     LaunchedEffect(enteredPlaylistId) {
         if (enteredPlaylistId != null) {
@@ -59,10 +64,8 @@ fun TvStandbyCleanScreen(
         }
     }
 
-    // Regreso en 1 solo clic al nivel de carpetas desde el video 60
     BackHandler(enabled = enteredPlaylistId != null) {
-        enteredPlaylistId = null
-        searchQuery = ""
+        enteredPlaylistId = null; searchQuery = ""; selectedUrls.clear()
     }
 
     LaunchedEffect(expiredItemForRenew) {
@@ -120,16 +123,43 @@ fun TvStandbyCleanScreen(
                 TvFolderDetailHeader(
                     folderName = currentPlaylist?.name ?: "Carpeta",
                     itemCount = currentPlaylist?.items?.size ?: 0,
-                    onBack = { enteredPlaylistId = null; searchQuery = "" }
+                    onBack = { enteredPlaylistId = null; searchQuery = ""; selectedUrls.clear() },
+                    modifier = Modifier.focusRequester(backButtonFocusRequester)
                 )
                 Spacer(modifier = Modifier.height(10.dp))
-                TvSortFilterBar(
-                    searchQuery = searchQuery,
-                    onSearchQueryChange = { searchQuery = it },
-                    selectedSort = selectedSort,
-                    onSortChange = { selectedSort = it },
-                    modifier = Modifier.fillMaxWidth()
-                )
+                Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    TvSortFilterBar(
+                        searchQuery = searchQuery, onSearchQueryChange = { searchQuery = it },
+                        selectedSort = selectedSort, onSortChange = { selectedSort = it },
+                        modifier = Modifier.weight(1f)
+                    )
+                    var isTrashFocused by remember { mutableStateOf(false) }
+                    val hasSel = selectedUrls.isNotEmpty()
+                    Card(
+                        colors = CardDefaults.cardColors(containerColor = if (isTrashFocused) (if (hasSel) Color(0xFFEF4444) else Color(0xFF38BDF8)) else (if (hasSel) Color(0xFF7F1D1D) else Color(0xFF251C35))),
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier.onFocusChanged { isTrashFocused = it.isFocused }.focusable()
+                            .clickable {
+                                if (hasSel) {
+                                    val count = selectedUrls.size
+                                    onDeleteMultiple(selectedUrls.toSet())
+                                    selectedUrls.clear()
+                                    scope.launch {
+                                        kotlinx.coroutines.delay(120)
+                                        val remaining = currentPlaylist?.items?.size ?: 0
+                                        if (remaining > count) runCatching { firstItemFocusRequester.requestFocus() }
+                                        else runCatching { backButtonFocusRequester.requestFocus() }
+                                    }
+                                }
+                            }
+                            .border(1.dp, if (isTrashFocused) Color.White else (if (hasSel) Color(0xFFEF4444) else Color(0xFF3E3255)), RoundedCornerShape(8.dp))
+                    ) {
+                        Row(modifier = Modifier.padding(horizontal = 14.dp, vertical = 9.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Text("🗑", fontSize = 15.sp)
+                            if (hasSel) Text("(${selectedUrls.size})", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
                 Spacer(modifier = Modifier.height(10.dp))
             }
 
@@ -146,10 +176,13 @@ fun TvStandbyCleanScreen(
                                 modifier = Modifier.fillMaxSize()
                             ) {
                                 itemsIndexed(playlistFilteredItems, key = { _, it -> it.url }) { index, item ->
+                                    val isSel = selectedUrls.contains(item.url)
                                     TvPlaylistItemRow(
                                         item = item,
                                         onPlay = { onPlayPlaylist(item) },
                                         onMenu = { menuItem = item },
+                                        isSelected = isSel,
+                                        onToggleSelect = { if (isSel) selectedUrls.remove(item.url) else selectedUrls.add(item.url) },
                                         modifier = if (index == 0) Modifier.focusRequester(firstItemFocusRequester) else Modifier
                                     )
                                 }
@@ -173,36 +206,11 @@ fun TvStandbyCleanScreen(
                                     }
                                 }
                             }
-                            1 -> {
-                                LazyColumn(
-                                    state = listState,
-                                    verticalArrangement = Arrangement.spacedBy(10.dp),
-                                    modifier = Modifier.fillMaxSize()
-                                ) {
-                                    items(activePlaylists, key = { it.id }) { pl ->
-                                        TvFolderRow(
-                                            name = pl.name,
-                                            date = formatFolderDate(pl.createdAt),
-                                            itemCount = pl.items.size,
-                                            onClick = { enteredPlaylistId = pl.id; searchQuery = "" }
-                                        )
-                                    }
-                                }
-                            }
-                            2 -> {
-                                val favs = activePlaylists.filter { it.isDefault || it.name.contains("Favorito", ignoreCase = true) }
-                                LazyColumn(
-                                    state = listState,
-                                    verticalArrangement = Arrangement.spacedBy(10.dp),
-                                    modifier = Modifier.fillMaxSize()
-                                ) {
-                                    items(favs, key = { it.id }) { pl ->
-                                        TvFolderRow(
-                                            name = pl.name,
-                                            date = formatFolderDate(pl.createdAt),
-                                            itemCount = pl.items.size,
-                                            onClick = { enteredPlaylistId = pl.id; searchQuery = "" }
-                                        )
+                            1, 2 -> {
+                                val folders = if (selectedTab == 2) activePlaylists.filter { it.isDefault || it.name.contains("Favorito", ignoreCase = true) } else activePlaylists
+                                LazyColumn(state = listState, verticalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxSize()) {
+                                    items(folders, key = { it.id }) { pl ->
+                                        TvFolderRow(name = pl.name, date = formatFolderDate(pl.createdAt), itemCount = pl.items.size, onClick = { enteredPlaylistId = pl.id; searchQuery = ""; selectedUrls.clear() })
                                     }
                                 }
                             }
@@ -213,61 +221,46 @@ fun TvStandbyCleanScreen(
             }
 
             Box(modifier = Modifier.fillMaxWidth().padding(top = 10.dp), contentAlignment = Alignment.Center) {
-                Surface(
-                    color = Color(0xFF251C35),
-                    shape = RoundedCornerShape(20.dp),
-                    modifier = Modifier.padding(vertical = 4.dp)
-                ) {
+                Surface(color = Color(0xFF251C35), shape = RoundedCornerShape(20.dp), modifier = Modifier.padding(vertical = 4.dp)) {
                     Text(
                         if (enteredPlaylistId != null) "Pulsa [Atrás] en el control para volver a las carpetas" else "¿No encuentras tus archivos? Actualiza o envía desde tu celular",
-                        color = Color(0xFF38BDF8),
-                        fontSize = 12.sp,
-                        modifier = Modifier.padding(horizontal = 18.dp, vertical = 6.dp)
+                        color = Color(0xFF38BDF8), fontSize = 12.sp, modifier = Modifier.padding(horizontal = 18.dp, vertical = 6.dp)
                     )
                 }
             }
         }
 
-        TvBottomConnectionDock(
-            ipAddress = ipAddress,
-            modifier = Modifier.align(Alignment.BottomCenter)
-        )
+        TvBottomConnectionDock(ipAddress = ipAddress, modifier = Modifier.align(Alignment.BottomCenter))
 
         menuItem?.let { item ->
             TvVideoActionDialog(
-                item = item,
-                onPlay = { onPlayPlaylist(item) },
-                onShare = { sharingItem = item },
-                onRenew = { renewItem = item },
-                onDelete = { onDeletePlaylist(item) },
+                item = item, onPlay = { onPlayPlaylist(item) }, onShare = { sharingItem = item }, onRenew = { renewItem = item },
+                onDelete = {
+                    onDeletePlaylist(item); menuItem = null
+                    scope.launch {
+                        kotlinx.coroutines.delay(120)
+                        val rem = currentPlaylist?.items?.size ?: 0
+                        if (rem > 1) runCatching { firstItemFocusRequester.requestFocus() }
+                        else runCatching { backButtonFocusRequester.requestFocus() }
+                    }
+                },
                 onDismiss = { menuItem = null }
             )
         }
 
-        sharingItem?.let { item ->
-            TvShareDialog(item = item, onDismiss = { sharingItem = null })
-        }
-
-        renewItem?.let { item ->
-            TvRenewQrDialog(
-                item = item,
-                onDismiss = {
-                    renewItem = null
-                    onClearExpiredRenew()
-                }
-            )
-        }
+        sharingItem?.let { item -> TvShareDialog(item = item, onDismiss = { sharingItem = null }) }
+        renewItem?.let { item -> TvRenewQrDialog(item = item, onDismiss = { renewItem = null; onClearExpiredRenew() }) }
     }
 }
 
 @Composable
-private fun TvFolderDetailHeader(folderName: String, itemCount: Int, onBack: () -> Unit) {
+private fun TvFolderDetailHeader(folderName: String, itemCount: Int, onBack: () -> Unit, modifier: Modifier = Modifier) {
     var isBackFocused by remember { mutableStateOf(false) }
     Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
         Card(
             colors = CardDefaults.cardColors(containerColor = if (isBackFocused) Color(0xFF38BDF8) else Color(0xFF251C35)),
             shape = RoundedCornerShape(8.dp),
-            modifier = Modifier.onFocusChanged { isBackFocused = it.isFocused }.focusable().clickable(onClick = onBack)
+            modifier = modifier.onFocusChanged { isBackFocused = it.isFocused }.focusable().clickable(onClick = onBack)
                 .border(1.dp, if (isBackFocused) Color.White else Color(0xFF38BDF8), RoundedCornerShape(8.dp))
         ) {
             Text("◀ Volver a carpetas", color = if (isBackFocused) Color.Black else Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp))

@@ -1,10 +1,10 @@
 {
-  "versionCodeSender": 112,
-  "versionCodeReceiver": 95,
-  "versionName": "3.32.67",
-  "releaseTag": "v3.32.67",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.67/omnicast-sender-v3.32.67.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.67/omnicast-receiver-v3.32.67.apk",
-  "changelog": "v3.32.67: Soporte para streams y películas con protección web (Cloudflare/DropCDN/Fastream) mediante enrutamiento por proxy HTTP local en el emisor; advertencia al guardar contenido protegido; compatibilidad total con Favoritos y Ver más tarde."
+  "versionCodeSender": 113,
+  "versionCodeReceiver": 96,
+  "versionName": "3.32.68",
+  "releaseTag": "v3.32.68",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.68/omnicast-sender-v3.32.68.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.68/omnicast-receiver-v3.32.68.apk",
+  "changelog": "v3.32.68: Soporte recursivo de sub-manifiestos HLS y cabeceras anti-bot en proxy HTTP local; gestión de foco en receptor tras eliminar película (primera fila o volver a carpetas si queda vacía); selección múltiple de videos y eliminación en lote con botón de papelera."
 }
 

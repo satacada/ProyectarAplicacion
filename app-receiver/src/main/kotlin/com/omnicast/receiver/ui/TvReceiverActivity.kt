@@ -109,7 +109,7 @@ class TvReceiverActivity : ComponentActivity() {
                 when (val state = receiverState.value) {
                     is ReceiverUiState.Standby -> TvStandbyCleanScreen(
                         ipAddress = localIpAddress.value, history = historyList, playlists = playlistsList,
-                        onPlayHistory = { playHistoryItem(it) }, onPlayPlaylist = { playPlaylistItem(it) }, onDeletePlaylist = { playlistManager.removeItem(it.url) },
+                        onPlayHistory = { playHistoryItem(it) }, onPlayPlaylist = { playPlaylistItem(it) }, onDeletePlaylist = { playlistManager.removeItem(it.url) }, onDeleteMultiple = { playlistManager.removeItems(it) },
                         updateState = otaState, onCheckUpdate = { lifecycleScope.launch { updateManager.checkForUpdates() } },
                         onDownloadAndInstall = { url ->
                             lifecycleScope.launch {

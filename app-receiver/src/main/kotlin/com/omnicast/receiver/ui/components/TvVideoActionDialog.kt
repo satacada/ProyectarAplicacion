@@ -154,21 +154,23 @@ fun TvPlaylistItemRow(
     item: TvPlaylistItem,
     onPlay: () -> Unit,
     onMenu: () -> Unit,
+    isSelected: Boolean = false,
+    onToggleSelect: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     var isFocused by remember { mutableStateOf(false) }
 
     Card(
         colors = CardDefaults.cardColors(
-            containerColor = if (isFocused) Color(0xFF2E2442) else Color(0xFF1E182A)
+            containerColor = if (isSelected) Color(0xFF3B1D28) else (if (isFocused) Color(0xFF2E2442) else Color(0xFF1E182A))
         ),
         shape = RoundedCornerShape(10.dp),
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 4.dp, vertical = 3.dp)
             .border(
-                width = if (isFocused) 2.dp else 1.dp,
-                color = if (isFocused) Color(0xFF38BDF8) else Color(0xFF2D223F),
+                width = if (isFocused || isSelected) 2.dp else 1.dp,
+                color = if (isSelected) Color(0xFFEF4444) else (if (isFocused) Color(0xFF38BDF8) else Color(0xFF2D223F)),
                 shape = RoundedCornerShape(10.dp)
             )
             .onFocusChanged { isFocused = it.isFocused }
@@ -216,14 +218,27 @@ fun TvPlaylistItemRow(
                     )
                 }
             }
-            Box(
-                modifier = Modifier
-                    .size(34.dp)
-                    .background(if (isFocused) Color(0xFF38BDF8) else Color(0xFF2D243F), RoundedCornerShape(6.dp))
-                    .clickable(onClick = onMenu),
-                contentAlignment = Alignment.Center
-            ) {
-                Text("⚙", fontSize = 14.sp, color = if (isFocused) Color.Black else Color.White)
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                if (onToggleSelect != null) {
+                    Box(
+                        modifier = Modifier
+                            .size(34.dp)
+                            .background(if (isSelected) Color(0xFFEF4444) else (if (isFocused) Color(0xFF38BDF8).copy(alpha = 0.3f) else Color(0xFF2D243F)), RoundedCornerShape(6.dp))
+                            .clickable { onToggleSelect() },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(if (isSelected) "✓" else "☐", fontSize = 14.sp, color = if (isSelected) Color.White else Color(0xFF94A3B8), fontWeight = FontWeight.Bold)
+                    }
+                }
+                Box(
+                    modifier = Modifier
+                        .size(34.dp)
+                        .background(if (isFocused) Color(0xFF38BDF8) else Color(0xFF2D243F), RoundedCornerShape(6.dp))
+                        .clickable(onClick = onMenu),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("⚙", fontSize = 14.sp, color = if (isFocused) Color.Black else Color.White)
+                }
             }
         }
     }

@@ -28,3 +28,4 @@ references/decompiled/
 .idea/
 .system_generated/
 .DS_Store
+scripts/__pycache__/

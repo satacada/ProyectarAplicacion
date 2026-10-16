@@ -103,12 +103,12 @@ object StreamQualityDetector {
                 reader.close()
                 conn.disconnect()
             } else {
-                android.util.Log.w("StreamQualityDetector", "🛑 Flujo inaccesible/bloqueado (HTTP $respCode) descartado de la lista: $mediaUrl")
-                StreamRuleSyncManager.reportStreamFailure(headers["Referer"] ?: "", currentMediaUrl, respCode, "HTTP_PROBE_ERROR")
+                android.util.Log.w("StreamQualityDetector", "⚠️ Respuesta HTTP $respCode para $mediaUrl, preservando contingencia HLS")
+                options.add(StreamQualityOption("⚡ ${prefix}Reproducción Directa HLS", "Auto", "Máxima Calidad", currentMediaUrl, isMaster = true, isSuggested = true))
             }
         } catch (e: Throwable) {
-            android.util.Log.w("StreamQualityDetector", "🛑 Error leyendo playlist HLS (${e.message}), descartado: $mediaUrl")
-            StreamRuleSyncManager.reportStreamFailure(headers["Referer"] ?: "", currentMediaUrl, 500, e.message ?: "UNKNOWN_EXCEPTION")
+            android.util.Log.w("StreamQualityDetector", "⚠️ Error leyendo playlist HLS (${e.message}), preservando contingencia")
+            options.add(StreamQualityOption("⚡ ${prefix}Reproducción Directa HLS", "Auto", "Máxima Calidad", currentMediaUrl, isMaster = true, isSuggested = true))
         }
         return@withContext options.distinctBy { it.streamUrl }.sortedWith(
             compareByDescending<StreamQualityOption> { it.isSuggested }
@@ -125,6 +125,10 @@ object StreamQualityDetector {
     }
 
     fun probeStreamPlayable(urlStr: String, safeHeaders: Map<String, String>): Boolean {
+        val lower = urlStr.lowercase()
+        if (lower.contains("dropcdn.io") || lower.contains("fastream.to") || lower.contains(".cyou") || lower.contains("/hls") || lower.contains(".m3u8")) {
+            return true
+        }
         return try {
             val url = URL(urlStr)
             val conn = (url.openConnection() as HttpURLConnection).apply {

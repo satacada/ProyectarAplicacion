@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 103,
-  "versionCodeReceiver": 86,
-  "versionName": "3.32.58",
-  "releaseTag": "v3.32.58",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.58/omnicast-sender-v3.32.58.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.58/omnicast-receiver-v3.32.58.apk",
-  "changelog": "v3.32.58: Telemetria de streaming completa en TV hacia Supabase sin ADB; descarte y filtrado previo de flujos corruptos (HTTP 403/404) para evitar crash de ExoPlayer; resolucion en caliente de tokens Fastream/dropcdn; eliminacion de eco de comando STOP desde el celular."
+  "versionCodeSender": 104,
+  "versionCodeReceiver": 87,
+  "versionName": "3.32.59",
+  "releaseTag": "v3.32.59",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.59/omnicast-sender-v3.32.59.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.59/omnicast-receiver-v3.32.59.apk",
+  "changelog": "v3.32.59: Priorizacion estricta de pelicula sobre trailers de YouTube en webs de cine; preservacion de contingencia HLS ante bloqueos 403 de sondeo; no descarte de CDNs protegidos (dropcdn.io, fastream.to, .cyou)."
 }

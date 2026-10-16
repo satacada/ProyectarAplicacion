@@ -12,8 +12,8 @@ android {
         applicationId = "com.omnicast.receiver"
         minSdk = 24 // Android 7.0+ (Soporte para TV Boxes AOSP, Rockchip, Amlogic y Android TV)
         targetSdk = 34
-        versionCode = 86
-        versionName = "3.32.58"
+        versionCode = 87
+        versionName = "3.32.59"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {

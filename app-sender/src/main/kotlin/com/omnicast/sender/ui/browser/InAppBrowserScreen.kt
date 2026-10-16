@@ -120,6 +120,8 @@ fun InAppBrowserScreen(
         MediaPlatformResolver.checkPlatform(
             url = url, title = title ?: webViewInstance?.title,
             onYouTube = { ytUrl, cleanT, hdrs ->
+                val isDirectYt = currentUrl.contains("youtube.com") || currentUrl.contains("youtu.be")
+                if (!isDirectYt) { registerStream(ytUrl, hdrs, isPrimary = false, label = "Tráiler"); return@checkPlatform }
                 val curYt = detectedStreams.firstOrNull()?.let { BrowserUrlHelper.extractYouTubeId(it) }
                 if (curYt != null && curYt != BrowserUrlHelper.extractYouTubeId(ytUrl)) {
                     detectedStreams.clear(); streamHeaders.clear(); streamLabels.clear(); qualityOptions = emptyList(); ActiveStreamHolder.clearDetectedStream()
@@ -136,10 +138,8 @@ fun InAppBrowserScreen(
 
     fun navigateTo(url: String) {
         detectedStreams.clear(); streamHeaders.clear(); streamLabels.clear(); streamDurations.clear(); qualityOptions = emptyList()
-        ActiveStreamHolder.clearDetectedStream(); pageTitle = "Cargando..."
-        val target = BrowserUrlHelper.normalizeUrl(url)
-        inputUrl = target; currentUrl = target; isHome = false
-        prefs.edit().putString("saved_browser_last_url", target).apply()
+        ActiveStreamHolder.clearDetectedStream(); pageTitle = "Cargando..."; val target = BrowserUrlHelper.normalizeUrl(url)
+        inputUrl = target; currentUrl = target; isHome = false; prefs.edit().putString("saved_browser_last_url", target).apply()
         checkPlatformUrls(target); webViewInstance?.loadUrl(target)
     }
 
@@ -157,8 +157,8 @@ fun InAppBrowserScreen(
             val ytId = BrowserUrlHelper.extractYouTubeId(url); val num = currentStreams.size - index
             val dur = streamDurations[url] ?: (durMs / 1000f).coerceAtLeast(0f)
             val isMovie = dur >= 2400f || (dur == 0f && url.contains(".m3u8", true)) || cleanTitle.contains("pelicula", true)
-            val isSugg = (url == activeStream) || (index == 0 && activeStream.isNullOrBlank())
-            if (ytId != null) StreamQualityOption("🎬 $prefix YouTube #$num", "YouTube", "1080p / 720p", url, durationSeconds = dur, isMovie = isMovie, isSuggested = isSugg)
+            val isSugg = (url == activeStream) || (index == 0 && activeStream.isNullOrBlank() && ytId == null)
+            if (ytId != null) StreamQualityOption("🎬 $prefix Tráiler YouTube", "YouTube", "1080p / 720p", url, durationSeconds = dur, isMovie = false, isSuggested = false)
             else {
                 val qLabel = streamLabels[url] ?: if (url.contains(".m3u8", true)) "HLS Adaptativo" else "Video Directo"
                 StreamQualityOption("🎬 $prefix$qLabel #$num", if (url.contains(".m3u8", true)) "Auto" else "Original", "Máxima Calidad", url, isMaster = qLabel.contains("HLS"), durationSeconds = dur, isMovie = isMovie, isSuggested = isSugg)
@@ -171,7 +171,7 @@ fun InAppBrowserScreen(
                 if (deep.isNotEmpty()) {
                     qualityOptions = deep.distinctBy { it.streamUrl }.sortedWith(compareByDescending<StreamQualityOption> { it.isSuggested }.thenByDescending { it.resolution.removeSuffix("p").toIntOrNull() ?: 0 })
                     val validUrls = deep.map { it.streamUrl }.toSet()
-                    detectedStreams.retainAll { s -> validUrls.contains(s) || s.contains("youtube.com") }
+                    detectedStreams.retainAll { s -> validUrls.contains(s) || s.contains(".m3u8") || s.contains("dropcdn") || s.contains("fastream") || s.contains("youtube.com") }
                 }
             }
         }

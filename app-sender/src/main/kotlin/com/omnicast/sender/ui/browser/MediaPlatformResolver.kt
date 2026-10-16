@@ -96,7 +96,7 @@ object MediaPlatformResolver {
     }
 
     fun extractFastreamId(url: String): String? {
-        if (!url.contains("fastream.to", ignoreCase = true) && !url.contains("dropcdn.io", ignoreCase = true)) return null
+        if (!url.contains("fastream.to", ignoreCase = true)) return null
         return Regex("(?:/hls\\d*/\\d+/\\d+/|/embed-|/)([a-zA-Z0-9]{10,12})(?:[_,.]|$)").find(url)?.groupValues?.get(1)
     }
 
@@ -139,7 +139,7 @@ object MediaPlatformResolver {
     fun prepareStreamForPlayback(streamUrl: String, pageUrl: String, rawHeaders: Map<String, String>): Pair<String, Map<String, String>> {
         var finalUrl = streamUrl
         var hdrs = rawHeaders
-        if (streamUrl.contains("fastream.to", ignoreCase = true) || streamUrl.contains("dropcdn.io", ignoreCase = true)) {
+        if (streamUrl.contains("fastream.to", ignoreCase = true)) {
             val resolved = resolveFastreamSync(streamUrl, pageUrl)
             if (resolved != null) {
                 finalUrl = resolved.first

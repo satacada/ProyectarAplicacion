@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 104,
-  "versionCodeReceiver": 87,
-  "versionName": "3.32.59",
-  "releaseTag": "v3.32.59",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.59/omnicast-sender-v3.32.59.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.59/omnicast-receiver-v3.32.59.apk",
-  "changelog": "v3.32.59: Priorizacion estricta de pelicula sobre trailers de YouTube en webs de cine; preservacion de contingencia HLS ante bloqueos 403 de sondeo; no descarte de CDNs protegidos (dropcdn.io, fastream.to, .cyou)."
+  "versionCodeSender": 105,
+  "versionCodeReceiver": 88,
+  "versionName": "3.32.60",
+  "releaseTag": "v3.32.60",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.60/omnicast-sender-v3.32.60.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.60/omnicast-receiver-v3.32.60.apk",
+  "changelog": "v3.32.60: Foco D-Pad automático en primera película al entrar a carpetas; corrección de corte de texto en buscador TV; preservación de cabeceras reales de dropcdn.io sin forzar fastream."
 }

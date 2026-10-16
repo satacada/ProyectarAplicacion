@@ -153,7 +153,8 @@ private fun TvDialogButton(
 fun TvPlaylistItemRow(
     item: TvPlaylistItem,
     onPlay: () -> Unit,
-    onMenu: () -> Unit
+    onMenu: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     var isFocused by remember { mutableStateOf(false) }
 
@@ -162,7 +163,7 @@ fun TvPlaylistItemRow(
             containerColor = if (isFocused) Color(0xFF2E2442) else Color(0xFF1E182A)
         ),
         shape = RoundedCornerShape(10.dp),
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 4.dp, vertical = 3.dp)
             .border(

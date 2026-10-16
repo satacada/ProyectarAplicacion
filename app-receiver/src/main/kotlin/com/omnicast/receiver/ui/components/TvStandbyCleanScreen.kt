@@ -8,7 +8,10 @@ import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Surface
@@ -47,6 +50,14 @@ fun TvStandbyCleanScreen(
     var searchQuery by remember { mutableStateOf("") }
     var selectedSort by remember { mutableStateOf(TvVideoSortOrder.NEWEST) }
     val listState = androidx.compose.foundation.lazy.rememberLazyListState()
+    val firstItemFocusRequester = remember { FocusRequester() }
+
+    LaunchedEffect(enteredPlaylistId) {
+        if (enteredPlaylistId != null) {
+            kotlinx.coroutines.delay(120)
+            runCatching { firstItemFocusRequester.requestFocus() }
+        }
+    }
 
     // Regreso en 1 solo clic al nivel de carpetas desde el video 60
     BackHandler(enabled = enteredPlaylistId != null) {
@@ -134,11 +145,12 @@ fun TvStandbyCleanScreen(
                                 verticalArrangement = Arrangement.spacedBy(10.dp),
                                 modifier = Modifier.fillMaxSize()
                             ) {
-                                items(playlistFilteredItems, key = { it.url }) { item ->
+                                itemsIndexed(playlistFilteredItems, key = { _, it -> it.url }) { index, item ->
                                     TvPlaylistItemRow(
                                         item = item,
                                         onPlay = { onPlayPlaylist(item) },
-                                        onMenu = { menuItem = item }
+                                        onMenu = { menuItem = item },
+                                        modifier = if (index == 0) Modifier.focusRequester(firstItemFocusRequester) else Modifier
                                     )
                                 }
                             }

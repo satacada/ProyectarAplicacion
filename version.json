@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 116,
-  "versionCodeReceiver": 99,
-  "versionName": "3.32.71",
-  "releaseTag": "v3.32.71",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.71/omnicast-sender-v3.32.71.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.71/omnicast-receiver-v3.32.71.apk",
-  "changelog": "v3.32.71: Actualizador automático en segundo plano para listas públicas de bloqueo de anuncios (StevenBlack Hosts con más de 73,000 dominios y baseline oficial OmniCast/WVC con 34,800 reglas); protección y recarga en caliente del motor C++ libadblock-client sin degradación."
+  "versionCodeSender": 117,
+  "versionCodeReceiver": 100,
+  "versionName": "3.32.72",
+  "releaseTag": "v3.32.72",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.72/omnicast-sender-v3.32.72.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.72/omnicast-receiver-v3.32.72.apk",
+  "changelog": "v3.32.72: Corrección crítica en la extracción de IDs de DropCDN/dr0pstream (/e/ y /d/) para evitar que el nombre de dominio sea tomado como identificador; desvío automático universal de nodos caídos en TV Receiver y Core Domain (StreamManifestProbe y ExoPlayerTvManager); reproducción limpia de películas protegidas en TV Box."
 }

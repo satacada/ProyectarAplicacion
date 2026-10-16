@@ -30,30 +30,43 @@ object StreamManifestProbe {
         val httpCode: Int = -1
     )
 
+    fun sanitizeMediaUrl(url: String): String {
+        if (url.isBlank()) return url
+        if (url.contains(".dropcdn.io", true) && url.contains("srv=")) {
+            val srvMatch = Regex("[?&]srv=([^&]+)").find(url)
+            val srv = srvMatch?.groupValues?.get(1)
+            if (!srv.isNullOrBlank()) {
+                return url.replace(Regex("https?://r\\d+\\.dropcdn\\.io"), "https://$srv.dropcdn.io")
+                          .replace(Regex("https?://[^/]+\\.dropcdn\\.io(?=/hls)"), "https://$srv.dropcdn.io")
+            }
+        }
+        return url
+    }
+
     fun probeAndHeal(
         streamUrl: String,
         initialHeaders: Map<String, String> = emptyMap(),
         pageUrl: String? = null
     ): ProbeResult {
         if (streamUrl.isBlank()) return ProbeResult(false, streamUrl, initialHeaders)
-        val lower = streamUrl.lowercase()
+        val cleanUrl = sanitizeMediaUrl(streamUrl)
+        val lower = cleanUrl.lowercase()
         // Los enlaces crudos de página web de YouTube no son flujos reproducibles por ExoPlayer directo
         if ((lower.contains("youtube.com/watch") || lower.contains("youtu.be/")) && !lower.contains(".m3u8") && !lower.contains("googlevideo.com")) {
-            return ProbeResult(false, streamUrl, initialHeaders, httpCode = 415)
+            return ProbeResult(false, cleanUrl, initialHeaders, httpCode = 415)
         }
 
-        val candidates = buildHeaderPermutations(streamUrl, initialHeaders, pageUrl)
-        var lastResult = ProbeResult(false, streamUrl, initialHeaders)
+        val candidates = buildHeaderPermutations(cleanUrl, initialHeaders, pageUrl)
+        var lastResult = ProbeResult(false, cleanUrl, initialHeaders)
 
         for ((strategyName, candidateHeaders) in candidates) {
-            val res = executeSingleProbe(streamUrl, candidateHeaders)
+            val res = executeSingleProbe(cleanUrl, candidateHeaders)
             lastResult = res
             if (res.isPlayable) {
-                val host = extractHost(streamUrl)
+                val host = extractHost(cleanUrl)
                 if (host != null) learnedHostStrategy[host] = strategyName
                 return res
             }
-            // Si el archivo no existe (404) o expiró definitivamente (410), o el servidor no responde (-1), no permutar más
             if (res.httpCode == 404 || res.httpCode == 410 || res.httpCode == -1) {
                 break
             }

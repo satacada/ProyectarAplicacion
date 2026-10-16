@@ -98,7 +98,7 @@ object MediaPlatformResolver {
     fun extractFastreamId(url: String): String? {
         val lower = url.lowercase()
         if (!lower.contains("fastream.to") && !lower.contains("dropcdn.io") && !lower.contains("dr0pstream.com")) return null
-        return Regex("(?:/hls\\d*/\\d+/\\d+/|/embed-|/)([a-zA-Z0-9]{10,12})(?:[_,.]|$)").find(url)?.groupValues?.get(1)
+        return Regex("(?:/hls\\d*/\\d+/\\d+/|/embed-|/e/|/d/)([a-zA-Z0-9]{8,16})(?:[_,.]|$)").find(url)?.groupValues?.get(1)
     }
 
     fun resolveFastreamSync(url: String, referer: String? = null): Triple<String, String?, Map<String, String>>? {

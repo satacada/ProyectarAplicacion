@@ -126,16 +126,17 @@ class ExoPlayerTvManager(private val context: Context) {
             return
         }
         initialize()
-        currentUrl = url
+        val cleanUrl = com.omnicast.core.domain.usecases.StreamManifestProbe.sanitizeMediaUrl(url)
+        currentUrl = cleanUrl
         currentTitle = title
         currentHeaders = headers
         isRetryingClean = false
 
-        val safeHeaders = filterSafeHeaders(url, headers)
-        val mediaItem = buildMediaItem(url, title)
+        val safeHeaders = filterSafeHeaders(cleanUrl, headers)
+        val mediaItem = buildMediaItem(cleanUrl, title)
 
         if (safeHeaders.isEmpty()) {
-            playClean(url, title, startPositionMs)
+            playClean(cleanUrl, title, startPositionMs)
             return
         }
 
@@ -168,9 +169,10 @@ class ExoPlayerTvManager(private val context: Context) {
 
     fun playClean(url: String, title: String? = null, startPositionMs: Long = 0L) {
         if (url.contains("stub.mp4", ignoreCase = true) || url.contains("dummy.mp4", ignoreCase = true)) return
+        val cleanUrl = com.omnicast.core.domain.usecases.StreamManifestProbe.sanitizeMediaUrl(url)
         runCatching {
-            val mediaItem = buildMediaItem(url, title)
-            val safe = filterSafeHeaders(url, emptyMap())
+            val mediaItem = buildMediaItem(cleanUrl, title)
+            val safe = filterSafeHeaders(cleanUrl, emptyMap())
             val httpFactory = DefaultHttpDataSource.Factory()
                 .setUserAgent(safe["User-Agent"] ?: DEFAULT_UA).setAllowCrossProtocolRedirects(true).setConnectTimeoutMs(15000).setReadTimeoutMs(15000)
             if (safe.isNotEmpty()) httpFactory.setDefaultRequestProperties(safe)

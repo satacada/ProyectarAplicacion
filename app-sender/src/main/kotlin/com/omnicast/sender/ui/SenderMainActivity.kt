@@ -149,14 +149,10 @@ class SenderMainActivity : ComponentActivity() {
     }
 
     private fun checkAutoMirroring(intent: Intent?) {
-        if (intent?.getBooleanExtra("EXTRA_START_MIRRORING_AUTO", false) == true) {
-            intent.removeExtra("EXTRA_START_MIRRORING_AUTO"); autoPromptCapture.value = true
-        }
+        if (intent?.getBooleanExtra("EXTRA_START_MIRRORING_AUTO", false) == true) { intent.removeExtra("EXTRA_START_MIRRORING_AUTO"); autoPromptCapture.value = true }
         if (intent?.getBooleanExtra("EXTRA_OPEN_BROWSER", false) == true) { intent.removeExtra("EXTRA_OPEN_BROWSER"); openBrowserDirectly.value = true }
         if (intent?.getBooleanExtra("EXTRA_OPEN_GALLERY", false) == true) { intent.removeExtra("EXTRA_OPEN_GALLERY"); openGalleryDirectly.value = true }
-        if (intent?.getBooleanExtra("EXTRA_GO_TO_MAIN", false) == true) {
-            intent.removeExtra("EXTRA_GO_TO_MAIN"); onRequestReturnToMain?.invoke()
-        }
+        if (intent?.getBooleanExtra("EXTRA_GO_TO_MAIN", false) == true) { intent.removeExtra("EXTRA_GO_TO_MAIN"); onRequestReturnToMain?.invoke() }
     }
 
     fun connectToTv(ipAddress: String, port: Int) {
@@ -188,6 +184,7 @@ class SenderMainActivity : ComponentActivity() {
                     if (msg.state == "ERROR_FORBIDDEN_403") {
                         val fUrl = msg.mediaUrl ?: ActiveStreamHolder.streamUrl
                         if (!fUrl.isNullOrBlank() && !fUrl.contains(":8092")) {
+                            lastHandoffTime = System.currentTimeMillis()
                             val origUrl = com.omnicast.sender.media.LocalStreamProxyServer.getOriginalUrl(fUrl) ?: fUrl
                             val proxyUrl = com.omnicast.sender.media.LocalStreamProxyServer.startAndGetProxyUrl(this@SenderMainActivity, origUrl, ActiveStreamHolder.headers)
                             runOnUiThread { Toast.makeText(this@SenderMainActivity, "🔒 Servidor protegido: Transmitiendo vía teléfono. No desconectes WiFi.", Toast.LENGTH_LONG).show() }
@@ -205,9 +202,12 @@ class SenderMainActivity : ComponentActivity() {
                             com.omnicast.sender.service.CastMediaNotificationService.start(this@SenderMainActivity)
                         }
                     } else if (msg.state in listOf("STOPPED", "ENDED", "IDLE")) {
-                        ActiveStreamHolder.stopCasting(notifyTv = false)
-                        com.omnicast.sender.service.CastMediaNotificationService.stop(this@SenderMainActivity)
-                        checkInactivityAutoExit()
+                        val isRecent = (System.currentTimeMillis() - lastHandoffTime) < 3500L
+                        if (!isRecent) {
+                            ActiveStreamHolder.stopCasting(notifyTv = false)
+                            com.omnicast.sender.service.CastMediaNotificationService.stop(this@SenderMainActivity)
+                            checkInactivityAutoExit()
+                        }
                     }
                     ActiveStreamHolder.updatePlayback(msg.state == "PLAYING", msg.positionMs, msg.durationMs)
                     if (msg.positionMs > 5000L) {
@@ -273,10 +273,8 @@ class SenderMainActivity : ComponentActivity() {
     }
 
     private fun sendSignalingMessage(msg: SignalingMessage) {
-        if (signalingClient.isConnected) signalingClient.sendMessage(msg) else {
-            val ip = getSharedPreferences("omnicast_prefs", Context.MODE_PRIVATE).getString("saved_tv_ip", "") ?: ""
-            if (ip.isNotBlank()) signalingClient.connect(ip, 8088, { signalingClient.sendMessage(msg) }, {})
-        }
+        if (signalingClient.isConnected) signalingClient.sendMessage(msg)
+        else getSharedPreferences("omnicast_prefs", Context.MODE_PRIVATE).getString("saved_tv_ip", "")?.takeIf { it.isNotBlank() }?.let { ip -> signalingClient.connect(ip, 8088, { signalingClient.sendMessage(msg) }, {}) }
     }
 
     private fun startScreenStreaming(target: DeviceTarget, profile: StreamProfile, tvScaleMode: String, permissionData: Intent) {

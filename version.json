@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 121,
-  "versionCodeReceiver": 104,
-  "versionName": "3.32.76",
-  "releaseTag": "v3.32.76",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.76/omnicast-sender-v3.32.76.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.76/omnicast-receiver-v3.32.76.apk",
-  "changelog": "v3.32.76: Rediseño fiel a Web Video Caster de la hoja de 'Lista de videos' (presentación plana en fondo negro, icono cuadrado naranja y 4 líneas detalladas por flujo con selección directa); barra superior del navegador compacta con botón de recarga integrado dentro del cajón de búsqueda y controles de tamaño reducido; control multimedia condicionado estrictamente a reproducción activa en TV y conmutable mediante botón en la barra superior."
+  "versionCodeSender": 122,
+  "versionCodeReceiver": 105,
+  "versionName": "3.32.77",
+  "releaseTag": "v3.32.77",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.77/omnicast-sender-v3.32.77.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.77/omnicast-receiver-v3.32.77.apk",
+  "changelog": "v3.32.77: Ordenamiento LIFO estricto en lista de videos (los últimos flujos capturados se colocan primero en el tope y los antiguos abajo); eliminación de condición de carrera entre ERROR_FORBIDDEN_403 y señal STOPPED cancelando statusJob en TV y protegiendo el proxy en el emisor; cabeceras y cookies estrictas de embed para DropCDN y Fastream en LocalStreamProxyServer."
 }

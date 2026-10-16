@@ -65,9 +65,13 @@ object LocalStreamProxyServer {
         if (!mutableHeaders.containsKey("User-Agent")) mutableHeaders["User-Agent"] = DEFAULT_UA
         val id = MediaPlatformResolver.extractFastreamId(cleanUrl)
         val isDrop = cleanUrl.contains("dropcdn.io", true) || cleanUrl.contains("dr0pstream.com", true)
-        if (isDrop && id != null && !mutableHeaders.containsKey("Referer")) {
+        val isFastream = cleanUrl.contains("fastream.to", true)
+        if (isDrop && id != null) {
             mutableHeaders["Referer"] = "https://dr0pstream.com/e/$id"
             mutableHeaders["Origin"] = "https://dr0pstream.com"
+        } else if (isFastream && id != null) {
+            mutableHeaders["Referer"] = "https://fastream.to/embed-$id.html"
+            mutableHeaders["Origin"] = "https://fastream.to"
         } else {
             val ref = mutableHeaders["Referer"] ?: headers["Referer"]
             if (!ref.isNullOrBlank() && !mutableHeaders.containsKey("Origin")) {
@@ -82,6 +86,7 @@ object LocalStreamProxyServer {
             val cookie = CookieManager.getInstance().getCookie(cleanUrl)
                 ?: mutableHeaders["Referer"]?.let { CookieManager.getInstance().getCookie(it) }
                 ?: mutableHeaders["Origin"]?.let { CookieManager.getInstance().getCookie(it) }
+                ?: CookieManager.getInstance().getCookie("https://dr0pstream.com")
             if (!cookie.isNullOrBlank() && !mutableHeaders.containsKey("Cookie")) {
                 mutableHeaders["Cookie"] = cookie
             }

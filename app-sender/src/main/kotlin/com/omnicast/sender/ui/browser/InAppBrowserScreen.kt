@@ -67,12 +67,13 @@ fun InAppBrowserScreen(
     fun registerStream(url: String, hdrs: Map<String, String>, isPrimary: Boolean = false, label: String? = null) {
         if (url.isBlank() || AdBlocker.isAd(url) || !isRealMedia(url) || BrowserUrlHelper.extractYouTubeId(url) != null) return
         if (detectedStreams.contains(url)) detectedStreams.remove(url)
-        if (isPrimary) detectedStreams.add(0, url) else detectedStreams.add(url)
+        // Últimos capturados al principio (índice 0), y los primeros/antiguos abajo
+        detectedStreams.add(0, url)
         if (hdrs.isNotEmpty()) streamHeaders[url] = hdrs; if (!label.isNullOrBlank()) streamLabels[url] = label
         val primaryUrl = detectedStreams.firstOrNull { isRealMedia(it) } ?: url
         val cleanT = if (pageTitle.isNotBlank() && pageTitle != "Cargando..." && pageTitle != "Transmisión") pageTitle else "Video Web"
         ActiveStreamHolder.update(primaryUrl, cleanT, streamHeaders[primaryUrl] ?: hdrs)
-        android.util.Log.i("StreamDetection", "🎬 Flujo registrado [${if (isPrimary) "PRIMARY" else "ADDED"}]: $url (Referer=${hdrs["Referer"] ?: "none"})")
+        android.util.Log.i("StreamDetection", "🎬 Flujo registrado [TOP/RECENT]: $url")
     }
 
     fun checkPlatformUrls(url: String?, title: String? = null) {
@@ -95,6 +96,7 @@ fun InAppBrowserScreen(
         val refPage = savedPageUrl?.takeIf { it.isNotBlank() } ?: currentUrl
         pageTitle = cleanT; com.omnicast.sender.history.NavigationTrackManager.saveTrackLocally(context, refPage, cleanT)
         scope.launch(Dispatchers.IO) {
+            val isForceProxy = hdrs["X-Force-Proxy"] == "true" || url.contains("dropcdn.io") || url.contains("dr0pstream.com")
             val (finalUrl, finalHdrs) = MediaPlatformResolver.prepareStreamForPlayback(url, refPage, hdrs)
             val probe = StreamQualityDetector.probeAndHealStream(finalUrl, finalHdrs, refPage)
             if (!probe.isPlayable && (probe.httpCode == 404 || probe.httpCode == 410)) {
@@ -107,7 +109,8 @@ fun InAppBrowserScreen(
                 }
                 return@launch
             }
-            val healedHdrs = if (probe.isPlayable && probe.healedHeaders.isNotEmpty()) probe.healedHeaders else finalHdrs
+            val baseHdrs = if (probe.isPlayable && probe.healedHeaders.isNotEmpty()) probe.healedHeaders else finalHdrs
+            val healedHdrs = baseHdrs.toMutableMap().apply { if (isForceProxy) put("X-Force-Proxy", "true") }
             withContext(Dispatchers.Main) { streamHeaders[finalUrl] = healedHdrs; historyManager.addOrUpdate(finalUrl, cleanT, refPage, healedHdrs); onSendStreamToTv(finalUrl, cleanT, healedHdrs); showBottomControls = true }
         }
     }
@@ -159,9 +162,10 @@ fun InAppBrowserScreen(
             }
             if (validParents.isNotEmpty()) detectedStreams.retainAll { validParents.contains(it) }
             val finalOpts = if (deep.isNotEmpty()) deep else qualityOptions
-            qualityOptions = finalOpts.distinctBy { it.streamUrl }.sortedWith(
-                compareByDescending<StreamQualityOption> { it.isSuggested }.thenByDescending { it.isMovie }.thenByDescending { it.resolution.removeSuffix("p").toIntOrNull() ?: 0 }
-            )
+            val orderMap = currentStreams.withIndex().associate { it.value to it.index }
+            qualityOptions = finalOpts.distinctBy { it.streamUrl }.sortedBy { opt ->
+                orderMap[opt.streamUrl] ?: currentStreams.indexOfFirst { opt.streamUrl.startsWith(it.substringBefore('?')) }.takeIf { it >= 0 } ?: 999
+            }
         }
     }
 
@@ -275,7 +279,11 @@ fun InAppBrowserScreen(
     BrowserModalSheets(
         showOptionsSheet = showOptionsSheet, showHistorySheet = false, showSavedPlaylistsSheet = false, videoToSave = videoToSave,
         playlistManager = playlistManager, pageTitle = pageTitle, qualityOptions = qualityOptions, historyList = emptyList(),
-        onTransmitOption = { opt -> showOptionsSheet = false; val bT = webViewInstance?.title?.takeIf { it.isNotBlank() && !it.contains("about:blank") && it != "Transmisión" } ?: pageTitle; transmitWithHistory(opt.streamUrl, bT, opt.healedHeaders.ifEmpty { streamHeaders[opt.streamUrl] ?: emptyMap() }) },
+        onTransmitOption = { opt ->
+            showOptionsSheet = false; val bT = webViewInstance?.title?.takeIf { it.isNotBlank() && !it.contains("about:blank") && it != "Transmisión" } ?: pageTitle
+            val merged = (streamHeaders[opt.streamUrl] ?: emptyMap()) + opt.healedHeaders
+            transmitWithHistory(opt.streamUrl, bT, merged)
+        },
         onTransmitHistory = { transmitWithHistory(it.url, it.title, it.headers, it.pageUrl) }, onDismissOptions = { showOptionsSheet = false },
         onClearOptions = { detectedStreams.clear(); qualityOptions = emptyList(); showOptionsSheet = false },
         onRescanOptions = { webViewInstance?.evaluateJavascript(WvcSnifferScripts.buildAggressiveRescanScript(WvcDomSniffer.CONSOLE_PREFIX), null); Toast.makeText(context, "🔍 Buscando videos...", Toast.LENGTH_SHORT).show() },

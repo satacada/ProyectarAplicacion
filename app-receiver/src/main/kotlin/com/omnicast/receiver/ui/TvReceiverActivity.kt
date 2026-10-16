@@ -60,6 +60,7 @@ class TvReceiverActivity : ComponentActivity() {
         exoPlayerManager = ExoPlayerTvManager(this).apply {
             onTracksChanged = { info -> lifecycleScope.launch { signalingServer.sendMessage(info) } }
             onPlaybackFailed = { failedUrl, failedTitle -> runOnUiThread {
+                statusJob?.cancel()
                 val streamToReport = failedUrl ?: (receiverState.value as? ReceiverUiState.DirectStreamPlaying)?.streamUrl
                 val titleToReport = failedTitle ?: (receiverState.value as? ReceiverUiState.DirectStreamPlaying)?.title
                 (receiverState.value as? ReceiverUiState.DirectStreamPlaying)?.let { cur ->

@@ -29,19 +29,24 @@ object StreamQualityDetector {
         }
 
         val options = mutableListOf<StreamQualityOption>()
-        if (!mediaUrl.contains(".m3u8", ignoreCase = true)) {
-            val label = if (mediaUrl.contains(".mp4", ignoreCase = true)) "🎬 ${prefix}Video MP4 Directo" else "▶ ${prefix}Flujo Directo"
-            return@withContext listOf(StreamQualityOption(label, "Nativa", "Original", mediaUrl))
-        }
-
         var currentMediaUrl = mediaUrl
         var safeHeaders = BrowserUrlHelper.buildSafeHeaders(currentMediaUrl, headers["Referer"] ?: "", UA_MOBILE, headers)
-        if (currentMediaUrl.contains("fastream.to", ignoreCase = true)) {
+        if (currentMediaUrl.contains("fastream.to", ignoreCase = true) || currentMediaUrl.contains("dropcdn.io", ignoreCase = true)) {
             val resolved = MediaPlatformResolver.resolveFastreamSync(currentMediaUrl, headers["Referer"])
             if (resolved != null) {
                 currentMediaUrl = resolved.first
                 safeHeaders = BrowserUrlHelper.buildSafeHeaders(currentMediaUrl, headers["Referer"] ?: "", UA_MOBILE, resolved.third)
             }
+        }
+
+        if (!currentMediaUrl.contains(".m3u8", ignoreCase = true)) {
+            val isPlayable = probeStreamPlayable(currentMediaUrl, safeHeaders)
+            if (!isPlayable) {
+                android.util.Log.w("StreamQualityDetector", "🛑 Flujo MP4/Directo corrupto o bloqueado descartado: $currentMediaUrl")
+                return@withContext emptyList()
+            }
+            val label = if (currentMediaUrl.contains(".mp4", ignoreCase = true)) "🎬 ${prefix}Video MP4 Directo" else "▶ ${prefix}Flujo Directo"
+            return@withContext listOf(StreamQualityOption(label, "Nativa", "Original", currentMediaUrl))
         }
 
         try {
@@ -98,14 +103,12 @@ object StreamQualityDetector {
                 reader.close()
                 conn.disconnect()
             } else {
-                android.util.Log.w("StreamQualityDetector", "⚠️ Respuesta HTTP $respCode para $mediaUrl, habilitando contingencia")
+                android.util.Log.w("StreamQualityDetector", "🛑 Flujo inaccesible/bloqueado (HTTP $respCode) descartado de la lista: $mediaUrl")
                 StreamRuleSyncManager.reportStreamFailure(headers["Referer"] ?: "", currentMediaUrl, respCode, "HTTP_PROBE_ERROR")
-                options.add(StreamQualityOption("🎬 ${prefix}Reproducción Directa", "Auto", "Directo", currentMediaUrl, isMaster = true, isSuggested = true))
             }
         } catch (e: Throwable) {
-            android.util.Log.w("StreamQualityDetector", "No se pudo leer playlist HLS (${e.message}), habilitando contingencia: $mediaUrl")
+            android.util.Log.w("StreamQualityDetector", "🛑 Error leyendo playlist HLS (${e.message}), descartado: $mediaUrl")
             StreamRuleSyncManager.reportStreamFailure(headers["Referer"] ?: "", currentMediaUrl, 500, e.message ?: "UNKNOWN_EXCEPTION")
-            options.add(StreamQualityOption("🎬 ${prefix}Reproducción Directa", "Auto", "Directo", currentMediaUrl, isMaster = true, isSuggested = true))
         }
         return@withContext options.distinctBy { it.streamUrl }.sortedWith(
             compareByDescending<StreamQualityOption> { it.isSuggested }
@@ -119,5 +122,24 @@ object StreamQualityDetector {
         val sub = inf.substring(idx + key.length + 1)
         return if (sub.startsWith("\"")) sub.substring(1).substringBefore("\"")
         else sub.substringBefore(",").substringBefore("\n").trim()
+    }
+
+    fun probeStreamPlayable(urlStr: String, safeHeaders: Map<String, String>): Boolean {
+        return try {
+            val url = URL(urlStr)
+            val conn = (url.openConnection() as HttpURLConnection).apply {
+                connectTimeout = 3000
+                readTimeout = 3000
+                requestMethod = "HEAD"
+                instanceFollowRedirects = true
+                safeHeaders.forEach { (k, v) -> setRequestProperty(k, v) }
+            }
+            val code = conn.responseCode
+            val isHtml = conn.contentType?.lowercase()?.contains("text/html") == true
+            conn.disconnect()
+            code in 200..299 && !isHtml
+        } catch (_: Throwable) {
+            false
+        }
     }
 }

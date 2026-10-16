@@ -157,21 +157,17 @@ class ExoPlayerTvManager(private val context: Context) {
         if (url.contains("stub.mp4", ignoreCase = true) || url.contains("dummy.mp4", ignoreCase = true)) return
         runCatching {
             val mediaItem = buildMediaItem(url, title)
+            val safe = filterSafeHeaders(url, emptyMap())
             val httpFactory = DefaultHttpDataSource.Factory()
-                .setUserAgent(DEFAULT_UA).setAllowCrossProtocolRedirects(true).setConnectTimeoutMs(15000).setReadTimeoutMs(15000)
-            val mediaSource = DefaultMediaSourceFactory(context)
-                .setDataSourceFactory(httpFactory)
-                .createMediaSource(mediaItem)
-
+                .setUserAgent(safe["User-Agent"] ?: DEFAULT_UA).setAllowCrossProtocolRedirects(true).setConnectTimeoutMs(15000).setReadTimeoutMs(15000)
+            if (safe.isNotEmpty()) httpFactory.setDefaultRequestProperties(safe)
+            val mediaSource = DefaultMediaSourceFactory(context).setDataSourceFactory(httpFactory).createMediaSource(mediaItem)
             player?.apply {
-                stop()
-                clearMediaItems()
-                setMediaSource(mediaSource)
+                stop(); clearMediaItems(); setMediaSource(mediaSource)
                 if (startPositionMs > 0L) seekTo(startPositionMs) else seekToDefaultPosition()
-                prepare()
-                play()
+                prepare(); play()
             }
-            com.omnicast.receiver.log.ReceiverLogger.log(TAG, "Reproduciendo flujo directo limpio con caché: $url (pos=${startPositionMs}ms)")
+            com.omnicast.receiver.log.ReceiverLogger.log(TAG, "Reproduciendo flujo limpio con cabeceras de dominio: $url (pos=${startPositionMs}ms)")
         }.onFailure { err ->
             com.omnicast.receiver.log.ReceiverLogger.log(TAG, "Error crítico reproduciendo flujo limpio: ${err.message}", err)
         }
@@ -220,6 +216,7 @@ class ExoPlayerTvManager(private val context: Context) {
             val fastreamId = Regex("(?:/hls\\d*/\\d+/\\d+/|/embed-|/)([a-zA-Z0-9]{10,12})(?:[_,.]|$)").find(url)?.groupValues?.get(1)
             allowed["Origin"] = "https://fastream.to"
             allowed["Referer"] = if (!fastreamId.isNullOrBlank()) "https://fastream.to/embed-$fastreamId.html" else "https://fastream.to/embed-video.html"
+            allowed["User-Agent"] = DEFAULT_UA
             allowed["Sec-Fetch-Mode"] = "cors"
             allowed["Sec-Fetch-Dest"] = "empty"
             allowed["Sec-Fetch-Site"] = "cross-site"

@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 102,
-  "versionCodeReceiver": 85,
-  "versionName": "3.32.57",
-  "releaseTag": "v3.32.57",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.57/omnicast-sender-v3.32.57.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.57/omnicast-receiver-v3.32.57.apk",
-  "changelog": "v3.32.57: Soporte para CDN Fastream / Dropcdn (dropcdn.io) auto-descubierto por IA de Gemini, inyección de cabeceras seguras embed en móvil y TV Box, deduplicación de telemetría en Supabase y modelo gemini-3.5-flash-lite."
+  "versionCodeSender": 103,
+  "versionCodeReceiver": 86,
+  "versionName": "3.32.58",
+  "releaseTag": "v3.32.58",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.58/omnicast-sender-v3.32.58.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.58/omnicast-receiver-v3.32.58.apk",
+  "changelog": "v3.32.58: Telemetria de streaming completa en TV hacia Supabase sin ADB; descarte y filtrado previo de flujos corruptos (HTTP 403/404) para evitar crash de ExoPlayer; resolucion en caliente de tokens Fastream/dropcdn; eliminacion de eco de comando STOP desde el celular."
 }

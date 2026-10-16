@@ -69,11 +69,12 @@ object ReceiverLogger {
         while (logBuffer.size > MAX_LOGS) { logBuffer.poll() }
 
         val isErrorOrWarning = throwable != null || message.contains("❌") || message.contains("Error", ignoreCase = true) || message.contains("⚠️") || message.contains("warning", ignoreCase = true)
-        val isMilestone = tag == "INIT" || tag == "TV_RECEIVER" || tag == "ICE" || tag.contains("WebRtc", ignoreCase = true)
+        val isStreamEvent = tag.contains("ExoPlayer", ignoreCase = true) || tag.contains("Stream", ignoreCase = true) || tag == "TV_RECEIVER" || tag == "HANDOFF" || tag.contains("Playback", ignoreCase = true)
+        val isMilestone = tag == "INIT" || tag == "ICE" || tag.contains("WebRtc", ignoreCase = true)
 
         thread(isDaemon = true) {
             runCatching { logFile?.appendText("$line\n") }
-            if (isErrorOrWarning || isMilestone) {
+            if (isErrorOrWarning || isStreamEvent || isMilestone) {
                 dispatchToSupabase(tag, message, errStr, if (isErrorOrWarning) "error" else "info")
             }
         }

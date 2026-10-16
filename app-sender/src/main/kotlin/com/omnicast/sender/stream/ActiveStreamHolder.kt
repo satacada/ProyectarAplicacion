@@ -89,12 +89,14 @@ object ActiveStreamHolder {
         _volume.value = vol.coerceIn(0f, 1f)
     }
 
-    fun stopCasting() {
+    fun stopCasting(notifyTv: Boolean = true) {
         _isCasting.value = false
         _isPlaying.value = false
         _tracksInfo.value = null
         com.omnicast.sender.overlay.FloatingIndicatorService.updateMode()
-        onSendPlayControl?.invoke("STOP", 0L, 1.0f, null)
+        if (notifyTv) {
+            onSendPlayControl?.invoke("STOP", 0L, 1.0f, null)
+        }
     }
 
     fun stopCastingAndClear() {

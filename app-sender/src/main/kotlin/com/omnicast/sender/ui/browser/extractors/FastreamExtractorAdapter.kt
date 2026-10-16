@@ -17,7 +17,7 @@ class FastreamExtractorAdapter : IMediaStreamExtractorPort {
 
     override fun canHandle(candidate: StreamCandidate): Boolean {
         val lower = candidate.url.lowercase()
-        return lower.contains("fastream.to") || lower.contains("/hls2/")
+        return lower.contains("fastream.to") || lower.contains("dropcdn.io") || lower.contains("/hls2/")
     }
 
     override fun extract(candidate: StreamCandidate): MediaStream? {

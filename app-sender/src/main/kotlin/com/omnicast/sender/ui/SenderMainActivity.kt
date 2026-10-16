@@ -200,7 +200,7 @@ class SenderMainActivity : ComponentActivity() {
                             com.omnicast.sender.service.CastMediaNotificationService.start(this@SenderMainActivity)
                         }
                     } else if (msg.state in listOf("STOPPED", "ENDED", "IDLE")) {
-                        ActiveStreamHolder.stopCasting()
+                        ActiveStreamHolder.stopCasting(notifyTv = false)
                         com.omnicast.sender.service.CastMediaNotificationService.stop(this@SenderMainActivity)
                         checkInactivityAutoExit()
                     }

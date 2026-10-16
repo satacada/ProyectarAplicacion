@@ -75,17 +75,17 @@ fun BrowserTopBar(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(2.dp)
         ) {
-            IconButton(onClick = onOpenDrawer, modifier = Modifier.size(28.dp)) {
-                Text("☰", color = Color(0xFF94A3B8), fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            IconButton(onClick = onOpenDrawer, modifier = Modifier.size(26.dp)) {
+                Text("☰", color = Color(0xFF94A3B8), fontSize = 14.sp, fontWeight = FontWeight.Bold)
             }
-            IconButton(onClick = onBack, modifier = Modifier.size(28.dp)) {
-                Text("<", color = Color(0xFFCBD5E1), fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            IconButton(onClick = onBack, modifier = Modifier.size(26.dp)) {
+                Text("<", color = Color(0xFFCBD5E1), fontSize = 14.sp, fontWeight = FontWeight.Bold)
             }
-            IconButton(onClick = onForward, enabled = canGoForward, modifier = Modifier.size(28.dp)) {
+            IconButton(onClick = onForward, enabled = canGoForward, modifier = Modifier.size(26.dp)) {
                 Text(
                     ">",
                     color = if (canGoForward) Color(0xFFCBD5E1) else Color(0xFF475569),
-                    fontSize = 16.sp,
+                    fontSize = 14.sp,
                     fontWeight = FontWeight.Bold
                 )
             }
@@ -155,11 +155,11 @@ fun BrowserTopBar(
                 IconButton(
                     onClick = onToggleBottomControls,
                     modifier = Modifier
-                        .size(30.dp)
+                        .size(26.dp)
                         .background(if (showBottomControls) Color(0xFF0284C7) else Color(0xFF1E293B), CircleShape)
                         .border(1.dp, if (showBottomControls) Color(0xFF38BDF8) else Color(0xFF334155), CircleShape)
                 ) {
-                    Text("🎛️", fontSize = 13.sp)
+                    Text("🎛️", fontSize = 11.sp)
                 }
             }
 
@@ -168,7 +168,7 @@ fun BrowserTopBar(
                 IconButton(
                     onClick = onOpenDetectedVideos,
                     modifier = Modifier
-                        .size(32.dp)
+                        .size(26.dp)
                         .background(
                             if (detectedStreamsCount > 0) Color(0xFFFF7A00) else Color(0xFF334155),
                             CircleShape
@@ -177,7 +177,7 @@ fun BrowserTopBar(
                     Text(
                         "▶",
                         color = if (detectedStreamsCount > 0) Color.White else Color(0xFF94A3B8),
-                        fontSize = 14.sp,
+                        fontSize = 11.sp,
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -185,15 +185,15 @@ fun BrowserTopBar(
                 if (detectedStreamsCount > 0) {
                     Box(
                         modifier = Modifier
-                            .offset(x = 3.dp, y = (-3).dp)
+                            .offset(x = 2.dp, y = (-2).dp)
                             .background(Color(0xFFEF4444), CircleShape)
-                            .padding(horizontal = 4.dp, vertical = 1.dp),
+                            .padding(horizontal = 3.dp, vertical = 0.5.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
                             text = if (detectedStreamsCount > 9) "9+" else detectedStreamsCount.toString(),
                             color = Color.White,
-                            fontSize = 8.sp,
+                            fontSize = 7.sp,
                             fontWeight = FontWeight.ExtraBold
                         )
                     }
@@ -201,8 +201,8 @@ fun BrowserTopBar(
             }
 
             Box {
-                IconButton(onClick = { showMenu = true }, modifier = Modifier.size(28.dp)) {
-                    Text("⋮", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                IconButton(onClick = { showMenu = true }, modifier = Modifier.size(26.dp)) {
+                    Text("⋮", color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.Bold)
                 }
 
                 DropdownMenu(

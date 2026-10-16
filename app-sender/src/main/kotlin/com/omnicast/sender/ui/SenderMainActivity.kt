@@ -183,7 +183,6 @@ class SenderMainActivity : ComponentActivity() {
                     val mUrl = msg.mediaUrl
                     if (msg.state == "ERROR_FORBIDDEN_403") {
                         runOnUiThread { Toast.makeText(this@SenderMainActivity, "⚠️ Error 403: Enlace o token expirado. Usa el video superior reciente.", Toast.LENGTH_LONG).show() }
-                        ActiveStreamHolder.notifyPlaybackError("ERROR_FORBIDDEN_403")
                         ActiveStreamHolder.stopCasting(notifyTv = false)
                         com.omnicast.sender.service.CastMediaNotificationService.stop(this@SenderMainActivity)
                     } else if ((msg.state == "PLAYING" || msg.state == "PAUSED") && !mUrl.isNullOrBlank()) {

@@ -65,9 +65,6 @@ object StreamIntelligenceEngine {
                     "user-agent" -> result["User-Agent"] = v
                     "cookie" -> result["Cookie"] = v
                     "authorization" -> result["Authorization"] = v
-                    "sec-fetch-mode" -> result["Sec-Fetch-Mode"] = v
-                    "sec-fetch-dest" -> result["Sec-Fetch-Dest"] = v
-                    "sec-fetch-site" -> result["Sec-Fetch-Site"] = v
                 }
             }
         }
@@ -87,9 +84,6 @@ object StreamIntelligenceEngine {
             } catch (_: Throwable) {}
         }
 
-        if (!result.containsKey("Sec-Fetch-Mode")) result["Sec-Fetch-Mode"] = "cors"
-        if (!result.containsKey("Sec-Fetch-Dest")) result["Sec-Fetch-Dest"] = "empty"
-        if (!result.containsKey("Sec-Fetch-Site")) result["Sec-Fetch-Site"] = "cross-site"
         if (!result.containsKey("User-Agent")) result["User-Agent"] = UA_MOBILE
         return result
     }

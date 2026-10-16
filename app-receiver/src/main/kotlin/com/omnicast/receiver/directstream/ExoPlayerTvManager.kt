@@ -215,9 +215,6 @@ class ExoPlayerTvManager(private val context: Context) {
                     k.equals("user-agent", true) -> allowed["User-Agent"] = v
                     k.equals("cookie", true) -> allowed["Cookie"] = v
                     k.equals("authorization", true) -> allowed["Authorization"] = v
-                    k.equals("sec-fetch-mode", true) -> allowed["Sec-Fetch-Mode"] = v
-                    k.equals("sec-fetch-dest", true) -> allowed["Sec-Fetch-Dest"] = v
-                    k.equals("sec-fetch-site", true) -> allowed["Sec-Fetch-Site"] = v
                 }
             }
         }

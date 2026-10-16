@@ -270,10 +270,7 @@ fun SenderMainScreen(
         )
     }
 
-    com.omnicast.sender.ui.browser.StreamErrorRecoveryDialog(
-        onStartMirroring = { projectionLauncher.launch(getSafeCaptureIntent()) },
-        onRenewInBrowser = { showInAppBrowser = true }
-    )
+
 
     if (showHelpDialog) {
         SenderHelpDialog(onDismiss = { showHelpDialog = false })

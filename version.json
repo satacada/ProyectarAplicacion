@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 123,
-  "versionCodeReceiver": 106,
-  "versionName": "3.32.78",
-  "releaseTag": "v3.32.78",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.78/omnicast-sender-v3.32.78.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.78/omnicast-receiver-v3.32.78.apk",
-  "changelog": "v3.32.78: Eliminación definitiva del enrutamiento forzado por proxy automático; transmisión 100% directa y transparente de CDN a TV estilo Web Video Caster con cabeceras reales conservadas; eliminación de falso fallback de proxy ante error 403."
+  "versionCodeSender": 124,
+  "versionCodeReceiver": 107,
+  "versionName": "3.32.79",
+  "releaseTag": "v3.32.79",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.79/omnicast-sender-v3.32.79.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.79/omnicast-receiver-v3.32.79.apk",
+  "changelog": "v3.32.79: Eliminación total de la ventana modal de Servidor Protegido 403; reducción del tamaño de los botones de la barra superior del navegador (botón de captura naranja a 26dp y botón de controles multimedia al mismo tamaño compacto de 26dp); eliminación de cabeceras prohibidas Sec-Fetch-* en ExoPlayer."
 }

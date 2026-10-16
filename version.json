@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 105,
-  "versionCodeReceiver": 88,
-  "versionName": "3.32.60",
-  "releaseTag": "v3.32.60",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.60/omnicast-sender-v3.32.60.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.60/omnicast-receiver-v3.32.60.apk",
-  "changelog": "v3.32.60: Foco D-Pad automático en primera película al entrar a carpetas; corrección de corte de texto en buscador TV; preservación de cabeceras reales de dropcdn.io sin forzar fastream."
+  "versionCodeSender": 107,
+  "versionCodeReceiver": 90,
+  "versionName": "3.32.62",
+  "releaseTag": "v3.32.62",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.62/omnicast-sender-v3.32.62.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.62/omnicast-receiver-v3.32.62.apk",
+  "changelog": "v3.32.62: Auto-rotación EXIF en fotos de galería; soporte multi-receptor en galería; protección contra corte de videos locales en TV; reactividad de estado de proyección y WebRtcSdpTuner."
 }

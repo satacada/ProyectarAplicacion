@@ -85,8 +85,28 @@ fun SaveToPlaylistSheet(
                 fontSize = 12.sp,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.padding(bottom = 12.dp)
+                modifier = Modifier.padding(bottom = 8.dp)
             )
+
+            val isProtected = videoItem.requiresProxy || videoItem.url.contains(":8092") || com.omnicast.sender.stream.ActiveStreamHolder.isProxied.value
+            if (isProtected) {
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFF451A03)),
+                    shape = RoundedCornerShape(10.dp),
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp)
+                ) {
+                    Row(modifier = Modifier.padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Text("⚠️", fontSize = 16.sp)
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            "Contenido con protección web: Para reproducirse en la TV, el teléfono debe estar encendido y en el mismo WiFi. Si el emisor se desconecta, la película se detendrá.",
+                            color = Color(0xFFFED7AA),
+                            fontSize = 11.sp,
+                            lineHeight = 15.sp
+                        )
+                    }
+                }
+            }
 
             if (isCreatingNew) {
                 Row(

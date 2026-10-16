@@ -14,7 +14,8 @@ data class HistoryItem(
     val timestamp: Long = System.currentTimeMillis(),
     val lastPositionMs: Long = 0L,
     val durationMs: Long = 0L,
-    val isFavorite: Boolean = false
+    val isFavorite: Boolean = false,
+    val requiresProxy: Boolean = false
 )
 
 class PlayHistoryManager(private val context: Context) {
@@ -38,16 +39,17 @@ class PlayHistoryManager(private val context: Context) {
         } catch (_: Throwable) { emptyList() }
     }
 
-    fun addOrUpdate(url: String, title: String, pageUrl: String? = null, headers: Map<String, String> = emptyMap(), positionMs: Long = 0L, durationMs: Long = 0L) {
+    fun addOrUpdate(url: String, title: String, pageUrl: String? = null, headers: Map<String, String> = emptyMap(), positionMs: Long = 0L, durationMs: Long = 0L, requiresProxy: Boolean = false) {
         if (url.isBlank() || url.contains("stub.mp4") || url.contains("creative")) return
         val current = getHistory().toMutableList()
         val cleanTitle = title.ifBlank { "Película / Video" }
         val existing = current.firstOrNull { it.url == url || (cleanTitle != "Película / Video" && cleanTitle != "Dailymotion" && it.title == cleanTitle) }
         val isFav = existing?.isFavorite ?: false
+        val isProx = requiresProxy || (existing?.requiresProxy ?: false) || url.contains(":8092")
         val finalPos = if (positionMs > 0L) positionMs else (existing?.lastPositionMs ?: 0L)
         val finalDur = if (durationMs > 0L) durationMs else (existing?.durationMs ?: 0L)
         current.removeAll { it.url == url || (cleanTitle != "Película / Video" && cleanTitle != "Dailymotion" && it.title == cleanTitle) }
-        current.add(0, HistoryItem(url, cleanTitle, pageUrl ?: existing?.pageUrl, if (headers.isNotEmpty()) headers else (existing?.headers ?: emptyMap()), System.currentTimeMillis(), finalPos, finalDur, isFavorite = isFav))
+        current.add(0, HistoryItem(url, cleanTitle, pageUrl ?: existing?.pageUrl, if (headers.isNotEmpty()) headers else (existing?.headers ?: emptyMap()), System.currentTimeMillis(), finalPos, finalDur, isFavorite = isFav, requiresProxy = isProx))
         val favorites = current.filter { it.isFavorite }
         val nonFavorites = current.filter { !it.isFavorite }.take(MAX_NON_FAVORITES)
         val combined = (favorites + nonFavorites).distinctBy { it.url }

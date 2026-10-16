@@ -29,7 +29,7 @@ class ExoPlayerTvManager(private val context: Context) {
     var playerView: androidx.media3.ui.PlayerView? = null
     var trackManager: TvTrackManager? = null; private set
     var onTracksChanged: ((com.omnicast.core.protocol.SignalingMessage.TracksInfo) -> Unit)? = null
-    var onPlaybackFailed: (() -> Unit)? = null
+    var onPlaybackFailed: ((url: String?, title: String?) -> Unit)? = null
     val recoveryManager = PlaybackRecoveryManager()
     val aspectRatioHelper = TvAspectRatioHelper()
     private var currentUrl: String? = null
@@ -89,12 +89,12 @@ class ExoPlayerTvManager(private val context: Context) {
                                                 playStream(probe.resolvedUrl, probe.healedHeaders, currentTitle, if (probe.isLiveStream) 0L else currentPositionMs)
                                                 isRetryingClean = true
                                             } else {
-                                                playClean(targetUrl, currentTitle)
+                                                onPlaybackFailed?.invoke(targetUrl, currentTitle)
                                             }
                                         }
                                     }
                                 } else if (isRetryingClean) {
-                                    onPlaybackFailed?.invoke()
+                                    onPlaybackFailed?.invoke(targetUrl, currentTitle)
                                 }
                             }
                             val handled = recoveryManager.handlePlaybackError(error, player) { triggerSelfHeal() }
@@ -202,7 +202,7 @@ class ExoPlayerTvManager(private val context: Context) {
         return builder.build()
     }
 
-    private fun filterSafeHeaders(url: String, headers: Map<String, String>): Map<String, String> {
+    private fun filterSafeHeaders(@Suppress("UNUSED_PARAMETER") url: String, headers: Map<String, String>): Map<String, String> {
         val allowed = mutableMapOf<String, String>()
         headers.forEach { (k, v) ->
             if (v.isNotBlank()) {

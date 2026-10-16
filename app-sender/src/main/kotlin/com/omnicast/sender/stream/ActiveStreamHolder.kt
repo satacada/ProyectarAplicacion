@@ -36,6 +36,10 @@ object ActiveStreamHolder {
     private val _playbackError = MutableStateFlow<String?>(null)
     val playbackError = _playbackError.asStateFlow()
 
+    private val _isProxied = MutableStateFlow(false)
+    val isProxied = _isProxied.asStateFlow()
+
+    fun setProxied(proxied: Boolean) { _isProxied.value = proxied }
     fun notifyPlaybackError(err: String?) { _playbackError.value = err }
     fun clearPlaybackError() { _playbackError.value = null }
 
@@ -65,6 +69,7 @@ object ActiveStreamHolder {
         _currentMediaTitle.value = ""
         _tracksInfo.value = null
         _playbackError.value = null
+        _isProxied.value = false
         com.omnicast.sender.overlay.FloatingIndicatorService.updateMode()
     }
 
@@ -76,6 +81,7 @@ object ActiveStreamHolder {
         _positionMs.value = 0L
         _durationMs.value = 0L
         _tracksInfo.value = null
+        _isProxied.value = url.contains(":8092")
         com.omnicast.sender.overlay.FloatingIndicatorService.updateMode()
     }
 

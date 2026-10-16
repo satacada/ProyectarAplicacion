@@ -64,14 +64,15 @@ fun PlayHistorySheet(
                             ) {
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(
-                                        (if (item.isFavorite) "⭐ " else "") + item.title,
+                                        (if (item.isFavorite) "⭐ " else "") + item.title + (if (item.requiresProxy) " 🔒" else ""),
                                         color = if (item.isFavorite) Color(0xFFFDE047) else Color.White,
                                         fontSize = 13.sp,
                                         fontWeight = FontWeight.SemiBold,
                                         maxLines = 1,
                                         overflow = TextOverflow.Ellipsis
                                     )
-                                    Text(item.url, color = Color(0xFF64748B), fontSize = 10.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                    val subtitle = if (item.requiresProxy) "🔒 Requiere emisor en WiFi • " + item.url else item.url
+                                    Text(subtitle, color = if (item.requiresProxy) Color(0xFFF97316) else Color(0xFF64748B), fontSize = 10.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
                                 }
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     IconButton(onClick = { onToggleFavorite(item.url) }, modifier = Modifier.size(32.dp)) {

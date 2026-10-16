@@ -226,6 +226,22 @@ class PlaylistManager(context: Context) {
         return 0L
     }
 
+    fun updateItemProxyRequirement(url: String, requiresProxy: Boolean) {
+        if (url.isBlank()) return
+        val clean = url.substringBefore('?')
+        var changed = false
+        val updated = getPlaylists().map { pl ->
+            val idx = pl.items.indexOfFirst { it.url == url || it.url.substringBefore('?') == clean }
+            if (idx >= 0) {
+                changed = true
+                val list = pl.items.toMutableList()
+                list[idx] = list[idx].copy(requiresProxy = requiresProxy)
+                pl.copy(items = list)
+            } else pl
+        }
+        if (changed) savePlaylists(updated)
+    }
+
     fun syncFromTv(jsonStr: String): Boolean {
         if (jsonStr.isBlank()) return false
         return try {

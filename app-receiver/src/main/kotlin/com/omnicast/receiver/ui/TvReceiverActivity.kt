@@ -59,12 +59,15 @@ class TvReceiverActivity : ComponentActivity() {
         }
         exoPlayerManager = ExoPlayerTvManager(this).apply {
             onTracksChanged = { info -> lifecycleScope.launch { signalingServer.sendMessage(info) } }
-            onPlaybackFailed = { runOnUiThread {
+            onPlaybackFailed = { failedUrl, failedTitle -> runOnUiThread {
+                val streamToReport = failedUrl ?: (receiverState.value as? ReceiverUiState.DirectStreamPlaying)?.streamUrl
+                val titleToReport = failedTitle ?: (receiverState.value as? ReceiverUiState.DirectStreamPlaying)?.title
                 (receiverState.value as? ReceiverUiState.DirectStreamPlaying)?.let { cur ->
                     val found = playlistManager.findItemByUrlOrTitle(cur.streamUrl, cur.title)
                     if (found != null) expiredItemForRenew.value = found else Toast.makeText(this@TvReceiverActivity, "⚠️ Servidor no disponible (HTTP 403)", Toast.LENGTH_SHORT).show()
                 }
-                receiverState.value = ReceiverUiState.Standby; lifecycleScope.launch { signalingServer.sendMessage(SignalingMessage.PlaybackStatus("ERROR_FORBIDDEN_403", 0L, 0L)) }
+                receiverState.value = ReceiverUiState.Standby
+                lifecycleScope.launch { signalingServer.sendMessage(SignalingMessage.PlaybackStatus("ERROR_FORBIDDEN_403", 0L, 0L, mediaUrl = streamToReport, title = titleToReport)) }
             } }
         }
         digitalAudioReceiver = DigitalAudioReceiver()

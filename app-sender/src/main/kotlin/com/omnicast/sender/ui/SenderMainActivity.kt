@@ -45,22 +45,15 @@ class SenderMainActivity : ComponentActivity() {
         }
 
         fun sendDisconnectStatic(context: Context) { SignalingClientHolder.get().sendMessage(SignalingMessage.Disconnect()) }
-
         var onBrowserRescanRequested: (() -> Unit)? = null
-
-        fun requestBrowserRescan(context: Context) {
-            instance?.let { inst -> onBrowserRescanRequested?.let { req -> inst.runOnUiThread { req.invoke() } } }
-        }
+        fun requestBrowserRescan(context: Context) { instance?.let { inst -> onBrowserRescanRequested?.let { req -> inst.runOnUiThread { req.invoke() } } } }
 
         fun exitCompletely(context: Context) {
             try {
-                com.omnicast.sender.overlay.FloatingIndicatorService.stop(context)
-                com.omnicast.sender.service.CastMediaNotificationService.stop(context)
-                com.omnicast.sender.service.ProjectionForegroundService.stopService(context)
-                com.omnicast.sender.stream.ActiveStreamHolder.clear(); com.omnicast.sender.stream.ActiveStreamHolder.stopCasting()
-                sendDisconnectStatic(context)
-                (context.getSystemService(Context.NOTIFICATION_SERVICE) as? android.app.NotificationManager)?.cancelAll()
-                instance?.let { act -> act.runOnUiThread { act.finishAffinity() } }
+                com.omnicast.sender.overlay.FloatingIndicatorService.stop(context); com.omnicast.sender.service.CastMediaNotificationService.stop(context)
+                com.omnicast.sender.service.ProjectionForegroundService.stopService(context); com.omnicast.sender.media.LocalStreamProxyServer.stop()
+                com.omnicast.sender.stream.ActiveStreamHolder.clear(); com.omnicast.sender.stream.ActiveStreamHolder.stopCasting(); sendDisconnectStatic(context)
+                (context.getSystemService(Context.NOTIFICATION_SERVICE) as? android.app.NotificationManager)?.cancelAll(); instance?.let { act -> act.runOnUiThread { act.finishAffinity() } }
             } catch (e: Throwable) { Log.e("Sender", "exitCompletely", e) }
         }
     }
@@ -193,9 +186,17 @@ class SenderMainActivity : ComponentActivity() {
                 if (msg is SignalingMessage.PlaybackStatus) {
                     val mUrl = msg.mediaUrl
                     if (msg.state == "ERROR_FORBIDDEN_403") {
-                        ActiveStreamHolder.notifyPlaybackError("ERROR_FORBIDDEN_403")
-                        ActiveStreamHolder.stopCasting(notifyTv = false)
-                        com.omnicast.sender.service.CastMediaNotificationService.stop(this@SenderMainActivity)
+                        val fUrl = msg.mediaUrl ?: ActiveStreamHolder.streamUrl
+                        if (!fUrl.isNullOrBlank() && !fUrl.contains(":8092")) {
+                            val origUrl = com.omnicast.sender.media.LocalStreamProxyServer.getOriginalUrl(fUrl) ?: fUrl
+                            val proxyUrl = com.omnicast.sender.media.LocalStreamProxyServer.startAndGetProxyUrl(this@SenderMainActivity, origUrl, ActiveStreamHolder.headers)
+                            runOnUiThread { Toast.makeText(this@SenderMainActivity, "🔒 Servidor protegido: Transmitiendo vía teléfono. No desconectes WiFi.", Toast.LENGTH_LONG).show() }
+                            val sTitle = msg.title ?: ActiveStreamHolder.title ?: "Transmisión Protegida"
+                            historyManager.addOrUpdate(origUrl, sTitle, headers = ActiveStreamHolder.headers, requiresProxy = true); playlistManager.updateItemProxyRequirement(origUrl, true)
+                            ActiveStreamHolder.setProxied(true); sendSignalingMessage(SignalingMessage.DirectStreamHandoff(proxyUrl, title = sTitle, headers = emptyMap(), startPositionMs = msg.positionMs))
+                        } else {
+                            ActiveStreamHolder.notifyPlaybackError("ERROR_FORBIDDEN_403"); ActiveStreamHolder.stopCasting(notifyTv = false); com.omnicast.sender.service.CastMediaNotificationService.stop(this@SenderMainActivity)
+                        }
                     } else if ((msg.state == "PLAYING" || msg.state == "PAUSED") && !mUrl.isNullOrBlank()) {
                         if (!ActiveStreamHolder.isCasting.value || ActiveStreamHolder.streamUrl != mUrl) {
                             val streamTitle = msg.title?.ifBlank { "Película en TV" } ?: "Película en TV"
@@ -239,19 +240,20 @@ class SenderMainActivity : ComponentActivity() {
     fun sendDirectStreamToTv(url: String, title: String? = null, headers: Map<String, String> = emptyMap(), resumePositionMs: Long? = null) {
         val safeTitle = title?.ifBlank { "Transmisión Web" } ?: "Transmisión Web"
         val savedPos = resumePositionMs ?: com.omnicast.sender.stream.StreamResumeManager.getPosition(this, url).takeIf { it > 0 } ?: playlistManager.getLastPosition(url)
-        historyManager.addOrUpdate(url, safeTitle, headers = headers)
-        ActiveStreamHolder.startCasting(url, safeTitle, headers)
-        com.omnicast.sender.service.CastMediaNotificationService.start(this)
+        val isKnownProxy = historyManager.getHistory().firstOrNull { it.url == url }?.requiresProxy == true || playlistManager.getPlaylists().any { pl -> pl.items.any { it.url == url && it.requiresProxy } }
+        val effectiveUrl = if (isKnownProxy && !url.contains(":8092")) {
+            Toast.makeText(this, "🔒 Contenido protegido: Enrutando por teléfono...", Toast.LENGTH_SHORT).show()
+            com.omnicast.sender.media.LocalStreamProxyServer.startAndGetProxyUrl(this, url, headers)
+        } else url
+        historyManager.addOrUpdate(url, safeTitle, headers = headers, requiresProxy = isKnownProxy); ActiveStreamHolder.startCasting(effectiveUrl, safeTitle, headers)
+        if (isKnownProxy) ActiveStreamHolder.setProxied(true); com.omnicast.sender.service.CastMediaNotificationService.start(this)
         ActiveStreamHolder.onSendPlayControl = { act, pos, vol, par -> sendPlayControl(act, pos, vol, par) }
-        val msg = SignalingMessage.DirectStreamHandoff(mediaUrl = url, title = safeTitle, headers = headers, startPositionMs = savedPos)
-        sendSignalingMessage(msg)
-        com.omnicast.sender.discovery.MultiReceiverManager.broadcastToSecondary(msg, nsdScanner.discoveredDevices.value)
+        val msg = SignalingMessage.DirectStreamHandoff(mediaUrl = effectiveUrl, title = safeTitle, headers = if (isKnownProxy) emptyMap() else headers, startPositionMs = savedPos)
+        sendSignalingMessage(msg); com.omnicast.sender.discovery.MultiReceiverManager.broadcastToSecondary(msg, nsdScanner.discoveredDevices.value)
         if (savedPos > 0L) {
             val formatted = com.omnicast.sender.stream.StreamResumeManager.formatTime(savedPos)
             Toast.makeText(this, "▶ Reanudando en $formatted", Toast.LENGTH_SHORT).show()
-        } else {
-            Toast.makeText(this, "Enviando video a receptores...", Toast.LENGTH_SHORT).show()
-        }
+        } else if (!isKnownProxy) Toast.makeText(this, "Enviando video a receptores...", Toast.LENGTH_SHORT).show()
     }
 
     fun sendPlayControl(action: String, positionMs: Long = 0L, volume: Float = 1.0f, param: String? = null) {
@@ -288,7 +290,7 @@ class SenderMainActivity : ComponentActivity() {
     }
 
     override fun onDestroy() {
-        super.onDestroy(); instance = null; com.omnicast.sender.media.LocalImageServer.stop()
+        super.onDestroy(); instance = null; com.omnicast.sender.media.LocalImageServer.stop(); com.omnicast.sender.media.LocalStreamProxyServer.stop()
         try { nsdScanner.stopDiscovery() } catch (e: Throwable) { Log.e("Sender", "NSD stop", e) }
     }
 }

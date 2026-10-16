@@ -1,10 +1,10 @@
 {
-  "versionCodeSender": 111,
-  "versionCodeReceiver": 94,
-  "versionName": "3.32.66",
-  "releaseTag": "v3.32.66",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.66/omnicast-sender-v3.32.66.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.66/omnicast-receiver-v3.32.66.apk",
-  "changelog": "v3.32.66: Eliminación de oscilación por acelerómetro y zoom 4x erróneo en vertical (100% altura visible); exclusión estricta de botones/enlaces en AdBlock para no perder toques en pantalla."
+  "versionCodeSender": 112,
+  "versionCodeReceiver": 95,
+  "versionName": "3.32.67",
+  "releaseTag": "v3.32.67",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.67/omnicast-sender-v3.32.67.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.67/omnicast-receiver-v3.32.67.apk",
+  "changelog": "v3.32.67: Soporte para streams y películas con protección web (Cloudflare/DropCDN/Fastream) mediante enrutamiento por proxy HTTP local en el emisor; advertencia al guardar contenido protegido; compatibilidad total con Favoritos y Ver más tarde."
 }
 

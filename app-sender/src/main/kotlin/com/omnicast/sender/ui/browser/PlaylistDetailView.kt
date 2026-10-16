@@ -123,7 +123,7 @@ private fun SavedPlaylistItemCard(
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = item.title,
+                    text = item.title + (if (item.requiresProxy) " 🔒" else ""),
                     color = Color.White,
                     fontSize = 13.sp,
                     fontWeight = FontWeight.SemiBold,
@@ -135,9 +135,10 @@ private fun SavedPlaylistItemCard(
                     val s = (item.lastPositionMs / 1000) % 60
                     "▶ Reanudar en %02d:%02d • ".format(m, s)
                 } else ""
+                val proxyNotice = if (item.requiresProxy) "🔒 Requiere emisor • " else ""
                 Text(
-                    text = posText + item.url,
-                    color = if (item.lastPositionMs >= 5000L) Color(0xFF38BDF8) else Color(0xFF64748B),
+                    text = proxyNotice + posText + item.url,
+                    color = if (item.requiresProxy) Color(0xFFF97316) else if (item.lastPositionMs >= 5000L) Color(0xFF38BDF8) else Color(0xFF64748B),
                     fontSize = 10.sp,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis

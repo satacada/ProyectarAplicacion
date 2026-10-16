@@ -1,10 +1,10 @@
 {
-  "versionCodeSender": 110,
-  "versionCodeReceiver": 93,
-  "versionName": "3.32.65",
-  "releaseTag": "v3.32.65",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.65/omnicast-sender-v3.32.65.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.65/omnicast-receiver-v3.32.65.apk",
-  "changelog": "v3.32.65: Detección y contingencia automática ante servidores con bloqueo HTTP 403; proyección de pantalla WebRTC estricta en dos posiciones (Vertical Fit completo y Horizontal Fill 16:9 de TV)."
+  "versionCodeSender": 111,
+  "versionCodeReceiver": 94,
+  "versionName": "3.32.66",
+  "releaseTag": "v3.32.66",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.66/omnicast-sender-v3.32.66.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.66/omnicast-receiver-v3.32.66.apk",
+  "changelog": "v3.32.66: Eliminación de oscilación por acelerómetro y zoom 4x erróneo en vertical (100% altura visible); exclusión estricta de botones/enlaces en AdBlock para no perder toques en pantalla."
 }
 

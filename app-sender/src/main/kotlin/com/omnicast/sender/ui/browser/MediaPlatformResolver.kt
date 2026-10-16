@@ -96,14 +96,17 @@ object MediaPlatformResolver {
     }
 
     fun extractFastreamId(url: String): String? {
-        if (!url.contains("fastream.to", ignoreCase = true)) return null
+        val lower = url.lowercase()
+        if (!lower.contains("fastream.to") && !lower.contains("dropcdn.io") && !lower.contains("dr0pstream.com")) return null
         return Regex("(?:/hls\\d*/\\d+/\\d+/|/embed-|/)([a-zA-Z0-9]{10,12})(?:[_,.]|$)").find(url)?.groupValues?.get(1)
     }
 
     fun resolveFastreamSync(url: String, referer: String? = null): Triple<String, String?, Map<String, String>>? {
         val id = extractFastreamId(url) ?: return null
         return try {
-            val embedUrl = "https://fastream.to/embed-$id.html"
+            val isDrop = url.contains("dropcdn.io", true) || url.contains("dr0pstream.com", true)
+            val embedUrl = if (isDrop) "https://dr0pstream.com/embed-$id.html" else "https://fastream.to/embed-$id.html"
+            val origin = if (isDrop) "https://dr0pstream.com" else "https://fastream.to"
             val conn = (URL(embedUrl).openConnection() as HttpURLConnection).apply {
                 connectTimeout = 4000
                 readTimeout = 4000
@@ -123,12 +126,12 @@ object MediaPlatformResolver {
             val hdrs = mapOf(
                 "User-Agent" to UA_MOBILE,
                 "Referer" to embedUrl,
-                "Origin" to "https://fastream.to",
+                "Origin" to origin,
                 "Sec-Fetch-Mode" to "cors",
                 "Sec-Fetch-Dest" to "empty",
                 "Sec-Fetch-Site" to "cross-site"
             )
-            Log.i(TAG, "🎬 Fastream resuelto exitosamente: $id -> $streamUrl")
+            Log.i(TAG, "🎬 Fastream/DropCDN resuelto exitosamente: $id -> $streamUrl")
             Triple(streamUrl, null, hdrs)
         } catch (e: Throwable) {
             Log.w(TAG, "No se pudo resolver Fastream ($id): ${e.message}")
@@ -139,7 +142,8 @@ object MediaPlatformResolver {
     fun prepareStreamForPlayback(streamUrl: String, pageUrl: String, rawHeaders: Map<String, String>): Pair<String, Map<String, String>> {
         var finalUrl = streamUrl
         var hdrs = rawHeaders
-        if (streamUrl.contains("fastream.to", ignoreCase = true)) {
+        val lower = streamUrl.lowercase()
+        if (lower.contains("fastream.to") || lower.contains("dropcdn.io") || lower.contains("dr0pstream.com")) {
             val resolved = resolveFastreamSync(streamUrl, pageUrl)
             if (resolved != null) {
                 finalUrl = resolved.first

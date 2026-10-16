@@ -107,14 +107,14 @@ object AdBlocker {
                         'div[class*="ad-banner"]', 'a[href*="bet365"]', 'a[href*="1xbet"]',
                         'div[class*="popunder"]', 'div[id*="popunder"]', '.ad-overlay', '#ad-overlay',
                         'div[class*="click-shield"]', 'div[class*="video-click-shield"]',
-                        '.vp_layer_fake', 'div[class*="fake-player"]', 'div[class*="play-overlay"]'
+                        '.vp_layer_fake', 'div[class*="fake-player"]'
                     ];
                     for (var s = 0; s < selectors.length; s++) {
                         try {
                             var found = doc.querySelectorAll(selectors[s]);
                             for (var f = 0; f < found.length; f++) {
                                 var item = found[f];
-                                if (!item.querySelector('video, iframe, input, form, textarea, select')) item.remove();
+                                if (!item.querySelector('video, iframe, input, form, textarea, select, button, a')) item.remove();
                             }
                         } catch(e) {}
                     }
@@ -134,12 +134,12 @@ object AdBlocker {
                 window.__omniAdBlockInjected = true;
 
                 // Neutralización reactiva en fase de captura del evento click:
-                // Se evalúa únicamente el elemento tocado por el usuario, con costo de CPU 0 en reposo
+                // Solo neutraliza velos transparentes que no sean botones ni enlaces
                 document.addEventListener('click', function(e) {
                     var el = e.target;
                     if (!el) return;
-                    if (el.closest && el.closest('input, textarea, select, form, [contenteditable="true"], [role="search"], [role="textbox"], [role="combobox"]')) return;
-                    if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT' || el.tagName === 'FORM') return;
+                    if (el.closest && el.closest('input, textarea, select, button, form, a, [role="button"], [contenteditable="true"], [role="search"], [role="textbox"], [role="combobox"]')) return;
+                    if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT' || el.tagName === 'FORM' || el.tagName === 'BUTTON' || el.tagName === 'A') return;
                     if (el !== document.body && el !== document.documentElement) {
                         var cs = window.getComputedStyle(el);
                         if (cs && (cs.position === 'fixed' || cs.position === 'absolute')) {
@@ -152,7 +152,7 @@ object AdBlocker {
                                 var bg = cs.backgroundColor;
                                 var isTrans = (bg === 'transparent' || bg === 'rgba(0, 0, 0, 0)' || bg === 'rgba(255, 255, 255, 0)');
                                 var noText = !el.innerText || el.innerText.trim().length === 0;
-                                if ((op <= 0.08 || (isTrans && noText)) && !el.querySelector('video, iframe, button, input')) {
+                                if ((op <= 0.08 || (isTrans && noText)) && !el.querySelector('video, iframe, button, input, a')) {
                                     e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
                                     el.style.pointerEvents = 'none';
                                     el.remove();
@@ -162,22 +162,6 @@ object AdBlocker {
                                 }
                             }
                         }
-                    }
-                    var cur = el;
-                    while (cur && cur !== document.body) {
-                        if (cur.tagName === 'A') {
-                            var h = cur.getAttribute('href') || '';
-                            if (h && (h.startsWith('http') || h.startsWith('//'))) {
-                                var host = '';
-                                try { host = new URL(h, window.location.href).hostname.toLowerCase(); } catch(err){}
-                                if (host && host !== window.location.hostname && !host.endsWith(window.location.hostname)) {
-                                    if (host.indexOf('aliexpress') !== -1 || host.indexOf('temu') !== -1 || host.indexOf('shein') !== -1 || host.indexOf('bet') !== -1 || host.indexOf('click') !== -1 || host.indexOf('track') !== -1 || host.indexOf('pop') !== -1) {
-                                        e.preventDefault(); e.stopPropagation(); cur.remove(); return false;
-                                    }
-                                }
-                            }
-                        }
-                        cur = cur.parentElement;
                     }
                 }, true);
             } catch(e) {}

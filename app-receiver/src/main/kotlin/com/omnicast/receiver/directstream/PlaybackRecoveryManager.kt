@@ -58,12 +58,11 @@ class PlaybackRecoveryManager {
             return true
         }
 
-        // 2. Errores de Conexión de Red Local o Remota
-        val isNetworkError = code == PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_FAILED ||
-                code == PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_TIMEOUT ||
-                code == PlaybackException.ERROR_CODE_IO_BAD_HTTP_STATUS
+        // 2. Errores de Conexión de Red Local o Remota (Timeout, Caída transitoria)
+        val isNetworkTimeout = code == PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_FAILED ||
+                code == PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_TIMEOUT
 
-        if (isNetworkError && retryCount < MAX_RETRIES) {
+        if (isNetworkTimeout && retryCount < MAX_RETRIES) {
             retryCount++
             val backoffMs = (1000L * retryCount).coerceAtMost(4000L)
             Log.i(TAG, "Reintentando conexión ($retryCount/$MAX_RETRIES) en ${backoffMs}ms...")
@@ -83,9 +82,9 @@ class PlaybackRecoveryManager {
             return true
         }
 
-        // 3. Fallo de Decodificador o Cabeceras Prohibidas (HTTP 403)
-        if (retryCount >= MAX_RETRIES || code == PlaybackException.ERROR_CODE_DECODER_INIT_FAILED) {
-            Log.i(TAG, "Agotados reintentos estándar, activando fallback de flujo limpio...")
+        // 3. Fallo de Decodificador o Cabeceras Prohibidas (HTTP 403 / BAD_STATUS)
+        if (code == PlaybackException.ERROR_CODE_IO_BAD_HTTP_STATUS || retryCount >= MAX_RETRIES || code == PlaybackException.ERROR_CODE_DECODER_INIT_FAILED) {
+            Log.i(TAG, "Activando resolución/curación inmediata de flujo (HTTP status / decoder)...")
             onRetryCleanStream()
             return true
         }

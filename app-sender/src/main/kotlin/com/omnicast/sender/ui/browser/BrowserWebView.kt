@@ -181,12 +181,12 @@ fun BrowserWebView(
                                 showBlockedToast(ctx)
                                 return true
                             }
-                            if (inMovie && !isSameSite && targetHost != null) {
+                            if (inMovie && !isSameSite && targetHost != null && r?.hasGesture() != true) {
                                 val isAllowedExternal = AdBlocker.isSearchEngine(targetHost) ||
                                     AdBlocker.isKnownMediaHost(targetHost) ||
                                     AdBlockWhitelistManager.isWhitelistedHost(targetHost)
                                 if (!isAllowedExternal) {
-                                    android.util.Log.w("BrowserWebView", "🛑 Secuestro proactivo bloqueado hacia: $targetHost (aprendiendo dominio)")
+                                    android.util.Log.w("BrowserWebView", "🛑 Secuestro automático bloqueado hacia: $targetHost (aprendiendo dominio)")
                                     AdBlocker.learnAndBlockAdHost(targetHost, curHost)
                                     showBlockedToast(ctx)
                                     return true

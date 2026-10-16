@@ -144,7 +144,6 @@ class ProjectionForegroundService : Service() {
                     }
                     isProjecting = true
                     CastSessionState.setProjecting(true)
-                    startOrientationMonitoring()
                     com.omnicast.sender.overlay.FloatingIndicatorService.start(this)
                     com.omnicast.sender.overlay.FloatingIndicatorService.updateMode()
                 } else {
@@ -153,40 +152,6 @@ class ProjectionForegroundService : Service() {
             }
         }
         return START_STICKY
-    }
-
-    private var orientationListener: android.view.OrientationEventListener? = null
-    private var currentOrientationState: String? = null
-
-    private fun startOrientationMonitoring() {
-        stopOrientationMonitoring()
-        orientationListener = object : android.view.OrientationEventListener(this) {
-            override fun onOrientationChanged(orientation: Int) {
-                if (orientation == ORIENTATION_UNKNOWN) return
-                // Estrictamente dos posiciones: Vertical (se ve todo) y Horizontal (aspecto 16:9 en TV)
-                val newOrientation = when (orientation) {
-                    in 60..120, in 240..300 -> "LANDSCAPE"
-                    in 0..30, in 330..360, in 150..210 -> "PORTRAIT"
-                    else -> null // Zona muerta (histéresis sin oscilaciones intermedias)
-                }
-                if (newOrientation != null && newOrientation != currentOrientationState) {
-                    currentOrientationState = newOrientation
-                    val isLandscape = (newOrientation == "LANDSCAPE")
-                    val mode = if (isLandscape) "FILL" else "FIT"
-                    Log.i(TAG, "🔄 Orientación conmutada a $newOrientation -> modo TV: $mode")
-                    currentSession?.setDisplayMode(mode)
-                }
-            }
-        }
-        if (orientationListener?.canDetectOrientation() == true) {
-            orientationListener?.enable()
-        }
-    }
-
-    private fun stopOrientationMonitoring() {
-        try { orientationListener?.disable() } catch (_: Throwable) {}
-        orientationListener = null
-        currentOrientationState = null
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
@@ -199,7 +164,6 @@ class ProjectionForegroundService : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
-        stopOrientationMonitoring()
         currentSession?.stop()
         currentSession = null
         isProjecting = false

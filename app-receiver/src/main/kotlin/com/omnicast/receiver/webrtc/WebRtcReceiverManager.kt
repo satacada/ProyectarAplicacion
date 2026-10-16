@@ -77,27 +77,52 @@ class WebRtcReceiverManager(private val context: Context) {
             val tvAspect = tvW / tvH
             val frameAspect = frameW.toFloat() / frameH.toFloat()
 
-            // Solo dos posiciones: Vertical (se ve todo) y Horizontal (aspecto 16:9 completo)
-            val isLandscape = (currentMode == "FILL" || currentMode == "16:9" || currentMode == "EXTEND_16_9") || (frameW > frameH)
-
-            if (!isLandscape) {
-                // Posición 1: VERTICAL. Ver la pantalla completa del celular sin recortes de arriba ni abajo
-                renderer.setScalingType(RendererCommon.ScalingType.SCALE_ASPECT_FIT)
-                renderer.scaleX = 1.0f
-                renderer.scaleY = 1.0f
-                renderer.translationX = 0f
-                renderer.translationY = 0f
-                ReceiverLogger.log(TAG, "📱 Posición VERTICAL: SCALE_ASPECT_FIT 1.0x (frame=${frameW}x${frameH} rot=$lastRot)")
+            val isLandscape = frameW > frameH
+            val aspectFillFactor = if (isLandscape) {
+                if (frameAspect > tvAspect) (frameAspect / tvAspect) else (tvAspect / frameAspect)
             } else {
-                // Posición 2: HORIZONTAL. Aspecto 16:9 en TV completo sin franjas negras
-                val aspectFillFactor = if (frameAspect > tvAspect) (frameAspect / tvAspect) else (tvAspect / frameAspect)
-                renderer.setScalingType(RendererCommon.ScalingType.SCALE_ASPECT_FILL)
-                val factor = if (aspectFillFactor > 1.0f) aspectFillFactor else 1.0f
-                renderer.scaleX = factor
-                renderer.scaleY = factor
-                renderer.translationX = 0f
-                renderer.translationY = 0f
-                ReceiverLogger.log(TAG, "📺 Posición HORIZONTAL 16:9: factor=$factor (frame=${frameW}x${frameH} rot=$lastRot)")
+                1.0f
+            }
+
+            val targetScalingType = if (!isLandscape) {
+                RendererCommon.ScalingType.SCALE_ASPECT_FIT
+            } else {
+                currentScalingType
+            }
+            renderer.setScalingType(targetScalingType)
+
+            when (currentMode) {
+                "ZOOM" -> {
+                    val scale = if (isLandscape && aspectFillFactor > 1.0f) currentZoom * aspectFillFactor else currentZoom
+                    renderer.scaleX = scale
+                    renderer.scaleY = scale
+                    renderer.translationX = currentPanX
+                    renderer.translationY = currentPanY
+                    ReceiverLogger.log(TAG, "🔍 Zoom gradual TV: ${String.format(java.util.Locale.US, "%.2f", currentZoom)}x -> escala $scale (panX=$currentPanX, panY=$currentPanY, frame=${frameW}x${frameH})")
+                }
+                "FILL", "16:9", "EXTEND_16_9" -> {
+                    val factor = if (isLandscape) aspectFillFactor else 1.0f
+                    renderer.scaleX = factor
+                    renderer.scaleY = factor
+                    renderer.translationX = 0f
+                    renderer.translationY = 0f
+                    ReceiverLogger.log(TAG, "📺 Modo 16:9 (FILL): factor=$factor frame=${frameW}x${frameH} rot=$lastRot")
+                }
+                else -> {
+                    val baseScale = if (currentZoom > 0f) currentZoom else 1.0f
+                    val scale = if (isLandscape && currentZoom <= 1.0f && aspectFillFactor > 1.0f) {
+                        aspectFillFactor
+                    } else if (isLandscape && aspectFillFactor > 1.0f && currentZoom > 1.0f) {
+                        baseScale * aspectFillFactor
+                    } else {
+                        baseScale
+                    }
+                    renderer.scaleX = scale
+                    renderer.scaleY = scale
+                    renderer.translationX = if (isLandscape) currentPanX else 0f
+                    renderer.translationY = currentPanY
+                    ReceiverLogger.log(TAG, "📱 Modo FIT: escala $scale (frame=${frameW}x${frameH} rot=$lastRot)")
+                }
             }
         }
     }

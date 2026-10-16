@@ -1,71 +1,46 @@
 # CONTEXTO DEL PROYECTO Y ARQUITECTURA DE COSTO CERO ($0) — OMNICAST PRO
 
-> **Documento de Contexto General para Humanos e IA:**
-> Este archivo resume la identidad, los módulos, la arquitectura realista de Costo Cero (`$0`) y el catálogo completo de documentos del proyecto **OmniCast Pro (`proyectarAplicacion`)**.
+> **Documento Maestro de Arranque para Humanos y Nuevos Chats de IA:**
+> Leyendo este archivo junto con [`AGENTS.md`](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/AGENTS.md), [`doc/DESIGN.md`](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/DESIGN.md), [`doc/ARCHITECTURE.md`](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/ARCHITECTURE.md) y [`doc/PROJECT_DASHBOARD.md`](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/PROJECT_DASHBOARD.md), cualquier ingeniero o nuevo chat de IA tiene el **100% del contexto técnico, funcional y operativo** para continuar el desarrollo sin pérdida de información.
 
 ---
 
-## 1. Identidad y Misión del Proyecto
-- **Propósito:** Ecosistema nativo Android (Emisor Móvil `:app-sender` + Receptor Android TV `:app-receiver` + Núcleo Hexagonal `:core`) para Screen Mirroring WebRTC de baja latencia (<60ms), proyección de galerías locales y casteo web directo (HLS/MP4/DASH) con bloqueador de anuncios C++ y reproducción autónoma en TV.
-- **Stack Tecnológico Principal:** Kotlin, Jetpack Compose (Mobile & TV Leanback), WebRTC (`MediaCodec` H.264), Media3 ExoPlayer, C++ JNI (`AdBlocker`), Ktor/WebSockets LAN.
-- **Comando Oráculo de Compilación:** `./gradlew clean build` (o `./gradlew assembleRelease testReleaseUnitTest`).
+## 1. Estado Exacto Actual (Punto de Partida)
+- **Versión en Producción:** **`v3.32.61`**
+  - `:app-sender` (`app-sender/build.gradle.kts`): `versionCode = 106`, `versionName = "3.32.61"`
+  - `:app-receiver` (`app-receiver/build.gradle.kts`): `versionCode = 89`, `versionName = "3.32.61"`
+- **Artefactos Compilados:** Guardados en `releases/OmniCast-Sender-v3.32.61.apk` y `releases/OmniCast-Receiver-v3.32.61.apk` y publicados en GitHub Releases (`satacada/ProyectarAplicacion`).
+- **Dispositivo Móvil de Pruebas:** Teléfono Xiaomi (`23129RA5FL`) conectado por ADB inalámbrico (`adb install -r releases/OmniCast-Sender-v3.32.61.apk`).
+- **Telemetría Remota de TV Box (Sin cables ADB):** La TV Box reporta todos sus logs de `ExoPlayerTvManager` y `DirectStreamHandoff` en tiempo real a Supabase (`omnicast_system_logs`, consultable vía REST API en `ReceiverLogger.kt`).
 
 ---
 
-## 2. Propuesta Realista y Acotada de Costo Cero ($0): Clases Deterministas vs. IA Gratuita
+## 2. Mapa Exacto de Módulos y Clases Críticas
 
-Para garantizar **costo `$0` perpetuo** sin pagar suscripciones ni APIs de IA, el sistema reemplaza el uso innecesario de IA en tiempo real por **Objetos y Clases Kotlin deterministas** dentro de la app (que resuelven el **90% de los escenarios en milisegundos y gratis**), dejando la **bolsa gratuita de IA (Google Gemini Flash Free Tier en GitHub Actions)** únicamente para el **10% de casos extremos en segundo plano**:
-
-### A. Lo que se resuelve 100% con Objetos y Clases Kotlin (`$0`, Cero Tokens, Instantáneo)
-1. **Captura Fiel de la Fuente Real (Cero "Cosas en Duro"):**
-   - **Problema:** Inventar fuentes en duro (`dropcdn.io -> fastream.to`) rompe la reproducción cuando otro servidor usa el mismo CDN.
-   - **Solución con Clases:** Capturar siempre el `requestHeaders["Referer"]` real de Chromium (`shouldInterceptRequest`) y el `window.location.href` del `<iframe>` reproductor en JavaScript (`WvcDomSniffer`), pasándolo intacto a la TV sin pisarlo con `if-else` en duro.
-2. **Sonda Pre-Cast de Manifiestos (`StreamManifestProbe`):**
-   - **Problema:** Se detectan 2 o 3 enlaces en la web (un tráiler, un enlace corrupto que cierra ExoPlayer y la película real).
-   - **Solución con Clases:** Antes de mostrar el enlace o enviarlo a ExoPlayer, una clase Kotlin descarga los primeros 4 KB del `.m3u8`:
-     - Si no es un manifiesto válido (`#EXTM3U`) o devuelve error irremediable $\rightarrow$ **Se descarta automáticamente (evita el cierre de ExoPlayer).**
-     - Si **no** tiene `#EXT-X-ENDLIST` $\rightarrow$ Se clasifica como **Stream en Vivo (`LIVE`)** (no se descarta por duración y siempre arranca en el borde en vivo).
-     - Suma los `#EXTINF`: si dura `< 3 min` lo etiqueta como **"Tráiler / Clip"**; si dura `> 20 min` lo marca como **"Película Principal ⭐"**.
-3. **Auto-Reparador Local de Error 403 (`HeaderSelfHealer`):**
-   - **Problema:** Un servidor CDN rechaza el enlace con `HTTP 403`.
-   - **Solución con Clases:** En menos de 1 segundo, un objeto Kotlin prueba las 4 permutaciones lógicas reales:
-     1) `Referer`/`Origin` del `<iframe>` que pidió el video.
-     2) `Referer`/`Origin` de la página principal (`pageUrl`).
-     3) `Referer` del propio dominio del CDN.
-     4) Petición limpia sin `Referer`/`Origin`.
-     - La combinación que responda `HTTP 200` se guarda en una memoria local (`learned_rules.json`) en el celular y en la TV para no volver a fallar.
-4. **Vencimiento de Token en "Ver más tarde / Favoritos" (Celular y TV):**
-   - **Problema:** Los enlaces `.m3u8` guardados vencen a las pocas horas.
-   - **Solución con Clases:**
-     - Siempre se guarda `pageUrl` (la página exacta de la película) tanto en el celular (`PlaylistManager`) como en la TV (`TvPlaylistManager`).
-     - Si al darle Play el token ya venció (`HTTP 403/404/410`), primero intenta auto-extraer el nuevo flujo desde `pageUrl` en segundo plano.
-     - **Respaldo sin re-búsqueda:** Solo si falla la extracción y reproducción automática, abre directamente la `pageUrl` guardada para que el usuario no tenga que volver a buscar la película.
-5. **Limpiador de Títulos (`MediaTitleCleaner`):**
-   - **Solución con Clases:** Expresiones regulares (Regex) que limpian *"Ver Película X (2024) Online Gratis HD"* $\rightarrow$ *"X (2024)"*.
-
-### B. El Único Punto Crítico donde se usa la Bolsa Gratuita de IA (`$0` en Lote)
-- **Auto-Sanador Colectivo OTA (`scripts/ai_stream_healer.py` en GitHub Actions):**
-  - **Cuándo actúa:** Solo cuando aparece una web nueva con protecciones atípicas donde las 4 permutaciones de `HeaderSelfHealer` fallaron.
-  - **Por qué cuesta `$0`:** No se llama por cada usuario ni en cada clic. Se ejecuta en lote en GitHub Actions (cada 6 horas) usando el nivel gratuito de **Google Gemini Flash (1,500 llamadas/día sin costo)**, analiza los dominios fallidos reportados en Supabase y actualiza `rules/live_stream_rules.json` para todos los dispositivos.
+| Módulo | Archivos Clave | Responsabilidad Exacta |
+| :--- | :--- | :--- |
+| **`:core:domain`** | • [`StreamManifestProbe.kt`](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/core/domain/src/main/kotlin/com/omnicast/core/domain/usecases/StreamManifestProbe.kt)<br>• [`DetectMediaStreamUseCase.kt`](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/core/domain/src/main/kotlin/com/omnicast/core/domain/usecases/DetectMediaStreamUseCase.kt) | **Núcleo Hexagonal Puro (JVM, Costo `$0`):**<br>• `StreamManifestProbe`: Sonda Pre-Cast que descarga los primeros 4 KB del manifiesto `.m3u8`/MP4 antes de mostrarlo o enviarlo a ExoPlayer. Descarta enlaces rotos o páginas HTML (evita cierres de ExoPlayer), detecta **Streams en Vivo** (sin `#EXT-X-ENDLIST`), separa **Tráilers (<3m)** de **Películas (>20m)** y auto-repara errores `HTTP 403` probando 4 permutaciones reales de cabeceras (`ORIGINAL` $\rightarrow$ `PAGE_URL` $\rightarrow$ `SELF_CDN` $\rightarrow$ `CLEAN`). |
+| **`:core:protocol`** | • [`SignalingMessage.kt`](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/core/protocol/src/main/kotlin/com/omnicast/core/protocol/SignalingMessage.kt) | Contrato de mensajes WebSocket JSON entre Celular y TV (`DirectStreamHandoff`, `PlaybackStatus`, `PlayControl`, `SyncPlaylists`, `Offer`/`Answer`). |
+| **`:app-sender`** *(Celular)* | • [`InAppBrowserScreen.kt`](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/InAppBrowserScreen.kt)<br>• [`BrowserWebView.kt`](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/BrowserWebView.kt)<br>• [`StreamQualityDetector.kt`](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/StreamQualityDetector.kt)<br>• [`BrowserUrlHelper.kt`](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/BrowserUrlHelper.kt)<br>• [`StreamIntelligenceEngine.kt`](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/StreamIntelligenceEngine.kt)<br>• [`WvcDomSniffer.kt`](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/WvcDomSniffer.kt) & [`universal_sniffer.js`](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/app-sender/src/main/assets/sniffer/universal_sniffer.js)<br>• [`PlaylistManager.kt`](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/app-sender/src/main/kotlin/com/omnicast/sender/playlist/PlaylistManager.kt) | **Emisor Móvil y Navegador Integrado:**<br>• **Cero Dominios en Duro:** Captura el `Referer`/`Origin` real de Chromium (`shouldInterceptRequest`) y el `frameUrl` (`window.location.href`) del `<iframe>` reproductor en JS.<br>• **Pre-Validación:** Usa `StreamManifestProbe` en `StreamQualityDetector` y `transmitWithHistory` para eliminar enlaces rotos antes de enviarlos a la TV.<br>• **Renovación por `pageUrl`:** Si un video guardado en *"Ver más tarde / Favoritos"* tiene el token vencido, abre automáticamente la `pageUrl` guardada en el navegador sin obligar al usuario a volver a buscar la película. |
+| **`:app-receiver`** *(Android TV)* | • [`TvReceiverActivity.kt`](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/app-receiver/src/main/kotlin/com/omnicast/receiver/ui/TvReceiverActivity.kt)<br>• [`ExoPlayerTvManager.kt`](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/app-receiver/src/main/kotlin/com/omnicast/receiver/directstream/ExoPlayerTvManager.kt)<br>• [`TvStandbyCleanScreen.kt`](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/app-receiver/src/main/kotlin/com/omnicast/receiver/ui/components/TvStandbyCleanScreen.kt)<br>• [`TvSortFilterBar.kt`](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/app-receiver/src/main/kotlin/com/omnicast/receiver/ui/components/TvSortFilterBar.kt)<br>• [`TvPlaylistManager.kt`](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/app-receiver/src/main/kotlin/com/omnicast/receiver/directstream/TvPlaylistManager.kt) | **Receptor Android TV Autónomo:**<br>• Respeta íntegramente las cabeceras reales enviadas por el celular sin pisarlas con dominios en duro.<br>• Ante cualquier fallo HTTP en `ExoPlayerTvManager`, ejecuta `StreamManifestProbe.probeAndHeal` en segundo plano para auto-recuperar el flujo.<br>• En las carpetas *"Ver más tarde"* y *"Favoritos"*, posiciona el foco D-Pad automáticamente en la primera película (`firstItemFocusRequester`) y muestra el buscador `BasicTextField` sin recorte de texto. |
 
 ---
 
-## 3. Mapa Completo de Documentos Legibles por Humanos en el Repositorio
+## 3. Arquitectura de Costo Cero ($0): 100% Objetos y Clases Kotlin Deterministas
+- **Directiva Inviolable:** No se usan listas de dominios en duro (`hardcoded`) ni se paga por servicios de IA.
+- Todo el flujo de captura de fuente real (`Referer`/`Origin` de Chromium y `frameUrl` del `<iframe>`), validación de manifiestos `#EXTM3U`, detección de Streams en Vivo, separación de Tráiler vs. Película, auto-reparación de errores `403` mediante 4 permutaciones lógicas y respaldo de tokens vencidos vía `pageUrl` se ejecuta **100% con Clases y Objetos Kotlin deterministas en `:core:domain`, `:app-sender` y `:app-receiver`**.
 
-### Documentos Principales de Arquitectura y Diseño
-1. [`doc/DESIGN.md`](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/DESIGN.md) — **Documento Canónico de Diseño y Requerimientos Funcionales** (4 Pilares, Listas Guardadas, Vencimiento de Tokens, Streams en Vivo y Propuesta Realista `$0`).
-2. [`doc/ARCHITECTURE.md`](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/ARCHITECTURE.md) — **Arquitectura C4 del Sistema y Diagrama de Flujo de Decisión `$0`**.
-3. [`PROJECT_CONTEXT.md`](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/PROJECT_CONTEXT.md) — **Este documento** (Contexto ejecutivo y separación entre Clases Kotlin e IA Gratuita).
-4. [`AGENTS.md`](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/AGENTS.md) — **Leyes Técnicas Inviolables del Proyecto** (Arquitectura Hexagonal, Límite de 300 líneas, Reglas de Hardware).
-5. [`doc/PROJECT_DASHBOARD.md`](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/PROJECT_DASHBOARD.md) — **Estado Actual del Proyecto y Historial de Versiones Desplegadas**.
-6. [`doc/RUNBOOK.md`](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/RUNBOOK.md) — **Manual Operativo de Compilación, Despliegue ADB y Diagnóstico**.
+---
 
-### Decisiones de Arquitectura (ADRs)
-7. [`doc/adr/ADR-001-stack-inicial.md`](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/adr/ADR-001-stack-inicial.md) — Elección de WebRTC, ExoPlayer y Jetpack Compose.
-8. [`doc/adr/ADR-002-telemetria-tv-logs.md`](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/adr/ADR-002-telemetria-tv-logs.md) — Telemetría y envío de logs desde la TV Box por red local.
-9. [`doc/adr/ADR-003-estrategia-renovacion-enlaces-tv.md`](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/adr/ADR-003-estrategia-renovacion-enlaces-tv.md) — Renovación de enlaces expirados en TV (`pageUrl`, QR y sustitución TTL).
-10. [`doc/adr/ADR-004-arquitectura-auto-recuperacion-ia-ota.md`](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/adr/ADR-004-arquitectura-auto-recuperacion-ia-ota.md) — Arquitectura escalonada de Costo `$0` (Clases Deterministas + IA Gratuita OTA).
+## 4. Catálogo Completo de Documentos Legibles por Humanos
 
-### Historias de Usuario (Contratos Funcionales)
-11. [`doc/historias-usuario/README.md`](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/historias-usuario/README.md) y [`ARBOL_DE_RELACIONES.md`](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/historias-usuario/ARBOL_DE_RELACIONES.md)
-12. [`HU-001`](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/historias-usuario/HU-001-galeria-fotos-continua.md) (Galería de Fotos), [`HU-002`](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/historias-usuario/HU-002-standby-limpio-tv.md) (Standby Limpio en TV), [`HU-003`](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/historias-usuario/HU-003-menu-lateral-historial.md) (Menú Lateral e Historial), [`HU-004`](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/historias-usuario/HU-004-deduplicacion-streams-web.md) (Deduplicación de Streams), [`HU-005`](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/historias-usuario/HU-005-extraccion-hexagonal-streams.md) (Extracción Hexagonal), [`HU-006`](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/historias-usuario/HU-006-renovacion-enlaces-expirados-tv.md) (Renovación de Enlaces Expirados).
+1. [**`PROJECT_CONTEXT.md`**](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/PROJECT_CONTEXT.md) — Resumen Ejecutivo, Estado Actual (`v3.32.61`) y Mapa de Clases.
+2. [**`doc/DESIGN.md`**](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/DESIGN.md) — Especificación General de Diseño, los 4 Pilares, Listas Guardadas, Tokens Vencidos y Streams en Vivo.
+3. [**`doc/ARCHITECTURE.md`**](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/ARCHITECTURE.md) — Diagramas C4 de Contenedores, Puertos de Red (`:8088`, `:8087`) y Flujo de Decisión de Streams.
+4. [**`doc/PROJECT_DASHBOARD.md`**](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/PROJECT_DASHBOARD.md) — Tablero de Estado y Bitácora Histórica de Versiones (`v3.32.61` y anteriores).
+5. [**`AGENTS.md`**](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/AGENTS.md) — Leyes Técnicas Inviolables (Límite de 300 líneas por archivo, Arquitectura Hexagonal, Leyes de Hardware WebRTC/WebView y Despliegue Obligatorio).
+6. [**`doc/RUNBOOK.md`**](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/RUNBOOK.md) — Manual Operativo de Compilación y Despliegue ADB.
+7. **Decisiones de Arquitectura (`doc/adr/`):**
+   - [`ADR-001-stack-inicial.md`](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/adr/ADR-001-stack-inicial.md), [`ADR-002-telemetria-tv-logs.md`](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/adr/ADR-002-telemetria-tv-logs.md), [`ADR-003-estrategia-renovacion-enlaces-tv.md`](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/adr/ADR-003-estrategia-renovacion-enlaces-tv.md), [`ADR-004-arquitectura-auto-recuperacion-ia-ota.md`](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/adr/ADR-004-arquitectura-auto-recuperacion-ia-ota.md).
+8. **Historias de Usuario (`doc/historias-usuario/`):**
+   - [`README.md`](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/historias-usuario/README.md), [`ARBOL_DE_RELACIONES.md`](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/historias-usuario/ARBOL_DE_RELACIONES.md) y `HU-001` a `HU-006`.

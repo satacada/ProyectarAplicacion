@@ -28,12 +28,15 @@ fun WvcVideoListSheet(
     options: List<StreamQualityOption>,
     onSelectAndTransmit: (StreamQualityOption) -> Unit,
     onDismiss: () -> Unit,
-    onClear: () -> Unit
+    onClear: () -> Unit,
+    onRescan: (() -> Unit)? = null
 ) {
     var routeThroughPhone by remember { mutableStateOf(false) }
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
+        sheetState = sheetState,
         containerColor = Color(0xFF0F172A),
         shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
     ) {
@@ -54,6 +57,9 @@ fun WvcVideoListSheet(
                 Column(Modifier.weight(1f)) {
                     Text("Lista de videos (${options.size})", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 17.sp)
                     Text(pageTitle.ifBlank { "Transmisión Web" }, color = Color(0xFF94A3B8), fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                }
+                if (onRescan != null) {
+                    IconButton(onClick = onRescan) { Text("🔄", fontSize = 17.sp) }
                 }
                 IconButton(onClick = onClear) { Text("🗑", fontSize = 17.sp) }
                 IconButton(onClick = onDismiss) { Text("✕", color = Color.LightGray, fontSize = 17.sp) }
@@ -84,22 +90,51 @@ fun WvcVideoListSheet(
 
             Spacer(Modifier.height(10.dp))
 
-            LazyColumn(
-                modifier = Modifier.fillMaxWidth().heightIn(max = 420.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(options) { opt ->
-                    WvcVideoListItem(
-                        option = opt,
-                        pageTitle = pageTitle,
-                        routeThroughPhone = routeThroughPhone,
-                        onTransmit = {
-                            val effectiveOpt = if (routeThroughPhone) opt.copy(
-                                healedHeaders = opt.healedHeaders.toMutableMap().apply { put("X-Force-Proxy", "true") }
-                            ) else opt
-                            onSelectAndTransmit(effectiveOpt)
-                        }
+            if (options.isEmpty()) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 36.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Text("🔍", fontSize = 38.sp)
+                    Text("No se han detectado videos todavía", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                    Text(
+                        "Reproduce el video en la página web o pulsa re-escanear para capturar el flujo.",
+                        color = Color(0xFF94A3B8),
+                        fontSize = 12.sp,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                        modifier = Modifier.padding(horizontal = 24.dp)
                     )
+                    if (onRescan != null) {
+                        Button(
+                            onClick = onRescan,
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF7A00)),
+                            shape = RoundedCornerShape(10.dp)
+                        ) {
+                            Text("🔄 Volver a escanear", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                        }
+                    }
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier.fillMaxWidth().heightIn(max = 460.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(options) { opt ->
+                        WvcVideoListItem(
+                            option = opt,
+                            pageTitle = pageTitle,
+                            routeThroughPhone = routeThroughPhone,
+                            onTransmit = {
+                                val effectiveOpt = if (routeThroughPhone) opt.copy(
+                                    healedHeaders = opt.healedHeaders.toMutableMap().apply { put("X-Force-Proxy", "true") }
+                                ) else opt
+                                onSelectAndTransmit(effectiveOpt)
+                            }
+                        )
+                    }
                 }
             }
             Spacer(Modifier.height(16.dp))
@@ -170,6 +205,12 @@ fun WvcVideoListItem(
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Medium
                     )
+                    val host = remember(option.streamUrl) {
+                        try { java.net.URI(option.streamUrl).host?.removePrefix("www.") ?: "" } catch (_: Throwable) { "" }
+                    }
+                    if (host.isNotBlank()) {
+                        Text("🌐 " + host, color = Color(0xFF64748B), fontSize = 10.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    }
                     if (option.audioTracksSummary.isNotBlank()) {
                         Text("🔊 " + option.audioTracksSummary, color = Color(0xFF38BDF8), fontSize = 10.sp, maxLines = 1)
                     }

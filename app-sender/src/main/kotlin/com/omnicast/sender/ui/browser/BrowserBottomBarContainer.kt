@@ -14,16 +14,9 @@ fun BrowserBottomBarContainer(
     posMs: Long,
     durMs: Long,
     volume: Float = 1.0f,
-    detectedCount: Int,
-    streamSubtitle: String = "HLS • m3u8 stream directo",
-    pageTitle: String,
-    onTransmitLatest: () -> Unit,
-    onShowDetectedStreams: () -> Unit,
-    onOpenQualities: () -> Unit,
+    onOpenQualities: (() -> Unit)? = null,
     onPlayControl: (String, Long, Float) -> Unit,
     onStopCasting: () -> Unit,
-    onClearStreams: () -> Unit = {},
-    onRescanStreams: () -> Unit = {},
     onSaveToPlaylist: (() -> Unit)? = null,
     onDeleteFromSaved: (() -> Unit)? = null,
     isSaved: Boolean = false,
@@ -32,16 +25,10 @@ fun BrowserBottomBarContainer(
     Box(modifier = modifier.fillMaxWidth()) {
         RemoteControlBar(
             title = if (castTitle.isNotBlank()) castTitle else "Transmisión Web",
-            streamCount = detectedCount,
-            streamSubtitle = streamSubtitle,
             isPlaying = isPlaying,
             positionMs = posMs,
             durationMs = durMs,
             volume = volume,
-            onShowDetectedStreams = onShowDetectedStreams,
-            onRescanStreams = onRescanStreams,
-            onClearStreams = onClearStreams,
-            onTransmitLatest = onTransmitLatest,
             onPlayPause = {
                 val isNearEnd = durMs > 2000L && posMs >= (durMs - 1500L)
                 if (isPlaying) {

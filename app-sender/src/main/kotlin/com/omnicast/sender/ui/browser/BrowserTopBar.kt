@@ -44,6 +44,9 @@ fun BrowserTopBar(
     onClearData: () -> Unit,
     detectedStreamsCount: Int = 0,
     onToggleBottomControls: () -> Unit = {},
+    onOpenDetectedVideos: () -> Unit = {},
+    isCasting: Boolean = false,
+    showBottomControls: Boolean = false,
     onOpenHistory: () -> Unit = {},
     onOpenPlaylists: () -> Unit = {},
     onOpenDrawer: () -> Unit = {},
@@ -145,10 +148,23 @@ fun BrowserTopBar(
                 }
             }
 
+            // Control multimedia toggle (solo visible cuando está reproduciendo/transmitiendo en la TV)
+            if (isCasting) {
+                IconButton(
+                    onClick = onToggleBottomControls,
+                    modifier = Modifier
+                        .size(36.dp)
+                        .background(if (showBottomControls) Color(0xFF0284C7) else Color(0xFF1E293B), CircleShape)
+                        .border(1.dp, if (showBottomControls) Color(0xFF38BDF8) else Color(0xFF334155), CircleShape)
+                ) {
+                    Text("🎛️", fontSize = 15.sp)
+                }
+            }
+
             // Botón Naranja Circular de Transmisión con Insignia Contadora (Web Video Caster)
             Box(contentAlignment = Alignment.TopEnd) {
                 IconButton(
-                    onClick = onToggleBottomControls,
+                    onClick = onOpenDetectedVideos,
                     modifier = Modifier
                         .size(38.dp)
                         .background(

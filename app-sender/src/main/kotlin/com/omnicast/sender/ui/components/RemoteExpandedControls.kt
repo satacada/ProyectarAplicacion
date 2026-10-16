@@ -20,99 +20,21 @@ import androidx.compose.ui.unit.sp
 @Composable
 fun RemoteExpandedControls(
     title: String,
-    streamCount: Int = 1,
-    streamSubtitle: String = "HLS • m3u8 stream directo",
     isPlaying: Boolean,
     positionMs: Long,
     durationMs: Long,
     volume: Float,
-    onShowDetectedStreams: () -> Unit = {},
-    onRescanStreams: () -> Unit = {},
-    onClearStreams: () -> Unit = {},
-    onTransmitLatest: () -> Unit = {},
     onPlayPause: () -> Unit,
     onSeekTo: (Long) -> Unit,
     onSkip: (Long) -> Unit,
     onVolumeChange: (Float) -> Unit,
+    onStop: (() -> Unit)? = null,
     onSaveToPlaylist: (() -> Unit)? = null,
     onDeleteFromSaved: (() -> Unit)? = null,
     onSelectQuality: (() -> Unit)? = null,
     isSaved: Boolean = false
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 2.dp)) {
-
-        // ========================================================
-        // SECCIÓN 1: FLUJOS (Rayo + Conteo, Reset Rayo-X, Transmitir)
-        // ========================================================
-        Surface(
-            color = Color(0xFF141D2B),
-            shape = RoundedCornerShape(12.dp),
-            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF223147)),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 6.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier
-                        .weight(1f, fill = false)
-                        .clip(RoundedCornerShape(8.dp))
-                        .clickable { onShowDetectedStreams() }
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(32.dp)
-                            .background(Color(0xFF132F26), RoundedCornerShape(8.dp))
-                            .border(1.dp, Color(0xFF10B981).copy(alpha = 0.5f), RoundedCornerShape(8.dp)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text("⚡", fontSize = 15.sp)
-                    }
-                    Text(
-                        text = "flujos detectados ($streamCount)",
-                        color = Color.White,
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        maxLines = 1
-                    )
-                }
-
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    IconButton(
-                        onClick = onClearStreams,
-                        modifier = Modifier
-                            .size(34.dp)
-                            .background(Color(0xFF261922), CircleShape)
-                            .border(1.dp, Color(0xFF4C1D24), CircleShape)
-                    ) {
-                        RayCrossIcon(modifier = Modifier.size(19.dp))
-                    }
-
-                    Button(
-                        onClick = onTransmitLatest,
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF10B981)),
-                        shape = RoundedCornerShape(10.dp),
-                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
-                        modifier = Modifier.height(34.dp)
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(5.dp)
-                        ) {
-                            CastTvIcon(modifier = Modifier.size(16.dp), color = Color.White)
-                            Text("Transmitir", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                        }
-                    }
-                }
-            }
-        }
 
         // ========================================================
         // SECCIÓN 2: PELÍCULA, LISTAS (Bookmark / Bookmark-X) Y CALIDAD
@@ -168,6 +90,17 @@ fun RemoteExpandedControls(
                                 .border(1.dp, Color(0xFF4C1D24), RoundedCornerShape(8.dp))
                         ) {
                             BookmarkRemoveIcon(modifier = Modifier.size(17.dp))
+                        }
+                    }
+                    if (onStop != null) {
+                        IconButton(
+                            onClick = onStop,
+                            modifier = Modifier
+                                .size(34.dp)
+                                .background(Color(0xFF2D1515), RoundedCornerShape(8.dp))
+                                .border(1.dp, Color(0xFFEF4444).copy(alpha = 0.5f), RoundedCornerShape(8.dp))
+                        ) {
+                            Text("⏹", fontSize = 15.sp, color = Color(0xFFEF4444))
                         }
                     }
                 }

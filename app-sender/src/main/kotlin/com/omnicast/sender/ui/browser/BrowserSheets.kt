@@ -18,6 +18,7 @@ fun BrowserModalSheets(
     onTransmitHistory: (HistoryItem) -> Unit,
     onDismissOptions: () -> Unit,
     onClearOptions: () -> Unit,
+    onRescanOptions: (() -> Unit)? = null,
     onDeleteHistory: (String) -> Unit,
     onClearHistory: () -> Unit,
     onToggleFavorite: (String) -> Unit = {},
@@ -38,12 +39,14 @@ fun BrowserModalSheets(
         )
     }
 
-    if (showOptionsSheet && qualityOptions.isNotEmpty()) {
+    if (showOptionsSheet) {
         WvcVideoListSheet(
-            pageTitle = pageTitle, options = qualityOptions,
+            pageTitle = pageTitle,
+            options = qualityOptions,
             onSelectAndTransmit = onTransmitOption,
             onDismiss = onDismissOptions,
-            onClear = onClearOptions
+            onClear = onClearOptions,
+            onRescan = onRescanOptions
         )
     }
 

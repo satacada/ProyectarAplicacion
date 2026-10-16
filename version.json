@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 118,
-  "versionCodeReceiver": 101,
-  "versionName": "3.32.73",
-  "releaseTag": "v3.32.73",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.73/omnicast-sender-v3.32.73.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.73/omnicast-receiver-v3.32.73.apk",
-  "changelog": "v3.32.73: Soporte para manifiestos HLS ofuscados (.txt) en UniversalHlsExtractorAdapter, BrowserUrlHelper y ExoPlayerTvManager; eliminación estricta de I-Frames como opciones de reproducción; apertura de selector estilo Web Video Caster ante múltiples servidores; debounce de transmisión y filtrado de IP principal en MultiReceiverManager para erradicar el eco destructivo de comandos."
+  "versionCodeSender": 119,
+  "versionCodeReceiver": 102,
+  "versionName": "3.32.74",
+  "releaseTag": "v3.32.74",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.74/omnicast-sender-v3.32.74.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.74/omnicast-receiver-v3.32.74.apk",
+  "changelog": "v3.32.74: Botón superior de Play abre pantalla modal completa de videos detectados estilo Web Video Caster con re-escaneo y visualización de dominio de servidor; desacople total de la barra multimedia inferior (reservada exclusivamente para controles de reproducción cuando se transmite activamente a la TV); nuevo botón toggle en barra superior para mostrar/ocultar control multimedia en TV."
 }

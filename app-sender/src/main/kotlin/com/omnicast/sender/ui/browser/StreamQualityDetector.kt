@@ -41,7 +41,21 @@ object StreamQualityDetector {
         // Sonda Pre-Cast + Auto-Reparador de Cabeceras (4 permutaciones deterministas)
         val probe = StreamManifestProbe.probeAndHeal(currentMediaUrl, safeHeaders, pageUrl)
         if (!probe.isPlayable) {
-            android.util.Log.w("StreamQualityDetector", "🛑 Flujo descartado antes de ExoPlayer (HTTP ${probe.httpCode} / No reproducible): $currentMediaUrl")
+            android.util.Log.w("StreamQualityDetector", "🛑 Flujo advertido por sonda (HTTP ${probe.httpCode}): $currentMediaUrl")
+            if (BrowserUrlHelper.isRealMedia(currentMediaUrl) && probe.httpCode != 404 && probe.httpCode != 410) {
+                val label = if (currentMediaUrl.contains(".mp4", ignoreCase = true)) "🎬 ${prefix}Video MP4 Directo" else "▶ ${prefix}Flujo Directo (Nativo)"
+                return@withContext listOf(
+                    StreamQualityOption(
+                        label = label,
+                        resolution = "Auto",
+                        bitrate = "Original",
+                        streamUrl = currentMediaUrl,
+                        isMovie = true,
+                        isSuggested = true,
+                        healedHeaders = safeHeaders
+                    )
+                )
+            }
             return@withContext emptyList()
         }
 

@@ -28,14 +28,13 @@ class FastreamExtractorAdapter : IMediaStreamExtractorPort {
         val title = candidate.pageTitle ?: "Fastream Video"
         val embedUrl = if (!fastreamId.isNullOrBlank()) "https://fastream.to/embed-$fastreamId.html" else "https://fastream.to/embed-video.html"
 
-        val headers = mutableMapOf(
-            "User-Agent" to UA_MOBILE,
-            "Referer" to embedUrl,
-            "Origin" to "https://fastream.to",
-            "Sec-Fetch-Mode" to "cors",
-            "Sec-Fetch-Dest" to "empty",
-            "Sec-Fetch-Site" to "cross-site"
-        )
+        val headers = candidate.headers.toMutableMap()
+        if (!headers.containsKey("User-Agent")) headers["User-Agent"] = UA_MOBILE
+        if (!headers.containsKey("Referer")) headers["Referer"] = embedUrl
+        if (!headers.containsKey("Origin")) headers["Origin"] = "https://fastream.to"
+        if (!headers.containsKey("Sec-Fetch-Mode")) headers["Sec-Fetch-Mode"] = "cors"
+        if (!headers.containsKey("Sec-Fetch-Dest")) headers["Sec-Fetch-Dest"] = "empty"
+        if (!headers.containsKey("Sec-Fetch-Site")) headers["Sec-Fetch-Site"] = "cross-site"
 
         return MediaStream(
             url = url,

@@ -177,14 +177,20 @@ fun BrowserWebView(
                         if (isAdBlockEnabled && !isSourceWhitelisted) {
                             if (AdBlocker.isAd(reqUrl) || NativeAdBlockEngine.shouldBlock(reqUrl, liveUrl)) {
                                 android.util.Log.w("BrowserWebView", "🛑 Redirección publicitaria bloqueada: $targetHost")
+                                targetHost?.let { AdBlocker.learnAndBlockAdHost(it, curHost) }
                                 showBlockedToast(ctx)
                                 return true
                             }
-                            if (inMovie && !isSameSite && targetHost != null && !r.hasGesture()) {
-                                android.util.Log.w("BrowserWebView", "🛑 Secuestro automático bloqueado hacia: $targetHost")
-                                AdBlocker.learnAndBlockAdHost(targetHost, curHost)
-                                showBlockedToast(ctx)
-                                return true
+                            if (inMovie && !isSameSite && targetHost != null) {
+                                val isAllowedExternal = AdBlocker.isSearchEngine(targetHost) ||
+                                    AdBlocker.isKnownMediaHost(targetHost) ||
+                                    AdBlockWhitelistManager.isWhitelistedHost(targetHost)
+                                if (!isAllowedExternal) {
+                                    android.util.Log.w("BrowserWebView", "🛑 Secuestro proactivo bloqueado hacia: $targetHost (aprendiendo dominio)")
+                                    AdBlocker.learnAndBlockAdHost(targetHost, curHost)
+                                    showBlockedToast(ctx)
+                                    return true
+                                }
                             }
                         }
                         return false

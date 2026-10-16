@@ -1,9 +1,10 @@
 {
-  "versionCodeSender": 107,
-  "versionCodeReceiver": 90,
-  "versionName": "3.32.62",
-  "releaseTag": "v3.32.62",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.62/omnicast-sender-v3.32.62.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.62/omnicast-receiver-v3.32.62.apk",
-  "changelog": "v3.32.62: Auto-rotación EXIF en fotos de galería; soporte multi-receptor en galería; protección contra corte de videos locales en TV; reactividad de estado de proyección y WebRtcSdpTuner."
+  "versionCodeSender": 108,
+  "versionCodeReceiver": 91,
+  "versionName": "3.32.63",
+  "releaseTag": "v3.32.63",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.63/omnicast-sender-v3.32.63.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.63/omnicast-receiver-v3.32.63.apk",
+  "changelog": "v3.32.63: Autoaprendizaje proactivo de anuncios en SQLite local (bloqueo instantáneo de secuestros); neutralización de click-shields transparentes; resiliencia de flujos activos ante HTTP 403 de CDN con fallback directo."
 }
+

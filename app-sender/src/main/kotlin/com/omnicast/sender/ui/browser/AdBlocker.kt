@@ -137,8 +137,8 @@ object AdBlocker {
                 document.addEventListener('click', function(e) {
                     var el = e.target;
                     if (!el) return;
-                    if (el.closest && el.closest('input, textarea, select, button, form, a, [contenteditable="true"], [role="search"], [role="textbox"], [role="combobox"]')) return;
-                    if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT' || el.tagName === 'BUTTON' || el.tagName === 'FORM') return;
+                    if (el.closest && el.closest('input, textarea, select, form, [contenteditable="true"], [role="search"], [role="textbox"], [role="combobox"]')) return;
+                    if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT' || el.tagName === 'FORM') return;
                     if (el !== document.body && el !== document.documentElement) {
                         var cs = window.getComputedStyle(el);
                         if (cs && (cs.position === 'fixed' || cs.position === 'absolute')) {

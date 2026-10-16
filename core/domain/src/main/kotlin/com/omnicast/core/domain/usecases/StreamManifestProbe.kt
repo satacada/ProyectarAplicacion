@@ -79,6 +79,11 @@ object StreamManifestProbe {
                     "referer" -> orig["Referer"] = v
                     "origin" -> orig["Origin"] = v
                     "authorization" -> orig["Authorization"] = v
+                    "sec-fetch-mode" -> orig["Sec-Fetch-Mode"] = v
+                    "sec-fetch-dest" -> orig["Sec-Fetch-Dest"] = v
+                    "sec-fetch-site" -> orig["Sec-Fetch-Site"] = v
+                    "accept" -> orig["Accept"] = v
+                    "accept-language" -> orig["Accept-Language"] = v
                 }
             }
         }

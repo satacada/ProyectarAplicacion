@@ -99,7 +99,7 @@ fun InAppBrowserScreen(
         scope.launch(Dispatchers.IO) {
             val (finalUrl, finalHdrs) = MediaPlatformResolver.prepareStreamForPlayback(url, refPage, hdrs)
             val probe = StreamQualityDetector.probeAndHealStream(finalUrl, finalHdrs, refPage)
-            if (!probe.isPlayable) {
+            if (!probe.isPlayable && (probe.httpCode == 404 || probe.httpCode == 410)) {
                 withContext(Dispatchers.Main) {
                     detectedStreams.remove(url); detectedStreams.remove(finalUrl); qualityOptions = qualityOptions.filterNot { it.streamUrl == url || it.streamUrl == finalUrl }
                     if (!savedPageUrl.isNullOrBlank() && savedPageUrl.startsWith("http")) {
@@ -109,7 +109,7 @@ fun InAppBrowserScreen(
                 }
                 return@launch
             }
-            val healedHdrs = probe.healedHeaders
+            val healedHdrs = if (probe.isPlayable && probe.healedHeaders.isNotEmpty()) probe.healedHeaders else finalHdrs
             withContext(Dispatchers.Main) { streamHeaders[finalUrl] = healedHdrs; historyManager.addOrUpdate(finalUrl, cleanT, refPage, healedHdrs); onSendStreamToTv(finalUrl, cleanT, healedHdrs) }
         }
     }
@@ -156,16 +156,14 @@ fun InAppBrowserScreen(
                 }
                 opts
             }
-            detectedStreams.retainAll { validParents.contains(it) }
-            if (deep.isEmpty()) {
-                Toast.makeText(context, "⚠️ Se descartaron enlaces rotos. Dale Play al reproductor de la película.", Toast.LENGTH_SHORT).show()
-                webViewInstance?.evaluateJavascript(WvcSnifferScripts.buildAggressiveRescanScript(WvcDomSniffer.CONSOLE_PREFIX), null)
-            } else {
-                qualityOptions = deep.distinctBy { it.streamUrl }.sortedWith(
-                    compareByDescending<StreamQualityOption> { it.isSuggested }.thenByDescending { it.isMovie }.thenByDescending { it.resolution.removeSuffix("p").toIntOrNull() ?: 0 }
-                )
-                showOptionsSheet = true
+            if (validParents.isNotEmpty()) detectedStreams.retainAll { validParents.contains(it) }
+            val finalOpts = if (deep.isNotEmpty()) deep else currentStreams.map { u ->
+                StreamQualityOption("▶ [${cleanTitle.take(16)}] Flujo Directo", "Auto", "Original", u, isMovie = true, isSuggested = true, healedHeaders = streamHeaders[u] ?: emptyMap())
             }
+            qualityOptions = finalOpts.distinctBy { it.streamUrl }.sortedWith(
+                compareByDescending<StreamQualityOption> { it.isSuggested }.thenByDescending { it.isMovie }.thenByDescending { it.resolution.removeSuffix("p").toIntOrNull() ?: 0 }
+            )
+            showOptionsSheet = true
         }
     }
 

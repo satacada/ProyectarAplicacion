@@ -170,17 +170,30 @@ fun BrowserTopBar(
             Box(contentAlignment = Alignment.TopEnd) {
                 IconButton(
                     onClick = onOpenDetectedVideos,
-                    modifier = Modifier.size(26.dp).background(if (detectedStreamsCount > 0) Color(0xFFFF7A00) else Color(0xFF334155), CircleShape)
+                    modifier = Modifier.size(26.dp)
                 ) {
-                    Icon(Icons.Rounded.PlayArrow, contentDescription = "Videos", tint = if (detectedStreamsCount > 0) Color.White else Color(0xFF94A3B8), modifier = Modifier.size(15.dp))
+                    Icon(
+                        Icons.Rounded.PlayArrow,
+                        contentDescription = "Videos",
+                        tint = if (detectedStreamsCount > 0) Color(0xFFFF9800) else Color(0xFF94A3B8),
+                        modifier = Modifier.size(17.dp)
+                    )
                 }
 
                 if (detectedStreamsCount > 0) {
                     Box(
-                        modifier = Modifier.offset(x = 2.dp, y = (-2).dp).background(Color(0xFFEF4444), CircleShape).padding(horizontal = 3.dp, vertical = 0.5.dp),
+                        modifier = Modifier
+                            .offset(x = 1.dp, y = (-1).dp)
+                            .background(Color(0xFFEF4444), CircleShape)
+                            .padding(horizontal = 2.5.dp, vertical = 0.5.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(text = if (detectedStreamsCount > 9) "9+" else detectedStreamsCount.toString(), color = Color.White, fontSize = 7.sp, fontWeight = FontWeight.ExtraBold)
+                        Text(
+                            text = if (detectedStreamsCount > 9) "9+" else detectedStreamsCount.toString(),
+                            color = Color.White,
+                            fontSize = 7.sp,
+                            fontWeight = FontWeight.Bold
+                        )
                     }
                 }
             }

@@ -13,7 +13,8 @@ class TelemetryFilterAdapter : IStreamTelemetryFilterPort {
     private val staticExtensions = listOf(
         ".html", ".htm", ".css", ".js", ".json", ".xml",
         ".jpg", ".jpeg", ".png", ".webp", ".gif", ".svg", ".ico",
-        ".woff", ".woff2", ".ttf", ".eot", ".otf"
+        ".woff", ".woff2", ".ttf", ".eot", ".otf",
+        ".vtt", ".srt", ".sub", ".ass", ".key"
     )
 
     private val baseTelemetryKeywords = listOf(
@@ -53,7 +54,7 @@ class TelemetryFilterAdapter : IStreamTelemetryFilterPort {
         if (baseTelemetryKeywords.any { lower.contains(it) } || dynamicTelemetry.any { lower.contains(it) }) return true
 
         // 5. Descartar fragmentos elementales de streaming que no son listas maestras (evitar spam de chunks)
-        if (lower.contains(".ts?") || (lower.endsWith(".ts") && !lower.contains(".m3u8")) || lower.contains(".m4s") ||
+        if (pathOnly.endsWith(".ts") || pathOnly.endsWith(".m4s") || lower.contains(".ts?") || lower.contains(".m4s?") ||
             lower.contains("init.mp4") || lower.contains("/init-") || lower.contains("-init.")) return true
 
         // 6. Descartar audio aislado si se busca el flujo de video compuesto

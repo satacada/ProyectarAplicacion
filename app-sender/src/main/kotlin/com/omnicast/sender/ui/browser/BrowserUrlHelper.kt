@@ -34,8 +34,12 @@ object BrowserUrlHelper {
     fun isPlayableStream(url: String): Boolean {
         if (url.isBlank()) return false
         val lower = url.lowercase().substringBefore('?')
+        if (lower.endsWith(".vtt") || lower.endsWith(".srt") || lower.endsWith(".key") ||
+            lower.endsWith(".ts") || lower.endsWith(".m4s") || lower.endsWith(".html") ||
+            lower.endsWith(".htm") || lower.endsWith(".jsp") || lower.endsWith(".js") ||
+            lower.endsWith(".css") || lower.endsWith(".json")) return false
         val isPhpStream = lower.endsWith(".php") && (url.contains(".m3u8", true) || url.contains(".mp4", true) || url.contains("p.php?", true) || url.contains("url=", true) || url.contains("stream", true))
-        if (lower.endsWith(".html") || lower.endsWith(".htm") || (lower.endsWith(".php") && !isPhpStream) || lower.endsWith(".jsp")) return false
+        if (lower.endsWith(".php") && !isPhpStream) return false
         val fullLower = url.lowercase()
         if (fullLower.contains("dmxleo.dailymotion.com") || fullLower.contains("geo.dailymotion.com")) return false
         if (fullLower.contains("/embed/") || fullLower.contains("/embed69") || fullLower.contains("/widget/")) return false
@@ -49,8 +53,12 @@ object BrowserUrlHelper {
         if (s.isBlank() || s.contains("dmxleo.dailymotion.com") || AdBlocker.isAd(s)) return false
         if (dur in 0.1f..59.9f) return false
         val clean = s.substringBefore('?').lowercase()
+        if (clean.endsWith(".vtt") || clean.endsWith(".srt") || clean.endsWith(".key") ||
+            clean.endsWith(".ts") || clean.endsWith(".m4s") || clean.endsWith(".html") ||
+            clean.endsWith(".htm") || clean.endsWith(".jsp") || clean.endsWith(".js") ||
+            clean.endsWith(".css") || clean.endsWith(".json")) return false
         val isPhpStream = clean.endsWith(".php") && (s.contains(".m3u8", true) || s.contains(".mp4", true) || s.contains("p.php?", true) || s.contains("url=", true) || s.contains("stream", true) || s.contains("hls", true))
-        if (clean.endsWith(".html") || clean.endsWith(".htm") || (clean.endsWith(".php") && !isPhpStream) || clean.endsWith(".jsp") || clean.endsWith(".js") || clean.endsWith(".css")) return false
+        if (clean.endsWith(".php") && !isPhpStream) return false
         val isWeb = (s.contains("dailymotion.com/video/") || s.contains("ok.ru/video/")) &&
                     !s.contains(".m3u8") && !s.contains(".mpd") && !s.contains(".mp4") && !s.contains("cmd=video")
         val isTxtHls = (clean.endsWith(".txt") || s.contains(".txt?", true)) && (s.contains("/hls", true) || s.contains("master", true) || s.contains("index", true))

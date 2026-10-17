@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 132,
-  "versionCodeReceiver": 115,
-  "versionName": "3.32.87",
-  "releaseTag": "v3.32.87",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.87/omnicast-sender-v3.32.87.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.87/omnicast-receiver-v3.32.87.apk",
-  "changelog": "v3.32.87: Navegacion fluida multi-sitio sin bloqueo en motores de busqueda (Yandex/Google/sololatino/pelisgo) fijando setSupportMultipleWindows(false) y enrutando onCreateWindow; eliminacion de sobreescritura de window.open permitiendo que Cloudflare Turnstile auto-valide criptograficamente sin alertar bot heuristics; filtro estricto anti-anuncios de video (quickcore.fun, prerolls, vast, duration < 60s) garantizando que solo la pelicula principal sea capturada y proyectada."
+  "versionCodeSender": 133,
+  "versionCodeReceiver": 116,
+  "versionName": "3.32.88",
+  "releaseTag": "v3.32.88",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.88/omnicast-sender-v3.32.88.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.88/omnicast-receiver-v3.32.88.apk",
+  "changelog": "v3.32.88: Eliminacion estricta de archivos de subtitulos (.vtt, .srt, .sub, .ass), llaves de cifrado (.key) y fragmentos (.ts, .m4s) del extractor HLS y sniffer de red, impidiendo saturacion de listas con elementos no reproducibles en Pelisgo y sitios similares; priorizacion nativa de listas maestras (master.m3u8); icono de reproduccion superior rediseñado al estilo plano y compacto de Web Video Caster; eliminacion total del reintento forzado de proxy local en errores HTTP 403."
 }

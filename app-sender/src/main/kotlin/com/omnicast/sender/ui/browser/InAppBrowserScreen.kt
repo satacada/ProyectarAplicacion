@@ -88,22 +88,24 @@ fun InAppBrowserScreen(
             if (validParents.isNotEmpty()) detectedStreams.retainAll { validParents.contains(it) }
             val finalOpts = if (deep.isNotEmpty()) deep else qualityOptions
             val orderMap = currentStreams.withIndex().associate { it.value to it.index }
-            qualityOptions = finalOpts.distinctBy { it.streamUrl }.sortedBy { opt ->
-                orderMap[opt.streamUrl] ?: currentStreams.indexOfFirst { opt.streamUrl.startsWith(it.substringBefore('?')) }.takeIf { it >= 0 } ?: 999
-            }
+            qualityOptions = finalOpts.distinctBy { it.streamUrl }.sortedWith(
+                compareByDescending<StreamQualityOption> { it.isMaster || it.streamUrl.contains("master", true) }
+                    .thenBy { opt -> orderMap[opt.streamUrl] ?: currentStreams.indexOfFirst { opt.streamUrl.startsWith(it.substringBefore('?')) }.takeIf { it >= 0 } ?: 999 }
+            )
         }
     }
 
     fun registerStream(url: String, hdrs: Map<String, String>, isPrimary: Boolean = false, label: String? = null) {
         if (url.isBlank() || AdBlocker.isAd(url) || !isRealMedia(url) || BrowserUrlHelper.extractYouTubeId(url) != null) return
         if (detectedStreams.contains(url)) detectedStreams.remove(url)
-        // Últimos capturados al principio (índice 0), y los primeros/antiguos abajo
-        detectedStreams.add(0, url)
+        val isM = isPrimary || url.contains("master", true) || url.contains("playlist", true)
+        val nonM = detectedStreams.indexOfFirst { !it.contains("master", true) && !it.contains("playlist", true) }
+        if (isM) detectedStreams.add(0, url) else if (nonM >= 0) detectedStreams.add(nonM, url) else detectedStreams.add(url)
         if (hdrs.isNotEmpty()) streamHeaders[url] = hdrs; if (!label.isNullOrBlank()) streamLabels[url] = label
-        val primaryUrl = detectedStreams.firstOrNull { isRealMedia(it) } ?: url
+        val primaryUrl = detectedStreams.firstOrNull { it.contains("master", true) } ?: detectedStreams.firstOrNull { isRealMedia(it) } ?: url
         val cleanT = if (pageTitle.isNotBlank() && pageTitle != "Cargando..." && pageTitle != "Transmisión") pageTitle else "Video Web"
         ActiveStreamHolder.update(primaryUrl, cleanT, streamHeaders[primaryUrl] ?: hdrs)
-        android.util.Log.i("StreamDetection", "🎬 Flujo registrado [TOP/RECENT]: $url")
+        android.util.Log.i("StreamDetection", "🎬 Flujo registrado [isMaster=$isM]: $url")
         if (!showOptionsSheet && !isCasting && userDismissedSheetForUrl != currentUrl) {
             autoOpenJob?.cancel()
             autoOpenJob = scope.launch {
@@ -237,8 +239,7 @@ fun InAppBrowserScreen(
                         val sourceFrameUrl = sniffed.frameUrl.takeIf { it.startsWith("http") } ?: currentUrl
                         if (sniffed.src.contains("fastream.to") && !sniffed.src.contains(".m3u8")) {
                             scope.launch(Dispatchers.IO) {
-                                val res = MediaPlatformResolver.resolveFastreamSync(sniffed.src, sourceFrameUrl)
-                                if (res != null) withContext(Dispatchers.Main) { registerStream(res.first, res.third, isPrimary = true, label = sniffed.title) }
+                                MediaPlatformResolver.resolveFastreamSync(sniffed.src, sourceFrameUrl)?.let { res -> withContext(Dispatchers.Main) { registerStream(res.first, res.third, isPrimary = true, label = sniffed.title) } }
                             }
                             return@BrowserWebView
                         }

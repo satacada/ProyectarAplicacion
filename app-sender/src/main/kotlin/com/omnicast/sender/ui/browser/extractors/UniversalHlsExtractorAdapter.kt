@@ -13,11 +13,16 @@ class UniversalHlsExtractorAdapter : IMediaStreamExtractorPort {
     override val priority: Int = 10
 
     override fun canHandle(candidate: StreamCandidate): Boolean {
+        val cleanPath = candidate.url.substringBefore('?').lowercase()
+        if (cleanPath.endsWith(".vtt") || cleanPath.endsWith(".srt") || cleanPath.endsWith(".key") ||
+            cleanPath.endsWith(".ts") || cleanPath.endsWith(".m4s") || cleanPath.endsWith(".css") ||
+            cleanPath.endsWith(".js") || cleanPath.endsWith(".json")) return false
+
         val lower = candidate.url.lowercase()
         return lower.contains(".m3u8") ||
                lower.contains("chunklist") ||
-               (lower.contains("/hls") && !lower.endsWith(".ts")) ||
-               ((lower.endsWith(".txt") || lower.contains(".txt?")) && (lower.contains("master") || lower.contains("index") || lower.contains("/hls"))) ||
+               (lower.contains("/hls") && !cleanPath.endsWith(".ts")) ||
+               ((cleanPath.endsWith(".txt") || lower.contains(".txt?")) && (lower.contains("master") || lower.contains("index") || lower.contains("/hls"))) ||
                lower.contains("/stream/") || lower.contains("/manifest") ||
                lower.contains("/live") || lower.contains("live.m3u8") ||
                lower.contains("swdyu.com") || lower.contains("cloudemb.com") || lower.contains("morencius.com") ||

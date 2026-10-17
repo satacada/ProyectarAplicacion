@@ -6,6 +6,13 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.rounded.Delete
+import androidx.compose.material.icons.rounded.MoreVert
+import androidx.compose.material.icons.rounded.Movie
+import androidx.compose.material.icons.rounded.Refresh
+import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -46,7 +53,6 @@ fun WvcVideoListSheet(
                 .fillMaxHeight(0.92f)
                 .background(Color(0xFF121212))
         ) {
-            // Barra superior estilo Web Video Caster: ←  Lista de videos   [🔄] 🗑
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -54,7 +60,7 @@ fun WvcVideoListSheet(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButton(onClick = onDismiss, modifier = Modifier.size(36.dp)) {
-                    Text("←", color = Color.White, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+                    Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Volver", tint = Color.White, modifier = Modifier.size(20.dp))
                 }
                 Spacer(Modifier.width(8.dp))
                 Text(
@@ -62,15 +68,17 @@ fun WvcVideoListSheet(
                     color = Color.White,
                     fontWeight = FontWeight.Bold,
                     fontSize = 19.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f)
                 )
                 if (onRescan != null) {
                     IconButton(onClick = onRescan, modifier = Modifier.size(36.dp)) {
-                        Text("🔄", fontSize = 16.sp)
+                        Icon(Icons.Rounded.Refresh, contentDescription = "Re-escanear", tint = Color.White, modifier = Modifier.size(20.dp))
                     }
                 }
                 IconButton(onClick = onClear, modifier = Modifier.size(36.dp)) {
-                    Text("🗑", color = Color(0xFF9E9E9E), fontSize = 18.sp)
+                    Icon(Icons.Rounded.Delete, contentDescription = "Limpiar", tint = Color(0xFF9E9E9E), modifier = Modifier.size(20.dp))
                 }
             }
 
@@ -110,9 +118,9 @@ fun WvcVideoListSheet(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
-                    Text("🔍", fontSize = 38.sp)
+                    Icon(Icons.Rounded.Search, contentDescription = null, tint = Color(0xFF64748B), modifier = Modifier.size(38.dp))
                     Spacer(Modifier.height(8.dp))
-                    Text("No se han detectado videos todavía", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                    Text("No se han detectado videos todavía", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 15.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     Spacer(Modifier.height(4.dp))
                     Text(
                         "Reproduce el video en la página web o pulsa re-escanear para capturar el flujo.",
@@ -128,7 +136,9 @@ fun WvcVideoListSheet(
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF7A00)),
                             shape = RoundedCornerShape(10.dp)
                         ) {
-                            Text("🔄 Volver a escanear", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                            Icon(Icons.Rounded.Refresh, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
+                            Spacer(Modifier.width(6.dp))
+                            Text("Volver a escanear", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         }
                     }
                 }
@@ -193,7 +203,7 @@ fun WvcVideoListItem(
                 .background(Color(0xFFFF9800), RoundedCornerShape(4.dp)),
             contentAlignment = Alignment.Center
         ) {
-            Text("🎬", fontSize = 26.sp)
+            Icon(Icons.Rounded.Movie, contentDescription = null, tint = Color.White, modifier = Modifier.size(28.dp))
         }
 
         Spacer(Modifier.width(14.dp))
@@ -236,7 +246,7 @@ fun WvcVideoListItem(
                 onClick = { showMenu = true },
                 modifier = Modifier.size(32.dp)
             ) {
-                Text("⋮", color = Color(0xFF9E9E9E), fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                Icon(Icons.Rounded.MoreVert, contentDescription = "Opciones", tint = Color(0xFF9E9E9E), modifier = Modifier.size(18.dp))
             }
             DropdownMenu(
                 expanded = showMenu,
@@ -244,18 +254,18 @@ fun WvcVideoListItem(
                 modifier = Modifier.background(Color(0xFF1E293B))
             ) {
                 DropdownMenuItem(
-                    text = { Text("▶ Emitir ahora", color = Color.White) },
+                    text = { Text("Emitir ahora", color = Color.White, maxLines = 1, overflow = TextOverflow.Ellipsis) },
                     onClick = { showMenu = false; onTransmit() }
                 )
                 if (option.audioTracksSummary.isNotBlank()) {
                     DropdownMenuItem(
-                        text = { Text("🔊 Audio: ${option.audioTracksSummary}", color = Color(0xFF38BDF8)) },
+                        text = { Text("Audio: ${option.audioTracksSummary}", color = Color(0xFF38BDF8), maxLines = 1, overflow = TextOverflow.Ellipsis) },
                         onClick = { showMenu = false }
                     )
                 }
                 if (option.subtitleTracksSummary.isNotBlank()) {
                     DropdownMenuItem(
-                        text = { Text("💬 Subtítulos: ${option.subtitleTracksSummary}", color = Color(0xFFA78BFA)) },
+                        text = { Text("Subtítulos: ${option.subtitleTracksSummary}", color = Color(0xFFA78BFA), maxLines = 1, overflow = TextOverflow.Ellipsis) },
                         onClick = { showMenu = false }
                     )
                 }

@@ -6,21 +6,30 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.CalendarToday
+import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.PlayArrow
+import androidx.compose.material.icons.rounded.Schedule
+import androidx.compose.material.icons.rounded.Search
+import androidx.compose.material.icons.rounded.SortByAlpha
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.omnicast.sender.history.HistoryItem
 
-enum class VideoSortOrder(val label: String, val icon: String) {
-    NEWEST("Recientes", "📅"),
-    NAME_AZ("A - Z", "🔤"),
-    IN_PROGRESS("En progreso", "▶"),
-    OLDEST("Antiguos", "⏳")
+enum class VideoSortOrder(val label: String, val icon: ImageVector) {
+    NEWEST("Recientes", Icons.Rounded.CalendarToday),
+    NAME_AZ("A - Z", Icons.Rounded.SortByAlpha),
+    IN_PROGRESS("En progreso", Icons.Rounded.PlayArrow),
+    OLDEST("Antiguos", Icons.Rounded.Schedule)
 }
 
 @Composable
@@ -39,11 +48,17 @@ fun VideoSortFilterBar(
         OutlinedTextField(
             value = searchQuery,
             onValueChange = onSearchQueryChange,
-            placeholder = { Text("🔍 Buscar película o video...", fontSize = 12.sp, color = Color(0xFF64748B)) },
+            placeholder = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Rounded.Search, contentDescription = null, tint = Color(0xFF64748B), modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text("Buscar película o video...", fontSize = 12.sp, color = Color(0xFF64748B), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                }
+            },
             trailingIcon = {
                 if (searchQuery.isNotBlank()) {
                     IconButton(onClick = { onSearchQueryChange("") }, modifier = Modifier.size(24.dp)) {
-                        Text("✕", color = Color(0xFF94A3B8), fontSize = 12.sp)
+                        Icon(Icons.Rounded.Close, contentDescription = "Limpiar", tint = Color(0xFF94A3B8), modifier = Modifier.size(16.dp))
                     }
                 }
             },
@@ -79,9 +94,14 @@ fun VideoSortFilterBar(
                     Row(
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        horizontalArrangement = Arrangement.spacedBy(5.dp)
                     ) {
-                        Text(sort.icon, fontSize = 11.sp)
+                        Icon(
+                            imageVector = sort.icon,
+                            contentDescription = null,
+                            tint = if (isSelected) Color(0xFF0F172A) else Color(0xFFCBD5E1),
+                            modifier = Modifier.size(13.dp)
+                        )
                         Text(
                             text = sort.label,
                             color = if (isSelected) Color(0xFF0F172A) else Color(0xFFCBD5E1),

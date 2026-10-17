@@ -8,6 +8,12 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.Delete
+import androidx.compose.material.icons.rounded.History
+import androidx.compose.material.icons.rounded.Star
+import androidx.compose.material.icons.rounded.Tv
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -83,16 +89,37 @@ private fun DrawerSheetContent(
 
     Column(modifier = Modifier.fillMaxSize().padding(14.dp)) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-            Column {
-                Text("📺 Mis Videos", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                Text("Historial y Guardadas", fontSize = 11.sp, color = Color(0xFF94A3B8))
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Icon(Icons.Rounded.Tv, contentDescription = null, tint = Color(0xFF38BDF8), modifier = Modifier.size(24.dp))
+                Column {
+                    Text("Mis Videos", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text("Historial y Guardadas", fontSize = 11.sp, color = Color(0xFF94A3B8), maxLines = 1)
+                }
             }
-            IconButton(onClick = onClose) { Text("✕", color = Color(0xFF94A3B8), fontSize = 16.sp, fontWeight = FontWeight.Bold) }
+            IconButton(onClick = onClose) { Icon(Icons.Rounded.Close, contentDescription = "Cerrar", tint = Color(0xFF94A3B8), modifier = Modifier.size(20.dp)) }
         }
         Spacer(modifier = Modifier.height(10.dp))
         TabRow(selectedTabIndex = selectedTab, containerColor = Color(0xFF1E293B), contentColor = Color(0xFF38BDF8)) {
-            Tab(selected = selectedTab == 0, onClick = { selectedTab = 0; historyList = historyManager.getHistory() }, text = { Text("🕒 Historial (" + historyList.size + ")", fontSize = 12.sp) })
-            Tab(selected = selectedTab == 1, onClick = { selectedTab = 1; playlists = playlistManager.getPlaylists() }, text = { Text("⭐ Guardadas (" + playlists.sumOf { it.items.size } + " pelis)", fontSize = 11.sp) })
+            Tab(
+                selected = selectedTab == 0,
+                onClick = { selectedTab = 0; historyList = historyManager.getHistory() },
+                text = {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Icon(Icons.Rounded.History, contentDescription = null, modifier = Modifier.size(14.dp))
+                        Text("Historial (" + historyList.size + ")", fontSize = 12.sp, maxLines = 1)
+                    }
+                }
+            )
+            Tab(
+                selected = selectedTab == 1,
+                onClick = { selectedTab = 1; playlists = playlistManager.getPlaylists() },
+                text = {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Icon(Icons.Rounded.Star, contentDescription = null, modifier = Modifier.size(14.dp))
+                        Text("Guardadas (" + playlists.sumOf { it.items.size } + ")", fontSize = 11.sp, maxLines = 1)
+                    }
+                }
+            )
         }
         Spacer(modifier = Modifier.height(8.dp))
 
@@ -106,10 +133,13 @@ private fun DrawerSheetContent(
 
         if (selectedTab == 0) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                Text("Vistos recientemente", fontSize = 11.sp, color = Color(0xFF64748B))
+                Text("Vistos recientemente", fontSize = 11.sp, color = Color(0xFF64748B), maxLines = 1)
                 if (historyList.isNotEmpty()) {
                     TextButton(onClick = { historyManager.clear(keepFavorites = false); historyList = emptyList() }, contentPadding = PaddingValues(horizontal = 6.dp, vertical = 2.dp)) {
-                        Text("🗑 Limpiar", fontSize = 11.sp, color = Color(0xFFEF4444))
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Icon(Icons.Rounded.Delete, contentDescription = null, tint = Color(0xFFEF4444), modifier = Modifier.size(13.dp))
+                            Text("Limpiar", fontSize = 11.sp, color = Color(0xFFEF4444))
+                        }
                     }
                 }
             }

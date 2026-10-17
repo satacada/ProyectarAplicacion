@@ -33,6 +33,8 @@ class TelemetryFilterAdapter : IStreamTelemetryFilterPort {
 
     override fun isTelemetryOrGarbage(url: String): Boolean {
         if (url.isBlank() || url.startsWith("blob:") || url.startsWith("data:") || url.startsWith("about:")) return true
+        // 0. Evaluación nativa C++20 de latencia ultra-baja (<0.1 ms)
+        if (com.omnicast.sender.nativeclassifier.NativeStreamClassifier.shouldDiscard(url)) return true
         val lower = url.lowercase()
 
         // 1. Descartar anuncios identificados por el motor de AdBlock

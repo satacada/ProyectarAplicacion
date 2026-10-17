@@ -5,6 +5,11 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Language
+import androidx.compose.material.icons.rounded.PhotoLibrary
+import androidx.compose.material.icons.rounded.ScreenShare
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -55,12 +60,24 @@ fun CastModeSelectorBar(
                     modifier = Modifier.padding(vertical = 8.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = "🖼️ Galería",
-                        color = if (isGalSelected) Color(0xFFA7F3D0) else Color(0xFF94A3B8),
-                        fontSize = 12.sp,
-                        fontWeight = if (isGalSelected) FontWeight.ExtraBold else FontWeight.Medium
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Icon(
+                            Icons.Rounded.PhotoLibrary,
+                            contentDescription = null,
+                            tint = if (isGalSelected) Color(0xFFA7F3D0) else Color(0xFF94A3B8),
+                            modifier = Modifier.size(15.dp)
+                        )
+                        Text(
+                            text = "Galería",
+                            color = if (isGalSelected) Color(0xFFA7F3D0) else Color(0xFF94A3B8),
+                            fontSize = 12.sp,
+                            fontWeight = if (isGalSelected) FontWeight.ExtraBold else FontWeight.Medium,
+                            maxLines = 1
+                        )
+                    }
                 }
             }
         }
@@ -87,12 +104,24 @@ fun CastModeSelectorBar(
                     modifier = Modifier.padding(vertical = 8.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = "📱 Casteo-TV",
-                        color = if (isCastSelected) Color(0xFFBAE6FD) else Color(0xFF94A3B8),
-                        fontSize = 12.sp,
-                        fontWeight = if (isCastSelected) FontWeight.ExtraBold else FontWeight.Medium
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Icon(
+                            Icons.Rounded.ScreenShare,
+                            contentDescription = null,
+                            tint = if (isCastSelected) Color(0xFFBAE6FD) else Color(0xFF94A3B8),
+                            modifier = Modifier.size(15.dp)
+                        )
+                        Text(
+                            text = "Casteo-TV",
+                            color = if (isCastSelected) Color(0xFFBAE6FD) else Color(0xFF94A3B8),
+                            fontSize = 12.sp,
+                            fontWeight = if (isCastSelected) FontWeight.ExtraBold else FontWeight.Medium,
+                            maxLines = 1
+                        )
+                    }
                 }
             }
         }
@@ -115,12 +144,24 @@ fun CastModeSelectorBar(
                     modifier = Modifier.padding(vertical = 8.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = "🌐 Web Video",
-                        color = Color(0xFF67E8F9),
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Icon(
+                            Icons.Rounded.Language,
+                            contentDescription = null,
+                            tint = Color(0xFF67E8F9),
+                            modifier = Modifier.size(15.dp)
+                        )
+                        Text(
+                            text = "Web Video",
+                            color = Color(0xFF67E8F9),
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1
+                        )
+                    }
                 }
             }
         }

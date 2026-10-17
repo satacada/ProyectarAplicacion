@@ -45,9 +45,9 @@ object StreamQualityDetector {
         // Sonda Pre-Cast + Auto-Reparador de Cabeceras (4 permutaciones deterministas)
         val probe = StreamManifestProbe.probeAndHeal(currentMediaUrl, safeHeaders, pageUrl)
         if (!probe.isPlayable) {
-            android.util.Log.w("StreamQualityDetector", "🛑 Flujo advertido por sonda (HTTP ${probe.httpCode}): $currentMediaUrl")
+            android.util.Log.w("StreamQualityDetector", "Flujo advertido por sonda (HTTP ${probe.httpCode}): $currentMediaUrl")
             if (BrowserUrlHelper.isRealMedia(currentMediaUrl) && probe.httpCode != 404 && probe.httpCode != 410) {
-                val label = if (currentMediaUrl.contains(".mp4", ignoreCase = true)) "🎬 ${prefix}Video MP4 Directo" else "⚠️ ${prefix}Flujo Directo (No Verificado)"
+                val label = if (currentMediaUrl.contains(".mp4", ignoreCase = true)) "${prefix}Video MP4 Directo" else "${prefix}Flujo Directo (No Verificado)"
                 val defName = extractFileName(currentMediaUrl, "master")
                 val defFmt = if (currentMediaUrl.contains(".mp4", true)) "mp4 (Directo)" else "m3u8 (adaptive)"
                 return@withContext listOf(
@@ -76,7 +76,7 @@ object StreamQualityDetector {
             else -> "m3u8 (adaptive)"
         }
         if (probe.manifestContent.isBlank()) {
-            val label = if (currentMediaUrl.contains(".mp4", ignoreCase = true)) "🎬 ${prefix}Video MP4 Directo" else "▶ ${prefix}Flujo Directo"
+            val label = if (currentMediaUrl.contains(".mp4", ignoreCase = true)) "${prefix}Video MP4 Directo" else "${prefix}Flujo Directo"
             return@withContext listOf(
                 StreamQualityOption(
                     label = label,
@@ -95,9 +95,9 @@ object StreamQualityDetector {
         val options = mutableListOf<StreamQualityOption>()
         val isMovie = probe.isMasterPlaylist || probe.durationSeconds >= 300f || probe.isLiveStream
         val mainBadge = when {
-            probe.isLiveStream -> "🔴 ${prefix}Stream en Vivo"
-            probe.durationSeconds in 1f..180f -> "🎞️ ${prefix}Tráiler / Clip (${probe.durationSeconds.toInt()}s)"
-            else -> "⚡ ${prefix}Película Adaptativa (Auto)"
+            probe.isLiveStream -> "${prefix}Stream en Vivo"
+            probe.durationSeconds in 1f..180f -> "${prefix}Tráiler / Clip (${probe.durationSeconds.toInt()}s)"
+            else -> "${prefix}Película Adaptativa (Auto)"
         }
 
         val audioList = mutableListOf<String>()
@@ -119,11 +119,11 @@ object StreamQualityDetector {
                     val resBadge = if (height > 0) "${height}p" else res
                     val vName = extractFileName(resolvedUrl, "index-v1-a1")
                     val name = when {
-                        height >= 1080 -> "🎬 ${prefix}1080p Full HD ($bwStr)"
-                        height >= 720 -> "📺 ${prefix}720p HD ($bwStr)"
-                        height >= 480 -> "📱 ${prefix}480p SD ($bwStr)"
-                        height >= 360 -> "📱 ${prefix}360p ($bwStr)"
-                        else -> "▶ ${prefix}$res ($bwStr)"
+                        height >= 1080 -> "${prefix}1080p Full HD ($bwStr)"
+                        height >= 720 -> "${prefix}720p HD ($bwStr)"
+                        height >= 480 -> "${prefix}480p SD ($bwStr)"
+                        height >= 360 -> "${prefix}360p ($bwStr)"
+                        else -> "${prefix}$res ($bwStr)"
                     }
                     options.add(
                         StreamQualityOption(

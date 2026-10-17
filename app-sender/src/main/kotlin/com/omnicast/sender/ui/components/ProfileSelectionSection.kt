@@ -6,6 +6,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Bolt
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -30,7 +33,7 @@ fun ProfileSelectionSection(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text("⚡", fontSize = 12.sp)
+                Icon(Icons.Rounded.Bolt, contentDescription = null, tint = Color(0xFFFBBF24), modifier = Modifier.size(15.dp))
                 Text(
                     text = "PERFIL DE TRANSMISIÓN",
                     fontSize = 11.sp,

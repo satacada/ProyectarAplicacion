@@ -41,7 +41,8 @@ sealed class SignalingMessage {
         val format: String = "HLS",
         val headers: Map<String, String> = emptyMap(),
         val title: String? = null,
-        val startPositionMs: Long = 0L
+        val startPositionMs: Long = 0L,
+        val branch: String = "VOD_HLS_MP4"
     ) : SignalingMessage()
 
     @Serializable

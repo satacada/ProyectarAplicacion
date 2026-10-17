@@ -5,6 +5,8 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Stop
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -102,8 +104,9 @@ fun MainActionCards(
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
                                 if (!isStreaming) CastTvIcon(modifier = Modifier.size(15.dp), color = Color.White)
+                                else Icon(Icons.Rounded.Stop, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
                                 Text(
-                                    text = if (isStreaming) "⏹ Detener" else "Proyectar",
+                                    text = if (isStreaming) "Detener" else "Proyectar",
                                     fontSize = 12.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = Color.White

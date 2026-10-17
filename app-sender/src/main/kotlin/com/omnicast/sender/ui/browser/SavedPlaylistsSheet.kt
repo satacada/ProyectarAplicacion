@@ -7,6 +7,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.ArrowBack
+import androidx.compose.material.icons.rounded.Delete
+import androidx.compose.material.icons.rounded.Folder
+import androidx.compose.material.icons.rounded.Movie
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -57,7 +62,10 @@ fun SavedPlaylistsSheet(
             ) {
                 if (activePlaylist != null) {
                     TextButton(onClick = { selectedPlaylistId = null }) {
-                        Text("◀ Volver a Listas", color = Color(0xFF38BDF8), fontSize = 13.sp)
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Icon(Icons.Rounded.ArrowBack, contentDescription = null, tint = Color(0xFF38BDF8), modifier = Modifier.size(16.dp))
+                            Text("Volver a Listas", color = Color(0xFF38BDF8), fontSize = 13.sp)
+                        }
                     }
                     Text(
                         text = activePlaylist.name,
@@ -68,7 +76,10 @@ fun SavedPlaylistsSheet(
                         overflow = TextOverflow.Ellipsis
                     )
                 } else {
-                    Text("📂 Listas Guardadas", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Icon(Icons.Rounded.Folder, contentDescription = null, tint = Color(0xFF38BDF8), modifier = Modifier.size(20.dp))
+                        Text("Listas Guardadas", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                    }
                     TextButton(onClick = { isCreatingNew = !isCreatingNew }) {
                         Text(
                             text = if (isCreatingNew) "Cancelar" else "+ Nueva Lista",
@@ -183,7 +194,7 @@ private fun PlaylistFolderListView(
                                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                                 modifier = Modifier.weight(1f)
                             ) {
-                                Text(if (pl.isDefault) "📁" else "🎬", fontSize = 22.sp)
+                                Icon(if (pl.isDefault) Icons.Rounded.Folder else Icons.Rounded.Movie, contentDescription = null, tint = Color(0xFF38BDF8), modifier = Modifier.size(24.dp))
                                 Column {
                                     Text(pl.name, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
                                     Text(
@@ -195,7 +206,7 @@ private fun PlaylistFolderListView(
                             }
                             if (!pl.isDefault) {
                                 IconButton(onClick = { onDeletePlaylist(pl.id) }, modifier = Modifier.size(28.dp)) {
-                                    Text("🗑️", fontSize = 14.sp)
+                                    Icon(Icons.Rounded.Delete, contentDescription = "Eliminar", tint = Color(0xFFEF4444), modifier = Modifier.size(16.dp))
                                 }
                             }
                         }

@@ -36,8 +36,8 @@ class SenderMainActivity : ComponentActivity() {
         var onRequestReturnToMain: (() -> Unit)? = null
 
         fun sendDirectStreamStatic(context: Context, url: String, title: String? = null, headers: Map<String, String> = emptyMap()) {
-            val pos = com.omnicast.sender.stream.StreamResumeManager.getPosition(context, url)
-            instance?.sendDirectStreamToTv(url, title, headers) ?: QuickSignalingHelper.sendQuickMessage(context, SignalingMessage.DirectStreamHandoff(mediaUrl = url, title = title, headers = headers, startPositionMs = pos))
+            val pos = com.omnicast.sender.stream.StreamResumeManager.getPosition(context, url); val br = com.omnicast.sender.nativeclassifier.NativeStreamClassifier.classify(url).name
+            instance?.sendDirectStreamToTv(url, title, headers) ?: QuickSignalingHelper.sendQuickMessage(context, SignalingMessage.DirectStreamHandoff(mediaUrl = url, title = title, headers = headers, startPositionMs = pos, branch = br))
         }
 
         fun sendPlayControlStatic(context: Context, action: String, positionMs: Long = 0L, volume: Float = 1.0f) {
@@ -60,10 +60,8 @@ class SenderMainActivity : ComponentActivity() {
 
     private lateinit var nsdScanner: NsdScannerManager; private lateinit var clipboardExtractor: ClipboardStreamExtractor
     private val signalingClient: SignalingClient get() = SignalingClientHolder.get()
-    private val autoPromptCapture = androidx.compose.runtime.mutableStateOf(false); private val isTvConnected = androidx.compose.runtime.mutableStateOf(false)
-    private val openBrowserDirectly = androidx.compose.runtime.mutableStateOf(false); private val openGalleryDirectly = androidx.compose.runtime.mutableStateOf(false)
+    private val autoPromptCapture = androidx.compose.runtime.mutableStateOf(false); private val isTvConnected = androidx.compose.runtime.mutableStateOf(false); private val openBrowserDirectly = androidx.compose.runtime.mutableStateOf(false); private val openGalleryDirectly = androidx.compose.runtime.mutableStateOf(false)
     private lateinit var historyManager: PlayHistoryManager; private lateinit var playlistManager: com.omnicast.sender.playlist.PlaylistManager
-
     private val audioPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         if (!granted) Toast.makeText(this, "Audio interno desactivado. Transmitirá solo video.", Toast.LENGTH_SHORT).show()
     }
@@ -73,16 +71,15 @@ class SenderMainActivity : ComponentActivity() {
         instance = this; historyManager = PlayHistoryManager(this)
         com.omnicast.sender.log.SenderLogger.init(this)
         com.omnicast.sender.ui.browser.AdBlocker.init(this)
+        com.omnicast.sender.stream.CloudStreamRuleSyncManager.initAndSync(this)
         com.omnicast.sender.discovery.MultiReceiverManager.init(this)
         playlistManager = com.omnicast.sender.playlist.PlaylistManager(this).apply {
-            onPlaylistsChanged = { jsonStr ->
-                if (signalingClient.isConnected) signalingClient.sendMessage(SignalingMessage.SyncPlaylists(jsonStr))
-            }
+            onPlaylistsChanged = { jsonStr -> if (signalingClient.isConnected) signalingClient.sendMessage(SignalingMessage.SyncPlaylists(jsonStr)) }
         }
         try { nsdScanner = NsdScannerManager(this).apply { startDiscovery() } } catch (e: Throwable) { Log.e("Sender", "NSD", e) }
         clipboardExtractor = ClipboardStreamExtractor(this)
         if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
-            try { audioPermissionLauncher.launch(android.Manifest.permission.RECORD_AUDIO) } catch (e: Throwable) { Log.e("Sender", "Perm", e) }
+            runCatching { audioPermissionLauncher.launch(android.Manifest.permission.RECORD_AUDIO) }
         }
         checkAutoMirroring(intent)
 
@@ -116,8 +113,7 @@ class SenderMainActivity : ComponentActivity() {
         com.omnicast.sender.media.LocalImageServer.start(this)
         val prefs = getSharedPreferences("omnicast_prefs", Context.MODE_PRIVATE)
         prefs.getString("saved_tv_ip", null)?.takeIf { it.isNotBlank() }?.let { connectToTv(it, prefs.getInt("saved_tv_port", 8088)) }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && Settings.canDrawOverlays(this)) FloatingIndicatorService.start(this)
-        handleIncomingSharedIntent(intent)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && Settings.canDrawOverlays(this)) FloatingIndicatorService.start(this); handleIncomingSharedIntent(intent)
     }
 
     private var inactivityJob: kotlinx.coroutines.Job? = null
@@ -190,7 +186,7 @@ class SenderMainActivity : ComponentActivity() {
                             val safeTitle = msg.title ?: ActiveStreamHolder.title ?: ActiveStreamHolder.currentMediaTitle.value.ifBlank { "Película en TV" }
                             ActiveStreamHolder.startCasting(proxyUrl, safeTitle, emptyMap())
                             ActiveStreamHolder.setProxied(true)
-                            val retryMsg = SignalingMessage.DirectStreamHandoff(mediaUrl = proxyUrl, title = safeTitle, headers = emptyMap(), startPositionMs = ActiveStreamHolder.positionMs.value)
+                            val retryMsg = SignalingMessage.DirectStreamHandoff(mediaUrl = proxyUrl, title = safeTitle, headers = emptyMap(), startPositionMs = ActiveStreamHolder.positionMs.value, branch = com.omnicast.sender.nativeclassifier.NativeStreamClassifier.classify(proxyUrl).name)
                             sendSignalingMessage(retryMsg); com.omnicast.sender.discovery.MultiReceiverManager.broadcastToSecondary(retryMsg, nsdScanner.discoveredDevices.value)
                         } else {
                             runOnUiThread { Toast.makeText(this@SenderMainActivity, "⚠️ Enlace expirado en el servidor origen. Selecciona el video superior reciente.", Toast.LENGTH_LONG).show() }
@@ -218,6 +214,12 @@ class SenderMainActivity : ComponentActivity() {
                         ActiveStreamHolder.streamUrl?.let { sUrl ->
                             com.omnicast.sender.history.PlayHistoryManager(this@SenderMainActivity).updateProgress(sUrl, msg.positionMs, msg.durationMs)
                             playlistManager.updateProgress(sUrl, msg.positionMs, msg.durationMs)
+                            if (msg.positionMs > 60000L && (msg.positionMs % 30000L < 2000L)) {
+                                val host = com.omnicast.sender.stream.StreamProfileDatabase.extractHost(sUrl)
+                                val br = com.omnicast.sender.nativeclassifier.NativeStreamClassifier.classify(sUrl)
+                                com.omnicast.sender.stream.StreamProfileDatabase.get().recordSuccess(host, ActiveStreamHolder.headers, !ActiveStreamHolder.isProxied.value, br)
+                                com.omnicast.sender.stream.CloudStreamRuleSyncManager.reportVerifiedSuccess(this@SenderMainActivity, host, br, !ActiveStreamHolder.isProxied.value)
+                            }
                         }
                     }
                 } else if (msg is SignalingMessage.TracksInfo) {
@@ -245,21 +247,17 @@ class SenderMainActivity : ComponentActivity() {
         val safeTitle = title?.ifBlank { "Transmisión Web" } ?: "Transmisión Web"
         val (cleanUrl, preparedHeaders) = com.omnicast.sender.ui.browser.MediaPlatformResolver.prepareStreamForPlayback(url, headers["Referer"] ?: "", headers)
         val savedPos = resumePositionMs ?: com.omnicast.sender.stream.StreamResumeManager.getPosition(this, cleanUrl).takeIf { it > 0 } ?: playlistManager.getLastPosition(cleanUrl)
-        val isExplicitProxy = headers["X-Force-Proxy"] == "true"
-        val isProtected = isExplicitProxy
-        val effectiveUrl = if (isProtected && !cleanUrl.contains(":8092")) {
-            com.omnicast.sender.media.LocalStreamProxyServer.startAndGetProxyUrl(this, cleanUrl, preparedHeaders)
-        } else cleanUrl
+        val isProtected = headers["X-Force-Proxy"] == "true"
+        val effectiveUrl = if (isProtected && !cleanUrl.contains(":8092")) com.omnicast.sender.media.LocalStreamProxyServer.startAndGetProxyUrl(this, cleanUrl, preparedHeaders) else cleanUrl
         historyManager.addOrUpdate(cleanUrl, safeTitle, headers = preparedHeaders, requiresProxy = isProtected)
-        ActiveStreamHolder.startCasting(effectiveUrl, safeTitle, preparedHeaders)
-        if (isProtected) ActiveStreamHolder.setProxied(true)
+        ActiveStreamHolder.startCasting(effectiveUrl, safeTitle, preparedHeaders); if (isProtected) ActiveStreamHolder.setProxied(true)
         com.omnicast.sender.service.CastMediaNotificationService.start(this)
         ActiveStreamHolder.onSendPlayControl = { act, pos, vol, par -> sendPlayControl(act, pos, vol, par) }
-        val msg = SignalingMessage.DirectStreamHandoff(mediaUrl = effectiveUrl, title = safeTitle, headers = if (isProtected) emptyMap() else preparedHeaders, startPositionMs = savedPos)
+        val br = com.omnicast.sender.nativeclassifier.NativeStreamClassifier.classify(effectiveUrl).name
+        val msg = SignalingMessage.DirectStreamHandoff(mediaUrl = effectiveUrl, title = safeTitle, headers = if (isProtected) emptyMap() else preparedHeaders, startPositionMs = savedPos, branch = br)
         sendSignalingMessage(msg); com.omnicast.sender.discovery.MultiReceiverManager.broadcastToSecondary(msg, nsdScanner.discoveredDevices.value)
-        if (savedPos > 0L) {
-            Toast.makeText(this, "▶ Reanudando en ${com.omnicast.sender.stream.StreamResumeManager.formatTime(savedPos)}", Toast.LENGTH_SHORT).show()
-        } else Toast.makeText(this, "Enviando video a receptores...", Toast.LENGTH_SHORT).show()
+        val toastMsg = if (savedPos > 0L) "Reanudando en ${com.omnicast.sender.stream.StreamResumeManager.formatTime(savedPos)}" else "Enviando video a receptores..."
+        Toast.makeText(this, toastMsg, Toast.LENGTH_SHORT).show()
     }
 
     fun sendPlayControl(action: String, positionMs: Long = 0L, volume: Float = 1.0f, param: String? = null) {
@@ -270,7 +268,7 @@ class SenderMainActivity : ComponentActivity() {
     fun sendImageToTv(url: String, title: String? = null) {
         val msg = SignalingMessage.ShowImage(imageUrl = url, title = title); sendSignalingMessage(msg)
         com.omnicast.sender.discovery.MultiReceiverManager.broadcastToSecondary(msg, nsdScanner.discoveredDevices.value)
-        Toast.makeText(this, "🖼️ Foto proyectada en la TV Box", Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, "Foto proyectada en la TV Box", Toast.LENGTH_SHORT).show()
     }
 
     private fun sendSignalingMessage(msg: SignalingMessage) {
@@ -279,10 +277,8 @@ class SenderMainActivity : ComponentActivity() {
     }
 
     private fun startScreenStreaming(target: DeviceTarget, profile: StreamProfile, tvScaleMode: String, permissionData: Intent) {
-        autoPromptCapture.value = false
-        com.omnicast.sender.service.CastMediaNotificationService.stop(this)
-        val prefs = getSharedPreferences("omnicast_prefs", Context.MODE_PRIVATE)
-        val smoothBuffer = prefs.getBoolean("saved_smooth_buffer", true)
+        autoPromptCapture.value = false; com.omnicast.sender.service.CastMediaNotificationService.stop(this)
+        val smoothBuffer = getSharedPreferences("omnicast_prefs", Context.MODE_PRIVATE).getBoolean("saved_smooth_buffer", true)
         ProjectionForegroundService.startProjection(this, target.ipAddress, target.port, profile, permissionData, tvScaleMode, smoothBuffer)
         Toast.makeText(this, "Proyectando pantalla en ${target.name}", Toast.LENGTH_SHORT).show()
         lifecycleScope.launch { kotlinx.coroutines.delay(700); if (!isFinishing && !isDestroyed) moveTaskToBack(true) }

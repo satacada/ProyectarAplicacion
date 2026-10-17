@@ -4,8 +4,15 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Bolt
+import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.Info
+import androidx.compose.material.icons.rounded.Tv
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -54,7 +61,7 @@ fun DeviceSelectionCard(
                         Box(
                             modifier = Modifier.size(42.dp).background(Color(0xFF1C2744), RoundedCornerShape(12.dp)).border(1.dp, Color(0xFF3B82F6).copy(alpha = 0.5f), RoundedCornerShape(12.dp)),
                             contentAlignment = Alignment.Center
-                        ) { Text("📺", fontSize = 20.sp) }
+                        ) { Icon(Icons.Rounded.Tv, contentDescription = null, tint = Color(0xFF38BDF8), modifier = Modifier.size(22.dp)) }
 
                         Column {
                             Text(text = "DISPOSITIVO PRINCIPAL", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color(0xFF818CF8), letterSpacing = 0.8.sp)
@@ -67,7 +74,14 @@ fun DeviceSelectionCard(
                         border = androidx.compose.foundation.BorderStroke(1.dp, if (isConnected) Color(0xFF10B981) else Color(0xFF28354E)),
                         shape = RoundedCornerShape(20.dp)
                     ) {
-                        Text(if (isConnected) "● En Línea" else "○ Desconectado", modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp), fontSize = 11.sp, fontWeight = FontWeight.Bold, color = if (isConnected) Color(0xFF6EE7B7) else Color(0xFF94A3B8))
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(5.dp),
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                        ) {
+                            Box(modifier = Modifier.size(6.dp).background(if (isConnected) Color(0xFF10B981) else Color(0xFF94A3B8), CircleShape))
+                            Text(if (isConnected) "En Línea" else "Desconectado", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = if (isConnected) Color(0xFF6EE7B7) else Color(0xFF94A3B8))
+                        }
                     }
                 }
 
@@ -125,11 +139,11 @@ fun DeviceSelectionCard(
                                 .padding(horizontal = 8.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(
-                                if (isConnected) "●" else "✛",
-                                color = if (isConnected) Color(0xFF10B981) else Color(0xFF64748B),
-                                fontSize = 11.sp,
-                                modifier = Modifier.padding(end = 4.dp)
+                            Box(
+                                modifier = Modifier
+                                    .padding(end = 6.dp)
+                                    .size(6.dp)
+                                    .background(if (isConnected) Color(0xFF10B981) else Color(0xFF64748B), CircleShape)
                             )
                             BasicTextField(
                                 value = manualIp,
@@ -143,12 +157,11 @@ fun DeviceSelectionCard(
                                 )
                             )
                             if (manualIp.isNotBlank()) {
-                                Text(
-                                    "✕",
-                                    color = Color(0xFFEF4444),
-                                    fontSize = 14.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    modifier = Modifier.clickable { onClearIp() }.padding(horizontal = 4.dp)
+                                Icon(
+                                    Icons.Rounded.Close,
+                                    contentDescription = "Borrar",
+                                    tint = Color(0xFFEF4444),
+                                    modifier = Modifier.size(16.dp).clickable { onClearIp() }.padding(horizontal = 2.dp)
                                 )
                             }
                         }
@@ -198,12 +211,15 @@ fun DeviceSelectionCard(
                         contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
                         modifier = Modifier.height(40.dp)
                     ) {
-                        Text(
-                            text = if (isConnected) "✓ Listo" else "⚡ Conectar",
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Icon(if (isConnected) Icons.Rounded.Check else Icons.Rounded.Bolt, contentDescription = null, tint = Color.White, modifier = Modifier.size(14.dp))
+                            Text(
+                                text = if (isConnected) "Listo" else "Conectar",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                        }
                     }
                 }
 
@@ -225,7 +241,7 @@ fun DeviceSelectionCard(
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
-                                if (activeIp.isNotBlank()) "Marca [✓] para transmitir también" else "Toca para conectar",
+                                if (activeIp.isNotBlank()) "Marca para transmitir también" else "Toca para conectar",
                                 color = Color(0xFF64748B),
                                 fontSize = 9.sp
                             )
@@ -249,12 +265,18 @@ fun DeviceSelectionCard(
                 }
 
                 if (tooltipsEnabled) {
-                    Text(
-                        text = "💡 Enlaza el celular con tu Android TV Box en la misma red Wi-Fi para transmitir video, fotos y pantalla.",
-                        color = Color(0xFF94A3B8),
-                        fontSize = 11.sp,
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
                         modifier = Modifier.padding(top = 2.dp)
-                    )
+                    ) {
+                        Icon(Icons.Rounded.Info, contentDescription = null, tint = Color(0xFF94A3B8), modifier = Modifier.size(14.dp))
+                        Text(
+                            text = "Enlaza el celular con tu Android TV Box en la misma red Wi-Fi para transmitir video, fotos y pantalla.",
+                            color = Color(0xFF94A3B8),
+                            fontSize = 11.sp
+                        )
+                    }
                 }
             }
         }

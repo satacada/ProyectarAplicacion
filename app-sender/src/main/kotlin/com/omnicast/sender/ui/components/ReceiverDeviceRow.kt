@@ -5,6 +5,10 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.Tv
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -58,10 +62,10 @@ fun ReceiverDeviceRow(
                     ),
                 contentAlignment = Alignment.Center
             ) {
-                if (isChecked) Text("✓", color = Color.Black, fontSize = 11.sp, fontWeight = FontWeight.Black)
+                if (isChecked) Icon(Icons.Rounded.Check, contentDescription = null, tint = Color.Black, modifier = Modifier.size(13.dp))
             }
 
-            Text("📺", fontSize = 13.sp)
+            Icon(Icons.Rounded.Tv, contentDescription = null, tint = if (isPrimary) Color(0xFF38BDF8) else Color(0xFF94A3B8), modifier = Modifier.size(16.dp))
 
             Column(modifier = Modifier.weight(1f)) {
                 Row(

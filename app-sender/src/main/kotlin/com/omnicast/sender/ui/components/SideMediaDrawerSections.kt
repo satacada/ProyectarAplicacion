@@ -8,6 +8,14 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.Folder
+import androidx.compose.material.icons.rounded.Language
+import androidx.compose.material.icons.rounded.PlayArrow
+import androidx.compose.material.icons.rounded.Share
+import androidx.compose.material.icons.rounded.SubdirectoryArrowRight
+import androidx.compose.material.icons.rounded.Tv
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -83,24 +91,27 @@ fun HistoryTextCard(
             Text(item.title, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
             val posStr = ShareUtils.formatTime(item.lastPositionMs)
             val durStr = if (item.durationMs > 0L) ShareUtils.formatTime(item.durationMs) else null
-            val progressText = if (durStr != null) "▶ $posStr / $durStr" else if (item.lastPositionMs > 0L) "▶ $posStr" else "▶ 0:00"
-            Text(progressText, color = if (item.lastPositionMs > 0L) Color(0xFF38BDF8) else Color(0xFF94A3B8), fontSize = 11.sp, fontWeight = FontWeight.Medium)
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                Icon(Icons.Rounded.PlayArrow, contentDescription = null, tint = if (item.lastPositionMs > 0L) Color(0xFF38BDF8) else Color(0xFF94A3B8), modifier = Modifier.size(13.dp))
+                val progressText = if (durStr != null) "$posStr / $durStr" else if (item.lastPositionMs > 0L) posStr else "0:00"
+                Text(progressText, color = if (item.lastPositionMs > 0L) Color(0xFF38BDF8) else Color(0xFF94A3B8), fontSize = 11.sp, fontWeight = FontWeight.Medium)
+            }
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     IconButton(onClick = onPlay, modifier = Modifier.size(32.dp).background(Color(0xFF6366F1), RoundedCornerShape(8.dp))) {
-                        Text("📺", fontSize = 14.sp)
+                        Icon(Icons.Rounded.Tv, contentDescription = "TV", tint = Color.White, modifier = Modifier.size(16.dp))
                     }
                     IconButton(onClick = onOpenWeb, modifier = Modifier.size(32.dp).background(Color(0xFF334155), RoundedCornerShape(8.dp))) {
-                        Text("🌐", fontSize = 14.sp)
+                        Icon(Icons.Rounded.Language, contentDescription = "Web", tint = Color.White, modifier = Modifier.size(16.dp))
                     }
                     if (ShareUtils.canShare(item.url, item.pageUrl)) {
                         IconButton(
                             onClick = { ShareUtils.shareVideo(context, item.title, item.url, item.pageUrl) },
                             modifier = Modifier.size(32.dp).background(Color(0xFF0284C7), RoundedCornerShape(8.dp))
-                        ) { Text("🔗", fontSize = 14.sp) }
+                        ) { Icon(Icons.Rounded.Share, contentDescription = "Compartir", tint = Color.White, modifier = Modifier.size(16.dp)) }
                     }
                 }
-                IconButton(onClick = onDelete, modifier = Modifier.size(28.dp)) { Text("✕", color = Color(0xFF94A3B8), fontSize = 13.sp) }
+                IconButton(onClick = onDelete, modifier = Modifier.size(28.dp)) { Icon(Icons.Rounded.Close, contentDescription = "Eliminar", tint = Color(0xFF94A3B8), modifier = Modifier.size(14.dp)) }
             }
         }
     }
@@ -141,14 +152,17 @@ fun DrawerSavedPlaylistsList(
             LazyColumn(state = listState, verticalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.weight(1f).padding(end = 4.dp)) {
                 filteredPlaylists.forEach { pl ->
                     item {
-                        Text("📂 ${pl.name} (${pl.items.size} películas)", color = Color(0xFF38BDF8), fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Icon(Icons.Rounded.Folder, contentDescription = null, tint = Color(0xFF38BDF8), modifier = Modifier.size(16.dp))
+                            Text("${pl.name} (${pl.items.size} películas)", color = Color(0xFF38BDF8), fontWeight = FontWeight.Bold, fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        }
                     }
                     items(pl.items, key = { pl.id + "_" + it.url }) { video ->
                         Row(
                             modifier = Modifier.fillMaxWidth().padding(start = 10.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text("↳", color = Color(0xFF38BDF8), fontSize = 15.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(end = 6.dp))
+                            Icon(Icons.Rounded.SubdirectoryArrowRight, contentDescription = null, tint = Color(0xFF38BDF8), modifier = Modifier.size(16.dp).padding(end = 4.dp))
                             Card(
                                 colors = CardDefaults.cardColors(containerColor = Color(0xFF1E293B)),
                                 shape = RoundedCornerShape(8.dp),
@@ -159,17 +173,28 @@ fun DrawerSavedPlaylistsList(
                             ) {
                                 Column(modifier = Modifier.padding(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                                     Text(video.title, color = Color.White, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                                    val posText = if (video.lastPositionMs > 0L) "▶ " + ShareUtils.formatTime(video.lastPositionMs) else "▶ 0:00"
-                                    Text(posText, color = Color(0xFF10B981), fontSize = 10.sp)
+                                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                        Icon(Icons.Rounded.PlayArrow, contentDescription = null, tint = Color(0xFF10B981), modifier = Modifier.size(12.dp))
+                                        val posText = if (video.lastPositionMs > 0L) ShareUtils.formatTime(video.lastPositionMs) else "0:00"
+                                        Text(posText, color = Color(0xFF10B981), fontSize = 10.sp)
+                                    }
                                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                            IconButton(onClick = { onPlay(video.url, video.title, video.headers ?: emptyMap(), video.lastPositionMs) }, modifier = Modifier.size(30.dp).background(Color(0xFF6366F1), RoundedCornerShape(6.dp))) { Text("📺", fontSize = 13.sp) }
-                                            IconButton(onClick = { onOpenWeb(video.pageUrl ?: video.url) }, modifier = Modifier.size(30.dp).background(Color(0xFF334155), RoundedCornerShape(6.dp))) { Text("🌐", fontSize = 13.sp) }
+                                            IconButton(onClick = { onPlay(video.url, video.title, video.headers ?: emptyMap(), video.lastPositionMs) }, modifier = Modifier.size(30.dp).background(Color(0xFF6366F1), RoundedCornerShape(6.dp))) {
+                                                Icon(Icons.Rounded.Tv, contentDescription = "TV", tint = Color.White, modifier = Modifier.size(15.dp))
+                                            }
+                                            IconButton(onClick = { onOpenWeb(video.pageUrl ?: video.url) }, modifier = Modifier.size(30.dp).background(Color(0xFF334155), RoundedCornerShape(6.dp))) {
+                                                Icon(Icons.Rounded.Language, contentDescription = "Web", tint = Color.White, modifier = Modifier.size(15.dp))
+                                            }
                                             if (ShareUtils.canShare(video.url, video.pageUrl)) {
-                                                IconButton(onClick = { ShareUtils.shareVideo(context, video.title, video.url, video.pageUrl) }, modifier = Modifier.size(30.dp).background(Color(0xFF0284C7), RoundedCornerShape(6.dp))) { Text("🔗", fontSize = 13.sp) }
+                                                IconButton(onClick = { ShareUtils.shareVideo(context, video.title, video.url, video.pageUrl) }, modifier = Modifier.size(30.dp).background(Color(0xFF0284C7), RoundedCornerShape(6.dp))) {
+                                                    Icon(Icons.Rounded.Share, contentDescription = "Compartir", tint = Color.White, modifier = Modifier.size(15.dp))
+                                                }
                                             }
                                         }
-                                        IconButton(onClick = { onRemoveItem(pl.id, video.url) }, modifier = Modifier.size(24.dp)) { Text("✕", color = Color(0xFF94A3B8), fontSize = 12.sp) }
+                                        IconButton(onClick = { onRemoveItem(pl.id, video.url) }, modifier = Modifier.size(24.dp)) {
+                                            Icon(Icons.Rounded.Close, contentDescription = "Eliminar", tint = Color(0xFF94A3B8), modifier = Modifier.size(13.dp))
+                                        }
                                     }
                                 }
                             }

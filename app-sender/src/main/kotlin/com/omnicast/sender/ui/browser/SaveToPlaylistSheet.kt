@@ -6,6 +6,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Bookmark
+import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -53,12 +57,15 @@ fun SaveToPlaylistSheet(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(
-                    text = "💾 Guardar en Lista",
-                    color = Color.White,
-                    fontSize = 17.sp,
-                    fontWeight = FontWeight.Bold
-                )
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Icon(Icons.Rounded.Bookmark, contentDescription = null, tint = Color(0xFF38BDF8), modifier = Modifier.size(20.dp))
+                    Text(
+                        text = "Guardar en Lista",
+                        color = Color.White,
+                        fontSize = 17.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     TextButton(onClick = { isCreatingNew = !isCreatingNew }) {
                         Text(
@@ -74,7 +81,7 @@ fun SaveToPlaylistSheet(
                             .size(32.dp)
                             .background(Color(0xFF1E293B), RoundedCornerShape(8.dp))
                     ) {
-                        Text("✕", color = Color(0xFF94A3B8), fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                        Icon(Icons.Rounded.Close, contentDescription = "Cerrar", tint = Color(0xFF94A3B8), modifier = Modifier.size(16.dp))
                     }
                 }
             }
@@ -96,7 +103,7 @@ fun SaveToPlaylistSheet(
                     modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp)
                 ) {
                     Row(modifier = Modifier.padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Text("⚠️", fontSize = 16.sp)
+                        Icon(Icons.Rounded.Warning, contentDescription = null, tint = Color(0xFFFBBF24), modifier = Modifier.size(18.dp))
                         Spacer(Modifier.width(8.dp))
                         Text(
                             "Contenido con protección web: Para reproducirse en la TV, el teléfono debe estar encendido y en el mismo WiFi. Si el emisor se desconecta, la película se detendrá.",
@@ -213,7 +220,7 @@ fun SaveToPlaylistSheet(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Text("✕", fontSize = 14.sp, color = Color(0xFF94A3B8), fontWeight = FontWeight.Bold)
+                    Icon(Icons.Rounded.Close, contentDescription = null, tint = Color(0xFF94A3B8), modifier = Modifier.size(16.dp))
                     Text("Cerrar y volver a controles", fontSize = 13.sp, color = Color.White, fontWeight = FontWeight.SemiBold)
                 }
             }

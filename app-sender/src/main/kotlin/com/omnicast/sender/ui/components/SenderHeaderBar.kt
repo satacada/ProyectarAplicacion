@@ -6,6 +6,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.HelpOutline
+import androidx.compose.material.icons.rounded.Menu
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -46,7 +49,7 @@ fun SenderHeaderBar(
                         .clickable { onOpenDrawer() },
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("☰", color = Color(0xFF94A3B8), fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                    Icon(Icons.Rounded.Menu, contentDescription = "Menú", tint = Color(0xFF94A3B8), modifier = Modifier.size(20.dp))
                 }
             }
 
@@ -100,11 +103,11 @@ fun SenderHeaderBar(
                     .clickable { onToggleTooltips(!tooltipsEnabled) },
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = "?",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = if (tooltipsEnabled) Color(0xFF34D399) else Color(0xFF94A3B8)
+                Icon(
+                    imageVector = Icons.AutoMirrored.Rounded.HelpOutline,
+                    contentDescription = "Ayuda",
+                    tint = if (tooltipsEnabled) Color(0xFF34D399) else Color(0xFF94A3B8),
+                    modifier = Modifier.size(20.dp)
                 )
             }
         }

@@ -9,5 +9,6 @@ data class MediaStream(
     val title: String = "Transmisión",
     val isMaster: Boolean = false,
     val qualityLabel: String? = null,
-    val headers: Map<String, String> = emptyMap()
+    val headers: Map<String, String> = emptyMap(),
+    val branch: MediaBranch = MediaBranch.VOD_HLS_MP4
 )

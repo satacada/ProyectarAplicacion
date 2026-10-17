@@ -143,6 +143,12 @@ object MediaPlatformResolver {
     fun prepareStreamForPlayback(streamUrl: String, pageUrl: String, rawHeaders: Map<String, String>): Pair<String, Map<String, String>> {
         var finalUrl = BrowserUrlHelper.sanitizeMediaUrl(streamUrl)
         val hdrs = rawHeaders.toMutableMap()
+        val host = com.omnicast.sender.stream.StreamProfileDatabase.extractHost(finalUrl)
+        val learnedProfile = com.omnicast.sender.stream.StreamProfileDatabase.getProfileForHost(host)
+        if (learnedProfile != null) {
+            learnedProfile.headers.forEach { (k, v) -> if (hdrs[k].isNullOrBlank()) hdrs[k] = v }
+            if (!learnedProfile.bypassProxy) hdrs["X-Force-Proxy"] = "true"
+        }
         val lower = finalUrl.lowercase()
         val isDrop = lower.contains("dropcdn.io") || lower.contains("dr0pstream.com")
         val isFastream = lower.contains("fastream.to")

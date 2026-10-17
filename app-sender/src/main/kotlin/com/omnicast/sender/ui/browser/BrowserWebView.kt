@@ -210,6 +210,9 @@ fun BrowserWebView(
                             if (isAdBlockEnabled && (AdBlocker.isAd(reqUrl) || NativeAdBlockEngine.shouldBlock(reqUrl, docUrl))) {
                                 return AdBlocker.createEmptyResponse()
                             }
+                            if (com.omnicast.sender.nativeclassifier.NativeStreamClassifier.shouldDiscard(reqUrl)) {
+                                return super.shouldInterceptRequest(v, r)
+                            }
                             val candidate = com.omnicast.core.domain.models.StreamCandidate(
                                 url = reqUrl, pageUrl = docUrl,
                                 headers = r.requestHeaders ?: emptyMap(),

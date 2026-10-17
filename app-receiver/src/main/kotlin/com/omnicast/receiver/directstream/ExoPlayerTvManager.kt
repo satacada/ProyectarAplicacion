@@ -32,20 +32,20 @@ class ExoPlayerTvManager(private val context: Context) {
     var onPlaybackFailed: ((url: String?, title: String?) -> Unit)? = null
     val recoveryManager = PlaybackRecoveryManager()
     val aspectRatioHelper = TvAspectRatioHelper()
+    var activeBranch: com.omnicast.core.domain.models.MediaBranch = com.omnicast.core.domain.models.MediaBranch.VOD_HLS_MP4; private set
     private var currentUrl: String? = null
     private var currentTitle: String? = null
     private var currentHeaders: Map<String, String> = emptyMap()
     private var isRetryingClean = false
     private val ioScope = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO)
 
-    fun initialize() {
+    fun initialize(branch: com.omnicast.core.domain.models.MediaBranch = com.omnicast.core.domain.models.MediaBranch.VOD_HLS_MP4) {
+        if (player != null && activeBranch != branch) {
+            player?.release(); player = null
+        }
+        activeBranch = branch
         if (player == null) {
-            val loadControl = DefaultLoadControl.Builder()
-                .setBufferDurationsMs(25_000, 50_000, 2_000, 4_000)
-                .setPrioritizeTimeOverSizeThresholds(true)
-                .setBackBuffer(20_000, true)
-                .build()
-
+            val loadControl = TvBranchPlayerConfig.createLoadControl(branch)
             val renderersFactory = DefaultRenderersFactory(context)
                 .setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON)
                 .setEnableDecoderFallback(true)
@@ -56,6 +56,7 @@ class ExoPlayerTvManager(private val context: Context) {
                     .setForceHighestSupportedBitrate(true)
                     .build()
             }
+            TvBranchPlayerConfig.applyHardwareCodecSettings(trackSelector, branch)
             val tm = TvTrackManager(context, trackSelector)
             trackManager = tm
 
@@ -76,7 +77,12 @@ class ExoPlayerTvManager(private val context: Context) {
                             onTracksChanged?.invoke(info)
                         }
                         override fun onPlayerError(error: PlaybackException) {
-                            com.omnicast.receiver.log.ReceiverLogger.log(TAG, "❌ Error en ExoPlayer: ${error.errorCodeName} (${error.errorCode}): ${error.message}", error)
+                            com.omnicast.receiver.log.ReceiverLogger.log(TAG, "❌ Error en ExoPlayer ($activeBranch): ${error.errorCodeName} (${error.errorCode}): ${error.message}", error)
+                            if (TvBranchPlayerConfig.isLiveOrContinuous(activeBranch)) {
+                                com.omnicast.receiver.log.ReceiverLogger.log(TAG, "🔄 Auto-reconexión silenciosa en vivo (live edge)")
+                                android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({ player?.prepare(); player?.play() }, 800)
+                                return
+                            }
                             val targetUrl = currentUrl
                             val triggerSelfHeal: () -> Unit = {
                                 if (!isRetryingClean && targetUrl != null) {
@@ -86,7 +92,8 @@ class ExoPlayerTvManager(private val context: Context) {
                                         android.os.Handler(android.os.Looper.getMainLooper()).post {
                                             if (probe.isPlayable) {
                                                 com.omnicast.receiver.log.ReceiverLogger.log(TAG, "✅ HeaderSelfHealer recuperó el flujo (live=${probe.isLiveStream})")
-                                                playStream(probe.resolvedUrl, probe.healedHeaders, currentTitle, if (probe.isLiveStream) 0L else currentPositionMs)
+                                                val healedBranch = if (probe.isLiveStream) com.omnicast.core.domain.models.MediaBranch.LIVE_HLS else activeBranch
+                                                playStream(probe.resolvedUrl, probe.healedHeaders, currentTitle, if (probe.isLiveStream) 0L else currentPositionMs, healedBranch)
                                                 isRetryingClean = true
                                             } else {
                                                 onPlaybackFailed?.invoke(targetUrl, currentTitle)
@@ -120,12 +127,12 @@ class ExoPlayerTvManager(private val context: Context) {
     }
 
     @OptIn(UnstableApi::class)
-    fun playStream(url: String, headers: Map<String, String> = emptyMap(), title: String? = null, startPositionMs: Long = 0L) {
+    fun playStream(url: String, headers: Map<String, String> = emptyMap(), title: String? = null, startPositionMs: Long = 0L, branch: com.omnicast.core.domain.models.MediaBranch = com.omnicast.core.domain.models.MediaBranch.VOD_HLS_MP4) {
         if (url.contains("stub.mp4", ignoreCase = true) || url.contains("dummy.mp4", ignoreCase = true)) {
             com.omnicast.receiver.log.ReceiverLogger.log(TAG, "⚠️ Ignorando video dummy/placeholder: $url")
             return
         }
-        initialize()
+        initialize(branch)
         val cleanUrl = com.omnicast.core.domain.usecases.StreamManifestProbe.sanitizeMediaUrl(url)
         currentUrl = cleanUrl
         currentTitle = title
@@ -133,10 +140,10 @@ class ExoPlayerTvManager(private val context: Context) {
         isRetryingClean = false
 
         val safeHeaders = filterSafeHeaders(cleanUrl, headers)
-        val mediaItem = buildMediaItem(cleanUrl, title)
+        val mediaItem = buildMediaItem(cleanUrl, title, branch)
 
         if (safeHeaders.isEmpty()) {
-            playClean(cleanUrl, title, startPositionMs)
+            playClean(cleanUrl, title, startPositionMs, branch)
             return
         }
 
@@ -167,11 +174,12 @@ class ExoPlayerTvManager(private val context: Context) {
         }
     }
 
-    fun playClean(url: String, title: String? = null, startPositionMs: Long = 0L) {
+    fun playClean(url: String, title: String? = null, startPositionMs: Long = 0L, branch: com.omnicast.core.domain.models.MediaBranch = activeBranch) {
         if (url.contains("stub.mp4", ignoreCase = true) || url.contains("dummy.mp4", ignoreCase = true)) return
+        initialize(branch)
         val cleanUrl = com.omnicast.core.domain.usecases.StreamManifestProbe.sanitizeMediaUrl(url)
         runCatching {
-            val mediaItem = buildMediaItem(cleanUrl, title)
+            val mediaItem = buildMediaItem(cleanUrl, title, branch)
             val safe = filterSafeHeaders(cleanUrl, emptyMap())
             val httpFactory = DefaultHttpDataSource.Factory()
                 .setUserAgent(safe["User-Agent"] ?: DEFAULT_UA).setAllowCrossProtocolRedirects(true).setConnectTimeoutMs(15000).setReadTimeoutMs(15000)
@@ -182,23 +190,28 @@ class ExoPlayerTvManager(private val context: Context) {
                 if (startPositionMs > 0L) seekTo(startPositionMs) else seekToDefaultPosition()
                 prepare(); play()
             }
-            com.omnicast.receiver.log.ReceiverLogger.log(TAG, "Reproduciendo flujo limpio con cabeceras de dominio: $url (pos=${startPositionMs}ms)")
+            com.omnicast.receiver.log.ReceiverLogger.log(TAG, "Reproduciendo flujo limpio ($branch): $url (pos=${startPositionMs}ms)")
         }.onFailure { err ->
             com.omnicast.receiver.log.ReceiverLogger.log(TAG, "Error crítico reproduciendo flujo limpio: ${err.message}", err)
         }
     }
 
-    private fun buildMediaItem(url: String, title: String?): MediaItem {
+    private fun buildMediaItem(url: String, title: String?, branch: com.omnicast.core.domain.models.MediaBranch = activeBranch): MediaItem {
         val metadata = MediaMetadata.Builder().setTitle(title ?: "Transmisión Web").setDisplayTitle(title ?: "Transmisión Web").build()
         val builder = MediaItem.Builder().setUri(url).setMediaMetadata(metadata)
+        if (branch == com.omnicast.core.domain.models.MediaBranch.LIVE_HLS) {
+            builder.setLiveConfiguration(MediaItem.LiveConfiguration.Builder().setMaxPlaybackSpeed(1.02f).setMinPlaybackSpeed(0.98f).build())
+        }
         val lower = url.lowercase()
-        val isOkHls = (lower.contains("mycdn.me") || lower.contains("okcdn.ru")) &&
-                      (lower.contains("/type/") || lower.contains("type=") || lower.contains("/video/") || lower.contains("sig=") || lower.contains("expires="))
+        val isOkHls = (lower.contains("mycdn.me") || lower.contains("okcdn.ru")) && (lower.contains("/type/") || lower.contains("type=") || lower.contains("/video/") || lower.contains("sig=") || lower.contains("expires="))
         val isTxtHls = (lower.contains(".txt") || lower.contains(".txt?")) && (lower.contains("/hls") || lower.contains("master") || lower.contains("index"))
         when {
+            branch == com.omnicast.core.domain.models.MediaBranch.AUDIO_ONLY || lower.contains(".mp3") || lower.contains(".aac") ->
+                builder.setMimeType(androidx.media3.common.MimeTypes.AUDIO_MPEG)
+            branch == com.omnicast.core.domain.models.MediaBranch.DASH_MPD || lower.contains(".mpd") || lower.contains("dash") ->
+                builder.setMimeType(androidx.media3.common.MimeTypes.APPLICATION_MPD)
             lower.contains(".m3u8") || lower.contains("m3u8") || lower.contains("/hls") || isOkHls || isTxtHls ->
                 builder.setMimeType(androidx.media3.common.MimeTypes.APPLICATION_M3U8)
-            lower.contains(".mpd") || lower.contains("dash") -> builder.setMimeType(androidx.media3.common.MimeTypes.APPLICATION_MPD)
             lower.contains(".webm") -> builder.setMimeType(androidx.media3.common.MimeTypes.VIDEO_WEBM)
             lower.contains(".mp4") || lower.contains("/mp4") -> builder.setMimeType(androidx.media3.common.MimeTypes.APPLICATION_MP4)
         }
@@ -237,23 +250,17 @@ class ExoPlayerTvManager(private val context: Context) {
     var onZoomChanged: ((Float) -> Unit)? = null
 
     fun toggleResizeMode(): Int {
-        val next = aspectRatioHelper.cycleNextMode()
-        resizeMode = next.resizeMode
-        onResizeModeChanged?.invoke(resizeMode)
-        return resizeMode
+        resizeMode = aspectRatioHelper.cycleNextMode().resizeMode
+        onResizeModeChanged?.invoke(resizeMode); return resizeMode
     }
-
     fun setResizeMode(isZoom169: Boolean) {
         resizeMode = if (isZoom169) androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_ZOOM else androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_FIT
         onResizeModeChanged?.invoke(resizeMode)
     }
-
     fun setDisplayMode(mode: String, zoom: Float = 1.0f) {
-        currentZoom = zoom
-        val isZoom169 = mode == "FILL" || mode == "EXTEND_16_9"
+        currentZoom = zoom; val isZoom169 = mode == "FILL" || mode == "EXTEND_16_9"
         resizeMode = if (isZoom169) androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_ZOOM else androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_FIT
-        onResizeModeChanged?.invoke(resizeMode)
-        onZoomChanged?.invoke(zoom)
+        onResizeModeChanged?.invoke(resizeMode); onZoomChanged?.invoke(zoom)
     }
 
     fun isNearEnd(): Boolean {

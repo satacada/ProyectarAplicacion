@@ -6,6 +6,12 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.Lock
+import androidx.compose.material.icons.rounded.PlayArrow
+import androidx.compose.material.icons.rounded.Share
+import androidx.compose.material.icons.rounded.Tv
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -122,20 +128,26 @@ private fun SavedPlaylistItemCard(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = item.title + (if (item.requiresProxy) " 🔒" else ""),
-                    color = Color.White,
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(
+                        text = item.title,
+                        color = Color.White,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f, fill = false)
+                    )
+                    if (item.requiresProxy) {
+                        Icon(Icons.Rounded.Lock, contentDescription = "Proxy", tint = Color(0xFFF97316), modifier = Modifier.size(12.dp))
+                    }
+                }
                 val posText = if (item.lastPositionMs >= 5000L) {
                     val m = (item.lastPositionMs / 1000) / 60
                     val s = (item.lastPositionMs / 1000) % 60
-                    "▶ Reanudar en %02d:%02d • ".format(m, s)
+                    "Reanudar en %02d:%02d • ".format(m, s)
                 } else ""
-                val proxyNotice = if (item.requiresProxy) "🔒 Requiere emisor • " else ""
+                val proxyNotice = if (item.requiresProxy) "Requiere emisor • " else ""
                 Text(
                     text = proxyNotice + posText + item.url,
                     color = if (item.requiresProxy) Color(0xFFF97316) else if (item.lastPositionMs >= 5000L) Color(0xFF38BDF8) else Color(0xFF64748B),
@@ -147,7 +159,7 @@ private fun SavedPlaylistItemCard(
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                 if (ShareUtils.canShare(item.url, item.pageUrl)) {
                     IconButton(onClick = onShare, modifier = Modifier.size(28.dp)) {
-                        Text("🔗", fontSize = 13.sp)
+                        Icon(Icons.Rounded.Share, contentDescription = "Compartir", tint = Color(0xFF38BDF8), modifier = Modifier.size(15.dp))
                     }
                 }
                 Button(
@@ -156,10 +168,13 @@ private fun SavedPlaylistItemCard(
                     contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
                     modifier = Modifier.height(30.dp)
                 ) {
-                    Text("▶ TV", fontSize = 11.sp, color = Color.White, fontWeight = FontWeight.Bold)
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+                        Icon(Icons.Rounded.Tv, contentDescription = null, tint = Color.White, modifier = Modifier.size(13.dp))
+                        Text("TV", fontSize = 11.sp, color = Color.White, fontWeight = FontWeight.Bold)
+                    }
                 }
                 IconButton(onClick = onRemove, modifier = Modifier.size(28.dp)) {
-                    Text("✕", color = Color(0xFF94A3B8), fontSize = 12.sp)
+                    Icon(Icons.Rounded.Close, contentDescription = "Eliminar", tint = Color(0xFF94A3B8), modifier = Modifier.size(14.dp))
                 }
             }
         }

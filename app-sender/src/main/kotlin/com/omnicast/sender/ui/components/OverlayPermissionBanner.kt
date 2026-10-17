@@ -8,6 +8,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.CheckCircle
+import androidx.compose.material.icons.rounded.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -83,12 +86,18 @@ fun OverlayPermissionBanner() {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        "⚠️ Activar Asistente Flotante Permanente",
-                        color = Color(0xFFFEF08A),
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 14.sp
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Icon(Icons.Rounded.Warning, contentDescription = null, tint = Color(0xFFFEF08A), modifier = Modifier.size(16.dp))
+                        Text(
+                            "Activar Asistente Flotante Permanente",
+                            color = Color(0xFFFEF08A),
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 14.sp
+                        )
+                    }
                     Text(
                         "Permite controlar, detectar video o proyectar sobre Facebook, apps de fútbol y juegos.",
                         color = Color(0xFFFDE047),
@@ -116,12 +125,18 @@ fun OverlayPermissionBanner() {
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        "🟢 Asistente Flotante Activo",
-                        color = Color(0xFFA7F3D0),
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 14.sp
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Icon(Icons.Rounded.CheckCircle, contentDescription = null, tint = Color(0xFFA7F3D0), modifier = Modifier.size(16.dp))
+                        Text(
+                            "Asistente Flotante Activo",
+                            color = Color(0xFFA7F3D0),
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 14.sp
+                        )
+                    }
                     Text(
                         "Burbuja visible sobre tus apps. En Ajustes de tu teléfono: activa 'Aparecer encima' y 'Sin restricciones de batería' para que permanezca activa en segundo plano en cualquier marca (Samsung, Motorola, Huawei, Xiaomi, etc.).",
                         color = Color(0xFFD1FAE5),

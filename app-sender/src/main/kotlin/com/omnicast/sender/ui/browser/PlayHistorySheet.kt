@@ -6,6 +6,12 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.History
+import androidx.compose.material.icons.rounded.Lock
+import androidx.compose.material.icons.rounded.Star
+import androidx.compose.material.icons.rounded.StarBorder
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -38,10 +44,13 @@ fun PlayHistorySheet(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("📜 Historial de Películas", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Icon(Icons.Rounded.History, contentDescription = null, tint = Color(0xFF38BDF8), modifier = Modifier.size(20.dp))
+                    Text("Historial de Películas", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                }
                 if (historyList.isNotEmpty()) {
                     TextButton(onClick = onClearAll) {
-                        Text("Limpiar (conserva ⭐)", color = Color(0xFFEF4444), fontSize = 12.sp)
+                        Text("Limpiar (conserva favoritos)", color = Color(0xFFEF4444), fontSize = 12.sp)
                     }
                 }
             }
@@ -63,23 +72,32 @@ fun PlayHistorySheet(
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
                                 Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        (if (item.isFavorite) "⭐ " else "") + item.title + (if (item.requiresProxy) " 🔒" else ""),
-                                        color = if (item.isFavorite) Color(0xFFFDE047) else Color.White,
-                                        fontSize = 13.sp,
-                                        fontWeight = FontWeight.SemiBold,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis
-                                    )
-                                    val subtitle = if (item.requiresProxy) "🔒 Requiere emisor en WiFi • " + item.url else item.url
+                                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                        if (item.isFavorite) {
+                                            Icon(Icons.Rounded.Star, contentDescription = null, tint = Color(0xFFFDE047), modifier = Modifier.size(14.dp))
+                                        }
+                                        Text(
+                                            item.title,
+                                            color = if (item.isFavorite) Color(0xFFFDE047) else Color.White,
+                                            fontSize = 13.sp,
+                                            fontWeight = FontWeight.SemiBold,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis,
+                                            modifier = Modifier.weight(1f, fill = false)
+                                        )
+                                        if (item.requiresProxy) {
+                                            Icon(Icons.Rounded.Lock, contentDescription = "Proxy", tint = Color(0xFFF97316), modifier = Modifier.size(12.dp))
+                                        }
+                                    }
+                                    val subtitle = if (item.requiresProxy) "Requiere emisor en WiFi • " + item.url else item.url
                                     Text(subtitle, color = if (item.requiresProxy) Color(0xFFF97316) else Color(0xFF64748B), fontSize = 10.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
                                 }
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     IconButton(onClick = { onToggleFavorite(item.url) }, modifier = Modifier.size(32.dp)) {
-                                        Text(if (item.isFavorite) "⭐" else "☆", color = if (item.isFavorite) Color(0xFFF59E0B) else Color(0xFF94A3B8), fontSize = 15.sp)
+                                        Icon(if (item.isFavorite) Icons.Rounded.Star else Icons.Rounded.StarBorder, contentDescription = "Favorito", tint = if (item.isFavorite) Color(0xFFF59E0B) else Color(0xFF94A3B8), modifier = Modifier.size(18.dp))
                                     }
                                     IconButton(onClick = { onDelete(item.url) }, modifier = Modifier.size(28.dp)) {
-                                        Text("✕", color = Color(0xFF94A3B8), fontSize = 12.sp)
+                                        Icon(Icons.Rounded.Close, contentDescription = "Eliminar", tint = Color(0xFF94A3B8), modifier = Modifier.size(14.dp))
                                     }
                                 }
                             }

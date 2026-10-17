@@ -6,6 +6,14 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Forward10
+import androidx.compose.material.icons.rounded.Pause
+import androidx.compose.material.icons.rounded.PlayArrow
+import androidx.compose.material.icons.rounded.Replay10
+import androidx.compose.material.icons.rounded.Stop
+import androidx.compose.material.icons.rounded.VolumeMute
+import androidx.compose.material.icons.rounded.VolumeUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -100,7 +108,7 @@ fun RemoteExpandedControls(
                                 .background(Color(0xFF2D1515), RoundedCornerShape(8.dp))
                                 .border(1.dp, Color(0xFFEF4444).copy(alpha = 0.5f), RoundedCornerShape(8.dp))
                         ) {
-                            Text("⏹", fontSize = 15.sp, color = Color(0xFFEF4444))
+                            Icon(Icons.Rounded.Stop, contentDescription = "Detener", tint = Color(0xFFEF4444), modifier = Modifier.size(18.dp))
                         }
                     }
                 }
@@ -148,7 +156,7 @@ fun RemoteExpandedControls(
                     }
                 }
 
-                // 2. Fila de Controles de Reproducción: -10s afuera | ↺ | ❚❚ / ▶ Naranja | ↻ | +10s afuera
+                // 2. Fila de Controles de Reproducción: -10s | Replay10 | Play/Pause | Forward10 | +10s
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
                     verticalAlignment = Alignment.CenterVertically,
@@ -158,7 +166,7 @@ fun RemoteExpandedControls(
                     Box(
                         modifier = Modifier.size(38.dp).background(Color(0xFF161F2E), CircleShape).border(1.dp, Color(0xFF26354D), CircleShape).clickable { onSkip(-10000L) },
                         contentAlignment = Alignment.Center
-                    ) { Text("↺", fontSize = 18.sp, color = Color(0xFFCBD5E1), fontWeight = FontWeight.Bold) }
+                    ) { Icon(Icons.Rounded.Replay10, contentDescription = "-10s", tint = Color(0xFFCBD5E1), modifier = Modifier.size(20.dp)) }
 
                     Spacer(modifier = Modifier.width(16.dp))
 
@@ -166,7 +174,7 @@ fun RemoteExpandedControls(
                         modifier = Modifier.size(48.dp).background(Color(0xFFFF7A00), CircleShape).clickable { onPlayPause() },
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(text = if (isPlaying) "❚❚" else "▶", fontSize = if (isPlaying) 16.sp else 20.sp, color = Color.White, fontWeight = FontWeight.Bold)
+                        Icon(if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow, contentDescription = if (isPlaying) "Pausa" else "Reproducir", tint = Color.White, modifier = Modifier.size(24.dp))
                     }
 
                     Spacer(modifier = Modifier.width(16.dp))
@@ -174,7 +182,7 @@ fun RemoteExpandedControls(
                     Box(
                         modifier = Modifier.size(38.dp).background(Color(0xFF161F2E), CircleShape).border(1.dp, Color(0xFF26354D), CircleShape).clickable { onSkip(10000L) },
                         contentAlignment = Alignment.Center
-                    ) { Text("↻", fontSize = 18.sp, color = Color(0xFFCBD5E1), fontWeight = FontWeight.Bold) }
+                    ) { Icon(Icons.Rounded.Forward10, contentDescription = "+10s", tint = Color(0xFFCBD5E1), modifier = Modifier.size(20.dp)) }
 
                     Text(text = "+10s", color = Color(0xFF94A3B8), fontSize = 11.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(start = 6.dp))
                 }
@@ -185,7 +193,7 @@ fun RemoteExpandedControls(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     var curVol by remember(volume) { mutableFloatStateOf(volume) }
-                    Text(if (curVol <= 0.01f) "🔇" else "🔊", fontSize = 12.sp)
+                    Icon(if (curVol <= 0.01f) Icons.Rounded.VolumeMute else Icons.Rounded.VolumeUp, contentDescription = "Volumen", tint = Color(0xFF94A3B8), modifier = Modifier.size(16.dp))
                     Slider(
                         value = curVol,
                         onValueChange = { curVol = it },

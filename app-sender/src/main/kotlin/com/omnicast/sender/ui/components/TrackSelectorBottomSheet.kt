@@ -6,12 +6,16 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Info
+import androidx.compose.material.icons.rounded.Subtitles
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.omnicast.core.protocol.SignalingMessage
@@ -39,13 +43,21 @@ fun TrackSelectorBottomSheet(
                 .padding(horizontal = 20.dp, vertical = 10.dp)
                 .navigationBarsPadding()
         ) {
-            Text(
-                "💬 Idioma y Subtítulos",
-                color = Color.White,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier.padding(bottom = 16.dp)
-            )
+            ) {
+                Icon(Icons.Rounded.Subtitles, contentDescription = null, tint = Color(0xFF38BDF8), modifier = Modifier.size(22.dp))
+                Text(
+                    "Idioma y Subtítulos",
+                    color = Color.White,
+                    fontSize = 19.sp,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
 
             if (tracksInfo == null || (tracksInfo.audioTracks.isEmpty() && tracksInfo.textTracks.isEmpty())) {
                 Card(
@@ -57,7 +69,13 @@ fun TrackSelectorBottomSheet(
                         modifier = Modifier.padding(16.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Text("ℹ️ No se detectaron pistas adicionales.", color = Color.LightGray, fontSize = 14.sp)
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Icon(Icons.Rounded.Info, contentDescription = null, tint = Color(0xFF94A3B8), modifier = Modifier.size(16.dp))
+                            Text("No se detectaron pistas adicionales.", color = Color.LightGray, fontSize = 13.sp)
+                        }
                         Spacer(modifier = Modifier.height(4.dp))
                         Text("El reproductor usará el audio y subtítulos predeterminados de la fuente.", color = Color.Gray, fontSize = 12.sp)
                     }

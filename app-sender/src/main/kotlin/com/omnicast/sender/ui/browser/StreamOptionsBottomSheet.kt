@@ -7,6 +7,11 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.Delete
+import androidx.compose.material.icons.rounded.Movie
+import androidx.compose.material.icons.rounded.RocketLaunch
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -43,7 +48,7 @@ fun StreamOptionsBottomSheet(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("🎬", fontSize = 26.sp)
+                Icon(Icons.Rounded.Movie, contentDescription = null, tint = Color(0xFFF59E0B), modifier = Modifier.size(24.dp))
                 Spacer(Modifier.width(10.dp))
                 Column(Modifier.weight(1f)) {
                     Text(
@@ -61,11 +66,11 @@ fun StreamOptionsBottomSheet(
                 }
                 if (onClear != null) {
                     IconButton(onClick = onClear) {
-                        Text("🗑", fontSize = 18.sp)
+                        Icon(Icons.Rounded.Delete, contentDescription = "Limpiar", tint = Color(0xFFEF4444), modifier = Modifier.size(20.dp))
                     }
                 }
                 IconButton(onClick = onDismiss) {
-                    Text("✕", color = Color.LightGray, fontSize = 18.sp)
+                    Icon(Icons.Rounded.Close, contentDescription = "Cerrar", tint = Color.LightGray, modifier = Modifier.size(20.dp))
                 }
             }
 
@@ -132,12 +137,15 @@ fun StreamOptionsBottomSheet(
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF59E0B)),
                 shape = RoundedCornerShape(12.dp)
             ) {
-                Text(
-                    "🚀 Transmitir a TV Box (ExoPlayer)",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 15.sp,
-                    color = Color.Black
-                )
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Icon(Icons.Rounded.RocketLaunch, contentDescription = null, tint = Color.Black, modifier = Modifier.size(18.dp))
+                    Text(
+                        "Transmitir a TV Box (ExoPlayer)",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 15.sp,
+                        color = Color.Black
+                    )
+                }
             }
             Spacer(Modifier.height(16.dp))
         }

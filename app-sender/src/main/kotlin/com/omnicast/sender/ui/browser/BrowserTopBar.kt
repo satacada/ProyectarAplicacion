@@ -8,6 +8,17 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.automirrored.rounded.ArrowForward
+import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.HelpOutline
+import androidx.compose.material.icons.rounded.Lock
+import androidx.compose.material.icons.rounded.Menu
+import androidx.compose.material.icons.rounded.MoreVert
+import androidx.compose.material.icons.rounded.PlayArrow
+import androidx.compose.material.icons.rounded.Refresh
+import androidx.compose.material.icons.rounded.Tune
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -19,6 +30,7 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
@@ -76,18 +88,13 @@ fun BrowserTopBar(
             horizontalArrangement = Arrangement.spacedBy(2.dp)
         ) {
             IconButton(onClick = onOpenDrawer, modifier = Modifier.size(26.dp)) {
-                Text("☰", color = Color(0xFF94A3B8), fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                Icon(Icons.Rounded.Menu, contentDescription = "Menú", tint = Color(0xFF94A3B8), modifier = Modifier.size(16.dp))
             }
             IconButton(onClick = onBack, modifier = Modifier.size(26.dp)) {
-                Text("<", color = Color(0xFFCBD5E1), fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Atrás", tint = Color(0xFFCBD5E1), modifier = Modifier.size(16.dp))
             }
             IconButton(onClick = onForward, enabled = canGoForward, modifier = Modifier.size(26.dp)) {
-                Text(
-                    ">",
-                    color = if (canGoForward) Color(0xFFCBD5E1) else Color(0xFF475569),
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold
-                )
+                Icon(Icons.AutoMirrored.Rounded.ArrowForward, contentDescription = "Adelante", tint = if (canGoForward) Color(0xFFCBD5E1) else Color(0xFF475569), modifier = Modifier.size(16.dp))
             }
 
             Row(
@@ -96,61 +103,46 @@ fun BrowserTopBar(
                     .height(36.dp)
                     .background(Color(0xFF141C2B), RoundedCornerShape(18.dp))
                     .border(1.dp, Color(0xFF24334C), RoundedCornerShape(18.dp))
-                    .padding(horizontal = 10.dp),
+                    .padding(horizontal = 8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("🔒", fontSize = 10.sp)
+                Icon(Icons.Rounded.Lock, contentDescription = "Seguro", tint = Color(0xFF38BDF8), modifier = Modifier.size(12.dp))
                 Spacer(modifier = Modifier.width(4.dp))
                 BasicTextField(
                     value = textFieldValue,
                     onValueChange = { newValue ->
                         textFieldValue = newValue
-                        if (newValue.text != inputUrl) {
-                            onInputUrlChange(newValue.text)
-                        }
+                        if (newValue.text != inputUrl) onInputUrlChange(newValue.text)
                     },
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxHeight()
-                        .onFocusChanged { isFocused = it.isFocused },
+                    modifier = Modifier.weight(1f).fillMaxHeight().onFocusChanged { isFocused = it.isFocused },
                     singleLine = true,
                     cursorBrush = androidx.compose.ui.graphics.SolidColor(Color(0xFF38BDF8)),
                     textStyle = androidx.compose.ui.text.TextStyle(
-                        color = Color.White,
-                        fontSize = 13.sp,
-                        lineHeight = 16.sp,
-                        fontWeight = FontWeight.Normal,
+                        color = Color.White, fontSize = 13.sp, lineHeight = 16.sp, fontWeight = FontWeight.Normal,
                         platformStyle = androidx.compose.ui.text.PlatformTextStyle(includeFontPadding = false)
                     ),
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Go),
-                    keyboardActions = KeyboardActions(onGo = {
-                        focusManager.clearFocus()
-                        onNavigate(textFieldValue.text)
-                    }),
+                    keyboardActions = KeyboardActions(onGo = { focusManager.clearFocus(); onNavigate(textFieldValue.text) }),
                     decorationBox = { innerTextField ->
                         Box(contentAlignment = Alignment.CenterStart, modifier = Modifier.fillMaxSize()) {
                             if (textFieldValue.text.isEmpty()) {
-                                Text("Buscar o escribir URL...", color = Color(0xFF64748B), fontSize = 12.sp)
+                                Text("Buscar o escribir URL...", color = Color(0xFF64748B), fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, softWrap = false)
                             }
                             innerTextField()
                         }
                     }
                 )
                 if (textFieldValue.text.isNotBlank()) {
-                    IconButton(onClick = {
-                        textFieldValue = TextFieldValue("")
-                        onInputUrlChange("")
-                    }, modifier = Modifier.size(22.dp)) {
-                        Text("✕", color = Color(0xFF94A3B8), fontSize = 11.sp)
+                    IconButton(onClick = { textFieldValue = TextFieldValue(""); onInputUrlChange("") }, modifier = Modifier.size(22.dp)) {
+                        Icon(Icons.Rounded.Close, contentDescription = "Borrar", tint = Color(0xFF94A3B8), modifier = Modifier.size(13.dp))
                     }
                     Spacer(modifier = Modifier.width(2.dp))
                 }
                 IconButton(onClick = onReload, modifier = Modifier.size(22.dp)) {
-                    Text("⟳", color = Color(0xFFCBD5E1), fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                    Icon(Icons.Rounded.Refresh, contentDescription = "Recargar", tint = Color(0xFFCBD5E1), modifier = Modifier.size(15.dp))
                 }
             }
 
-            // Control multimedia toggle (solo visible cuando está transmitiendo Y reproduciendo activamente en la TV)
             if (isCasting && isPlaying) {
                 IconButton(
                     onClick = onToggleBottomControls,
@@ -159,50 +151,31 @@ fun BrowserTopBar(
                         .background(if (showBottomControls) Color(0xFF0284C7) else Color(0xFF1E293B), CircleShape)
                         .border(1.dp, if (showBottomControls) Color(0xFF38BDF8) else Color(0xFF334155), CircleShape)
                 ) {
-                    Text("🎛️", fontSize = 11.sp)
+                    Icon(Icons.Rounded.Tune, contentDescription = "Controles", tint = Color.White, modifier = Modifier.size(13.dp))
                 }
             }
 
-            // Botón Naranja Circular de Transmisión con Insignia Contadora (Web Video Caster)
             Box(contentAlignment = Alignment.TopEnd) {
                 IconButton(
                     onClick = onOpenDetectedVideos,
-                    modifier = Modifier
-                        .size(26.dp)
-                        .background(
-                            if (detectedStreamsCount > 0) Color(0xFFFF7A00) else Color(0xFF334155),
-                            CircleShape
-                        )
+                    modifier = Modifier.size(26.dp).background(if (detectedStreamsCount > 0) Color(0xFFFF7A00) else Color(0xFF334155), CircleShape)
                 ) {
-                    Text(
-                        "▶",
-                        color = if (detectedStreamsCount > 0) Color.White else Color(0xFF94A3B8),
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+                    Icon(Icons.Rounded.PlayArrow, contentDescription = "Videos", tint = if (detectedStreamsCount > 0) Color.White else Color(0xFF94A3B8), modifier = Modifier.size(15.dp))
                 }
 
                 if (detectedStreamsCount > 0) {
                     Box(
-                        modifier = Modifier
-                            .offset(x = 2.dp, y = (-2).dp)
-                            .background(Color(0xFFEF4444), CircleShape)
-                            .padding(horizontal = 3.dp, vertical = 0.5.dp),
+                        modifier = Modifier.offset(x = 2.dp, y = (-2).dp).background(Color(0xFFEF4444), CircleShape).padding(horizontal = 3.dp, vertical = 0.5.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(
-                            text = if (detectedStreamsCount > 9) "9+" else detectedStreamsCount.toString(),
-                            color = Color.White,
-                            fontSize = 7.sp,
-                            fontWeight = FontWeight.ExtraBold
-                        )
+                        Text(text = if (detectedStreamsCount > 9) "9+" else detectedStreamsCount.toString(), color = Color.White, fontSize = 7.sp, fontWeight = FontWeight.ExtraBold)
                     }
                 }
             }
 
             Box {
                 IconButton(onClick = { showMenu = true }, modifier = Modifier.size(26.dp)) {
-                    Text("⋮", color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.Bold)
+                    Icon(Icons.Rounded.MoreVert, contentDescription = "Opciones", tint = Color.White, modifier = Modifier.size(16.dp))
                 }
 
                 DropdownMenu(
@@ -261,15 +234,20 @@ fun BrowserTopBar(
         AlertDialog(
             onDismissRequest = { showHelpDialog = false },
             containerColor = Color(0xFF1E293B),
-            title = { Text("ℹ️ Detalle de Controles", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold) },
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Icon(Icons.Rounded.HelpOutline, contentDescription = null, tint = Color(0xFF38BDF8), modifier = Modifier.size(18.dp))
+                    Text("Detalle de Controles", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                }
+            },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    HelpItem("▶ Flujos", "Muestra la lista de videos capturados para emitir a la TV.")
-                    HelpItem("🎛️ Control", "Muestra u oculta los controles de reproducción de la TV.")
-                    HelpItem("⟳ Recargar", "Actualiza la página actual dentro del buscador.")
-                    HelpItem("❚❚ / ▶", "Pausa o reanuda la reproducción en el televisor.")
-                    HelpItem("↺ / ↻", "Adelanta o retrocede 10 segundos en la película.")
-                    HelpItem("🔊 Volumen", "Regula el volumen de sonido en el televisor.")
+                    HelpItem("Flujos", "Muestra la lista de videos capturados para emitir a la TV.")
+                    HelpItem("Control", "Muestra u oculta los controles de reproducción de la TV.")
+                    HelpItem("Recargar", "Actualiza la página actual dentro del buscador.")
+                    HelpItem("Pausa / Reproducir", "Pausa o reanuda la reproducción en el televisor.")
+                    HelpItem("Retroceder / Adelantar", "Salta 10 segundos en la película.")
+                    HelpItem("Volumen", "Regula el volumen de sonido en el televisor.")
                 }
             },
             confirmButton = {

@@ -7,6 +7,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Movie
+import androidx.compose.material.icons.rounded.RocketLaunch
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -38,7 +41,7 @@ fun StreamQualitySelectorDialog(
                 verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("🎬", fontSize = 24.sp)
+                    Icon(Icons.Rounded.Movie, contentDescription = null, tint = Color(0xFF38BDF8), modifier = Modifier.size(24.dp))
                     Spacer(Modifier.width(8.dp))
                     Column(Modifier.weight(1f)) {
                         Text("Calidad de Transmisión", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 17.sp)
@@ -100,7 +103,10 @@ fun StreamQualitySelectorDialog(
                         shape = RoundedCornerShape(10.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF10B981))
                     ) {
-                        Text("🚀 Transmitir", fontWeight = FontWeight.Bold, color = Color.White)
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Icon(Icons.Rounded.RocketLaunch, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
+                            Text("Transmitir", fontWeight = FontWeight.Bold, color = Color.White)
+                        }
                     }
                 }
             }

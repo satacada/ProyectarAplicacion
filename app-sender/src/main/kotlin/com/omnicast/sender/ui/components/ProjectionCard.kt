@@ -5,6 +5,10 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Settings
+import androidx.compose.material.icons.rounded.Stop
+import androidx.compose.material.icons.rounded.Tv
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -73,12 +77,15 @@ fun ProjectionCard(
                         shape = RoundedCornerShape(8.dp),
                         modifier = Modifier.fillMaxWidth().height(40.dp)
                     ) {
-                        Text(
-                            text = if (!isStreaming) "📺 Iniciar Proyección" else "🛑 Detener Proyección",
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Icon(if (!isStreaming) Icons.Rounded.Tv else Icons.Rounded.Stop, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
+                            Text(
+                                text = if (!isStreaming) "Iniciar Proyección" else "Detener Proyección",
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                        }
                     }
                 }
 
@@ -94,7 +101,7 @@ fun ProjectionCard(
                             .clickable { onOpenConfig() },
                         contentAlignment = Alignment.Center
                     ) {
-                        Text("⚙️", fontSize = 18.sp)
+                        Icon(Icons.Rounded.Settings, contentDescription = "Ajustes", tint = Color(0xFFCBD5E1), modifier = Modifier.size(20.dp))
                     }
                 }
             }

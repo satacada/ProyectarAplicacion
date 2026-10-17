@@ -4,6 +4,8 @@ build/
 app-receiver/build/
 app-sender/build/
 core/build/
+.cxx/
+app-sender/.cxx/
 local.properties
 *.hprof
 

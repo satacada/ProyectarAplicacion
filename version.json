@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 128,
-  "versionCodeReceiver": 111,
-  "versionName": "3.32.83",
-  "releaseTag": "v3.32.83",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.83/omnicast-sender-v3.32.83.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.83/omnicast-receiver-v3.32.83.apk",
-  "changelog": "v3.32.83: Transmisión directa de DropCDN con cabeceras reales (User-Agent, Referer, Origin) sin forzar proxy local; auto-apertura proactiva de lista de flujos; captura de etiquetas/calidades de múltiples flujos JWPlayer/Clappr."
+  "versionCodeSender": 129,
+  "versionCodeReceiver": 112,
+  "versionName": "3.32.84",
+  "releaseTag": "v3.32.84",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.84/omnicast-sender-v3.32.84.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.84/omnicast-receiver-v3.32.84.apk",
+  "changelog": "v3.32.84: Motor nativo C++20 para clasificacion ultrarrapida (<0.1ms); Despachador en 6 ramas (VOD, LIVE, DASH, Audio Puro sin decodificador de video, IPTV, Local); Aprendizaje de perfiles y reglas en la nube; UI Pixel-Perfect y Zero Layout Shift (HU-009, ADR-006)."
 }

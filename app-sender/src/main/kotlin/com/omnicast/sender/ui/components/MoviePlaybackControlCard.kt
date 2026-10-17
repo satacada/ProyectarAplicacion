@@ -3,7 +3,16 @@ package com.omnicast.sender.ui.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Forward10
+import androidx.compose.material.icons.rounded.Language
+import androidx.compose.material.icons.rounded.Movie
+import androidx.compose.material.icons.rounded.Pause
+import androidx.compose.material.icons.rounded.PlayArrow
+import androidx.compose.material.icons.rounded.Replay10
+import androidx.compose.material.icons.rounded.Stop
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -54,7 +63,7 @@ fun MoviePlaybackControlCard(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Text("🎬", fontSize = 20.sp)
+                    Icon(Icons.Rounded.Movie, contentDescription = null, tint = Color(0xFF38BDF8), modifier = Modifier.size(24.dp))
                     Column {
                         Text(
                             text = title.ifBlank { "Película en Transmisión" },
@@ -64,19 +73,23 @@ fun MoviePlaybackControlCard(
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
-                        Text(
-                            text = "🟢 Reproduciendo en TV Box",
-                            color = Color(0xFF10B981),
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Medium
-                        )
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Box(modifier = Modifier.size(6.dp).background(Color(0xFF10B981), CircleShape))
+                            Text(
+                                text = "Reproduciendo en TV Box",
+                                color = Color(0xFF10B981),
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Medium,
+                                maxLines = 1
+                            )
+                        }
                     }
                 }
                 IconButton(
                     onClick = onOpenBrowser,
                     modifier = Modifier.size(32.dp)
                 ) {
-                    Text("🌐", fontSize = 16.sp)
+                    Icon(Icons.Rounded.Language, contentDescription = "Navegador", tint = Color(0xFF94A3B8), modifier = Modifier.size(18.dp))
                 }
             }
 
@@ -123,20 +136,26 @@ fun MoviePlaybackControlCard(
                     colors = ButtonDefaults.filledTonalButtonColors(containerColor = Color(0xFF334155)),
                     contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp)
                 ) {
-                    Text("⏪ -10s", color = Color.White, fontSize = 12.sp)
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Icon(Icons.Rounded.Replay10, contentDescription = "-10s", tint = Color.White, modifier = Modifier.size(16.dp))
+                        Text("10s", color = Color.White, fontSize = 12.sp)
+                    }
                 }
 
                 Button(
                     onClick = onPlayPause,
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF38BDF8)),
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp)
+                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp)
                 ) {
-                    Text(
-                        text = if (isPlaying) "⏸ Pausa" else "▶ Reanudar",
-                        color = Color(0xFF0F172A),
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Icon(if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow, contentDescription = null, tint = Color(0xFF0F172A), modifier = Modifier.size(18.dp))
+                        Text(
+                            text = if (isPlaying) "Pausa" else "Reanudar",
+                            color = Color(0xFF0F172A),
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
 
                 FilledTonalButton(
@@ -144,14 +163,17 @@ fun MoviePlaybackControlCard(
                     colors = ButtonDefaults.filledTonalButtonColors(containerColor = Color(0xFF334155)),
                     contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp)
                 ) {
-                    Text("+10s ⏩", color = Color.White, fontSize = 12.sp)
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text("10s", color = Color.White, fontSize = 12.sp)
+                        Icon(Icons.Rounded.Forward10, contentDescription = "+10s", tint = Color.White, modifier = Modifier.size(16.dp))
+                    }
                 }
 
                 IconButton(
                     onClick = onStop,
                     modifier = Modifier.size(36.dp)
                 ) {
-                    Text("🛑", fontSize = 16.sp)
+                    Icon(Icons.Rounded.Stop, contentDescription = "Detener", tint = Color(0xFFEF4444), modifier = Modifier.size(20.dp))
                 }
             }
         }

@@ -9,6 +9,11 @@ import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.KeyboardArrowDown
+import androidx.compose.material.icons.rounded.KeyboardArrowUp
+import androidx.compose.material.icons.rounded.Pause
+import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -73,13 +78,19 @@ fun RemoteControlBar(
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
                     modifier = Modifier
                         .background(Color(0xFF1B2233), RoundedCornerShape(12.dp))
                         .padding(horizontal = 12.dp, vertical = 3.dp)
                 ) {
+                    Icon(
+                        if (isExpanded) Icons.Rounded.KeyboardArrowDown else Icons.Rounded.KeyboardArrowUp,
+                        contentDescription = null,
+                        tint = Color(0xFF94A3B8),
+                        modifier = Modifier.size(14.dp)
+                    )
                     Text(
-                        text = if (isExpanded) "▼ Desliza abajo para minimizar" else "▲ Desliza arriba para ver controles",
+                        text = if (isExpanded) "Desliza abajo para minimizar" else "Desliza arriba para ver controles",
                         color = Color(0xFF94A3B8),
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Medium
@@ -117,7 +128,12 @@ fun RemoteControlBar(
                                 .clickable { onPlayPause() },
                             contentAlignment = Alignment.Center
                         ) {
-                            Text(if (isPlaying) "❚❚" else "▶", fontSize = 14.sp, color = Color.White)
+                            Icon(
+                                if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
+                                contentDescription = if (isPlaying) "Pausar" else "Reproducir",
+                                tint = Color.White,
+                                modifier = Modifier.size(20.dp)
+                            )
                         }
                     }
                 }

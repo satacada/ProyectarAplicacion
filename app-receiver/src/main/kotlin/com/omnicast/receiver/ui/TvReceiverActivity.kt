@@ -192,8 +192,9 @@ class TvReceiverActivity : ComponentActivity() {
                     if (!ytId.isNullOrBlank()) {
                         exoPlayerManager.stop(); receiverState.value = ReceiverUiState.YouTubePlaying(ytId, title, System.currentTimeMillis())
                     } else {
+                        val br = com.omnicast.core.domain.models.MediaBranch.entries.firstOrNull { it.name.equals(message.branch, true) } ?: com.omnicast.core.domain.models.MediaBranch.VOD_HLS_MP4
                         receiverState.value = ReceiverUiState.DirectStreamPlaying(message.mediaUrl, title)
-                        exoPlayerManager.playStream(message.mediaUrl, message.headers, title, message.startPositionMs)
+                        exoPlayerManager.playStream(message.mediaUrl, message.headers, title, message.startPositionMs, br)
                         lifecycleScope.launch { historyManager.addOrUpdate(message.mediaUrl, title, message.headers, message.startPositionMs) }
                         startPlaybackStatusReporting()
                     }

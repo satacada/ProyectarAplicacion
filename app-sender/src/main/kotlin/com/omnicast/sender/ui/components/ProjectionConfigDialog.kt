@@ -8,6 +8,12 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.HelpOutline
+import androidx.compose.material.icons.rounded.Settings
+import androidx.compose.material.icons.rounded.Shield
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -76,7 +82,7 @@ fun ProjectionConfigDialog(
                                 .border(1.dp, Color(0xFF3B82F6).copy(alpha = 0.5f), CircleShape),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text("⚙️", fontSize = 18.sp)
+                            Icon(Icons.Rounded.Settings, contentDescription = null, tint = Color(0xFF38BDF8), modifier = Modifier.size(20.dp))
                         }
 
                         Column {
@@ -113,11 +119,11 @@ fun ProjectionConfigDialog(
                                 .clickable { dialogTooltipsEnabled = !dialogTooltipsEnabled },
                             contentAlignment = Alignment.Center
                         ) {
-                            Text(
-                                text = "?",
-                                fontSize = 15.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = if (dialogTooltipsEnabled) Color(0xFF34D399) else Color(0xFF94A3B8)
+                            Icon(
+                                Icons.Rounded.HelpOutline,
+                                contentDescription = "Ayuda",
+                                tint = if (dialogTooltipsEnabled) Color(0xFF34D399) else Color(0xFF94A3B8),
+                                modifier = Modifier.size(16.dp)
                             )
                         }
 
@@ -129,7 +135,7 @@ fun ProjectionConfigDialog(
                                 .clickable { onDismiss() },
                             contentAlignment = Alignment.Center
                         ) {
-                            Text("✕", color = Color(0xFF94A3B8), fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                            Icon(Icons.Rounded.Close, contentDescription = "Cerrar", tint = Color(0xFF94A3B8), modifier = Modifier.size(16.dp))
                         }
                     }
                 }
@@ -159,12 +165,12 @@ fun ProjectionConfigDialog(
                         ) {
                             Box(
                                 modifier = Modifier
-                                    .size(34.dp)
-                                    .background(Color(0xFF13362E), CircleShape)
-                                    .border(1.dp, Color(0xFF10B981).copy(alpha = 0.5f), CircleShape),
+                                .size(34.dp)
+                                .background(Color(0xFF13362E), CircleShape)
+                                .border(1.dp, Color(0xFF10B981).copy(alpha = 0.5f), CircleShape),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Text("🛡️", fontSize = 15.sp)
+                                Icon(Icons.Rounded.Shield, contentDescription = null, tint = Color(0xFF34D399), modifier = Modifier.size(18.dp))
                             }
                             Column(modifier = Modifier.weight(1f)) {
                                 Text("Suavizado Anti-Tirones", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold, maxLines = 1)
@@ -212,7 +218,13 @@ fun ProjectionConfigDialog(
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier.fillMaxWidth().height(46.dp)
                 ) {
-                    Text("✓ Guardar y Aplicar", fontWeight = FontWeight.ExtraBold, fontSize = 14.sp, color = Color.White)
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Icon(Icons.Rounded.Check, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
+                        Text("Guardar y Aplicar", fontWeight = FontWeight.ExtraBold, fontSize = 14.sp, color = Color.White)
+                    }
                 }
 
                 // Cerrar sin guardar

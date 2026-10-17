@@ -8,6 +8,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.BubbleChart
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -95,7 +97,7 @@ fun FloatingAssistantCard(
                             ),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(if (isServiceActive) "🫧" else "⚪", fontSize = 18.sp)
+                        Icon(Icons.Rounded.BubbleChart, contentDescription = null, tint = if (isServiceActive) Color(0xFF34D399) else Color(0xFF64748B), modifier = Modifier.size(20.dp))
                     }
 
                     Column {

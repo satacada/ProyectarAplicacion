@@ -3,6 +3,11 @@ package com.omnicast.sender.ui.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.Delete
+import androidx.compose.material.icons.rounded.Share
+import androidx.compose.material.icons.rounded.Tv
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -58,7 +63,10 @@ fun SavedVideoActionSheet(
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6366F1)),
                 shape = RoundedCornerShape(10.dp)
             ) {
-                Text("📺 Reproducir en TV", color = Color.White, fontWeight = FontWeight.Bold)
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Icon(Icons.Rounded.Tv, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
+                    Text("Reproducir en TV", color = Color.White, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                }
             }
 
             Button(
@@ -67,7 +75,10 @@ fun SavedVideoActionSheet(
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0284C7)),
                 shape = RoundedCornerShape(10.dp)
             ) {
-                Text("🔗 Compartir enlace", color = Color.White, fontWeight = FontWeight.Bold)
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Icon(Icons.Rounded.Share, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
+                    Text("Compartir enlace", color = Color.White, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                }
             }
 
             Button(
@@ -76,7 +87,10 @@ fun SavedVideoActionSheet(
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDC2626)),
                 shape = RoundedCornerShape(10.dp)
             ) {
-                Text("🗑️ Eliminar de guardados", color = Color.White, fontWeight = FontWeight.Bold)
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Icon(Icons.Rounded.Delete, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
+                    Text("Eliminar de guardados", color = Color.White, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                }
             }
 
             OutlinedButton(
@@ -84,7 +98,10 @@ fun SavedVideoActionSheet(
                 modifier = Modifier.fillMaxWidth().height(44.dp),
                 shape = RoundedCornerShape(10.dp)
             ) {
-                Text("✕ Cancelar", color = Color(0xFF94A3B8))
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Icon(Icons.Rounded.Close, contentDescription = null, tint = Color(0xFF94A3B8), modifier = Modifier.size(16.dp))
+                    Text("Cancelar", color = Color(0xFF94A3B8), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                }
             }
 
             Spacer(modifier = Modifier.height(10.dp))

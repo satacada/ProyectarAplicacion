@@ -3,6 +3,8 @@ package com.omnicast.sender.ui.components
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.AspectRatio
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -33,7 +35,7 @@ fun TvScaleZoomSection(
 
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text("⛶", fontSize = 12.sp, color = Color(0xFF818CF8))
+                    Icon(Icons.Rounded.AspectRatio, contentDescription = null, tint = Color(0xFF818CF8), modifier = Modifier.size(15.dp))
                     Text(
                         text = "PROPORCIÓN Y ZOOM EN TV",
                         color = Color(0xFFCBD5E1),

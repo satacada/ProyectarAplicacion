@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 125,
-  "versionCodeReceiver": 108,
-  "versionName": "3.32.80",
-  "releaseTag": "v3.32.80",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.80/omnicast-sender-v3.32.80.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.80/omnicast-receiver-v3.32.80.apk",
-  "changelog": "v3.32.80: Apertura automática proactiva de la hoja de opciones de video al capturar flujos (fiel a Web Video Caster); resolución proactiva de Cloudflare Turnstile con secuencia de eventos puntero/ratón y bypass en motor de bloqueo C++; supresión silenciosa de avisos publicitarios; eliminación absoluta de la ventana 403 y cabeceras de fingerprinting."
+  "versionCodeSender": 126,
+  "versionCodeReceiver": 109,
+  "versionName": "3.32.81",
+  "releaseTag": "v3.32.81",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.81/omnicast-sender-v3.32.81.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.81/omnicast-receiver-v3.32.81.apk",
+  "changelog": "v3.32.81: Alineación universal del User-Agent exacto de Chrome Mobile (KHTML, like Gecko) en sonda de dominio, proxy y reproductor ExoPlayer de Android TV; captura temprana de elementos source y data-src en etiquetas video inspirada en ingeniería inversa de Web Video Caster v6.0.4."
 }

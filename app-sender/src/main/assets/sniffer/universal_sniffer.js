@@ -113,6 +113,14 @@
             if (isCommercial(v)) { skipIfCommercial(); return; }
             var s = v.currentSrc || v.src;
             if (s) reportMedia(s, document.title, v.duration || 0, playing);
+            try {
+                var sources = v.getElementsByTagName('source');
+                for (var si = 0; si < sources.length; si++) {
+                    if (sources[si].src) reportMedia(sources[si].src, document.title, v.duration || 0, false);
+                }
+                var dSrc = v.getAttribute('data-src');
+                if (dSrc) reportMedia(dSrc, document.title, v.duration || 0, false);
+            } catch(_) {}
         }
 
         v.addEventListener('loadedmetadata', function() { skipIfCommercial(); checkAndReport(false); }, true);

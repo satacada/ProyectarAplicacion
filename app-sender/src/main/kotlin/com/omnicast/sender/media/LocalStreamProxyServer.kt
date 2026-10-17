@@ -26,7 +26,7 @@ import com.omnicast.sender.ui.browser.MediaPlatformResolver
 object LocalStreamProxyServer {
     private const val TAG = "StreamProxy"
     const val PORT = 8092
-    private const val DEFAULT_UA = "Mozilla/5.0 (Linux; Android 14; Mobile) AppleWebKit/537.36 Chrome/124.0.0.0 Mobile Safari/537.36"
+    private const val DEFAULT_UA = "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36"
 
     private var serverSocket: ServerSocket? = null
     private var isRunning = false

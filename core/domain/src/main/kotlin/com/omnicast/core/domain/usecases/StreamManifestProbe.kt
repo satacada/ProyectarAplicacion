@@ -15,7 +15,7 @@ import java.util.concurrent.ConcurrentHashMap
  */
 object StreamManifestProbe {
 
-    private const val DEFAULT_UA = "Mozilla/5.0 (Linux; Android 14; Mobile) AppleWebKit/537.36 Chrome/124.0.0.0 Mobile Safari/537.36"
+    private const val DEFAULT_UA = "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36"
     private const val TIMEOUT_MS = 3200
     private val learnedHostStrategy = ConcurrentHashMap<String, String>()
 

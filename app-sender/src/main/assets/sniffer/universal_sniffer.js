@@ -249,11 +249,46 @@
     setTimeout(sniffOkRuDom, 1500);
     setTimeout(sniffOkRuDom, 3500);
 
+    // 6b. Extractor DOM para APIs de reproductores web (JWPlayer, Clappr, Flowplayer) estilo WVC
+    function sniffPlayerApis() {
+        try {
+            if (typeof window.jwplayer === 'function') {
+                var pls = window.jwplayer().getPlaylist();
+                if (pls && pls.length > 0) {
+                    for (var p = 0; p < pls.length; p++) {
+                        var item = pls[p];
+                        var itemTitle = item.title || document.title;
+                        var srcs = item.sources || [];
+                        for (var s = 0; s < srcs.length; s++) {
+                            if (srcs[s].file && isMediaUrl(srcs[s].file)) {
+                                reportMedia(srcs[s].file, itemTitle, 0, false);
+                            }
+                        }
+                        if (item.file && isMediaUrl(item.file)) {
+                            reportMedia(item.file, itemTitle, 0, false);
+                        }
+                    }
+                }
+            }
+            if (typeof window.Clappr !== 'undefined' && window.Clappr.PlayerInfo && window.Clappr.PlayerInfo._players) {
+                var cp = window.Clappr.PlayerInfo._players;
+                for (var k in cp) {
+                    if (cp[k] && cp[k].options && cp[k].options.source && isMediaUrl(cp[k].options.source)) {
+                        reportMedia(cp[k].options.source, document.title, 0, false);
+                    }
+                }
+            }
+        } catch(_) {}
+    }
+    sniffPlayerApis();
+    setTimeout(sniffPlayerApis, 2000);
+
     // 7. Rescaneo periódico ligero de video
     setInterval(function() {
         var allV = document.getElementsByTagName('video');
         for (var j = 0; j < allV.length; j++) { monitorVideo(allV[j]); }
         sniffOkRuDom();
+        sniffPlayerApis();
     }, 3000);
 
     // 7b. Auto-resolución proactiva de Cloudflare Turnstile / Verificación humana
@@ -292,7 +327,7 @@
                 }
             }
 
-            var turnstileWrappers = document.querySelectorAll('.cf-turnstile, #cf-turnstile, [data-sitekey], #turnstile-wrapper, div[class*="turnstile"], #challenge-stage');
+            var turnstileWrappers = document.querySelectorAll('.cf-turnstile, #cf-turnstile, [data-sitekey], #turnstile-wrapper, div[class*="turnstile"], #challenge-stage, .g-recaptcha, #vid_play');
             for (var w = 0; w < turnstileWrappers.length; w++) {
                 var tw = turnstileWrappers[w];
                 var tNow = Date.now();
@@ -314,6 +349,14 @@
                     inp.checked = true;
                     triggerPointerSequence(inp);
                     if (inp.parentElement) triggerPointerSequence(inp.parentElement);
+                }
+            }
+
+            if (typeof window.imNotARobot === 'function' && !window.__imNotARobotCalled) {
+                var cfInp = document.querySelector('input[name="cf-turnstile-response"]');
+                if (cfInp && cfInp.value) {
+                    window.__imNotARobotCalled = true;
+                    window.imNotARobot();
                 }
             }
         } catch(e) {}

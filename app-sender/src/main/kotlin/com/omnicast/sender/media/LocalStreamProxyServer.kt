@@ -83,12 +83,19 @@ object LocalStreamProxyServer {
         if (!mutableHeaders.containsKey("Sec-Fetch-Dest")) mutableHeaders["Sec-Fetch-Dest"] = "empty"
         if (!mutableHeaders.containsKey("Accept")) mutableHeaders["Accept"] = "*/*"
         try {
-            val cookie = CookieManager.getInstance().getCookie(cleanUrl)
-                ?: mutableHeaders["Referer"]?.let { CookieManager.getInstance().getCookie(it) }
-                ?: mutableHeaders["Origin"]?.let { CookieManager.getInstance().getCookie(it) }
-                ?: CookieManager.getInstance().getCookie("https://dr0pstream.com")
-            if (!cookie.isNullOrBlank() && !mutableHeaders.containsKey("Cookie")) {
-                mutableHeaders["Cookie"] = cookie
+            val c1 = CookieManager.getInstance().getCookie(cleanUrl)
+            val c2 = mutableHeaders["Referer"]?.let { CookieManager.getInstance().getCookie(it) }
+            val c3 = mutableHeaders["Origin"]?.let { CookieManager.getInstance().getCookie(it) }
+            val c4 = CookieManager.getInstance().getCookie("https://dr0pstream.com")
+            val c5 = CookieManager.getInstance().getCookie("https://dropcdn.io")
+            val mergedCookies = listOfNotNull(c1, c2, c3, c4, c5, mutableHeaders["Cookie"])
+                .flatMap { it.split("; ") }
+                .map { it.trim() }
+                .filter { it.isNotBlank() }
+                .distinct()
+                .joinToString("; ")
+            if (mergedCookies.isNotBlank()) {
+                mutableHeaders["Cookie"] = mergedCookies
             }
         } catch (_: Throwable) {}
 
@@ -171,6 +178,13 @@ object LocalStreamProxyServer {
                     val absKey = try { baseUri.resolve(keyUri).toString() } catch (_: Throwable) { keyUri }
                     val proxyKey = "http://$localIp:$PORT/chunk?sid=$sid&url=${URLEncoder.encode(absKey, "UTF-8")}"
                     rewritten.append(trimmed.replace("URI=\"$keyUri\"", "URI=\"$proxyKey\"")).append("\n")
+                } else if (trimmed.startsWith("#EXT-X-MEDIA:") && trimmed.contains("URI=\"")) {
+                    val mediaUri = trimmed.substringAfter("URI=\"").substringBefore("\"")
+                    val absMedia = try { baseUri.resolve(mediaUri).toString() } catch (_: Throwable) { mediaUri }
+                    val isSub = absMedia.contains(".m3u8", ignoreCase = true)
+                    val endpoint = if (isSub) "playlist.m3u8" else "chunk"
+                    val proxyMedia = "http://$localIp:$PORT/$endpoint?sid=$sid&url=${URLEncoder.encode(absMedia, "UTF-8")}"
+                    rewritten.append(trimmed.replace("URI=\"$mediaUri\"", "URI=\"$proxyMedia\"")).append("\n")
                 } else if (!trimmed.startsWith("#")) {
                     val absUrl = try { baseUri.resolve(trimmed).toString() } catch (_: Throwable) { trimmed }
                     val isSub = absUrl.contains(".m3u8", ignoreCase = true)
@@ -209,8 +223,9 @@ object LocalStreamProxyServer {
             val mime = conn.contentType ?: "video/mp2t"
             val statusLine = if (code == 206) "HTTP/1.1 206 Partial Content" else "HTTP/1.1 200 OK"
             val rangeResp = conn.getHeaderField("Content-Range")?.let { "Content-Range: $it\r\n" } ?: ""
+            val clHeader = if (length >= 0L) "Content-Length: $length\r\n" else ""
 
-            val header = "$statusLine\r\nContent-Type: $mime\r\nContent-Length: $length\r\n${rangeResp}Accept-Ranges: bytes\r\nAccess-Control-Allow-Origin: *\r\nConnection: close\r\n\r\n"
+            val header = "$statusLine\r\nContent-Type: $mime\r\n${clHeader}${rangeResp}Accept-Ranges: bytes\r\nAccess-Control-Allow-Origin: *\r\nConnection: close\r\n\r\n"
             out.write(header.toByteArray())
 
             conn.inputStream.use { input ->

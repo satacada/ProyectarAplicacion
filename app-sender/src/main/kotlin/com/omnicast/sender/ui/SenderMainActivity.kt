@@ -246,7 +246,7 @@ class SenderMainActivity : ComponentActivity() {
         val (cleanUrl, preparedHeaders) = com.omnicast.sender.ui.browser.MediaPlatformResolver.prepareStreamForPlayback(url, headers["Referer"] ?: "", headers)
         val savedPos = resumePositionMs ?: com.omnicast.sender.stream.StreamResumeManager.getPosition(this, cleanUrl).takeIf { it > 0 } ?: playlistManager.getLastPosition(cleanUrl)
         val isExplicitProxy = headers["X-Force-Proxy"] == "true"
-        val isProtected = isExplicitProxy || cleanUrl.contains("dropcdn.io", true) || cleanUrl.contains("dr0pstream.com", true) || cleanUrl.contains("fastream.to", true)
+        val isProtected = isExplicitProxy
         val effectiveUrl = if (isProtected && !cleanUrl.contains(":8092")) {
             com.omnicast.sender.media.LocalStreamProxyServer.startAndGetProxyUrl(this, cleanUrl, preparedHeaders)
         } else cleanUrl

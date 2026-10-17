@@ -71,7 +71,8 @@ fun InAppBrowserScreen(
             return
         }
         qualityOptions = currentStreams.map { u ->
-            StreamQualityOption("▶ [${cleanTitle.take(16)}] Flujo Directo", "Auto", "Original", u, isMovie = true, isSuggested = true, healedHeaders = streamHeaders[u] ?: emptyMap())
+            val lbl = streamLabels[u]?.takeIf { it.isNotBlank() } ?: cleanTitle.take(16)
+            StreamQualityOption("▶ [$lbl] Flujo Directo", "Auto", "Original", u, isMovie = true, isSuggested = true, healedHeaders = streamHeaders[u] ?: emptyMap())
         }
         showOptionsSheet = true
         scope.launch {
@@ -103,11 +104,11 @@ fun InAppBrowserScreen(
         val cleanT = if (pageTitle.isNotBlank() && pageTitle != "Cargando..." && pageTitle != "Transmisión") pageTitle else "Video Web"
         ActiveStreamHolder.update(primaryUrl, cleanT, streamHeaders[primaryUrl] ?: hdrs)
         android.util.Log.i("StreamDetection", "🎬 Flujo registrado [TOP/RECENT]: $url")
-        if (!showOptionsSheet && !isCasting && !showBottomControls && userDismissedSheetForUrl != currentUrl) {
+        if (!showOptionsSheet && !isCasting && userDismissedSheetForUrl != currentUrl) {
             autoOpenJob?.cancel()
             autoOpenJob = scope.launch {
                 kotlinx.coroutines.delay(450)
-                if (!showOptionsSheet && !isCasting && !showBottomControls && userDismissedSheetForUrl != currentUrl && detectedStreams.any { isRealMedia(it) }) openOptionsSheet()
+                if (!showOptionsSheet && !isCasting && userDismissedSheetForUrl != currentUrl && detectedStreams.any { isRealMedia(it) }) openOptionsSheet()
             }
         }
     }
@@ -121,7 +122,7 @@ fun InAppBrowserScreen(
 
     fun navigateTo(url: String) {
         detectedStreams.clear(); streamHeaders.clear(); streamLabels.clear(); streamDurations.clear(); qualityOptions = emptyList()
-        userDismissedSheetForUrl = ""; autoOpenJob?.cancel(); ActiveStreamHolder.clearDetectedStream(); pageTitle = "Cargando..."; val target = BrowserUrlHelper.normalizeUrl(url)
+        userDismissedSheetForUrl = ""; autoOpenJob?.cancel(); ActiveStreamHolder.clearDetectedStream(); showBottomControls = false; pageTitle = "Cargando..."; val target = BrowserUrlHelper.normalizeUrl(url)
         inputUrl = target; currentUrl = target; isHome = false; prefs.edit().putString("saved_browser_last_url", target).apply()
         checkPlatformUrls(target); webViewInstance?.loadUrl(target)
     }
@@ -173,7 +174,6 @@ fun InAppBrowserScreen(
         SenderMainActivity.onBrowserRescanRequested = { webViewInstance?.evaluateJavascript(WvcSnifferScripts.buildAggressiveRescanScript(WvcDomSniffer.CONSOLE_PREFIX), null) }
         onDispose { SenderMainActivity.onBrowserRescanRequested = null }
     }
-
 
     SideMediaDrawer(
         isOpen = showSideDrawer, onClose = { showSideDrawer = false },
@@ -287,8 +287,7 @@ fun InAppBrowserScreen(
         playlistManager = playlistManager, pageTitle = pageTitle, qualityOptions = qualityOptions, historyList = emptyList(),
         onTransmitOption = { opt ->
             showOptionsSheet = false; val bT = webViewInstance?.title?.takeIf { it.isNotBlank() && !it.contains("about:blank") && it != "Transmisión" } ?: pageTitle
-            val merged = (streamHeaders[opt.streamUrl] ?: emptyMap()) + opt.healedHeaders
-            transmitWithHistory(opt.streamUrl, bT, merged)
+            transmitWithHistory(opt.streamUrl, bT, (streamHeaders[opt.streamUrl] ?: emptyMap()) + opt.healedHeaders)
         },
         onTransmitHistory = { transmitWithHistory(it.url, it.title, it.headers, it.pageUrl) }, onDismissOptions = { showOptionsSheet = false; userDismissedSheetForUrl = currentUrl },
         onClearOptions = { detectedStreams.clear(); qualityOptions = emptyList(); showOptionsSheet = false },

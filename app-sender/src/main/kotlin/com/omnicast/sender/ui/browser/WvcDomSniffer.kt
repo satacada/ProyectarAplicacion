@@ -80,9 +80,10 @@ object WvcDomSniffer {
                     "video" -> {
                         val src = json.optString("src")
                         val dur = json.optDouble("duration", 0.0).toFloat()
+                        val lbl = json.optString("label").takeIf { it.isNotBlank() }
                         if (dur in 0.1f..59.9f) return emptyList()
                         if (isValidMediaUrl(src)) {
-                            list.add(SniffedVideo(src, json.optString("title", "Transmisión Web"), json.optString("poster", ""), duration = dur, frameUrl = frameUrl))
+                            list.add(SniffedVideo(src, json.optString("title", "Transmisión Web"), json.optString("poster", ""), duration = dur, label = lbl, frameUrl = frameUrl))
                         }
                     }
                 }
@@ -91,10 +92,11 @@ object WvcDomSniffer {
                 val json = JSONObject(jsonStr)
                 val src = json.optString("src")
                 val dur = json.optDouble("duration", 0.0).toFloat()
+                val lbl = json.optString("label").takeIf { it.isNotBlank() }
                 val frameUrl = json.optString("from").ifBlank { json.optString("frameUrl", "") }
                 if (dur in 0.1f..59.9f) return emptyList()
                 if (isValidMediaUrl(src)) {
-                    list.add(SniffedVideo(src, json.optString("title", "Transmisión Web"), json.optString("poster", ""), duration = dur, frameUrl = frameUrl))
+                    list.add(SniffedVideo(src, json.optString("title", "Transmisión Web"), json.optString("poster", ""), duration = dur, label = lbl, frameUrl = frameUrl))
                 }
             }
         } catch (_: Throwable) {}

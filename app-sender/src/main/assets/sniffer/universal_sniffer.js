@@ -66,7 +66,7 @@
         return false;
     }
 
-    function reportMedia(src, title, duration, isPlaying) {
+    function reportMedia(src, title, duration, isPlaying, label) {
         if (!src || !isMediaUrl(src)) return;
         var dur = (typeof duration === 'number' && !isNaN(duration)) ? duration : 0;
         if (dur > 0 && dur < 60) return;
@@ -88,6 +88,7 @@
             video: src,
             src: src,
             title: t,
+            label: label || '',
             duration: dur,
             frameUrl: window.location.href || ''
         }));
@@ -261,11 +262,11 @@
                         var srcs = item.sources || [];
                         for (var s = 0; s < srcs.length; s++) {
                             if (srcs[s].file && isMediaUrl(srcs[s].file)) {
-                                reportMedia(srcs[s].file, itemTitle, 0, false);
+                                reportMedia(srcs[s].file, itemTitle, 0, false, srcs[s].label || ('Opción ' + (s + 1)));
                             }
                         }
                         if (item.file && isMediaUrl(item.file)) {
-                            reportMedia(item.file, itemTitle, 0, false);
+                            reportMedia(item.file, itemTitle, 0, false, 'Master');
                         }
                     }
                 }

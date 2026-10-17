@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 127,
-  "versionCodeReceiver": 110,
-  "versionName": "3.32.82",
-  "releaseTag": "v3.32.82",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.82/omnicast-sender-v3.32.82.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.82/omnicast-receiver-v3.32.82.apk",
-  "changelog": "v3.32.82: Auto-recuperación transparente e inmediata ante HTTP 403 vía proxy local; auto-enrutamiento proxy para hosts protegidos (DropCDN, dr0pstream, Fastream); captura proactiva de múltiples flujos JWPlayer/Clappr en sniffer y resolución mejorada de Turnstile."
+  "versionCodeSender": 128,
+  "versionCodeReceiver": 111,
+  "versionName": "3.32.83",
+  "releaseTag": "v3.32.83",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.83/omnicast-sender-v3.32.83.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.83/omnicast-receiver-v3.32.83.apk",
+  "changelog": "v3.32.83: Transmisión directa de DropCDN con cabeceras reales (User-Agent, Referer, Origin) sin forzar proxy local; auto-apertura proactiva de lista de flujos; captura de etiquetas/calidades de múltiples flujos JWPlayer/Clappr."
 }

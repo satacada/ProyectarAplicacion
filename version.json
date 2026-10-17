@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 131,
-  "versionCodeReceiver": 114,
-  "versionName": "3.32.86",
-  "releaseTag": "v3.32.86",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.86/omnicast-sender-v3.32.86.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.86/omnicast-receiver-v3.32.86.apk",
-  "changelog": "v3.32.86: Resolucion automatica limpia de Cloudflare Turnstile erradicando clicks sinteticos que activaban bot heuristics; preservacion inmutable del Referer real de embed (dr0pstream.com) impidiendo sobreescritura con pelisplus.hair; soporte prioritario EMBED_HOST en sonda pre-cast con lectura exitosa de master.m3u8 y desglose multi-calidad (Auto, 1080p, 720p, 480p) directo a TV."
+  "versionCodeSender": 132,
+  "versionCodeReceiver": 115,
+  "versionName": "3.32.87",
+  "releaseTag": "v3.32.87",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.87/omnicast-sender-v3.32.87.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.87/omnicast-receiver-v3.32.87.apk",
+  "changelog": "v3.32.87: Navegacion fluida multi-sitio sin bloqueo en motores de busqueda (Yandex/Google/sololatino/pelisgo) fijando setSupportMultipleWindows(false) y enrutando onCreateWindow; eliminacion de sobreescritura de window.open permitiendo que Cloudflare Turnstile auto-valide criptograficamente sin alertar bot heuristics; filtro estricto anti-anuncios de video (quickcore.fun, prerolls, vast, duration < 60s) garantizando que solo la pelicula principal sea capturada y proyectada."
 }

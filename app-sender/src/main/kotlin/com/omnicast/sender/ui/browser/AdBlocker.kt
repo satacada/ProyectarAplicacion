@@ -37,8 +37,19 @@ object AdBlocker {
                h.contains("recaptcha") || h.contains("captcha")
     }
 
+    fun isVideoAd(url: String): Boolean {
+        val lower = url.lowercase()
+        return lower.contains("quickcore.fun") || lower.contains("preroll") ||
+               lower.contains("ad-delivery") || lower.contains("/ads/") ||
+               lower.contains("imasdk") || lower.contains("ad.mp4") ||
+               lower.contains("vast") || lower.contains("spotx") ||
+               lower.contains("doubleclick") || lower.contains("holdbitter") ||
+               lower.contains("/gambling/") || lower.contains("bonus-")
+    }
+
     fun isAd(url: String): Boolean {
         if (isVerificationOrCaptcha(url)) return false
+        if (isVideoAd(url)) return true
         if (AdBlockWhitelistManager.isWhitelisted(url)) {
             val lower = url.lowercase()
             if (lower.contains("an.yandex.") || lower.contains("mc.yandex.")) return true
@@ -110,7 +121,6 @@ object AdBlocker {
                 if (h.indexOf('dailymotion.com') !== -1 || h.indexOf('youtube.com') !== -1 || h.indexOf('google.') !== -1 || h.indexOf('bing.') !== -1 || h.indexOf('yandex.') !== -1) {
                     return;
                 }
-                try { window.open = function() { return null; }; } catch(_) {}
                 function cleanDoc(doc) {
                     if (!doc) return;
                     try {

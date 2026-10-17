@@ -57,7 +57,7 @@
             s.indexOf('/ads/') !== -1 || s.indexOf('imasdk') !== -1 ||
             s.indexOf('cat-bolt') !== -1 || s.indexOf('ad.mp4') !== -1 || s.indexOf('vast') !== -1 ||
             s.indexOf('commercial') !== -1 || s.indexOf('spotx') !== -1 || s.indexOf('doubleclick') !== -1 ||
-            s.indexOf('holdbitter') !== -1 || s.indexOf('/gambling/') !== -1 || s.indexOf('bonus-') !== -1) {
+            s.indexOf('quickcore') !== -1 || s.indexOf('holdbitter') !== -1 || s.indexOf('/gambling/') !== -1 || s.indexOf('bonus-') !== -1) {
             return true;
         }
         // 2. Para cualquier video con duración finita menor a 60 segundos es un comercial (prerolls de 15s/18s/30s)

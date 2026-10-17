@@ -125,7 +125,7 @@ fun BrowserWebView(
                 settings.layoutAlgorithm = WebSettings.LayoutAlgorithm.NORMAL
                 settings.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
                 settings.mediaPlaybackRequiresUserGesture = false
-                settings.setSupportMultipleWindows(true)
+                settings.setSupportMultipleWindows(false)
                 settings.javaScriptCanOpenWindowsAutomatically = false
                 settings.userAgentString = UA_MOBILE
 
@@ -166,6 +166,7 @@ fun BrowserWebView(
                         val targetHost = try { r.url.host?.lowercase() } catch (_: Throwable) { null }
                         val isSameSite = curHost != null && targetHost != null && (targetHost == curHost || targetHost.endsWith(".$curHost") || curHost.endsWith(".$targetHost"))
                         val isSourceWhitelisted = curHost?.let { AdBlockWhitelistManager.isWhitelistedHost(it) } ?: false
+                        val isSourceSearchEngine = curHost?.let { AdBlocker.isSearchEngine(it) } ?: false
 
                         if (isAdBlockEnabled && !isSourceWhitelisted) {
                             if (AdBlocker.isAd(reqUrl) || NativeAdBlockEngine.shouldBlock(reqUrl, liveUrl)) {
@@ -174,7 +175,7 @@ fun BrowserWebView(
                                 showBlockedToast(ctx)
                                 return true
                             }
-                            if (!isSameSite && targetHost != null) {
+                            if (!isSameSite && !isSourceSearchEngine && targetHost != null) {
                                 val isAllowedExternal = AdBlocker.isSearchEngine(targetHost) ||
                                     AdBlocker.isKnownMediaHost(targetHost) ||
                                     AdBlocker.isVerificationOrCaptcha(targetHost) ||
@@ -209,10 +210,10 @@ fun BrowserWebView(
                                 } catch (_: Throwable) { super.shouldInterceptRequest(v, r) }
                             }
                             val docUrl = r.requestHeaders?.get("Referer") ?: currentUrl
-                            if (isAdBlockEnabled && (AdBlocker.isAd(reqUrl) || NativeAdBlockEngine.shouldBlock(reqUrl, docUrl))) {
+                            if (isAdBlockEnabled && (AdBlocker.isAd(reqUrl) || AdBlocker.isVideoAd(reqUrl) || NativeAdBlockEngine.shouldBlock(reqUrl, docUrl))) {
                                 return AdBlocker.createEmptyResponse()
                             }
-                            if (com.omnicast.sender.nativeclassifier.NativeStreamClassifier.shouldDiscard(reqUrl)) {
+                            if (com.omnicast.sender.nativeclassifier.NativeStreamClassifier.shouldDiscard(reqUrl) || AdBlocker.isVideoAd(reqUrl)) {
                                 return super.shouldInterceptRequest(v, r)
                             }
                             val candidate = com.omnicast.core.domain.models.StreamCandidate(
@@ -234,7 +235,22 @@ fun BrowserWebView(
 
                 webChromeClient = object : WebChromeClient() {
                     override fun onCreateWindow(view: WebView?, isDialog: Boolean, isUserGesture: Boolean, resultMsg: android.os.Message?): Boolean {
-                        android.util.Log.w("BrowserWebView", "🛑 Ventana emergente (popup) bloqueada de raíz")
+                        val transport = resultMsg?.obj as? WebView.WebViewTransport
+                        if (transport != null && view != null) {
+                            val tempWebView = WebView(view.context)
+                            tempWebView.webViewClient = object : WebViewClient() {
+                                override fun shouldOverrideUrlLoading(v: WebView?, req: WebResourceRequest?): Boolean {
+                                    val destUrl = req?.url?.toString()
+                                    if (!destUrl.isNullOrBlank() && !AdBlocker.isAd(destUrl)) {
+                                        view.loadUrl(destUrl)
+                                    }
+                                    return true
+                                }
+                            }
+                            transport.webView = tempWebView
+                            resultMsg.sendToTarget()
+                            return true
+                        }
                         return false
                     }
 

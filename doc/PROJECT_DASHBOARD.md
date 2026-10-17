@@ -1,7 +1,7 @@
 # 📊 PROJECT DASHBOARD — OmniCast Pro
 
 **Última actualización:** 2026-10-17  
-**Versión de producción actual:** v3.32.86 (Sender) / v3.32.86 (Receiver)  
+**Versión de producción actual:** v3.32.87 (Sender) / v3.32.87 (Receiver)  
 **Estándar de calidad:** AGENTS.md (Archivos <= 300 líneas, Clean Architecture, 100% Offline/Local)
 
 ---

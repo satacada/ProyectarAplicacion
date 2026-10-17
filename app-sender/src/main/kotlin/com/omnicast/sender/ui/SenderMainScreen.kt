@@ -163,7 +163,8 @@ fun SenderMainScreen(
                             prefs.edit().putBoolean("saved_tooltips_enabled", it).apply()
                         },
                         onOpenHelp = { showHelpDialog = true },
-                        onOpenDrawer = { showSideDrawer = true }
+                        onOpenDrawer = { showSideDrawer = true },
+                        onExitApp = { SenderMainActivity.exitCompletely(context) }
                     )
                 }
 

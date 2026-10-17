@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 129,
-  "versionCodeReceiver": 112,
-  "versionName": "3.32.84",
-  "releaseTag": "v3.32.84",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.84/omnicast-sender-v3.32.84.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.84/omnicast-receiver-v3.32.84.apk",
-  "changelog": "v3.32.84: Motor nativo C++20 para clasificacion ultrarrapida (<0.1ms); Despachador en 6 ramas (VOD, LIVE, DASH, Audio Puro sin decodificador de video, IPTV, Local); Aprendizaje de perfiles y reglas en la nube; UI Pixel-Perfect y Zero Layout Shift (HU-009, ADR-006)."
+  "versionCodeSender": 130,
+  "versionCodeReceiver": 113,
+  "versionName": "3.32.85",
+  "releaseTag": "v3.32.85",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.85/omnicast-sender-v3.32.85.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.85/omnicast-receiver-v3.32.85.apk",
+  "changelog": "v3.32.85: Interfaz minimalista inspirada en Web Video Caster (WVC); barra superior plana y libre de botones recargados; boton TV para restaurar controles; barra multimedia inferior 100% ocultable (0px); replica de Zoom TV gradual en controles remotos; ocultacion automatica del asistente flotante en el navegador web; boton discreto de salida limpia y liberacion de memoria (HU-010)."
 }

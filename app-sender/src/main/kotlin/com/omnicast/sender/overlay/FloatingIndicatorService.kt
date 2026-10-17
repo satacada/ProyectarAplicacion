@@ -45,6 +45,9 @@ class FloatingIndicatorService : Service() {
         fun stop(context: Context) {
             try { context.stopService(Intent(context, FloatingIndicatorService::class.java)) } catch (e: Throwable) { Log.e(TAG, "Error stop", e) }
         }
+        fun setBrowserActive(active: Boolean) {
+            instance?.let { it.handler.post { it.rootLayout?.visibility = if (active) View.GONE else View.VISIBLE } }
+        }
     }
 
     private var windowManager: WindowManager? = null
@@ -59,26 +62,16 @@ class FloatingIndicatorService : Service() {
     private var pollRunnable: Runnable? = null
 
     fun refreshDisplayMode() {
-        val pill = pillLayoutRef ?: return
-        val dot = dotViewRef ?: return
-        var changed = false
+        val pill = pillLayoutRef ?: return; val dot = dotViewRef ?: return; var changed = false
         if (pill.visibility != View.VISIBLE) { pill.visibility = View.VISIBLE; changed = true }
         if (dot.visibility != View.GONE) { dot.visibility = View.GONE; changed = true }
-        if (changed) {
-            try { windowManager?.updateViewLayout(rootLayout, layoutParamsRef) } catch (_: Throwable) {}
-        }
-        menuControllerRef?.applyMode(
-            com.omnicast.sender.service.CastSessionState.getCurrentMode(),
-            com.omnicast.sender.service.TvZoomManager.getCurrent().label
-        )
+        if (changed) { try { windowManager?.updateViewLayout(rootLayout, layoutParamsRef) } catch (_: Throwable) {} }
+        menuControllerRef?.applyMode(com.omnicast.sender.service.CastSessionState.getCurrentMode(), com.omnicast.sender.service.TvZoomManager.getCurrent().label)
     }
 
     override fun onCreate() {
-        super.onCreate()
-        instance = this
-        isRunning = true
-        clipboardExtractor = ClipboardStreamExtractor(this)
-        setupFloatingView()
+        super.onCreate(); instance = this; isRunning = true
+        clipboardExtractor = ClipboardStreamExtractor(this); setupFloatingView()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int = START_STICKY

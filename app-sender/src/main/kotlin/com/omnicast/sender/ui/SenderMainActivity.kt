@@ -53,7 +53,8 @@ class SenderMainActivity : ComponentActivity() {
                 com.omnicast.sender.overlay.FloatingIndicatorService.stop(context); com.omnicast.sender.service.CastMediaNotificationService.stop(context)
                 com.omnicast.sender.service.ProjectionForegroundService.stopService(context); com.omnicast.sender.media.LocalStreamProxyServer.stop()
                 com.omnicast.sender.stream.ActiveStreamHolder.clear(); com.omnicast.sender.stream.ActiveStreamHolder.stopCasting(); sendDisconnectStatic(context)
-                (context.getSystemService(Context.NOTIFICATION_SERVICE) as? android.app.NotificationManager)?.cancelAll(); instance?.let { act -> act.runOnUiThread { act.finishAffinity() } }
+                (context.getSystemService(Context.NOTIFICATION_SERVICE) as? android.app.NotificationManager)?.cancelAll()
+                instance?.let { act -> act.runOnUiThread { act.finishAffinity(); android.os.Process.killProcess(android.os.Process.myPid()); kotlin.system.exitProcess(0) } }
             } catch (e: Throwable) { Log.e("Sender", "exitCompletely", e) }
         }
     }

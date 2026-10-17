@@ -19,6 +19,7 @@ fun BrowserBottomBarContainer(
     onStopCasting: () -> Unit,
     onSaveToPlaylist: (() -> Unit)? = null,
     onDeleteFromSaved: (() -> Unit)? = null,
+    onDismiss: (() -> Unit)? = null,
     isSaved: Boolean = false,
     modifier: Modifier = Modifier
 ) {
@@ -45,6 +46,7 @@ fun BrowserBottomBarContainer(
             onSelectQuality = onOpenQualities,
             onSaveToPlaylist = onSaveToPlaylist,
             onDeleteFromSaved = onDeleteFromSaved,
+            onDismiss = onDismiss,
             isSaved = isSaved
         )
     }

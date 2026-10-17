@@ -18,7 +18,7 @@ import androidx.compose.material.icons.rounded.Menu
 import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.Refresh
-import androidx.compose.material.icons.rounded.Tune
+import androidx.compose.material.icons.rounded.Tv
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -87,6 +87,9 @@ fun BrowserTopBar(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(2.dp)
         ) {
+            IconButton(onClick = onClose, modifier = Modifier.size(26.dp)) {
+                Icon(Icons.Rounded.Close, contentDescription = "Cerrar", tint = Color(0xFFCBD5E1), modifier = Modifier.size(17.dp))
+            }
             IconButton(onClick = onOpenDrawer, modifier = Modifier.size(26.dp)) {
                 Icon(Icons.Rounded.Menu, contentDescription = "Menú", tint = Color(0xFF94A3B8), modifier = Modifier.size(16.dp))
             }
@@ -146,12 +149,21 @@ fun BrowserTopBar(
             if (isCasting && isPlaying) {
                 IconButton(
                     onClick = onToggleBottomControls,
-                    modifier = Modifier
-                        .size(26.dp)
-                        .background(if (showBottomControls) Color(0xFF0284C7) else Color(0xFF1E293B), CircleShape)
-                        .border(1.dp, if (showBottomControls) Color(0xFF38BDF8) else Color(0xFF334155), CircleShape)
+                    modifier = Modifier.size(26.dp)
                 ) {
-                    Icon(Icons.Rounded.Tune, contentDescription = "Controles", tint = Color.White, modifier = Modifier.size(13.dp))
+                    Box(contentAlignment = Alignment.TopEnd) {
+                        Icon(
+                            Icons.Rounded.Tv,
+                            contentDescription = "Controles TV",
+                            tint = if (showBottomControls) Color(0xFF38BDF8) else Color(0xFF10B981),
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Box(
+                            modifier = Modifier
+                                .size(5.dp)
+                                .background(if (showBottomControls) Color(0xFF38BDF8) else Color(0xFF10B981), CircleShape)
+                        )
+                    }
                 }
             }
 

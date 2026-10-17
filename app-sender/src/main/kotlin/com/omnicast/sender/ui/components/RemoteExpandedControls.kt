@@ -1,5 +1,6 @@
 package com.omnicast.sender.ui.components
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -7,6 +8,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.AspectRatio
 import androidx.compose.material.icons.rounded.Forward10
 import androidx.compose.material.icons.rounded.Pause
 import androidx.compose.material.icons.rounded.PlayArrow
@@ -20,10 +22,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.omnicast.sender.network.SignalingClientHolder
+import com.omnicast.sender.service.TvZoomManager
 
 @Composable
 fun RemoteExpandedControls(
@@ -42,6 +47,7 @@ fun RemoteExpandedControls(
     onSelectQuality: (() -> Unit)? = null,
     isSaved: Boolean = false
 ) {
+    val context = LocalContext.current
     Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 2.dp)) {
 
         // ========================================================
@@ -99,6 +105,19 @@ fun RemoteExpandedControls(
                         ) {
                             BookmarkRemoveIcon(modifier = Modifier.size(17.dp))
                         }
+                    }
+                    IconButton(
+                        onClick = {
+                            val preset = TvZoomManager.cycleNext()
+                            SignalingClientHolder.get().sendMessage(TvZoomManager.toSignalingMessage(preset))
+                            Toast.makeText(context, preset.label, Toast.LENGTH_SHORT).show()
+                        },
+                        modifier = Modifier
+                            .size(34.dp)
+                            .background(Color(0xFF1E2B4A), RoundedCornerShape(8.dp))
+                            .border(1.dp, Color(0xFF3B82F6), RoundedCornerShape(8.dp))
+                    ) {
+                        Icon(Icons.Rounded.AspectRatio, contentDescription = "Zoom TV", tint = Color(0xFF60A5FA), modifier = Modifier.size(17.dp))
                     }
                     if (onStop != null) {
                         IconButton(

@@ -14,6 +14,7 @@ import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material.icons.rounded.KeyboardArrowUp
 import androidx.compose.material.icons.rounded.Pause
 import androidx.compose.material.icons.rounded.PlayArrow
+import androidx.compose.material.icons.rounded.Stop
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -41,9 +42,10 @@ fun RemoteControlBar(
     onSelectQuality: (() -> Unit)? = null,
     onSaveToPlaylist: (() -> Unit)? = null,
     onDeleteFromSaved: (() -> Unit)? = null,
+    onDismiss: (() -> Unit)? = null,
     isSaved: Boolean = false
 ) {
-    var isExpanded by rememberSaveable { mutableStateOf(true) }
+    var isExpanded by rememberSaveable { mutableStateOf(false) }
 
     Surface(
         color = Color(0xF8111624),
@@ -99,41 +101,66 @@ fun RemoteControlBar(
             }
 
             if (!isExpanded) {
-                // Modo Compacto / Minimizado
+                // Modo Compacto / Minimizado (estilo WVC 44dp)
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable { isExpanded = true }
-                        .padding(vertical = 6.dp),
+                        .padding(vertical = 4.dp),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
+                    IconButton(
+                        onClick = { isExpanded = true },
+                        modifier = Modifier.size(30.dp)
+                    ) {
+                        Icon(Icons.Rounded.KeyboardArrowUp, contentDescription = "Expandir", tint = Color(0xFF94A3B8), modifier = Modifier.size(18.dp))
+                    }
+
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickable { isExpanded = true }
+                    ) {
                         Text(
                             text = title.ifBlank { "Transmitiendo a TV Box" },
-                            color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold,
+                            color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold,
                             maxLines = 1, overflow = TextOverflow.Ellipsis
                         )
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                            Box(modifier = Modifier.size(6.dp).background(Color(0xFF10B981), CircleShape))
-                            Text("En reproducción en TV", color = Color(0xFF6EE7B7), fontSize = 11.sp)
+                            Box(modifier = Modifier.size(5.dp).background(Color(0xFF10B981), CircleShape))
+                            Text("En TV", color = Color(0xFF6EE7B7), fontSize = 10.sp)
                         }
                     }
 
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier
-                                .size(34.dp)
-                                .background(Color(0xFFFF7A00), CircleShape)
-                                .clickable { onPlayPause() },
-                            contentAlignment = Alignment.Center
+                    IconButton(
+                        onClick = onPlayPause,
+                        modifier = Modifier
+                            .size(30.dp)
+                            .background(Color(0xFFFF7A00), CircleShape)
+                    ) {
+                        Icon(
+                            if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
+                            contentDescription = if (isPlaying) "Pausar" else "Reproducir",
+                            tint = Color.White,
+                            modifier = Modifier.size(17.dp)
+                        )
+                    }
+
+                    IconButton(
+                        onClick = onStop,
+                        modifier = Modifier
+                            .size(30.dp)
+                            .background(Color(0xFF2D1515), CircleShape)
+                    ) {
+                        Icon(Icons.Rounded.Stop, contentDescription = "Detener", tint = Color(0xFFEF4444), modifier = Modifier.size(15.dp))
+                    }
+
+                    if (onDismiss != null) {
+                        IconButton(
+                            onClick = onDismiss,
+                            modifier = Modifier.size(30.dp)
                         ) {
-                            Icon(
-                                if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
-                                contentDescription = if (isPlaying) "Pausar" else "Reproducir",
-                                tint = Color.White,
-                                modifier = Modifier.size(20.dp)
-                            )
+                            Icon(Icons.Rounded.KeyboardArrowDown, contentDescription = "Ocultar", tint = Color(0xFF94A3B8), modifier = Modifier.size(18.dp))
                         }
                     }
                 }

@@ -292,78 +292,26 @@
         sniffPlayerApis();
     }, 3000);
 
-    // 7b. Auto-resolución proactiva de Cloudflare Turnstile / Verificación humana
-    function autoSolveTurnstile() {
+    // 7b. Observación reactiva limpia de Cloudflare Turnstile (Cero clicks sintéticos que activen bot heuristics)
+    function checkTurnstileCompleted() {
         try {
-            function triggerPointerSequence(target, x, y) {
-                if (!target) return;
-                var rect = target.getBoundingClientRect();
-                var cx = (typeof x === 'number') ? x : (rect.left + Math.min(30, rect.width / 2));
-                var cy = (typeof y === 'number') ? y : (rect.top + rect.height / 2);
-                var common = { bubbles: true, cancelable: true, view: window, clientX: cx, clientY: cy, isTrusted: true, pointerId: 1, width: 1, height: 1 };
-                try { target.focus(); } catch(_) {}
-                try { target.dispatchEvent(new PointerEvent('pointerover', common)); } catch(_) {}
-                try { target.dispatchEvent(new PointerEvent('pointerenter', common)); } catch(_) {}
-                try { target.dispatchEvent(new MouseEvent('mouseover', common)); } catch(_) {}
-                try { target.dispatchEvent(new PointerEvent('pointerdown', common)); } catch(_) {}
-                try { target.dispatchEvent(new MouseEvent('mousedown', common)); } catch(_) {}
-                try { target.dispatchEvent(new PointerEvent('pointerup', common)); } catch(_) {}
-                try { target.dispatchEvent(new MouseEvent('mouseup', common)); } catch(_) {}
-                try { target.dispatchEvent(new MouseEvent('click', common)); } catch(_) {}
-                try { if (typeof target.click === 'function') target.click(); } catch(_) {}
-            }
-
-            var ifrs = document.querySelectorAll('iframe[src*="challenges.cloudflare.com"], iframe[src*="turnstile"], iframe[src*="challenge-platform"]');
-            for (var i = 0; i < ifrs.length; i++) {
-                var ifr = ifrs[i];
-                var now = Date.now();
-                var lastClick = parseInt(ifr.dataset.omniLastClick || '0', 10);
-                if (now - lastClick > 2500) {
-                    ifr.dataset.omniLastClick = now.toString();
-                    var rect = ifr.getBoundingClientRect();
-                    if (rect.width > 0 && rect.height > 0) {
-                        triggerPointerSequence(ifr, rect.left + 35, rect.top + (rect.height / 2));
-                        if (ifr.parentElement) triggerPointerSequence(ifr.parentElement, rect.left + 35, rect.top + (rect.height / 2));
-                    }
-                }
-            }
-
-            var turnstileWrappers = document.querySelectorAll('.cf-turnstile, #cf-turnstile, [data-sitekey], #turnstile-wrapper, div[class*="turnstile"], #challenge-stage, .g-recaptcha, #vid_play');
-            for (var w = 0; w < turnstileWrappers.length; w++) {
-                var tw = turnstileWrappers[w];
-                var tNow = Date.now();
-                var tLast = parseInt(tw.dataset.omniLastClick || '0', 10);
-                if (tNow - tLast > 2500) {
-                    tw.dataset.omniLastClick = tNow.toString();
-                    var twRect = tw.getBoundingClientRect();
-                    if (twRect.width > 0 && twRect.height > 0) {
-                        triggerPointerSequence(tw, twRect.left + 35, twRect.top + (twRect.height / 2));
-                    }
-                }
-            }
-
-            var cfInputs = document.querySelectorAll('input[type="checkbox"][name*="cf-turnstile"], input[name="cf-turnstile-response"], .recaptcha-checkbox, .hcaptcha-box, #recaptcha-anchor');
-            for (var c = 0; c < cfInputs.length; c++) {
-                var inp = cfInputs[c];
-                if (!inp.checked && !inp.dataset.omniChecked) {
-                    inp.dataset.omniChecked = 'true';
-                    inp.checked = true;
-                    triggerPointerSequence(inp);
-                    if (inp.parentElement) triggerPointerSequence(inp.parentElement);
-                }
-            }
-
-            if (typeof window.imNotARobot === 'function' && !window.__imNotARobotCalled) {
-                var cfInp = document.querySelector('input[name="cf-turnstile-response"]');
-                if (cfInp && cfInp.value) {
-                    window.__imNotARobotCalled = true;
+            var cfInp = document.querySelector('input[name="cf-turnstile-response"]');
+            if (cfInp && cfInp.value && !window.__omniTurnstileSubmitted) {
+                window.__omniTurnstileSubmitted = true;
+                if (typeof window.imNotARobot === 'function') {
                     window.imNotARobot();
+                } else if (typeof window.onSubmit === 'function') {
+                    window.onSubmit(cfInp.value);
+                } else {
+                    var f = document.getElementById('F1') || cfInp.closest('form');
+                    if (f && typeof f.submit === 'function') f.submit();
                 }
             }
-        } catch(e) {}
+        } catch(_) {}
     }
-    setInterval(autoSolveTurnstile, 600);
-    autoSolveTurnstile();
+    document.addEventListener('DOMContentLoaded', checkTurnstileCompleted);
+    window.addEventListener('load', checkTurnstileCompleted);
+    setInterval(checkTurnstileCompleted, 1000);
 
     // 8. Función global de reset y rescaneo profundo para el botón del trueno
     window.__omniResetAndRescan = function() {

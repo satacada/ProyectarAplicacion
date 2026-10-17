@@ -33,6 +33,7 @@ class SenderMainActivity : ComponentActivity() {
         private var instance: SenderMainActivity? = null
         private var lastHandoffTime = 0L
         private var lastHandoffUrl: String? = null
+        private var lastProxyTime = 0L
         var onRequestReturnToMain: (() -> Unit)? = null
 
         fun sendDirectStreamStatic(context: Context, url: String, title: String? = null, headers: Map<String, String> = emptyMap()) {
@@ -180,7 +181,9 @@ class SenderMainActivity : ComponentActivity() {
                     val mUrl = msg.mediaUrl
                     if (msg.state == "ERROR_FORBIDDEN_403") {
                         val failedUrl = mUrl ?: ActiveStreamHolder.streamUrl
-                        if (!failedUrl.isNullOrBlank() && !failedUrl.contains(":8092")) {
+                        val now = System.currentTimeMillis()
+                        if (!failedUrl.isNullOrBlank() && !failedUrl.contains(":8092") && (now - lastProxyTime > 3000L)) {
+                            lastProxyTime = now
                             com.omnicast.sender.log.SenderLogger.w("SenderMain", "🔄 HTTP 403 en TV: Recuperando automáticamente vía proxy local")
                             runOnUiThread { Toast.makeText(this@SenderMainActivity, "🔒 Servidor protegido: Conectando vía teléfono...", Toast.LENGTH_SHORT).show() }
                             val proxyUrl = com.omnicast.sender.media.LocalStreamProxyServer.startAndGetProxyUrl(this@SenderMainActivity, failedUrl, ActiveStreamHolder.headers)
@@ -189,7 +192,7 @@ class SenderMainActivity : ComponentActivity() {
                             ActiveStreamHolder.setProxied(true)
                             val retryMsg = SignalingMessage.DirectStreamHandoff(mediaUrl = proxyUrl, title = safeTitle, headers = emptyMap(), startPositionMs = ActiveStreamHolder.positionMs.value, branch = com.omnicast.sender.nativeclassifier.NativeStreamClassifier.classify(proxyUrl).name)
                             sendSignalingMessage(retryMsg); com.omnicast.sender.discovery.MultiReceiverManager.broadcastToSecondary(retryMsg, nsdScanner.discoveredDevices.value)
-                        } else {
+                        } else if (failedUrl?.contains(":8092") == true) {
                             runOnUiThread { Toast.makeText(this@SenderMainActivity, "⚠️ Enlace expirado en el servidor origen. Selecciona el video superior reciente.", Toast.LENGTH_LONG).show() }
                             ActiveStreamHolder.stopCasting(notifyTv = false)
                             com.omnicast.sender.service.CastMediaNotificationService.stop(this@SenderMainActivity)

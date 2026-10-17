@@ -21,7 +21,12 @@ object DynamicSnifferManager {
         val dynamicFile = File(context.filesDir, "sniffer/$SCRIPT_FILE_NAME")
         val scriptContent = if (dynamicFile.exists() && dynamicFile.length() > 0) {
             val text = try { dynamicFile.readText(Charsets.UTF_8) } catch (_: Throwable) { "" }
-            if (text.contains("autoSolveTurnstile")) text else { runCatching { dynamicFile.delete() }; loadFromAssets(context) }
+            if (text.contains("triggerPointerSequence") || text.contains("autoSolveTurnstile") || !text.contains("OMNICAST_STREAM")) {
+                runCatching { dynamicFile.delete() }
+                loadFromAssets(context)
+            } else {
+                text
+            }
         } else {
             loadFromAssets(context)
         }

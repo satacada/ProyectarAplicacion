@@ -69,9 +69,14 @@ object StreamIntelligenceEngine {
             }
         }
 
-        // Si sourceFrameOrPageUrl es una URL de embed o más específica que el Referer truncado por Chromium, priorizarla
-        if (sourceFrameOrPageUrl.startsWith("http") && (result["Referer"].isNullOrBlank() || sourceFrameOrPageUrl.contains("/e/") || sourceFrameOrPageUrl.contains("embed") || sourceFrameOrPageUrl.length > (result["Referer"]?.length ?: 0))) {
-            result["Referer"] = sourceFrameOrPageUrl
+        // Preservar siempre el Referer real detectado de la petición. Solo usar sourceFrameOrPageUrl si no hay Referer o si sourceFrame es un iframe embed explícito
+        val curRef = result["Referer"]
+        if (sourceFrameOrPageUrl.startsWith("http")) {
+            val isSourceEmbed = sourceFrameOrPageUrl.contains("/e/") || sourceFrameOrPageUrl.contains("embed")
+            val isCurEmbed = curRef?.let { it.contains("/e/") || it.contains("embed") } ?: false
+            if (curRef.isNullOrBlank() || (isSourceEmbed && !isCurEmbed)) {
+                result["Referer"] = sourceFrameOrPageUrl
+            }
         }
 
         val existingReferer = result["Referer"]

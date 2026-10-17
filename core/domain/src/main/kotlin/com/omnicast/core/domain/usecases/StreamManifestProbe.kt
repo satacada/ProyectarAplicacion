@@ -105,6 +105,27 @@ object StreamManifestProbe {
         }
         list.add("ORIGINAL" to orig)
 
+        // 1b. Permutación de host embed específico para CDN protegidas (DropCDN, Fastream)
+        val lower = streamUrl.lowercase()
+        if (lower.contains("dropcdn.io") || lower.contains("dr0pstream.com") || lower.contains("fastream.to")) {
+            val id = Regex("(?:/hls\\d*/\\d+/\\d+/|/embed-|/e/|/d/)([a-zA-Z0-9]{8,16})(?:[_,.]|$)").find(streamUrl)?.groupValues?.get(1)
+            if (id != null) {
+                val isDrop = lower.contains("dropcdn.io") || lower.contains("dr0pstream.com")
+                val embedUrl = if (isDrop) "https://dr0pstream.com/e/$id" else "https://fastream.to/embed-$id.html"
+                val origin = if (isDrop) "https://dr0pstream.com" else "https://fastream.to"
+                val embedMap = mutableMapOf(
+                    "User-Agent" to baseUa,
+                    "Referer" to embedUrl,
+                    "Origin" to origin,
+                    "Sec-Fetch-Mode" to "cors",
+                    "Sec-Fetch-Dest" to "empty",
+                    "Sec-Fetch-Site" to "cross-site"
+                )
+                if (baseCookie.isNotBlank()) embedMap["Cookie"] = baseCookie
+                list.add(0, "EMBED_HOST" to embedMap)
+            }
+        }
+
         // 2. Cabeceras de la página principal (pageUrl), si es distinta al Referer original
         if (!pageUrl.isNullOrBlank() && pageUrl.startsWith("http") && pageUrl != orig["Referer"]) {
             val pageMap = mutableMapOf("User-Agent" to baseUa, "Referer" to pageUrl)

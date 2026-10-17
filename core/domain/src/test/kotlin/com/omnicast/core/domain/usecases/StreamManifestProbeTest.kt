@@ -53,4 +53,14 @@ class StreamManifestProbeTest {
         assertFalse(result.isPlayable)
         assertTrue(result.resolvedUrl.isEmpty())
     }
+
+    @Test
+    fun `buildHeaderPermutations prioritizes EMBED_HOST for DropCDN`() {
+        val streamUrl = "https://ds4.dropcdn.io/hls2/01/00038/loaxg3kae97x_n/master.m3u8?t=xyz"
+        val permutations = StreamManifestProbe.buildHeaderPermutations(streamUrl, emptyMap(), "https://pelisplus.hair/pelicula/test")
+        val first = permutations.first()
+        assertEquals("EMBED_HOST", first.first)
+        assertEquals("https://dr0pstream.com/e/loaxg3kae97x", first.second["Referer"])
+        assertEquals("https://dr0pstream.com", first.second["Origin"])
+    }
 }

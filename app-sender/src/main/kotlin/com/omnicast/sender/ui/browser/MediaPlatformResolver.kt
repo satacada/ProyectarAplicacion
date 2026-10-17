@@ -157,8 +157,12 @@ object MediaPlatformResolver {
             if (id != null) {
                 val embed = if (isDrop) "https://dr0pstream.com/e/$id" else "https://fastream.to/embed-$id.html"
                 val origin = if (isDrop) "https://dr0pstream.com" else "https://fastream.to"
-                if (hdrs["Referer"].isNullOrBlank()) hdrs["Referer"] = embed
-                if (hdrs["Origin"].isNullOrBlank()) hdrs["Origin"] = origin
+                val curRef = hdrs["Referer"] ?: ""
+                val targetHost = if (isDrop) "dr0pstream.com" else "fastream.to"
+                if (curRef.isBlank() || !curRef.contains(targetHost)) {
+                    hdrs["Referer"] = embed
+                    hdrs["Origin"] = origin
+                }
             }
         }
         val safeHeaders = BrowserUrlHelper.buildSafeHeaders(finalUrl, pageUrl, UA_MOBILE, hdrs)

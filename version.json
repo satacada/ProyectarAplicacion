@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 130,
-  "versionCodeReceiver": 113,
-  "versionName": "3.32.85",
-  "releaseTag": "v3.32.85",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.85/omnicast-sender-v3.32.85.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.85/omnicast-receiver-v3.32.85.apk",
-  "changelog": "v3.32.85: Interfaz minimalista inspirada en Web Video Caster (WVC); barra superior plana y libre de botones recargados; boton TV para restaurar controles; barra multimedia inferior 100% ocultable (0px); replica de Zoom TV gradual en controles remotos; ocultacion automatica del asistente flotante en el navegador web; boton discreto de salida limpia y liberacion de memoria (HU-010)."
+  "versionCodeSender": 131,
+  "versionCodeReceiver": 114,
+  "versionName": "3.32.86",
+  "releaseTag": "v3.32.86",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.86/omnicast-sender-v3.32.86.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.86/omnicast-receiver-v3.32.86.apk",
+  "changelog": "v3.32.86: Resolucion automatica limpia de Cloudflare Turnstile erradicando clicks sinteticos que activaban bot heuristics; preservacion inmutable del Referer real de embed (dr0pstream.com) impidiendo sobreescritura con pelisplus.hair; soporte prioritario EMBED_HOST en sonda pre-cast con lectura exitosa de master.m3u8 y desglose multi-calidad (Auto, 1080p, 720p, 480p) directo a TV."
 }

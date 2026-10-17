@@ -137,6 +137,7 @@ fun BrowserWebView(
                     }
 
                     override fun onPageStarted(v: WebView?, u: String?, f: Bitmap?) {
+                        CookieManager.getInstance().flush()
                         u?.let { if (!it.startsWith("about:") && !it.contains("favicon")) onPageStarted(it) }
                         if (isAdBlockEnabled) v?.evaluateJavascript(AdBlocker.getAdHidingScript(), null)
                         v?.evaluateJavascript(inputViewportScript, null)
@@ -144,6 +145,7 @@ fun BrowserWebView(
 
                     override fun onPageFinished(v: WebView?, u: String?) {
                         swipeRefresh.isRefreshing = false
+                        CookieManager.getInstance().flush()
                         val title = v?.title ?: "Transmisión"
                         currentKnownTitle = title
                         onPageFinished(title, u)

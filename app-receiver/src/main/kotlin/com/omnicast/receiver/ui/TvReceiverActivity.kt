@@ -29,6 +29,7 @@ class TvReceiverActivity : ComponentActivity() {
 
     private val receiverState = mutableStateOf<ReceiverUiState>(ReceiverUiState.Standby)
     private val localIpAddress = mutableStateOf("127.0.0.1")
+    private val currentDisplayMode = mutableStateOf<SignalingMessage.SetDisplayMode?>(null)
     private val expiredItemForRenew = mutableStateOf<com.omnicast.receiver.directstream.TvPlaylistItem?>(null)
     private val youTubeControlFlow = MutableSharedFlow<SignalingMessage.PlayControl>(extraBufferCapacity = 16)
     private lateinit var webRtcReceiver: WebRtcReceiverManager
@@ -145,7 +146,7 @@ class TvReceiverActivity : ComponentActivity() {
                     )
                     is ReceiverUiState.WebStreamPlaying -> TvWebStreamScreen(
                         streamUrl = state.streamUrl, title = state.title, headers = state.headers, startPositionMs = state.startPositionMs,
-                        timestamp = state.timestamp, commandFlow = youTubeControlFlow,
+                        timestamp = state.timestamp, commandFlow = youTubeControlFlow, displayMode = currentDisplayMode.value,
                         onPlaybackStatus = { pos, dur, playing ->
                             lifecycleScope.launch {
                                 signalingServer.sendMessage(SignalingMessage.PlaybackStatus(if (playing) "PLAYING" else "PAUSED", pos, dur, state.streamUrl, state.title))
@@ -226,7 +227,10 @@ class TvReceiverActivity : ComponentActivity() {
                 }
             }
             is SignalingMessage.ImageTransform -> (receiverState.value as? ReceiverUiState.ImageDisplaying)?.let { receiverState.value = it.copy(scale = message.scale, panX = message.panX, panY = message.panY, rotation = message.rotation) }
-            is SignalingMessage.SetDisplayMode -> { webRtcReceiver.setDisplayMode(message.mode, message.zoom, message.panY, message.panX); exoPlayerManager.setDisplayMode(message.mode, message.zoom) }
+            is SignalingMessage.SetDisplayMode -> {
+                currentDisplayMode.value = message
+                webRtcReceiver.setDisplayMode(message.mode, message.zoom, message.panY, message.panX); exoPlayerManager.setDisplayMode(message.mode, message.zoom)
+            }
             is SignalingMessage.ShowImage -> { digitalAudioReceiver?.stop(); exoPlayerManager.stop("Casteo Foto"); webRtcReceiver.resetConnection(); receiverState.value = ReceiverUiState.ImageDisplaying(message.imageUrl, message.title ?: "Foto de Galería") }
             is SignalingMessage.SyncPlaylists -> lifecycleScope.launch { playlistManager.syncPlaylistsJson(message.playlistsJson) }
             is SignalingMessage.Disconnect -> { digitalAudioReceiver?.stop(); exoPlayerManager.stop("Desconexión"); webRtcReceiver.resetConnection(); receiverState.value = ReceiverUiState.Standby }

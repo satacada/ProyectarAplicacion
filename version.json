@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 139,
-  "versionCodeReceiver": 122,
-  "versionName": "3.32.94",
-  "releaseTag": "v3.32.94",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.94/omnicast-sender-v3.32.94.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.94/omnicast-receiver-v3.32.94.apk",
-  "changelog": "v3.32.94: Reproductor web HTML5 nativo en WebView (TvWebStreamScreen) para TV Box con stack Chromium, Hls.js y preservación de cabeceras Referer/Origin para eludir bloqueos HTTP 403 en streams firmados (DropCDN, Fastream, HLS)."
+  "versionCodeSender": 140,
+  "versionCodeReceiver": 123,
+  "versionName": "3.32.95",
+  "releaseTag": "v3.32.95",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.95/omnicast-sender-v3.32.95.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.95/omnicast-receiver-v3.32.95.apk",
+  "changelog": "v3.32.95: Soporte completo de Zoom TV (FIT, 85%, 75%, 115%, 130%, 16:9 Fill) y ajuste de proporción de pantalla en el receptor web HTML5 (TvWebStreamScreen) desde el móvil y mando de TV."
 }

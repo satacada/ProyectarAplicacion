@@ -54,8 +54,7 @@ private object WebPlayerAssetHelper {
 
 /**
  * Reproductor Web HTML5 / Chromium para TV Box.
- * Ejecuta flujos web protegidos con tokens de seguridad (DropCDN, Fastream, HLS)
- * dentro del stack de red nativo de Chromium sin riesgo de HTTP 403.
+ * Soporta control de reproducción remoto y ajuste de proporción / Zoom TV.
  */
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
@@ -66,16 +65,30 @@ fun TvWebStreamScreen(
     startPositionMs: Long = 0L,
     timestamp: Long = 0L,
     commandFlow: Flow<SignalingMessage.PlayControl>? = null,
+    displayMode: SignalingMessage.SetDisplayMode? = null,
     onPlaybackStatus: ((posMs: Long, durMs: Long, isPlaying: Boolean) -> Unit)? = null,
     onCloseClick: () -> Unit = {}
 ) {
     var showBanner by remember(streamUrl, timestamp) { mutableStateOf(true) }
+    var zoomBadgeText by remember { mutableStateOf<String?>(null) }
+    var showZoomBadge by remember { mutableStateOf(false) }
     var customView by remember(streamUrl, timestamp) { mutableStateOf<View?>(null) }
     var webViewRef by remember(streamUrl, timestamp) { mutableStateOf<WebView?>(null) }
 
-    LaunchedEffect(streamUrl, timestamp) {
-        delay(4000)
-        showBanner = false
+    LaunchedEffect(streamUrl, timestamp) { delay(4000); showBanner = false }
+
+    LaunchedEffect(displayMode, webViewRef) {
+        val dm = displayMode ?: return@LaunchedEffect
+        val wv = webViewRef ?: return@LaunchedEffect
+        wv.evaluateJavascript("setDisplayMode('${dm.mode}', ${dm.zoom}, ${dm.panY});", null)
+        zoomBadgeText = when {
+            dm.mode == "FILL" || dm.mode == "EXTEND_16_9" -> "📺 Escala: 16:9 (Llenar Pantalla)"
+            dm.mode == "FIT" -> "📱 Escala: Original Fit (100%)"
+            else -> "🔍 Zoom TV: ${(dm.zoom * 100).toInt()}%"
+        }
+        showZoomBadge = true
+        delay(2200)
+        showZoomBadge = false
     }
 
     LaunchedEffect(commandFlow, webViewRef) {
@@ -85,19 +98,11 @@ fun TvWebStreamScreen(
                 "PLAY" -> wv.evaluateJavascript("playStream();", null)
                 "PAUSE" -> wv.evaluateJavascript("pauseStream();", null)
                 "TOGGLE_PLAY" -> wv.evaluateJavascript("togglePlay();", null)
-                "SEEK" -> {
-                    val sec = msg.positionMs / 1000.0
-                    wv.evaluateJavascript("seekTo($sec);", null)
-                }
-                "SEEK_REL" -> {
-                    val secDelta = msg.positionMs / 1000.0
-                    wv.evaluateJavascript("seekRel($secDelta);", null)
-                }
-                "VOLUME" -> {
-                    val vol = msg.volume.coerceIn(0f, 1f)
-                    wv.evaluateJavascript("setVolume($vol);", null)
-                }
+                "SEEK" -> wv.evaluateJavascript("seekTo(${msg.positionMs / 1000.0});", null)
+                "SEEK_REL" -> wv.evaluateJavascript("seekRel(${msg.positionMs / 1000.0});", null)
+                "VOLUME" -> wv.evaluateJavascript("setVolume(${msg.volume.coerceIn(0f, 1f)});", null)
                 "STOP" -> wv.evaluateJavascript("stopStream();", null)
+                "CYCLE_ZOOM" -> wv.evaluateJavascript("cycleZoom();", null)
             }
         }
     }
@@ -105,14 +110,9 @@ fun TvWebStreamScreen(
     Box(modifier = Modifier.fillMaxSize().background(Color.Black), contentAlignment = Alignment.Center) {
         IconButton(
             onClick = onCloseClick,
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .padding(start = 24.dp, top = 24.dp)
-                .size(38.dp)
+            modifier = Modifier.align(Alignment.TopStart).padding(start = 24.dp, top = 24.dp).size(38.dp)
                 .background(Color(0x990F172A), RoundedCornerShape(10.dp))
-        ) {
-            ModernExitIcon()
-        }
+        ) { ModernExitIcon() }
 
         if (customView != null) {
             AndroidView(factory = { customView!! }, modifier = Modifier.fillMaxSize())
@@ -143,8 +143,7 @@ fun TvWebStreamScreen(
                             val safeUrl = streamUrl.replace("\\", "\\\\").replace("\"", "\\\"")
                             val startSec = (startPositionMs / 1000.0).coerceAtLeast(0.0)
                             val baseUrl = headers["Referer"]?.takeIf { it.isNotBlank() } ?: try {
-                                val uri = Uri.parse(streamUrl)
-                                "${uri.scheme}://${uri.host}/"
+                                val uri = Uri.parse(streamUrl); "${uri.scheme}://${uri.host}/"
                             } catch (_: Throwable) { "https://omnicast.tv" }
 
                             val html = """
@@ -155,7 +154,7 @@ fun TvWebStreamScreen(
                                 <style>
                                   * { margin:0; padding:0; box-sizing:border-box; }
                                   html, body { width:100vw; height:100vh; overflow:hidden; background:#000; }
-                                  video { width:100vw; height:100vh; object-fit:contain; background:#000; border:none; outline:none; }
+                                  video { width:100vw; height:100vh; object-fit:contain; background:#000; border:none; outline:none; transition:transform 0.2s ease, object-fit 0.2s ease; }
                                 </style>
                                 <script>$hlsCode</script>
                                 </head>
@@ -183,8 +182,7 @@ fun TvWebStreamScreen(
 
                                     function seekStart() {
                                       if (startSec > 0 && !hasResumed && vid) {
-                                        hasResumed = true;
-                                        vid.currentTime = startSec;
+                                        hasResumed = true; vid.currentTime = startSec;
                                       }
                                     }
                                     vid.addEventListener('loadedmetadata', seekStart);
@@ -204,17 +202,11 @@ fun TvWebStreamScreen(
                                           }
                                         });
                                       } else {
-                                        vid.src = streamUrl;
-                                        vid.play().catch(function(){});
+                                        vid.src = streamUrl; vid.play().catch(function(){});
                                       }
                                     }
 
-                                    if (streamUrl.indexOf('.m3u8') !== -1) {
-                                      initHls();
-                                    } else {
-                                      vid.src = streamUrl;
-                                      vid.play().catch(function(){});
-                                    }
+                                    if (streamUrl.indexOf('.m3u8') !== -1) initHls(); else { vid.src = streamUrl; vid.play().catch(function(){}); }
 
                                     function playStream() { if (vid) vid.play().catch(function(){}); }
                                     function pauseStream() { if (vid) vid.pause(); }
@@ -223,6 +215,30 @@ fun TvWebStreamScreen(
                                     function seekRel(d) { if (vid) vid.currentTime = Math.max(0, (vid.currentTime || 0) + d); }
                                     function setVolume(v) { if (vid) vid.volume = Math.max(0, Math.min(1, v)); }
                                     function stopStream() { if (vid) { vid.pause(); vid.removeAttribute('src'); vid.load(); } }
+
+                                    function setDisplayMode(mode, zoom, panY) {
+                                      if (!vid) return;
+                                      if (mode === 'FILL' || mode === 'EXTEND_16_9') {
+                                        vid.style.objectFit = 'fill'; vid.style.transform = 'scale(1.0)';
+                                      } else if (mode === 'FIT') {
+                                        vid.style.objectFit = 'contain'; vid.style.transform = 'scale(1.0)';
+                                      } else {
+                                        vid.style.objectFit = 'contain';
+                                        var z = zoom || 1.0;
+                                        var py = panY || 0;
+                                        vid.style.transform = 'scale(' + z + ') translateY(' + py + 'px)';
+                                      }
+                                    }
+
+                                    var zoomLevels = ['FIT', '1.15', '1.30', '0.85', '0.75', 'FILL'];
+                                    var zoomIdx = 0;
+                                    function cycleZoom() {
+                                      zoomIdx = (zoomIdx + 1) % zoomLevels.length;
+                                      var z = zoomLevels[zoomIdx];
+                                      if (z === 'FIT') setDisplayMode('FIT', 1.0, 0);
+                                      else if (z === 'FILL') setDisplayMode('FILL', 1.0, 0);
+                                      else setDisplayMode('ZOOM', parseFloat(z), 0);
+                                    }
 
                                     setInterval(reportStatus, 1000);
                                   </script>
@@ -235,12 +251,8 @@ fun TvWebStreamScreen(
                     onRelease = { webView ->
                         try {
                             if (webViewRef == webView) webViewRef = null
-                            webView.stopLoading()
-                            webView.evaluateJavascript("stopStream();", null)
-                            webView.loadUrl("about:blank")
-                            webView.clearHistory()
-                            webView.removeAllViews()
-                            webView.destroy()
+                            webView.stopLoading(); webView.evaluateJavascript("stopStream();", null)
+                            webView.loadUrl("about:blank"); webView.clearHistory(); webView.removeAllViews(); webView.destroy()
                         } catch (_: Throwable) {}
                     },
                     modifier = Modifier.fillMaxSize()
@@ -249,18 +261,23 @@ fun TvWebStreamScreen(
         }
 
         AnimatedVisibility(
-            visible = showBanner,
-            exit = fadeOut(),
+            visible = showBanner, exit = fadeOut(),
             modifier = Modifier.align(Alignment.TopCenter).padding(top = 28.dp)
         ) {
-            Card(
-                colors = CardDefaults.cardColors(containerColor = Color(0xDD0F172A)),
-                shape = RoundedCornerShape(12.dp)
-            ) {
+            Card(colors = CardDefaults.cardColors(containerColor = Color(0xDD0F172A)), shape = RoundedCornerShape(12.dp)) {
                 Column(modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(text = "OmniCast Web Player", color = Color(0xFF38BDF8), fontSize = 12.sp, fontWeight = FontWeight.Bold)
                     Text(text = title, color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
+            }
+        }
+
+        AnimatedVisibility(
+            visible = showZoomBadge && zoomBadgeText != null, exit = fadeOut(),
+            modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 32.dp)
+        ) {
+            Card(colors = CardDefaults.cardColors(containerColor = Color(0xEE0F172A)), shape = RoundedCornerShape(10.dp)) {
+                Text(text = zoomBadgeText ?: "", color = Color(0xFF38BDF8), fontSize = 14.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp))
             }
         }
     }

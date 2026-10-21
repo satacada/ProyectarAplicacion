@@ -145,6 +145,10 @@ object TvRemoteKeyHandler {
                         Toast.makeText(context, "⏪ -10s", Toast.LENGTH_SHORT).show()
                         return true
                     }
+                    KeyEvent.KEYCODE_MENU -> {
+                        youTubeControlFlow.tryEmit(SignalingMessage.PlayControl("CYCLE_ZOOM"))
+                        return true
+                    }
                 }
             }
             is ReceiverUiState.ScreenMirroring -> {

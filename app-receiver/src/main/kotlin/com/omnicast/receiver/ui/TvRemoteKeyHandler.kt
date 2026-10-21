@@ -128,6 +128,25 @@ object TvRemoteKeyHandler {
                     }
                 }
             }
+            is ReceiverUiState.WebStreamPlaying -> {
+                when (keyCode) {
+                    KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER,
+                    KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE, KeyEvent.KEYCODE_MEDIA_PLAY, KeyEvent.KEYCODE_MEDIA_PAUSE -> {
+                        youTubeControlFlow.tryEmit(SignalingMessage.PlayControl("TOGGLE_PLAY"))
+                        return true
+                    }
+                    KeyEvent.KEYCODE_DPAD_RIGHT, KeyEvent.KEYCODE_MEDIA_FAST_FORWARD -> {
+                        youTubeControlFlow.tryEmit(SignalingMessage.PlayControl("SEEK_REL", 10_000L))
+                        Toast.makeText(context, "⏩ +10s", Toast.LENGTH_SHORT).show()
+                        return true
+                    }
+                    KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.KEYCODE_MEDIA_REWIND -> {
+                        youTubeControlFlow.tryEmit(SignalingMessage.PlayControl("SEEK_REL", -10_000L))
+                        Toast.makeText(context, "⏪ -10s", Toast.LENGTH_SHORT).show()
+                        return true
+                    }
+                }
+            }
             is ReceiverUiState.ScreenMirroring -> {
                 if (keyCode == KeyEvent.KEYCODE_DPAD_CENTER || keyCode == KeyEvent.KEYCODE_ENTER || keyCode == KeyEvent.KEYCODE_MENU) {
                     val mode = webRtcReceiver.toggleScalingType()

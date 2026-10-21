@@ -23,6 +23,7 @@ references/decompiled/
 *.py
 *.ps1
 !app-sender/src/main/assets/**
+!app-receiver/src/main/assets/**
 !scripts/**
 !supabase/**
 

@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 137,
-  "versionCodeReceiver": 120,
-  "versionName": "3.32.92",
-  "releaseTag": "v3.32.92",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.92/omnicast-sender-v3.32.92.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.92/omnicast-receiver-v3.32.92.apk",
-  "changelog": "v3.32.92: Eliminación de la X de la barra superior; opción 'Salir de la aplicación' en menú de 3 puntos que cierra navegador y app por completo; bloqueo de anuncio subduepaler; DropCDN directo y 3 opciones garantizadas."
+  "versionCodeSender": 138,
+  "versionCodeReceiver": 121,
+  "versionName": "3.32.93",
+  "releaseTag": "v3.32.93",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.93/omnicast-sender-v3.32.93.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.93/omnicast-receiver-v3.32.93.apk",
+  "changelog": "v3.32.93: Patrón heurístico universal hasSignedSecurityToken en core domain y sender; erradicación de dominios en duro y omisión de sondas invasivas para preservar tokens firmados intactos."
 }

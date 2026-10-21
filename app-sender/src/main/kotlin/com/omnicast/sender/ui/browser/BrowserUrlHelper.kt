@@ -144,4 +144,6 @@ object BrowserUrlHelper {
             "https://www.google.com/search?q=${java.net.URLEncoder.encode(trimmed, "UTF-8")}"
         }
     }
+
+    fun hasSignedSecurityToken(url: String): Boolean = com.omnicast.core.domain.usecases.StreamManifestProbe.hasSignedSecurityToken(url)
 }

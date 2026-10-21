@@ -43,6 +43,21 @@ object StreamManifestProbe {
         return url
     }
 
+    fun hasSignedSecurityToken(url: String): Boolean {
+        val query = url.substringAfter('?', "")
+        if (query.isBlank()) return false
+        val params = query.split('&').map { it.substringBefore('=') to it.substringAfter('=', "") }
+        val hasToken = params.any { (k, v) ->
+            k.lowercase() in setOf("t", "token", "sig", "signature", "hash", "h", "st", "sign", "hdnts", "md5", "hmac", "auth_key") &&
+            v.length >= 16
+        }
+        val hasTime = params.any { (k, v) ->
+            k.lowercase() in setOf("s", "e", "exp", "expires", "validto", "endtime", "t_expire", "sp") &&
+            v.isNotEmpty() && v.all { it.isDigit() }
+        }
+        return hasToken && hasTime
+    }
+
     fun probeAndHeal(
         streamUrl: String,
         initialHeaders: Map<String, String> = emptyMap(),
@@ -54,6 +69,11 @@ object StreamManifestProbe {
         // Los enlaces crudos de página web de YouTube no son flujos reproducibles por ExoPlayer directo
         if ((lower.contains("youtube.com/watch") || lower.contains("youtu.be/")) && !lower.contains(".m3u8") && !lower.contains("googlevideo.com")) {
             return ProbeResult(false, cleanUrl, initialHeaders, httpCode = 415)
+        }
+        if (hasSignedSecurityToken(cleanUrl)) {
+            val isLive = !cleanUrl.contains(".m3u8") || cleanUrl.contains("live", true)
+            val isMaster = cleanUrl.contains("master", true) || cleanUrl.contains("playlist", true)
+            return ProbeResult(isPlayable = true, resolvedUrl = cleanUrl, healedHeaders = initialHeaders, isLiveStream = isLive, isMasterPlaylist = isMaster, durationSeconds = 7200f)
         }
 
         val candidates = buildHeaderPermutations(cleanUrl, initialHeaders, pageUrl)

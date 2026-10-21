@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 136,
-  "versionCodeReceiver": 119,
-  "versionName": "3.32.91",
-  "releaseTag": "v3.32.91",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.91/omnicast-sender-v3.32.91.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.91/omnicast-receiver-v3.32.91.apk",
-  "changelog": "v3.32.91: Replicación idéntica de lista de videos de Web Video Caster (master, iframes-v1-a1, index-v1-a1) con formato en verde; eliminación absoluta de avisos molestos de proxy; inicio síncrono de Jetty 9.4."
+  "versionCodeSender": 137,
+  "versionCodeReceiver": 120,
+  "versionName": "3.32.92",
+  "releaseTag": "v3.32.92",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.92/omnicast-sender-v3.32.92.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.92/omnicast-receiver-v3.32.92.apk",
+  "changelog": "v3.32.92: Eliminación de la X de la barra superior; opción 'Salir de la aplicación' en menú de 3 puntos que cierra navegador y app por completo; bloqueo de anuncio subduepaler; DropCDN directo y 3 opciones garantizadas."
 }

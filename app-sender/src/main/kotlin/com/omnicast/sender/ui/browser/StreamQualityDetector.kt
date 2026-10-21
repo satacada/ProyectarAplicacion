@@ -53,22 +53,20 @@ object StreamQualityDetector {
         if (!probe.isPlayable && rawManifest.isBlank()) {
             android.util.Log.w("StreamQualityDetector", "Flujo advertido por sonda (HTTP ${probe.httpCode}): $currentMediaUrl")
             if (BrowserUrlHelper.isRealMedia(currentMediaUrl) && probe.httpCode != 404 && probe.httpCode != 410) {
-                val label = if (currentMediaUrl.contains(".mp4", ignoreCase = true)) "${prefix}Video MP4 Directo" else "${prefix}Flujo Directo (No Verificado)"
+                val isDrop = currentMediaUrl.contains("dropcdn.io", true) || currentMediaUrl.contains("dr0pstream.com", true)
+                if (isDrop && currentMediaUrl.contains("master.m3u8", true)) {
+                    val uIframe = currentMediaUrl.replace("master.m3u8", "iframes-v1-a1.m3u8")
+                    val uIndex = currentMediaUrl.replace("master.m3u8", "index-v1-a1.m3u8")
+                    return@withContext listOf(
+                        StreamQualityOption("${prefix}Película Adaptativa (Auto)", "Auto", "Adaptativa", currentMediaUrl, isMaster = true, isMovie = true, isSuggested = true, healedHeaders = safeHeaders, fileName = "master", formatDetail = "m3u8 (adaptive)"),
+                        StreamQualityOption("${prefix}I-Frames (1920x816)", "1920x816", "I-Frame", uIframe, isMaster = false, isMovie = true, isSuggested = false, healedHeaders = safeHeaders, fileName = "iframes-v1-a1", formatDetail = "m3u8 (1920x816)"),
+                        StreamQualityOption("${prefix}1080p Full HD", "1080p", "Full HD", uIndex, isMaster = false, isMovie = true, isSuggested = false, healedHeaders = safeHeaders, fileName = "index-v1-a1", formatDetail = "m3u8 (1920x816)")
+                    )
+                }
+                val label = if (currentMediaUrl.contains(".mp4", ignoreCase = true)) "${prefix}Video MP4 Directo" else "${prefix}Flujo Directo"
                 val defName = extractFileName(currentMediaUrl, "master")
                 val defFmt = if (currentMediaUrl.contains(".mp4", true)) "mp4 (Directo)" else "m3u8 (adaptive)"
-                return@withContext listOf(
-                    StreamQualityOption(
-                        label = label,
-                        resolution = "Auto",
-                        bitrate = "Original",
-                        streamUrl = currentMediaUrl,
-                        isMovie = false,
-                        isSuggested = false,
-                        healedHeaders = safeHeaders,
-                        fileName = defName,
-                        formatDetail = defFmt
-                    )
-                )
+                return@withContext listOf(StreamQualityOption(label, "Auto", "Original", currentMediaUrl, isMovie = false, isSuggested = false, healedHeaders = safeHeaders, fileName = defName, formatDetail = defFmt))
             }
             return@withContext emptyList()
         }

@@ -63,7 +63,8 @@ fun BrowserTopBar(
     onOpenHistory: () -> Unit = {},
     onOpenPlaylists: () -> Unit = {},
     onOpenDrawer: () -> Unit = {},
-    onOpenWhitelist: () -> Unit = {}
+    onOpenWhitelist: () -> Unit = {},
+    onExitApp: () -> Unit = {}
 ) {
     val focusManager = LocalFocusManager.current
     var showMenu by remember { mutableStateOf(false) }
@@ -87,9 +88,6 @@ fun BrowserTopBar(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(2.dp)
         ) {
-            IconButton(onClick = onClose, modifier = Modifier.size(26.dp)) {
-                Icon(Icons.Rounded.Close, contentDescription = "Cerrar", tint = Color(0xFFCBD5E1), modifier = Modifier.size(17.dp))
-            }
             IconButton(onClick = onOpenDrawer, modifier = Modifier.size(26.dp)) {
                 Icon(Icons.Rounded.Menu, contentDescription = "Menú", tint = Color(0xFF94A3B8), modifier = Modifier.size(16.dp))
             }
@@ -243,8 +241,8 @@ fun BrowserTopBar(
                     )
                     HorizontalDivider(color = Color(0xFF334155))
                     DropdownMenuItem(
-                        text = { Text("✕ Cerrar Navegador", color = Color(0xFFCBD5E1)) },
-                        onClick = { onClose(); showMenu = false }
+                        text = { Text("🚪 Salir de la aplicación", color = Color(0xFFF87171), fontWeight = FontWeight.Bold) },
+                        onClick = { onExitApp(); showMenu = false }
                     )
                     DropdownMenuItem(
                         text = { Text("🗑 Limpiar caché y datos", color = Color(0xFFF87171)) },

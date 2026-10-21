@@ -93,16 +93,17 @@ fun InAppBrowserScreen(
     }
 
     fun registerStream(url: String, hdrs: Map<String, String>, isPrimary: Boolean = false, label: String? = null) {
-        if (url.isBlank() || AdBlocker.isAd(url) || !isRealMedia(url) || BrowserUrlHelper.extractYouTubeId(url) != null) return
-        if (detectedStreams.contains(url)) detectedStreams.remove(url)
-        val isM = isPrimary || url.contains("master", true) || url.contains("playlist", true)
+        val cleanUrl = BrowserUrlHelper.sanitizeMediaUrl(url)
+        if (cleanUrl.isBlank() || AdBlocker.isAd(cleanUrl) || AdBlocker.isVideoAd(cleanUrl) || !isRealMedia(cleanUrl) || BrowserUrlHelper.extractYouTubeId(cleanUrl) != null) return
+        if (detectedStreams.contains(cleanUrl)) detectedStreams.remove(cleanUrl)
+        val isM = isPrimary || cleanUrl.contains("master", true) || cleanUrl.contains("playlist", true)
         val nonM = detectedStreams.indexOfFirst { !it.contains("master", true) && !it.contains("playlist", true) }
-        if (isM) detectedStreams.add(0, url) else if (nonM >= 0) detectedStreams.add(nonM, url) else detectedStreams.add(url)
-        if (hdrs.isNotEmpty()) streamHeaders[url] = hdrs; if (!label.isNullOrBlank()) streamLabels[url] = label
-        val primaryUrl = detectedStreams.firstOrNull { it.contains("master", true) } ?: detectedStreams.firstOrNull { isRealMedia(it) } ?: url
+        if (isM) detectedStreams.add(0, cleanUrl) else if (nonM >= 0) detectedStreams.add(nonM, cleanUrl) else detectedStreams.add(cleanUrl)
+        if (hdrs.isNotEmpty()) streamHeaders[cleanUrl] = hdrs; if (!label.isNullOrBlank()) streamLabels[cleanUrl] = label
+        val primaryUrl = detectedStreams.firstOrNull { it.contains("master", true) } ?: detectedStreams.firstOrNull { isRealMedia(it) } ?: cleanUrl
         val cleanT = if (pageTitle.isNotBlank() && pageTitle != "Cargando..." && pageTitle != "Transmisión") pageTitle else "Video Web"
         ActiveStreamHolder.update(primaryUrl, cleanT, streamHeaders[primaryUrl] ?: hdrs)
-        android.util.Log.i("StreamDetection", "🎬 Flujo registrado [isMaster=$isM]: $url")
+        android.util.Log.i("StreamDetection", "🎬 Flujo registrado [isMaster=$isM]: $cleanUrl")
         if (!showOptionsSheet && !isCasting && userDismissedSheetForUrl != currentUrl) {
             autoOpenJob?.cancel()
             autoOpenJob = scope.launch {
@@ -197,7 +198,8 @@ fun InAppBrowserScreen(
                 },
                 detectedStreamsCount = detectedStreams.count { isRealMedia(it) }, onToggleBottomControls = { showBottomControls = !showBottomControls },
                 onOpenDetectedVideos = { openOptionsSheet() }, isCasting = isCasting, isPlaying = isPlaying, showBottomControls = showBottomControls,
-                onOpenHistory = { showSideDrawer = true }, onOpenPlaylists = { showSideDrawer = true }, onOpenDrawer = { showSideDrawer = true }, onOpenWhitelist = { showWhitelistDialog = true }
+                onOpenHistory = { showSideDrawer = true }, onOpenPlaylists = { showSideDrawer = true }, onOpenDrawer = { showSideDrawer = true }, onOpenWhitelist = { showWhitelistDialog = true },
+                onExitApp = { SenderMainActivity.exitCompletely(context) }
             )
 
             if (progress in 1..99) LinearProgressIndicator(progress = { progress / 100f }, modifier = Modifier.fillMaxWidth().height(3.dp), color = Color(0xFF38BDF8))

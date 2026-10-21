@@ -44,7 +44,13 @@ object StreamQualityDetector {
 
         // Sonda Pre-Cast + Auto-Reparador de Cabeceras (4 permutaciones deterministas)
         val probe = StreamManifestProbe.probeAndHeal(currentMediaUrl, safeHeaders, pageUrl)
-        if (!probe.isPlayable) {
+        val rawManifest = if (probe.isPlayable && probe.manifestContent.isNotBlank()) {
+            probe.manifestContent
+        } else {
+            com.omnicast.sender.media.LocalStreamProxyServer.fetchManifestContent(currentMediaUrl, safeHeaders) ?: probe.manifestContent
+        }
+
+        if (!probe.isPlayable && rawManifest.isBlank()) {
             android.util.Log.w("StreamQualityDetector", "Flujo advertido por sonda (HTTP ${probe.httpCode}): $currentMediaUrl")
             if (BrowserUrlHelper.isRealMedia(currentMediaUrl) && probe.httpCode != 404 && probe.httpCode != 410) {
                 val label = if (currentMediaUrl.contains(".mp4", ignoreCase = true)) "${prefix}Video MP4 Directo" else "${prefix}Flujo Directo (No Verificado)"
@@ -67,7 +73,8 @@ object StreamQualityDetector {
             return@withContext emptyList()
         }
 
-        val healed = probe.healedHeaders
+        val healed = if (probe.healedHeaders.isNotEmpty()) probe.healedHeaders else safeHeaders
+        val isMasterPl = probe.isMasterPlaylist || rawManifest.contains("#EXT-X-STREAM-INF:")
         val defaultMasterName = extractFileName(currentMediaUrl, if (probe.isLiveStream) "stream" else "master")
         val masterFormat = when {
             probe.isLiveStream -> "m3u8 (en vivo)"
@@ -75,7 +82,7 @@ object StreamQualityDetector {
             currentMediaUrl.contains(".mp4", true) -> "mp4 (Directo)"
             else -> "m3u8 (adaptive)"
         }
-        if (probe.manifestContent.isBlank()) {
+        if (rawManifest.isBlank()) {
             val label = if (currentMediaUrl.contains(".mp4", ignoreCase = true)) "${prefix}Video MP4 Directo" else "${prefix}Flujo Directo"
             return@withContext listOf(
                 StreamQualityOption(
@@ -93,7 +100,7 @@ object StreamQualityDetector {
         }
 
         val options = mutableListOf<StreamQualityOption>()
-        val isMovie = probe.isMasterPlaylist || probe.durationSeconds >= 300f || probe.isLiveStream
+        val isMovie = isMasterPl || probe.durationSeconds >= 300f || probe.isLiveStream
         val mainBadge = when {
             probe.isLiveStream -> "${prefix}Stream en Vivo"
             probe.durationSeconds in 1f..180f -> "${prefix}Tráiler / Clip (${probe.durationSeconds.toInt()}s)"
@@ -104,9 +111,9 @@ object StreamQualityDetector {
         val subList = mutableListOf<String>()
 
         try {
-            val baseUri = URI(probe.resolvedUrl)
+            val baseUri = URI(if (probe.resolvedUrl.isNotBlank()) probe.resolvedUrl else currentMediaUrl)
             var pendingInf: String? = null
-            for (rawLine in probe.manifestContent.lineSequence()) {
+            for (rawLine in rawManifest.lineSequence()) {
                 val trimmed = rawLine.trim()
                 if (trimmed.startsWith("#EXT-X-STREAM-INF:")) {
                     pendingInf = trimmed

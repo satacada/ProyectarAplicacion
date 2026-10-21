@@ -78,10 +78,8 @@ object LocalStreamProxyServer {
         }
     }
 
-    fun startAndGetProxyUrl(context: Context, originalUrl: String, headers: Map<String, String>): String {
-        start(context)
+    fun enrichProxyHeaders(originalUrl: String, headers: Map<String, String>): Map<String, String> {
         val cleanUrl = BrowserUrlHelper.sanitizeMediaUrl(originalUrl)
-        val sid = Integer.toHexString(cleanUrl.hashCode())
         val mutableHeaders = headers.toMutableMap()
         if (!mutableHeaders.containsKey("User-Agent")) mutableHeaders["User-Agent"] = DEFAULT_UA
         val id = MediaPlatformResolver.extractFastreamId(cleanUrl)
@@ -104,12 +102,13 @@ object LocalStreamProxyServer {
         if (!mutableHeaders.containsKey("Sec-Fetch-Dest")) mutableHeaders["Sec-Fetch-Dest"] = "empty"
         if (!mutableHeaders.containsKey("Accept")) mutableHeaders["Accept"] = "*/*"
         try {
-            val c1 = CookieManager.getInstance().getCookie(cleanUrl)
-            val c2 = mutableHeaders["Referer"]?.let { CookieManager.getInstance().getCookie(it) }
-            val c3 = mutableHeaders["Origin"]?.let { CookieManager.getInstance().getCookie(it) }
-            val c4 = CookieManager.getInstance().getCookie("https://dr0pstream.com")
-            val c5 = CookieManager.getInstance().getCookie("https://dropcdn.io")
-            val c6 = CookieManager.getInstance().getCookie("https://fastream.to")
+            val cm = CookieManager.getInstance()
+            val c1 = cm?.getCookie(cleanUrl)
+            val c2 = mutableHeaders["Referer"]?.let { cm?.getCookie(it) }
+            val c3 = mutableHeaders["Origin"]?.let { cm?.getCookie(it) }
+            val c4 = cm?.getCookie("https://dr0pstream.com")
+            val c5 = cm?.getCookie("https://dropcdn.io")
+            val c6 = cm?.getCookie("https://fastream.to")
             val mergedCookies = listOfNotNull(c1, c2, c3, c4, c5, c6, mutableHeaders["Cookie"])
                 .flatMap { it.split("; ") }
                 .map { it.trim() }
@@ -118,8 +117,27 @@ object LocalStreamProxyServer {
                 .joinToString("; ")
             if (mergedCookies.isNotBlank()) mutableHeaders["Cookie"] = mergedCookies
         } catch (_: Throwable) {}
+        return mutableHeaders
+    }
 
-        sessions[sid] = ProxySession(cleanUrl, mutableHeaders)
+    fun fetchManifestContent(targetUrl: String, headers: Map<String, String>): String? {
+        val cleanUrl = BrowserUrlHelper.sanitizeMediaUrl(targetUrl)
+        val enriched = enrichProxyHeaders(cleanUrl, headers)
+        val reqBuilder = OkHttpRequest.Builder().url(cleanUrl).get()
+        enriched.forEach { (k, v) -> reqBuilder.header(k, v) }
+        return try {
+            httpClient.newCall(reqBuilder.build()).execute().use { resp ->
+                if (resp.isSuccessful) resp.body?.string() else null
+            }
+        } catch (_: Throwable) { null }
+    }
+
+    fun startAndGetProxyUrl(context: Context, originalUrl: String, headers: Map<String, String>): String {
+        start(context)
+        val cleanUrl = BrowserUrlHelper.sanitizeMediaUrl(originalUrl)
+        val sid = Integer.toHexString(cleanUrl.hashCode())
+        val enriched = enrichProxyHeaders(cleanUrl, headers)
+        sessions[sid] = ProxySession(cleanUrl, enriched)
         val ip = LocalImageServer.getLocalIpAddress()
         val isHls = cleanUrl.contains(".m3u8", ignoreCase = true) || cleanUrl.contains("/hls", ignoreCase = true)
         val endpoint = if (isHls) "master.m3u8" else "video.mp4"

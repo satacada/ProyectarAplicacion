@@ -165,12 +165,10 @@ class SenderMainActivity : ComponentActivity() {
                 if (!isFinishing && !isDestroyed) Toast.makeText(this@SenderMainActivity, "🟢 Conectado con TV ($ipAddress)", Toast.LENGTH_SHORT).show()
             }, {
                 isTvConnected.value = false; Log.w("TvConnection", "🔴 Desconectado de TV: $ipAddress:$port")
-                ActiveStreamHolder.stopCasting(); com.omnicast.sender.service.CastMediaNotificationService.stop(this@SenderMainActivity)
-                checkInactivityAutoExit()
+                ActiveStreamHolder.stopCasting(); com.omnicast.sender.service.CastMediaNotificationService.stop(this@SenderMainActivity); checkInactivityAutoExit()
             })
         } catch (e: Throwable) {
-            isTvConnected.value = false; ActiveStreamHolder.stopCasting()
-            com.omnicast.sender.service.CastMediaNotificationService.stop(this@SenderMainActivity); checkInactivityAutoExit()
+            isTvConnected.value = false; ActiveStreamHolder.stopCasting(); com.omnicast.sender.service.CastMediaNotificationService.stop(this@SenderMainActivity); checkInactivityAutoExit()
         }
     }
 
@@ -181,34 +179,32 @@ class SenderMainActivity : ComponentActivity() {
                     val mUrl = msg.mediaUrl
                     if (msg.state == "ERROR_FORBIDDEN_403") {
                         val origUrl = ActiveStreamHolder.streamUrl
+                        val now = System.currentTimeMillis()
+                        if (now - lastProxyTime < 5000L) return@collect
+                        if (!mUrl.isNullOrBlank() && origUrl != null && !origUrl.contains(mUrl) && !mUrl.contains(origUrl)) return@collect
                         if (!ActiveStreamHolder.isProxied.value && !origUrl.isNullOrBlank()) {
+                            lastProxyTime = now
                             com.omnicast.sender.log.SenderLogger.i("SenderMain", "🛡️ HTTP 403 en TV: Recuperación automática vía Proxy Jetty...")
                             runOnUiThread { Toast.makeText(this@SenderMainActivity, "🛡️ Flujo protegido: Enrutando vía teléfono (Jetty)...", Toast.LENGTH_SHORT).show() }
                             val pUrl = com.omnicast.sender.media.LocalStreamProxyServer.startAndGetProxyUrl(this@SenderMainActivity, origUrl, ActiveStreamHolder.headers)
                             val sTitle = ActiveStreamHolder.title ?: "Transmisión Web"
                             val br = com.omnicast.sender.nativeclassifier.NativeStreamClassifier.classify(origUrl).name
                             val pMsg = SignalingMessage.DirectStreamHandoff(mediaUrl = pUrl, title = sTitle, headers = ActiveStreamHolder.headers, startPositionMs = 0L, branch = br)
-                            sendSignalingMessage(pMsg)
-                            ActiveStreamHolder.startCasting(pUrl, sTitle, ActiveStreamHolder.headers)
+                            sendSignalingMessage(pMsg); ActiveStreamHolder.startCasting(pUrl, sTitle, ActiveStreamHolder.headers)
                             return@collect
                         }
                         com.omnicast.sender.log.SenderLogger.w("SenderMain", "⚠️ HTTP 403 en TV: Flujo protegido o expirado en origen")
                         runOnUiThread { Toast.makeText(this@SenderMainActivity, "⚠️ Enlace no disponible o protegido en el servidor origen", Toast.LENGTH_SHORT).show() }
-                        ActiveStreamHolder.stopCasting(notifyTv = false)
-                        com.omnicast.sender.service.CastMediaNotificationService.stop(this@SenderMainActivity)
+                        ActiveStreamHolder.stopCasting(notifyTv = false); com.omnicast.sender.service.CastMediaNotificationService.stop(this@SenderMainActivity)
                     } else if ((msg.state == "PLAYING" || msg.state == "PAUSED") && !mUrl.isNullOrBlank()) {
                         if (!ActiveStreamHolder.isCasting.value || ActiveStreamHolder.streamUrl != mUrl) {
                             val streamTitle = msg.title?.ifBlank { "Película en TV" } ?: "Película en TV"
-                            ActiveStreamHolder.startCasting(mUrl, streamTitle, emptyMap())
-                            ActiveStreamHolder.onSendPlayControl = { act, pos, vol, par -> sendPlayControl(act, pos, vol, par) }
+                            ActiveStreamHolder.startCasting(mUrl, streamTitle, emptyMap()); ActiveStreamHolder.onSendPlayControl = { act, pos, vol, par -> sendPlayControl(act, pos, vol, par) }
                             com.omnicast.sender.service.CastMediaNotificationService.start(this@SenderMainActivity)
                         }
                     } else if (msg.state in listOf("STOPPED", "ENDED", "IDLE")) {
-                        val isRecent = (System.currentTimeMillis() - lastHandoffTime) < 3500L
-                        if (!isRecent) {
-                            ActiveStreamHolder.stopCasting(notifyTv = false)
-                            com.omnicast.sender.service.CastMediaNotificationService.stop(this@SenderMainActivity)
-                            checkInactivityAutoExit()
+                        if ((System.currentTimeMillis() - lastHandoffTime) >= 3500L) {
+                            ActiveStreamHolder.stopCasting(notifyTv = false); com.omnicast.sender.service.CastMediaNotificationService.stop(this@SenderMainActivity); checkInactivityAutoExit()
                         }
                     }
                     ActiveStreamHolder.updatePlayback(msg.state == "PLAYING", msg.positionMs, msg.durationMs)

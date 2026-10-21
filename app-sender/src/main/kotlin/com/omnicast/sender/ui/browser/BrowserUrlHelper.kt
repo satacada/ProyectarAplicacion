@@ -85,12 +85,33 @@ object BrowserUrlHelper {
         val headers = StreamIntelligenceEngine.resolveDynamicHeaders(streamUrl, currentUrl, rawHeaders).toMutableMap()
         try {
             val refererUrl = headers["Referer"] ?: currentUrl
-            val cookie = CookieManager.getInstance().getCookie(streamUrl)
-                ?: CookieManager.getInstance().getCookie(refererUrl)
-                ?: CookieManager.getInstance().getCookie(currentUrl)
-                ?: ""
-            if (cookie.isNotBlank() && !headers.containsKey("Cookie")) headers["Cookie"] = cookie
-            if (!headers.containsKey("Referer") && currentUrl.isNotBlank()) {
+            val cm = CookieManager.getInstance()
+            val c1 = cm?.getCookie(streamUrl)
+            val c2 = if (refererUrl.isNotBlank()) cm?.getCookie(refererUrl) else null
+            val c3 = if (currentUrl.isNotBlank()) cm?.getCookie(currentUrl) else null
+            val c4 = cm?.getCookie("https://dr0pstream.com")
+            val c5 = cm?.getCookie("https://dropcdn.io")
+            val c6 = cm?.getCookie("https://fastream.to")
+            val mergedCookies = listOfNotNull(c1, c2, c3, c4, c5, c6, rawHeaders?.get("Cookie"), rawHeaders?.get("cookie"))
+                .flatMap { it.split("; ") }
+                .map { it.trim() }
+                .filter { it.isNotBlank() }
+                .distinct()
+                .joinToString("; ")
+            if (mergedCookies.isNotBlank()) headers["Cookie"] = mergedCookies
+
+            val id = MediaPlatformResolver.extractFastreamId(streamUrl)
+            val isDrop = streamUrl.contains("dropcdn.io", true) || streamUrl.contains("dr0pstream.com", true)
+            val isFast = streamUrl.contains("fastream.to", true)
+            if (isDrop && id != null) {
+                headers["Referer"] = "https://dr0pstream.com/e/$id"
+                headers["Origin"] = "https://dr0pstream.com"
+                headers["Sec-Fetch-Mode"] = "cors"; headers["Sec-Fetch-Site"] = "cross-site"; headers["Sec-Fetch-Dest"] = "empty"
+            } else if (isFast && id != null) {
+                headers["Referer"] = "https://fastream.to/embed-$id.html"
+                headers["Origin"] = "https://fastream.to"
+                headers["Sec-Fetch-Mode"] = "cors"; headers["Sec-Fetch-Site"] = "cross-site"; headers["Sec-Fetch-Dest"] = "empty"
+            } else if (!headers.containsKey("Referer") && currentUrl.isNotBlank()) {
                 headers["Referer"] = currentUrl
             }
             if (!headers.containsKey("User-Agent")) headers["User-Agent"] = userAgent

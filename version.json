@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 143,
-  "versionCodeReceiver": 126,
-  "versionName": "3.32.98",
-  "releaseTag": "v3.32.98",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.98/omnicast-sender-v3.32.98.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.98/omnicast-receiver-v3.32.98.apk",
-  "changelog": "v3.32.98: Intercambio de iconos en barra superior del navegador: icono de TV para detección de flujos (con badge numérico y resaltado naranja) e icono de Play para desplegar/ocultar controles multimedia."
+  "versionCodeSender": 144,
+  "versionCodeReceiver": 127,
+  "versionName": "3.32.99",
+  "releaseTag": "v3.32.99",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.99/omnicast-sender-v3.32.99.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.99/omnicast-receiver-v3.32.99.apk",
+  "changelog": "v3.32.99: Historial y Guardadas a pantalla completa con botón cerrar y BackHandler. Filas ultra compactas con menú de 3 puntos (Proyectar, Web, Compartir, Descargar película, Eliminar). Descarga física de videos con DownloadManager nativo."
 }

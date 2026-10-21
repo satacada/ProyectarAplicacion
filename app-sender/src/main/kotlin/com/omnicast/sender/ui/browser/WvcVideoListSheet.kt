@@ -172,6 +172,7 @@ fun WvcVideoListItem(
     pageTitle: String,
     onTransmit: () -> Unit
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     var showMenu by remember { mutableStateOf(false) }
     val isLive = option.isLive
     val displayName = pageTitle.takeIf { it.isNotBlank() && it != "Cargando..." && it != "Transmisión Web" }
@@ -256,6 +257,18 @@ fun WvcVideoListItem(
                 DropdownMenuItem(
                     text = { Text("Emitir ahora", color = Color.White, maxLines = 1, overflow = TextOverflow.Ellipsis) },
                     onClick = { showMenu = false; onTransmit() }
+                )
+                DropdownMenuItem(
+                    text = { Text("⬇️ Descargar película", color = Color(0xFF10B981), maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                    onClick = {
+                        showMenu = false
+                        com.omnicast.sender.ui.utils.MediaDownloadHelper.downloadMedia(
+                            context,
+                            option.streamUrl,
+                            displayName,
+                            option.healedHeaders
+                        )
+                    }
                 )
                 if (option.audioTracksSummary.isNotBlank()) {
                     DropdownMenuItem(

@@ -44,6 +44,10 @@ fun SideMediaDrawer(
     val historyManager = remember { PlayHistoryManager(context) }
     val playlistManager = remember { PlaylistManager(context) }
 
+    androidx.activity.compose.BackHandler(enabled = isOpen) {
+        onClose()
+    }
+
     LaunchedEffect(isOpen) {
         if (isOpen) drawerState.open() else drawerState.close()
     }
@@ -58,7 +62,7 @@ fun SideMediaDrawer(
         drawerContent = {
             ModalDrawerSheet(
                 drawerContainerColor = Color(0xFF0F172A),
-                modifier = Modifier.width(320.dp).fillMaxHeight()
+                modifier = Modifier.fillMaxWidth().fillMaxHeight()
             ) {
                 DrawerSheetContent(
                     historyManager = historyManager,
@@ -96,7 +100,12 @@ private fun DrawerSheetContent(
                     Text("Historial y Guardadas", fontSize = 11.sp, color = Color(0xFF94A3B8), maxLines = 1)
                 }
             }
-            IconButton(onClick = onClose) { Icon(Icons.Rounded.Close, contentDescription = "Cerrar", tint = Color(0xFF94A3B8), modifier = Modifier.size(20.dp)) }
+            IconButton(
+                onClick = onClose,
+                modifier = Modifier.size(34.dp).background(Color(0xFF334155), androidx.compose.foundation.shape.CircleShape)
+            ) {
+                Icon(Icons.Rounded.Close, contentDescription = "Cerrar", tint = Color.White, modifier = Modifier.size(20.dp))
+            }
         }
         Spacer(modifier = Modifier.height(10.dp))
         TabRow(selectedTabIndex = selectedTab, containerColor = Color(0xFF1E293B), contentColor = Color(0xFF38BDF8)) {

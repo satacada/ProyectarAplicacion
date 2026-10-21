@@ -30,7 +30,13 @@ import com.omnicast.sender.playlist.Playlist
 import com.omnicast.sender.playlist.PlaylistManager
 import com.omnicast.sender.ui.utils.ShareUtils
 
-@OptIn(ExperimentalMaterial3Api::class)
+import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+
 @Composable
 fun SideMediaDrawer(
     isOpen: Boolean,
@@ -39,30 +45,25 @@ fun SideMediaDrawer(
     onOpenInBrowser: (url: String) -> Unit,
     content: @Composable () -> Unit
 ) {
-    val drawerState = rememberDrawerState(initialValue = if (isOpen) DrawerValue.Open else DrawerValue.Closed)
     val context = LocalContext.current
     val historyManager = remember { PlayHistoryManager(context) }
     val playlistManager = remember { PlaylistManager(context) }
 
-    androidx.activity.compose.BackHandler(enabled = isOpen) {
-        onClose()
-    }
+    Box(modifier = Modifier.fillMaxSize()) {
+        content()
 
-    LaunchedEffect(isOpen) {
-        if (isOpen) drawerState.open() else drawerState.close()
-    }
-
-    LaunchedEffect(drawerState.isOpen) {
-        if (!drawerState.isOpen && isOpen) onClose()
-    }
-
-    ModalNavigationDrawer(
-        drawerState = drawerState,
-        gesturesEnabled = false,
-        drawerContent = {
-            ModalDrawerSheet(
-                drawerContainerColor = Color(0xFF0F172A),
-                modifier = Modifier.fillMaxWidth().fillMaxHeight()
+        AnimatedVisibility(
+            visible = isOpen,
+            enter = slideInHorizontally(initialOffsetX = { -it }) + fadeIn(),
+            exit = slideOutHorizontally(targetOffsetX = { -it }) + fadeOut(),
+            modifier = Modifier.fillMaxSize()
+        ) {
+            BackHandler(enabled = isOpen) {
+                onClose()
+            }
+            Surface(
+                color = Color(0xFF0F172A),
+                modifier = Modifier.fillMaxSize()
             ) {
                 DrawerSheetContent(
                     historyManager = historyManager,
@@ -72,9 +73,8 @@ fun SideMediaDrawer(
                     onOpenInBrowser = onOpenInBrowser
                 )
             }
-        },
-        content = content
-    )
+        }
+    }
 }
 
 @Composable

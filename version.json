@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 144,
-  "versionCodeReceiver": 127,
-  "versionName": "3.32.99",
-  "releaseTag": "v3.32.99",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.99/omnicast-sender-v3.32.99.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.99/omnicast-receiver-v3.32.99.apk",
-  "changelog": "v3.32.99: Historial y Guardadas a pantalla completa con botón cerrar y BackHandler. Filas ultra compactas con menú de 3 puntos (Proyectar, Web, Compartir, Descargar película, Eliminar). Descarga física de videos con DownloadManager nativo."
+  "versionCodeSender": 145,
+  "versionCodeReceiver": 128,
+  "versionName": "3.32.100",
+  "releaseTag": "v3.32.100",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.100/omnicast-sender-v3.32.100.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.100/omnicast-receiver-v3.32.100.apk",
+  "changelog": "v3.32.100: Corrección visual definitiva del cajón de historial: erradicación de ModalNavigationDrawer reemplazado por AnimatedVisibility limpia y fluida a pantalla completa sin fugas de borde en la pantalla principal."
 }

@@ -151,10 +151,10 @@ fun BrowserTopBar(
                 ) {
                     Box(contentAlignment = Alignment.TopEnd) {
                         Icon(
-                            Icons.Rounded.Tv,
-                            contentDescription = "Controles TV",
+                            Icons.Rounded.PlayArrow,
+                            contentDescription = "Controles Multimedia",
                             tint = if (showBottomControls) Color(0xFF38BDF8) else Color(0xFF10B981),
-                            modifier = Modifier.size(18.dp)
+                            modifier = Modifier.size(19.dp)
                         )
                         Box(
                             modifier = Modifier
@@ -171,10 +171,10 @@ fun BrowserTopBar(
                     modifier = Modifier.size(26.dp)
                 ) {
                     Icon(
-                        Icons.Rounded.PlayArrow,
-                        contentDescription = "Videos",
+                        Icons.Rounded.Tv,
+                        contentDescription = "Videos Detectados",
                         tint = if (detectedStreamsCount > 0) Color(0xFFFF9800) else Color(0xFF94A3B8),
-                        modifier = Modifier.size(17.dp)
+                        modifier = Modifier.size(18.dp)
                     )
                 }
 

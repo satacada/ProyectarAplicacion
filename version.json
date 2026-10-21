@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 142,
-  "versionCodeReceiver": 125,
-  "versionName": "3.32.97",
-  "releaseTag": "v3.32.97",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.97/omnicast-sender-v3.32.97.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.97/omnicast-receiver-v3.32.97.apk",
-  "changelog": "v3.32.97: Autocompletado y replicación inteligente de selecciones web (HU-011): persistencia nativa por dominio de checkboxes, radios, desplegables y opciones de servidor/idioma."
+  "versionCodeSender": 143,
+  "versionCodeReceiver": 126,
+  "versionName": "3.32.98",
+  "releaseTag": "v3.32.98",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.98/omnicast-sender-v3.32.98.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.98/omnicast-receiver-v3.32.98.apk",
+  "changelog": "v3.32.98: Intercambio de iconos en barra superior del navegador: icono de TV para detección de flujos (con badge numérico y resaltado naranja) e icono de Play para desplegar/ocultar controles multimedia."
 }

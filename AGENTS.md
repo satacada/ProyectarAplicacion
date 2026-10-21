@@ -64,4 +64,7 @@ Este repositorio sigue el estándar abierto AGENTS.md para el desarrollo de la a
    PROHIBIDO asignar `setOnTouchListener` con `requestFocus()` al `WebView`. Chromium y el `InputMethodManager` de Android gestionan el foco y la posición del cursor de forma nativa; manipularlo en eventos táctiles reinicia la conexión IME en el índice 0 y genera escritura inversa o bloqueo del teclado virtual.
 4. **Protección de Elementos de Entrada y Dominios Oficiales en `AdBlocker`:**
    El script de limpieza y neutralización de capas NUNCA debe ejecutarse en plataformas oficiales (`dailymotion.com`, `youtube.com`, buscadores) y NUNCA debe remover elementos que contengan formularios (`form`, `input`, `textarea`, `select`).
+5. **Arquitectura Híbrida Dual y Resiliencia CDN con `TvWebStreamScreen` (HTML5/Chromium):**
+   Queda terminantemente PROHIBIDO eliminar o forzar exclusivamente `ExoPlayer` para flujos protegidos por tokens efímeros, firmas criptográficas o CDNs anti-scrape (DropCDN, Fastream, etc.). Los sockets de red de Java en ExoPlayer son rechazados con `HTTP 403 Forbidden` por inspección TLS/Fingerprint de dichas CDNs. La TV Box DEBE mantener siempre activo el receptor web HTML5 nativo (`TvWebStreamScreen` con `Hls.js`) para flujos con tokens firmados (`hasSignedSecurityToken`) y como fallback reactivo automático ante cualquier error 403 en ExoPlayer (ADR-007, HU-012).
+
 

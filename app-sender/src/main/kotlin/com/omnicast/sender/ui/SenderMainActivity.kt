@@ -185,7 +185,6 @@ class SenderMainActivity : ComponentActivity() {
                         if (!ActiveStreamHolder.isProxied.value && !origUrl.isNullOrBlank()) {
                             lastProxyTime = now
                             com.omnicast.sender.log.SenderLogger.i("SenderMain", "🛡️ HTTP 403 en TV: Recuperación automática vía Proxy Jetty...")
-                            runOnUiThread { Toast.makeText(this@SenderMainActivity, "🛡️ Flujo protegido: Enrutando vía teléfono (Jetty)...", Toast.LENGTH_SHORT).show() }
                             val pUrl = com.omnicast.sender.media.LocalStreamProxyServer.startAndGetProxyUrl(this@SenderMainActivity, origUrl, ActiveStreamHolder.headers)
                             val sTitle = ActiveStreamHolder.title ?: "Transmisión Web"
                             val br = com.omnicast.sender.nativeclassifier.NativeStreamClassifier.classify(origUrl).name
@@ -194,7 +193,6 @@ class SenderMainActivity : ComponentActivity() {
                             return@collect
                         }
                         com.omnicast.sender.log.SenderLogger.w("SenderMain", "⚠️ HTTP 403 en TV: Flujo protegido o expirado en origen")
-                        runOnUiThread { Toast.makeText(this@SenderMainActivity, "⚠️ Enlace no disponible o protegido en el servidor origen", Toast.LENGTH_SHORT).show() }
                         ActiveStreamHolder.stopCasting(notifyTv = false); com.omnicast.sender.service.CastMediaNotificationService.stop(this@SenderMainActivity)
                     } else if ((msg.state == "PLAYING" || msg.state == "PAUSED") && !mUrl.isNullOrBlank()) {
                         if (!ActiveStreamHolder.isCasting.value || ActiveStreamHolder.streamUrl != mUrl) {

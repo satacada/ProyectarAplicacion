@@ -56,25 +56,23 @@ object LocalStreamProxyServer {
     @Synchronized
     fun start(context: Context? = null) {
         if (isRunning && jettyServer?.isStarted == true) return
-        isRunning = true
-        thread(isDaemon = true, name = "JettyProxyStarter") {
-            try {
-                val pool = QueuedThreadPool(32, 8, 60000).apply { name = "JettyWorker" }
-                val server = Server(pool)
-                val connector = ServerConnector(server).apply {
-                    port = PORT
-                    reuseAddress = true
-                    idleTimeout = 30000
-                }
-                server.addConnector(connector)
-                server.handler = JettyProxyHandler()
-                server.start()
-                jettyServer = server
-                Log.i(TAG, "🟢 Servidor Eclipse Jetty 9.4 iniciado en puerto $PORT con Keep-Alive")
-            } catch (e: Throwable) {
-                isRunning = false
-                Log.e(TAG, "❌ Error al iniciar Eclipse Jetty: ${e.message}", e)
+        try {
+            val pool = QueuedThreadPool(32, 8, 60000).apply { name = "JettyWorker" }
+            val server = Server(pool)
+            val connector = ServerConnector(server).apply {
+                port = PORT
+                reuseAddress = true
+                idleTimeout = 30000
             }
+            server.addConnector(connector)
+            server.handler = JettyProxyHandler()
+            server.start()
+            jettyServer = server
+            isRunning = true
+            Log.i(TAG, "🟢 Servidor Eclipse Jetty 9.4 iniciado en puerto $PORT con Keep-Alive")
+        } catch (e: Throwable) {
+            isRunning = false
+            Log.e(TAG, "❌ Error al iniciar Eclipse Jetty: ${e.message}", e)
         }
     }
 

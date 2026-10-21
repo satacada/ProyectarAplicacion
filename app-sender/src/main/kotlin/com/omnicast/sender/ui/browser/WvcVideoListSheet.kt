@@ -234,7 +234,7 @@ fun WvcVideoListItem(
             )
             Text(
                 text = displayFormat,
-                color = Color(0xFF9E9E9E),
+                color = Color(0xFF4CAF50),
                 fontSize = 12.sp,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis

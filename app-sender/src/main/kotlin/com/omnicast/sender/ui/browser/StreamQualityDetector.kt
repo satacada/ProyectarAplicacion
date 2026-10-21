@@ -150,7 +150,28 @@ object StreamQualityDetector {
                     )
                     pendingInf = null
                 } else if (trimmed.startsWith("#EXT-X-I-FRAME-STREAM-INF:")) {
-                    // Ignorado: Los I-Frames son solo miniaturas/seek sin audio y no son películas reproducibles
+                    val uri = extractAttr(trimmed, "URI")
+                    if (!uri.isNullOrBlank()) {
+                        val resolvedUrl = try { baseUri.resolve(uri).toString() } catch (_: Exception) { uri }
+                        val res = extractAttr(trimmed, "RESOLUTION") ?: "1920x816"
+                        val vName = extractFileName(resolvedUrl, "iframes-v1-a1")
+                        options.add(
+                            StreamQualityOption(
+                                label = "${prefix}I-Frames ($res)",
+                                resolution = res,
+                                bitrate = "I-Frame",
+                                streamUrl = resolvedUrl,
+                                isMaster = false,
+                                durationSeconds = probe.durationSeconds,
+                                isMovie = isMovie,
+                                isSuggested = false,
+                                healedHeaders = healed,
+                                isLive = probe.isLiveStream,
+                                fileName = vName,
+                                formatDetail = "m3u8 ($res)"
+                            )
+                        )
+                    }
                 } else if (trimmed.startsWith("#EXT-X-MEDIA:TYPE=AUDIO")) {
                     val aName = extractAttr(trimmed, "NAME") ?: extractAttr(trimmed, "LANGUAGE")
                     if (!aName.isNullOrBlank() && !audioList.contains(aName)) audioList.add(aName)

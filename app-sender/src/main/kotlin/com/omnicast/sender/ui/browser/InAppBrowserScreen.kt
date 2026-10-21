@@ -71,24 +71,21 @@ fun InAppBrowserScreen(
             return
         }
         qualityOptions = currentStreams.map { u ->
-            val lbl = streamLabels[u]?.takeIf { it.isNotBlank() } ?: cleanTitle.take(16)
-            StreamQualityOption("▶ [$lbl] Flujo Directo", "Auto", "Original", u, isMovie = true, isSuggested = true, healedHeaders = streamHeaders[u] ?: emptyMap())
+            val vName = StreamQualityDetector.extractFileName(u, if (u.contains("master", true)) "master" else "video")
+            val isM = u.contains("master", true) || u.contains("playlist", true)
+            val fmt = when { isM -> "m3u8 (adaptive)"; u.contains(".mp4", true) -> "mp4 (Directo)"; u.contains(".mpd", true) -> "mpd (adaptive)"; else -> "m3u8" }
+            StreamQualityOption("▶ [${cleanTitle.take(16)}] $vName", "Auto", "Original", u, isMovie = true, isSuggested = isM, healedHeaders = streamHeaders[u] ?: emptyMap(), fileName = vName, formatDetail = fmt)
         }
         showOptionsSheet = true
         scope.launch {
-            val validParents = mutableSetOf<String>()
             val deep = currentStreams.flatMap { u ->
                 val opts = StreamQualityDetector.detectQualities(u, streamHeaders[u] ?: emptyMap(), cleanTitle, currentUrl)
-                if (opts.isNotEmpty()) {
-                    validParents.add(u); opts.firstOrNull()?.healedHeaders?.takeIf { it.isNotEmpty() }?.let { streamHeaders[u] = it }
-                    opts.forEach { o -> if (o.healedHeaders.isNotEmpty()) streamHeaders[o.streamUrl] = o.healedHeaders }
-                }
+                opts.forEach { o -> if (o.healedHeaders.isNotEmpty()) streamHeaders[o.streamUrl] = o.healedHeaders }
                 opts
             }
-            if (validParents.isNotEmpty()) detectedStreams.retainAll { validParents.contains(it) }
-            val finalOpts = if (deep.isNotEmpty()) deep else qualityOptions
+            val finalOpts = (qualityOptions + deep).distinctBy { it.streamUrl }
             val orderMap = currentStreams.withIndex().associate { it.value to it.index }
-            qualityOptions = finalOpts.distinctBy { it.streamUrl }.sortedWith(
+            qualityOptions = finalOpts.sortedWith(
                 compareByDescending<StreamQualityOption> { it.isMaster || it.streamUrl.contains("master", true) }
                     .thenBy { opt -> orderMap[opt.streamUrl] ?: currentStreams.indexOfFirst { opt.streamUrl.startsWith(it.substringBefore('?')) }.takeIf { it >= 0 } ?: 999 }
             )

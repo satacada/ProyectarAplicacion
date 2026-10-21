@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 133,
-  "versionCodeReceiver": 116,
-  "versionName": "3.32.88",
-  "releaseTag": "v3.32.88",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.88/omnicast-sender-v3.32.88.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.88/omnicast-receiver-v3.32.88.apk",
-  "changelog": "v3.32.88: Eliminacion estricta de archivos de subtitulos (.vtt, .srt, .sub, .ass), llaves de cifrado (.key) y fragmentos (.ts, .m4s) del extractor HLS y sniffer de red, impidiendo saturacion de listas con elementos no reproducibles en Pelisgo y sitios similares; priorizacion nativa de listas maestras (master.m3u8); icono de reproduccion superior rediseñado al estilo plano y compacto de Web Video Caster; eliminacion total del reintento forzado de proxy local en errores HTTP 403."
+  "versionCodeSender": 134,
+  "versionCodeReceiver": 117,
+  "versionName": "3.32.89",
+  "releaseTag": "v3.32.89",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.89/omnicast-sender-v3.32.89.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.89/omnicast-receiver-v3.32.89.apk",
+  "changelog": "v3.32.89: Integracion definitiva del servidor proxy HTTP local Eclipse Jetty 9.4 con pool de conexiones OkHttp y soporte persistente Keep-Alive; extension de segmentos corregida a .ts para plena compatibilidad con ExoPlayer; recuperacion transparente e instantanea ante HTTP 403 enrutando mediante el telefono con cookies y cabeceras de sesion; habilitacion de la casilla 'Emitir a traves del telefono' hacia Jetty 8092."
 }

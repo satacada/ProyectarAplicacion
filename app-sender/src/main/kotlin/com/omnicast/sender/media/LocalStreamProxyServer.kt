@@ -3,34 +3,49 @@ package com.omnicast.sender.media
 import android.content.Context
 import android.util.Log
 import android.webkit.CookieManager
-import java.io.BufferedReader
-import java.io.InputStreamReader
-import java.io.OutputStream
-import java.net.HttpURLConnection
-import java.net.ServerSocket
-import java.net.Socket
+import com.omnicast.sender.ui.browser.BrowserUrlHelper
+import com.omnicast.sender.ui.browser.MediaPlatformResolver
+import okhttp3.ConnectionPool
+import okhttp3.OkHttpClient
+import okhttp3.Request as OkHttpRequest
+import org.eclipse.jetty.server.Request
+import org.eclipse.jetty.server.Server
+import org.eclipse.jetty.server.ServerConnector
+import org.eclipse.jetty.server.handler.AbstractHandler
+import org.eclipse.jetty.util.thread.QueuedThreadPool
+import java.io.IOException
 import java.net.URI
-import java.net.URL
 import java.net.URLDecoder
 import java.net.URLEncoder
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.TimeUnit
+import javax.servlet.http.HttpServletRequest
+import javax.servlet.http.HttpServletResponse
 import kotlin.concurrent.thread
-import com.omnicast.sender.ui.browser.BrowserUrlHelper
-import com.omnicast.sender.ui.browser.MediaPlatformResolver
 
 /**
- * Proxy HTTP local ultraligero y aislado para transmisiones protegidas (Cloudflare Turnstile, DropCDN, Fastream).
- * Enruta la reproducción a través del teléfono preservando cookies y huella del navegador.
- * Cero dependencias invasivas, estricta adhesión a la Arquitectura Hexagonal.
+ * Servidor Proxy HTTP local impulsado por Eclipse Jetty 9.4 y OkHttp Connection Pooling.
+ * Provee streaming persistente (Keep-Alive), soporte de rangos parciales (HTTP 206)
+ * y reenvío fiel de cookies/cabeceras de sesión para sortear protecciones CDN (DropCDN, Fastream, Turnstile).
  */
 object LocalStreamProxyServer {
-    private const val TAG = "StreamProxy"
+    private const val TAG = "StreamProxyJetty"
     const val PORT = 8092
     private const val DEFAULT_UA = "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36"
 
-    private var serverSocket: ServerSocket? = null
-    private var isRunning = false
+    private var jettyServer: Server? = null
+    @Volatile private var isRunning = false
     private val sessions = ConcurrentHashMap<String, ProxySession>()
+
+    private val httpClient: OkHttpClient by lazy {
+        OkHttpClient.Builder()
+            .connectionPool(ConnectionPool(16, 5, TimeUnit.MINUTES))
+            .connectTimeout(10, TimeUnit.SECONDS)
+            .readTimeout(15, TimeUnit.SECONDS)
+            .followRedirects(true)
+            .followSslRedirects(true)
+            .build()
+    }
 
     data class ProxySession(
         val originalUrl: String,
@@ -38,21 +53,27 @@ object LocalStreamProxyServer {
         val createdAt: Long = System.currentTimeMillis()
     )
 
+    @Synchronized
     fun start(context: Context? = null) {
-        if (isRunning) return
+        if (isRunning && jettyServer?.isStarted == true) return
         isRunning = true
-        thread(isDaemon = true, name = "StreamProxyThread") {
+        thread(isDaemon = true, name = "JettyProxyStarter") {
             try {
-                serverSocket = ServerSocket(PORT).apply { reuseAddress = true }
-                Log.i(TAG, "Proxy HTTP de streaming iniciado en puerto $PORT")
-                while (isRunning) {
-                    val client = serverSocket?.accept() ?: break
-                    thread(isDaemon = true, name = "ProxyClientWorker") {
-                        handleClient(client)
-                    }
+                val pool = QueuedThreadPool(32, 8, 60000).apply { name = "JettyWorker" }
+                val server = Server(pool)
+                val connector = ServerConnector(server).apply {
+                    port = PORT
+                    reuseAddress = true
+                    idleTimeout = 30000
                 }
+                server.addConnector(connector)
+                server.handler = JettyProxyHandler()
+                server.start()
+                jettyServer = server
+                Log.i(TAG, "🟢 Servidor Eclipse Jetty 9.4 iniciado en puerto $PORT con Keep-Alive")
             } catch (e: Throwable) {
-                if (isRunning) Log.e(TAG, "Error en proxy socket: ${e.message}")
+                isRunning = false
+                Log.e(TAG, "❌ Error al iniciar Eclipse Jetty: ${e.message}", e)
             }
         }
     }
@@ -88,15 +109,14 @@ object LocalStreamProxyServer {
             val c3 = mutableHeaders["Origin"]?.let { CookieManager.getInstance().getCookie(it) }
             val c4 = CookieManager.getInstance().getCookie("https://dr0pstream.com")
             val c5 = CookieManager.getInstance().getCookie("https://dropcdn.io")
-            val mergedCookies = listOfNotNull(c1, c2, c3, c4, c5, mutableHeaders["Cookie"])
+            val c6 = CookieManager.getInstance().getCookie("https://fastream.to")
+            val mergedCookies = listOfNotNull(c1, c2, c3, c4, c5, c6, mutableHeaders["Cookie"])
                 .flatMap { it.split("; ") }
                 .map { it.trim() }
                 .filter { it.isNotBlank() }
                 .distinct()
                 .joinToString("; ")
-            if (mergedCookies.isNotBlank()) {
-                mutableHeaders["Cookie"] = mergedCookies
-            }
+            if (mergedCookies.isNotBlank()) mutableHeaders["Cookie"] = mergedCookies
         } catch (_: Throwable) {}
 
         sessions[sid] = ProxySession(cleanUrl, mutableHeaders)
@@ -111,156 +131,140 @@ object LocalStreamProxyServer {
         return sessions[sid]?.originalUrl
     }
 
-    private fun handleClient(client: Socket) {
-        try {
-            client.use { s ->
-                val reader = BufferedReader(InputStreamReader(s.getInputStream()))
-                val reqLine = reader.readLine() ?: return
-                val parts = reqLine.split(" ")
-                if (parts.size < 2) return
-                val pathAndQuery = parts[1]
-                var rangeHeader: String? = null
-                var headerLine = reader.readLine()
-                while (!headerLine.isNullOrEmpty()) {
-                    if (headerLine.startsWith("Range:", ignoreCase = true)) {
-                        rangeHeader = headerLine.substringAfter(":", "").trim()
-                    }
-                    headerLine = reader.readLine()
-                }
-
-                val out = s.getOutputStream()
-                val qIndex = pathAndQuery.indexOf('?')
-                val path = if (qIndex != -1) pathAndQuery.substring(0, qIndex) else pathAndQuery
-                val query = if (qIndex != -1) pathAndQuery.substring(qIndex + 1) else ""
-                val params = parseQueryParams(query)
-
-                when {
-                    path.endsWith(".m3u8", ignoreCase = true) || path.contains("manifest", ignoreCase = true) ->
-                        serveManifest(params["url"], params["sid"], out)
-                    path.startsWith("/chunk") -> serveChunk(params["url"], params["sid"], rangeHeader, out)
-                    path.startsWith("/video.mp4") -> serveDirectMedia(params["sid"], rangeHeader, out)
-                    else -> out.write("HTTP/1.1 404 Not Found\r\n\r\n".toByteArray())
-                }
-            }
-        } catch (_: Throwable) {}
-    }
-
-    private fun serveManifest(rawUrl: String?, sid: String?, out: OutputStream) {
-        val session = sid?.let { sessions[it] } ?: run {
-            out.write("HTTP/1.1 404 Session Not Found\r\n\r\n".toByteArray())
-            return
-        }
-        val targetUrl = BrowserUrlHelper.sanitizeMediaUrl(rawUrl?.let { try { URLDecoder.decode(it, "UTF-8") } catch (_: Throwable) { it } } ?: session.originalUrl)
-
-        try {
-            val conn = (URL(targetUrl).openConnection() as HttpURLConnection).apply {
-                connectTimeout = 8000; readTimeout = 12000; requestMethod = "GET"
-                session.headers.forEach { (k, v) -> setRequestProperty(k, v) }
-            }
-            if (conn.responseCode !in 200..299) {
-                out.write("HTTP/1.1 ${conn.responseCode} Upstream Error\r\n\r\n".toByteArray())
-                conn.disconnect()
+    private class JettyProxyHandler : AbstractHandler() {
+        override fun handle(target: String, baseRequest: Request, request: HttpServletRequest, response: HttpServletResponse) {
+            baseRequest.isHandled = true
+            response.setHeader("Access-Control-Allow-Origin", "*")
+            response.setHeader("Access-Control-Allow-Headers", "*")
+            response.setHeader("Access-Control-Allow-Methods", "GET, HEAD, OPTIONS")
+            if (request.method.equals("OPTIONS", ignoreCase = true)) {
+                response.status = HttpServletResponse.SC_OK
                 return
             }
 
-            val localIp = LocalImageServer.getLocalIpAddress()
-            val baseUri = URI(targetUrl)
-            val lines = conn.inputStream.bufferedReader().readLines()
-            conn.disconnect()
+            val path = target.substringBefore('?')
+            val rawUrl = request.getParameter("url")
+            val sid = request.getParameter("sid")
+            val session = sid?.let { sessions[it] }
 
-            val rewritten = StringBuilder()
-            for (line in lines) {
-                val trimmed = line.trim()
-                if (trimmed.isEmpty()) {
-                    rewritten.append("\n")
-                } else if (trimmed.startsWith("#EXT-X-KEY:") && trimmed.contains("URI=\"")) {
-                    val keyUri = trimmed.substringAfter("URI=\"").substringBefore("\"")
-                    val absKey = try { baseUri.resolve(keyUri).toString() } catch (_: Throwable) { keyUri }
-                    val proxyKey = "http://$localIp:$PORT/chunk?sid=$sid&url=${URLEncoder.encode(absKey, "UTF-8")}"
-                    rewritten.append(trimmed.replace("URI=\"$keyUri\"", "URI=\"$proxyKey\"")).append("\n")
-                } else if (trimmed.startsWith("#EXT-X-MEDIA:") && trimmed.contains("URI=\"")) {
-                    val mediaUri = trimmed.substringAfter("URI=\"").substringBefore("\"")
-                    val absMedia = try { baseUri.resolve(mediaUri).toString() } catch (_: Throwable) { mediaUri }
-                    val isSub = absMedia.contains(".m3u8", ignoreCase = true)
-                    val endpoint = if (isSub) "playlist.m3u8" else "chunk"
-                    val proxyMedia = "http://$localIp:$PORT/$endpoint?sid=$sid&url=${URLEncoder.encode(absMedia, "UTF-8")}"
-                    rewritten.append(trimmed.replace("URI=\"$mediaUri\"", "URI=\"$proxyMedia\"")).append("\n")
-                } else if (!trimmed.startsWith("#")) {
-                    val absUrl = try { baseUri.resolve(trimmed).toString() } catch (_: Throwable) { trimmed }
-                    val isSub = absUrl.contains(".m3u8", ignoreCase = true)
-                    val endpoint = if (isSub) "playlist.m3u8" else "chunk"
-                    val proxyUrl = "http://$localIp:$PORT/$endpoint?sid=$sid&url=${URLEncoder.encode(absUrl, "UTF-8")}"
-                    rewritten.append(proxyUrl).append("\n")
-                } else {
-                    rewritten.append(line).append("\n")
+            when {
+                path.endsWith(".m3u8", ignoreCase = true) || path.contains("manifest", ignoreCase = true) ->
+                    serveManifest(rawUrl, session, sid, response)
+                path.contains("/chunk", ignoreCase = true) ->
+                    serveChunk(rawUrl, session, request.getHeader("Range"), response)
+                path.startsWith("/video.mp4", ignoreCase = true) ->
+                    serveChunk(session?.originalUrl, session, request.getHeader("Range"), response)
+                else -> response.sendError(HttpServletResponse.SC_NOT_FOUND)
+            }
+        }
+
+        private fun serveManifest(rawUrl: String?, session: ProxySession?, sid: String?, response: HttpServletResponse) {
+            if (session == null && rawUrl.isNullOrBlank()) {
+                response.sendError(HttpServletResponse.SC_NOT_FOUND, "Session not found"); return
+            }
+            val targetUrl = BrowserUrlHelper.sanitizeMediaUrl(rawUrl?.let { decode(it) } ?: session?.originalUrl ?: "")
+            val reqBuilder = OkHttpRequest.Builder().url(targetUrl).get()
+            session?.headers?.forEach { (k, v) -> reqBuilder.header(k, v) }
+
+            try {
+                httpClient.newCall(reqBuilder.build()).execute().use { upstream ->
+                    if (!upstream.isSuccessful) {
+                        response.sendError(upstream.code, "Upstream error"); return
+                    }
+                    val body = upstream.body?.string() ?: ""
+                    val localIp = LocalImageServer.getLocalIpAddress()
+                    val baseUri = URI(targetUrl)
+                    val lines = body.lineSequence()
+                    val rewritten = StringBuilder()
+
+                    for (line in lines) {
+                        val trimmed = line.trim()
+                        if (trimmed.isEmpty()) {
+                            rewritten.append("\n")
+                        } else if (trimmed.startsWith("#EXT-X-KEY:") && trimmed.contains("URI=\"")) {
+                            val keyUri = trimmed.substringAfter("URI=\"").substringBefore("\"")
+                            val absKey = try { baseUri.resolve(keyUri).toString() } catch (_: Throwable) { keyUri }
+                            val proxyKey = "http://$localIp:$PORT/chunk.ts?sid=$sid&url=${encode(absKey)}"
+                            rewritten.append(trimmed.replace("URI=\"$keyUri\"", "URI=\"$proxyKey\"")).append("\n")
+                        } else if (trimmed.startsWith("#EXT-X-MEDIA:") && trimmed.contains("URI=\"")) {
+                            val mediaUri = trimmed.substringAfter("URI=\"").substringBefore("\"")
+                            val absMedia = try { baseUri.resolve(mediaUri).toString() } catch (_: Throwable) { mediaUri }
+                            val isSub = absMedia.contains(".m3u8", ignoreCase = true)
+                            val ep = if (isSub) "playlist.m3u8" else "chunk.ts"
+                            val proxyMedia = "http://$localIp:$PORT/$ep?sid=$sid&url=${encode(absMedia)}"
+                            rewritten.append(trimmed.replace("URI=\"$mediaUri\"", "URI=\"$proxyMedia\"")).append("\n")
+                        } else if (!trimmed.startsWith("#")) {
+                            val absUrl = try { baseUri.resolve(trimmed).toString() } catch (_: Throwable) { trimmed }
+                            val isSub = absUrl.contains(".m3u8", ignoreCase = true)
+                            val ep = if (isSub) "playlist.m3u8" else "chunk.ts"
+                            val proxyUrl = "http://$localIp:$PORT/$ep?sid=$sid&url=${encode(absUrl)}"
+                            rewritten.append(proxyUrl).append("\n")
+                        } else {
+                            rewritten.append(line).append("\n")
+                        }
+                    }
+
+                    val bytes = rewritten.toString().toByteArray(Charsets.UTF_8)
+                    response.status = HttpServletResponse.SC_OK
+                    response.contentType = "application/vnd.apple.mpegurl"
+                    response.setContentLength(bytes.size)
+                    response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate")
+                    response.outputStream.write(bytes)
+                    response.outputStream.flush()
                 }
+            } catch (e: Throwable) {
+                try { response.sendError(HttpServletResponse.SC_BAD_GATEWAY) } catch (_: Throwable) {}
+            }
+        }
+
+        private fun serveChunk(rawUrl: String?, session: ProxySession?, range: String?, response: HttpServletResponse) {
+            val targetUrl = BrowserUrlHelper.sanitizeMediaUrl(rawUrl?.let { decode(it) } ?: "")
+            if (targetUrl.isBlank()) {
+                response.sendError(HttpServletResponse.SC_BAD_REQUEST); return
             }
 
-            val bytes = rewritten.toString().toByteArray(Charsets.UTF_8)
-            val header = "HTTP/1.1 200 OK\r\nContent-Type: application/vnd.apple.mpegurl\r\nContent-Length: ${bytes.size}\r\nCache-Control: no-cache, no-store, must-revalidate\r\nPragma: no-cache\r\nAccess-Control-Allow-Origin: *\r\nConnection: close\r\n\r\n"
-            out.write(header.toByteArray()); out.write(bytes); out.flush()
-        } catch (e: Throwable) {
-            out.write("HTTP/1.1 502 Bad Gateway\r\n\r\n".toByteArray())
-        }
-    }
+            val reqBuilder = OkHttpRequest.Builder().url(targetUrl).get()
+            session?.headers?.forEach { (k, v) -> reqBuilder.header(k, v) }
+            if (!range.isNullOrBlank()) reqBuilder.header("Range", range)
 
-    private fun serveChunk(rawUrl: String?, sid: String?, range: String?, out: OutputStream) {
-        val targetUrl = BrowserUrlHelper.sanitizeMediaUrl(rawUrl?.let { try { URLDecoder.decode(it, "UTF-8") } catch (_: Throwable) { it } } ?: "")
-        if (targetUrl.isBlank()) {
-            out.write("HTTP/1.1 400 Bad Request\r\n\r\n".toByteArray()); return
-        }
-        val session = sid?.let { sessions[it] }
+            try {
+                httpClient.newCall(reqBuilder.build()).execute().use { upstream ->
+                    response.status = upstream.code
+                    response.contentType = upstream.header("Content-Type") ?: "video/mp2t"
+                    upstream.header("Content-Length")?.toLongOrNull()?.let { response.setContentLengthLong(it) }
+                    upstream.header("Content-Range")?.let { response.setHeader("Content-Range", it) }
+                    response.setHeader("Accept-Ranges", "bytes")
 
-        var conn: HttpURLConnection? = null
-        try {
-            conn = (URL(targetUrl).openConnection() as HttpURLConnection).apply {
-                connectTimeout = 10000; readTimeout = 15000; requestMethod = "GET"
-                session?.headers?.forEach { (k, v) -> setRequestProperty(k, v) }
-                if (!range.isNullOrBlank()) setRequestProperty("Range", range)
-            }
-            val code = conn.responseCode
-            val length = conn.contentLengthLong
-            val mime = conn.contentType ?: "video/mp2t"
-            val statusLine = if (code == 206) "HTTP/1.1 206 Partial Content" else "HTTP/1.1 200 OK"
-            val rangeResp = conn.getHeaderField("Content-Range")?.let { "Content-Range: $it\r\n" } ?: ""
-            val clHeader = if (length >= 0L) "Content-Length: $length\r\n" else ""
-
-            val header = "$statusLine\r\nContent-Type: $mime\r\n${clHeader}${rangeResp}Accept-Ranges: bytes\r\nAccess-Control-Allow-Origin: *\r\nConnection: close\r\n\r\n"
-            out.write(header.toByteArray())
-
-            conn.inputStream.use { input ->
-                val buf = ByteArray(64 * 1024)
-                var read: Int
-                while (input.read(buf).also { read = it } != -1) {
-                    out.write(buf, 0, read)
+                    upstream.body?.byteStream()?.use { input ->
+                        val buf = ByteArray(64 * 1024)
+                        var read: Int
+                        val out = response.outputStream
+                        while (input.read(buf).also { read = it } != -1) {
+                            out.write(buf, 0, read)
+                        }
+                        out.flush()
+                    }
                 }
+            } catch (_: IOException) {
+                // Client disconnection or seek (Broken pipe / Connection reset): ignore gracefully
+            } catch (e: Throwable) {
+                try { response.sendError(HttpServletResponse.SC_BAD_GATEWAY) } catch (_: Throwable) {}
             }
-            out.flush()
-        } catch (_: Throwable) {
-        } finally {
-            try { conn?.disconnect() } catch (_: Throwable) {}
         }
+
+        private fun decode(s: String): String = try { URLDecoder.decode(s, "UTF-8") } catch (_: Throwable) { s }
+        private fun encode(s: String): String = try { URLEncoder.encode(s, "UTF-8") } catch (_: Throwable) { s }
     }
 
-    private fun serveDirectMedia(sid: String?, range: String?, out: OutputStream) {
-        val session = sid?.let { sessions[it] } ?: run {
-            out.write("HTTP/1.1 404 Not Found\r\n\r\n".toByteArray()); return
-        }
-        serveChunk(session.originalUrl, sid, range, out)
-    }
-
-    private fun parseQueryParams(query: String): Map<String, String> {
-        if (query.isBlank()) return emptyMap()
-        return query.split("&").mapNotNull {
-            val idx = it.indexOf('=')
-            if (idx > 0) it.substring(0, idx) to it.substring(idx + 1) else null
-        }.toMap()
-    }
-
+    @Synchronized
     fun stop() {
         isRunning = false
-        try { serverSocket?.close() } catch (_: Throwable) {}
-        serverSocket = null
+        try {
+            jettyServer?.stop()
+            jettyServer?.destroy()
+        } catch (_: Throwable) {}
+        jettyServer = null
         sessions.clear()
+        Log.i(TAG, "⏹️ Servidor Eclipse Jetty detenido")
     }
 }

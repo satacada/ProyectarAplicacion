@@ -180,6 +180,18 @@ class SenderMainActivity : ComponentActivity() {
                 if (msg is SignalingMessage.PlaybackStatus) {
                     val mUrl = msg.mediaUrl
                     if (msg.state == "ERROR_FORBIDDEN_403") {
+                        val origUrl = ActiveStreamHolder.streamUrl
+                        if (!ActiveStreamHolder.isProxied.value && !origUrl.isNullOrBlank()) {
+                            com.omnicast.sender.log.SenderLogger.i("SenderMain", "🛡️ HTTP 403 en TV: Recuperación automática vía Proxy Jetty...")
+                            runOnUiThread { Toast.makeText(this@SenderMainActivity, "🛡️ Flujo protegido: Enrutando vía teléfono (Jetty)...", Toast.LENGTH_SHORT).show() }
+                            val pUrl = com.omnicast.sender.media.LocalStreamProxyServer.startAndGetProxyUrl(this@SenderMainActivity, origUrl, ActiveStreamHolder.headers)
+                            val sTitle = ActiveStreamHolder.title ?: "Transmisión Web"
+                            val br = com.omnicast.sender.nativeclassifier.NativeStreamClassifier.classify(origUrl).name
+                            val pMsg = SignalingMessage.DirectStreamHandoff(mediaUrl = pUrl, title = sTitle, headers = ActiveStreamHolder.headers, startPositionMs = 0L, branch = br)
+                            sendSignalingMessage(pMsg)
+                            ActiveStreamHolder.startCasting(pUrl, sTitle, ActiveStreamHolder.headers)
+                            return@collect
+                        }
                         com.omnicast.sender.log.SenderLogger.w("SenderMain", "⚠️ HTTP 403 en TV: Flujo protegido o expirado en origen")
                         runOnUiThread { Toast.makeText(this@SenderMainActivity, "⚠️ Enlace no disponible o protegido en el servidor origen", Toast.LENGTH_SHORT).show() }
                         ActiveStreamHolder.stopCasting(notifyTv = false)
@@ -237,13 +249,15 @@ class SenderMainActivity : ComponentActivity() {
         lastHandoffTime = now; lastHandoffUrl = url
         val safeTitle = title?.ifBlank { "Transmisión Web" } ?: "Transmisión Web"
         val (cleanUrl, preparedHeaders) = com.omnicast.sender.ui.browser.MediaPlatformResolver.prepareStreamForPlayback(url, headers["Referer"] ?: "", headers)
+        val isForceProxy = headers["X-Force-Proxy"] == "true" || preparedHeaders["X-Force-Proxy"] == "true"
+        val finalMediaUrl = if (isForceProxy) com.omnicast.sender.media.LocalStreamProxyServer.startAndGetProxyUrl(this, cleanUrl, preparedHeaders) else cleanUrl
         val savedPos = resumePositionMs ?: com.omnicast.sender.stream.StreamResumeManager.getPosition(this, cleanUrl).takeIf { it > 0 } ?: playlistManager.getLastPosition(cleanUrl)
-        historyManager.addOrUpdate(cleanUrl, safeTitle, headers = preparedHeaders, requiresProxy = false)
-        ActiveStreamHolder.startCasting(cleanUrl, safeTitle, preparedHeaders)
+        historyManager.addOrUpdate(cleanUrl, safeTitle, headers = preparedHeaders, requiresProxy = isForceProxy)
+        ActiveStreamHolder.startCasting(finalMediaUrl, safeTitle, preparedHeaders)
         com.omnicast.sender.service.CastMediaNotificationService.start(this)
         ActiveStreamHolder.onSendPlayControl = { act, pos, vol, par -> sendPlayControl(act, pos, vol, par) }
         val br = com.omnicast.sender.nativeclassifier.NativeStreamClassifier.classify(cleanUrl).name
-        val msg = SignalingMessage.DirectStreamHandoff(mediaUrl = cleanUrl, title = safeTitle, headers = preparedHeaders, startPositionMs = savedPos, branch = br)
+        val msg = SignalingMessage.DirectStreamHandoff(mediaUrl = finalMediaUrl, title = safeTitle, headers = preparedHeaders, startPositionMs = savedPos, branch = br)
         sendSignalingMessage(msg); com.omnicast.sender.discovery.MultiReceiverManager.broadcastToSecondary(msg, nsdScanner.discoveredDevices.value)
         val toastMsg = if (savedPos > 0L) "Reanudando en ${com.omnicast.sender.stream.StreamResumeManager.formatTime(savedPos)}" else "Enviando video a receptores..."
         Toast.makeText(this, toastMsg, Toast.LENGTH_SHORT).show()

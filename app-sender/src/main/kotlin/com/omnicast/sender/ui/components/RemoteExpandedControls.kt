@@ -119,17 +119,6 @@ fun RemoteExpandedControls(
                     ) {
                         Icon(Icons.Rounded.AspectRatio, contentDescription = "Zoom TV", tint = Color(0xFF60A5FA), modifier = Modifier.size(17.dp))
                     }
-                    if (onStop != null) {
-                        IconButton(
-                            onClick = onStop,
-                            modifier = Modifier
-                                .size(34.dp)
-                                .background(Color(0xFF2D1515), RoundedCornerShape(8.dp))
-                                .border(1.dp, Color(0xFFEF4444).copy(alpha = 0.5f), RoundedCornerShape(8.dp))
-                        ) {
-                            Icon(Icons.Rounded.Stop, contentDescription = "Detener", tint = Color(0xFFEF4444), modifier = Modifier.size(18.dp))
-                        }
-                    }
                 }
             }
         }
@@ -175,35 +164,52 @@ fun RemoteExpandedControls(
                     }
                 }
 
-                // 2. Fila de Controles de Reproducción: -10s | Replay10 | Play/Pause | Forward10 | +10s
-                Row(
+                // 2. Fila de Controles de Reproducción con Detener al final de la línea
+                Box(
                     modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
+                    contentAlignment = Alignment.Center
                 ) {
-                    Text(text = "-10s", color = Color(0xFF94A3B8), fontSize = 11.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(end = 6.dp))
-                    Box(
-                        modifier = Modifier.size(38.dp).background(Color(0xFF161F2E), CircleShape).border(1.dp, Color(0xFF26354D), CircleShape).clickable { onSkip(-10000L) },
-                        contentAlignment = Alignment.Center
-                    ) { Icon(Icons.Rounded.Replay10, contentDescription = "-10s", tint = Color(0xFFCBD5E1), modifier = Modifier.size(20.dp)) }
-
-                    Spacer(modifier = Modifier.width(16.dp))
-
-                    Box(
-                        modifier = Modifier.size(48.dp).background(Color(0xFFFF7A00), CircleShape).clickable { onPlayPause() },
-                        contentAlignment = Alignment.Center
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
                     ) {
-                        Icon(if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow, contentDescription = if (isPlaying) "Pausa" else "Reproducir", tint = Color.White, modifier = Modifier.size(24.dp))
+                        Text(text = "-10s", color = Color(0xFF94A3B8), fontSize = 11.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(end = 6.dp))
+                        Box(
+                            modifier = Modifier.size(38.dp).background(Color(0xFF161F2E), CircleShape).border(1.dp, Color(0xFF26354D), CircleShape).clickable { onSkip(-10000L) },
+                            contentAlignment = Alignment.Center
+                        ) { Icon(Icons.Rounded.Replay10, contentDescription = "-10s", tint = Color(0xFFCBD5E1), modifier = Modifier.size(20.dp)) }
+
+                        Spacer(modifier = Modifier.width(16.dp))
+
+                        Box(
+                            modifier = Modifier.size(48.dp).background(Color(0xFFFF7A00), CircleShape).clickable { onPlayPause() },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow, contentDescription = if (isPlaying) "Pausa" else "Reproducir", tint = Color.White, modifier = Modifier.size(24.dp))
+                        }
+
+                        Spacer(modifier = Modifier.width(16.dp))
+
+                        Box(
+                            modifier = Modifier.size(38.dp).background(Color(0xFF161F2E), CircleShape).border(1.dp, Color(0xFF26354D), CircleShape).clickable { onSkip(10000L) },
+                            contentAlignment = Alignment.Center
+                        ) { Icon(Icons.Rounded.Forward10, contentDescription = "+10s", tint = Color(0xFFCBD5E1), modifier = Modifier.size(20.dp)) }
+
+                        Text(text = "+10s", color = Color(0xFF94A3B8), fontSize = 11.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(start = 6.dp))
                     }
 
-                    Spacer(modifier = Modifier.width(16.dp))
-
-                    Box(
-                        modifier = Modifier.size(38.dp).background(Color(0xFF161F2E), CircleShape).border(1.dp, Color(0xFF26354D), CircleShape).clickable { onSkip(10000L) },
-                        contentAlignment = Alignment.Center
-                    ) { Icon(Icons.Rounded.Forward10, contentDescription = "+10s", tint = Color(0xFFCBD5E1), modifier = Modifier.size(20.dp)) }
-
-                    Text(text = "+10s", color = Color(0xFF94A3B8), fontSize = 11.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(start = 6.dp))
+                    if (onStop != null) {
+                        IconButton(
+                            onClick = onStop,
+                            modifier = Modifier
+                                .align(Alignment.CenterEnd)
+                                .size(34.dp)
+                                .background(Color(0xFF2D1515), RoundedCornerShape(8.dp))
+                                .border(1.dp, Color(0xFFEF4444).copy(alpha = 0.5f), RoundedCornerShape(8.dp))
+                        ) {
+                            Icon(Icons.Rounded.Stop, contentDescription = "Detener flujo", tint = Color(0xFFEF4444), modifier = Modifier.size(18.dp))
+                        }
+                    }
                 }
 
                 // 3. Fila de Volumen

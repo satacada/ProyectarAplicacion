@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 140,
-  "versionCodeReceiver": 123,
-  "versionName": "3.32.95",
-  "releaseTag": "v3.32.95",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.95/omnicast-sender-v3.32.95.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.95/omnicast-receiver-v3.32.95.apk",
-  "changelog": "v3.32.95: Soporte completo de Zoom TV (FIT, 85%, 75%, 115%, 130%, 16:9 Fill) y ajuste de proporción de pantalla en el receptor web HTML5 (TvWebStreamScreen) desde el móvil y mando de TV."
+  "versionCodeSender": 141,
+  "versionCodeReceiver": 124,
+  "versionName": "3.32.96",
+  "releaseTag": "v3.32.96",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.96/omnicast-sender-v3.32.96.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.96/omnicast-receiver-v3.32.96.apk",
+  "changelog": "v3.32.96: Reubicación del botón Detener Flujo en la barra central de reproducción alineado a la derecha con separación de controles [-10s, Play/Pausa, +10s]."
 }

@@ -83,36 +83,11 @@ fun BrowserWebView(
                 }
             }
 
-            val inputViewportScript = """
-                (function() {
-                    if (window.__omniInputFixInjected) return;
-                    window.__omniInputFixInjected = true;
-                    function fixCaret(el) {
-                        if (!el || (el.tagName !== 'INPUT' && el.tagName !== 'TEXTAREA')) return;
-                        if (!el.getAttribute('dir')) el.setAttribute('dir', 'ltr');
-                        if (el.selectionStart === 0 && el.value && el.value.length > 0) {
-                            try { var len = el.value.length; el.setSelectionRange(len, len); } catch(_) {}
-                        }
-                    }
-                    document.addEventListener('input', function(e) { fixCaret(e.target); }, true);
-                    document.addEventListener('focusin', function(e) {
-                        var el = e.target;
-                        if (!el) return;
-                        fixCaret(el);
-                        if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable) {
-                            setTimeout(function() {
-                                try { el.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'smooth' }); }
-                                catch(_) { try { el.scrollIntoView(); } catch(__) {} }
-                            }, 50);
-                        }
-                    }, true);
-                })();
-            """.trimIndent()
-
             webView.apply {
                 isFocusable = true
                 isFocusableInTouchMode = true
                 isClickable = true
+                SmartSelectionAutoCompleter.attach(this, ctx)
                 CookieManager.getInstance().setAcceptCookie(true)
                 CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
                 settings.javaScriptEnabled = true
@@ -140,7 +115,7 @@ fun BrowserWebView(
                         CookieManager.getInstance().flush()
                         u?.let { if (!it.startsWith("about:") && !it.contains("favicon")) onPageStarted(it) }
                         if (isAdBlockEnabled) v?.evaluateJavascript(AdBlocker.getAdHidingScript(), null)
-                        v?.evaluateJavascript(inputViewportScript, null)
+                        v?.evaluateJavascript(SmartSelectionAutoCompleter.getCombinedInjectionScript(), null)
                     }
 
                     override fun onPageFinished(v: WebView?, u: String?) {
@@ -150,7 +125,7 @@ fun BrowserWebView(
                         currentKnownTitle = title
                         onPageFinished(title, u)
                         if (isAdBlockEnabled) v?.evaluateJavascript(AdBlocker.getAdHidingScript(), null)
-                        v?.evaluateJavascript(inputViewportScript, null)
+                        v?.evaluateJavascript(SmartSelectionAutoCompleter.getCombinedInjectionScript(), null)
                         v?.evaluateJavascript(WvcDomSniffer.getInjectionScript(ctx), null)
                     }
 

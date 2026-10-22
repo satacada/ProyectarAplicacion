@@ -33,10 +33,7 @@ fun InAppBrowserScreen(
     val historyManager = remember { PlayHistoryManager(context) }
     val playlistManager = remember { PlaylistManager(context) }
     val prefs = remember { context.getSharedPreferences("omnicast_prefs", android.content.Context.MODE_PRIVATE) }
-    val savedLastUrl = remember { prefs.getString("saved_browser_last_url", "") ?: "" }
-    val initialIsHome = savedLastUrl.isBlank() || savedLastUrl == "about:blank"
-
-    var inputUrl by rememberSaveable { mutableStateOf(if (initialIsHome) "" else savedLastUrl) }; var currentUrl by rememberSaveable { mutableStateOf(if (initialIsHome) "" else savedLastUrl) }; var isHome by rememberSaveable { mutableStateOf(initialIsHome) }
+    var inputUrl by rememberSaveable { mutableStateOf("") }; var currentUrl by rememberSaveable { mutableStateOf("") }; var isHome by rememberSaveable { mutableStateOf(true) }
     var pageTitle by rememberSaveable { mutableStateOf("OmniCast Browser") }; var progress by remember { mutableIntStateOf(0) }; var isDesktopMode by remember { mutableStateOf(false) }; var isAdBlockEnabled by remember { mutableStateOf(true) }
     val detectedStreams = remember { mutableStateListOf<String>() }; val streamHeaders = remember { mutableStateMapOf<String, Map<String, String>>() }; val streamLabels = remember { mutableStateMapOf<String, String>() }; val streamDurations = remember { mutableStateMapOf<String, Float>() }
     var qualityOptions by remember { mutableStateOf<List<StreamQualityOption>>(emptyList()) }; var showOptionsSheet by remember { mutableStateOf(false) }; var showSideDrawer by remember { mutableStateOf(false) }; var showWhitelistDialog by remember { mutableStateOf(false) }
@@ -166,13 +163,14 @@ fun InAppBrowserScreen(
     }
 
     fun handleBrowserBack() {
-        if (webViewInstance?.canGoBack() == true) {
-            if (detectedStreams.isNotEmpty() || BrowserUrlHelper.isMovieOrVideoPage(currentUrl)) com.omnicast.sender.history.NavigationTrackManager.saveTrackLocally(context, currentUrl, pageTitle)
-            webViewInstance?.goBack()
-        } else if (com.omnicast.sender.history.NavigationTrackManager.canGoBackPersistent(context)) {
-            val prev = com.omnicast.sender.history.NavigationTrackManager.popPreviousBrowserUrl(context)
-            if (!prev.isNullOrBlank()) { inputUrl = prev; currentUrl = prev; isHome = false; webViewInstance?.loadUrl(prev) } else if (!isHome) isHome = true else onCloseBrowser()
-        } else if (!isHome) isHome = true else onCloseBrowser()
+        if (!isHome) {
+            if (webViewInstance?.canGoBack() == true) {
+                if (detectedStreams.isNotEmpty() || BrowserUrlHelper.isMovieOrVideoPage(currentUrl)) com.omnicast.sender.history.NavigationTrackManager.saveTrackLocally(context, currentUrl, pageTitle)
+                webViewInstance?.goBack()
+            } else {
+                isHome = true; inputUrl = ""; currentUrl = ""; detectedStreams.clear(); qualityOptions = emptyList()
+            }
+        } else onCloseBrowser()
     }
 
     BackHandler(enabled = true) {
@@ -224,7 +222,10 @@ fun InAppBrowserScreen(
                         checkPlatformUrls(newUrl)
                     },
                     onPageFinished = { t, u ->
-                        if (!t.isNullOrBlank() && t != "Transmisión" && !t.contains("about:blank")) pageTitle = t
+                        if (!t.isNullOrBlank() && t != "Transmisión" && !t.contains("about:blank")) {
+                            pageTitle = t
+                            u?.let { com.omnicast.sender.history.NavigationTrackManager.updateTitleIfPresent(context, it, t) }
+                        }
                         u?.let { checkPlatformUrls(it, pageTitle); com.omnicast.sender.history.NavigationTrackManager.recordStep(it, pageTitle) }
                     },
                     onHistoryUpdated = { u, t ->

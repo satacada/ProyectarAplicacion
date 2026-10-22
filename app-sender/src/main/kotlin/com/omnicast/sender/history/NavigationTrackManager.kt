@@ -110,4 +110,36 @@ object NavigationTrackManager {
             tracks[key] ?: emptyList()
         } catch (_: Throwable) { emptyList() }
     }
+
+    fun getRecentVisitedSteps(context: Context, limit: Int = 3): List<NavigationStep> {
+        return try {
+            val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            val raw = prefs.getString(KEY_PERSISTENT_STACK, null) ?: return emptyList()
+            val stack = runCatching { json.decodeFromString<List<NavigationStep>>(raw) }.getOrNull() ?: return emptyList()
+            stack.asReversed()
+                .filter { it.url.isNotBlank() && !it.url.startsWith("about:") && !it.url.contains("favicon") && it.url.startsWith("http") }
+                .distinctBy { it.url }
+                .take(limit)
+        } catch (_: Throwable) { emptyList() }
+    }
+
+    fun updateTitleIfPresent(context: Context, url: String, newTitle: String) {
+        if (url.isBlank() || newTitle.isBlank() || newTitle == "Cargando..." || newTitle == "Transmisión" || newTitle.startsWith("http")) return
+        try {
+            val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            val raw = prefs.getString(KEY_PERSISTENT_STACK, null) ?: return
+            val stack = runCatching { json.decodeFromString<MutableList<NavigationStep>>(raw) }.getOrNull() ?: return
+            var modified = false
+            for (i in stack.indices.reversed()) {
+                if (stack[i].url == url) {
+                    stack[i] = stack[i].copy(title = newTitle)
+                    modified = true
+                    break
+                }
+            }
+            if (modified) {
+                prefs.edit().putString(KEY_PERSISTENT_STACK, json.encodeToString(stack)).apply()
+            }
+        } catch (_: Throwable) {}
+    }
 }

@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 160,
-  "versionCodeReceiver": 143,
-  "versionName": "3.4.10",
-  "releaseTag": "v3.4.10",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.10/omnicast-sender-v3.4.10.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.10/omnicast-receiver-v3.4.10.apk",
-  "changelog": "v3.4.10: Restauración de arquitectura v3.4.6 para TV Box: recorte fino 1.075x de barras de estado/navegación en vertical al 100% de la altura y conmutación 16:9 pantalla completa en horizontal; bypass de bucle infinito en Cloudflare Turnstile con polyfill de Chromium e inmunidad de scripts DOM."
+  "versionCodeSender": 161,
+  "versionCodeReceiver": 144,
+  "versionName": "3.4.11",
+  "releaseTag": "v3.4.11",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.11/omnicast-sender-v3.4.11.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.11/omnicast-receiver-v3.4.11.apk",
+  "changelog": "v3.4.11: Inicio predeterminado en pantalla principal del explorador con accesos rápidos y lista inferior de los últimos 3 enlaces visitados; navegación secuencial atrás (sesión web -> pantalla inicial del explorador -> pantalla principal del aplicativo)."
 }

@@ -82,7 +82,7 @@ fun TvWebStreamScreen(
     LaunchedEffect(displayMode, webViewRef) {
         val dm = displayMode ?: return@LaunchedEffect
         val wv = webViewRef ?: return@LaunchedEffect
-        wv.evaluateJavascript("setDisplayMode('${dm.mode}', ${dm.zoom}, ${dm.panY});", null)
+        wv.evaluateJavascript("if (typeof setDisplayMode === 'function') setDisplayMode('${dm.mode}', ${dm.zoom}, ${dm.panY});", null)
         zoomBadgeText = when {
             dm.mode == "FILL" || dm.mode == "EXTEND_16_9" -> "📺 Escala: 16:9 (Llenar Pantalla)"
             dm.mode == "FIT" -> "📱 Escala: Original Fit (100%)"
@@ -153,9 +153,9 @@ fun TvWebStreamScreen(
                             val hlsCode = WebPlayerAssetHelper.getHlsJs(ctx)
                             val safeUrl = streamUrl.replace("\\", "\\\\").replace("\"", "\\\"")
                             val startSec = (startPositionMs / 1000.0).coerceAtLeast(0.0)
-                            val baseUrl = headers["Referer"]?.takeIf { it.isNotBlank() } ?: try {
+                            val baseUrl = try {
                                 val uri = Uri.parse(streamUrl); "${uri.scheme}://${uri.host}/"
-                            } catch (_: Throwable) { "https://omnicast.tv" }
+                            } catch (_: Throwable) { headers["Referer"]?.takeIf { it.isNotBlank() } ?: "https://omnicast.tv/" }
 
                             val html = """
                                 <!DOCTYPE html>

@@ -147,12 +147,12 @@ class TvReceiverActivity : ComponentActivity() {
                                 historyManager.updateProgress(state.streamUrl, pos, dur); playlistManager.updateProgress(state.streamUrl, pos)
                             }
                         },
-                        onPlaybackFailed = { reason ->
+                        onPlaybackFailed = { reason -> runOnUiThread {
                             com.omnicast.receiver.log.ReceiverLogger.log("TvReceiverActivity", "⚠️ WebStream falló ($reason). Fallback a ExoPlayer...")
                             receiverState.value = ReceiverUiState.DirectStreamPlaying(state.streamUrl, state.title)
                             exoPlayerManager.playStream(state.streamUrl, state.headers, state.title, state.startPositionMs)
                             startPlaybackStatusReporting()
-                        },
+                        } },
                         onCloseClick = { receiverState.value = ReceiverUiState.Standby }
                     )
                     is ReceiverUiState.ImageDisplaying -> TvImageScreen(

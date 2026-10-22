@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 163,
-  "versionCodeReceiver": 146,
-  "versionName": "3.4.13",
-  "releaseTag": "v3.4.13",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.13/omnicast-sender-v3.4.13.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.13/omnicast-receiver-v3.4.13.apk",
-  "changelog": "v3.4.13: Resiliencia en Repelis y CDNs Cloudflare con auto-proxy y pase de cabeceras completas a TvWebStreamScreen; corrección integral de zoom en screen mirroring horizontal manteniendo SCALE_ASPECT_FILL sin colapso a 1/16; sincronización de contador de videos detectados; soporte universal HLS (.txt y master) en reproductor web de TV."
+  "versionCodeSender": 164,
+  "versionCodeReceiver": 147,
+  "versionName": "3.4.14",
+  "releaseTag": "v3.4.14",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.14/omnicast-sender-v3.4.14.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.14/omnicast-receiver-v3.4.14.apk",
+  "changelog": "v3.4.14: Ordenamiento inteligente por probabilidad de pelicula sin eliminar ningun flujo; preservacion de enlaces con advertencia al fondo de la lista; correccion de CORS en TvWebStreamScreen usando streamOrigin; proteccion runOnUiThread en fallback reactivo de TV a ExoPlayer; eliminacion de ReferenceError en setDisplayMode."
 }

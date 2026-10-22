@@ -102,7 +102,8 @@ object StreamQualityDetector {
                 val label = if (currentMediaUrl.contains(".mp4", ignoreCase = true)) "${prefix}Video MP4 Directo" else "${prefix}Flujo Directo"
                 val defName = extractFileName(currentMediaUrl, "master")
                 val defFmt = if (currentMediaUrl.contains(".mp4", true)) "mp4 (Directo)" else "m3u8 (adaptive)"
-                return@withContext listOf(StreamQualityOption(label, "Auto", "Original", currentMediaUrl, isMovie = false, isSuggested = false, healedHeaders = safeHeaders, fileName = defName, formatDetail = defFmt))
+                val warnFmt = if (probe.httpCode > 0) "$defFmt [HTTP ${probe.httpCode}]" else defFmt
+                return@withContext listOf(StreamQualityOption(label, "Auto", if (probe.httpCode > 0) "HTTP ${probe.httpCode}" else "No verificado", currentMediaUrl, isMovie = false, isSuggested = false, healedHeaders = safeHeaders, fileName = defName, formatDetail = warnFmt))
             }
             return@withContext emptyList()
         }
@@ -266,5 +267,30 @@ object StreamQualityDetector {
 
     fun probeAndHealStream(urlStr: String, safeHeaders: Map<String, String>, pageUrl: String? = null): StreamManifestProbe.ProbeResult {
         return StreamManifestProbe.probeAndHeal(urlStr, safeHeaders, pageUrl)
+    }
+
+    fun calculateMovieProbability(opt: StreamQualityOption, pageUrl: String?): Int {
+        val url = opt.streamUrl
+        val isM = opt.isMaster || url.contains("master", true) || url.contains("playlist", true) || url.contains(".urlset", true)
+        val hasToken = StreamManifestProbe.hasSignedSecurityToken(url)
+        val isCdn = url.contains("tnmr.org", true) || url.contains("dropcdn", true) || url.contains("fastream", true) ||
+                url.contains("streamwish", true) || url.contains("vidhide", true) || url.contains("mycdn.me", true) ||
+                url.contains("okcdn.ru", true) || url.contains("streamtape", true) || url.contains("waaw", true) ||
+                url.contains("futureofgaming", true) || url.contains("/hls", true)
+        val pageHost = pageUrl?.let { runCatching { URI(it).host }.getOrNull() }
+        val streamHost = runCatching { URI(url).host }.getOrNull()
+        val isSameHost = pageHost != null && streamHost != null && (pageHost.equals(streamHost, true) || pageHost.endsWith(".$streamHost", true) || streamHost.endsWith(".$pageHost", true))
+        val isAdvertisedError = opt.bitrate.contains("HTTP 40", true) || opt.formatDetail.contains("HTTP 40", true)
+        return when {
+            isAdvertisedError -> 5
+            isSameHost && !isM && !hasToken -> 15
+            isM && (hasToken || isCdn) -> 100
+            isM -> 90
+            hasToken || isCdn -> 85
+            url.contains(".m3u8", true) || url.contains(".txt", true) -> 75
+            opt.isMovie && !isSameHost -> 65
+            !isSameHost -> 50
+            else -> 30
+        }
     }
 }

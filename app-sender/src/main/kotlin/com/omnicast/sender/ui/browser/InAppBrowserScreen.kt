@@ -76,7 +76,7 @@ fun InAppBrowserScreen(
                 val res = lbl?.takeIf { it.contains("p", true) } ?: if (isM) "Auto" else "Original"
                 listOf(StreamQualityOption("▶ [${cleanTitle.take(16)}] $vName", res, if (isM) "Adaptativa" else "Directo", u, isMovie = true, isSuggested = isM, healedHeaders = streamHeaders[u] ?: emptyMap(), fileName = vName, formatDetail = fmt))
             }
-        }
+        }.sortedByDescending { StreamQualityDetector.calculateMovieProbability(it, currentUrl) }
         showOptionsSheet = true
         scope.launch {
             val deep = currentStreams.filter { BrowserUrlHelper.extractYouTubeId(it) == null }.flatMap { u ->
@@ -84,10 +84,8 @@ fun InAppBrowserScreen(
                 opts.forEach { o -> if (o.healedHeaders.isNotEmpty()) streamHeaders[o.streamUrl] = o.healedHeaders }; opts
             }
             if (deep.isNotEmpty()) {
-                val finalOpts = (qualityOptions + deep).distinctBy { it.streamUrl }
-                val orderMap = currentStreams.withIndex().associate { it.value to it.index }
-                qualityOptions = finalOpts.sortedWith(compareByDescending<StreamQualityOption> { it.isMaster || it.streamUrl.contains("master", true) }
-                    .thenBy { opt -> orderMap[opt.streamUrl] ?: currentStreams.indexOfFirst { opt.streamUrl.startsWith(it.substringBefore('?')) }.takeIf { it >= 0 } ?: 999 })
+                val sorted = (qualityOptions + deep).distinctBy { it.streamUrl }.sortedByDescending { StreamQualityDetector.calculateMovieProbability(it, currentUrl) }
+                qualityOptions = sorted.mapIndexed { idx, opt -> if (idx == 0 && StreamQualityDetector.calculateMovieProbability(opt, currentUrl) >= 50) opt.copy(isSuggested = true) else if (idx > 0) opt.copy(isSuggested = false) else opt }
             }
         }
     }

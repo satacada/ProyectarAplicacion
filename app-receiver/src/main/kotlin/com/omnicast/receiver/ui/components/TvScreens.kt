@@ -96,13 +96,6 @@ fun TvMirroringActiveScreen(
     ) {
         val renderer = webRtcReceiver.surfaceViewRenderer
         if (renderer != null) {
-            val isVertical = webRtcReceiver.isVertical(resolution)
-            val streamAspect = webRtcReceiver.streamAspect(resolution)
-            val videoModifier = if (isVertical && webRtcReceiver.currentMode != "FILL") {
-                Modifier.fillMaxHeight().aspectRatio(streamAspect)
-            } else {
-                Modifier.fillMaxSize()
-            }
             androidx.compose.ui.viewinterop.AndroidView(
                 factory = {
                     try {
@@ -110,18 +103,21 @@ fun TvMirroringActiveScreen(
                     } catch (_: Throwable) {}
                     renderer.apply {
                         layoutParams = android.view.ViewGroup.LayoutParams(
-                            if (isVertical) android.view.ViewGroup.LayoutParams.WRAP_CONTENT else android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                            android.view.ViewGroup.LayoutParams.MATCH_PARENT,
                             android.view.ViewGroup.LayoutParams.MATCH_PARENT
                         )
                     }
                 },
                 update = { r ->
-                    val targetW = if (isVertical) android.view.ViewGroup.LayoutParams.WRAP_CONTENT else android.view.ViewGroup.LayoutParams.MATCH_PARENT
-                    if (r.layoutParams?.width != targetW) {
-                        r.layoutParams = android.view.ViewGroup.LayoutParams(targetW, android.view.ViewGroup.LayoutParams.MATCH_PARENT)
+                    if (r.layoutParams?.width != android.view.ViewGroup.LayoutParams.MATCH_PARENT ||
+                        r.layoutParams?.height != android.view.ViewGroup.LayoutParams.MATCH_PARENT) {
+                        r.layoutParams = android.view.ViewGroup.LayoutParams(
+                            android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                            android.view.ViewGroup.LayoutParams.MATCH_PARENT
+                        )
                     }
                 },
-                modifier = videoModifier
+                modifier = Modifier.fillMaxSize()
             )
         } else {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {

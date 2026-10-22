@@ -137,10 +137,30 @@ class ProjectionSession(
             },
             onError = { e -> com.omnicast.sender.log.SenderLogger.e("ProjectionSession", "Error conectando TV ($targetIp:$targetPort): ${e.message}", e) }
         )
+
+        val oListener = object : android.view.OrientationEventListener(context) {
+            private var lastIsLandscape: Boolean? = null
+            override fun onOrientationChanged(orientation: Int) {
+                if (orientation == android.view.OrientationEventListener.ORIENTATION_UNKNOWN) return
+                val isLandscape = (orientation in 60..120 || orientation in 240..300)
+                if (isLandscape != lastIsLandscape) {
+                    lastIsLandscape = isLandscape
+                    val targetMode = if (isLandscape) "FILL" else "FIT"
+                    Log.i("ProjectionSession", "📱 Giro de teléfono detectado ($orientation°): enviando modo $targetMode a TV Box")
+                    signalingClient?.sendMessage(SignalingMessage.SetDisplayMode(targetMode))
+                }
+            }
+        }
+        if (oListener.canDetectOrientation()) oListener.enable()
+        this.orientationListener = oListener
     }
+
+    private var orientationListener: android.view.OrientationEventListener? = null
 
     fun stop() {
         try {
+            orientationListener?.disable()
+            orientationListener = null
             audioCaptureManager?.stopAudioCapture()
             audioCaptureManager = null
             audioSender?.close()

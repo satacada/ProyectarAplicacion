@@ -102,17 +102,16 @@ class WebRtcReceiverManager(private val context: Context) {
                 if (frameAspect > tvAspect) (frameAspect / tvAspect) else (tvAspect / frameAspect)
             } else 1.0f
 
-            val targetScalingType = if (!isLandscape) {
-                RendererCommon.ScalingType.SCALE_ASPECT_FIT
-            } else if (currentMode == "FILL" || currentMode == "16:9" || currentMode == "EXTEND_16_9") {
+            val isFill = (currentMode == "FILL" || currentMode == "16:9" || currentMode == "EXTEND_16_9" || currentScalingType == RendererCommon.ScalingType.SCALE_ASPECT_FILL)
+            val targetScalingType = if (isFill) {
                 RendererCommon.ScalingType.SCALE_ASPECT_FILL
             } else {
                 RendererCommon.ScalingType.SCALE_ASPECT_FIT
             }
             renderer.setScalingType(targetScalingType)
 
-            when (currentMode) {
-                "ZOOM" -> {
+            when {
+                currentMode == "ZOOM" -> {
                     val scale = if (isLandscape && aspectFillFactor > 1.0f) currentZoom * aspectFillFactor else currentZoom
                     renderer.scaleX = scale
                     renderer.scaleY = scale
@@ -120,8 +119,12 @@ class WebRtcReceiverManager(private val context: Context) {
                     renderer.translationY = currentPanY
                     ReceiverLogger.log(TAG, "🔍 Zoom gradual TV: ${String.format(java.util.Locale.US, "%.2f", currentZoom)}x -> escala $scale (panX=$currentPanX, panY=$currentPanY, frame=${frameW}x${frameH})")
                 }
-                "FILL", "16:9", "EXTEND_16_9" -> {
-                    val factor = if (isLandscape) aspectFillFactor else 1.075f
+                isFill -> {
+                    val factor = if (isLandscape) {
+                        if (aspectFillFactor > 1.0f) aspectFillFactor else 1.0f
+                    } else {
+                        if (tvAspect > frameAspect) (tvAspect / frameAspect) else 1.0f
+                    }
                     renderer.scaleX = factor
                     renderer.scaleY = factor
                     renderer.translationX = 0f
@@ -226,6 +229,7 @@ class WebRtcReceiverManager(private val context: Context) {
         } else {
             RendererCommon.ScalingType.SCALE_ASPECT_FIT
         }
+        currentMode = if (currentScalingType == RendererCommon.ScalingType.SCALE_ASPECT_FILL) "FILL" else "FIT"
         applyDisplayTransform()
         return currentScalingType
     }

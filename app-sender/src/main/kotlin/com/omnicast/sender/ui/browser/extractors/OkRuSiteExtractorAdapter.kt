@@ -15,8 +15,10 @@ class OkRuSiteExtractorAdapter : IMediaStreamExtractorPort {
     override fun canHandle(candidate: StreamCandidate): Boolean {
         val lower = candidate.url.lowercase()
 
-        // Rechazar explícitamente estadísticas y beacons
-        if (lower.contains("videostat") || lower.contains("statnew") || lower.contains("tracking")) {
+        // Rechazar explícitamente estadísticas, beacons y fragmentos temporales de buffer (bytes)
+        if (lower.contains("videostat") || lower.contains("statnew") || lower.contains("tracking") ||
+            lower.contains("bytes=") || lower.contains("&bytes") || lower.contains("?bytes") ||
+            lower.contains("ct=11") || lower.contains("ct=12")) {
             return false
         }
 

@@ -43,6 +43,7 @@ object BrowserUrlHelper {
         val fullLower = url.lowercase()
         if (fullLower.contains("dmxleo.dailymotion.com") || fullLower.contains("geo.dailymotion.com")) return false
         if (fullLower.contains("/embed/") || fullLower.contains("/embed69") || fullLower.contains("/widget/")) return false
+        if (url.contains("bytes=", true) || url.contains("&bytes", true) || url.contains("ct=11") || url.contains("ct=12")) return false
         val isWebPage = (fullLower.contains("dailymotion.com/video/") || fullLower.contains("ok.ru/video/")) &&
                         !fullLower.contains(".m3u8") && !fullLower.contains(".mpd") && !fullLower.contains(".mp4") && !fullLower.contains("cmd=video")
         if (isWebPage) return false
@@ -51,6 +52,7 @@ object BrowserUrlHelper {
 
     fun isRealMedia(s: String, dur: Float = 0f): Boolean {
         if (s.isBlank() || s.contains("dmxleo.dailymotion.com") || AdBlocker.isAd(s)) return false
+        if (s.contains("bytes=", true) || s.contains("&bytes", true) || s.contains("ct=11") || s.contains("ct=12")) return false
         if (dur in 0.1f..59.9f) return false
         val clean = s.substringBefore('?').lowercase()
         if (clean.endsWith(".vtt") || clean.endsWith(".srt") || clean.endsWith(".key") ||

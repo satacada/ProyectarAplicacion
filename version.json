@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 167,
-  "versionCodeReceiver": 150,
-  "versionName": "3.4.17",
-  "releaseTag": "v3.4.17",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.17/omnicast-sender-v3.4.17.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.17/omnicast-receiver-v3.4.17.apk",
-  "changelog": "v3.4.17: Restauracion exacta del envio de URL limpia original para Spider-Man y CDNs protegidas sin desvio a proxy local de Java, garantizando reproduccion nativa HTML5 en TV con ordenamiento de pelicula real en 1er lugar."
+  "versionCodeSender": 168,
+  "versionCodeReceiver": 151,
+  "versionName": "3.4.18",
+  "releaseTag": "v3.4.18",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.18/omnicast-sender-v3.4.18.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.18/omnicast-receiver-v3.4.18.apk",
+  "changelog": "v3.4.18: Sincronización precisa de orientación y zoom independiente horizontal/vertical en Screen Mirroring. Expansión 16:9 sin colapso a 1/3 y zoom gradual con D-Pad en control remoto de TV."
 }

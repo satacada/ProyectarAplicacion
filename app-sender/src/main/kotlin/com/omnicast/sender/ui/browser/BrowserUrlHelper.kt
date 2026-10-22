@@ -153,5 +153,26 @@ object BrowserUrlHelper {
         }
     }
 
+    fun isSameLogicalStream(url1: String, url2: String): Boolean {
+        if (url1 == url2) return true
+        val isOk1 = url1.contains("mycdn.me", true) || url1.contains("okcdn.ru", true)
+        val isOk2 = url2.contains("mycdn.me", true) || url2.contains("okcdn.ru", true)
+        if (isOk1 && isOk2) {
+            val isM1 = url1.contains("video.m3u8", true) || url1.contains(".m3u8", true)
+            val isM2 = url2.contains("video.m3u8", true) || url2.contains(".m3u8", true)
+            if (isM1 && isM2) return true
+            val t1 = Regex("[?&]type=([0-9]+)").find(url1)?.groupValues?.get(1)
+            val t2 = Regex("[?&]type=([0-9]+)").find(url2)?.groupValues?.get(1)
+            val id1 = Regex("[?&]id=([0-9]+)").find(url1)?.groupValues?.get(1)
+            val id2 = Regex("[?&]id=([0-9]+)").find(url2)?.groupValues?.get(1)
+            if (t1 != null && t2 != null && t1 == t2) {
+                return id1 == null || id2 == null || id1 == id2
+            }
+        }
+        val c1 = url1.substringBefore('?').lowercase()
+        val c2 = url2.substringBefore('?').lowercase()
+        return c1 == c2 && c1.isNotBlank()
+    }
+
     fun hasSignedSecurityToken(url: String): Boolean = com.omnicast.core.domain.usecases.StreamManifestProbe.hasSignedSecurityToken(url)
 }

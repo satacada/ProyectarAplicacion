@@ -219,9 +219,11 @@ fun BrowserWebView(
                                     if (!destUrl.isNullOrBlank() && !AdBlocker.isAd(destUrl)) {
                                         view.loadUrl(destUrl)
                                     }
+                                    v?.post { try { v.destroy() } catch (_: Throwable) {} }
                                     return true
                                 }
                             }
+                            tempWebView.postDelayed({ try { tempWebView.destroy() } catch (_: Throwable) {} }, 10000)
                             transport.webView = tempWebView
                             resultMsg.sendToTarget()
                             return true

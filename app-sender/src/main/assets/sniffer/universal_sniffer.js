@@ -284,17 +284,20 @@
         if (typeof meta === 'string') {
             try { meta = JSON.parse(meta); } catch(e) { return; }
         }
+        var mId = (meta.movie && meta.movie.id) ? String(meta.movie.id) : (document.title || 'okvid');
         var t = (meta.movie && meta.movie.title) ? meta.movie.title : (defaultTitle || document.title);
         var dur = (meta.movie && meta.movie.duration) ? meta.movie.duration : 0;
-        if (meta.hlsManifestUrl && !window.__reportedOkRuStreams[meta.hlsManifestUrl]) {
-            window.__reportedOkRuStreams[meta.hlsManifestUrl] = true;
+        var hlsKey = mId + '_hls';
+        if (meta.hlsManifestUrl && !window.__reportedOkRuStreams[hlsKey]) {
+            window.__reportedOkRuStreams[hlsKey] = true;
             reportMedia(meta.hlsManifestUrl, t, dur, false, 'Auto (Adaptativo)');
         }
         if (meta.videos && meta.videos.length > 0) {
             for (var v = 0; v < meta.videos.length; v++) {
                 var vidItem = meta.videos[v];
-                if (vidItem && vidItem.url && !window.__reportedOkRuStreams[vidItem.url]) {
-                    window.__reportedOkRuStreams[vidItem.url] = true;
+                var qKey = mId + '_' + (vidItem.name || v);
+                if (vidItem && vidItem.url && !window.__reportedOkRuStreams[qKey]) {
+                    window.__reportedOkRuStreams[qKey] = true;
                     reportMedia(vidItem.url, t, dur, false, mapOkRuQuality(vidItem.name));
                 }
             }

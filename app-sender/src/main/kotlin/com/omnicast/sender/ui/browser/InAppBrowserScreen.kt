@@ -81,36 +81,40 @@ fun InAppBrowserScreen(
         scope.launch {
             val deep = currentStreams.flatMap { u ->
                 val opts = StreamQualityDetector.detectQualities(u, streamHeaders[u] ?: emptyMap(), cleanTitle, currentUrl)
-                opts.forEach { o -> if (o.healedHeaders.isNotEmpty()) streamHeaders[o.streamUrl] = o.healedHeaders }
-                opts
+                opts.forEach { o -> if (o.healedHeaders.isNotEmpty()) streamHeaders[o.streamUrl] = o.healedHeaders }; opts
             }
             val finalOpts = (qualityOptions + deep).distinctBy { it.streamUrl }
             val orderMap = currentStreams.withIndex().associate { it.value to it.index }
-            qualityOptions = finalOpts.sortedWith(
-                compareByDescending<StreamQualityOption> { it.isMaster || it.streamUrl.contains("master", true) }
-                    .thenBy { opt -> orderMap[opt.streamUrl] ?: currentStreams.indexOfFirst { opt.streamUrl.startsWith(it.substringBefore('?')) }.takeIf { it >= 0 } ?: 999 }
-            )
+            qualityOptions = finalOpts.sortedWith(compareByDescending<StreamQualityOption> { it.isMaster || it.streamUrl.contains("master", true) }
+                .thenBy { opt -> orderMap[opt.streamUrl] ?: currentStreams.indexOfFirst { opt.streamUrl.startsWith(it.substringBefore('?')) }.takeIf { it >= 0 } ?: 999 })
         }
     }
 
     fun registerStream(url: String, hdrs: Map<String, String>, isPrimary: Boolean = false, label: String? = null) {
         val cleanUrl = BrowserUrlHelper.sanitizeMediaUrl(url)
         if (cleanUrl.isBlank() || AdBlocker.isAd(cleanUrl) || AdBlocker.isVideoAd(cleanUrl) || !isRealMedia(cleanUrl) || BrowserUrlHelper.extractYouTubeId(cleanUrl) != null) return
-        if (detectedStreams.contains(cleanUrl)) detectedStreams.remove(cleanUrl)
-        val isM = isPrimary || cleanUrl.contains("master", true) || cleanUrl.contains("playlist", true)
-        val nonM = detectedStreams.indexOfFirst { !it.contains("master", true) && !it.contains("playlist", true) }
+        val existingIndex = detectedStreams.indexOfFirst { BrowserUrlHelper.isSameLogicalStream(it, cleanUrl) }
+        val isM = isPrimary || cleanUrl.contains("master", true) || cleanUrl.contains("playlist", true) || cleanUrl.contains("video.m3u8", true)
+        if (existingIndex >= 0) {
+            val oldUrl = detectedStreams[existingIndex]
+            detectedStreams[existingIndex] = cleanUrl
+            streamHeaders.remove(oldUrl); val oldLbl = streamLabels.remove(oldUrl)
+            if (hdrs.isNotEmpty()) streamHeaders[cleanUrl] = hdrs
+            (label?.takeIf { it.isNotBlank() } ?: oldLbl)?.let { streamLabels[cleanUrl] = it }
+            if (isM) ActiveStreamHolder.update(cleanUrl, pageTitle, streamHeaders[cleanUrl] ?: hdrs)
+            return
+        }
+        if (detectedStreams.size >= 12) return
+        val nonM = detectedStreams.indexOfFirst { !it.contains("master", true) && !it.contains("playlist", true) && !it.contains("video.m3u8", true) }
         if (isM) detectedStreams.add(0, cleanUrl) else if (nonM >= 0) detectedStreams.add(nonM, cleanUrl) else detectedStreams.add(cleanUrl)
         if (hdrs.isNotEmpty()) streamHeaders[cleanUrl] = hdrs; if (!label.isNullOrBlank()) streamLabels[cleanUrl] = label
-        val primaryUrl = detectedStreams.firstOrNull { it.contains("master", true) } ?: detectedStreams.firstOrNull { isRealMedia(it) } ?: cleanUrl
+        val primaryUrl = detectedStreams.firstOrNull { it.contains("master", true) || it.contains("video.m3u8", true) } ?: cleanUrl
         val cleanT = if (pageTitle.isNotBlank() && pageTitle != "Cargando..." && pageTitle != "Transmisión") pageTitle else "Video Web"
         ActiveStreamHolder.update(primaryUrl, cleanT, streamHeaders[primaryUrl] ?: hdrs)
         android.util.Log.i("StreamDetection", "🎬 Flujo registrado [isMaster=$isM]: $cleanUrl")
         if (!showOptionsSheet && !isCasting && userDismissedSheetForUrl != currentUrl) {
             autoOpenJob?.cancel()
-            autoOpenJob = scope.launch {
-                kotlinx.coroutines.delay(450)
-                if (!showOptionsSheet && !isCasting && userDismissedSheetForUrl != currentUrl && detectedStreams.any { isRealMedia(it) }) openOptionsSheet()
-            }
+            autoOpenJob = scope.launch { kotlinx.coroutines.delay(450); if (!showOptionsSheet && !isCasting && userDismissedSheetForUrl != currentUrl && detectedStreams.any { isRealMedia(it) }) openOptionsSheet() }
         }
     }
 
@@ -159,16 +163,14 @@ fun InAppBrowserScreen(
             webViewInstance?.goBack()
         } else if (com.omnicast.sender.history.NavigationTrackManager.canGoBackPersistent(context)) {
             val prev = com.omnicast.sender.history.NavigationTrackManager.popPreviousBrowserUrl(context)
-            if (!prev.isNullOrBlank()) { inputUrl = prev; currentUrl = prev; isHome = false; webViewInstance?.loadUrl(prev) }
-            else if (!isHome) isHome = true else onCloseBrowser()
+            if (!prev.isNullOrBlank()) { inputUrl = prev; currentUrl = prev; isHome = false; webViewInstance?.loadUrl(prev) } else if (!isHome) isHome = true else onCloseBrowser()
         } else if (!isHome) isHome = true else onCloseBrowser()
     }
 
     BackHandler(enabled = true) {
         if (showSideDrawer) showSideDrawer = false else if (showWhitelistDialog) showWhitelistDialog = false
         else if (popupWebView != null) { popupWebView?.destroy(); popupWebView = null }
-        else if (videoToSave != null) videoToSave = null else if (showOptionsSheet) { showOptionsSheet = false; userDismissedSheetForUrl = currentUrl }
-        else handleBrowserBack()
+        else if (videoToSave != null) videoToSave = null else if (showOptionsSheet) { showOptionsSheet = false; userDismissedSheetForUrl = currentUrl } else handleBrowserBack()
     }
 
     DisposableEffect(webViewInstance) {
@@ -238,9 +240,7 @@ fun InAppBrowserScreen(
                         if (AdBlocker.isAd(sniffed.src) || sniffed.duration in 0.1f..59.9f) return@BrowserWebView
                         val sourceFrameUrl = sniffed.frameUrl.takeIf { it.startsWith("http") } ?: currentUrl
                         if (sniffed.src.contains("fastream.to") && !sniffed.src.contains(".m3u8")) {
-                            scope.launch(Dispatchers.IO) {
-                                MediaPlatformResolver.resolveFastreamSync(sniffed.src, sourceFrameUrl)?.let { res -> withContext(Dispatchers.Main) { registerStream(res.first, res.third, isPrimary = true, label = sniffed.title) } }
-                            }
+                            scope.launch(Dispatchers.IO) { MediaPlatformResolver.resolveFastreamSync(sniffed.src, sourceFrameUrl)?.let { res -> withContext(Dispatchers.Main) { registerStream(res.first, res.third, isPrimary = true, label = sniffed.title) } } }
                             return@BrowserWebView
                         }
                         val hdrs = BrowserUrlHelper.buildSafeHeaders(sniffed.src, sourceFrameUrl, UA_MOBILE); if (sniffed.duration > 0f) streamDurations[sniffed.src] = sniffed.duration

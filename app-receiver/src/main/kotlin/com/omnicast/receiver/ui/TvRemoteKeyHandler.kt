@@ -156,8 +156,22 @@ object TvRemoteKeyHandler {
                     KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER, KeyEvent.KEYCODE_MENU,
                     KeyEvent.KEYCODE_MEDIA_PLAY, KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE, KeyEvent.KEYCODE_SPACE -> {
                         val mode = webRtcReceiver.toggleScalingType()
-                        val txt = if (mode == org.webrtc.RendererCommon.ScalingType.SCALE_ASPECT_FILL) "Modo: Llenar Pantalla (16:9)" else "Modo: Ajustar Proporción (Fit)"
+                        val txt = if (mode == org.webrtc.RendererCommon.ScalingType.SCALE_ASPECT_FILL) "📺 Modo: Llenar Pantalla (16:9)" else "📱 Modo: Ajustar Proporción (Fit)"
                         Toast.makeText(context, txt, Toast.LENGTH_SHORT).show()
+                        return true
+                    }
+                    KeyEvent.KEYCODE_DPAD_UP -> {
+                        val curZoom = webRtcReceiver.currentZoom
+                        val newZoom = (curZoom + 0.15f).coerceAtMost(2.0f)
+                        webRtcReceiver.setDisplayMode("ZOOM", zoom = newZoom, isLandscapeParam = webRtcReceiver.isLandscape)
+                        Toast.makeText(context, "🔍 Zoom TV: ${(newZoom * 100).toInt()}%", Toast.LENGTH_SHORT).show()
+                        return true
+                    }
+                    KeyEvent.KEYCODE_DPAD_DOWN -> {
+                        val curZoom = webRtcReceiver.currentZoom
+                        val newZoom = (curZoom - 0.15f).coerceAtLeast(0.75f)
+                        webRtcReceiver.setDisplayMode("ZOOM", zoom = newZoom, isLandscapeParam = webRtcReceiver.isLandscape)
+                        Toast.makeText(context, "🔍 Zoom TV: ${(newZoom * 100).toInt()}%", Toast.LENGTH_SHORT).show()
                         return true
                     }
                 }

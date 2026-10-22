@@ -35,18 +35,20 @@ class ProjectionSession(
     fun setTvScaleMode(mode: String) {
         tvScaleMode = mode
         webRtcManager?.tvScaleMode = mode
+        val isLandscape = isDeviceLandscape || mode == "FILL_16_9" || mode == "FILL" || mode == "EXTEND_16_9"
         val preset = TvZoomManager.PRESETS.firstOrNull { it.id == mode || it.mode == mode }
         if (preset != null) {
-            signalingClient?.sendMessage(TvZoomManager.toSignalingMessage(preset, isLandscape = isDeviceLandscape))
+            signalingClient?.sendMessage(TvZoomManager.toSignalingMessage(preset, isLandscape = isLandscape))
         } else {
-            signalingClient?.sendMessage(SignalingMessage.SetDisplayMode(if (isDeviceLandscape || mode == "EXTEND_16_9" || mode == "FILL") "FILL" else "FIT", isLandscape = isDeviceLandscape))
+            signalingClient?.sendMessage(SignalingMessage.SetDisplayMode(if (isLandscape) "FILL" else "FIT", isLandscape = isLandscape))
         }
     }
 
     fun setDisplayMode(mode: String, zoom: Float = 1.0f, panY: Float = 0.0f, panX: Float = 0.0f) {
         tvScaleMode = mode
         webRtcManager?.tvScaleMode = mode
-        signalingClient?.sendMessage(SignalingMessage.SetDisplayMode(mode, zoom, panY, panX, isLandscape = isDeviceLandscape))
+        val isLandscape = isDeviceLandscape || mode == "FILL_16_9" || mode == "FILL" || mode == "EXTEND_16_9"
+        signalingClient?.sendMessage(SignalingMessage.SetDisplayMode(mode, zoom, panY, panX, isLandscape = isLandscape))
     }
 
     fun toggleTvScaleMode(): String {
@@ -128,11 +130,14 @@ class ProjectionSession(
                     // CRÍTICO: iniciar captura DESPUÉS de enviar la oferta, no antes
                     // El encoder ya está negociado y puede recibir frames inmediatamente
                     webRtcManager?.beginCapture()
+                    val initOrientation = context.resources.configuration.orientation
+                    isDeviceLandscape = (initOrientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE)
+                    val isLandscape = isDeviceLandscape || tvScaleMode == "FILL_16_9" || tvScaleMode == "FILL" || tvScaleMode == "EXTEND_16_9"
                     val initPreset = TvZoomManager.PRESETS.firstOrNull { it.id == tvScaleMode || it.mode == tvScaleMode }
                     if (initPreset != null) {
-                        client.sendMessage(TvZoomManager.toSignalingMessage(initPreset))
+                        client.sendMessage(TvZoomManager.toSignalingMessage(initPreset, isLandscape = isLandscape))
                     } else {
-                        client.sendMessage(SignalingMessage.SetDisplayMode(if (tvScaleMode == "EXTEND_16_9" || tvScaleMode == "FILL") "FILL" else "FIT"))
+                        client.sendMessage(SignalingMessage.SetDisplayMode(if (isLandscape) "FILL" else "FIT", isLandscape = isLandscape))
                     }
                 }
             },
@@ -146,9 +151,10 @@ class ProjectionSession(
                 val isLandscape = (orientation in 60..120 || orientation in 240..300)
                 if (isLandscape != lastIsLandscape) {
                     lastIsLandscape = isLandscape
+                    isDeviceLandscape = isLandscape
                     val targetMode = if (isLandscape) "FILL" else "FIT"
-                    Log.i("ProjectionSession", "📱 Giro de teléfono detectado ($orientation°): enviando modo $targetMode a TV Box")
-                    signalingClient?.sendMessage(SignalingMessage.SetDisplayMode(targetMode))
+                    Log.i("ProjectionSession", "📱 Giro de teléfono detectado ($orientation°): enviando modo $targetMode a TV Box (landscape=$isLandscape)")
+                    signalingClient?.sendMessage(SignalingMessage.SetDisplayMode(targetMode, isLandscape = isLandscape))
                 }
             }
         }

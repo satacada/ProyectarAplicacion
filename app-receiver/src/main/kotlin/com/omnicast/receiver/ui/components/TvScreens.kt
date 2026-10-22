@@ -98,7 +98,7 @@ fun TvMirroringActiveScreen(
         if (renderer != null) {
             val isVertical = webRtcReceiver.isVertical(resolution)
             val streamAspect = webRtcReceiver.streamAspect(resolution)
-            val videoModifier = if (isVertical && webRtcReceiver.currentMode != "FILL") {
+            val videoModifier = if (isVertical) {
                 Modifier.fillMaxHeight().aspectRatio(streamAspect)
             } else {
                 Modifier.fillMaxSize()

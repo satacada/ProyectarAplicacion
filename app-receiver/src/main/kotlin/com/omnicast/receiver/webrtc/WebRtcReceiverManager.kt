@@ -29,7 +29,7 @@ class WebRtcReceiverManager(private val context: Context) {
     private var isResetting = false
     private var currentScalingType = RendererCommon.ScalingType.SCALE_ASPECT_FIT
     var currentMode: String by mutableStateOf("FIT"); private set
-    private var currentZoom = 1.0f
+    var currentZoom: Float by mutableStateOf(1.0f); private set
     private var currentPanY = 0.0f
     private var currentPanX = 0.0f
     var lastFrameW: Int by mutableIntStateOf(0); private set
@@ -41,8 +41,11 @@ class WebRtcReceiverManager(private val context: Context) {
     val effectiveFrameW: Int get() = if (isRotated) lastFrameH else lastFrameW
     val effectiveFrameH: Int get() = if (isRotated) lastFrameW else lastFrameH
 
+    val isLandscape: Boolean
+        get() = isPhoneLandscape || (effectiveFrameW > 0 && effectiveFrameH > 0 && effectiveFrameW > effectiveFrameH) || currentMode in listOf("FILL", "16:9", "EXTEND_16_9")
+
     fun isVertical(res: String = ""): Boolean {
-        if (isPhoneLandscape) return false
+        if (isLandscape) return false
         if (effectiveFrameW > 0 && effectiveFrameH > 0) return effectiveFrameW < effectiveFrameH
         val p = res.split("x"); val w = p.getOrNull(0)?.toIntOrNull() ?: 0; val h = p.getOrNull(1)?.toIntOrNull() ?: 0
         return w in 1..<h
@@ -92,14 +95,7 @@ class WebRtcReceiverManager(private val context: Context) {
             val frameW = if (isRot) lastFrameH else lastFrameW
             val frameH = if (isRot) lastFrameW else lastFrameH
             if (frameW <= 0 || frameH <= 0) return@post
-
-            val tvMetrics = context.resources.displayMetrics
-            val tvW = tvMetrics.widthPixels.toFloat().coerceAtLeast(1280f)
-            val tvH = tvMetrics.heightPixels.toFloat().coerceAtLeast(720f)
-            val tvAspect = tvW / tvH
-            val frameAspect = frameW.toFloat() / frameH.toFloat()
-
-            val isLandscape = isPhoneLandscape || (frameW > frameH)
+            val land = isLandscape || (frameW > frameH)
 
             if (renderer.width > 0 && renderer.height > 0) {
                 renderer.pivotX = renderer.width / 2f
@@ -108,7 +104,7 @@ class WebRtcReceiverManager(private val context: Context) {
                 renderer.resetPivot()
             }
 
-            if (!isLandscape) {
+            if (!land) {
                 // Proyección Vertical: 100% altura TV, recorte de status/nav bar (1.075x) sin deformación lateral
                 renderer.setScalingType(RendererCommon.ScalingType.SCALE_ASPECT_FIT)
                 val scale = if (currentMode == "ZOOM") currentZoom * 1.075f else 1.075f
@@ -204,12 +200,10 @@ class WebRtcReceiverManager(private val context: Context) {
     }
 
     fun toggleScalingType(): RendererCommon.ScalingType {
-        currentScalingType = if (currentScalingType == RendererCommon.ScalingType.SCALE_ASPECT_FIT) {
-            RendererCommon.ScalingType.SCALE_ASPECT_FILL
-        } else {
-            RendererCommon.ScalingType.SCALE_ASPECT_FIT
-        }
-        currentMode = if (currentScalingType == RendererCommon.ScalingType.SCALE_ASPECT_FILL) "FILL" else "FIT"
+        val willBeFill = (currentScalingType != RendererCommon.ScalingType.SCALE_ASPECT_FILL)
+        currentScalingType = if (willBeFill) RendererCommon.ScalingType.SCALE_ASPECT_FILL else RendererCommon.ScalingType.SCALE_ASPECT_FIT
+        currentMode = if (willBeFill) "FILL" else "FIT"
+        isPhoneLandscape = willBeFill
         currentZoom = 1.0f
         currentPanX = 0f
         currentPanY = 0f
@@ -221,18 +215,19 @@ class WebRtcReceiverManager(private val context: Context) {
         currentMode = mode.uppercase(); currentZoom = zoom; currentPanY = panY; currentPanX = panX
         if (isLandscapeParam != null) {
             isPhoneLandscape = isLandscapeParam
-        } else if (currentMode == "FILL" || currentMode == "16:9" || currentMode == "EXTEND_16_9") {
+        } else if (currentMode in listOf("FILL", "16:9", "EXTEND_16_9")) {
             isPhoneLandscape = true
         } else if (currentMode == "FIT" && zoom == 1.0f) {
             isPhoneLandscape = false
         }
+        val land = isLandscape
         when (currentMode) {
             "FILL", "16:9", "EXTEND_16_9" -> currentScalingType = RendererCommon.ScalingType.SCALE_ASPECT_FILL
             "FIT", "ORIGINAL_FIT" -> {
-                currentScalingType = if (isPhoneLandscape) RendererCommon.ScalingType.SCALE_ASPECT_FILL else RendererCommon.ScalingType.SCALE_ASPECT_FIT
+                currentScalingType = if (land) RendererCommon.ScalingType.SCALE_ASPECT_FILL else RendererCommon.ScalingType.SCALE_ASPECT_FIT
                 currentZoom = 1.0f; currentPanY = 0.0f; currentPanX = 0.0f
             }
-            "ZOOM" -> currentScalingType = if (isPhoneLandscape) RendererCommon.ScalingType.SCALE_ASPECT_FILL else RendererCommon.ScalingType.SCALE_ASPECT_FIT
+            "ZOOM" -> currentScalingType = if (land) RendererCommon.ScalingType.SCALE_ASPECT_FILL else RendererCommon.ScalingType.SCALE_ASPECT_FIT
             "TOGGLE" -> toggleScalingType()
         }
         applyDisplayTransform()

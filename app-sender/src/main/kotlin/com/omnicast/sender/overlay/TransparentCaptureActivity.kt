@@ -33,8 +33,9 @@ class TransparentCaptureActivity : ComponentActivity() {
 
             val savedProfileName = prefs.getString("saved_stream_profile", StreamProfile.BALANCED_30FPS.mode.name)
             val profile = StreamProfile.ALL_PROFILES.firstOrNull { it.mode.name == savedProfileName } ?: StreamProfile.BALANCED_30FPS
-            val rawScaleMode = prefs.getString("saved_tv_scale_mode", "FIT") ?: "FIT"
-            val scaleMode = if (rawScaleMode == "ZOOM" || rawScaleMode == "ZOOM_85") "FIT" else rawScaleMode
+            val scaleMode = "FIT"
+            prefs.edit().putString("saved_tv_scale_mode", "FIT").apply()
+            com.omnicast.sender.service.TvZoomManager.resetToFit()
             val smoothBuffer = prefs.getBoolean("saved_smooth_buffer", true)
 
             ProjectionForegroundService.startProjection(

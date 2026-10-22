@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 172,
-  "versionCodeReceiver": 155,
-  "versionName": "3.4.22",
-  "releaseTag": "v3.4.22",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.22/omnicast-sender-v3.4.22.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.22/omnicast-receiver-v3.4.22.apk",
-  "changelog": "v3.4.22: Corrección matemática pura de geometría de frame (frameW vs frameH). Erradicación de falso landscape en vertical. Diferenciación visual inmediata entre FIT (1.075f) y FILL (1.40f) en vertical."
+  "versionCodeSender": 173,
+  "versionCodeReceiver": 156,
+  "versionName": "3.4.23",
+  "releaseTag": "v3.4.23",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.23/omnicast-sender-v3.4.23.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.23/omnicast-receiver-v3.4.23.apk",
+  "changelog": "v3.4.23: Erradicación total de residuos de zoom (ZOOM_115). La proyección arranca estrictamente limpia en FIT (100% altura TV de borde a borde). Reset de presets en TvZoomManager al iniciar sesión."
 }

@@ -49,7 +49,7 @@ fun SenderMainScreen(
     }
     var tvScaleMode by remember {
         val raw = prefs.getString("saved_tv_scale_mode", "FIT_100") ?: "FIT_100"
-        mutableStateOf(if (raw == "ZOOM" || raw == "ZOOM_85") "FIT_100" else raw)
+        mutableStateOf(if (raw.startsWith("ZOOM")) "FIT_100" else raw)
     }
     var smoothBufferEnabled by remember { mutableStateOf(prefs.getBoolean("saved_smooth_buffer", true)) }
     val isStreaming by com.omnicast.sender.service.CastSessionState.isProjectingFlow.collectAsState()

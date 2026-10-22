@@ -30,6 +30,11 @@ object TvZoomManager {
 
     fun getCurrent(): TvZoomPreset = PRESETS[currentIndex]
 
+    fun resetToFit(): TvZoomPreset {
+        currentIndex = 0
+        return PRESETS[0]
+    }
+
     fun cycleNext(): TvZoomPreset {
         currentIndex = (currentIndex + 1) % PRESETS.size
         return PRESETS[currentIndex]

@@ -132,8 +132,10 @@ class ProjectionForegroundService : Service() {
                 } else {
                     @Suppress("DEPRECATION") intent.getParcelableExtra("EXTRA_PERMISSION_DATA")
                 }
-                val rawScaleMode = intent.getStringExtra("EXTRA_TV_SCALE_MODE") ?: prefs.getString("saved_tv_scale_mode", "FIT") ?: "FIT"
-                val tvScaleMode = if (rawScaleMode == "ZOOM" || rawScaleMode == "ZOOM_85") "FIT" else rawScaleMode
+                val rawScaleMode = intent.getStringExtra("EXTRA_TV_SCALE_MODE") ?: "FIT"
+                val tvScaleMode = if (rawScaleMode.startsWith("ZOOM")) "FIT" else rawScaleMode
+                prefs.edit().putString("saved_tv_scale_mode", tvScaleMode).apply()
+                TvZoomManager.resetToFit()
                 val smoothBuffer = intent.getBooleanExtra("EXTRA_SMOOTH_BUFFER", prefs.getBoolean("saved_smooth_buffer", true))
                 Log.i(TAG, "ACTION_START recibido: ip=$ip, port=$port, mode=$mode, fps=$fps, tvScaleMode=$tvScaleMode, smoothBuffer=$smoothBuffer")
                 if (permData != null) {

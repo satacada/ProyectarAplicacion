@@ -280,16 +280,16 @@ object StreamQualityDetector {
         val pageHost = pageUrl?.let { runCatching { URI(it).host }.getOrNull() }
         val streamHost = runCatching { URI(url).host }.getOrNull()
         val isSameHost = pageHost != null && streamHost != null && (pageHost.equals(streamHost, true) || pageHost.endsWith(".$streamHost", true) || streamHost.endsWith(".$pageHost", true))
-        val isAdvertisedError = opt.bitrate.contains("HTTP 40", true) || opt.formatDetail.contains("HTTP 40", true)
+        val is404 = opt.bitrate.contains("HTTP 404", true) || opt.formatDetail.contains("HTTP 404", true) || opt.bitrate.contains("HTTP 410", true)
         return when {
-            isAdvertisedError -> 5
+            is404 -> 0
+            (hasToken || isCdn) && isM -> 100
+            hasToken || isCdn -> 95
+            isM && !isSameHost -> 90
+            url.contains(".m3u8", true) && !isSameHost -> 85
+            url.contains(".txt", true) && !isSameHost -> 80
             isSameHost && !isM && !hasToken -> 15
-            isM && (hasToken || isCdn) -> 100
-            isM -> 90
-            hasToken || isCdn -> 85
-            url.contains(".m3u8", true) || url.contains(".txt", true) -> 75
-            opt.isMovie && !isSameHost -> 65
-            !isSameHost -> 50
+            !isSameHost -> 70
             else -> 30
         }
     }

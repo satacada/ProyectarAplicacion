@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 165,
-  "versionCodeReceiver": 148,
-  "versionName": "3.4.15",
-  "releaseTag": "v3.4.15",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.15/omnicast-sender-v3.4.15.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.15/omnicast-receiver-v3.4.15.apk",
-  "changelog": "v3.4.15: Apertura directa de pagina web por defecto al pulsar sobre elementos de Historial y Guardadas tanto en el explorador como en la pantalla principal; eliminacion de icono gigante de play en reproductor web de TV reemplazado por indicador animado de carga (spinner)."
+  "versionCodeSender": 166,
+  "versionCodeReceiver": 149,
+  "versionName": "3.4.16",
+  "releaseTag": "v3.4.16",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.16/omnicast-sender-v3.4.16.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.16/omnicast-receiver-v3.4.16.apk",
+  "changelog": "v3.4.16: Correccion de clasificacion y ordenamiento de peliculas reales (100 puntos prioritarios para CDNs con proteccion/tokens evitando que salgan al final), tryPlay con mute transitorio para autoplay inmediato sin frame congelado en TV y eliminacion reforzada de overlays."
 }

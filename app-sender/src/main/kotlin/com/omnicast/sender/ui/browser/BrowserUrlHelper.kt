@@ -155,6 +155,8 @@ object BrowserUrlHelper {
 
     fun isSameLogicalStream(url1: String, url2: String): Boolean {
         if (url1 == url2) return true
+        val y1 = extractYouTubeId(url1); val y2 = extractYouTubeId(url2)
+        if (y1 != null && y2 != null) return y1 == y2
         val isOk1 = url1.contains("mycdn.me", true) || url1.contains("okcdn.ru", true)
         val isOk2 = url2.contains("mycdn.me", true) || url2.contains("okcdn.ru", true)
         if (isOk1 && isOk2) {

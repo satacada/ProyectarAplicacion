@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 150,
-  "versionCodeReceiver": 133,
-  "versionName": "3.4.0",
-  "releaseTag": "v3.4.0",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.0/omnicast-sender-v3.4.0.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.0/omnicast-receiver-v3.4.0.apk",
-  "changelog": "v3.4.0: Detección limpia en OK.ru con Auto (Adaptativo) y calidades reales (1080p, 720p, 480p, etc.), eliminando miniaturas de preview y fragmentos."
+  "versionCodeSender": 152,
+  "versionCodeReceiver": 135,
+  "versionName": "3.4.2",
+  "releaseTag": "v3.4.2",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.2/omnicast-sender-v3.4.2.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.2/omnicast-receiver-v3.4.2.apk",
+  "changelog": "v3.4.2: Blindaje de plataformas oficiales: restauración de captura directa de YouTube y whitelist permanente de assets de Dailymotion (dmcdn.net) con suite de pruebas de regresión."
 }

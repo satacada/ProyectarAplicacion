@@ -6,7 +6,7 @@ import java.io.ByteArrayInputStream
 object AdBlocker {
 
     private val KNOWN_MEDIA_HOSTS = hashSetOf(
-        "ok.ru", "mycdn.me", "vk.com", "dailymotion.com", "youtube.com", "youtu.be",
+        "ok.ru", "mycdn.me", "vk.com", "dailymotion.com", "dmcdn.net", "youtube.com", "youtu.be", "ytimg.com", "googlevideo.com",
         "yandex.com", "yandex.ru", "ya.ru", "dzen.ru", "yastatic.net",
         "streamwish.to", "filemoon.sx", "doodstream.com", "mixdrop.co", "vidmoly.me",
         "voe.sx", "vidoza.net", "streamtape.com", "mp4upload.com", "upstream.to",
@@ -119,7 +119,7 @@ object AdBlocker {
         (function() {
             try {
                 var h = (window.location.hostname || '').toLowerCase();
-                if (h.indexOf('dailymotion.com') !== -1 || h.indexOf('youtube.com') !== -1 || h.indexOf('google.') !== -1 || h.indexOf('bing.') !== -1 || h.indexOf('yandex.') !== -1 || h.indexOf('ok.ru') !== -1 || h.indexOf('odnoklassniki.ru') !== -1 || h.indexOf('vk.com') !== -1) {
+                if (h.indexOf('dailymotion.com') !== -1 || h.indexOf('dmcdn.net') !== -1 || h.indexOf('youtube.com') !== -1 || h.indexOf('ytimg.com') !== -1 || h.indexOf('googlevideo.com') !== -1 || h.indexOf('google.') !== -1 || h.indexOf('bing.') !== -1 || h.indexOf('yandex.') !== -1 || h.indexOf('ok.ru') !== -1 || h.indexOf('odnoklassniki.ru') !== -1 || h.indexOf('vk.com') !== -1) {
                     return;
                 }
                 function cleanDoc(doc) {

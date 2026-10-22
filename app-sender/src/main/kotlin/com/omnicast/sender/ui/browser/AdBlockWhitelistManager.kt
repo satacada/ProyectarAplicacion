@@ -13,7 +13,7 @@ object AdBlockWhitelistManager {
     private const val PREFS_NAME = "omnicast_adblock_whitelist_prefs"
     private const val KEY_WHITELIST_SET = "whitelisted_domains"
 
-    private val DEFAULT_WHITELIST = setOf(
+    internal val DEFAULT_WHITELIST = setOf(
         "yandex.com",
         "yandex.ru",
         "ya.ru",
@@ -21,7 +21,10 @@ object AdBlockWhitelistManager {
         "yastatic.net",
         "dailymotion.com",
         "geo.dailymotion.com",
-        "youtube.com"
+        "dmcdn.net",
+        "youtube.com",
+        "ytimg.com",
+        "googlevideo.com"
     )
 
     private val cachedDomains = mutableSetOf<String>()
@@ -33,12 +36,9 @@ object AdBlockWhitelistManager {
         val saved = prefs.getStringSet(KEY_WHITELIST_SET, null)
         synchronized(cachedDomains) {
             cachedDomains.clear()
-            if (saved != null) {
-                cachedDomains.addAll(saved)
-            } else {
-                cachedDomains.addAll(DEFAULT_WHITELIST)
-                prefs.edit().putStringSet(KEY_WHITELIST_SET, DEFAULT_WHITELIST).apply()
-            }
+            cachedDomains.addAll(DEFAULT_WHITELIST)
+            if (saved != null) cachedDomains.addAll(saved)
+            prefs.edit().putStringSet(KEY_WHITELIST_SET, cachedDomains).apply()
         }
         isInitialized = true
     }

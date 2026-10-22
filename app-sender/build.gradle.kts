@@ -12,8 +12,8 @@ android {
         applicationId = "com.omnicast.sender"
         minSdk = 26 // Android 8.0+ y Android 9 (Pie) compatible; AudioPlaybackCapture se activa dinámicamente en Android 10+
         targetSdk = 34
-        versionCode = 150
-        versionName = "3.4.0"
+        versionCode = 152
+        versionName = "3.4.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -50,6 +50,9 @@ android {
     }
     kotlinOptions {
         jvmTarget = "17"
+    }
+    testOptions {
+        unitTests.isReturnDefaultValues = true
     }
     buildFeatures {
         compose = true
@@ -106,4 +109,6 @@ dependencies {
 
     // Eclipse Jetty Embebed HTTP Server (Proxy local de alto rendimiento)
     implementation(libs.jetty.server)
+
+    testImplementation(libs.junit)
 }

@@ -71,10 +71,11 @@ fun InAppBrowserScreen(
             return
         }
         qualityOptions = currentStreams.map { u ->
-            val vName = StreamQualityDetector.extractFileName(u, if (u.contains("master", true)) "master" else "video")
-            val isM = u.contains("master", true) || u.contains("playlist", true)
-            val fmt = when { isM -> "m3u8 (adaptive)"; u.contains(".mp4", true) -> "mp4 (Directo)"; u.contains(".mpd", true) -> "mpd (adaptive)"; else -> "m3u8" }
-            StreamQualityOption("▶ [${cleanTitle.take(16)}] $vName", "Auto", "Original", u, isMovie = true, isSuggested = isM, healedHeaders = streamHeaders[u] ?: emptyMap(), fileName = vName, formatDetail = fmt)
+            val lbl = streamLabels[u]; val isM = u.contains("master", true) || u.contains("playlist", true) || lbl?.contains("auto", true) == true
+            val vName = lbl?.takeIf { it.isNotBlank() } ?: StreamQualityDetector.extractFileName(u, if (isM) "master" else "video")
+            val fmt = when { isM -> "m3u8 (adaptive)"; u.contains(".mp4", true) || u.contains("mycdn.me", true) -> "mp4 (Directo)"; else -> "m3u8" }
+            val res = lbl?.takeIf { it.contains("p", true) } ?: if (isM) "Auto" else "Original"
+            StreamQualityOption("▶ [${cleanTitle.take(16)}] $vName", res, if (isM) "Adaptativa" else "Directo", u, isMovie = true, isSuggested = isM, healedHeaders = streamHeaders[u] ?: emptyMap(), fileName = vName, formatDetail = fmt)
         }
         showOptionsSheet = true
         scope.launch {

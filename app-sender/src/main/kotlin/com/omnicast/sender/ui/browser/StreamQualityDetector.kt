@@ -53,6 +53,35 @@ object StreamQualityDetector {
                     StreamQualityOption("${prefix}1080p Full HD", "1080p", "Full HD", uIndex, isMaster = false, isMovie = true, isSuggested = false, healedHeaders = safeHeaders, fileName = "index-v1-a1", formatDetail = "m3u8 (1920x816)")
                 )
             }
+            val okQuality = if (currentMediaUrl.contains("mycdn.me", true) || currentMediaUrl.contains("okcdn.ru", true)) {
+                when {
+                    currentMediaUrl.contains("/type/5") || currentMediaUrl.contains("type=5") -> "1080p FHD"
+                    currentMediaUrl.contains("/type/4") || currentMediaUrl.contains("type=4") -> "720p HD"
+                    currentMediaUrl.contains("/type/3") || currentMediaUrl.contains("type=3") -> "480p SD"
+                    currentMediaUrl.contains("/type/2") || currentMediaUrl.contains("type=2") -> "360p"
+                    currentMediaUrl.contains("/type/1") || currentMediaUrl.contains("type=1") -> "240p"
+                    currentMediaUrl.contains("/type/0") || currentMediaUrl.contains("type=0") -> "144p Móvil"
+                    currentMediaUrl.contains(".m3u8", true) || currentMediaUrl.contains("/hls", true) -> "Auto (Adaptativo)"
+                    else -> null
+                }
+            } else null
+            if (okQuality != null) {
+                val isMaster = okQuality.contains("Auto")
+                return@withContext listOf(
+                    StreamQualityOption(
+                        label = "${prefix}$okQuality",
+                        resolution = if (isMaster) "Auto" else okQuality,
+                        bitrate = if (isMaster) "Adaptativa" else "Directo",
+                        streamUrl = currentMediaUrl,
+                        isMaster = isMaster,
+                        isMovie = true,
+                        isSuggested = isMaster,
+                        healedHeaders = safeHeaders,
+                        fileName = okQuality,
+                        formatDetail = if (isMaster) "m3u8 (adaptive)" else "mp4 (Directo)"
+                    )
+                )
+            }
             val defName = extractFileName(currentMediaUrl, "master")
             val defFmt = if (currentMediaUrl.contains(".mp4", true)) "mp4 (Directo)" else "m3u8 (adaptive)"
             val label = if (currentMediaUrl.contains(".mp4", ignoreCase = true)) "${prefix}Video MP4 Directo" else "${prefix}Película Directa"

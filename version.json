@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 146,
-  "versionCodeReceiver": 129,
-  "versionName": "3.32.101",
-  "releaseTag": "v3.32.101",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.101/omnicast-sender-v3.32.101.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.32.101/omnicast-receiver-v3.32.101.apk",
-  "changelog": "v3.32.101: Soporte completo e interactivo para OK.ru: reactivación de enlaces emergentes target=_blank y window.open, protección de enlaces/anclas en el bloqueador de anuncios, sniffer enriquecido para feeds y largeHeap a 512MB."
+  "versionCodeSender": 147,
+  "versionCodeReceiver": 130,
+  "versionName": "3.4.0",
+  "releaseTag": "v3.4.0",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.0/omnicast-sender-v3.4.0.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.0/omnicast-receiver-v3.4.0.apk",
+  "changelog": "v3.4.0: Detección completa de películas en OK.ru con Auto (Adaptativo) y todas las resoluciones (1080p FHD, 720p HD, 480p SD, 360p, 240p, 144p). Corrección de sintaxis y reactivación de window.open y navegación SPA para feeds y canales."
 }

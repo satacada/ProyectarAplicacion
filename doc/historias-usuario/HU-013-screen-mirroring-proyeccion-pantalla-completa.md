@@ -16,30 +16,32 @@
 
 ## 2. Criterios de Aceptación (Contrato Inamovible)
 
-### A. Proyección Vertical (Celular Erguido) — Desacoplamiento de Dos Rutas
-1. **Ruta A: Proyección de Pantalla Completa (Modo FIT 1.0f - 100% Íntegra):**
-   - La pantalla completa del teléfono debe mostrarse al 100% íntegra en la altura física del televisor (1080p nativo) en `SCALE_ASPECT_FIT` con escala base estrictamente `1.0f`.
-   - La barra de estado superior (batería, hora, señal) y la barra de navegación/gestos inferiores del teléfono deben ser 100% visibles sin ningún recorte ni pérdida de bordes.
-2. **Ruta B: Proyección Por Aplicación (Modos APP / CROP_BARS / APP_FIT 1.075f):**
-   - Ruta independiente para proyección de una aplicación individual o recorte deliberado de barras del sistema para ampliar contenido, aplicando el factor de 1.075x.
-   - Ambas rutas operan con estados y parámetros aislados; una modificación en una no puede alterar la otra.
-3. **Centrado Simétrico:**
-   - La columna vertical del celular debe estar perfectamente centrada en el eje horizontal de la TV, con barras negras laterales simétricas propias de la relación de aspecto del teléfono (ej. 9:20 o 9:19.5).
-4. **Sin Deformación Lateral:**
-   - Queda terminantemente prohibido estirar la imagen vertical horizontalmente para llenar un televisor 16:9 (prohibido aplicar factores multiplicadores de distorsión lateral como 3.95x).
+### A. Proyección Vertical (Celular Erguido) — Adaptación Matemática de Pantalla
+1. **Modo FIT (100% Altura sin Barras de Sistema - Factor 1.075f):**
+   - En orientación vertical, la TV Box renderiza en `SCALE_ASPECT_FIT` con escala base estricta de **1.075f**.
+   - Ocupa el 100% íntegro de la altura física del televisor (1080p nativo) sin franjas negras arriba o abajo.
+   - Desplaza simétricamente fuera del marco físico del televisor los ~40px de la barra de estado superior (hora, batería, señal) y los ~40px de la barra inferior de navegación/gestos, garantizando que el 100% del contenido útil del teléfono sea visible sin recortes de texto ni pérdida de elementos de la interfaz.
+2. **Modo FILL en Vertical (Rellenar Proporcional Controlado - Factor 1.35f):**
+   - Queda terminantemente PROHIBIDO aplicar `SCALE_ASPECT_FILL` a un flujo vertical en un televisor 16:9, ya que requeriría escalar un ratio 9:20 a 16:9 multiplicando la escala por ~3.95x y recortando el 75% del celular.
+   - En su lugar, el modo FILL en vertical aplica un factor moderado de **1.35f**, ampliando la imagen vertical para acercar el contenido sin destruir la visibilidad de la pantalla.
+3. **Modos de Zoom Gradual:**
+   - Aplica `currentZoom * 1.075f` (presets de 75%, 85%, 115%, 130%) preservando el centrado simétrico horizontal.
+4. **Centrado Simétrico:**
+   - La columna vertical del celular se mantiene centrada en el eje horizontal de la TV con barras laterales simétricas propias del aspect ratio vertical del teléfono.
 
-### B. Proyección Horizontal (Celular Apaisado / Pantalla Completa)
+### B. Proyección Horizontal (Celular Apaisado / Videos 16:9)
 1. **Llenado 16:9 de Borde a Borde:**
-   - Al reproducir videos en pantalla completa (YouTube, reproductores externos) o girar el teléfono, la imagen debe expandirse a pantalla completa 16:9 en la TV Box.
-2. **Erradicación del Fallo de 1/4 de Pantalla:**
-   - Queda terminantemente prohibido que la imagen horizontal se reduzca o quede atrapada en un recuadro de 1/4 en la esquina izquierda con el resto en negro.
+   - Al reproducir videos horizontales (YouTube, películas) o girar el teléfono a apaisado, la TV Box opera incondicionalmente en `SCALE_ASPECT_FILL` con escala 1.0f cubriendo toda la pantalla de borde a borde.
+2. **Detección Pura de Orientación por Frames y Sensor:**
+   - `isLandscape` se determina EXCLUSIVAMENTE por frames decodificados reales (`effectiveFrameW > effectiveFrameH`) o sensor de orientación (`isPhoneLandscape`).
+   - Ningún modo de visualización (`FILL`, `16:9`) puede adulterar la orientación a horizontal si los frames recibidos son verticales.
 
 ### C. Leyes Técnicas de Hardware y Renderizado
-1. **Configuración de Renderizado en TV Box (`setEnableHardwareScaler(false)`):**
-   - `SurfaceViewRenderer` en la TV Box opera con `setEnableHardwareScaler(false)` para permitir que Compose gestione las dimensiones reales del marco mediante `Modifier.fillMaxHeight().aspectRatio(streamAspect)` y evitar fallos de escalado asimétrico.
-2. **Contenedor Compose Reactivo a Orientación:**
-   - En `TvScreens.kt`, el `AndroidView` debe ser reactivo a `isVertical`:
-     - Modo Vertical: `Modifier.fillMaxHeight().aspectRatio(streamAspect)` con `layoutParams = WRAP_CONTENT, MATCH_PARENT`.
-     - Modo Horizontal: `Modifier.fillMaxSize()` con `layoutParams = MATCH_PARENT, MATCH_PARENT`.
-3. **Conmutación Idempotente con Mando a Distancia:**
-   - Pulsar Play/Pausa o DPAD_Center en el control remoto de la TV conmuta limpiamente entre modos de visualización reinicializando traslaciones y zooms espurios, garantizando que el usuario pueda alternar modos infinitamente sin que la imagen se trabe o desplace.
+1. **Área de Renderizado en Compose (`fillMaxSize()`):**
+   - En `TvScreens.kt`, `AndroidView` mantiene permanentemente `Modifier.fillMaxSize()` y `MATCH_PARENT, MATCH_PARENT`. El motor WebRTC (`SurfaceViewRenderer`) gestiona internamente el escalado y centrado mediante `setScalingType()`, `scaleX`, `scaleY`, `translationX` y `translationY`.
+2. **Conmutación Idempotente con Mando a Distancia:**
+   - Pulsar Play/Pausa o DPAD_Center en el control remoto de la TV conmuta limpiamente entre modos reinicializando traslaciones, garantizando que el usuario pueda alternar modos infinitamente sin que la imagen se trabe o desplace.
+
+### D. Obediencia Inmediata del Comando STOP
+1. **Terminación Instantánea (<5ms):**
+   - Al pulsar "Detener Transmisión" o recibir `SignalingMessage.PlayControl("STOP")` o `Disconnect`, la TV Box detiene inmediatamente el decodificador WebRTC (`webRtcReceiver.resetConnection()`), el receptor de audio digital (`digitalAudioReceiver?.stop()`) y transiciona de inmediato a `ReceiverUiState.Standby` sin congelamiento ni espera de timeouts.

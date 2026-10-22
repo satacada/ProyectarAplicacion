@@ -36,12 +36,8 @@ class ProjectionSession(
         tvScaleMode = mode
         webRtcManager?.tvScaleMode = mode
         val isLandscape = isDeviceLandscape || mode == "FILL_16_9" || mode == "FILL" || mode == "EXTEND_16_9"
-        val preset = TvZoomManager.PRESETS.firstOrNull { it.id == mode || it.mode == mode }
-        if (preset != null) {
-            signalingClient?.sendMessage(TvZoomManager.toSignalingMessage(preset, isLandscape = isLandscape))
-        } else {
-            signalingClient?.sendMessage(SignalingMessage.SetDisplayMode(if (isLandscape) "FILL" else "FIT", isLandscape = isLandscape))
-        }
+        val preset = TvZoomManager.findPreset(mode)
+        signalingClient?.sendMessage(TvZoomManager.toSignalingMessage(preset, isLandscape = isLandscape))
     }
 
     fun setDisplayMode(mode: String, zoom: Float = 1.0f, panY: Float = 0.0f, panX: Float = 0.0f) {
@@ -133,12 +129,8 @@ class ProjectionSession(
                     val initOrientation = context.resources.configuration.orientation
                     isDeviceLandscape = (initOrientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE)
                     val isLandscape = isDeviceLandscape || tvScaleMode == "FILL_16_9" || tvScaleMode == "FILL" || tvScaleMode == "EXTEND_16_9"
-                    val initPreset = TvZoomManager.PRESETS.firstOrNull { it.id == tvScaleMode || it.mode == tvScaleMode }
-                    if (initPreset != null) {
-                        client.sendMessage(TvZoomManager.toSignalingMessage(initPreset, isLandscape = isLandscape))
-                    } else {
-                        client.sendMessage(SignalingMessage.SetDisplayMode(if (isLandscape) "FILL" else "FIT", isLandscape = isLandscape))
-                    }
+                    val initPreset = TvZoomManager.findPreset(tvScaleMode)
+                    client.sendMessage(TvZoomManager.toSignalingMessage(initPreset, isLandscape = isLandscape))
                 }
             },
             onError = { e -> com.omnicast.sender.log.SenderLogger.e("ProjectionSession", "Error conectando TV ($targetIp:$targetPort): ${e.message}", e) }
@@ -171,6 +163,7 @@ class ProjectionSession(
             audioSender?.close()
             audioSender = null
 
+            signalingClient?.sendMessage(SignalingMessage.PlayControl("STOP"))
             signalingClient?.sendMessage(SignalingMessage.Disconnect())
             signalingClient?.disconnect()
             signalingClient = null

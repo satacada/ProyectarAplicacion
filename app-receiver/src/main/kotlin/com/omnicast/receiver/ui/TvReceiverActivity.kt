@@ -213,10 +213,8 @@ class TvReceiverActivity : ComponentActivity() {
                     }
                     "PAUSE" -> exoPlayerManager.pause()
                     "STOP" -> {
-                        exoPlayerManager.stop("Comando STOP celular")
-                        if (receiverState.value is ReceiverUiState.DirectStreamPlaying || receiverState.value is ReceiverUiState.WebStreamPlaying || receiverState.value is ReceiverUiState.YouTubePlaying) {
-                            receiverState.value = ReceiverUiState.Standby
-                        }
+                        digitalAudioReceiver?.stop(); exoPlayerManager.stop("Comando STOP celular"); webRtcReceiver.resetConnection()
+                        receiverState.value = ReceiverUiState.Standby
                     }
                     "SEEK" -> exoPlayerManager.seekTo(message.positionMs)
                     "VOLUME" -> TvReceiverHelper.applySystemAndPlayerVolume(this, exoPlayerManager, message.volume)

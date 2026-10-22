@@ -186,7 +186,7 @@ class FloatingIndicatorService : Service() {
             onToggleTvScale = {
                 val preset = com.omnicast.sender.service.TvZoomManager.cycleNext()
                 val msg = com.omnicast.sender.service.TvZoomManager.toSignalingMessage(preset)
-                prefs.edit().putString("saved_tv_scale_mode", preset.mode).apply()
+                prefs.edit().putString("saved_tv_scale_mode", preset.id).apply()
                 if (ProjectionForegroundService.isProjecting) {
                     ProjectionForegroundService.setDisplayMode(preset.mode, preset.zoom, preset.panY)
                 } else {
@@ -212,6 +212,7 @@ class FloatingIndicatorService : Service() {
                 menuLayoutRef?.visibility = View.GONE; isExpanded = false
                 ProjectionForegroundService.stopService(this)
                 SenderMainActivity.sendPlayControlStatic(this, "STOP")
+                SenderMainActivity.sendDisconnectStatic(this)
                 com.omnicast.sender.service.CastMediaNotificationService.stop(this)
                 com.omnicast.sender.stream.ActiveStreamHolder.stopCasting()
                 com.omnicast.sender.stream.ActiveStreamHolder.clear()

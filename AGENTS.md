@@ -69,21 +69,22 @@ Este repositorio sigue el estándar abierto AGENTS.md para el desarrollo de la a
 6. **Blindaje Inviolable de Plataformas Oficiales (YouTube y Dailymotion):**
    - **YouTube:** PROHIBIDO filtrar, descartar o ignorar URLs con ID de YouTube (`extractYouTubeId != null`) en `registerStream()`, `checkPlatformUrls()`, `openOptionsSheet()` o `isRealMedia()`. La detección y generación de opciones de calidad de YouTube (`createYouTubeQualityOptions`) debe ejecutarse de forma limpia y directa hacia `TvYouTubeScreen`.
    - **Dailymotion y Recursos de Interfaz:** PROHIBIDO bloquear dominios de CDN/UI de Dailymotion (`dmcdn.net`, `static1.dmcdn.net`) o YouTube (`ytimg.com`, `googlevideo.com`) en `NativeAdBlockEngine` o `AdBlocker`. Dichos dominios deben residir permanentemente en `AdBlockWhitelistManager.DEFAULT_WHITELIST` y en `AdBlocker.KNOWN_MEDIA_HOSTS` para garantizar que la caja de texto del buscador y los controles interactivos de Dailymotion NUNCA desaparezcan ni se rompan.
-7. **Blindaje Inviolable y Desacoplamiento de Rutas de Proyección (Pantalla Completa vs. Por Aplicación) (HU-013, v3.4.20) [BLOQUEANTE]:**
-   - **Desacoplamiento Estricto de las Dos Rutas:**
-     1. **Ruta A (Pantalla Completa - Modo FIT 1.0f):** En orientación vertical, la TV Box DEBE renderizar en `SCALE_ASPECT_FIT` con escala base estrictamente `1.0f`, garantizando el 100% íntegro de la visibilidad de la pantalla física del móvil (barra de estado, reloj, batería y barra de gestos/navegación completamente visibles, sin recortes ni pérdida de bordes arriba o abajo). Prohibido forzar sobre-escala de 1.075x en modo FIT de pantalla completa.
-     2. **Ruta B (Por Aplicación - Modos APP / CROP_BARS / APP_FIT 1.075f):** Opera como ruta totalmente independiente para ventanas de aplicaciones individuales o recorte deliberado de barras del sistema para ampliar contenido, aplicando factor `1.075f`.
-     3. **Independencia Absoluta:** Queda terminantemente PROHIBIDO unificar ambas rutas o modificar los parámetros de una alterando la otra. Deben permanecer desacopladas e inmunes a regresiones cruzadas.
-   - **Prioridad Absoluta de la Imagen (Horizontal vs. Vertical):**
-     En `WebRtcReceiverManager.kt`, la propiedad reactiva `isLandscape` unifica obligatoriamente:
-     1. Indicador del teléfono (`isPhoneLandscape`).
-     2. Decodificación real de frames de video apaisados (`effectiveFrameW > effectiveFrameH`).
-     3. Modos forzados de llenar pantalla (`FILL`, `16:9`, `EXTEND_16_9`).
-     Si la imagen es horizontal (video de partido/película o teléfono horizontal), `isVertical` es estrictamente `false`.
-   - **Área de Renderizado y Zoom Totalmente Independientes:**
-     - **En Horizontal:** La TV utiliza incondicionalmente `Modifier.fillMaxSize()`, `MATCH_PARENT, MATCH_PARENT` en `SurfaceViewRenderer` y base `SCALE_ASPECT_FILL`. El zoom aplica sobre el área horizontal completa de 16:9 centrado en toda la pantalla del televisor sin colapsar a un tercio ni desplazarse a la izquierda.
-     - **En Vertical:** Se mantiene centrado ocupando la altura física de la TV con `SCALE_ASPECT_FIT` (escala 1.0f para Pantalla Completa y 1.075f para Por Aplicación), y el zoom opera únicamente sobre el área vertical. Queda TERMINANTEMENTE PROHIBIDO usar `WRAP_CONTENT` en `SurfaceViewRenderer` o aplicar factores multiplicadores de distorsión lateral.
-   - **Arquitectura de Renderizado en TV:** En `TvScreens.kt`, `AndroidView` debe mantener incondicionalmente `Modifier.fillMaxSize()` y `MATCH_PARENT, MATCH_PARENT` para que `SurfaceView` ocupe todo el televisor y sea el motor hardware WebRTC el que controle el centrado y la escala con `setEnableHardwareScaler(false)`. Toda conmutación desde control remoto debe ser estrictamente idempotente.
+7. **Blindaje Inviolable de Adaptación de Imagen en Screen Mirroring y Comando STOP (HU-013, v3.4.21) [BLOQUEANTE]:**
+   - **Detección Pura de Orientación por Análisis de Imagen y Dispositivo:**
+     En `WebRtcReceiverManager.kt`, `isLandscape` se determina EXCLUSIVAMENTE mediante:
+     1. Los frames decodificados reales (`effectiveFrameW > effectiveFrameH`).
+     2. El sensor de orientación física del teléfono (`isPhoneLandscape`).
+     Queda TERMINANTEMENTE PROHIBIDO que la selección de un modo (como `FILL`) adultere `isLandscape` a `true` cuando la imagen recibida es vertical, ya que provocaría una explosión de zoom de 4x destructiva.
+   - **Comportamiento Matemático según Tipo de Pantalla/Imagen:**
+     1. **Imagen Vertical (Celular Erguido / Apps / Reels):**
+        - La TV opera incondicionalmente en `SCALE_ASPECT_FIT` centrada horizontalmente.
+        - **Modo FIT (Pantalla Completa sin Barras de Sistema):** Aplica factor base estricto de **1.075f**, ocupando el 100% íntegro de la altura física del televisor (1080p nativo) de borde a borde y desplazando simétricamente fuera del marco físico la barra de estado superior (hora, batería, señal) y la barra de navegación/gestos inferior.
+        - **Modo FILL (Rellenar en Vertical):** Aplica factor moderado de **1.35f**, ampliando la imagen vertical sin recortes desmedidos.
+        - **Zoom Gradual:** Aplica `currentZoom * 1.075f` (75%, 85%, 115%, 130%).
+     2. **Imagen Horizontal (Video de Película/Partido o Celular Apaisado):**
+        - La TV opera en `SCALE_ASPECT_FILL` con escala 1.0f cubriendo los 16:9 completos del televisor de borde a borde.
+   - **Obediencia Inmediata del Comando STOP:**
+     Todo mensaje de control `SignalingMessage.PlayControl("STOP")` o `Disconnect` recibido en `TvReceiverActivity.kt` DEBE detener de inmediato `ExoPlayerTvManager`, `DigitalAudioReceiver`, `WebRtcReceiverManager.resetConnection()` y transicionar el estado a `ReceiverUiState.Standby` en menos de 5ms, sin congelar la pantalla ni esperar timeouts de ICE.
 
 ---
 

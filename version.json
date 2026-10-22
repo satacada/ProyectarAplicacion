@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 170,
-  "versionCodeReceiver": 153,
-  "versionName": "3.4.20",
-  "releaseTag": "v3.4.20",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.20/omnicast-sender-v3.4.20.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.20/omnicast-receiver-v3.4.20.apk",
-  "changelog": "v3.4.20: Desacoplamiento estricto y blindaje de las dos rutas de proyección: Pantalla Completa 100% íntegra (FIT 1.0x sin recorte de hora, batería ni barra de navegación) y Por Aplicación (1.075x para recorte de barras del sistema). Modo FIT por defecto al proyectar."
+  "versionCodeSender": 171,
+  "versionCodeReceiver": 154,
+  "versionName": "3.4.21",
+  "releaseTag": "v3.4.21",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.21/omnicast-sender-v3.4.21.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.21/omnicast-receiver-v3.4.21.apk",
+  "changelog": "v3.4.21: Adaptación matemática de imagen en Screen Mirroring (FIT con escala 1.075f que oculta barra de estado y navegación en vertical; FILL proporcional controlado 1.35f sin explosión de 4x) y obediencia inmediata del comando STOP en TV (<5ms)."
 }

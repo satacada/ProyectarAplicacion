@@ -28,12 +28,18 @@ object TvZoomManager {
 
     private var currentIndex = 0
 
+    fun getCurrent(): TvZoomPreset = PRESETS[currentIndex]
+
     fun cycleNext(): TvZoomPreset {
         currentIndex = (currentIndex + 1) % PRESETS.size
         return PRESETS[currentIndex]
     }
 
-    fun getCurrent(): TvZoomPreset = PRESETS[currentIndex]
+    fun findPreset(idOrMode: String): TvZoomPreset {
+        return PRESETS.firstOrNull { it.id == idOrMode }
+            ?: PRESETS.firstOrNull { it.mode == idOrMode && it.zoom == 1.0f }
+            ?: PRESETS.first()
+    }
 
     fun toSignalingMessage(preset: TvZoomPreset, isLandscape: Boolean? = null): SignalingMessage.SetDisplayMode {
         return SignalingMessage.SetDisplayMode(preset.mode, preset.zoom, preset.panY, isLandscape = isLandscape)

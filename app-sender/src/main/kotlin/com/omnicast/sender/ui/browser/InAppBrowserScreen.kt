@@ -84,7 +84,7 @@ fun InAppBrowserScreen(
                 opts.forEach { o -> if (o.healedHeaders.isNotEmpty()) streamHeaders[o.streamUrl] = o.healedHeaders }; opts
             }
             if (deep.isNotEmpty()) {
-                val sorted = (qualityOptions + deep).distinctBy { it.streamUrl }.sortedByDescending { StreamQualityDetector.calculateMovieProbability(it, currentUrl) }
+                val sorted = (deep + qualityOptions).filterNot { it.streamUrl.contains("iframes", true) }.distinctBy { it.streamUrl }.sortedByDescending { StreamQualityDetector.calculateMovieProbability(it, currentUrl) }
                 qualityOptions = sorted.mapIndexed { idx, opt -> if (idx == 0 && StreamQualityDetector.calculateMovieProbability(opt, currentUrl) >= 50) opt.copy(isSuggested = true) else if (idx > 0) opt.copy(isSuggested = false) else opt }
             }
         }
@@ -170,9 +170,7 @@ fun InAppBrowserScreen(
             if (webViewInstance?.canGoBack() == true) {
                 if (detectedStreams.isNotEmpty() || BrowserUrlHelper.isMovieOrVideoPage(currentUrl)) com.omnicast.sender.history.NavigationTrackManager.saveTrackLocally(context, currentUrl, pageTitle)
                 webViewInstance?.goBack()
-            } else {
-                isHome = true; inputUrl = ""; currentUrl = ""; detectedStreams.clear(); qualityOptions = emptyList()
-            }
+            } else { isHome = true; inputUrl = ""; currentUrl = ""; detectedStreams.clear(); qualityOptions = emptyList() }
         } else onCloseBrowser()
     }
 

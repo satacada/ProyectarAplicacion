@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 168,
-  "versionCodeReceiver": 151,
-  "versionName": "3.4.18",
-  "releaseTag": "v3.4.18",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.18/omnicast-sender-v3.4.18.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.18/omnicast-receiver-v3.4.18.apk",
-  "changelog": "v3.4.18: Sincronización precisa de orientación y zoom independiente horizontal/vertical en Screen Mirroring. Expansión 16:9 sin colapso a 1/3 y zoom gradual con D-Pad en control remoto de TV."
+  "versionCodeSender": 169,
+  "versionCodeReceiver": 152,
+  "versionName": "3.4.19",
+  "releaseTag": "v3.4.19",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.19/omnicast-sender-v3.4.19.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.19/omnicast-receiver-v3.4.19.apk",
+  "changelog": "v3.4.19: Navegación horizontal D-Pad completa en Ver más tarde entre película, casilla [✓] y tuerca [⚙]. Eliminación de iframes sintéticos para listar exactamente los 3 flujos reales de la película y resiliencia web con Referer en TV."
 }

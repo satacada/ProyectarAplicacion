@@ -160,40 +160,39 @@ fun TvPlaylistItemRow(
 ) {
     var isFocused by remember { mutableStateOf(false) }
 
-    Card(
-        colors = CardDefaults.cardColors(
-            containerColor = if (isSelected) Color(0xFF3B1D28) else (if (isFocused) Color(0xFF2E2442) else Color(0xFF1E182A))
-        ),
-        shape = RoundedCornerShape(10.dp),
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 4.dp, vertical = 3.dp)
-            .border(
-                width = if (isFocused || isSelected) 2.dp else 1.dp,
-                color = if (isSelected) Color(0xFFEF4444) else (if (isFocused) Color(0xFF38BDF8) else Color(0xFF2D223F)),
-                shape = RoundedCornerShape(10.dp)
-            )
-            .onFocusChanged { isFocused = it.isFocused }
-            .focusable()
-            .combinedClickable(
-                onClick = onPlay,
-                onLongClick = onMenu
-            )
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 3.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 10.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+        Card(
+            colors = CardDefaults.cardColors(
+                containerColor = if (isSelected) Color(0xFF3B1D28) else (if (isFocused) Color(0xFF2E2442) else Color(0xFF1E182A))
+            ),
+            shape = RoundedCornerShape(10.dp),
+            modifier = modifier
+                .weight(1f)
+                .border(
+                    width = if (isFocused || isSelected) 2.dp else 1.dp,
+                    color = if (isSelected) Color(0xFFEF4444) else (if (isFocused) Color(0xFF38BDF8) else Color(0xFF2D223F)),
+                    shape = RoundedCornerShape(10.dp)
+                )
+                .onFocusChanged { isFocused = it.isFocused }
+                .focusable()
+                .combinedClickable(
+                    onClick = onPlay,
+                    onLongClick = onMenu
+                )
         ) {
             Row(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 10.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                modifier = Modifier.weight(1f)
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 Text("↳", color = if (isFocused) Color(0xFF38BDF8) else Color(0xFF64748B), fontSize = 16.sp, fontWeight = FontWeight.Bold)
                 Text(if (item.isFavorite) "⭐" else "🎬", fontSize = 17.sp)
                 Column(
-                    modifier = Modifier.padding(start = 4.dp),
+                    modifier = Modifier.weight(1f).padding(start = 4.dp),
                     verticalArrangement = Arrangement.spacedBy(2.dp)
                 ) {
                     Text(
@@ -210,7 +209,7 @@ fun TvPlaylistItemRow(
                         "%02d:%02d".format(m, s)
                     } else null
                     Text(
-                        text = if (isFocused) (if (posLabel != null) "▶ Reanudar en $posLabel • Mantén presionado OK para menú" else "▶ Presiona OK para reproducir • Mantén OK para menú")
+                        text = if (isFocused) (if (posLabel != null) "▶ Reanudar en $posLabel • [→] Casilla / Menú" else "▶ Presiona OK para reproducir • [→] Casilla / Menú")
                                else (if (posLabel != null) "▶ En $posLabel" else "Guardada"),
                         color = if (isFocused) Color(0xFF7DD3FC) else (if (posLabel != null) Color(0xFF10B981) else Color(0xFF94A3B8)),
                         fontSize = 11.sp,
@@ -218,47 +217,47 @@ fun TvPlaylistItemRow(
                     )
                 }
             }
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                if (onToggleSelect != null) {
-                    var isCheckFocused by remember { mutableStateOf(false) }
-                    Box(
-                        modifier = Modifier
-                            .size(34.dp)
-                            .onFocusChanged { isCheckFocused = it.isFocused }
-                            .border(
-                                width = if (isCheckFocused) 2.dp else 1.dp,
-                                color = if (isCheckFocused) Color.White else (if (isSelected) Color(0xFFEF4444) else Color(0xFF475569)),
-                                shape = RoundedCornerShape(6.dp)
-                            )
-                            .background(
-                                if (isSelected) Color(0xFFEF4444) else (if (isCheckFocused) Color(0xFF38BDF8).copy(alpha = 0.4f) else Color(0xFF2D243F)),
-                                RoundedCornerShape(6.dp)
-                            )
-                            .focusable()
-                            .clickable { onToggleSelect() },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(if (isSelected) "✓" else "☐", fontSize = 14.sp, color = if (isSelected || isCheckFocused) Color.White else Color(0xFF94A3B8), fontWeight = FontWeight.Bold)
-                    }
-                }
-                var isMenuFocused by remember { mutableStateOf(false) }
-                Box(
-                    modifier = Modifier
-                        .size(34.dp)
-                        .onFocusChanged { isMenuFocused = it.isFocused }
-                        .border(
-                            width = if (isMenuFocused) 2.dp else 1.dp,
-                            color = if (isMenuFocused) Color.White else Color.Transparent,
-                            shape = RoundedCornerShape(6.dp)
-                        )
-                        .background(if (isMenuFocused) Color(0xFF38BDF8) else Color(0xFF2D243F), RoundedCornerShape(6.dp))
-                        .focusable()
-                        .clickable(onClick = onMenu),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text("⚙", fontSize = 14.sp, color = if (isMenuFocused) Color.Black else Color.White)
-                }
+        }
+
+        if (onToggleSelect != null) {
+            var isCheckFocused by remember { mutableStateOf(false) }
+            Box(
+                modifier = Modifier
+                    .size(38.dp)
+                    .onFocusChanged { isCheckFocused = it.isFocused }
+                    .border(
+                        width = if (isCheckFocused) 2.dp else 1.dp,
+                        color = if (isCheckFocused) Color.White else (if (isSelected) Color(0xFFEF4444) else Color(0xFF475569)),
+                        shape = RoundedCornerShape(8.dp)
+                    )
+                    .background(
+                        if (isSelected) Color(0xFFEF4444) else (if (isCheckFocused) Color(0xFF38BDF8).copy(alpha = 0.4f) else Color(0xFF2D243F)),
+                        RoundedCornerShape(8.dp)
+                    )
+                    .focusable()
+                    .clickable { onToggleSelect() },
+                contentAlignment = Alignment.Center
+            ) {
+                Text(if (isSelected) "✓" else "☐", fontSize = 15.sp, color = if (isSelected || isCheckFocused) Color.White else Color(0xFF94A3B8), fontWeight = FontWeight.Bold)
             }
+        }
+
+        var isMenuFocused by remember { mutableStateOf(false) }
+        Box(
+            modifier = Modifier
+                .size(38.dp)
+                .onFocusChanged { isMenuFocused = it.isFocused }
+                .border(
+                    width = if (isMenuFocused) 2.dp else 1.dp,
+                    color = if (isMenuFocused) Color.White else Color.Transparent,
+                    shape = RoundedCornerShape(8.dp)
+                )
+                .background(if (isMenuFocused) Color(0xFF38BDF8) else Color(0xFF2D243F), RoundedCornerShape(8.dp))
+                .focusable()
+                .clickable(onClick = onMenu),
+            contentAlignment = Alignment.Center
+        ) {
+            Text("⚙", fontSize = 16.sp, color = if (isMenuFocused) Color.Black else Color.White)
         }
     }
 }

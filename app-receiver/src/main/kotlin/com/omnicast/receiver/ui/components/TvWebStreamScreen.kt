@@ -130,15 +130,12 @@ fun TvWebStreamScreen(
                             settings.databaseEnabled = true
                             settings.mediaPlaybackRequiresUserGesture = false
                             settings.useWideViewPort = true
-                            settings.loadWithOverviewMode = true
-                            settings.allowFileAccess = true
-                            settings.allowContentAccess = true
-                            settings.allowFileAccessFromFileURLs = true
-                            settings.allowUniversalAccessFromFileURLs = true
+                            settings.loadWithOverviewMode = true; settings.allowFileAccess = true; settings.allowContentAccess = true
+                            settings.allowFileAccessFromFileURLs = true; settings.allowUniversalAccessFromFileURLs = true
                             settings.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
                             settings.userAgentString = headers["User-Agent"] ?: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
-                            CookieManager.getInstance().setAcceptCookie(true)
-                            CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
+                            CookieManager.getInstance().setAcceptCookie(true); CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
+                            headers["Cookie"]?.let { ck -> runCatching { CookieManager.getInstance().setCookie(headers["Referer"] ?: streamUrl, ck) } }
                             addJavascriptInterface(WebStreamBridge(onPlaybackStatus, onPlaybackFailed), "AndroidBridge")
                             webViewClient = WebViewClient()
                             webChromeClient = object : WebChromeClient() {
@@ -153,9 +150,9 @@ fun TvWebStreamScreen(
                             val hlsCode = WebPlayerAssetHelper.getHlsJs(ctx)
                             val safeUrl = streamUrl.replace("\\", "\\\\").replace("\"", "\\\"")
                             val startSec = (startPositionMs / 1000.0).coerceAtLeast(0.0)
-                            val baseUrl = try {
+                            val baseUrl = headers["Referer"]?.takeIf { it.isNotBlank() } ?: try {
                                 val uri = Uri.parse(streamUrl); "${uri.scheme}://${uri.host}/"
-                            } catch (_: Throwable) { headers["Referer"]?.takeIf { it.isNotBlank() } ?: "https://omnicast.tv/" }
+                            } catch (_: Throwable) { "https://omnicast.tv/" }
 
                             val html = """
                                 <!DOCTYPE html>

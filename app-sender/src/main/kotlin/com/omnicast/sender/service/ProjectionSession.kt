@@ -144,30 +144,28 @@ class ProjectionSession(
             onError = { e -> com.omnicast.sender.log.SenderLogger.e("ProjectionSession", "Error conectando TV ($targetIp:$targetPort): ${e.message}", e) }
         )
 
-        val oListener = object : android.view.OrientationEventListener(context) {
-            private var lastIsLandscape: Boolean? = null
-            override fun onOrientationChanged(orientation: Int) {
-                if (orientation == android.view.OrientationEventListener.ORIENTATION_UNKNOWN) return
-                val isLandscape = (orientation in 60..120 || orientation in 240..300)
-                if (isLandscape != lastIsLandscape) {
-                    lastIsLandscape = isLandscape
-                    isDeviceLandscape = isLandscape
-                    val targetMode = if (isLandscape) "FILL" else "FIT"
-                    Log.i("ProjectionSession", "📱 Giro de teléfono detectado ($orientation°): enviando modo $targetMode a TV Box (landscape=$isLandscape)")
-                    signalingClient?.sendMessage(SignalingMessage.SetDisplayMode(targetMode, isLandscape = isLandscape))
+        val configCallback = object : android.content.ComponentCallbacks {
+            override fun onConfigurationChanged(newConfig: android.content.res.Configuration) {
+                val isLand = (newConfig.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE)
+                if (isLand != isDeviceLandscape) {
+                    isDeviceLandscape = isLand
+                    val targetMode = if (isLand || tvScaleMode in listOf("FILL_16_9", "FILL", "EXTEND_16_9")) "FILL" else "FIT"
+                    Log.i("ProjectionSession", "📱 Giro real de imagen en celular: modo $targetMode (landscape=$isLand)")
+                    signalingClient?.sendMessage(SignalingMessage.SetDisplayMode(targetMode, isLandscape = isLand || targetMode == "FILL"))
                 }
             }
+            override fun onLowMemory() = Unit
         }
-        if (oListener.canDetectOrientation()) oListener.enable()
-        this.orientationListener = oListener
+        context.registerComponentCallbacks(configCallback)
+        this.componentCallbacks = configCallback
     }
 
-    private var orientationListener: android.view.OrientationEventListener? = null
+    private var componentCallbacks: android.content.ComponentCallbacks? = null
 
     fun stop() {
         try {
-            orientationListener?.disable()
-            orientationListener = null
+            componentCallbacks?.let { context.unregisterComponentCallbacks(it) }
+            componentCallbacks = null
             audioCaptureManager?.stopAudioCapture()
             audioCaptureManager = null
             audioSender?.close()

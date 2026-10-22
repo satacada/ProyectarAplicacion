@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 171,
-  "versionCodeReceiver": 154,
-  "versionName": "3.4.21",
-  "releaseTag": "v3.4.21",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.21/omnicast-sender-v3.4.21.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.21/omnicast-receiver-v3.4.21.apk",
-  "changelog": "v3.4.21: Adaptación matemática de imagen en Screen Mirroring (FIT con escala 1.075f que oculta barra de estado y navegación en vertical; FILL proporcional controlado 1.35f sin explosión de 4x) y obediencia inmediata del comando STOP en TV (<5ms)."
+  "versionCodeSender": 172,
+  "versionCodeReceiver": 155,
+  "versionName": "3.4.22",
+  "releaseTag": "v3.4.22",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.22/omnicast-sender-v3.4.22.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.22/omnicast-receiver-v3.4.22.apk",
+  "changelog": "v3.4.22: Corrección matemática pura de geometría de frame (frameW vs frameH). Erradicación de falso landscape en vertical. Diferenciación visual inmediata entre FIT (1.075f) y FILL (1.40f) en vertical."
 }

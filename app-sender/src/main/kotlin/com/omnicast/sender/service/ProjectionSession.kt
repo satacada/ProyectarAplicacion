@@ -35,16 +35,14 @@ class ProjectionSession(
     fun setTvScaleMode(mode: String) {
         tvScaleMode = mode
         webRtcManager?.tvScaleMode = mode
-        val isLandscape = isDeviceLandscape || mode == "FILL_16_9" || mode == "FILL" || mode == "EXTEND_16_9"
         val preset = TvZoomManager.findPreset(mode)
-        signalingClient?.sendMessage(TvZoomManager.toSignalingMessage(preset, isLandscape = isLandscape))
+        signalingClient?.sendMessage(TvZoomManager.toSignalingMessage(preset, isLandscape = isDeviceLandscape))
     }
 
     fun setDisplayMode(mode: String, zoom: Float = 1.0f, panY: Float = 0.0f, panX: Float = 0.0f) {
         tvScaleMode = mode
         webRtcManager?.tvScaleMode = mode
-        val isLandscape = isDeviceLandscape || mode == "FILL_16_9" || mode == "FILL" || mode == "EXTEND_16_9"
-        signalingClient?.sendMessage(SignalingMessage.SetDisplayMode(mode, zoom, panY, panX, isLandscape = isLandscape))
+        signalingClient?.sendMessage(SignalingMessage.SetDisplayMode(mode, zoom, panY, panX, isLandscape = isDeviceLandscape))
     }
 
     fun toggleTvScaleMode(): String {
@@ -128,7 +126,7 @@ class ProjectionSession(
                     webRtcManager?.beginCapture()
                     val initOrientation = context.resources.configuration.orientation
                     isDeviceLandscape = (initOrientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE)
-                    val isLandscape = isDeviceLandscape || tvScaleMode == "FILL_16_9" || tvScaleMode == "FILL" || tvScaleMode == "EXTEND_16_9"
+                    val isLandscape = isDeviceLandscape
                     val initPreset = TvZoomManager.findPreset(tvScaleMode)
                     client.sendMessage(TvZoomManager.toSignalingMessage(initPreset, isLandscape = isLandscape))
                 }
@@ -141,9 +139,9 @@ class ProjectionSession(
                 val isLand = (newConfig.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE)
                 if (isLand != isDeviceLandscape) {
                     isDeviceLandscape = isLand
-                    val targetMode = if (isLand || tvScaleMode in listOf("FILL_16_9", "FILL", "EXTEND_16_9")) "FILL" else "FIT"
+                    val targetMode = if (isLand) "FILL" else "FIT"
                     Log.i("ProjectionSession", "📱 Giro real de imagen en celular: modo $targetMode (landscape=$isLand)")
-                    signalingClient?.sendMessage(SignalingMessage.SetDisplayMode(targetMode, isLandscape = isLand || targetMode == "FILL"))
+                    signalingClient?.sendMessage(SignalingMessage.SetDisplayMode(targetMode, isLandscape = isLand))
                 }
             }
             override fun onLowMemory() = Unit

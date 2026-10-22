@@ -15,7 +15,7 @@ object AdBlocker {
         "vidhide.com", "vidhidepro.com", "vidhidepre.com", "embed69.org",
         "pelismart.mov", "pelismart.com", "pelismart.online", "pelismart.vip", "pelismart.net", "pelismart.lat", "pelismart.app", "pelismart.org",
         "vidurl.to", "fembed.com", "fplayer.info", "swdyu.com",
-        "doo.la", "ds2play.com", "ds2video.com"
+        "doo.la", "ds2play.com", "ds2video.com", "fastream.to", "dropcdn.io", "dr0pstream.com"
     )
 
     fun init(context: android.content.Context) {
@@ -72,12 +72,24 @@ object AdBlocker {
     fun addAdKeyword(keyword: String) = AdBlockDatabase.get().addKeyword(keyword)
     fun removeAdDomain(domain: String) = AdBlockDatabase.get().removeDomain(domain)
 
+    fun isSameSite(host1: String?, host2: String?): Boolean {
+        if (host1.isNullOrBlank() || host2.isNullOrBlank()) return false
+        val h1 = host1.lowercase().removePrefix("www.")
+        val h2 = host2.lowercase().removePrefix("www.")
+        if (h1 == h2 || h1.endsWith(".$h2") || h2.endsWith(".$h1")) return true
+        val p1 = h1.split('.')
+        val p2 = h2.split('.')
+        if (p1.size >= 2 && p2.size >= 2) {
+            val root1 = "${p1[p1.size - 2]}.${p1.last()}"
+            val root2 = "${p2[p2.size - 2]}.${p2.last()}"
+            return root1 == root2
+        }
+        return false
+    }
+
     fun isKnownMediaHost(host: String): Boolean {
         val lower = host.lowercase()
-        for (m in KNOWN_MEDIA_HOSTS) {
-            if (lower == m || lower.endsWith(".$m") || lower.contains(m.substringBefore("."))) return true
-        }
-        return lower.contains("embed") || lower.contains("player") || lower.contains("video") || lower.contains("stream") || lower.contains("cdn")
+        return KNOWN_MEDIA_HOSTS.any { m -> lower == m || lower.endsWith(".$m") }
     }
 
     fun learnAndBlockAdHost(urlOrHost: String?, currentMovieHost: String? = null): Boolean {
@@ -166,8 +178,8 @@ object AdBlocker {
                 document.addEventListener('click', function(e) {
                     var el = e.target;
                     if (!el) return;
-                    if (el.closest && el.closest('a, [href], input, textarea, select, button, form, [role="button"], [contenteditable="true"], [role="search"], [role="textbox"], [role="combobox"]')) return;
-                    if (el.tagName === 'A' || el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT' || el.tagName === 'FORM' || el.tagName === 'BUTTON') return;
+                    if (el.closest && el.closest('input, textarea, select, button, form, [role="button"], [contenteditable="true"], [role="search"], [role="textbox"], [role="combobox"]')) return;
+                    if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT' || el.tagName === 'FORM' || el.tagName === 'BUTTON') return;
                     if (el !== document.body && el !== document.documentElement) {
                         var cs = window.getComputedStyle(el);
                         if (cs && (cs.position === 'fixed' || cs.position === 'absolute')) {
@@ -180,7 +192,7 @@ object AdBlocker {
                                 var bg = cs.backgroundColor;
                                 var isTrans = (bg === 'transparent' || bg === 'rgba(0, 0, 0, 0)' || bg === 'rgba(255, 255, 255, 0)');
                                 var noText = !el.innerText || el.innerText.trim().length === 0;
-                                if ((op <= 0.08 || (isTrans && noText)) && !el.querySelector('video, iframe, button, input, a')) {
+                                if ((op <= 0.08 || (isTrans && noText)) && !el.querySelector('video, iframe, button, input, form')) {
                                     e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
                                     el.style.pointerEvents = 'none';
                                     el.remove();

@@ -53,4 +53,22 @@ class MediaPlatformRegressionTest {
         assertTrue("ytimg.com debe estar en DEFAULT_WHITELIST para miniaturas de YouTube", defaultList.contains("ytimg.com"))
         assertTrue("googlevideo.com debe estar en DEFAULT_WHITELIST", defaultList.contains("googlevideo.com"))
     }
+
+    @Test
+    fun testSameSiteDetection() {
+        assertTrue(AdBlocker.isSameSite("pelisplus.lat", "ww3.pelisplus.lat"))
+        assertTrue(AdBlocker.isSameSite("www.ok.ru", "ok.ru"))
+        assertFalse(AdBlocker.isSameSite("pelisplus.lat", "adnetwork.com"))
+        assertFalse(AdBlocker.isSameSite("reypelis.net", "bet365.com"))
+    }
+
+    @Test
+    fun testKnownMediaHostStrictMatching() {
+        assertTrue(AdBlocker.isKnownMediaHost("ok.ru"))
+        assertTrue(AdBlocker.isKnownMediaHost("sub.streamwish.to"))
+        assertTrue(AdBlocker.isKnownMediaHost("fastream.to"))
+        assertFalse(AdBlocker.isKnownMediaHost("fake-ads-cdn.com"))
+        assertFalse(AdBlocker.isKnownMediaHost("adstreamer.xyz"))
+        assertFalse(AdBlocker.isKnownMediaHost("player-bonus.net"))
+    }
 }

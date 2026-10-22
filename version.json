@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 152,
-  "versionCodeReceiver": 135,
-  "versionName": "3.4.2",
-  "releaseTag": "v3.4.2",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.2/omnicast-sender-v3.4.2.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.2/omnicast-receiver-v3.4.2.apk",
-  "changelog": "v3.4.2: Blindaje de plataformas oficiales: restauración de captura directa de YouTube y whitelist permanente de assets de Dailymotion (dmcdn.net) con suite de pruebas de regresión."
+  "versionCodeSender": 153,
+  "versionCodeReceiver": 136,
+  "versionName": "3.4.3",
+  "releaseTag": "v3.4.3",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.3/omnicast-sender-v3.4.3.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.3/omnicast-receiver-v3.4.3.apk",
+  "changelog": "v3.4.3: Bloqueo impenetrable de secuestro publicitario: filtrado estricto en onCreateWindow para popups externos, neutralización reactiva de click-shields invisibles y blindaje de navegación en páginas de películas."
 }

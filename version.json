@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 157,
-  "versionCodeReceiver": 140,
-  "versionName": "3.4.7",
-  "releaseTag": "v3.4.7",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.7/omnicast-sender-v3.4.7.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.7/omnicast-receiver-v3.4.7.apk",
-  "changelog": "v3.4.7: Solución definitiva a recorte de 1/4 y auto-conmutación horizontal 16:9; SurfaceViewRenderer a pantalla completa (MATCH_PARENT) centrada; auto-detección por sensor giroscópico en celular que conmuta automáticamente la TV Box a FILL/FIT; soporte completo de botón Play en control remoto de TV."
+  "versionCodeSender": 158,
+  "versionCodeReceiver": 141,
+  "versionName": "3.4.8",
+  "releaseTag": "v3.4.8",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.8/omnicast-sender-v3.4.8.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.8/omnicast-receiver-v3.4.8.apk",
+  "changelog": "v3.4.8: Restauración de acelerador de hardware (hardware scaler) nativo y eliminación de escalados espurios; en vertical cubre el 100% de la altura sin franjas arriba/abajo con recorte simétrico de barras (1.075x); en horizontal expande a 16:9 completo sin recortes a 1/4 ni desfases; conmutación de zoom con control remoto totalmente idempotente sin bloqueos."
 }

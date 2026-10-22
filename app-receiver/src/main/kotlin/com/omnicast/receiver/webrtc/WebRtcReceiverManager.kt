@@ -78,7 +78,7 @@ class WebRtcReceiverManager(private val context: Context) {
                 }
             })
             setScalingType(RendererCommon.ScalingType.SCALE_ASPECT_FIT)
-            setEnableHardwareScaler(false)
+            setEnableHardwareScaler(true)
             setZOrderMediaOverlay(true)
         }
     }
@@ -91,58 +91,47 @@ class WebRtcReceiverManager(private val context: Context) {
             val frameH = if (isRot) lastFrameW else lastFrameH
             if (frameW <= 0 || frameH <= 0) return@post
 
-            val tvMetrics = context.resources.displayMetrics
-            val tvW = tvMetrics.widthPixels.toFloat().coerceAtLeast(1280f)
-            val tvH = tvMetrics.heightPixels.toFloat().coerceAtLeast(720f)
-            val tvAspect = tvW / tvH
-            val frameAspect = frameW.toFloat() / frameH.toFloat()
-
             val isLandscape = frameW > frameH
-            val aspectFillFactor = if (isLandscape) {
-                if (frameAspect > tvAspect) (frameAspect / tvAspect) else (tvAspect / frameAspect)
-            } else 1.0f
-
-            val isFill = (currentMode == "FILL" || currentMode == "16:9" || currentMode == "EXTEND_16_9" || currentScalingType == RendererCommon.ScalingType.SCALE_ASPECT_FILL)
-            val targetScalingType = if (isFill) {
-                RendererCommon.ScalingType.SCALE_ASPECT_FILL
-            } else {
-                RendererCommon.ScalingType.SCALE_ASPECT_FIT
+            if (renderer.width > 0 && renderer.height > 0) {
+                renderer.pivotX = renderer.width / 2f
+                renderer.pivotY = renderer.height / 2f
+            } else if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+                renderer.resetPivot()
             }
-            renderer.setScalingType(targetScalingType)
 
-            when {
-                currentMode == "ZOOM" -> {
-                    val scale = if (isLandscape && aspectFillFactor > 1.0f) currentZoom * aspectFillFactor else currentZoom
-                    renderer.scaleX = scale
-                    renderer.scaleY = scale
-                    renderer.translationX = currentPanX
-                    renderer.translationY = currentPanY
-                    ReceiverLogger.log(TAG, "🔍 Zoom gradual TV: ${String.format(java.util.Locale.US, "%.2f", currentZoom)}x -> escala $scale (panX=$currentPanX, panY=$currentPanY, frame=${frameW}x${frameH})")
-                }
-                isFill -> {
-                    val factor = if (isLandscape) {
-                        if (aspectFillFactor > 1.0f) aspectFillFactor else 1.0f
-                    } else {
-                        if (tvAspect > frameAspect) (tvAspect / frameAspect) else 1.0f
-                    }
-                    renderer.scaleX = factor
-                    renderer.scaleY = factor
+            if (!isLandscape) {
+                // Proyección Vertical: 100% altura TV, recorte simétrico de status/nav bar (1.075x) sin deformación
+                renderer.setScalingType(RendererCommon.ScalingType.SCALE_ASPECT_FIT)
+                val scale = if (currentMode == "ZOOM") currentZoom * 1.075f else 1.075f
+                renderer.scaleX = scale
+                renderer.scaleY = scale
+                renderer.translationX = if (currentMode == "ZOOM") currentPanX else 0f
+                renderer.translationY = if (currentMode == "ZOOM") currentPanY else 0f
+                ReceiverLogger.log(TAG, "📱 Vertical TV: escala $scale centrado (frame=${frameW}x${frameH} rot=$lastRot)")
+            } else {
+                // Proyección Horizontal (YouTube / Video apaisado): pantalla completa 16:9
+                val isFill = (currentMode == "FILL" || currentMode == "16:9" || currentMode == "EXTEND_16_9" || currentScalingType == RendererCommon.ScalingType.SCALE_ASPECT_FILL)
+                if (isFill) {
+                    renderer.setScalingType(RendererCommon.ScalingType.SCALE_ASPECT_FILL)
+                    renderer.scaleX = 1.0f
+                    renderer.scaleY = 1.0f
                     renderer.translationX = 0f
                     renderer.translationY = 0f
-                    ReceiverLogger.log(TAG, "📺 Modo 16:9 (FILL): factor=$factor frame=${frameW}x${frameH} rot=$lastRot")
-                }
-                else -> {
-                    val baseScale = if (currentZoom > 0f) currentZoom else 1.0f
-                    val scale = if (isLandscape) {
-                        if (currentZoom > 1.0f && aspectFillFactor > 1.0f) baseScale * aspectFillFactor else baseScale
-                    } else {
-                        if (baseScale == 1.0f) 1.075f else baseScale * 1.075f
-                    }
-                    renderer.scaleX = scale
-                    renderer.scaleY = scale
-                    renderer.translationX = if (isLandscape) currentPanX else 0f
+                    ReceiverLogger.log(TAG, "📺 Horizontal TV 16:9 (FILL): pantalla completa (frame=${frameW}x${frameH} rot=$lastRot)")
+                } else if (currentMode == "ZOOM") {
+                    renderer.setScalingType(RendererCommon.ScalingType.SCALE_ASPECT_FIT)
+                    renderer.scaleX = currentZoom
+                    renderer.scaleY = currentZoom
+                    renderer.translationX = currentPanX
                     renderer.translationY = currentPanY
-                    ReceiverLogger.log(TAG, "📱 Modo FIT: escala $scale (isLandscape=$isLandscape, frame=${frameW}x${frameH} rot=$lastRot)")
+                    ReceiverLogger.log(TAG, "🔍 Horizontal TV (ZOOM): ${currentZoom}x")
+                } else {
+                    renderer.setScalingType(RendererCommon.ScalingType.SCALE_ASPECT_FIT)
+                    renderer.scaleX = 1.0f
+                    renderer.scaleY = 1.0f
+                    renderer.translationX = 0f
+                    renderer.translationY = 0f
+                    ReceiverLogger.log(TAG, "📺 Horizontal TV (FIT): original (frame=${frameW}x${frameH} rot=$lastRot)")
                 }
             }
         }
@@ -230,6 +219,9 @@ class WebRtcReceiverManager(private val context: Context) {
             RendererCommon.ScalingType.SCALE_ASPECT_FIT
         }
         currentMode = if (currentScalingType == RendererCommon.ScalingType.SCALE_ASPECT_FILL) "FILL" else "FIT"
+        currentZoom = 1.0f
+        currentPanX = 0f
+        currentPanY = 0f
         applyDisplayTransform()
         return currentScalingType
     }

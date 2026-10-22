@@ -15,22 +15,23 @@ class OkRuSiteExtractorAdapter : IMediaStreamExtractorPort {
     override fun canHandle(candidate: StreamCandidate): Boolean {
         val lower = candidate.url.lowercase()
 
-        // Rechazar explícitamente estadísticas, beacons y fragmentos temporales de buffer (bytes)
+        // Rechazar explícitamente estadísticas, beacons, imágenes, miniaturas y fragmentos de buffer
         if (lower.contains("videostat") || lower.contains("statnew") || lower.contains("tracking") ||
+            lower.contains("videopreview") || lower.contains("preview") || lower.contains("/i?") ||
+            lower.contains("i.okcdn.ru") || lower.contains("i.mycdn.me") ||
+            lower.contains("st.okcdn.ru") || lower.contains("st.mycdn.me") || lower.contains("static.") ||
             lower.contains("bytes=") || lower.contains("&bytes") || lower.contains("?bytes") ||
-            lower.contains("ct=11") || lower.contains("ct=12")) {
+            lower.contains("ct=11") || lower.contains("ct=12") || lower.contains("ct=6")) {
             return false
         }
 
-        // El video real de OK.ru se sirve a través de su CDN dedicada mycdn.me / okcdn.ru
+        // El video real de OK.ru se sirve a través de servidores vd*.mycdn.me o vd*.okcdn.ru
         val isMyCdn = (lower.contains("mycdn.me") || lower.contains("okcdn.ru")) &&
-                      (lower.contains("vd") || lower.contains("video") || lower.contains("cmd=video") ||
-                       lower.contains("/cmd/") || lower.contains(".m3u8") || lower.contains(".mp4") || lower.contains(".mpd") ||
-                       lower.contains("sig") || lower.contains("expires") || lower.contains("mid=")) &&
-                      !lower.contains("i.mycdn.me") && !lower.contains("st.mycdn.me") && !lower.contains("static.mycdn.me")
+                      (lower.contains("vd") || lower.contains("cmd=video") || lower.contains("/cmd/") || lower.contains(".m3u8") || lower.contains(".mp4")) &&
+                      (lower.contains("sig=") || lower.contains("expires=") || lower.contains(".m3u8"))
 
         val isOkRuVideo = (lower.contains("ok.ru/") || lower.contains("odnoklassniki.ru/")) &&
-                          (lower.contains("video") || lower.contains("cmd=video") || lower.contains("hlsmanifest"))
+                          (lower.contains("cmd=video") || lower.contains("hlsmanifest"))
 
         return isMyCdn || isOkRuVideo
     }

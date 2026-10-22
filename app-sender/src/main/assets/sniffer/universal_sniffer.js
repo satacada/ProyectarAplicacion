@@ -47,18 +47,23 @@
         var l = u.toLowerCase();
         if (l.indexOf('.jpg') !== -1 || l.indexOf('.png') !== -1 || l.indexOf('.webp') !== -1 ||
             l.indexOf('.gif') !== -1 || l.indexOf('.css') !== -1 || l.indexOf('.js') !== -1 ||
-            l.indexOf('i.mycdn.me') !== -1 || l.indexOf('st.mycdn.me') !== -1) return false;
+            l.indexOf('i.mycdn.me') !== -1 || l.indexOf('st.mycdn.me') !== -1 ||
+            l.indexOf('i.okcdn.ru') !== -1 || l.indexOf('st.okcdn.ru') !== -1 ||
+            l.indexOf('videopreview') !== -1 || l.indexOf('preview') !== -1 || l.indexOf('/i?') !== -1) return false;
         if (l.indexOf('stub.mp4') !== -1 || l.indexOf('dummy.mp4') !== -1 || l.indexOf('blank.mp4') !== -1) return false;
         if (l.indexOf('/embed/') !== -1 || l.indexOf('/embed69') !== -1 || l.indexOf('/vidurl/') !== -1) return false;
         if (l.indexOf('init.mp4') !== -1 || l.indexOf('/init-') !== -1 || l.indexOf('.m4s') !== -1) return false;
         if (l.indexOf('.ts') !== -1 && l.indexOf('.m3u8') === -1) return false;
         if (l.indexOf('holdbitter') !== -1 || l.indexOf('/gambling/') !== -1 || l.indexOf('bonus-') !== -1 || l.indexOf('bonus_') !== -1) return false;
-        if (l.indexOf('bytes=') !== -1 || l.indexOf('&bytes') !== -1 || l.indexOf('?bytes') !== -1 || l.indexOf('ct=11') !== -1 || l.indexOf('ct=12') !== -1) return false;
+        if (l.indexOf('bytes=') !== -1 || l.indexOf('&bytes') !== -1 || l.indexOf('?bytes') !== -1 || l.indexOf('ct=11') !== -1 || l.indexOf('ct=12') !== -1 || l.indexOf('ct=6') !== -1) return false;
+        var isOkRuCdn = (l.indexOf('mycdn.me') !== -1 || l.indexOf('okcdn.ru') !== -1) &&
+                        (l.indexOf('vd') !== -1 || l.indexOf('cmd=video') !== -1 || l.indexOf('/cmd/') !== -1 || l.indexOf('.m3u8') !== -1) &&
+                        (l.indexOf('sig=') !== -1 || l.indexOf('expires=') !== -1 || l.indexOf('.m3u8') !== -1);
         return l.indexOf('.m3u8') !== -1 || l.indexOf('.mp4') !== -1 || l.indexOf('.mpd') !== -1 ||
                l.indexOf('/hls') !== -1 || l.indexOf('/stream/') !== -1 || l.indexOf('/manifest') !== -1 ||
                l.indexOf('/live') !== -1 || l.indexOf('chunklist') !== -1 ||
                l.indexOf('p.php?url=') !== -1 || (l.indexOf('/p.php') !== -1 && l.indexOf('sig=') !== -1) ||
-               ((l.indexOf('mycdn.me') !== -1 || l.indexOf('okcdn.ru') !== -1) && (l.indexOf('vd') !== -1 || l.indexOf('video') !== -1 || l.indexOf('cmd=video') !== -1 || l.indexOf('/cmd/') !== -1 || l.indexOf('sig=') !== -1 || l.indexOf('type=') !== -1 || l.indexOf('/type/') !== -1 || l.indexOf('expires=') !== -1)) ||
+               isOkRuCdn ||
                (l.indexOf('master.txt') !== -1 && l.indexOf('/hls') !== -1);
     }
 

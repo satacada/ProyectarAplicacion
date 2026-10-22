@@ -71,4 +71,13 @@ class MediaPlatformRegressionTest {
         assertFalse(AdBlocker.isKnownMediaHost("adstreamer.xyz"))
         assertFalse(AdBlocker.isKnownMediaHost("player-bonus.net"))
     }
+
+    @Test
+    fun testVerificationAndCaptchaProtection() {
+        assertTrue(AdBlocker.isVerificationOrCaptcha("https://challenges.cloudflare.com/turnstile/v0/api.js"))
+        assertTrue(AdBlocker.isVerificationOrCaptcha("https://pelicinehd.com/cdn-cgi/challenge-platform/h/b/orchestrate/chl_page/v1"))
+        assertTrue(AdBlocker.isVerificationOrCaptcha("https://pelicinehd.com/?__cf_chl_tk=12345"))
+        assertTrue(AdBlocker.isVerificationOrCaptcha("challenges.cloudflare.com"))
+        assertFalse(AdBlocker.isVerificationOrCaptcha("https://pelisplus.lat/movie/123"))
+    }
 }

@@ -54,7 +54,7 @@ class AdBlockDatabase private constructor(private val appContext: Context) :
         fun isAdDomain(host: String?): Boolean {
             if (host.isNullOrBlank()) return false
             val h = host.lowercase()
-            if (h.contains("cloudflare") || h.contains("turnstile") || h.contains("challenges") || h.contains("hcaptcha") || h.contains("recaptcha")) return false
+            if (h.contains("cloudflare") || h.contains("turnstile") || h.contains("challenge") || h.contains("hcaptcha") || h.contains("recaptcha") || h.contains("cdn-cgi")) return false
             for (d in cachedDomains) {
                 if (h == d || h.endsWith(".$d")) return true
             }
@@ -63,7 +63,7 @@ class AdBlockDatabase private constructor(private val appContext: Context) :
 
         fun matchesKeyword(url: String): Boolean {
             val lower = url.lowercase()
-            if (lower.contains("cloudflare") || lower.contains("turnstile") || lower.contains("challenges")) return false
+            if (lower.contains("cloudflare") || lower.contains("turnstile") || lower.contains("challenge") || lower.contains("cdn-cgi") || lower.contains("cf_chl") || lower.contains("cf-chl")) return false
             for (kw in cachedKeywords) {
                 if (lower.contains(kw)) return true
             }

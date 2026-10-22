@@ -33,8 +33,9 @@ object AdBlocker {
         if (urlOrHost.isNullOrBlank()) return false
         val h = urlOrHost.lowercase()
         return h.contains("cloudflare") || h.contains("turnstile") ||
-               h.contains("challenges") || h.contains("hcaptcha") ||
-               h.contains("recaptcha") || h.contains("captcha")
+               h.contains("challenge") || h.contains("hcaptcha") ||
+               h.contains("recaptcha") || h.contains("captcha") ||
+               h.contains("cdn-cgi") || h.contains("cf_chl") || h.contains("cf-chl")
     }
 
     fun isVideoAd(url: String): Boolean {
@@ -131,7 +132,10 @@ object AdBlocker {
         (function() {
             try {
                 var h = (window.location.hostname || '').toLowerCase();
-                if (h.indexOf('dailymotion.com') !== -1 || h.indexOf('dmcdn.net') !== -1 || h.indexOf('youtube.com') !== -1 || h.indexOf('ytimg.com') !== -1 || h.indexOf('googlevideo.com') !== -1 || h.indexOf('google.') !== -1 || h.indexOf('bing.') !== -1 || h.indexOf('yandex.') !== -1 || h.indexOf('ok.ru') !== -1 || h.indexOf('odnoklassniki.ru') !== -1 || h.indexOf('vk.com') !== -1) {
+                if (h.indexOf('dailymotion.com') !== -1 || h.indexOf('dmcdn.net') !== -1 || h.indexOf('youtube.com') !== -1 || h.indexOf('ytimg.com') !== -1 || h.indexOf('googlevideo.com') !== -1 || h.indexOf('google.') !== -1 || h.indexOf('bing.') !== -1 || h.indexOf('yandex.') !== -1 || h.indexOf('ok.ru') !== -1 || h.indexOf('odnoklassniki.ru') !== -1 || h.indexOf('vk.com') !== -1 || h.indexOf('canela.tv') !== -1 || h.indexOf('cloudflare') !== -1) {
+                    return;
+                }
+                if ((document.title || '').indexOf('Just a moment') !== -1 || (window.location.pathname || '').indexOf('cdn-cgi') !== -1 || (window.location.search || '').indexOf('__cf_chl') !== -1) {
                     return;
                 }
                 function cleanDoc(doc) {
@@ -164,6 +168,8 @@ object AdBlocker {
                     cleanDoc(document);
                     var iframes = document.querySelectorAll('iframe');
                     for (var k = 0; k < iframes.length; k++) {
+                        var isrc = (iframes[k].src || '').toLowerCase();
+                        if (isrc.indexOf('cloudflare') !== -1 || isrc.indexOf('turnstile') !== -1 || isrc.indexOf('challenge') !== -1) continue;
                         try { cleanDoc(iframes[k].contentDocument); } catch(e) {}
                     }
                 }
@@ -178,8 +184,13 @@ object AdBlocker {
                 document.addEventListener('click', function(e) {
                     var el = e.target;
                     if (!el) return;
+                    var aTag = el.closest ? el.closest('a') : null;
+                    if (aTag) {
+                        var href = (aTag.getAttribute('href') || '').trim();
+                        if (href && href !== '#' && href.indexOf('javascript:') !== 0) return;
+                    }
                     if (el.closest && el.closest('input, textarea, select, button, form, [role="button"], [contenteditable="true"], [role="search"], [role="textbox"], [role="combobox"]')) return;
-                    if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT' || el.tagName === 'FORM' || el.tagName === 'BUTTON') return;
+                    if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT' || el.tagName === 'FORM' || el.tagName === 'BUTTON' || el.tagName === 'A') return;
                     if (el !== document.body && el !== document.documentElement) {
                         var cs = window.getComputedStyle(el);
                         if (cs && (cs.position === 'fixed' || cs.position === 'absolute')) {

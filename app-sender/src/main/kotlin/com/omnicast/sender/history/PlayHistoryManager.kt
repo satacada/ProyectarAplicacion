@@ -48,8 +48,8 @@ class PlayHistoryManager(private val context: Context) {
         val isProx = requiresProxy || (existing?.requiresProxy ?: false) || url.contains(":8092")
         val finalPos = if (positionMs > 0L) positionMs else (existing?.lastPositionMs ?: 0L)
         val finalDur = if (durationMs > 0L) durationMs else (existing?.durationMs ?: 0L)
-        current.removeAll { it.url == url || (cleanTitle != "Película / Video" && cleanTitle != "Dailymotion" && it.title == cleanTitle) }
-        current.add(0, HistoryItem(url, cleanTitle, pageUrl ?: existing?.pageUrl, if (headers.isNotEmpty()) headers else (existing?.headers ?: emptyMap()), System.currentTimeMillis(), finalPos, finalDur, isFavorite = isFav, requiresProxy = isProx))
+        val effectivePageUrl = pageUrl?.takeIf { it.isNotBlank() } ?: existing?.pageUrl ?: headers["Referer"]?.takeIf { it.isNotBlank() }
+        current.add(0, HistoryItem(url, cleanTitle, effectivePageUrl, if (headers.isNotEmpty()) headers else (existing?.headers ?: emptyMap()), System.currentTimeMillis(), finalPos, finalDur, isFavorite = isFav, requiresProxy = isProx))
         val favorites = current.filter { it.isFavorite }
         val nonFavorites = current.filter { !it.isFavorite }.take(MAX_NON_FAVORITES)
         val combined = (favorites + nonFavorites).distinctBy { it.url }

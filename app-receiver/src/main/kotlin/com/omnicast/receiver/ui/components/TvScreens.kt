@@ -234,6 +234,7 @@ fun TvDirectStreamScreen(
                         exoPlayerManager.playerView = this
                         isFocusable = true
                         isFocusableInTouchMode = true
+                        TvMediaControlsStyler.applyTvFocusHighlight(this)
                     }
                 },
                 update = { pv ->

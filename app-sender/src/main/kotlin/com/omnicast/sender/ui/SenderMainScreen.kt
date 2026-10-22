@@ -52,6 +52,7 @@ fun SenderMainScreen(
     val isStreaming by com.omnicast.sender.service.CastSessionState.isProjectingFlow.collectAsState()
     var detectionResult by remember { mutableStateOf<StreamDetectionResult?>(null) }
     var showInAppBrowser by rememberSaveable { mutableStateOf(initialOpenBrowser) }
+    var browserInitialUrl by remember { mutableStateOf<String?>(null) }
     var showConfigDialog by remember { mutableStateOf(false) }
     var showHelpDialog by remember { mutableStateOf(false) }
     var showSideDrawer by remember { mutableStateOf(false) }
@@ -133,7 +134,7 @@ fun SenderMainScreen(
             Toast.makeText(context, "Transmitiendo a TV Box...", Toast.LENGTH_SHORT).show()
         },
         onOpenInBrowser = {
-            prefs.edit().putString("saved_browser_last_url", it).apply()
+            browserInitialUrl = it
             showInAppBrowser = true
         }
     ) {
@@ -143,8 +144,9 @@ fun SenderMainScreen(
                     onSendDirectStream(url, title, hdrs)
                     Toast.makeText(context, "Transmitiendo a TV Box...", Toast.LENGTH_SHORT).show()
                 },
-                onCloseBrowser = { showInAppBrowser = false },
-                isTvConnected = isTvConnected
+                onCloseBrowser = { showInAppBrowser = false; browserInitialUrl = null },
+                isTvConnected = isTvConnected,
+                initialUrl = browserInitialUrl
             )
         } else {
             LazyColumn(

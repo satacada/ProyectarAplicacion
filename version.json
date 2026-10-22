@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 164,
-  "versionCodeReceiver": 147,
-  "versionName": "3.4.14",
-  "releaseTag": "v3.4.14",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.14/omnicast-sender-v3.4.14.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.14/omnicast-receiver-v3.4.14.apk",
-  "changelog": "v3.4.14: Ordenamiento inteligente por probabilidad de pelicula sin eliminar ningun flujo; preservacion de enlaces con advertencia al fondo de la lista; correccion de CORS en TvWebStreamScreen usando streamOrigin; proteccion runOnUiThread en fallback reactivo de TV a ExoPlayer; eliminacion de ReferenceError en setDisplayMode."
+  "versionCodeSender": 165,
+  "versionCodeReceiver": 148,
+  "versionName": "3.4.15",
+  "releaseTag": "v3.4.15",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.15/omnicast-sender-v3.4.15.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.15/omnicast-receiver-v3.4.15.apk",
+  "changelog": "v3.4.15: Apertura directa de pagina web por defecto al pulsar sobre elementos de Historial y Guardadas tanto en el explorador como en la pantalla principal; eliminacion de icono gigante de play en reproductor web de TV reemplazado por indicador animado de carga (spinner)."
 }

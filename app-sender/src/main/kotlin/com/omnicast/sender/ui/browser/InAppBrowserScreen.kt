@@ -27,7 +27,8 @@ import kotlinx.coroutines.withContext
 fun InAppBrowserScreen(
     onSendStreamToTv: (url: String, title: String, headers: Map<String, String>) -> Unit,
     onCloseBrowser: () -> Unit,
-    isTvConnected: Boolean = true
+    isTvConnected: Boolean = true,
+    initialUrl: String? = null
 ) {
     val context = LocalContext.current
     val historyManager = remember { PlayHistoryManager(context) }
@@ -40,7 +41,6 @@ fun InAppBrowserScreen(
     var showBottomControls by rememberSaveable { mutableStateOf(ActiveStreamHolder.isCasting.value && ActiveStreamHolder.isPlaying.value) }; var videoToSave by remember { mutableStateOf<HistoryItem?>(null) }; var webViewInstance by remember { mutableStateOf<WebView?>(null) }; var popupWebView by remember { mutableStateOf<WebView?>(null) }
     var playlistsVersion by remember { mutableIntStateOf(0) }; val scope = rememberCoroutineScope(); var userDismissedSheetForUrl by rememberSaveable { mutableStateOf("") }; var autoOpenJob by remember { mutableStateOf<kotlinx.coroutines.Job?>(null) }
     val isCasting by ActiveStreamHolder.isCasting.collectAsState(); val isPlaying by ActiveStreamHolder.isPlaying.collectAsState(); val posMs by ActiveStreamHolder.positionMs.collectAsState(); val durMs by ActiveStreamHolder.durationMs.collectAsState(); val volume by ActiveStreamHolder.volume.collectAsState(); val castTitle by ActiveStreamHolder.currentMediaTitle.collectAsState()
-
     fun isRealMedia(s: String) = BrowserUrlHelper.isRealMedia(s, streamDurations[s] ?: 0f)
 
     val isMovieSaved = remember(detectedStreams.size, playlistsVersion, castTitle, pageTitle) {
@@ -136,6 +136,7 @@ fun InAppBrowserScreen(
         inputUrl = target; currentUrl = target; isHome = false; prefs.edit().putString("saved_browser_last_url", target).apply()
         checkPlatformUrls(target); webViewInstance?.loadUrl(target)
     }
+    LaunchedEffect(initialUrl) { if (!initialUrl.isNullOrBlank()) navigateTo(initialUrl) }
 
     fun transmitWithHistory(url: String, title: String, hdrs: Map<String, String>, savedPageUrl: String? = null) {
         if (url.isBlank()) return

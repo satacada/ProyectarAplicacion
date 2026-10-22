@@ -164,40 +164,39 @@ fun TvWebStreamScreen(
                                 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
                                 <style>
                                   * { margin:0; padding:0; box-sizing:border-box; }
-                                  html, body { width:100vw; height:100vh; overflow:hidden; background:#000; }
+                                  html, body { width:100vw; height:100vh; overflow:hidden; background:#000; position:relative; }
                                   video { width:100vw; height:100vh; object-fit:contain; background:#000; border:none; outline:none; transition:transform 0.2s ease, object-fit 0.2s ease; }
+                                  video::-webkit-media-controls-overlay-play-button { display:none !important; -webkit-appearance:none; }
+                                  video::-webkit-media-controls-start-playback-button { display:none !important; -webkit-appearance:none; }
+                                  .spinner { position:absolute; top:50%; left:50%; width:60px; height:60px; margin:-30px 0 0 -30px; border:4px solid rgba(255,255,255,0.15); border-top-color:#38bdf8; border-radius:50%; animation:spin 0.8s linear infinite; pointer-events:none; z-index:10; opacity:1; transition:opacity 0.3s ease; }
+                                  @keyframes spin { 0% { transform:rotate(0deg); } 100% { transform:rotate(360deg); } }
                                 </style>
                                 <script>$hlsCode</script>
                                 </head>
                                 <body>
                                   <video id="vplayer" autoplay playsinline controls></video>
+                                  <div id="loader" class="spinner"></div>
                                   <script>
-                                    var vid = document.getElementById('vplayer');
-                                    var streamUrl = "$safeUrl";
-                                    var startSec = $startSec;
-                                    var hasResumed = false;
-
+                                    var vid = document.getElementById('vplayer'), spinner = document.getElementById('loader');
+                                    var streamUrl = "$safeUrl", startSec = $startSec, hasResumed = false;
+                                    function hideSpin() { if (spinner) spinner.style.opacity = '0'; }
+                                    function showSpin() { if (spinner) spinner.style.opacity = '1'; }
                                     function reportStatus() {
                                       if (window.AndroidBridge && vid) {
-                                        var cur = vid.currentTime || 0;
-                                        var dur = vid.duration || 0;
-                                        var playing = !vid.paused && !vid.ended && vid.readyState > 2;
-                                        window.AndroidBridge.onPlaybackStatus(cur, dur, playing);
+                                        window.AndroidBridge.onPlaybackStatus(vid.currentTime || 0, vid.duration || 0, !vid.paused && !vid.ended && vid.readyState > 2);
                                       }
                                     }
-
                                     vid.addEventListener('timeupdate', reportStatus);
-                                    vid.addEventListener('play', reportStatus);
+                                    vid.addEventListener('play', function() { hideSpin(); reportStatus(); });
+                                    vid.addEventListener('playing', hideSpin);
+                                    vid.addEventListener('waiting', showSpin);
+                                    vid.addEventListener('seeking', showSpin);
+                                    vid.addEventListener('seeked', hideSpin);
                                     vid.addEventListener('pause', reportStatus);
                                     vid.addEventListener('ended', reportStatus);
-
-                                    function seekStart() {
-                                      if (startSec > 0 && !hasResumed && vid) {
-                                        hasResumed = true; vid.currentTime = startSec;
-                                      }
-                                    }
+                                    function seekStart() { if (startSec > 0 && !hasResumed && vid) { hasResumed = true; vid.currentTime = startSec; } }
                                     vid.addEventListener('loadedmetadata', seekStart);
-                                    vid.addEventListener('canplay', seekStart);
+                                    vid.addEventListener('canplay', function() { hideSpin(); seekStart(); vid.play().catch(function(){}); });
                                     vid.addEventListener('error', function() {
                                       var c = vid.error ? vid.error.code : 0;
                                       if (window.AndroidBridge && window.AndroidBridge.onPlaybackFailed) window.AndroidBridge.onPlaybackFailed('VID_ERR_' + c);

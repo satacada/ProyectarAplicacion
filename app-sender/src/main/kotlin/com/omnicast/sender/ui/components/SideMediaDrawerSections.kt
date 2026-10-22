@@ -68,7 +68,10 @@ fun DrawerHistoryList(
                     HistoryTextCard(
                         item = item,
                         onPlay = { onPlay(item) },
-                        onOpenWeb = { onOpenWeb(item.pageUrl ?: item.url) },
+                        onOpenWeb = {
+                            val target = item.pageUrl?.takeIf { it.isNotBlank() } ?: item.headers["Referer"]?.takeIf { it.isNotBlank() } ?: item.url
+                            onOpenWeb(target)
+                        },
                         onDelete = { onDelete(item.url) }
                     )
                 }
@@ -91,7 +94,7 @@ fun HistoryTextCard(
     Card(
         colors = CardDefaults.cardColors(containerColor = Color(0xFF1E293B)),
         shape = RoundedCornerShape(8.dp),
-        modifier = Modifier.fillMaxWidth().clickable { onPlay() }
+        modifier = Modifier.fillMaxWidth().clickable { onOpenWeb() }
     ) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 7.dp),
@@ -208,7 +211,10 @@ fun DrawerSavedPlaylistsList(
                                 colors = CardDefaults.cardColors(containerColor = Color(0xFF1E293B)),
                                 shape = RoundedCornerShape(8.dp),
                                 modifier = Modifier.weight(1f).combinedClickable(
-                                    onClick = { onPlay(video.url, video.title, video.headers ?: emptyMap(), video.lastPositionMs) },
+                                    onClick = {
+                                        val target = video.pageUrl?.takeIf { it.isNotBlank() } ?: video.headers?.get("Referer")?.takeIf { it.isNotBlank() } ?: video.url
+                                        onOpenWeb(target)
+                                    },
                                     onLongClick = { actionItem = pl.id to video }
                                 )
                             ) {

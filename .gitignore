@@ -26,6 +26,8 @@ references/decompiled/
 !app-receiver/src/main/assets/**
 !app-sender/src/main/AndroidManifest.xml
 !app-receiver/src/main/AndroidManifest.xml
+!app-sender/src/main/res/**
+!app-receiver/src/main/res/**
 !scripts/**
 !supabase/**
 

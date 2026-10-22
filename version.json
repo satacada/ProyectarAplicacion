@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 155,
-  "versionCodeReceiver": 138,
-  "versionName": "3.4.5",
-  "releaseTag": "v3.4.5",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.5/omnicast-sender-v3.4.5.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.5/omnicast-receiver-v3.4.5.apk",
-  "changelog": "v3.4.5: Proyección vertical exacta restaurada al 100% de la altura de la TV Box con Modifier.fillMaxHeight().aspectRatio(streamAspect) y layoutParams WRAP_CONTENT/MATCH_PARENT sin franjas arriba ni abajo."
+  "versionCodeSender": 156,
+  "versionCodeReceiver": 139,
+  "versionName": "3.4.6",
+  "releaseTag": "v3.4.6",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.6/omnicast-sender-v3.4.6.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.6/omnicast-receiver-v3.4.6.apk",
+  "changelog": "v3.4.6: Recorte de barra de estado superior (hora/batería) y barra de navegación inferior en vertical (1.075x); corrección de rotación dinámica a horizontal (16:9 pantalla completa en TV, eliminando el fallo de un cuarto de imagen en la esquina)."
 }

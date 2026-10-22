@@ -34,7 +34,23 @@ class WebRtcReceiverManager(private val context: Context) {
     private var currentPanX = 0.0f
     var lastFrameW: Int by mutableIntStateOf(0); private set
     var lastFrameH: Int by mutableIntStateOf(0); private set
-    private var lastRot = 0
+    var lastRot: Int by mutableIntStateOf(0); private set
+
+    val isRotated: Boolean get() = (lastRot == 90 || lastRot == 270)
+    val effectiveFrameW: Int get() = if (isRotated) lastFrameH else lastFrameW
+    val effectiveFrameH: Int get() = if (isRotated) lastFrameW else lastFrameH
+
+    fun isVertical(res: String = ""): Boolean {
+        if (effectiveFrameW > 0 && effectiveFrameH > 0) return effectiveFrameW < effectiveFrameH
+        val p = res.split("x"); val w = p.getOrNull(0)?.toIntOrNull() ?: 0; val h = p.getOrNull(1)?.toIntOrNull() ?: 0
+        return w in 1..<h
+    }
+
+    fun streamAspect(res: String = ""): Float {
+        if (effectiveFrameW > 0 && effectiveFrameH > 0) return effectiveFrameW.toFloat() / effectiveFrameH.toFloat()
+        val p = res.split("x"); val h = p.getOrNull(1)?.toFloatOrNull() ?: 16f
+        return if (h > 0f) (p.getOrNull(0)?.toFloatOrNull() ?: 9f) / h else (9f / 16f)
+    }
 
     fun initialize() {
         ReceiverLogger.log(TAG, "Inicializando decodificador WebRTC por hardware en TV Box (v3.25)")
@@ -70,9 +86,9 @@ class WebRtcReceiverManager(private val context: Context) {
     private fun applyDisplayTransform() {
         val renderer = surfaceViewRenderer ?: return
         android.os.Handler(android.os.Looper.getMainLooper()).post {
-            val isRotated = (lastRot == 90 || lastRot == 270)
-            val frameW = if (isRotated) lastFrameH else lastFrameW
-            val frameH = if (isRotated) lastFrameW else lastFrameH
+            val isRot = (lastRot == 90 || lastRot == 270)
+            val frameW = if (isRot) lastFrameH else lastFrameW
+            val frameH = if (isRot) lastFrameW else lastFrameH
             if (frameW <= 0 || frameH <= 0) return@post
 
             val tvMetrics = context.resources.displayMetrics
@@ -84,14 +100,14 @@ class WebRtcReceiverManager(private val context: Context) {
             val isLandscape = frameW > frameH
             val aspectFillFactor = if (isLandscape) {
                 if (frameAspect > tvAspect) (frameAspect / tvAspect) else (tvAspect / frameAspect)
-            } else {
-                1.0f
-            }
+            } else 1.0f
 
             val targetScalingType = if (!isLandscape) {
                 RendererCommon.ScalingType.SCALE_ASPECT_FIT
+            } else if (currentMode == "FILL" || currentMode == "16:9" || currentMode == "EXTEND_16_9") {
+                RendererCommon.ScalingType.SCALE_ASPECT_FILL
             } else {
-                currentScalingType
+                RendererCommon.ScalingType.SCALE_ASPECT_FIT
             }
             renderer.setScalingType(targetScalingType)
 
@@ -105,7 +121,7 @@ class WebRtcReceiverManager(private val context: Context) {
                     ReceiverLogger.log(TAG, "🔍 Zoom gradual TV: ${String.format(java.util.Locale.US, "%.2f", currentZoom)}x -> escala $scale (panX=$currentPanX, panY=$currentPanY, frame=${frameW}x${frameH})")
                 }
                 "FILL", "16:9", "EXTEND_16_9" -> {
-                    val factor = if (isLandscape) aspectFillFactor else 1.0f
+                    val factor = if (isLandscape) aspectFillFactor else 1.075f
                     renderer.scaleX = factor
                     renderer.scaleY = factor
                     renderer.translationX = 0f
@@ -114,18 +130,16 @@ class WebRtcReceiverManager(private val context: Context) {
                 }
                 else -> {
                     val baseScale = if (currentZoom > 0f) currentZoom else 1.0f
-                    val scale = if (isLandscape && currentZoom <= 1.0f && aspectFillFactor > 1.0f) {
-                        aspectFillFactor
-                    } else if (isLandscape && aspectFillFactor > 1.0f && currentZoom > 1.0f) {
-                        baseScale * aspectFillFactor
+                    val scale = if (isLandscape) {
+                        if (currentZoom > 1.0f && aspectFillFactor > 1.0f) baseScale * aspectFillFactor else baseScale
                     } else {
-                        baseScale
+                        if (baseScale == 1.0f) 1.075f else baseScale * 1.075f
                     }
                     renderer.scaleX = scale
                     renderer.scaleY = scale
                     renderer.translationX = if (isLandscape) currentPanX else 0f
                     renderer.translationY = currentPanY
-                    ReceiverLogger.log(TAG, "📱 Modo FIT: escala $scale (frame=${frameW}x${frameH} rot=$lastRot)")
+                    ReceiverLogger.log(TAG, "📱 Modo FIT: escala $scale (isLandscape=$isLandscape, frame=${frameW}x${frameH} rot=$lastRot)")
                 }
             }
         }

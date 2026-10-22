@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 158,
-  "versionCodeReceiver": 141,
-  "versionName": "3.4.8",
-  "releaseTag": "v3.4.8",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.8/omnicast-sender-v3.4.8.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.8/omnicast-receiver-v3.4.8.apk",
-  "changelog": "v3.4.8: Restauración de acelerador de hardware (hardware scaler) nativo y eliminación de escalados espurios; en vertical cubre el 100% de la altura sin franjas arriba/abajo con recorte simétrico de barras (1.075x); en horizontal expande a 16:9 completo sin recortes a 1/4 ni desfases; conmutación de zoom con control remoto totalmente idempotente sin bloqueos."
+  "versionCodeSender": 159,
+  "versionCodeReceiver": 142,
+  "versionName": "3.4.9",
+  "releaseTag": "v3.4.9",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.9/omnicast-sender-v3.4.9.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.9/omnicast-receiver-v3.4.9.apk",
+  "changelog": "v3.4.9: User-Agent adaptativo dinámico y bypass integral de bucle de verificación Cloudflare Turnstile en explorador; fijación inamovible de HU-013 y Regla 7 de AGENTS.md con proyección vertical 1.0x limpia al 100% de la altura física de la TV sin deformaciones ni franjas."
 }

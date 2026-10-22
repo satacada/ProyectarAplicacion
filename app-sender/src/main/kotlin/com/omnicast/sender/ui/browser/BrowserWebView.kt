@@ -14,9 +14,10 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 const val UA_MOBILE = "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36"
 const val UA_DESKTOP = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/124.0.0.0 Safari/537.36"
 
-private fun showBlockedToast(@Suppress("UNUSED_PARAMETER") ctx: android.content.Context) {
-    // Silencioso estilo Web Video Caster: bloquear sin interrumpir al usuario con Toasts
-}
+fun getAdaptiveMobileUserAgent(ctx: android.content.Context): String =
+    try { WebSettings.getDefaultUserAgent(ctx).replace("; wv", "").replace(Regex("Version/\\d+\\.\\d+\\s*"), "") } catch (_: Throwable) { UA_MOBILE }
+
+private fun showBlockedToast(@Suppress("UNUSED_PARAMETER") ctx: android.content.Context) {}
 
 /**
  * Componente AndroidView con SwipeRefreshLayout y WebView blindado contra cierres por fallos de renderizado.
@@ -102,7 +103,7 @@ fun BrowserWebView(
                 settings.mediaPlaybackRequiresUserGesture = false
                 settings.setSupportMultipleWindows(true)
                 settings.javaScriptCanOpenWindowsAutomatically = true
-                settings.userAgentString = UA_MOBILE
+                settings.userAgentString = getAdaptiveMobileUserAgent(ctx)
 
                 webViewClient = object : WebViewClient() {
                     override fun onRenderProcessGone(view: WebView?, detail: RenderProcessGoneDetail?): Boolean {
@@ -114,8 +115,11 @@ fun BrowserWebView(
                     override fun onPageStarted(v: WebView?, u: String?, f: Bitmap?) {
                         CookieManager.getInstance().flush()
                         u?.let { if (!it.startsWith("about:") && !it.contains("favicon")) onPageStarted(it) }
-                        if (isAdBlockEnabled) v?.evaluateJavascript(AdBlocker.getAdHidingScript(), null)
-                        v?.evaluateJavascript(SmartSelectionAutoCompleter.getCombinedInjectionScript(), null)
+                        val isChl = AdBlocker.isVerificationOrCaptcha(u) || (v?.title?.contains("Just a moment", ignoreCase = true) == true)
+                        if (!isChl) {
+                            if (isAdBlockEnabled) v?.evaluateJavascript(AdBlocker.getAdHidingScript(), null)
+                            v?.evaluateJavascript(SmartSelectionAutoCompleter.getCombinedInjectionScript(), null)
+                        }
                     }
 
                     override fun onPageFinished(v: WebView?, u: String?) {
@@ -124,8 +128,11 @@ fun BrowserWebView(
                         val title = v?.title ?: "Transmisión"
                         currentKnownTitle = title
                         onPageFinished(title, u)
-                        if (isAdBlockEnabled) v?.evaluateJavascript(AdBlocker.getAdHidingScript(), null)
-                        v?.evaluateJavascript(SmartSelectionAutoCompleter.getCombinedInjectionScript(), null)
+                        val isChl = AdBlocker.isVerificationOrCaptcha(u) || title.contains("Just a moment", ignoreCase = true)
+                        if (!isChl) {
+                            if (isAdBlockEnabled) v?.evaluateJavascript(AdBlocker.getAdHidingScript(), null)
+                            v?.evaluateJavascript(SmartSelectionAutoCompleter.getCombinedInjectionScript(), null)
+                        }
                         v?.evaluateJavascript(WvcDomSniffer.getInjectionScript(ctx), null)
                     }
 
@@ -137,6 +144,7 @@ fun BrowserWebView(
                         val reqUrl = r?.url?.toString() ?: return false
                         if (AdBlocker.isExternalRedirect(reqUrl)) return true
                         val liveUrl = v?.url ?: currentUrl
+                        if (AdBlocker.isVerificationOrCaptcha(reqUrl) || AdBlocker.isVerificationOrCaptcha(liveUrl)) return false
                         val curHost = try { java.net.URI(liveUrl).host?.lowercase() } catch (_: Throwable) { null }
                         val targetHost = try { r.url.host?.lowercase() } catch (_: Throwable) { null }
                         val isSameSite = AdBlocker.isSameSite(curHost, targetHost)

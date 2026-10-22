@@ -100,9 +100,9 @@ class WebRtcReceiverManager(private val context: Context) {
             }
 
             if (!isLandscape) {
-                // Proyección Vertical: 100% altura TV, recorte simétrico de status/nav bar (1.075x) sin deformación
+                // Proyección Vertical: 100% altura TV de borde a borde sin deformación
                 renderer.setScalingType(RendererCommon.ScalingType.SCALE_ASPECT_FIT)
-                val scale = if (currentMode == "ZOOM") currentZoom * 1.075f else 1.075f
+                val scale = if (currentMode == "ZOOM") currentZoom else 1.0f
                 renderer.scaleX = scale
                 renderer.scaleY = scale
                 renderer.translationX = if (currentMode == "ZOOM") currentPanX else 0f

@@ -224,7 +224,8 @@ fun TvWebStreamScreen(
                                       }
                                     }
 
-                                    var isDirectVideo = streamUrl.indexOf('.mp4') !== -1 || streamUrl.indexOf('.webm') !== -1;
+                                    var isOkMp4 = (streamUrl.indexOf('mycdn.me') !== -1 || streamUrl.indexOf('okcdn.ru') !== -1) && streamUrl.indexOf('/hls') === -1 && streamUrl.indexOf('m3u8') === -1;
+                                    var isDirectVideo = streamUrl.indexOf('.mp4') !== -1 || streamUrl.indexOf('.webm') !== -1 || isOkMp4;
                                     if (!isDirectVideo && window.Hls && Hls.isSupported()) initHls(); else { vid.src = streamUrl; vid.play().catch(function(){}); }
 
                                     function playStream() { if (vid) vid.play().catch(function(){}); }

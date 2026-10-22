@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 173,
-  "versionCodeReceiver": 156,
-  "versionName": "3.4.23",
-  "releaseTag": "v3.4.23",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.23/omnicast-sender-v3.4.23.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.23/omnicast-receiver-v3.4.23.apk",
-  "changelog": "v3.4.23: Erradicación total de residuos de zoom (ZOOM_115). La proyección arranca estrictamente limpia en FIT (100% altura TV de borde a borde). Reset de presets en TvZoomManager al iniciar sesión."
+  "versionCodeSender": 174,
+  "versionCodeReceiver": 157,
+  "versionName": "3.4.24",
+  "releaseTag": "v3.4.24",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.24/omnicast-sender-v3.4.24.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.24/omnicast-receiver-v3.4.24.apk",
+  "changelog": "v3.4.24: Restauración de aspectRatio(streamAspect) y WRAP_CONTENT en TvScreens.kt para proyección vertical 100% de altura centrada sin estiramiento a 16:9; exclusión de Dailymotion y plataformas oficiales en SmartSelectionAutoCompleter para entrada limpia en teclado virtual."
 }

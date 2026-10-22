@@ -203,7 +203,8 @@ class ExoPlayerTvManager(private val context: Context) {
             builder.setLiveConfiguration(MediaItem.LiveConfiguration.Builder().setMaxPlaybackSpeed(1.02f).setMinPlaybackSpeed(0.98f).build())
         }
         val lower = url.lowercase()
-        val isOkHls = (lower.contains("mycdn.me") || lower.contains("okcdn.ru")) && (lower.contains("/type/") || lower.contains("type=") || lower.contains("/video/") || lower.contains("sig=") || lower.contains("expires="))
+        val isOk = lower.contains("mycdn.me") || lower.contains("okcdn.ru")
+        val isOkHls = isOk && (lower.contains("/hls") || lower.contains("m3u8") || lower.contains("format=hls"))
         val isTxtHls = (lower.contains(".txt") || lower.contains(".txt?")) && (lower.contains("/hls") || lower.contains("master") || lower.contains("index"))
         when {
             branch == com.omnicast.core.domain.models.MediaBranch.AUDIO_ONLY || lower.contains(".mp3") || lower.contains(".aac") ->
@@ -213,7 +214,7 @@ class ExoPlayerTvManager(private val context: Context) {
             lower.contains(".m3u8") || lower.contains("m3u8") || lower.contains("/hls") || isOkHls || isTxtHls ->
                 builder.setMimeType(androidx.media3.common.MimeTypes.APPLICATION_M3U8)
             lower.contains(".webm") -> builder.setMimeType(androidx.media3.common.MimeTypes.VIDEO_WEBM)
-            lower.contains(".mp4") || lower.contains("/mp4") -> builder.setMimeType(androidx.media3.common.MimeTypes.APPLICATION_MP4)
+            lower.contains(".mp4") || lower.contains("/mp4") || (isOk && !isOkHls) -> builder.setMimeType(androidx.media3.common.MimeTypes.APPLICATION_MP4)
         }
         return builder.build()
     }

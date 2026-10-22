@@ -62,6 +62,7 @@ object SmartSelectionAutoCompleter {
             (function() {
                 var h = (window.location.hostname || '').toLowerCase();
                 var t = (document.title || '').toLowerCase();
+                if (h.indexOf('dailymotion.com') !== -1 || h.indexOf('dmcdn.net') !== -1 || h.indexOf('youtube.com') !== -1 || h.indexOf('google.') !== -1 || h.indexOf('bing.') !== -1 || h.indexOf('yandex.') !== -1) return;
                 if (h.indexOf('cloudflare') !== -1 || t.indexOf('just a moment') !== -1 || (window.location.pathname || '').indexOf('cdn-cgi') !== -1) return;
                 // 1. Corrección nativa de caret y scroll suave para campos de texto
                 if (!window.__omniInputFixInjected) {

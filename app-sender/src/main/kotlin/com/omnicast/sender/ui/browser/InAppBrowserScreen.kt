@@ -156,8 +156,12 @@ fun InAppBrowserScreen(
                 return@launch
             }
             val baseHdrs = if (probe.isPlayable && probe.healedHeaders.isNotEmpty()) probe.healedHeaders else finalHdrs
-            val healedHdrs = baseHdrs.toMutableMap().apply { if (hdrs["X-Force-Proxy"] == "true" || (!probe.isPlayable && probe.httpCode == 403) || finalUrl.contains("repelis", true)) put("X-Force-Proxy", "true") }
-            withContext(Dispatchers.Main) { streamHeaders[finalUrl] = healedHdrs; historyManager.addOrUpdate(finalUrl, cleanT, refPage, healedHdrs); onSendStreamToTv(finalUrl, cleanT, healedHdrs); showBottomControls = true }
+            withContext(Dispatchers.Main) {
+                streamHeaders[finalUrl] = baseHdrs
+                historyManager.addOrUpdate(finalUrl, cleanT, refPage, baseHdrs)
+                onSendStreamToTv(finalUrl, cleanT, baseHdrs)
+                showBottomControls = true
+            }
         }
     }
 

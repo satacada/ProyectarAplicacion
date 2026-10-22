@@ -175,20 +175,22 @@ fun TvWebStreamScreen(
                                 <script>$hlsCode</script>
                                 </head>
                                 <body>
-                                  <video id="vplayer" autoplay playsinline controls></video>
+                                  <div id="black-curtain" style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:#000;z-index:5;transition:opacity 0.3s ease;"></div>
+                                  <video id="vplayer" autoplay playsinline controls poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"></video>
                                   <div id="loader" class="spinner"></div>
                                   <script>
-                                    var vid = document.getElementById('vplayer'), spinner = document.getElementById('loader');
+                                    var vid = document.getElementById('vplayer'), spinner = document.getElementById('loader'), curtain = document.getElementById('black-curtain');
                                     var streamUrl = "$safeUrl", startSec = $startSec, hasResumed = false;
                                     function hideSpin() { if (spinner) spinner.style.opacity = '0'; }
                                     function showSpin() { if (spinner) spinner.style.opacity = '1'; }
+                                    function hideCurtain() { if (curtain) { curtain.style.opacity = '0'; curtain.style.pointerEvents = 'none'; } }
                                     function tryPlay() {
                                       if (!vid) return;
                                       var p = vid.play();
                                       if (p !== undefined) {
-                                        p.then(hideSpin).catch(function() {
+                                        p.then(function() { hideSpin(); hideCurtain(); }).catch(function() {
                                           vid.muted = true;
-                                          vid.play().then(function() { setTimeout(function() { if (vid) vid.muted = false; hideSpin(); }, 250); }).catch(function(){});
+                                          vid.play().then(function() { setTimeout(function() { if (vid) vid.muted = false; hideSpin(); hideCurtain(); }, 250); }).catch(function(){});
                                         });
                                       }
                                     }
@@ -197,8 +199,8 @@ fun TvWebStreamScreen(
                                         window.AndroidBridge.onPlaybackStatus(vid.currentTime || 0, vid.duration || 0, !vid.paused && !vid.ended && vid.readyState > 2);
                                       }
                                     }
-                                    vid.addEventListener('timeupdate', reportStatus); vid.addEventListener('play', function() { hideSpin(); reportStatus(); });
-                                    vid.addEventListener('playing', hideSpin); vid.addEventListener('waiting', showSpin); vid.addEventListener('seeking', showSpin); vid.addEventListener('seeked', hideSpin);
+                                    vid.addEventListener('timeupdate', reportStatus); vid.addEventListener('play', function() { hideSpin(); hideCurtain(); reportStatus(); });
+                                    vid.addEventListener('playing', function() { hideSpin(); hideCurtain(); }); vid.addEventListener('waiting', showSpin); vid.addEventListener('seeking', showSpin); vid.addEventListener('seeked', hideSpin);
                                     vid.addEventListener('pause', reportStatus); vid.addEventListener('ended', reportStatus);
                                     function seekStart() { if (startSec > 0 && !hasResumed && vid) { hasResumed = true; vid.currentTime = startSec; } }
                                     vid.addEventListener('loadedmetadata', seekStart); vid.addEventListener('canplay', function() { seekStart(); tryPlay(); });

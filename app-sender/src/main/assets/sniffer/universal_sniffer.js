@@ -221,23 +221,23 @@
     // 6. Extractor DOM específico para OK.ru (Metadata JSON en elemento reproductor)
     function sniffOkRuDom() {
         try {
-            var elms = document.querySelectorAll('[data-options*="metadata"], [data-module="OKVideo"], div.vp-layer');
+            var elms = document.querySelectorAll('[data-options*="metadata"], [data-module="OKVideo"], div.vp-layer, div[data-video], [data-options*="video"]');
             for (var i = 0; i < elms.length; i++) {
-                var raw = elms[i].getAttribute('data-options');
+                var raw = elms[i].getAttribute('data-options') || elms[i].getAttribute('data-video');
                 if (!raw) continue;
                 try {
                     var p = JSON.parse(raw);
-                    var meta = (p.flashvars && p.flashvars.metadata) ? p.flashvars.metadata : null;
+                    var meta = (p.flashvars && p.flashvars.metadata) ? p.flashvars.metadata : (p.metadata || null);
                     if (typeof meta === 'string') { try { meta = JSON.parse(meta); } catch(e) {} }
                     if (meta) {
                         var t = (meta.movie && meta.movie.title) ? meta.movie.title : document.title;
                         if (meta.hlsManifestUrl) {
-                            reportMedia(meta.hlsManifestUrl, t, 0, false);
+                            reportMedia(meta.hlsManifestUrl, t, 0, false, 'Adaptativo HLS');
                         }
                         if (meta.videos && meta.videos.length > 0) {
                             for (var v = 0; v < meta.videos.length; v++) {
                                 if (meta.videos[v].url) {
-                                    reportMedia(meta.videos[v].url, t, 0, false);
+                                    reportMedia(meta.videos[v].url, t, 0, false, meta.videos[v].name || ('OK.ru ' + (v + 1)));
                                 }
                             }
                         }
@@ -249,6 +249,7 @@
     sniffOkRuDom();
     setTimeout(sniffOkRuDom, 1500);
     setTimeout(sniffOkRuDom, 3500);
+    document.addEventListener('click', function() { setTimeout(sniffOkRuDom, 800); }, true);
 
     // 6b. Extractor DOM para APIs de reproductores web (JWPlayer, Clappr, Flowplayer) estilo WVC
     function sniffPlayerApis() {

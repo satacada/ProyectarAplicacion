@@ -119,7 +119,7 @@ object AdBlocker {
         (function() {
             try {
                 var h = (window.location.hostname || '').toLowerCase();
-                if (h.indexOf('dailymotion.com') !== -1 || h.indexOf('youtube.com') !== -1 || h.indexOf('google.') !== -1 || h.indexOf('bing.') !== -1 || h.indexOf('yandex.') !== -1) {
+                if (h.indexOf('dailymotion.com') !== -1 || h.indexOf('youtube.com') !== -1 || h.indexOf('google.') !== -1 || h.indexOf('bing.') !== -1 || h.indexOf('yandex.') !== -1 || h.indexOf('ok.ru') !== -1 || h.indexOf('odnoklassniki.ru') !== -1 || h.indexOf('vk.com') !== -1) {
                     return;
                 }
                 function cleanDoc(doc) {
@@ -166,8 +166,8 @@ object AdBlocker {
                 document.addEventListener('click', function(e) {
                     var el = e.target;
                     if (!el) return;
-                    if (el.closest && el.closest('input, textarea, select, button, form, [role="button"], [contenteditable="true"], [role="search"], [role="textbox"], [role="combobox"]')) return;
-                    if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT' || el.tagName === 'FORM' || el.tagName === 'BUTTON') return;
+                    if (el.closest && el.closest('a, [href], input, textarea, select, button, form, [role="button"], [contenteditable="true"], [role="search"], [role="textbox"], [role="combobox"]')) return;
+                    if (el.tagName === 'A' || el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT' || el.tagName === 'FORM' || el.tagName === 'BUTTON') return;
                     if (el !== document.body && el !== document.documentElement) {
                         var cs = window.getComputedStyle(el);
                         if (cs && (cs.position === 'fixed' || cs.position === 'absolute')) {

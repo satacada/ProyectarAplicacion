@@ -64,7 +64,39 @@ object SmartSelectionAutoCompleter {
                 var t = (document.title || '').toLowerCase();
                 if (h.indexOf('cloudflare') !== -1 || t.indexOf('just a moment') !== -1 || (window.location.pathname || '').indexOf('cdn-cgi') !== -1) return;
 
-                // Persistencia y replicación automática de selecciones (checkbox, radios, selects, servidores)
+                // 1. Corrección nativa LTR, visibilidad de viewport y protección de caret contra escritura inversa
+                if (!window.__omniInputFixInjected) {
+                    window.__omniInputFixInjected = true;
+                    try {
+                        var st = document.createElement('style');
+                        st.textContent = 'input, textarea { direction: ltr !important; unicode-bidi: plaintext !important; }';
+                        (document.head || document.documentElement).appendChild(st);
+                    } catch(_) {}
+
+                    function anchorCaret(el) {
+                        if (!el || (el.tagName !== 'INPUT' && el.tagName !== 'TEXTAREA')) return;
+                        if (!el.getAttribute('dir')) el.setAttribute('dir', 'ltr');
+                        if (el.selectionStart === 0 && el.selectionEnd === 0 && el.value && el.value.length > 0) {
+                            try { var len = el.value.length; el.setSelectionRange(len, len); } catch(_) {}
+                        }
+                    }
+
+                    document.addEventListener('input', function(e) { anchorCaret(e.target); }, true);
+
+                    document.addEventListener('focusin', function(e) {
+                        var el = e.target;
+                        if (!el) return;
+                        anchorCaret(el);
+                        if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable) {
+                            setTimeout(function() {
+                                try { el.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'smooth' }); }
+                                catch(_) { try { el.scrollIntoView(); } catch(__) {} }
+                            }, 100);
+                        }
+                    }, true);
+                }
+
+                // 2. Persistencia y replicación automática de selecciones (checkbox, radios, selects, servidores)
                 if (window.__omniSmartSelectionInjected) {
                     if (window.__omniApplySelections) window.__omniApplySelections();
                     return;

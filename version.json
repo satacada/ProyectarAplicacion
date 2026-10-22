@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 175,
-  "versionCodeReceiver": 158,
-  "versionName": "3.4.25",
-  "releaseTag": "v3.4.25",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.25/omnicast-sender-v3.4.25.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.25/omnicast-receiver-v3.4.25.apk",
-  "changelog": "v3.4.25: Auto-reparación proactiva al vuelo entre HLS y MP4 ante errores de manifiesto en ExoPlayer y Chromium; eliminación total de scripts invasivos sobre campos de texto para compatibilidad universal con todos los teclados e interfaces web."
+  "versionCodeSender": 176,
+  "versionCodeReceiver": 159,
+  "versionName": "3.4.26",
+  "releaseTag": "v3.4.26",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.26/omnicast-sender-v3.4.26.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.26/omnicast-receiver-v3.4.26.apk",
+  "changelog": "v3.4.26: Corrección definitiva de entrada de texto en Dailymotion y webs SPA; forzado LTR para erradicar escritura invertida, auto-scroll al centro para visibilidad sobre el teclado virtual y anclaje de caret."
 }

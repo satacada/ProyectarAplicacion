@@ -69,10 +69,17 @@ Este repositorio sigue el estándar abierto AGENTS.md para el desarrollo de la a
 6. **Blindaje Inviolable de Plataformas Oficiales (YouTube y Dailymotion):**
    - **YouTube:** PROHIBIDO filtrar, descartar o ignorar URLs con ID de YouTube (`extractYouTubeId != null`) en `registerStream()`, `checkPlatformUrls()`, `openOptionsSheet()` o `isRealMedia()`. La detección y generación de opciones de calidad de YouTube (`createYouTubeQualityOptions`) debe ejecutarse de forma limpia y directa hacia `TvYouTubeScreen`.
    - **Dailymotion y Recursos de Interfaz:** PROHIBIDO bloquear dominios de CDN/UI de Dailymotion (`dmcdn.net`, `static1.dmcdn.net`) o YouTube (`ytimg.com`, `googlevideo.com`) en `NativeAdBlockEngine` o `AdBlocker`. Dichos dominios deben residir permanentemente en `AdBlockWhitelistManager.DEFAULT_WHITELIST` y en `AdBlocker.KNOWN_MEDIA_HOSTS` para garantizar que la caja de texto del buscador y los controles interactivos de Dailymotion NUNCA desaparezcan ni se rompan.
-7. **Blindaje Inviolable de Screen Mirroring Vertical y Horizontal (HU-013):**
-   - **Vertical:** `SurfaceViewRenderer` debe ocupar el 100% de la altura física de la TV (de borde a borde sin franjas negras arriba/abajo), centrado horizontalmente con sus barras laterales naturales, aplicando un escalado fino de 1.075x que recorta y desplaza fuera del televisor la barra de estado superior (hora, batería) y los controles de navegación inferiores. PROHIBIDO aplicar factores multiplicadores de distorsión lateral.
-   - **Horizontal:** Expansión a 16:9 pantalla completa de borde a borde al girar el dispositivo o reproducir video horizontal. PROHIBIDO reducir la imagen a 1/4 o desplazarla al margen izquierdo.
-   - **Arquitectura de Renderizado:** En `TvScreens.kt`, `AndroidView` debe ser reactivo a `isVertical` (`Modifier.fillMaxHeight().aspectRatio(streamAspect)` con `WRAP_CONTENT, MATCH_PARENT` en vertical, y `Modifier.fillMaxSize()` con `MATCH_PARENT, MATCH_PARENT` en horizontal), con `setEnableHardwareScaler(false)` en el renderer. Toda conmutación desde control remoto debe ser estrictamente idempotente.
+7. **Blindaje Inviolable de Screen Mirroring Vertical y Horizontal (HU-013, v3.4.18) [BLOQUEANTE]:**
+   - **Prioridad Absoluta de la Imagen (Horizontal vs. Vertical):**
+     En `WebRtcReceiverManager.kt`, la propiedad reactiva `isLandscape` unifica obligatoriamente:
+     1. Indicador del teléfono (`isPhoneLandscape`).
+     2. Decodificación real de frames de video apaisados (`effectiveFrameW > effectiveFrameH`).
+     3. Modos forzados de llenar pantalla (`FILL`, `16:9`, `EXTEND_16_9`).
+     Si la imagen es horizontal (video de partido/película o teléfono horizontal), `isVertical` es estrictamente `false`.
+   - **Área de Renderizado y Zoom Totalmente Independientes:**
+     - **En Horizontal:** La TV utiliza incondicionalmente `Modifier.fillMaxSize()`, `MATCH_PARENT, MATCH_PARENT` en `SurfaceViewRenderer` y base `SCALE_ASPECT_FILL`. El zoom aplica sobre el área horizontal completa de 16:9 centrado en toda la pantalla del televisor sin colapsar a un tercio ni desplazarse a la izquierda.
+     - **En Vertical:** Se mantiene centrado ocupando el 100% de la altura física de la TV (de borde a borde sin franjas negras arriba/abajo) con recorte fino de 1.075x para barras de sistema (hora, batería, navegación), y el zoom opera únicamente sobre el área vertical. Queda TERMINANTEMENTE PROHIBIDO usar `WRAP_CONTENT` en `SurfaceViewRenderer` o aplicar factores multiplicadores de distorsión lateral.
+   - **Arquitectura de Renderizado en TV:** En `TvScreens.kt`, `AndroidView` debe mantener incondicionalmente `Modifier.fillMaxSize()` y `MATCH_PARENT, MATCH_PARENT` para que `SurfaceView` ocupe todo el televisor y sea el motor hardware WebRTC el que controle el centrado y la escala con `setEnableHardwareScaler(false)`. Toda conmutación desde control remoto debe ser estrictamente idempotente.
 
 ---
 
@@ -82,8 +89,8 @@ Queda terminantemente PROHIBIDO compilar o proponer una versión sin auditar pre
    Todo fallback o cambio de estado hacia `ReceiverUiState.WebStreamPlaying` DEBE transferir obligatoriamente el mapa de cabeceras (`headers = lastDirectHeaders`). Queda prohibido instanciar `WebStreamPlaying` con cabeceras vacías (`emptyMap()`), ya que despoja a Chromium de las cookies de sesión y del `Referer`, provocando rechazo inmediato 403 en CDNs protegidas (Cloudflare, Repelis).
 2. **Soporte HLS sin Extensión Rígida (Spider-Man / PelisGO):**
    En `TvWebStreamScreen`, toda URL que no sea un archivo de video directo (`.mp4`, `.webm`) DEBE pasar por `initHls()` (`Hls.js`). Prohibido suponer que HLS solo termina en `.m3u8`; existen manifiestos con terminación `.txt` o parámetros query que requieren `Hls.js` y fallan si se asignan directamente a `video.src`.
-3. **Escalado Horizontal y Zoom en Mirroring (No-Colapso a 1/16):**
-   En modo horizontal (`isLandscape == true`), `WebRtcReceiverManager` DEBE operar siempre con base `SCALE_ASPECT_FILL`. Queda prohibido resetear a `SCALE_ASPECT_FIT` o aplicar `aspectRatio` vertical de 9:16 durante el ciclo de zoom en horizontal.
+3. **Escalado Horizontal y Zoom en Mirroring (No-Colapso a 1/3 ni a 1/16):**
+   En modo horizontal (`isLandscape == true`), `WebRtcReceiverManager` DEBE operar siempre con base `SCALE_ASPECT_FILL` y `TvScreens.kt` con `MATCH_PARENT, MATCH_PARENT`. Queda PROHIBIDO usar `WRAP_CONTENT`, resetear a `SCALE_ASPECT_FIT` o aplicar `aspectRatio` vertical de 9:16 durante el ciclo de zoom en horizontal.
 4. **Prohibición de Inventar Vías Alternativas ante Fallos de un Pilar:**
    Si un flujo falla en el reproductor contratado (ExoPlayer o HTML5), queda TERMINANTEMENTE PROHIBIDO desviar la arquitectura hacia proxies o mecanismos improvisados no solicitados. Se debe inspeccionar el log local de la TV (`/logs`), identificar el fallo exacto en ese reproductor y corregirlo en su propio pilar sin romper los demás.
 

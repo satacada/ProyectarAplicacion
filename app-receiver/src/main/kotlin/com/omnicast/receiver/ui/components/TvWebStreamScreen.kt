@@ -201,12 +201,17 @@ fun TvWebStreamScreen(
                                     vid.addEventListener('pause', reportStatus); vid.addEventListener('ended', reportStatus);
                                     function seekStart() { if (startSec > 0 && !hasResumed && vid) { hasResumed = true; vid.currentTime = startSec; } }
                                     vid.addEventListener('loadedmetadata', seekStart); vid.addEventListener('canplay', function() { seekStart(); tryPlay(); });
+                                    var hasTriedHls = false;
                                     vid.addEventListener('error', function() {
+                                      if (!hasTriedHls && window.Hls && Hls.isSupported() && streamUrl.indexOf('.mp4') === -1) {
+                                        initHls(); return;
+                                      }
                                       var c = vid.error ? vid.error.code : 0;
                                       if (window.AndroidBridge && window.AndroidBridge.onPlaybackFailed) window.AndroidBridge.onPlaybackFailed('VID_ERR_' + c);
                                     });
 
                                     function initHls() {
+                                      hasTriedHls = true;
                                       if (window.Hls && Hls.isSupported()) {
                                         var hls = new Hls({ enableWorker: true, lowLatencyMode: false, backBufferLength: 90 });
                                         hls.loadSource(streamUrl);
@@ -216,7 +221,7 @@ fun TvWebStreamScreen(
                                           if (data.fatal) {
                                             if (data.type === Hls.ErrorTypes.NETWORK_ERROR) hls.startLoad();
                                             else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) hls.recoverMediaError();
-                                            else { vid.src = streamUrl; tryPlay(); }
+                                            else { try { hls.destroy(); } catch(_) {} vid.src = streamUrl; tryPlay(); }
                                           }
                                         });
                                       } else {
@@ -231,23 +236,14 @@ fun TvWebStreamScreen(
                                     function playStream() { if (vid) vid.play().catch(function(){}); }
                                     function pauseStream() { if (vid) vid.pause(); }
                                     function togglePlay() { if (vid) { if (vid.paused) vid.play().catch(function(){}); else vid.pause(); } }
-                                    function seekTo(s) { if (vid) vid.currentTime = Math.max(0, s); }
-                                    function seekRel(d) { if (vid) vid.currentTime = Math.max(0, (vid.currentTime || 0) + d); }
-                                    function setVolume(v) { if (vid) vid.volume = Math.max(0, Math.min(1, v)); }
-                                    function stopStream() { if (vid) { vid.pause(); vid.removeAttribute('src'); vid.load(); } }
+                                    function seekTo(s) { if (vid) vid.currentTime = Math.max(0, s); }; function seekRel(d) { if (vid) vid.currentTime = Math.max(0, (vid.currentTime || 0) + d); }
+                                    function setVolume(v) { if (vid) vid.volume = Math.max(0, Math.min(1, v)); }; function stopStream() { if (vid) { vid.pause(); vid.removeAttribute('src'); vid.load(); } }
 
                                     function setDisplayMode(mode, zoom, panY) {
                                       if (!vid) return;
-                                      if (mode === 'FILL' || mode === 'EXTEND_16_9') {
-                                        vid.style.objectFit = 'fill'; vid.style.transform = 'scale(1.0)';
-                                      } else if (mode === 'FIT') {
-                                        vid.style.objectFit = 'contain'; vid.style.transform = 'scale(1.0)';
-                                      } else {
-                                        vid.style.objectFit = 'contain';
-                                        var z = zoom || 1.0;
-                                        var py = panY || 0;
-                                        vid.style.transform = 'scale(' + z + ') translateY(' + py + 'px)';
-                                      }
+                                      if (mode === 'FILL' || mode === 'EXTEND_16_9') { vid.style.objectFit = 'fill'; vid.style.transform = 'scale(1.0)'; }
+                                      else if (mode === 'FIT') { vid.style.objectFit = 'contain'; vid.style.transform = 'scale(1.0)'; }
+                                      else { vid.style.objectFit = 'contain'; vid.style.transform = 'scale(' + (zoom || 1.0) + ') translateY(' + (panY || 0) + 'px)'; }
                                     }
 
                                     var zoomLevels = ['FIT', '1.15', '1.30', '0.85', '0.75', 'FILL'];

@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 174,
-  "versionCodeReceiver": 157,
-  "versionName": "3.4.24",
-  "releaseTag": "v3.4.24",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.24/omnicast-sender-v3.4.24.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.24/omnicast-receiver-v3.4.24.apk",
-  "changelog": "v3.4.24: Restauración de aspectRatio(streamAspect) y WRAP_CONTENT en TvScreens.kt para proyección vertical 100% de altura centrada sin estiramiento a 16:9; exclusión de Dailymotion y plataformas oficiales en SmartSelectionAutoCompleter para entrada limpia en teclado virtual."
+  "versionCodeSender": 175,
+  "versionCodeReceiver": 158,
+  "versionName": "3.4.25",
+  "releaseTag": "v3.4.25",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.25/omnicast-sender-v3.4.25.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.25/omnicast-receiver-v3.4.25.apk",
+  "changelog": "v3.4.25: Auto-reparación proactiva al vuelo entre HLS y MP4 ante errores de manifiesto en ExoPlayer y Chromium; eliminación total de scripts invasivos sobre campos de texto para compatibilidad universal con todos los teclados e interfaces web."
 }

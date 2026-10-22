@@ -37,6 +37,8 @@ class ExoPlayerTvManager(private val context: Context) {
     private var currentTitle: String? = null
     private var currentHeaders: Map<String, String> = emptyMap()
     private var isRetryingClean = false
+    private var fallbackMime: String? = null
+    private var activeMimeType: String? = null
     private val ioScope = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO)
 
     fun initialize(branch: com.omnicast.core.domain.models.MediaBranch = com.omnicast.core.domain.models.MediaBranch.VOD_HLS_MP4) {
@@ -77,10 +79,19 @@ class ExoPlayerTvManager(private val context: Context) {
                             onTracksChanged?.invoke(info)
                         }
                         override fun onPlayerError(error: PlaybackException) {
-                            com.omnicast.receiver.log.ReceiverLogger.log(TAG, "❌ Error en ExoPlayer ($activeBranch): ${error.errorCodeName} (${error.errorCode}): ${error.message}", error)
+                            val code = error.errorCode
+                            com.omnicast.receiver.log.ReceiverLogger.log(TAG, "❌ Error en ExoPlayer ($activeBranch): ${error.errorCodeName} ($code): ${error.message}", error)
                             if (TvBranchPlayerConfig.isLiveOrContinuous(activeBranch)) {
                                 com.omnicast.receiver.log.ReceiverLogger.log(TAG, "🔄 Auto-reconexión silenciosa en vivo (live edge)")
                                 android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({ player?.prepare(); player?.play() }, 800)
+                                return
+                            }
+                            // Auto-reparación proactiva: Si falla el parser de manifiesto (ej. era MP4 sin extensión o HLS en .txt)
+                            if ((code == PlaybackException.ERROR_CODE_PARSING_MANIFEST_MALFORMED || code == PlaybackException.ERROR_CODE_PARSING_CONTAINER_MALFORMED) && fallbackMime == null && currentUrl != null) {
+                                val alt = if (activeMimeType == androidx.media3.common.MimeTypes.APPLICATION_M3U8) androidx.media3.common.MimeTypes.APPLICATION_MP4 else androidx.media3.common.MimeTypes.APPLICATION_M3U8
+                                fallbackMime = alt
+                                com.omnicast.receiver.log.ReceiverLogger.log(TAG, "🔄 Auto-reparación al vuelo: Formato erróneo, conmutando a $alt")
+                                playStream(currentUrl!!, currentHeaders, currentTitle, currentPositionMs, activeBranch)
                                 return
                             }
                             val targetUrl = currentUrl
@@ -111,6 +122,7 @@ class ExoPlayerTvManager(private val context: Context) {
                         override fun onPlaybackStateChanged(playbackState: Int) {
                             if (playbackState == Player.STATE_READY) {
                                 recoveryManager.onPlaybackReady()
+                                fallbackMime = null
                             }
                             val stateName = when (playbackState) {
                                 Player.STATE_READY -> "LISTO / REPRODUCIENDO"
@@ -206,16 +218,16 @@ class ExoPlayerTvManager(private val context: Context) {
         val isOk = lower.contains("mycdn.me") || lower.contains("okcdn.ru")
         val isOkHls = isOk && (lower.contains("/hls") || lower.contains("m3u8") || lower.contains("format=hls"))
         val isTxtHls = (lower.contains(".txt") || lower.contains(".txt?")) && (lower.contains("/hls") || lower.contains("master") || lower.contains("index"))
-        when {
-            branch == com.omnicast.core.domain.models.MediaBranch.AUDIO_ONLY || lower.contains(".mp3") || lower.contains(".aac") ->
-                builder.setMimeType(androidx.media3.common.MimeTypes.AUDIO_MPEG)
-            branch == com.omnicast.core.domain.models.MediaBranch.DASH_MPD || lower.contains(".mpd") || lower.contains("dash") ->
-                builder.setMimeType(androidx.media3.common.MimeTypes.APPLICATION_MPD)
-            lower.contains(".m3u8") || lower.contains("m3u8") || lower.contains("/hls") || isOkHls || isTxtHls ->
-                builder.setMimeType(androidx.media3.common.MimeTypes.APPLICATION_M3U8)
-            lower.contains(".webm") -> builder.setMimeType(androidx.media3.common.MimeTypes.VIDEO_WEBM)
-            lower.contains(".mp4") || lower.contains("/mp4") || (isOk && !isOkHls) -> builder.setMimeType(androidx.media3.common.MimeTypes.APPLICATION_MP4)
+        val inferred = when {
+            branch == com.omnicast.core.domain.models.MediaBranch.AUDIO_ONLY || lower.contains(".mp3") || lower.contains(".aac") -> androidx.media3.common.MimeTypes.AUDIO_MPEG
+            branch == com.omnicast.core.domain.models.MediaBranch.DASH_MPD || lower.contains(".mpd") || lower.contains("dash") -> androidx.media3.common.MimeTypes.APPLICATION_MPD
+            lower.contains(".m3u8") || lower.contains("m3u8") || lower.contains("/hls") || isOkHls || isTxtHls -> androidx.media3.common.MimeTypes.APPLICATION_M3U8
+            lower.contains(".webm") -> androidx.media3.common.MimeTypes.VIDEO_WEBM
+            else -> androidx.media3.common.MimeTypes.APPLICATION_MP4
         }
+        val targetMime = fallbackMime ?: inferred
+        activeMimeType = targetMime
+        builder.setMimeType(targetMime)
         return builder.build()
     }
 
@@ -237,9 +249,7 @@ class ExoPlayerTvManager(private val context: Context) {
         if (!ref.isNullOrBlank() && !allowed.containsKey("Origin")) {
             runCatching {
                 val u = java.net.URI(ref)
-                if (!u.scheme.isNullOrBlank() && !u.host.isNullOrBlank()) {
-                    allowed["Origin"] = "${u.scheme}://${u.host}"
-                }
+                if (!u.scheme.isNullOrBlank() && !u.host.isNullOrBlank()) allowed["Origin"] = "${u.scheme}://${u.host}"
             }
         }
         return allowed
@@ -250,48 +260,18 @@ class ExoPlayerTvManager(private val context: Context) {
     var currentZoom: Float = 1.0f; private set
     var onZoomChanged: ((Float) -> Unit)? = null
 
-    fun toggleResizeMode(): Int {
-        resizeMode = aspectRatioHelper.cycleNextMode().resizeMode
-        onResizeModeChanged?.invoke(resizeMode); return resizeMode
-    }
-    fun setResizeMode(isZoom169: Boolean) {
-        resizeMode = if (isZoom169) androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_ZOOM else androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_FIT
-        onResizeModeChanged?.invoke(resizeMode)
-    }
-    fun setDisplayMode(mode: String, zoom: Float = 1.0f) {
-        currentZoom = zoom; val isZoom169 = mode == "FILL" || mode == "EXTEND_16_9"
-        resizeMode = if (isZoom169) androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_ZOOM else androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_FIT
-        onResizeModeChanged?.invoke(resizeMode); onZoomChanged?.invoke(zoom)
-    }
-
-    fun isNearEnd(): Boolean {
-        val p = player ?: return false
-        return p.playbackState == androidx.media3.common.Player.STATE_ENDED || (p.duration > 0L && p.currentPosition >= p.duration - 1500L)
-    }
-
-    fun seekTo(pos: Long) { player?.seekTo(pos) }
-    fun pause() { player?.pause() }
-    fun resume() {
-        val p = player ?: return
-        if (isNearEnd()) p.seekTo(0L)
-        p.play()
-    }
+    fun toggleResizeMode(): Int { resizeMode = aspectRatioHelper.cycleNextMode().resizeMode; onResizeModeChanged?.invoke(resizeMode); return resizeMode }
+    fun setResizeMode(isZoom169: Boolean) { resizeMode = if (isZoom169) androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_ZOOM else androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_FIT; onResizeModeChanged?.invoke(resizeMode) }
+    fun setDisplayMode(mode: String, zoom: Float = 1.0f) { currentZoom = zoom; val isZoom169 = mode == "FILL" || mode == "EXTEND_16_9"; resizeMode = if (isZoom169) androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_ZOOM else androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_FIT; onResizeModeChanged?.invoke(resizeMode); onZoomChanged?.invoke(zoom) }
+    fun isNearEnd(): Boolean = player?.let { it.playbackState == androidx.media3.common.Player.STATE_ENDED || (it.duration > 0L && it.currentPosition >= it.duration - 1500L) } ?: false
+    fun seekTo(pos: Long) { player?.seekTo(pos) }; fun pause() { player?.pause() }; fun resume() { val p = player ?: return; if (isNearEnd()) p.seekTo(0L); p.play() }
     fun setVolume(vol: Float) { player?.volume = vol.coerceIn(0f, 1f) }
-    fun toggleSubtitles(enable: Boolean? = null): Boolean {
-        val p = player ?: return false
-        val st = trackManager?.toggleSubtitles(enable) ?: false
-        trackManager?.getTracksInfo(p)?.let { onTracksChanged?.invoke(it) }
-        return st
-    }
+    fun toggleSubtitles(enable: Boolean? = null): Boolean = player?.let { p -> val st = trackManager?.toggleSubtitles(enable) ?: false; trackManager?.getTracksInfo(p)?.let { onTracksChanged?.invoke(it) }; st } ?: false
     fun selectTextTrack(idx: Int) { player?.let { trackManager?.selectTextTrack(it, idx); trackManager?.getTracksInfo(it)?.let { info -> onTracksChanged?.invoke(info) } } }
     fun selectAudioTrack(idx: Int) { player?.let { trackManager?.selectAudioTrack(it, idx); trackManager?.getTracksInfo(it)?.let { info -> onTracksChanged?.invoke(info) } } }
     val currentPositionMs: Long get() = player?.currentPosition?.coerceAtLeast(0L) ?: 0L
     val durationMs: Long get() = player?.duration?.coerceAtLeast(0L) ?: 0L
     val isPlaying: Boolean get() = player?.isPlaying ?: false
-    fun stop(reason: String = "desconocido") {
-        com.omnicast.receiver.log.ReceiverLogger.log(TAG, "⏹️ Deteniendo ExoPlayer (motivo: $reason)")
-        player?.stop()
-        player?.clearMediaItems()
-    }
+    fun stop(reason: String = "desconocido") { com.omnicast.receiver.log.ReceiverLogger.log(TAG, "⏹️ Deteniendo ExoPlayer (motivo: $reason)"); player?.stop(); player?.clearMediaItems() }
     fun release() { stop("release"); playerView = null; player?.release(); player = null; TvMediaCacheManager.release() }
 }

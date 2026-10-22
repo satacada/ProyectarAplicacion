@@ -62,33 +62,9 @@ object SmartSelectionAutoCompleter {
             (function() {
                 var h = (window.location.hostname || '').toLowerCase();
                 var t = (document.title || '').toLowerCase();
-                if (h.indexOf('dailymotion.com') !== -1 || h.indexOf('dmcdn.net') !== -1 || h.indexOf('youtube.com') !== -1 || h.indexOf('google.') !== -1 || h.indexOf('bing.') !== -1 || h.indexOf('yandex.') !== -1) return;
                 if (h.indexOf('cloudflare') !== -1 || t.indexOf('just a moment') !== -1 || (window.location.pathname || '').indexOf('cdn-cgi') !== -1) return;
-                // 1. Corrección nativa de caret y scroll suave para campos de texto
-                if (!window.__omniInputFixInjected) {
-                    window.__omniInputFixInjected = true;
-                    function fixCaret(el) {
-                        if (!el || (el.tagName !== 'INPUT' && el.tagName !== 'TEXTAREA')) return;
-                        if (!el.getAttribute('dir')) el.setAttribute('dir', 'ltr');
-                        if (el.selectionStart === 0 && el.value && el.value.length > 0) {
-                            try { var len = el.value.length; el.setSelectionRange(len, len); } catch(_) {}
-                        }
-                    }
-                    document.addEventListener('input', function(e) { fixCaret(e.target); }, true);
-                    document.addEventListener('focusin', function(e) {
-                        var el = e.target;
-                        if (!el) return;
-                        fixCaret(el);
-                        if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable) {
-                            setTimeout(function() {
-                                try { el.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'smooth' }); }
-                                catch(_) { try { el.scrollIntoView(); } catch(__) {} }
-                            }, 50);
-                        }
-                    }, true);
-                }
 
-                // 2. Persistencia y replicación automática de selecciones (checkbox, radios, selects, servidores)
+                // Persistencia y replicación automática de selecciones (checkbox, radios, selects, servidores)
                 if (window.__omniSmartSelectionInjected) {
                     if (window.__omniApplySelections) window.__omniApplySelections();
                     return;

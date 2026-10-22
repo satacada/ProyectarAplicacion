@@ -156,7 +156,7 @@ object TvRemoteKeyHandler {
                     KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER, KeyEvent.KEYCODE_MENU,
                     KeyEvent.KEYCODE_MEDIA_PLAY, KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE, KeyEvent.KEYCODE_SPACE -> {
                         val mode = webRtcReceiver.toggleScalingType()
-                        val txt = if (mode == org.webrtc.RendererCommon.ScalingType.SCALE_ASPECT_FILL) "📺 Modo: Llenar Pantalla (16:9)" else "📱 Modo: Ajustar Proporción (Fit)"
+                        val txt = if (mode == org.webrtc.RendererCommon.ScalingType.SCALE_ASPECT_FILL) "📺 Modo: Llenar Pantalla (16:9)" else "📱 Modo: Pantalla Completa (100% Íntegra)"
                         Toast.makeText(context, txt, Toast.LENGTH_SHORT).show()
                         return true
                     }

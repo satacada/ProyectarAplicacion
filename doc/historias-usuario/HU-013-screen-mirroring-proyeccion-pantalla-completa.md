@@ -16,13 +16,16 @@
 
 ## 2. Criterios de Aceptación (Contrato Inamovible)
 
-### A. Proyección Vertical (Celular Erguido)
-1. **100% de Altura Física en TV y Recorte de Barras de Sistema:**
-   - La imagen vertical del teléfono debe ocupar el 100% de la altura física del televisor (1080p nativo) de borde a borde, aplicando un factor de recorte fino de 1.075x que desplaza simétricamente fuera del marco del televisor la barra de estado superior (batería, hora, señal) y los controles de navegación inferiores del teléfono.
-   - Queda estrictamente prohibido que aparezcan franjas negras arriba o abajo.
-2. **Centrado Simétrico:**
+### A. Proyección Vertical (Celular Erguido) — Desacoplamiento de Dos Rutas
+1. **Ruta A: Proyección de Pantalla Completa (Modo FIT 1.0f - 100% Íntegra):**
+   - La pantalla completa del teléfono debe mostrarse al 100% íntegra en la altura física del televisor (1080p nativo) en `SCALE_ASPECT_FIT` con escala base estrictamente `1.0f`.
+   - La barra de estado superior (batería, hora, señal) y la barra de navegación/gestos inferiores del teléfono deben ser 100% visibles sin ningún recorte ni pérdida de bordes.
+2. **Ruta B: Proyección Por Aplicación (Modos APP / CROP_BARS / APP_FIT 1.075f):**
+   - Ruta independiente para proyección de una aplicación individual o recorte deliberado de barras del sistema para ampliar contenido, aplicando el factor de 1.075x.
+   - Ambas rutas operan con estados y parámetros aislados; una modificación en una no puede alterar la otra.
+3. **Centrado Simétrico:**
    - La columna vertical del celular debe estar perfectamente centrada en el eje horizontal de la TV, con barras negras laterales simétricas propias de la relación de aspecto del teléfono (ej. 9:20 o 9:19.5).
-3. **Sin Deformación Lateral:**
+4. **Sin Deformación Lateral:**
    - Queda terminantemente prohibido estirar la imagen vertical horizontalmente para llenar un televisor 16:9 (prohibido aplicar factores multiplicadores de distorsión lateral como 3.95x).
 
 ### B. Proyección Horizontal (Celular Apaisado / Pantalla Completa)

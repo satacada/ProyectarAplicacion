@@ -40,7 +40,7 @@ class ProjectionForegroundService : Service() {
             targetPort: Int,
             profile: StreamProfile,
             permissionData: Intent,
-            tvScaleMode: String = "EXTEND_16_9",
+            tvScaleMode: String = "FIT",
             smoothBuffer: Boolean = true
         ) {
             val intent = Intent(context, ProjectionForegroundService::class.java).apply {
@@ -72,11 +72,11 @@ class ProjectionForegroundService : Service() {
         }
 
         fun toggleTvScaleMode(): String {
-            return currentSession?.toggleTvScaleMode() ?: "EXTEND_16_9"
+            return currentSession?.toggleTvScaleMode() ?: "FIT"
         }
 
         fun getTvScaleMode(): String {
-            return currentSession?.getTvScaleMode() ?: "EXTEND_16_9"
+            return currentSession?.getTvScaleMode() ?: "FIT"
         }
 
         fun stopService(context: Context) {

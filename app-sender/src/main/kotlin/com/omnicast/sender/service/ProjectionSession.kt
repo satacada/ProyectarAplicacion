@@ -22,7 +22,7 @@ class ProjectionSession(
     private val targetPort: Int,
     private val profile: StreamProfile,
     private val permissionData: Intent,
-    private var tvScaleMode: String = "EXTEND_16_9",
+    private var tvScaleMode: String = "FIT",
     private val smoothBuffer: Boolean = true
 ) {
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
@@ -52,7 +52,7 @@ class ProjectionSession(
     }
 
     fun toggleTvScaleMode(): String {
-        val next = if (tvScaleMode == "EXTEND_16_9") "ORIGINAL_FIT" else "EXTEND_16_9"
+        val next = if (tvScaleMode == "FILL_16_9" || tvScaleMode == "FILL") "FIT" else "FILL_16_9"
         setTvScaleMode(next)
         return next
     }

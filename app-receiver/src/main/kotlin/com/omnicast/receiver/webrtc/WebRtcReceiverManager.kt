@@ -105,13 +105,17 @@ class WebRtcReceiverManager(private val context: Context) {
             }
 
             if (!land) {
-                // Proyección Vertical: 100% altura TV, recorte de status/nav bar (1.075x) sin deformación lateral
+                // Proyección Vertical: FIT muestra el 100% íntegro de la pantalla del celular sin recortes
                 renderer.setScalingType(RendererCommon.ScalingType.SCALE_ASPECT_FIT)
-                val scale = if (currentMode == "ZOOM") currentZoom * 1.075f else 1.075f
+                val scale = when (currentMode) {
+                    "ZOOM" -> currentZoom
+                    "APP", "CROP_BARS", "APP_FIT" -> 1.075f
+                    else -> 1.0f // FIT: Pantalla completa 100% íntegra (hora, batería y navegación visibles)
+                }
                 renderer.scaleX = scale; renderer.scaleY = scale
                 renderer.translationX = if (currentMode == "ZOOM") currentPanX else 0f
                 renderer.translationY = if (currentMode == "ZOOM") currentPanY else 0f
-                ReceiverLogger.log(TAG, "📱 Vertical TV: escala $scale centrado (frame=${frameW}x${frameH} rot=$lastRot)")
+                ReceiverLogger.log(TAG, "📱 Vertical TV: modo=$currentMode escala=$scale centrado (frame=${frameW}x${frameH} rot=$lastRot)")
             } else {
                 // Proyección Horizontal: 16:9 pantalla completa de borde a borde con SCALE_ASPECT_FILL
                 renderer.setScalingType(RendererCommon.ScalingType.SCALE_ASPECT_FILL)
@@ -226,6 +230,10 @@ class WebRtcReceiverManager(private val context: Context) {
             "FIT", "ORIGINAL_FIT" -> {
                 currentScalingType = if (land) RendererCommon.ScalingType.SCALE_ASPECT_FILL else RendererCommon.ScalingType.SCALE_ASPECT_FIT
                 currentZoom = 1.0f; currentPanY = 0.0f; currentPanX = 0.0f
+            }
+            "APP", "APP_FIT", "CROP_BARS" -> {
+                currentScalingType = if (land) RendererCommon.ScalingType.SCALE_ASPECT_FILL else RendererCommon.ScalingType.SCALE_ASPECT_FIT
+                currentZoom = 1.075f; currentPanY = 0.0f; currentPanX = 0.0f
             }
             "ZOOM" -> currentScalingType = if (land) RendererCommon.ScalingType.SCALE_ASPECT_FILL else RendererCommon.ScalingType.SCALE_ASPECT_FIT
             "TOGGLE" -> toggleScalingType()

@@ -69,7 +69,11 @@ Este repositorio sigue el estándar abierto AGENTS.md para el desarrollo de la a
 6. **Blindaje Inviolable de Plataformas Oficiales (YouTube y Dailymotion):**
    - **YouTube:** PROHIBIDO filtrar, descartar o ignorar URLs con ID de YouTube (`extractYouTubeId != null`) en `registerStream()`, `checkPlatformUrls()`, `openOptionsSheet()` o `isRealMedia()`. La detección y generación de opciones de calidad de YouTube (`createYouTubeQualityOptions`) debe ejecutarse de forma limpia y directa hacia `TvYouTubeScreen`.
    - **Dailymotion y Recursos de Interfaz:** PROHIBIDO bloquear dominios de CDN/UI de Dailymotion (`dmcdn.net`, `static1.dmcdn.net`) o YouTube (`ytimg.com`, `googlevideo.com`) en `NativeAdBlockEngine` o `AdBlocker`. Dichos dominios deben residir permanentemente en `AdBlockWhitelistManager.DEFAULT_WHITELIST` y en `AdBlocker.KNOWN_MEDIA_HOSTS` para garantizar que la caja de texto del buscador y los controles interactivos de Dailymotion NUNCA desaparezcan ni se rompan.
-7. **Blindaje Inviolable de Screen Mirroring Vertical y Horizontal (HU-013, v3.4.18) [BLOQUEANTE]:**
+7. **Blindaje Inviolable y Desacoplamiento de Rutas de Proyección (Pantalla Completa vs. Por Aplicación) (HU-013, v3.4.20) [BLOQUEANTE]:**
+   - **Desacoplamiento Estricto de las Dos Rutas:**
+     1. **Ruta A (Pantalla Completa - Modo FIT 1.0f):** En orientación vertical, la TV Box DEBE renderizar en `SCALE_ASPECT_FIT` con escala base estrictamente `1.0f`, garantizando el 100% íntegro de la visibilidad de la pantalla física del móvil (barra de estado, reloj, batería y barra de gestos/navegación completamente visibles, sin recortes ni pérdida de bordes arriba o abajo). Prohibido forzar sobre-escala de 1.075x en modo FIT de pantalla completa.
+     2. **Ruta B (Por Aplicación - Modos APP / CROP_BARS / APP_FIT 1.075f):** Opera como ruta totalmente independiente para ventanas de aplicaciones individuales o recorte deliberado de barras del sistema para ampliar contenido, aplicando factor `1.075f`.
+     3. **Independencia Absoluta:** Queda terminantemente PROHIBIDO unificar ambas rutas o modificar los parámetros de una alterando la otra. Deben permanecer desacopladas e inmunes a regresiones cruzadas.
    - **Prioridad Absoluta de la Imagen (Horizontal vs. Vertical):**
      En `WebRtcReceiverManager.kt`, la propiedad reactiva `isLandscape` unifica obligatoriamente:
      1. Indicador del teléfono (`isPhoneLandscape`).
@@ -78,7 +82,7 @@ Este repositorio sigue el estándar abierto AGENTS.md para el desarrollo de la a
      Si la imagen es horizontal (video de partido/película o teléfono horizontal), `isVertical` es estrictamente `false`.
    - **Área de Renderizado y Zoom Totalmente Independientes:**
      - **En Horizontal:** La TV utiliza incondicionalmente `Modifier.fillMaxSize()`, `MATCH_PARENT, MATCH_PARENT` en `SurfaceViewRenderer` y base `SCALE_ASPECT_FILL`. El zoom aplica sobre el área horizontal completa de 16:9 centrado en toda la pantalla del televisor sin colapsar a un tercio ni desplazarse a la izquierda.
-     - **En Vertical:** Se mantiene centrado ocupando el 100% de la altura física de la TV (de borde a borde sin franjas negras arriba/abajo) con recorte fino de 1.075x para barras de sistema (hora, batería, navegación), y el zoom opera únicamente sobre el área vertical. Queda TERMINANTEMENTE PROHIBIDO usar `WRAP_CONTENT` en `SurfaceViewRenderer` o aplicar factores multiplicadores de distorsión lateral.
+     - **En Vertical:** Se mantiene centrado ocupando la altura física de la TV con `SCALE_ASPECT_FIT` (escala 1.0f para Pantalla Completa y 1.075f para Por Aplicación), y el zoom opera únicamente sobre el área vertical. Queda TERMINANTEMENTE PROHIBIDO usar `WRAP_CONTENT` en `SurfaceViewRenderer` o aplicar factores multiplicadores de distorsión lateral.
    - **Arquitectura de Renderizado en TV:** En `TvScreens.kt`, `AndroidView` debe mantener incondicionalmente `Modifier.fillMaxSize()` y `MATCH_PARENT, MATCH_PARENT` para que `SurfaceView` ocupe todo el televisor y sea el motor hardware WebRTC el que controle el centrado y la escala con `setEnableHardwareScaler(false)`. Toda conmutación desde control remoto debe ser estrictamente idempotente.
 
 ---

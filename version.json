@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 169,
-  "versionCodeReceiver": 152,
-  "versionName": "3.4.19",
-  "releaseTag": "v3.4.19",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.19/omnicast-sender-v3.4.19.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.19/omnicast-receiver-v3.4.19.apk",
-  "changelog": "v3.4.19: Navegación horizontal D-Pad completa en Ver más tarde entre película, casilla [✓] y tuerca [⚙]. Eliminación de iframes sintéticos para listar exactamente los 3 flujos reales de la película y resiliencia web con Referer en TV."
+  "versionCodeSender": 170,
+  "versionCodeReceiver": 153,
+  "versionName": "3.4.20",
+  "releaseTag": "v3.4.20",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.20/omnicast-sender-v3.4.20.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.20/omnicast-receiver-v3.4.20.apk",
+  "changelog": "v3.4.20: Desacoplamiento estricto y blindaje de las dos rutas de proyección: Pantalla Completa 100% íntegra (FIT 1.0x sin recorte de hora, batería ni barra de navegación) y Por Aplicación (1.075x para recorte de barras del sistema). Modo FIT por defecto al proyectar."
 }

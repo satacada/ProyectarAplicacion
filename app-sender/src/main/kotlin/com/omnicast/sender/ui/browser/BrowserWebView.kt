@@ -5,9 +5,10 @@ import android.graphics.Bitmap
 import android.os.Build
 import android.webkit.*
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 
@@ -281,20 +282,16 @@ fun BrowserWebView(
                     override fun onConsoleMessage(cm: ConsoleMessage?): Boolean {
                         val msg = cm?.message() ?: return super.onConsoleMessage(cm)
                         val sniffedList = WvcDomSniffer.parseConsoleMessage(msg)
-                        if (sniffedList.isNotEmpty()) {
-                            post { sniffedList.forEach { onSniffedVideo(it) } }
-                            return true
-                        }
+                        if (sniffedList.isNotEmpty()) { post { sniffedList.forEach { onSniffedVideo(it) } }; return true }
                         return super.onConsoleMessage(cm)
                     }
                 }
-
                 onWebViewCreated(this)
             }
-
             swipeRefresh.addView(webView)
             swipeRefresh
         },
-        modifier = Modifier.fillMaxSize().alpha(if (isHome) 0f else 1f)
+        update = { it.visibility = if (isHome) android.view.View.GONE else android.view.View.VISIBLE },
+        modifier = if (isHome) Modifier.size(0.dp) else Modifier.fillMaxSize()
     )
 }

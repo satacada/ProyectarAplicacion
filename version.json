@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 161,
-  "versionCodeReceiver": 144,
-  "versionName": "3.4.11",
-  "releaseTag": "v3.4.11",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.11/omnicast-sender-v3.4.11.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.11/omnicast-receiver-v3.4.11.apk",
-  "changelog": "v3.4.11: Inicio predeterminado en pantalla principal del explorador con accesos rápidos y lista inferior de los últimos 3 enlaces visitados; navegación secuencial atrás (sesión web -> pantalla inicial del explorador -> pantalla principal del aplicativo)."
+  "versionCodeSender": 162,
+  "versionCodeReceiver": 145,
+  "versionName": "3.4.12",
+  "releaseTag": "v3.4.12",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.12/omnicast-sender-v3.4.12.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.12/omnicast-receiver-v3.4.12.apk",
+  "changelog": "v3.4.12: Corrección de interacción en pantalla de inicio del explorador: ocultación estricta View.GONE y size(0.dp) del WebView nativo subyacente y reordenamiento en primer plano para garantizar respuesta táctil inmediata en accesos directos (Yandex, etc.) y enlaces recientes."
 }

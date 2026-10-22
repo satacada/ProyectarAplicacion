@@ -64,7 +64,7 @@ fun WvcVideoListSheet(
                 }
                 Spacer(Modifier.width(8.dp))
                 Text(
-                    text = "Lista de videos",
+                    text = if (options.isNotEmpty()) "Lista de videos (${options.size})" else "Lista de videos",
                     color = Color.White,
                     fontWeight = FontWeight.Bold,
                     fontSize = 19.sp,

@@ -30,22 +30,23 @@ class ProjectionSession(
     private var audioSender: DigitalAudioSender? = null
     private var audioCaptureManager: AudioCaptureManager? = null
     private var signalingClient: SignalingClient? = null
+    var isDeviceLandscape: Boolean = false; private set
 
     fun setTvScaleMode(mode: String) {
         tvScaleMode = mode
         webRtcManager?.tvScaleMode = mode
         val preset = TvZoomManager.PRESETS.firstOrNull { it.id == mode || it.mode == mode }
         if (preset != null) {
-            signalingClient?.sendMessage(TvZoomManager.toSignalingMessage(preset))
+            signalingClient?.sendMessage(TvZoomManager.toSignalingMessage(preset, isLandscape = isDeviceLandscape))
         } else {
-            signalingClient?.sendMessage(SignalingMessage.SetDisplayMode(if (mode == "EXTEND_16_9" || mode == "FILL") "FILL" else "FIT"))
+            signalingClient?.sendMessage(SignalingMessage.SetDisplayMode(if (isDeviceLandscape || mode == "EXTEND_16_9" || mode == "FILL") "FILL" else "FIT", isLandscape = isDeviceLandscape))
         }
     }
 
     fun setDisplayMode(mode: String, zoom: Float = 1.0f, panY: Float = 0.0f, panX: Float = 0.0f) {
         tvScaleMode = mode
         webRtcManager?.tvScaleMode = mode
-        signalingClient?.sendMessage(SignalingMessage.SetDisplayMode(mode, zoom, panY, panX))
+        signalingClient?.sendMessage(SignalingMessage.SetDisplayMode(mode, zoom, panY, panX, isLandscape = isDeviceLandscape))
     }
 
     fun toggleTvScaleMode(): String {

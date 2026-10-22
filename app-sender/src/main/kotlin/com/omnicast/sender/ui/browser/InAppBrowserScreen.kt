@@ -157,7 +157,7 @@ fun InAppBrowserScreen(
                 return@launch
             }
             val baseHdrs = if (probe.isPlayable && probe.healedHeaders.isNotEmpty()) probe.healedHeaders else finalHdrs
-            val healedHdrs = baseHdrs.toMutableMap().apply { if (hdrs["X-Force-Proxy"] == "true") put("X-Force-Proxy", "true") }
+            val healedHdrs = baseHdrs.toMutableMap().apply { if (hdrs["X-Force-Proxy"] == "true" || (!probe.isPlayable && probe.httpCode == 403) || finalUrl.contains("repelis", true)) put("X-Force-Proxy", "true") }
             withContext(Dispatchers.Main) { streamHeaders[finalUrl] = healedHdrs; historyManager.addOrUpdate(finalUrl, cleanT, refPage, healedHdrs); onSendStreamToTv(finalUrl, cleanT, healedHdrs); showBottomControls = true }
         }
     }
@@ -198,7 +198,7 @@ fun InAppBrowserScreen(
                 isAdBlockEnabled = isAdBlockEnabled, onToggleAdBlock = { isAdBlockEnabled = !isAdBlockEnabled },
                 onForceRescan = { webViewInstance?.evaluateJavascript(WvcSnifferScripts.buildAggressiveRescanScript(WvcDomSniffer.CONSOLE_PREFIX), null) },
                 onClearData = { webViewInstance?.clearCache(true); webViewInstance?.clearHistory(); detectedStreams.clear(); qualityOptions = emptyList(); isHome = true; inputUrl = ""; currentUrl = ""; ActiveStreamHolder.clear(); prefs.edit().remove("saved_browser_last_url").apply() },
-                detectedStreamsCount = detectedStreams.count { isRealMedia(it) }, onToggleBottomControls = { showBottomControls = !showBottomControls },
+                detectedStreamsCount = maxOf(detectedStreams.count { isRealMedia(it) }, qualityOptions.size), onToggleBottomControls = { showBottomControls = !showBottomControls },
                 onOpenDetectedVideos = { openOptionsSheet() }, isCasting = isCasting, isPlaying = isPlaying, showBottomControls = showBottomControls,
                 onOpenHistory = { showSideDrawer = true }, onOpenPlaylists = { showSideDrawer = true }, onOpenDrawer = { showSideDrawer = true }, onOpenWhitelist = { showWhitelistDialog = true },
                 onExitApp = { SenderMainActivity.exitCompletely(context) }

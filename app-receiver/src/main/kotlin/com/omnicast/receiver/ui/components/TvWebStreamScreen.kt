@@ -32,7 +32,8 @@ import kotlinx.coroutines.flow.Flow
  * Puente JavaScript para capturar eventos de reproducción del reproductor HTML5 en TV Box.
  */
 class WebStreamBridge(
-    private val onStatus: ((posMs: Long, durMs: Long, isPlaying: Boolean) -> Unit)?
+    private val onStatus: ((posMs: Long, durMs: Long, isPlaying: Boolean) -> Unit)?,
+    private val onFailed: ((String) -> Unit)? = null
 ) {
     @JavascriptInterface
     fun onPlaybackStatus(curSec: Float, durSec: Float, isPlaying: Boolean) {
@@ -40,16 +41,16 @@ class WebStreamBridge(
         val durMs = if (durSec.isNaN() || durSec.isInfinite() || durSec < 0f) 0L else (durSec * 1000).toLong()
         onStatus?.invoke(curMs, durMs, isPlaying)
     }
+    @JavascriptInterface
+    fun onPlaybackFailed(reason: String) {
+        com.omnicast.receiver.log.ReceiverLogger.log("WebStreamBridge", "❌ Error en reproductor web: $reason")
+        onFailed?.invoke(reason)
+    }
 }
 
 private object WebPlayerAssetHelper {
     private var cachedHlsJs: String? = null
-    fun getHlsJs(context: Context): String {
-        cachedHlsJs?.let { return it }
-        return try {
-            context.assets.open("hls.light.min.js").bufferedReader().use { it.readText() }.also { cachedHlsJs = it }
-        } catch (_: Throwable) { "" }
-    }
+    fun getHlsJs(ctx: Context): String = cachedHlsJs ?: try { ctx.assets.open("hls.light.min.js").bufferedReader().use { it.readText() }.also { cachedHlsJs = it } } catch (_: Throwable) { "" }
 }
 
 /**
@@ -67,6 +68,7 @@ fun TvWebStreamScreen(
     commandFlow: Flow<SignalingMessage.PlayControl>? = null,
     displayMode: SignalingMessage.SetDisplayMode? = null,
     onPlaybackStatus: ((posMs: Long, durMs: Long, isPlaying: Boolean) -> Unit)? = null,
+    onPlaybackFailed: ((String) -> Unit)? = null,
     onCloseClick: () -> Unit = {}
 ) {
     var showBanner by remember(streamUrl, timestamp) { mutableStateOf(true) }
@@ -129,14 +131,23 @@ fun TvWebStreamScreen(
                             settings.mediaPlaybackRequiresUserGesture = false
                             settings.useWideViewPort = true
                             settings.loadWithOverviewMode = true
+                            settings.allowFileAccess = true
+                            settings.allowContentAccess = true
+                            settings.allowFileAccessFromFileURLs = true
+                            settings.allowUniversalAccessFromFileURLs = true
+                            settings.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
                             settings.userAgentString = headers["User-Agent"] ?: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
                             CookieManager.getInstance().setAcceptCookie(true)
                             CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
-                            addJavascriptInterface(WebStreamBridge(onPlaybackStatus), "AndroidBridge")
+                            addJavascriptInterface(WebStreamBridge(onPlaybackStatus, onPlaybackFailed), "AndroidBridge")
                             webViewClient = WebViewClient()
                             webChromeClient = object : WebChromeClient() {
                                 override fun onShowCustomView(v: View?, c: CustomViewCallback?) { customView = v }
                                 override fun onHideCustomView() { customView = null }
+                                override fun onConsoleMessage(cm: ConsoleMessage?): Boolean {
+                                    cm?.let { com.omnicast.receiver.log.ReceiverLogger.log("TvWebStreamJS", "[${it.messageLevel()}] ${it.message()}") }
+                                    return super.onConsoleMessage(cm)
+                                }
                             }
 
                             val hlsCode = WebPlayerAssetHelper.getHlsJs(ctx)
@@ -187,6 +198,10 @@ fun TvWebStreamScreen(
                                     }
                                     vid.addEventListener('loadedmetadata', seekStart);
                                     vid.addEventListener('canplay', seekStart);
+                                    vid.addEventListener('error', function() {
+                                      var c = vid.error ? vid.error.code : 0;
+                                      if (window.AndroidBridge && window.AndroidBridge.onPlaybackFailed) window.AndroidBridge.onPlaybackFailed('VID_ERR_' + c);
+                                    });
 
                                     function initHls() {
                                       if (window.Hls && Hls.isSupported()) {
@@ -206,7 +221,8 @@ fun TvWebStreamScreen(
                                       }
                                     }
 
-                                    if (streamUrl.indexOf('.m3u8') !== -1) initHls(); else { vid.src = streamUrl; vid.play().catch(function(){}); }
+                                    var isDirectVideo = streamUrl.indexOf('.mp4') !== -1 || streamUrl.indexOf('.webm') !== -1;
+                                    if (!isDirectVideo && window.Hls && Hls.isSupported()) initHls(); else { vid.src = streamUrl; vid.play().catch(function(){}); }
 
                                     function playStream() { if (vid) vid.play().catch(function(){}); }
                                     function pauseStream() { if (vid) vid.pause(); }
@@ -260,10 +276,7 @@ fun TvWebStreamScreen(
             }
         }
 
-        AnimatedVisibility(
-            visible = showBanner, exit = fadeOut(),
-            modifier = Modifier.align(Alignment.TopCenter).padding(top = 28.dp)
-        ) {
+        AnimatedVisibility(visible = showBanner, exit = fadeOut(), modifier = Modifier.align(Alignment.TopCenter).padding(top = 28.dp)) {
             Card(colors = CardDefaults.cardColors(containerColor = Color(0xDD0F172A)), shape = RoundedCornerShape(12.dp)) {
                 Column(modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(text = "OmniCast Web Player", color = Color(0xFF38BDF8), fontSize = 12.sp, fontWeight = FontWeight.Bold)
@@ -272,10 +285,7 @@ fun TvWebStreamScreen(
             }
         }
 
-        AnimatedVisibility(
-            visible = showZoomBadge && zoomBadgeText != null, exit = fadeOut(),
-            modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 32.dp)
-        ) {
+        AnimatedVisibility(visible = showZoomBadge && zoomBadgeText != null, exit = fadeOut(), modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 32.dp)) {
             Card(colors = CardDefaults.cardColors(containerColor = Color(0xEE0F172A)), shape = RoundedCornerShape(10.dp)) {
                 Text(text = zoomBadgeText ?: "", color = Color(0xFF38BDF8), fontSize = 14.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp))
             }

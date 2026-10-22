@@ -35,7 +35,7 @@ object TvZoomManager {
 
     fun getCurrent(): TvZoomPreset = PRESETS[currentIndex]
 
-    fun toSignalingMessage(preset: TvZoomPreset): SignalingMessage.SetDisplayMode {
-        return SignalingMessage.SetDisplayMode(preset.mode, preset.zoom, preset.panY)
+    fun toSignalingMessage(preset: TvZoomPreset, isLandscape: Boolean? = null): SignalingMessage.SetDisplayMode {
+        return SignalingMessage.SetDisplayMode(preset.mode, preset.zoom, preset.panY, isLandscape = isLandscape)
     }
 }

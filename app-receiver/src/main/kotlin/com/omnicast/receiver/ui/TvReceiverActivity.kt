@@ -27,20 +27,14 @@ import kotlinx.coroutines.launch
 
 class TvReceiverActivity : ComponentActivity() {
 
-    private val receiverState = mutableStateOf<ReceiverUiState>(ReceiverUiState.Standby)
-    private val localIpAddress = mutableStateOf("127.0.0.1")
-    private val currentDisplayMode = mutableStateOf<SignalingMessage.SetDisplayMode?>(null)
-    private val expiredItemForRenew = mutableStateOf<com.omnicast.receiver.directstream.TvPlaylistItem?>(null)
+    private val receiverState = mutableStateOf<ReceiverUiState>(ReceiverUiState.Standby); private val localIpAddress = mutableStateOf("127.0.0.1")
+    private val currentDisplayMode = mutableStateOf<SignalingMessage.SetDisplayMode?>(null); private val expiredItemForRenew = mutableStateOf<com.omnicast.receiver.directstream.TvPlaylistItem?>(null)
     private val youTubeControlFlow = MutableSharedFlow<SignalingMessage.PlayControl>(extraBufferCapacity = 16)
-    private lateinit var webRtcReceiver: WebRtcReceiverManager
-    private lateinit var exoPlayerManager: ExoPlayerTvManager
-    private lateinit var signalingServer: LocalSignalingServer
-    private lateinit var nsdAdvertiser: NsdAdvertiserManager
-    private lateinit var historyManager: com.omnicast.receiver.directstream.TvPlaybackHistoryManager
-    private lateinit var playlistManager: com.omnicast.receiver.directstream.TvPlaylistManager
-    private lateinit var updateManager: com.omnicast.receiver.update.TvUpdateManager
-    private var digitalAudioReceiver: DigitalAudioReceiver? = null
-    private var statusJob: Job? = null
+    private lateinit var webRtcReceiver: WebRtcReceiverManager; private lateinit var exoPlayerManager: ExoPlayerTvManager; private lateinit var signalingServer: LocalSignalingServer
+    private lateinit var nsdAdvertiser: NsdAdvertiserManager; private lateinit var historyManager: com.omnicast.receiver.directstream.TvPlaybackHistoryManager
+    private lateinit var playlistManager: com.omnicast.receiver.directstream.TvPlaylistManager; private lateinit var updateManager: com.omnicast.receiver.update.TvUpdateManager
+    private var digitalAudioReceiver: DigitalAudioReceiver? = null; private var statusJob: Job? = null
+    private var lastDirectHeaders: Map<String, String> = emptyMap()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -62,7 +56,7 @@ class TvReceiverActivity : ComponentActivity() {
                 val titleToReport = failedTitle ?: (receiverState.value as? ReceiverUiState.DirectStreamPlaying)?.title
                 if (!streamToReport.isNullOrBlank() && (streamToReport.startsWith("http://") || streamToReport.startsWith("https://")) && !streamToReport.contains(":8089")) {
                     com.omnicast.receiver.log.ReceiverLogger.log("TV_RECEIVER", "ExoPlayer 403 detectado, fallback a WebView HTML5: $streamToReport")
-                    receiverState.value = ReceiverUiState.WebStreamPlaying(streamToReport, titleToReport ?: "Transmisión Web")
+                    receiverState.value = ReceiverUiState.WebStreamPlaying(streamToReport, titleToReport ?: "Transmisión Web", headers = lastDirectHeaders)
                 } else {
                     (receiverState.value as? ReceiverUiState.DirectStreamPlaying)?.let { cur ->
                         val found = playlistManager.findItemByUrlOrTitle(cur.streamUrl, cur.title)
@@ -153,6 +147,12 @@ class TvReceiverActivity : ComponentActivity() {
                                 historyManager.updateProgress(state.streamUrl, pos, dur); playlistManager.updateProgress(state.streamUrl, pos)
                             }
                         },
+                        onPlaybackFailed = { reason ->
+                            com.omnicast.receiver.log.ReceiverLogger.log("TvReceiverActivity", "⚠️ WebStream falló ($reason). Fallback a ExoPlayer...")
+                            receiverState.value = ReceiverUiState.DirectStreamPlaying(state.streamUrl, state.title)
+                            exoPlayerManager.playStream(state.streamUrl, state.headers, state.title, state.startPositionMs)
+                            startPlaybackStatusReporting()
+                        },
                         onCloseClick = { receiverState.value = ReceiverUiState.Standby }
                     )
                     is ReceiverUiState.ImageDisplaying -> TvImageScreen(
@@ -178,7 +178,7 @@ class TvReceiverActivity : ComponentActivity() {
             is SignalingMessage.IceCandidate -> webRtcReceiver.addRemoteIceCandidate(message.sdpMid, message.sdpMLineIndex, message.candidate)
             is SignalingMessage.DirectStreamHandoff -> {
                 runCatching {
-                    digitalAudioReceiver?.stop(); webRtcReceiver.resetConnection()
+                    lastDirectHeaders = message.headers; digitalAudioReceiver?.stop(); webRtcReceiver.resetConnection()
                     val title = message.title?.ifBlank { "Transmisión Web" } ?: "Transmisión Web"
                     val exp = expiredItemForRenew.value
                     if (exp != null) { playlistManager.replaceExpiredUrl(exp.url, message.mediaUrl, message.headers); expiredItemForRenew.value = null }
@@ -229,7 +229,8 @@ class TvReceiverActivity : ComponentActivity() {
             is SignalingMessage.ImageTransform -> (receiverState.value as? ReceiverUiState.ImageDisplaying)?.let { receiverState.value = it.copy(scale = message.scale, panX = message.panX, panY = message.panY, rotation = message.rotation) }
             is SignalingMessage.SetDisplayMode -> {
                 currentDisplayMode.value = message
-                webRtcReceiver.setDisplayMode(message.mode, message.zoom, message.panY, message.panX); exoPlayerManager.setDisplayMode(message.mode, message.zoom)
+                webRtcReceiver.setDisplayMode(message.mode, message.zoom, message.panY, message.panX, message.isLandscape)
+                exoPlayerManager.setDisplayMode(message.mode, message.zoom)
             }
             is SignalingMessage.ShowImage -> { digitalAudioReceiver?.stop(); exoPlayerManager.stop("Casteo Foto"); webRtcReceiver.resetConnection(); receiverState.value = ReceiverUiState.ImageDisplaying(message.imageUrl, message.title ?: "Foto de Galería") }
             is SignalingMessage.SyncPlaylists -> lifecycleScope.launch { playlistManager.syncPlaylistsJson(message.playlistsJson) }

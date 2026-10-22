@@ -74,4 +74,17 @@ Este repositorio sigue el estándar abierto AGENTS.md para el desarrollo de la a
    - **Horizontal:** Expansión a 16:9 pantalla completa de borde a borde al girar el dispositivo o reproducir video horizontal. PROHIBIDO reducir la imagen a 1/4 o desplazarla al margen izquierdo.
    - **Arquitectura de Renderizado:** En `TvScreens.kt`, `AndroidView` debe ser reactivo a `isVertical` (`Modifier.fillMaxHeight().aspectRatio(streamAspect)` con `WRAP_CONTENT, MATCH_PARENT` en vertical, y `Modifier.fillMaxSize()` con `MATCH_PARENT, MATCH_PARENT` en horizontal), con `setEnableHardwareScaler(false)` en el renderer. Toda conmutación desde control remoto debe ser estrictamente idempotente.
 
+---
+
+## 8. PROTOCOLO PRE-VUELO INVIOLABLE CONTRA REGRESIONES (CHECKLIST OBLIGATORIO)
+Queda terminantemente PROHIBIDO compilar o proponer una versión sin auditar previamente este checklist contra regresiones:
+1. **Preservación Total de Cabeceras en Fallback (Anti-403 / Cloudflare):**
+   Todo fallback o cambio de estado hacia `ReceiverUiState.WebStreamPlaying` DEBE transferir obligatoriamente el mapa de cabeceras (`headers = lastDirectHeaders`). Queda prohibido instanciar `WebStreamPlaying` con cabeceras vacías (`emptyMap()`), ya que despoja a Chromium de las cookies de sesión y del `Referer`, provocando rechazo inmediato 403 en CDNs protegidas (Cloudflare, Repelis).
+2. **Soporte HLS sin Extensión Rígida (Spider-Man / PelisGO):**
+   En `TvWebStreamScreen`, toda URL que no sea un archivo de video directo (`.mp4`, `.webm`) DEBE pasar por `initHls()` (`Hls.js`). Prohibido suponer que HLS solo termina en `.m3u8`; existen manifiestos con terminación `.txt` o parámetros query que requieren `Hls.js` y fallan si se asignan directamente a `video.src`.
+3. **Escalado Horizontal y Zoom en Mirroring (No-Colapso a 1/16):**
+   En modo horizontal (`isLandscape == true`), `WebRtcReceiverManager` DEBE operar siempre con base `SCALE_ASPECT_FILL`. Queda prohibido resetear a `SCALE_ASPECT_FIT` o aplicar `aspectRatio` vertical de 9:16 durante el ciclo de zoom en horizontal.
+4. **Prohibición de Inventar Vías Alternativas ante Fallos de un Pilar:**
+   Si un flujo falla en el reproductor contratado (ExoPlayer o HTML5), queda TERMINANTEMENTE PROHIBIDO desviar la arquitectura hacia proxies o mecanismos improvisados no solicitados. Se debe inspeccionar el log local de la TV (`/logs`), identificar el fallo exacto en ese reproductor y corregirlo en su propio pilar sin romper los demás.
+
 

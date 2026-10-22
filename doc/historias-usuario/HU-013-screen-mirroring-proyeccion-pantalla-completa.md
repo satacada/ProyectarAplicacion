@@ -17,13 +17,13 @@
 ## 2. Criterios de Aceptación (Contrato Inamovible)
 
 ### A. Proyección Vertical (Celular Erguido)
-1. **100% de Altura Física en TV:**
-   - La imagen vertical del teléfono debe tocar exactamente los bordes físicos superior e inferior del televisor (1080p nativo).
-   - Queda estrictamente prohibido que aparezcan franjas negras arriba o abajo que reduzcan la altura de la imagen.
+1. **100% de Altura Física en TV y Recorte de Barras de Sistema:**
+   - La imagen vertical del teléfono debe ocupar el 100% de la altura física del televisor (1080p nativo) de borde a borde, aplicando un factor de recorte fino de 1.075x que desplaza simétricamente fuera del marco del televisor la barra de estado superior (batería, hora, señal) y los controles de navegación inferiores del teléfono.
+   - Queda estrictamente prohibido que aparezcan franjas negras arriba o abajo.
 2. **Centrado Simétrico:**
    - La columna vertical del celular debe estar perfectamente centrada en el eje horizontal de la TV, con barras negras laterales simétricas propias de la relación de aspecto del teléfono (ej. 9:20 o 9:19.5).
 3. **Sin Deformación Lateral:**
-   - Queda terminantemente prohibido estirar la imagen vertical horizontalmente para llenar un televisor 16:9 (prohibido aplicar escalas desproporcionadas como 3.95x).
+   - Queda terminantemente prohibido estirar la imagen vertical horizontalmente para llenar un televisor 16:9 (prohibido aplicar factores multiplicadores de distorsión lateral como 3.95x).
 
 ### B. Proyección Horizontal (Celular Apaisado / Pantalla Completa)
 1. **Llenado 16:9 de Borde a Borde:**
@@ -32,9 +32,11 @@
    - Queda terminantemente prohibido que la imagen horizontal se reduzca o quede atrapada en un recuadro de 1/4 en la esquina izquierda con el resto en negro.
 
 ### C. Leyes Técnicas de Hardware y Renderizado
-1. **Escalador de Hardware Obligatorio (`setEnableHardwareScaler(true)`):**
-   - `SurfaceViewRenderer` en la TV Box DEBE mantener siempre activo el escalador por hardware de Android TV (`setEnableHardwareScaler(true)`). Desactivarlo bloquea el buffer de superficie en la resolución inicial e introduce el fallo de 1/4.
-2. **Contenedor Compose a Pantalla Completa:**
-   - En `TvScreens.kt`, el `AndroidView` debe configurarse con `Modifier.fillMaxSize()` y `layoutParams = MATCH_PARENT, MATCH_PARENT`.
+1. **Configuración de Renderizado en TV Box (`setEnableHardwareScaler(false)`):**
+   - `SurfaceViewRenderer` en la TV Box opera con `setEnableHardwareScaler(false)` para permitir que Compose gestione las dimensiones reales del marco mediante `Modifier.fillMaxHeight().aspectRatio(streamAspect)` y evitar fallos de escalado asimétrico.
+2. **Contenedor Compose Reactivo a Orientación:**
+   - En `TvScreens.kt`, el `AndroidView` debe ser reactivo a `isVertical`:
+     - Modo Vertical: `Modifier.fillMaxHeight().aspectRatio(streamAspect)` con `layoutParams = WRAP_CONTENT, MATCH_PARENT`.
+     - Modo Horizontal: `Modifier.fillMaxSize()` con `layoutParams = MATCH_PARENT, MATCH_PARENT`.
 3. **Conmutación Idempotente con Mando a Distancia:**
    - Pulsar Play/Pausa o DPAD_Center en el control remoto de la TV conmuta limpiamente entre modos de visualización reinicializando traslaciones y zooms espurios, garantizando que el usuario pueda alternar modos infinitamente sin que la imagen se trabe o desplace.

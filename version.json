@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 159,
-  "versionCodeReceiver": 142,
-  "versionName": "3.4.9",
-  "releaseTag": "v3.4.9",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.9/omnicast-sender-v3.4.9.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.9/omnicast-receiver-v3.4.9.apk",
-  "changelog": "v3.4.9: User-Agent adaptativo dinámico y bypass integral de bucle de verificación Cloudflare Turnstile en explorador; fijación inamovible de HU-013 y Regla 7 de AGENTS.md con proyección vertical 1.0x limpia al 100% de la altura física de la TV sin deformaciones ni franjas."
+  "versionCodeSender": 160,
+  "versionCodeReceiver": 143,
+  "versionName": "3.4.10",
+  "releaseTag": "v3.4.10",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.10/omnicast-sender-v3.4.10.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.10/omnicast-receiver-v3.4.10.apk",
+  "changelog": "v3.4.10: Restauración de arquitectura v3.4.6 para TV Box: recorte fino 1.075x de barras de estado/navegación en vertical al 100% de la altura y conmutación 16:9 pantalla completa en horizontal; bypass de bucle infinito en Cloudflare Turnstile con polyfill de Chromium e inmunidad de scripts DOM."
 }

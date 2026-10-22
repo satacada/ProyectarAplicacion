@@ -60,6 +60,9 @@ object SmartSelectionAutoCompleter {
     fun getCombinedInjectionScript(): String {
         return """
             (function() {
+                var h = (window.location.hostname || '').toLowerCase();
+                var t = (document.title || '').toLowerCase();
+                if (h.indexOf('cloudflare') !== -1 || t.indexOf('just a moment') !== -1 || (window.location.pathname || '').indexOf('cdn-cgi') !== -1) return;
                 // 1. Corrección nativa de caret y scroll suave para campos de texto
                 if (!window.__omniInputFixInjected) {
                     window.__omniInputFixInjected = true;

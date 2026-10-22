@@ -47,6 +47,7 @@ fun BrowserWebView(
             AdBlockRuleSyncManager.syncIfNeeded(ctx)
             AdBlockWhitelistManager.init(ctx)
             var currentKnownTitle: String? = null
+            var isChallenge = false
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                 try {
@@ -91,19 +92,16 @@ fun BrowserWebView(
                 SmartSelectionAutoCompleter.attach(this, ctx)
                 CookieManager.getInstance().setAcceptCookie(true)
                 CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
-                settings.javaScriptEnabled = true
-                settings.domStorageEnabled = true
-                settings.databaseEnabled = true
-                settings.allowFileAccess = true
-                settings.useWideViewPort = true
-                settings.loadWithOverviewMode = true
-                settings.textZoom = 100
-                settings.layoutAlgorithm = WebSettings.LayoutAlgorithm.NORMAL
-                settings.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
-                settings.mediaPlaybackRequiresUserGesture = false
-                settings.setSupportMultipleWindows(true)
-                settings.javaScriptCanOpenWindowsAutomatically = true
-                settings.userAgentString = getAdaptiveMobileUserAgent(ctx)
+                settings.apply {
+                    javaScriptEnabled = true; domStorageEnabled = true; databaseEnabled = true
+                    allowFileAccess = true; allowContentAccess = true; useWideViewPort = true
+                    loadWithOverviewMode = true; textZoom = 100
+                    layoutAlgorithm = WebSettings.LayoutAlgorithm.NORMAL
+                    mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
+                    mediaPlaybackRequiresUserGesture = false; setSupportMultipleWindows(true)
+                    javaScriptCanOpenWindowsAutomatically = true
+                    userAgentString = getAdaptiveMobileUserAgent(ctx)
+                }
 
                 webViewClient = object : WebViewClient() {
                     override fun onRenderProcessGone(view: WebView?, detail: RenderProcessGoneDetail?): Boolean {
@@ -114,9 +112,10 @@ fun BrowserWebView(
 
                     override fun onPageStarted(v: WebView?, u: String?, f: Bitmap?) {
                         CookieManager.getInstance().flush()
+                        v?.evaluateJavascript("try{if(!window.chrome)window.chrome={runtime:{},app:{}};Object.defineProperty(navigator,'webdriver',{get:()=>false});}catch(_){}", null)
                         u?.let { if (!it.startsWith("about:") && !it.contains("favicon")) onPageStarted(it) }
-                        val isChl = AdBlocker.isVerificationOrCaptcha(u) || (v?.title?.contains("Just a moment", ignoreCase = true) == true)
-                        if (!isChl) {
+                        isChallenge = AdBlocker.isVerificationOrCaptcha(u)
+                        if (!isChallenge) {
                             if (isAdBlockEnabled) v?.evaluateJavascript(AdBlocker.getAdHidingScript(), null)
                             v?.evaluateJavascript(SmartSelectionAutoCompleter.getCombinedInjectionScript(), null)
                         }
@@ -128,12 +127,12 @@ fun BrowserWebView(
                         val title = v?.title ?: "Transmisión"
                         currentKnownTitle = title
                         onPageFinished(title, u)
-                        val isChl = AdBlocker.isVerificationOrCaptcha(u) || title.contains("Just a moment", ignoreCase = true)
+                        val isChl = isChallenge || AdBlocker.isVerificationOrCaptcha(u) || title.contains("Just a moment", ignoreCase = true)
                         if (!isChl) {
                             if (isAdBlockEnabled) v?.evaluateJavascript(AdBlocker.getAdHidingScript(), null)
                             v?.evaluateJavascript(SmartSelectionAutoCompleter.getCombinedInjectionScript(), null)
+                            v?.evaluateJavascript(WvcDomSniffer.getInjectionScript(ctx), null)
                         }
-                        v?.evaluateJavascript(WvcDomSniffer.getInjectionScript(ctx), null)
                     }
 
                     override fun doUpdateVisitedHistory(v: WebView?, u: String?, isR: Boolean) {
@@ -144,7 +143,7 @@ fun BrowserWebView(
                         val reqUrl = r?.url?.toString() ?: return false
                         if (AdBlocker.isExternalRedirect(reqUrl)) return true
                         val liveUrl = v?.url ?: currentUrl
-                        if (AdBlocker.isVerificationOrCaptcha(reqUrl) || AdBlocker.isVerificationOrCaptcha(liveUrl)) return false
+                        if (isChallenge || AdBlocker.isVerificationOrCaptcha(reqUrl) || AdBlocker.isVerificationOrCaptcha(liveUrl) || (v?.title?.contains("Just a moment", ignoreCase = true) == true)) return false
                         val curHost = try { java.net.URI(liveUrl).host?.lowercase() } catch (_: Throwable) { null }
                         val targetHost = try { r.url.host?.lowercase() } catch (_: Throwable) { null }
                         val isSameSite = AdBlocker.isSameSite(curHost, targetHost)
@@ -185,6 +184,7 @@ fun BrowserWebView(
                     override fun shouldInterceptRequest(v: WebView?, r: WebResourceRequest?): WebResourceResponse? {
                         return try {
                             val reqUrl = r?.url?.toString() ?: return super.shouldInterceptRequest(v, r)
+                            if (reqUrl.contains("challenges.cloudflare.com") || reqUrl.contains("cdn-cgi/challenge-platform")) isChallenge = true
                             if (reqUrl.contains("/ibjslib/wai2iku6/")) {
                                 val assetName = if (reqUrl.contains("json2.js")) "json2.js" else "wvc_sniffer.js"
                                 return try {
@@ -236,15 +236,12 @@ fun BrowserWebView(
                                             if (AdBlocker.isAd(destUrl) || AdBlocker.isExternalRedirect(destUrl) || NativeAdBlockEngine.shouldBlock(destUrl, liveUrl)) {
                                                 allow = false
                                             } else if (!isSameSite && !isSourceSearchEngine && targetHost != null) {
-                                                val isAllowed = AdBlocker.isSearchEngine(targetHost) ||
-                                                    AdBlocker.isKnownMediaHost(targetHost) ||
-                                                    AdBlocker.isVerificationOrCaptcha(targetHost) ||
-                                                    AdBlockWhitelistManager.isWhitelistedHost(targetHost)
-                                                if (!isAllowed) allow = false
+                                                val ok = AdBlocker.isSearchEngine(targetHost) || AdBlocker.isKnownMediaHost(targetHost) ||
+                                                    AdBlocker.isVerificationOrCaptcha(targetHost) || AdBlockWhitelistManager.isWhitelistedHost(targetHost)
+                                                if (!ok) allow = false
                                             }
                                         }
                                         if (allow) view.loadUrl(destUrl) else {
-                                            android.util.Log.w("BrowserWebView", "🛑 Popup publicitario bloqueado en onCreateWindow: $targetHost")
                                             targetHost?.let { AdBlocker.learnAndBlockAdHost(it, curHost) }
                                             showBlockedToast(ctx)
                                         }
@@ -264,8 +261,11 @@ fun BrowserWebView(
                     override fun onProgressChanged(v: WebView?, p: Int) {
                         onProgress(p)
                         if (p >= 80) swipeRefresh.isRefreshing = false
-                        if (isAdBlockEnabled && (p == 30 || p == 60 || p == 100)) v?.evaluateJavascript(AdBlocker.getAdHidingScript(), null)
-                        if (p == 60 || p == 85 || p == 100) v?.evaluateJavascript(WvcDomSniffer.getInjectionScript(ctx), null)
+                        val isChl = isChallenge || AdBlocker.isVerificationOrCaptcha(v?.url) || (v?.title?.contains("Just a moment", ignoreCase = true) == true)
+                        if (!isChl) {
+                            if (isAdBlockEnabled && (p == 30 || p == 60 || p == 100)) v?.evaluateJavascript(AdBlocker.getAdHidingScript(), null)
+                            if (p == 60 || p == 85 || p == 100) v?.evaluateJavascript(WvcDomSniffer.getInjectionScript(ctx), null)
+                        }
                     }
 
                     override fun onReceivedTitle(v: WebView?, title: String?) {
@@ -273,6 +273,7 @@ fun BrowserWebView(
                         val t = title?.trim()
                         if (!t.isNullOrBlank() && !t.contains("about:blank") && t != "Transmisión" && !t.startsWith("http")) {
                             currentKnownTitle = t
+                            if (t.contains("Just a moment", ignoreCase = true) || t.contains("Cloudflare", ignoreCase = true)) isChallenge = true
                             post { onTitleReceived(t) }
                         }
                     }

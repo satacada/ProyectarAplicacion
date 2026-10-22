@@ -35,7 +35,8 @@ object AdBlocker {
         return h.contains("cloudflare") || h.contains("turnstile") ||
                h.contains("challenge") || h.contains("hcaptcha") ||
                h.contains("recaptcha") || h.contains("captcha") ||
-               h.contains("cdn-cgi") || h.contains("cf_chl") || h.contains("cf-chl")
+               h.contains("cdn-cgi") || h.contains("cf_chl") || h.contains("cf-chl") ||
+               h.contains("cf_clearance")
     }
 
     fun isVideoAd(url: String): Boolean {

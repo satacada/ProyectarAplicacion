@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 154,
-  "versionCodeReceiver": 137,
-  "versionName": "3.4.4",
-  "releaseTag": "v3.4.4",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.4/omnicast-sender-v3.4.4.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.4/omnicast-receiver-v3.4.4.apk",
-  "changelog": "v3.4.4: Altura completa de borde a borde vertical en TV Box (hardware scaler nativo activo sin franjas negras arriba y abajo); protección de enlaces SPA en Canela.tv y bypass de verificación Cloudflare Turnstile en PelicineHD."
+  "versionCodeSender": 155,
+  "versionCodeReceiver": 138,
+  "versionName": "3.4.5",
+  "releaseTag": "v3.4.5",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.5/omnicast-sender-v3.4.5.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.5/omnicast-receiver-v3.4.5.apk",
+  "changelog": "v3.4.5: Proyección vertical exacta restaurada al 100% de la altura de la TV Box con Modifier.fillMaxHeight().aspectRatio(streamAspect) y layoutParams WRAP_CONTENT/MATCH_PARENT sin franjas arriba ni abajo."
 }

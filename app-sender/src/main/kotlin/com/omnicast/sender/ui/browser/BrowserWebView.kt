@@ -37,6 +37,7 @@ fun BrowserWebView(
     onStreamIntercepted: (streamUrl: String, headers: Map<String, String>, isMaster: Boolean) -> Unit,
     onSniffedVideo: (WvcDomSniffer.SniffedVideo) -> Unit,
     onTitleReceived: (String) -> Unit = {},
+    onClearFocus: () -> Unit = {},
     onOpenPopup: (WebView) -> Unit = {},
     onClosePopup: () -> Unit = {},
     onWebViewCreated: (WebView) -> Unit
@@ -78,16 +79,18 @@ fun BrowserWebView(
 
             val webView = WebView(ctx)
             val swipeRefresh = SwipeRefreshLayout(ctx).apply {
+                isEnabled = false
                 descendantFocusability = android.view.ViewGroup.FOCUS_AFTER_DESCENDANTS
                 setColorSchemeColors(0xFF38BDF8.toInt())
                 setOnRefreshListener { webView.reload() }
-                setOnChildScrollUpCallback { _, _ -> webView.scrollY > 0 }
             }
 
             webView.apply {
-                isFocusable = true
-                isFocusableInTouchMode = true
-                isClickable = true
+                isFocusable = true; isFocusableInTouchMode = true; isClickable = true
+                setOnTouchListener { _, ev ->
+                    if (ev.action == android.view.MotionEvent.ACTION_DOWN) onClearFocus()
+                    false
+                }
                 SmartSelectionAutoCompleter.attach(this, ctx)
                 CookieManager.getInstance().setAcceptCookie(true)
                 CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
@@ -244,13 +247,8 @@ fun BrowserWebView(
                                 v?.post { try { v.destroy() } catch (_: Throwable) {} }
                             }
                             tempWebView.webViewClient = object : WebViewClient() {
-                                override fun onPageStarted(v: WebView?, u: String?, f: Bitmap?) {
-                                    handlePopupUrl(v, u)
-                                }
-                                override fun shouldOverrideUrlLoading(v: WebView?, req: WebResourceRequest?): Boolean {
-                                    handlePopupUrl(v, req?.url?.toString())
-                                    return true
-                                }
+                                override fun onPageStarted(v: WebView?, u: String?, f: Bitmap?) { handlePopupUrl(v, u) }
+                                override fun shouldOverrideUrlLoading(v: WebView?, req: WebResourceRequest?): Boolean { handlePopupUrl(v, req?.url?.toString()); return true }
                             }
                             tempWebView.postDelayed({ try { tempWebView.destroy() } catch (_: Throwable) {} }, 10000)
                             transport.webView = tempWebView

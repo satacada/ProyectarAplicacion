@@ -39,7 +39,7 @@ fun InAppBrowserScreen(
     val detectedStreams = remember { mutableStateListOf<String>() }; val streamHeaders = remember { mutableStateMapOf<String, Map<String, String>>() }; val streamLabels = remember { mutableStateMapOf<String, String>() }; val streamDurations = remember { mutableStateMapOf<String, Float>() }
     var qualityOptions by remember { mutableStateOf<List<StreamQualityOption>>(emptyList()) }; var showOptionsSheet by remember { mutableStateOf(false) }; var showSideDrawer by remember { mutableStateOf(false) }; var showWhitelistDialog by remember { mutableStateOf(false) }
     var showBottomControls by rememberSaveable { mutableStateOf(ActiveStreamHolder.isCasting.value && ActiveStreamHolder.isPlaying.value) }; var videoToSave by remember { mutableStateOf<HistoryItem?>(null) }; var webViewInstance by remember { mutableStateOf<WebView?>(null) }; var popupWebView by remember { mutableStateOf<WebView?>(null) }
-    var playlistsVersion by remember { mutableIntStateOf(0) }; val scope = rememberCoroutineScope(); var userDismissedSheetForUrl by rememberSaveable { mutableStateOf("") }; var autoOpenJob by remember { mutableStateOf<kotlinx.coroutines.Job?>(null) }
+    var playlistsVersion by remember { mutableIntStateOf(0) }; val scope = rememberCoroutineScope(); var userDismissedSheetForUrl by rememberSaveable { mutableStateOf("") }
     val isCasting by ActiveStreamHolder.isCasting.collectAsState(); val isPlaying by ActiveStreamHolder.isPlaying.collectAsState(); val posMs by ActiveStreamHolder.positionMs.collectAsState(); val durMs by ActiveStreamHolder.durationMs.collectAsState(); val volume by ActiveStreamHolder.volume.collectAsState(); val castTitle by ActiveStreamHolder.currentMediaTitle.collectAsState()
     fun isRealMedia(s: String) = BrowserUrlHelper.isRealMedia(s, streamDurations[s] ?: 0f)
 
@@ -108,11 +108,6 @@ fun InAppBrowserScreen(
         val cleanT = if (pageTitle.isNotBlank() && pageTitle != "Cargando..." && pageTitle != "Transmisión") pageTitle else "Video Web"
         ActiveStreamHolder.update(primaryUrl, cleanT, streamHeaders[primaryUrl] ?: hdrs)
         android.util.Log.i("StreamDetection", "🎬 Flujo registrado [isMaster=$isM]: $cleanUrl")
-        val lUrl = currentUrl.lowercase()
-        val isFeedOrSearch = (lUrl.contains("dailymotion.com") && !lUrl.contains("/video/")) || ((lUrl.contains("ok.ru") || lUrl.contains("vk.ru") || lUrl.contains("vk.com")) && !lUrl.contains("video") && !lUrl.contains("/live/")) || lUrl.contains("/search") || lUrl.contains("?q=") || lUrl.contains("&q=")
-        if (!showOptionsSheet && !isCasting && userDismissedSheetForUrl != currentUrl && !isFeedOrSearch) {
-            autoOpenJob?.cancel(); autoOpenJob = scope.launch { kotlinx.coroutines.delay(500); if (!showOptionsSheet && !isCasting && userDismissedSheetForUrl != currentUrl && detectedStreams.any { isRealMedia(it) }) webViewInstance?.evaluateJavascript("(function(){var a=document.activeElement;return (a&&(a.tagName==='INPUT'||a.tagName==='TEXTAREA'||a.isContentEditable))?'1':'0';})()") { r -> if (r?.contains("1") != true && !showOptionsSheet && !isCasting) openOptionsSheet() } }
-        }
     }
 
     fun checkPlatformUrls(url: String?, title: String? = null) {
@@ -132,7 +127,7 @@ fun InAppBrowserScreen(
     fun navigateTo(url: String) {
         focusManager.clearFocus()
         detectedStreams.clear(); streamHeaders.clear(); streamLabels.clear(); streamDurations.clear(); qualityOptions = emptyList()
-        userDismissedSheetForUrl = ""; autoOpenJob?.cancel(); ActiveStreamHolder.clearDetectedStream(); showBottomControls = false; pageTitle = "Cargando..."; val target = BrowserUrlHelper.normalizeUrl(url)
+        userDismissedSheetForUrl = ""; ActiveStreamHolder.clearDetectedStream(); showBottomControls = false; pageTitle = "Cargando..."; val target = BrowserUrlHelper.normalizeUrl(url)
         inputUrl = target; currentUrl = target; isHome = false; prefs.edit().putString("saved_browser_last_url", target).apply()
         checkPlatformUrls(target); webViewInstance?.loadUrl(target)
     }
@@ -210,10 +205,11 @@ fun InAppBrowserScreen(
                     isHome = isHome, isAdBlockEnabled = isAdBlockEnabled, currentUrl = currentUrl,
                     hasStreams = detectedStreams.any { isRealMedia(it) },
                     onProgress = { progress = it },
+                    onClearFocus = { focusManager.clearFocus() },
                     onPageStarted = { newUrl ->
                         focusManager.clearFocus()
                         if (currentUrl.isNotBlank() && currentUrl != newUrl && !newUrl.startsWith("about:")) {
-                            detectedStreams.clear(); streamHeaders.clear(); streamLabels.clear(); qualityOptions = emptyList(); ActiveStreamHolder.clearDetectedStream(); pageTitle = "Cargando..."; userDismissedSheetForUrl = ""; autoOpenJob?.cancel()
+                            detectedStreams.clear(); streamHeaders.clear(); streamLabels.clear(); qualityOptions = emptyList(); ActiveStreamHolder.clearDetectedStream(); pageTitle = "Cargando..."; userDismissedSheetForUrl = ""
                         }
                         inputUrl = newUrl; currentUrl = newUrl; com.omnicast.sender.history.NavigationTrackManager.recordStep(newUrl, pageTitle)
                         if (!newUrl.startsWith("about:")) { prefs.edit().putString("saved_browser_last_url", newUrl).apply(); com.omnicast.sender.history.NavigationTrackManager.pushBrowserHistory(context, newUrl, pageTitle) }

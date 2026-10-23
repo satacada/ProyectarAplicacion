@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 181,
-  "versionCodeReceiver": 164,
-  "versionName": "3.4.31",
-  "releaseTag": "v3.4.31",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.31/omnicast-sender-v3.4.31.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.31/omnicast-receiver-v3.4.31.apk",
-  "changelog": "v3.4.31: Zoom horizontal en pantalla completa al girar el celular con video apaisado (sin encasillamiento vertical en Compose), erradicación total de escritura inversa en buscadores al eliminar anchorCaret y manipulación de selectionRange, e interacción fluida con enlaces emergentes en OK.ru."
+  "versionCodeSender": 182,
+  "versionCodeReceiver": 165,
+  "versionName": "3.4.32",
+  "releaseTag": "v3.4.32",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.32/omnicast-sender-v3.4.32.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.32/omnicast-receiver-v3.4.32.apk",
+  "changelog": "v3.4.32: Eliminación total de autoOpenJob para evitar interrupciones y robo de foco al navegar; liberación reactiva del foco de Compose hacia Chromium en WebView; habilitación inmediata de escritura en el cuadro de búsqueda de Dailymotion y navegación web idéntica a Web Video Caster."
 }

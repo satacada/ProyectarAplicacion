@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 180,
-  "versionCodeReceiver": 163,
-  "versionName": "3.4.30",
-  "releaseTag": "v3.4.30",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.30/omnicast-sender-v3.4.30.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.30/omnicast-receiver-v3.4.30.apk",
-  "changelog": "v3.4.30: Analizador proactivo estilo Web Video Caster: navegación universal en enlaces y ventanas emergentes (OK.ru, VK.ru, Rumble), supresión de robo de foco por panel inferior al usar buscadores, y corrección definitiva de escritura inversa y visibilidad en cajas de búsqueda."
+  "versionCodeSender": 181,
+  "versionCodeReceiver": 164,
+  "versionName": "3.4.31",
+  "releaseTag": "v3.4.31",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.31/omnicast-sender-v3.4.31.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.31/omnicast-receiver-v3.4.31.apk",
+  "changelog": "v3.4.31: Zoom horizontal en pantalla completa al girar el celular con video apaisado (sin encasillamiento vertical en Compose), erradicación total de escritura inversa en buscadores al eliminar anchorCaret y manipulación de selectionRange, e interacción fluida con enlaces emergentes en OK.ru."
 }

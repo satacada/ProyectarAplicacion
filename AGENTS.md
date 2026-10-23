@@ -86,6 +86,11 @@ Este repositorio sigue el estándar abierto AGENTS.md para el desarrollo de la a
    - **Obediencia Inmediata del Comando STOP:**
      Todo mensaje de control `SignalingMessage.PlayControl("STOP")` o `Disconnect` recibido en `TvReceiverActivity.kt` DEBE detener de inmediato `ExoPlayerTvManager`, `DigitalAudioReceiver`, `WebRtcReceiverManager.resetConnection()` y transicionar el estado a `ReceiverUiState.Standby` en menos de 5ms, sin congelar la pantalla ni esperar timeouts de ICE.
 
+8. **Blindaje Total e Intocabilidad del Canvas de Screen Mirroring y Proyección por Aplicación (HU-013, v3.4.27) [SELLADO E INMUTABLE]:**
+   - **Independencia Absoluta de la Captura de Flujo Web:** Queda TERMINANTEMENTE PROHIBIDO modificar `TvScreens.kt` o `WebRtcReceiverManager.kt` para solucionar problemas de detección de flujos web, reproductores (ExoPlayer/TvWebStreamScreen) o bloqueador de anuncios. Screen Mirroring y Proyección por Aplicación operan sobre un pipeline WebRTC 100% independiente.
+   - **Inmutabilidad del Canvas en Compose (`TvScreens.kt`):** El `AndroidView` para el `SurfaceViewRenderer` DEBE permanecer inalterable con `Modifier.fillMaxSize()` y `layoutParams = MATCH_PARENT, MATCH_PARENT`. Queda PROHIBIDO introducir `WRAP_CONTENT`, `aspectRatio` o restricciones de Compose que encasillen el renderizador.
+   - **Obediencia Pura a la Orientación del Video y Zoom Libre:** La orientación y el escalado se gobiernan de forma autónoma en `WebRtcReceiverManager.kt` mediante el aspect ratio del frame decodificado (`effectiveFrameW > effectiveFrameH`). En horizontal opera en `SCALE_ASPECT_FILL` 16:9 de borde a borde; en vertical opera en `SCALE_ASPECT_FIT` con factor base 1.075f. Los presets de zoom (75%, 85%, 115%, 130%) escalan libremente sobre todo el panel 1080p sin recortes de Compose.
+
 ---
 
 ## 8. PROTOCOLO PRE-VUELO INVIOLABLE CONTRA REGRESIONES (CHECKLIST OBLIGATORIO)
@@ -98,5 +103,7 @@ Queda terminantemente PROHIBIDO compilar o proponer una versión sin auditar pre
    En modo horizontal (`isLandscape == true`), `WebRtcReceiverManager` DEBE operar siempre con base `SCALE_ASPECT_FILL` y `TvScreens.kt` con `MATCH_PARENT, MATCH_PARENT`. Queda PROHIBIDO usar `WRAP_CONTENT`, resetear a `SCALE_ASPECT_FIT` o aplicar `aspectRatio` vertical de 9:16 durante el ciclo de zoom en horizontal.
 4. **Prohibición de Inventar Vías Alternativas ante Fallos de un Pilar:**
    Si un flujo falla en el reproductor contratado (ExoPlayer o HTML5), queda TERMINANTEMENTE PROHIBIDO desviar la arquitectura hacia proxies o mecanismos improvisados no solicitados. Se debe inspeccionar el log local de la TV (`/logs`), identificar el fallo exacto en ese reproductor y corregirlo en su propio pilar sin romper los demás.
+5. **Inmunidad e Intocabilidad del Canvas WebRTC (`TvScreens.kt`):**
+   Auditar obligatoriamente que ningún cambio en extractores web, bloqueador de anuncios o reproductores de streaming modifique `TvScreens.kt` ni `WebRtcReceiverManager.kt`. Ambos archivos están sellados para preservar la proyección por aplicación y pantalla completa.
 
 

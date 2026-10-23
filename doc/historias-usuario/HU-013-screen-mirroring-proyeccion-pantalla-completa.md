@@ -38,10 +38,18 @@
 
 ### C. Leyes Técnicas de Hardware y Renderizado
 1. **Área de Renderizado en Compose (`fillMaxSize()`):**
-   - En `TvScreens.kt`, `AndroidView` mantiene permanentemente `Modifier.fillMaxSize()` y `MATCH_PARENT, MATCH_PARENT`. El motor WebRTC (`SurfaceViewRenderer`) gestiona internamente el escalado y centrado mediante `setScalingType()`, `scaleX`, `scaleY`, `translationX` y `translationY`.
-2. **Conmutación Idempotente con Mando a Distancia:**
+   - En `TvScreens.kt`, `AndroidView` mantiene permanentemente `Modifier.fillMaxSize()` y `MATCH_PARENT, MATCH_PARENT`. El motor WebRTC (`SurfaceViewRenderer`) gestiona internamente el escalado y centrado mediante `setScalingType()`, `scaleX`, `scaleY`, `translationX` y `translationY`. Queda prohibido el uso de `WRAP_CONTENT` o `aspectRatio` en este composable.
+2. **Independencia Absoluta de la Captura de Flujos Web:**
+   - La Proyección por Aplicación y Screen Mirroring (Pilar 3: WebRTC) son completamente independientes de la captura, análisis y casteo de flujos web (ExoPlayer, HTML5, extractores). Queda sellado e intocable: ningún ajuste en reproductores web o anuncios puede alterar el canvas de `TvScreens.kt`.
+3. **Conmutación Idempotente con Mando a Distancia:**
    - Pulsar Play/Pausa o DPAD_Center en el control remoto de la TV conmuta limpiamente entre modos reinicializando traslaciones, garantizando que el usuario pueda alternar modos infinitamente sin que la imagen se trabe o desplace.
 
 ### D. Obediencia Inmediata del Comando STOP
 1. **Terminación Instantánea (<5ms):**
    - Al pulsar "Detener Transmisión" o recibir `SignalingMessage.PlayControl("STOP")` o `Disconnect`, la TV Box detiene inmediatamente el decodificador WebRTC (`webRtcReceiver.resetConnection()`), el receptor de audio digital (`digitalAudioReceiver?.stop()`) y transiciona de inmediato a `ReceiverUiState.Standby` sin congelamiento ni espera de timeouts.
+
+---
+
+## 3. Estado de Sellado Definitivo (v3.4.27)
+- **Consolidación Final:** Validado y sellado en `v3.4.27`.
+- **Intocabilidad:** Los archivos `TvScreens.kt` y `WebRtcReceiverManager.kt` quedan blindados contra modificaciones transversales.

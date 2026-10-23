@@ -87,7 +87,7 @@ object SmartSelectionAutoCompleter {
                     window.__omniInputFixInjected = true;
                     try {
                         var st = document.createElement('style');
-                        st.textContent = 'input, textarea { direction: ltr !important; unicode-bidi: plaintext !important; }';
+                        st.textContent = 'input, textarea { direction: ltr !important; }';
                         (document.head || document.documentElement).appendChild(st);
                     } catch(_) {}
                 }

@@ -212,7 +212,6 @@ fun InAppBrowserScreen(
                     onProgress = { progress = it },
                     onClearFocus = { focusManager.clearFocus() },
                     onPageStarted = { newUrl ->
-                        focusManager.clearFocus()
                         if (currentUrl.isNotBlank() && currentUrl != newUrl && !newUrl.startsWith("about:")) {
                             detectedStreams.clear(); streamHeaders.clear(); streamLabels.clear(); qualityOptions = emptyList(); ActiveStreamHolder.clearDetectedStream(); pageTitle = "Cargando..."; userDismissedSheetForUrl = ""
                         }

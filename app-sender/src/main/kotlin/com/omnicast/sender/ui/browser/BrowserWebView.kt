@@ -80,7 +80,7 @@ fun BrowserWebView(
 
             val webView = WebView(ctx)
             val swipeRefresh = SwipeRefreshLayout(ctx).apply {
-                isEnabled = false
+                isEnabled = false; isFocusable = false; isFocusableInTouchMode = false
                 descendantFocusability = android.view.ViewGroup.FOCUS_AFTER_DESCENDANTS
                 setColorSchemeColors(0xFF38BDF8.toInt())
                 setOnRefreshListener { webView.reload() }
@@ -88,6 +88,7 @@ fun BrowserWebView(
 
             webView.apply {
                 isFocusable = true; isFocusableInTouchMode = true; isClickable = true
+                InputCaretStabilizer.attach(this)
                 SmartSelectionAutoCompleter.attach(this, ctx)
                 CookieManager.getInstance().setAcceptCookie(true)
                 CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)

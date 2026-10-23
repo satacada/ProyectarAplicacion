@@ -86,10 +86,16 @@ Este repositorio sigue el estándar abierto AGENTS.md para el desarrollo de la a
    - **Obediencia Inmediata del Comando STOP:**
      Todo mensaje de control `SignalingMessage.PlayControl("STOP")` o `Disconnect` recibido en `TvReceiverActivity.kt` DEBE detener de inmediato `ExoPlayerTvManager`, `DigitalAudioReceiver`, `WebRtcReceiverManager.resetConnection()` y transicionar el estado a `ReceiverUiState.Standby` en menos de 5ms, sin congelar la pantalla ni esperar timeouts de ICE.
 
-8. **Blindaje Total e Intocabilidad del Canvas de Screen Mirroring y Proyección por Aplicación (HU-013, v3.4.27) [SELLADO E INMUTABLE]:**
-   - **Independencia Absoluta de la Captura de Flujo Web:** Queda TERMINANTEMENTE PROHIBIDO modificar `TvScreens.kt` o `WebRtcReceiverManager.kt` para solucionar problemas de detección de flujos web, reproductores (ExoPlayer/TvWebStreamScreen) o bloqueador de anuncios. Screen Mirroring y Proyección por Aplicación operan sobre un pipeline WebRTC 100% independiente.
-   - **Inmutabilidad del Canvas en Compose (`TvScreens.kt`):** El `AndroidView` para el `SurfaceViewRenderer` DEBE permanecer inalterable con `Modifier.fillMaxSize()` y `layoutParams = MATCH_PARENT, MATCH_PARENT`. Queda PROHIBIDO introducir `WRAP_CONTENT`, `aspectRatio` o restricciones de Compose que encasillen el renderizador.
-   - **Obediencia Pura a la Orientación del Video y Zoom Libre:** La orientación y el escalado se gobiernan de forma autónoma en `WebRtcReceiverManager.kt` mediante el aspect ratio del frame decodificado (`effectiveFrameW > effectiveFrameH`). En horizontal opera en `SCALE_ASPECT_FILL` 16:9 de borde a borde; en vertical opera en `SCALE_ASPECT_FIT` con factor base 1.075f. Los presets de zoom (75%, 85%, 115%, 130%) escalan libremente sobre todo el panel 1080p sin recortes de Compose.
+8. **Separación Total y Blindaje de las Dos Opciones: Pantalla Completa vs Por Aplicación (HU-013, v3.4.28) [SELLADO E INMUTABLE]:**
+   - **Independencia Absoluta de la Captura de Flujo Web:** Queda TERMINANTEMENTE PROHIBIDO modificar `TvScreens.kt` o `WebRtcReceiverManager.kt` para solucionar problemas de detección de flujos web, reproductores (ExoPlayer/TvWebStreamScreen) o bloqueador de anuncios.
+   - **Opción 1: Pantalla Completa (`isAppProjectionMode == false`):**
+     - Botón dedicado "Pantalla Completa" en el Sender (`MediaProjectionConfig.createConfigForDefaultDisplay()`).
+     - En `TvScreens.kt`, cuando es vertical y no está en `FILL`, utiliza obligatoriamente `Modifier.fillMaxHeight().aspectRatio(streamAspect)` y `WRAP_CONTENT, MATCH_PARENT` para centrar la pantalla vertical del teléfono al 100% de la altura física del TV sin deformaciones.
+   - **Opción 2: Por Aplicación (`isAppProjectionMode == true`):**
+     - Botón dedicado "Por Aplicación" en el Sender (`MediaProjectionConfig.createConfigForUserChoice()`).
+     - En `TvScreens.kt`, utiliza obligatoriamente `Modifier.fillMaxSize()` y `MATCH_PARENT, MATCH_PARENT`.
+     - Ignora el sensor físico del teléfono (`isPhoneLandscape`) y obedece EXCLUSIVAMENTE la orientación real del frame del video (`effectiveFrameW > effectiveFrameH`), permitiendo zoom libre (75%, 85%, 115%, 130%) sobre toda la pantalla 16:9 sin recortes de Compose.
+   - **Aislamiento Mutuo:** Queda PROHIBIDO mezclar o unificar ambas rutas; un cambio en una jamás debe afectar a la otra.
 
 ---
 

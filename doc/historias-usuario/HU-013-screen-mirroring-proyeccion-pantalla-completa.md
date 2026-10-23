@@ -36,13 +36,16 @@
    - `isLandscape` se determina EXCLUSIVAMENTE por frames decodificados reales (`effectiveFrameW > effectiveFrameH`) o sensor de orientación (`isPhoneLandscape`).
    - Ningún modo de visualización (`FILL`, `16:9`) puede adulterar la orientación a horizontal si los frames recibidos son verticales.
 
-### C. Leyes Técnicas de Hardware y Renderizado
-1. **Área de Renderizado en Compose (`fillMaxSize()`):**
-   - En `TvScreens.kt`, `AndroidView` mantiene permanentemente `Modifier.fillMaxSize()` y `MATCH_PARENT, MATCH_PARENT`. El motor WebRTC (`SurfaceViewRenderer`) gestiona internamente el escalado y centrado mediante `setScalingType()`, `scaleX`, `scaleY`, `translationX` y `translationY`. Queda prohibido el uso de `WRAP_CONTENT` o `aspectRatio` en este composable.
-2. **Independencia Absoluta de la Captura de Flujos Web:**
-   - La Proyección por Aplicación y Screen Mirroring (Pilar 3: WebRTC) son completamente independientes de la captura, análisis y casteo de flujos web (ExoPlayer, HTML5, extractores). Queda sellado e intocable: ningún ajuste en reproductores web o anuncios puede alterar el canvas de `TvScreens.kt`.
-3. **Conmutación Idempotente con Mando a Distancia:**
-   - Pulsar Play/Pausa o DPAD_Center en el control remoto de la TV conmuta limpiamente entre modos reinicializando traslaciones, garantizando que el usuario pueda alternar modos infinitamente sin que la imagen se trabe o desplace.
+### C. Separación Total de las Dos Opciones: Pantalla Completa vs Por Aplicación
+1. **Opción 1: Proyección de Pantalla Completa (`isAppProjectionMode == false`):**
+   - Botón dedicado "Pantalla Completa" en el Sender (`MediaProjectionConfig.createConfigForDefaultDisplay()`).
+   - En `TvScreens.kt`, cuando es vertical y no está en `FILL`, utiliza `Modifier.fillMaxHeight().aspectRatio(streamAspect)` y `WRAP_CONTENT, MATCH_PARENT` para centrar la pantalla vertical del teléfono al 100% de la altura física del TV sin deformaciones.
+2. **Opción 2: Proyección por Aplicación (`isAppProjectionMode == true`):**
+   - Botón dedicado "Por Aplicación" en el Sender (`MediaProjectionConfig.createConfigForUserChoice()`).
+   - En `TvScreens.kt`, utiliza `Modifier.fillMaxSize()` y `MATCH_PARENT, MATCH_PARENT`.
+   - Ignora la orientación física del teléfono y obedece exclusivamente la orientación real del frame del video (`effectiveFrameW > effectiveFrameH`), permitiendo zoom libre sobre los 16:9 de la TV sin recortes.
+3. **Independencia Absoluta de la Captura de Flujos Web:**
+   - Ambas opciones son 100% independientes entre sí y de la captura web (ExoPlayer, HTML5, extractores).
 
 ### D. Obediencia Inmediata del Comando STOP
 1. **Terminación Instantánea (<5ms):**
@@ -50,6 +53,7 @@
 
 ---
 
-## 3. Estado de Sellado Definitivo (v3.4.27)
-- **Consolidación Final:** Validado y sellado en `v3.4.27`.
+## 3. Estado de Sellado Definitivo (v3.4.28)
+- **Consolidación Final:** Validado y sellado en `v3.4.28` con separación total de ambas opciones.
 - **Intocabilidad:** Los archivos `TvScreens.kt` y `WebRtcReceiverManager.kt` quedan blindados contra modificaciones transversales.
+

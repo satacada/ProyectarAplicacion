@@ -29,6 +29,7 @@ class WebRtcReceiverManager(private val context: Context) {
     private var isResetting = false
     private var currentScalingType = RendererCommon.ScalingType.SCALE_ASPECT_FIT
     var currentMode: String by mutableStateOf("FIT"); private set
+    var isAppProjectionMode: Boolean by mutableStateOf(false); private set
     var currentZoom: Float by mutableStateOf(1.0f); private set
     private var currentPanY = 0.0f
     private var currentPanX = 0.0f
@@ -44,6 +45,8 @@ class WebRtcReceiverManager(private val context: Context) {
     val isLandscape: Boolean
         get() = if (effectiveFrameW > 0 && effectiveFrameH > 0) {
             effectiveFrameW > effectiveFrameH
+        } else if (isAppProjectionMode) {
+            false
         } else {
             isPhoneLandscape
         }
@@ -220,8 +223,18 @@ class WebRtcReceiverManager(private val context: Context) {
     }
 
     fun setDisplayMode(mode: String, zoom: Float = 1f, panY: Float = 0f, panX: Float = 0f, isLandscapeParam: Boolean? = null) {
-        currentMode = mode.uppercase(); currentZoom = zoom; currentPanY = panY; currentPanX = panX
-        if (isLandscapeParam != null) {
+        val up = mode.uppercase()
+        if (up == "APP") {
+            isAppProjectionMode = true
+            currentMode = "FIT"
+        } else if (up == "FULL_SCREEN") {
+            isAppProjectionMode = false
+            currentMode = "FIT"
+        } else {
+            currentMode = up
+        }
+        currentZoom = zoom; currentPanY = panY; currentPanX = panX
+        if (isLandscapeParam != null && !isAppProjectionMode) {
             isPhoneLandscape = isLandscapeParam
         }
         val land = isLandscape

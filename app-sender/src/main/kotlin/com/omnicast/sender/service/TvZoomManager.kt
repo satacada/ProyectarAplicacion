@@ -41,6 +41,8 @@ object TvZoomManager {
     }
 
     fun findPreset(idOrMode: String): TvZoomPreset {
+        if (idOrMode == "APP") return TvZoomPreset("APP", "📲 Por Aplicación", "APP", 1.0f)
+        if (idOrMode == "FULL_SCREEN") return TvZoomPreset("FULL_SCREEN", "📱 Pantalla Completa", "FULL_SCREEN", 1.0f)
         return PRESETS.firstOrNull { it.id == idOrMode }
             ?: PRESETS.firstOrNull { it.mode == idOrMode && it.zoom == 1.0f }
             ?: PRESETS.first()

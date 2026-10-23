@@ -94,7 +94,14 @@ fun SenderMainScreen(
         Toast.makeText(context, "🧹 IP limpiada. Auto-detectando TV...", Toast.LENGTH_SHORT).show()
     }
 
-    fun getSafeCaptureIntent(): Intent = (context.getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager).createScreenCaptureIntent()
+    var pendingProjectionMode by remember { mutableStateOf("FULL_SCREEN") }
+    fun getCaptureIntent(isFull: Boolean = true): Intent {
+        val mpm = context.getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
+        return if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            val cfg = if (isFull) android.media.projection.MediaProjectionConfig.createConfigForDefaultDisplay() else android.media.projection.MediaProjectionConfig.createConfigForUserChoice()
+            mpm.createScreenCaptureIntent(cfg)
+        } else mpm.createScreenCaptureIntent()
+    }
 
     LaunchedEffect(devices) {
         if (devices.isNotEmpty()) {
@@ -115,7 +122,7 @@ fun SenderMainScreen(
         if (result.resultCode == Activity.RESULT_OK && result.data != null) {
             saveTarget(manualIp.trim(), manualPort)
             val target = selectedDevice ?: DeviceTarget("direct-tv", "OmniCast TV Box", manualIp.trim(), manualPort.toIntOrNull() ?: 8088)
-            onStartProjection(target, selectedProfile, tvScaleMode, result.data!!)
+            onStartProjection(target, selectedProfile, pendingProjectionMode, result.data!!)
         } else {
             Toast.makeText(context, "Permiso de captura de pantalla denegado", Toast.LENGTH_SHORT).show()
         }
@@ -123,7 +130,7 @@ fun SenderMainScreen(
 
     LaunchedEffect(autoPromptCapture) {
         if (autoPromptCapture) {
-            try { projectionLauncher.launch(getSafeCaptureIntent()) } catch (e: Throwable) {
+            try { pendingProjectionMode = "FULL_SCREEN"; projectionLauncher.launch(getCaptureIntent(true)) } catch (e: Throwable) {
                 android.util.Log.e("SenderMainScreen", "Error autoPromptCapture", e)
             }
         }
@@ -226,10 +233,9 @@ fun SenderMainScreen(
                         tvScaleMode = tvScaleMode,
                         tooltipsEnabled = tooltipsEnabled,
                         onOpenBrowser = { showInAppBrowser = true },
-                        onStartProjection = { projectionLauncher.launch(getSafeCaptureIntent()) },
-                        onStopProjection = {
-                            onStopProjection()
-                        },
+                        onStartFullScreen = { pendingProjectionMode = "FULL_SCREEN"; projectionLauncher.launch(getCaptureIntent(true)) },
+                        onStartAppProjection = { pendingProjectionMode = "APP"; projectionLauncher.launch(getCaptureIntent(false)) },
+                        onStopProjection = { onStopProjection() },
                         onOpenProjectionConfig = { showConfigDialog = true },
                         onOpenGallery = { context.startActivity(Intent(context, com.omnicast.sender.overlay.GalleryPickerActivity::class.java).apply { putExtra(com.omnicast.sender.overlay.GalleryPickerActivity.EXTRA_MIME_FILTER, "image/*"); addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }) },
                         onPickExternalFile = { context.startActivity(Intent(context, com.omnicast.sender.overlay.GalleryPickerActivity::class.java).apply { putExtra(com.omnicast.sender.overlay.GalleryPickerActivity.EXTRA_MIME_FILTER, "video/*"); addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }) }
@@ -271,7 +277,7 @@ fun SenderMainScreen(
         StreamResultDialog(
             result = res,
             onSendDirectStream = { url -> onSendDirectStream(url, null, emptyMap()) },
-            onStartScreenMirroring = { projectionLauncher.launch(getSafeCaptureIntent()) },
+            onStartScreenMirroring = { pendingProjectionMode = "FULL_SCREEN"; projectionLauncher.launch(getCaptureIntent(true)) },
             onDismiss = { detectionResult = null }
         )
     }

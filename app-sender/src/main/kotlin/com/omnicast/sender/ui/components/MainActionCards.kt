@@ -31,7 +31,8 @@ fun MainActionCards(
     tvScaleMode: String,
     tooltipsEnabled: Boolean,
     onOpenBrowser: () -> Unit,
-    onStartProjection: () -> Unit,
+    onStartFullScreen: () -> Unit,
+    onStartAppProjection: () -> Unit,
     onStopProjection: () -> Unit,
     onOpenProjectionConfig: () -> Unit,
     onOpenGallery: () -> Unit,
@@ -68,71 +69,68 @@ fun MainActionCards(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                         Box(
-                            modifier = Modifier
-                                .size(38.dp)
-                                .background(Color(0xFF2B1F47), RoundedCornerShape(10.dp))
-                                .border(1.dp, Color(0xFF8B5CF6).copy(alpha = 0.5f), RoundedCornerShape(10.dp)),
+                            modifier = Modifier.size(38.dp).background(Color(0xFF2B1F47), RoundedCornerShape(10.dp)).border(1.dp, Color(0xFF8B5CF6).copy(alpha = 0.5f), RoundedCornerShape(10.dp)),
                             contentAlignment = Alignment.Center
                         ) {
                             VectorTvIcon(modifier = Modifier.size(22.dp), color = Color(0xFFA78BFA))
                         }
-                        Text(
-                            text = "Casteo a Tv",
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = Color(0xFFF1F5F9)
-                        )
+                        Text("Casteo a Tv", fontSize = 16.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFFF1F5F9))
                     }
 
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    Box(
+                        modifier = Modifier.size(36.dp).background(Color(0xFF281C44), RoundedCornerShape(10.dp)).border(1.dp, Color(0xFF6D28D9), RoundedCornerShape(10.dp)).clickable { onOpenProjectionConfig() },
+                        contentAlignment = Alignment.Center
                     ) {
+                        VectorGearIcon(modifier = Modifier.size(19.dp), color = Color(0xFFDDD6FE))
+                    }
+                }
+
+                if (!isStreaming) {
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Button(
-                            onClick = { if (isStreaming) onStopProjection() else onStartProjection() },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = if (isStreaming) Color(0xFFDC2626) else Color(0xFF7C3AED)
-                            ),
+                            onClick = onStartFullScreen,
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7C3AED)),
                             shape = RoundedCornerShape(10.dp),
-                            contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp),
-                            modifier = Modifier.height(36.dp)
+                            contentPadding = PaddingValues(horizontal = 6.dp, vertical = 6.dp),
+                            modifier = Modifier.weight(1f).height(38.dp)
                         ) {
-                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
-                                if (!isStreaming) CastTvIcon(modifier = Modifier.size(15.dp), color = Color.White)
-                                else Icon(Icons.Rounded.Stop, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
-                                Text(
-                                    text = if (isStreaming) "Detener" else "Proyectar",
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.White
-                                )
+                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                CastTvIcon(modifier = Modifier.size(14.dp), color = Color.White)
+                                Text("Pantalla Completa", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.White, maxLines = 1)
                             }
                         }
-
-                        Box(
-                            modifier = Modifier
-                                .size(36.dp)
-                                .background(Color(0xFF281C44), RoundedCornerShape(10.dp))
-                                .border(1.dp, Color(0xFF6D28D9), RoundedCornerShape(10.dp))
-                                .clickable { onOpenProjectionConfig() },
-                            contentAlignment = Alignment.Center
+                        Button(
+                            onClick = onStartAppProjection,
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4F46E5)),
+                            shape = RoundedCornerShape(10.dp),
+                            contentPadding = PaddingValues(horizontal = 6.dp, vertical = 6.dp),
+                            modifier = Modifier.weight(1f).height(38.dp)
                         ) {
-                            VectorGearIcon(modifier = Modifier.size(19.dp), color = Color(0xFFDDD6FE))
+                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                CastTvIcon(modifier = Modifier.size(14.dp), color = Color(0xFFC7D2FE))
+                                Text("Por Aplicación", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.White, maxLines = 1)
+                            }
+                        }
+                    }
+                } else {
+                    Button(
+                        onClick = onStopProjection,
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDC2626)),
+                        shape = RoundedCornerShape(10.dp),
+                        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp),
+                        modifier = Modifier.fillMaxWidth().height(38.dp)
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Icon(Icons.Rounded.Stop, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
+                            Text("Detener Transmisión", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = Color.White)
                         }
                     }
                 }
 
-                // Barra de información inferior estilizada (sin palabra ESTADO y en una sola línea)
                 Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(Color(0xFF100C1C), RoundedCornerShape(8.dp))
-                        .padding(horizontal = 10.dp, vertical = 5.dp)
+                    modifier = Modifier.fillMaxWidth().background(Color(0xFF100C1C), RoundedCornerShape(8.dp)).padding(horizontal = 10.dp, vertical = 5.dp)
                 ) {
                     Text(
                         text = "$rfShort • Zoom: $zoomDisplayLabel • Anti-Tirones: ${if (smoothBufferEnabled) "Si" else "No"}",

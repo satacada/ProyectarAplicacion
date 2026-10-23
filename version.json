@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 177,
-  "versionCodeReceiver": 160,
-  "versionName": "3.4.27",
-  "releaseTag": "v3.4.27",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.27/omnicast-sender-v3.4.27.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.27/omnicast-receiver-v3.4.27.apk",
-  "changelog": "v3.4.27: Restauración integral de SurfaceViewRenderer a MATCH_PARENT en TvScreens.kt; obediencia absoluta de la orientación de los frames de video y zoom libre sin restricciones artificiales de Compose para proyección por aplicación."
+  "versionCodeSender": 178,
+  "versionCodeReceiver": 161,
+  "versionName": "3.4.28",
+  "releaseTag": "v3.4.28",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.28/omnicast-sender-v3.4.28.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.28/omnicast-receiver-v3.4.28.apk",
+  "changelog": "v3.4.28: Separación total de las dos opciones de proyección: 'Pantalla Completa' (centrado vertical 100% íntegro con aspectRatio) y 'Por Aplicación' (lienzo libre 16:9 obedeciendo orientación del video y zoom sin restricciones)."
 }

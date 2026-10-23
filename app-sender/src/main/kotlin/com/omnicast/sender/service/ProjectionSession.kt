@@ -126,7 +126,7 @@ class ProjectionSession(
                     webRtcManager?.beginCapture()
                     val initOrientation = context.resources.configuration.orientation
                     isDeviceLandscape = (initOrientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE)
-                    val isLandscape = isDeviceLandscape
+                    val isLandscape = if (tvScaleMode == "APP") null else isDeviceLandscape
                     val initPreset = TvZoomManager.findPreset(tvScaleMode)
                     client.sendMessage(TvZoomManager.toSignalingMessage(initPreset, isLandscape = isLandscape))
                 }
@@ -136,6 +136,7 @@ class ProjectionSession(
 
         val configCallback = object : android.content.ComponentCallbacks {
             override fun onConfigurationChanged(newConfig: android.content.res.Configuration) {
+                if (tvScaleMode == "APP") return
                 val isLand = (newConfig.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE)
                 if (isLand != isDeviceLandscape) {
                     isDeviceLandscape = isLand

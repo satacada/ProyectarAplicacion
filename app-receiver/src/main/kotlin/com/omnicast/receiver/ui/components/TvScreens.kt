@@ -96,28 +96,47 @@ fun TvMirroringActiveScreen(
     ) {
         val renderer = webRtcReceiver.surfaceViewRenderer
         if (renderer != null) {
+            val isVertical = webRtcReceiver.isVertical(resolution)
+            val streamAspect = webRtcReceiver.streamAspect(resolution)
+            val isFill = webRtcReceiver.currentMode == "FILL"
+            val useVerticalBox = !webRtcReceiver.isAppProjectionMode && isVertical && !isFill
+            val videoModifier = if (useVerticalBox) {
+                Modifier.fillMaxHeight().aspectRatio(streamAspect)
+            } else {
+                Modifier.fillMaxSize()
+            }
             androidx.compose.ui.viewinterop.AndroidView(
                 factory = {
                     try {
                         (renderer.parent as? android.view.ViewGroup)?.removeView(renderer)
                     } catch (_: Throwable) {}
+                    val targetW = if (useVerticalBox) {
+                        android.view.ViewGroup.LayoutParams.WRAP_CONTENT
+                    } else {
+                        android.view.ViewGroup.LayoutParams.MATCH_PARENT
+                    }
                     renderer.apply {
                         layoutParams = android.view.ViewGroup.LayoutParams(
-                            android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                            targetW,
                             android.view.ViewGroup.LayoutParams.MATCH_PARENT
                         )
                     }
                 },
                 update = { r ->
-                    if (r.layoutParams?.width != android.view.ViewGroup.LayoutParams.MATCH_PARENT ||
+                    val targetW = if (useVerticalBox) {
+                        android.view.ViewGroup.LayoutParams.WRAP_CONTENT
+                    } else {
+                        android.view.ViewGroup.LayoutParams.MATCH_PARENT
+                    }
+                    if (r.layoutParams?.width != targetW ||
                         r.layoutParams?.height != android.view.ViewGroup.LayoutParams.MATCH_PARENT) {
                         r.layoutParams = android.view.ViewGroup.LayoutParams(
-                            android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                            targetW,
                             android.view.ViewGroup.LayoutParams.MATCH_PARENT
                         )
                     }
                 },
-                modifier = Modifier.fillMaxSize()
+                modifier = videoModifier
             )
         } else {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {

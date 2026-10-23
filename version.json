@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 178,
-  "versionCodeReceiver": 161,
-  "versionName": "3.4.28",
-  "releaseTag": "v3.4.28",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.28/omnicast-sender-v3.4.28.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.28/omnicast-receiver-v3.4.28.apk",
-  "changelog": "v3.4.28: Separación total de las dos opciones de proyección: 'Pantalla Completa' (centrado vertical 100% íntegro con aspectRatio) y 'Por Aplicación' (lienzo libre 16:9 obedeciendo orientación del video y zoom sin restricciones)."
+  "versionCodeSender": 179,
+  "versionCodeReceiver": 162,
+  "versionName": "3.4.29",
+  "releaseTag": "v3.4.29",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.29/omnicast-sender-v3.4.29.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.29/omnicast-receiver-v3.4.29.apk",
+  "changelog": "v3.4.29: Restauración definitiva del buscador y teclado virtual en Dailymotion y plataformas oficiales sin tocar las rutas selladas de Screen Mirroring."
 }

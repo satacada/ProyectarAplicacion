@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 176,
-  "versionCodeReceiver": 159,
-  "versionName": "3.4.26",
-  "releaseTag": "v3.4.26",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.26/omnicast-sender-v3.4.26.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.26/omnicast-receiver-v3.4.26.apk",
-  "changelog": "v3.4.26: Corrección definitiva de entrada de texto en Dailymotion y webs SPA; forzado LTR para erradicar escritura invertida, auto-scroll al centro para visibilidad sobre el teclado virtual y anclaje de caret."
+  "versionCodeSender": 177,
+  "versionCodeReceiver": 160,
+  "versionName": "3.4.27",
+  "releaseTag": "v3.4.27",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.27/omnicast-sender-v3.4.27.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.27/omnicast-receiver-v3.4.27.apk",
+  "changelog": "v3.4.27: Restauración integral de SurfaceViewRenderer a MATCH_PARENT en TvScreens.kt; obediencia absoluta de la orientación de los frames de video y zoom libre sin restricciones artificiales de Compose para proyección por aplicación."
 }

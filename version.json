@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 188,
-  "versionCodeReceiver": 171,
-  "versionName": "3.4.38",
-  "releaseTag": "v3.4.38",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.38/omnicast-sender-v3.4.38.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.38/omnicast-receiver-v3.4.38.apk",
-  "changelog": "v3.4.38: Erradicada la escritura inversa (sorraC -> Carros) al remover unicode-bidi: plaintext y estabilizar caret en InputCaretStabilizer; corregida la visibilidad del buscador en Dailymotion mediante scroll condicional nearest; telemetría y logs en vivo de eventos de input en Logcat (OmniInput); blindaje de foco en SwipeRefreshLayout y Compose."
+  "versionCodeSender": 189,
+  "versionCodeReceiver": 172,
+  "versionName": "3.4.39",
+  "releaseTag": "v3.4.39",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.39/omnicast-sender-v3.4.39.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.39/omnicast-receiver-v3.4.39.apk",
+  "changelog": "v3.4.39: Restitución íntegra del estabilizador de caret React (intercepción de HTMLInputElement.prototype.value y requestAnimationFrame en input) erradicando la escritura inversa (aCrro -> carro); desplazamiento central automático (scrollIntoView block: center) que ubica el cuadro de búsqueda directamente sobre el teclado virtual en Dailymotion."
 }

@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 185,
-  "versionCodeReceiver": 168,
-  "versionName": "3.4.35",
-  "releaseTag": "v3.4.35",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.35/omnicast-sender-v3.4.35.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.35/omnicast-receiver-v3.4.35.apk",
-  "changelog": "v3.4.35: Sincronización viva de plataformas oficiales desde GitHub (uBlock/yt-dlp mirror) y Supabase; catálogo inicial en assets/rules/official_platforms.json; actualización dinámica continua sin necesidad de recompilar el APK."
+  "versionCodeSender": 186,
+  "versionCodeReceiver": 169,
+  "versionName": "3.4.36",
+  "releaseTag": "v3.4.36",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.36/omnicast-sender-v3.4.36.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.36/omnicast-receiver-v3.4.36.apk",
+  "changelog": "v3.4.36: Estabilizador universal de foco y posición de caret (InputCaretStabilizer) para Chromium WebView en componentes React controlados (Dailymotion/Next.js); eliminación definitiva del setOnTouchListener conflictivo en BrowserWebView para prevenir reinicios del teclado virtual y escritura inversa."
 }

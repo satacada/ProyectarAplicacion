@@ -31,7 +31,6 @@ object MoviePagePreScanner {
         }
         if (progress == 60 || progress == 85 || progress == 100) {
             webView.evaluateJavascript(SmartSelectionAutoCompleter.getCombinedInjectionScript(), null)
-            webView.evaluateJavascript(WvcDomSniffer.getInjectionScript(context), null)
             webView.evaluateJavascript(getPreScanScript(), null)
         }
     }

@@ -127,6 +127,7 @@ fun BrowserWebView(
                         currentKnownTitle = title
                         onPageFinished(title, u)
                         val isChl = isChallenge || AdBlocker.isVerificationOrCaptcha(u) || title.contains("Just a moment", ignoreCase = true)
+                        if (!isChl) v?.evaluateJavascript(WvcDomSniffer.getInjectionScript(ctx), null)
                         MoviePagePreScanner.injectPageScripts(v, u, 100, isAdBlockEnabled, isChl, ctx)
                     }
 
@@ -177,6 +178,7 @@ fun BrowserWebView(
 
                     override fun shouldInterceptRequest(v: WebView?, r: WebResourceRequest?): WebResourceResponse? {
                         return try {
+                            if (r?.isForMainFrame == true) return super.shouldInterceptRequest(v, r)
                             val reqUrl = r?.url?.toString() ?: return super.shouldInterceptRequest(v, r)
                             if (reqUrl.contains("challenges.cloudflare.com") || reqUrl.contains("cdn-cgi/challenge-platform")) isChallenge = true
                             if (reqUrl.contains("/ibjslib/wai2iku6/")) {
@@ -255,6 +257,7 @@ fun BrowserWebView(
                         if (p >= 80) swipeRefresh.isRefreshing = false
                         if (p in 40..60) InputCaretStabilizer.inject(v)
                         val isChl = isChallenge || AdBlocker.isVerificationOrCaptcha(v?.url) || (v?.title?.contains("Just a moment", ignoreCase = true) == true)
+                        if (!isChl && (p == 60 || p == 85 || p == 100)) v?.evaluateJavascript(WvcDomSniffer.getInjectionScript(ctx), null)
                         MoviePagePreScanner.injectPageScripts(v, v?.url, p, isAdBlockEnabled, isChl, ctx)
                     }
 

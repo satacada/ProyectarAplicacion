@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 187,
-  "versionCodeReceiver": 170,
-  "versionName": "3.4.37",
-  "releaseTag": "v3.4.37",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.37/omnicast-sender-v3.4.37.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.37/omnicast-receiver-v3.4.37.apk",
-  "changelog": "v3.4.37: Restauración universal de WvcDomSniffer para captura de streams en OK.ru y reproductores HTML5; solución definitiva de foco y visibilidad en Dailymotion mediante scrollIntoView en focusin con preservación 100% nativa de inputs React; protección de navegaciones main frame y sincronización de NativeAdBlockEngine contra errores de web no disponible."
+  "versionCodeSender": 188,
+  "versionCodeReceiver": 171,
+  "versionName": "3.4.38",
+  "releaseTag": "v3.4.38",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.38/omnicast-sender-v3.4.38.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.38/omnicast-receiver-v3.4.38.apk",
+  "changelog": "v3.4.38: Erradicada la escritura inversa (sorraC -> Carros) al remover unicode-bidi: plaintext y estabilizar caret en InputCaretStabilizer; corregida la visibilidad del buscador en Dailymotion mediante scroll condicional nearest; telemetría y logs en vivo de eventos de input en Logcat (OmniInput); blindaje de foco en SwipeRefreshLayout y Compose."
 }

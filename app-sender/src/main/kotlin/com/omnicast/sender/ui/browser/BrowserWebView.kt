@@ -48,6 +48,7 @@ fun BrowserWebView(
             NativeAdBlockEngine.init(ctx)
             AdBlockRuleSyncManager.syncIfNeeded(ctx)
             AdBlockWhitelistManager.init(ctx)
+            BrowserPageClassifier.init(ctx)
             var currentKnownTitle: String? = null
             var isChallenge = false
             var livePageUrl = currentUrl
@@ -117,10 +118,7 @@ fun BrowserWebView(
                         v?.evaluateJavascript("try{if(!window.chrome)window.chrome={runtime:{},app:{}};Object.defineProperty(navigator,'webdriver',{get:()=>false});}catch(_){}", null)
                         u?.let { if (!it.startsWith("about:") && !it.contains("favicon")) { livePageUrl = it; onPageStarted(it) } }
                         isChallenge = AdBlocker.isVerificationOrCaptcha(u)
-                        if (!isChallenge) {
-                            if (isAdBlockEnabled) v?.evaluateJavascript(AdBlocker.getAdHidingScript(), null)
-                            v?.evaluateJavascript(SmartSelectionAutoCompleter.getCombinedInjectionScript(), null)
-                        }
+                        MoviePagePreScanner.injectPageScripts(v, u, 0, isAdBlockEnabled, isChallenge, ctx)
                     }
 
                     override fun onPageFinished(v: WebView?, u: String?) {
@@ -131,11 +129,7 @@ fun BrowserWebView(
                         currentKnownTitle = title
                         onPageFinished(title, u)
                         val isChl = isChallenge || AdBlocker.isVerificationOrCaptcha(u) || title.contains("Just a moment", ignoreCase = true)
-                        if (!isChl) {
-                            if (isAdBlockEnabled) v?.evaluateJavascript(AdBlocker.getAdHidingScript(), null)
-                            v?.evaluateJavascript(SmartSelectionAutoCompleter.getCombinedInjectionScript(), null)
-                            v?.evaluateJavascript(WvcDomSniffer.getInjectionScript(ctx), null)
-                        }
+                        MoviePagePreScanner.injectPageScripts(v, u, 100, isAdBlockEnabled, isChl, ctx)
                     }
 
                     override fun doUpdateVisitedHistory(v: WebView?, u: String?, isR: Boolean) {
@@ -262,10 +256,7 @@ fun BrowserWebView(
                         onProgress(p)
                         if (p >= 80) swipeRefresh.isRefreshing = false
                         val isChl = isChallenge || AdBlocker.isVerificationOrCaptcha(v?.url) || (v?.title?.contains("Just a moment", ignoreCase = true) == true)
-                        if (!isChl) {
-                            if (isAdBlockEnabled && (p == 30 || p == 60 || p == 100)) v?.evaluateJavascript(AdBlocker.getAdHidingScript(), null)
-                            if (p == 60 || p == 85 || p == 100) v?.evaluateJavascript(WvcDomSniffer.getInjectionScript(ctx), null)
-                        }
+                        MoviePagePreScanner.injectPageScripts(v, v?.url, p, isAdBlockEnabled, isChl, ctx)
                     }
 
                     override fun onReceivedTitle(v: WebView?, title: String?) {
@@ -280,6 +271,11 @@ fun BrowserWebView(
 
                     override fun onConsoleMessage(cm: ConsoleMessage?): Boolean {
                         val msg = cm?.message() ?: return super.onConsoleMessage(cm)
+                        if (msg.startsWith("OMNICAST_SERVER_CANDIDATE:")) {
+                            val sUrl = msg.removePrefix("OMNICAST_SERVER_CANDIDATE:").trim()
+                            MoviePagePreScanner.handleServerCandidate(sUrl, livePageUrl, currentKnownTitle) { u, h, m -> post { onStreamIntercepted(u, h, m) } }
+                            return true
+                        }
                         val sniffedList = WvcDomSniffer.parseConsoleMessage(msg)
                         if (sniffedList.isNotEmpty()) { post { sniffedList.forEach { onSniffedVideo(it) } }; return true }
                         return super.onConsoleMessage(cm)

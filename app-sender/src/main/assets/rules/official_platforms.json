@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "updated_at": "2026-10-23",
+  "description": "Lista oficial de plataformas verificadas de video, medios y buscadores (uBlock Whitelist / yt-dlp / Tranco)",
+  "official_domains": [
+    "youtube.com", "youtu.be", "ytimg.com", "googlevideo.com",
+    "dailymotion.com", "geo.dailymotion.com", "dmcdn.net", "static1.dmcdn.net",
+    "ok.ru", "odnoklassniki.ru", "okcdn.ru", "mycdn.me",
+    "vk.com", "vk.ru", "vkvideo.ru", "userapi.com",
+    "vimeo.com", "vimeocdn.com", "rumble.com",
+    "twitch.tv", "ttvnw.net", "jtvnw.net",
+    "canela.tv", "pluto.tv", "rtve.es", "atresplayer.com", "mitele.es",
+    "tiktok.com", "byteoversea.com", "ibytedtos.com",
+    "x.com", "twitter.com", "twimg.com", "t.co",
+    "facebook.com", "fb.watch", "fbcdn.net", "instagram.com", "cdninstagram.com",
+    "reddit.com", "redd.it", "bilibili.com", "archive.org", "ted.com",
+    "google.com", "bing.com", "duckduckgo.com", "yahoo.com",
+    "yandex.com", "yandex.ru", "ya.ru", "dzen.ru", "yastatic.net",
+    "ecosia.org", "brave.com", "wikipedia.org", "wikimedia.org", "github.com",
+    "disneyplus.com", "netflix.com", "primevideo.com", "max.com", "hbomax.com", "crunchyroll.com"
+  ]
+}

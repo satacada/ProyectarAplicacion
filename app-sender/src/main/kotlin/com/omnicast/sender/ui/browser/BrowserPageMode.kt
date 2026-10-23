@@ -6,6 +6,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.json.JSONArray
+import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URI
 import java.net.URL
@@ -22,6 +23,10 @@ object BrowserPageClassifier {
     private const val KEY_DOMAINS = "official_domains_set"
     private const val KEY_LAST_SYNC = "last_official_sync_ms"
     private const val SYNC_INTERVAL_MS = 12 * 60 * 60 * 1000L // 12 horas
+
+    // Lista viva oficial pública alojada en GitHub y sincronizada continuamente
+    private const val GITHUB_OFFICIAL_RULES_URL =
+        "https://raw.githubusercontent.com/satacada/ProyectarAplicacion/main/app-sender/src/main/assets/rules/official_platforms.json"
 
     private const val SUPABASE_LOGS_URL = "https://pfhjrplnfuupftgzdnop.supabase.co/rest/v1/omnicast_system_logs"
     private const val SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBmaGpycGxuZnV1cGZ0Z3pkbm9wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg5NTc4NDEsImV4cCI6MjEwNDUzMzg0MX0.u2ysI-hTvT7LczA7QL2YS2mudW8pSI644Ig8gyvTs7o"
@@ -40,7 +45,8 @@ object BrowserPageClassifier {
         "reddit.com", "redd.it", "bilibili.com", "archive.org",
         "google.com", "bing.com", "duckduckgo.com", "yahoo.com",
         "yandex.com", "yandex.ru", "ya.ru", "dzen.ru", "yastatic.net",
-        "ecosia.org", "brave.com", "wikipedia.org", "wikimedia.org", "github.com"
+        "ecosia.org", "brave.com", "wikipedia.org", "wikimedia.org", "github.com",
+        "disneyplus.com", "netflix.com", "primevideo.com", "max.com", "hbomax.com", "crunchyroll.com"
     )
 
     private val cachedDomains = ConcurrentHashMap.newKeySet<String>()
@@ -50,11 +56,24 @@ object BrowserPageClassifier {
     fun init(context: Context) {
         if (isInitialized) return
         cachedDomains.addAll(DEFAULT_OFFICIAL_DOMAINS)
+        loadFromAssets(context)
         val prefs = context.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         val saved = prefs.getStringSet(KEY_DOMAINS, null)
         if (saved != null) cachedDomains.addAll(saved)
         isInitialized = true
         syncFromCloudIfNeeded(context.applicationContext)
+    }
+
+    private fun loadFromAssets(context: Context) {
+        try {
+            val jsonText = context.assets.open("rules/official_platforms.json").bufferedReader().use { it.readText() }
+            val root = JSONObject(jsonText)
+            val arr = root.optJSONArray("official_domains") ?: return
+            for (i in 0 until arr.length()) {
+                val d = arr.optString(i).trim().lowercase().removePrefix("www.")
+                if (d.isNotBlank()) cachedDomains.add(d)
+            }
+        } catch (_: Throwable) {}
     }
 
     fun classify(url: String?): BrowserPageMode {
@@ -95,33 +114,50 @@ object BrowserPageClassifier {
         if (now - lastSync < SYNC_INTERVAL_MS) return
 
         scope.launch {
+            var updated = false
             try {
-                val url = URL("$SUPABASE_LOGS_URL?select=message&event=eq.OFFICIAL_PLATFORM&order=created_at.desc&limit=50")
-                val conn = url.openConnection() as HttpURLConnection
-                conn.requestMethod = "GET"
-                conn.connectTimeout = 6000
-                conn.readTimeout = 6000
-                conn.setRequestProperty("apikey", SUPABASE_ANON_KEY)
-                conn.setRequestProperty("Authorization", "Bearer $SUPABASE_ANON_KEY")
-                conn.setRequestProperty("Accept", "application/json")
+                // 1. Sincronización desde lista viva en GitHub (uBlock / yt-dlp mirror)
+                val ghUrl = URL(GITHUB_OFFICIAL_RULES_URL)
+                val ghConn = (ghUrl.openConnection() as HttpURLConnection).apply {
+                    connectTimeout = 6000; readTimeout = 6000; requestMethod = "GET"
+                }
+                if (ghConn.responseCode == 200) {
+                    val body = ghConn.inputStream.bufferedReader().use { it.readText() }
+                    val root = JSONObject(body)
+                    root.optJSONArray("official_domains")?.let { arr ->
+                        for (i in 0 until arr.length()) {
+                            val d = arr.optString(i).trim().lowercase().removePrefix("www.")
+                            if (d.isNotBlank()) { cachedDomains.add(d); updated = true }
+                        }
+                    }
+                }
+            } catch (_: Throwable) {}
 
-                if (conn.responseCode == 200) {
-                    val body = conn.inputStream.bufferedReader().use { it.readText() }
+            try {
+                // 2. Sincronización desde Supabase (Inteligencia Colectiva)
+                val sbUrl = URL("$SUPABASE_LOGS_URL?select=message&event=eq.OFFICIAL_PLATFORM&order=created_at.desc&limit=50")
+                val sbConn = (sbUrl.openConnection() as HttpURLConnection).apply {
+                    connectTimeout = 6000; readTimeout = 6000; requestMethod = "GET"
+                    setRequestProperty("apikey", SUPABASE_ANON_KEY)
+                    setRequestProperty("Authorization", "Bearer $SUPABASE_ANON_KEY")
+                    setRequestProperty("Accept", "application/json")
+                }
+                if (sbConn.responseCode == 200) {
+                    val body = sbConn.inputStream.bufferedReader().use { it.readText() }
                     val array = JSONArray(body)
-                    var count = 0
                     for (i in 0 until array.length()) {
                         val row = array.optJSONObject(i) ?: continue
                         val domain = row.optString("message").trim().lowercase().removePrefix("www.")
                         if (domain.isNotBlank() && !domain.startsWith("{")) {
-                            cachedDomains.add(domain)
-                            count++
+                            cachedDomains.add(domain); updated = true
                         }
-                    }
-                    if (count > 0) {
-                        prefs.edit().putStringSet(KEY_DOMAINS, cachedDomains.toSet()).putLong(KEY_LAST_SYNC, now).apply()
                     }
                 }
             } catch (_: Throwable) {}
+
+            if (updated) {
+                prefs.edit().putStringSet(KEY_DOMAINS, cachedDomains.toSet()).putLong(KEY_LAST_SYNC, now).apply()
+            }
         }
     }
 

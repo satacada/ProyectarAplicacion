@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 184,
-  "versionCodeReceiver": 167,
-  "versionName": "3.4.34",
-  "releaseTag": "v3.4.34",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.34/omnicast-sender-v3.4.34.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.34/omnicast-receiver-v3.4.34.apk",
-  "changelog": "v3.4.34: Clasificación dinámica dual de páginas y pre-análisis de películas (HU-015); Modo A ('Guantes de Seda') para plataformas oficiales vivas y buscadores con cero inyección DOM y foco nativo; Modo B ('Escaneo Total de Películas') con pre-escaneo de iframes/servidores, neutralización de velos click-shield y sincronización continua de dominios oficiales desde la nube."
+  "versionCodeSender": 185,
+  "versionCodeReceiver": 168,
+  "versionName": "3.4.35",
+  "releaseTag": "v3.4.35",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.35/omnicast-sender-v3.4.35.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.35/omnicast-receiver-v3.4.35.apk",
+  "changelog": "v3.4.35: Sincronización viva de plataformas oficiales desde GitHub (uBlock/yt-dlp mirror) y Supabase; catálogo inicial en assets/rules/official_platforms.json; actualización dinámica continua sin necesidad de recompilar el APK."
 }

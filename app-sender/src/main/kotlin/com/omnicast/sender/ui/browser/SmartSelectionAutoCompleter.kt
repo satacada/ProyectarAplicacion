@@ -53,7 +53,25 @@ object SmartSelectionAutoCompleter {
         }
     }
 
+    private val PROTECTED_HOSTS = listOf(
+        "dailymotion.com", "dmcdn.net", "youtube.com", "youtu.be",
+        "ok.ru", "odnoklassniki.ru", "vk.com", "google.com",
+        "bing.com", "yandex.com", "yandex.ru", "ya.ru", "dzen.ru"
+    )
+
     fun attach(webView: WebView, context: Context) {
+        try {
+            val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            val editor = prefs.edit()
+            var modified = false
+            for (k in prefs.all.keys.toList()) {
+                if (PROTECTED_HOSTS.any { k.contains(it) }) {
+                    editor.remove(k)
+                    modified = true
+                }
+            }
+            if (modified) editor.apply()
+        } catch (_: Throwable) {}
         webView.addJavascriptInterface(SmartSelectionBridge(context), BRIDGE_NAME)
     }
 
@@ -63,40 +81,8 @@ object SmartSelectionAutoCompleter {
                 var h = (window.location.hostname || '').toLowerCase();
                 var t = (document.title || '').toLowerCase();
                 if (h.indexOf('cloudflare') !== -1 || t.indexOf('just a moment') !== -1 || (window.location.pathname || '').indexOf('cdn-cgi') !== -1) return;
+                if (h.indexOf('dailymotion.com') !== -1 || h.indexOf('dmcdn.net') !== -1 || h.indexOf('youtube.com') !== -1 || h.indexOf('youtu.be') !== -1 || h.indexOf('ok.ru') !== -1 || h.indexOf('odnoklassniki.ru') !== -1 || h.indexOf('vk.com') !== -1 || h.indexOf('google.') !== -1 || h.indexOf('bing.') !== -1 || h.indexOf('yandex.') !== -1 || h.indexOf('ya.ru') !== -1 || h.indexOf('dzen.ru') !== -1) return;
 
-                // 1. Corrección nativa LTR, visibilidad de viewport y protección de caret contra escritura inversa
-                if (!window.__omniInputFixInjected) {
-                    window.__omniInputFixInjected = true;
-                    try {
-                        var st = document.createElement('style');
-                        st.textContent = 'input, textarea { direction: ltr !important; unicode-bidi: plaintext !important; }';
-                        (document.head || document.documentElement).appendChild(st);
-                    } catch(_) {}
-
-                    function anchorCaret(el) {
-                        if (!el || (el.tagName !== 'INPUT' && el.tagName !== 'TEXTAREA')) return;
-                        if (!el.getAttribute('dir')) el.setAttribute('dir', 'ltr');
-                        if (el.selectionStart === 0 && el.selectionEnd === 0 && el.value && el.value.length > 0) {
-                            try { var len = el.value.length; el.setSelectionRange(len, len); } catch(_) {}
-                        }
-                    }
-
-                    document.addEventListener('input', function(e) { anchorCaret(e.target); }, true);
-
-                    document.addEventListener('focusin', function(e) {
-                        var el = e.target;
-                        if (!el) return;
-                        anchorCaret(el);
-                        if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable) {
-                            setTimeout(function() {
-                                try { el.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'smooth' }); }
-                                catch(_) { try { el.scrollIntoView(); } catch(__) {} }
-                            }, 100);
-                        }
-                    }, true);
-                }
-
-                // 2. Persistencia y replicación automática de selecciones (checkbox, radios, selects, servidores)
                 if (window.__omniSmartSelectionInjected) {
                     if (window.__omniApplySelections) window.__omniApplySelections();
                     return;
@@ -124,7 +110,6 @@ object SmartSelectionAutoCompleter {
                     return null;
                 }
 
-                // Listener reactivo a eventos del usuario (Fail-Fast sin bucles pesados)
                 document.addEventListener('change', function(e) {
                     if (!e.isTrusted || !window.OmniSelectionBridge) return;
                     var el = e.target;
@@ -160,8 +145,8 @@ object SmartSelectionAutoCompleter {
                 document.addEventListener('click', function(e) {
                     if (!e.isTrusted || !window.OmniSelectionBridge) return;
                     var el = e.target;
-                    if (!el) return;
-                    var btn = el.closest('button, [data-server], [data-lang], .server-item, .lang-item, .opt-item');
+                    if (!el || !el.closest) return;
+                    var btn = el.closest('[data-server], [data-lang], [data-opt], .server-item, .lang-item, .opt-item');
                     if (btn) {
                         var key = getElementKey(btn);
                         var txt = (btn.innerText || btn.textContent || '').trim();
@@ -176,6 +161,8 @@ object SmartSelectionAutoCompleter {
 
                 window.__omniApplySelections = function() {
                     if (!window.OmniSelectionBridge) return;
+                    var ae = document.activeElement;
+                    if (ae && (ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA' || ae.isContentEditable)) return;
                     var raw = window.OmniSelectionBridge.getSavedSelections(host);
                     if (!raw || raw === '{}') return;
                     var selections;
@@ -209,16 +196,6 @@ object SmartSelectionAutoCompleter {
                                 var el = null;
                                 if (!k.includes(':contains(')) {
                                     el = document.querySelector(k);
-                                }
-                                if (!el && item.text) {
-                                    var candidates = document.querySelectorAll('button, a, li, span');
-                                    for (var i = 0; i < candidates.length; i++) {
-                                        var c = candidates[i];
-                                        if ((c.innerText || c.textContent || '').trim() === item.text && c.offsetParent !== null) {
-                                            el = c;
-                                            break;
-                                        }
-                                    }
                                 }
                                 if (el && !el.classList.contains('active') && !el.classList.contains('selected') && !el.getAttribute('data-omni-applied')) {
                                     el.setAttribute('data-omni-applied', 'true');

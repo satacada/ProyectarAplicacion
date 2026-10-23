@@ -52,12 +52,12 @@ object AdBlocker {
 
     fun isAd(url: String): Boolean {
         if (isVerificationOrCaptcha(url)) return false
-        if (isVideoAd(url)) return true
         if (AdBlockWhitelistManager.isWhitelisted(url)) {
             val lower = url.lowercase()
             if (lower.contains("an.yandex.") || lower.contains("mc.yandex.")) return true
             return false
         }
+        if (isVideoAd(url)) return true
         val lower = url.lowercase()
         // Permitir completamente Yandex (.com, .ru, ya.ru, yastatic.net, dzen.ru) salvo subdominios de anuncios/métricas
         if (lower.contains("yandex.") || lower.contains("ya.ru") || lower.contains("dzen.ru") || lower.contains("yastatic.net")) {

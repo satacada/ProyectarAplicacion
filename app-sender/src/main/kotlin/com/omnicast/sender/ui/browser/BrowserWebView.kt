@@ -49,24 +49,25 @@ fun BrowserWebView(
             AdBlockWhitelistManager.init(ctx)
             var currentKnownTitle: String? = null
             var isChallenge = false
+            var livePageUrl = currentUrl
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                 try {
                     ServiceWorkerController.getInstance().setServiceWorkerClient(object : ServiceWorkerClient() {
                         override fun shouldInterceptRequest(request: WebResourceRequest): WebResourceResponse? {
                             val reqUrl = request.url.toString()
-                            val docUrl = request.requestHeaders?.get("Referer") ?: currentUrl
+                            val docUrl = request.requestHeaders?.get("Referer") ?: livePageUrl
                             if (isAdBlockEnabled && (AdBlocker.isAd(reqUrl) || NativeAdBlockEngine.shouldBlock(reqUrl, docUrl))) {
                                 return AdBlocker.createEmptyResponse()
                             }
                             val candidate = com.omnicast.core.domain.models.StreamCandidate(
-                                url = reqUrl, pageUrl = currentUrl,
+                                url = reqUrl, pageUrl = docUrl,
                                 headers = request.requestHeaders ?: emptyMap(),
                                 userAgent = UA_MOBILE, pageTitle = currentKnownTitle
                             )
                             val detectedStream = com.omnicast.sender.ui.browser.extractors.StreamExtractorRegistry.useCase.execute(candidate)
                             if (detectedStream != null) {
-                                val hdrs = BrowserUrlHelper.buildSafeHeaders(detectedStream.url, currentUrl, UA_MOBILE, detectedStream.headers)
+                                val hdrs = BrowserUrlHelper.buildSafeHeaders(detectedStream.url, docUrl, UA_MOBILE, detectedStream.headers)
                                 onStreamIntercepted(detectedStream.url, hdrs, detectedStream.isMaster)
                             }
                             return super.shouldInterceptRequest(request)
@@ -77,13 +78,10 @@ fun BrowserWebView(
 
             val webView = WebView(ctx)
             val swipeRefresh = SwipeRefreshLayout(ctx).apply {
+                descendantFocusability = android.view.ViewGroup.FOCUS_AFTER_DESCENDANTS
                 setColorSchemeColors(0xFF38BDF8.toInt())
-                setOnRefreshListener {
-                    webView.reload()
-                }
-                setOnChildScrollUpCallback { _, _ ->
-                    webView.scrollY > 0
-                }
+                setOnRefreshListener { webView.reload() }
+                setOnChildScrollUpCallback { _, _ -> webView.scrollY > 0 }
             }
 
             webView.apply {
@@ -114,7 +112,7 @@ fun BrowserWebView(
                     override fun onPageStarted(v: WebView?, u: String?, f: Bitmap?) {
                         CookieManager.getInstance().flush()
                         v?.evaluateJavascript("try{if(!window.chrome)window.chrome={runtime:{},app:{}};Object.defineProperty(navigator,'webdriver',{get:()=>false});}catch(_){}", null)
-                        u?.let { if (!it.startsWith("about:") && !it.contains("favicon")) onPageStarted(it) }
+                        u?.let { if (!it.startsWith("about:") && !it.contains("favicon")) { livePageUrl = it; onPageStarted(it) } }
                         isChallenge = AdBlocker.isVerificationOrCaptcha(u)
                         if (!isChallenge) {
                             if (isAdBlockEnabled) v?.evaluateJavascript(AdBlocker.getAdHidingScript(), null)
@@ -125,6 +123,7 @@ fun BrowserWebView(
                     override fun onPageFinished(v: WebView?, u: String?) {
                         swipeRefresh.isRefreshing = false
                         CookieManager.getInstance().flush()
+                        u?.let { if (!it.startsWith("about:")) livePageUrl = it }
                         val title = v?.title ?: "Transmisión"
                         currentKnownTitle = title
                         onPageFinished(title, u)
@@ -137,13 +136,13 @@ fun BrowserWebView(
                     }
 
                     override fun doUpdateVisitedHistory(v: WebView?, u: String?, isR: Boolean) {
-                        u?.let { onHistoryUpdated(it, v?.title) }
+                        u?.let { if (!it.startsWith("about:")) livePageUrl = it; onHistoryUpdated(it, v?.title) }
                     }
 
                     override fun shouldOverrideUrlLoading(v: WebView?, r: WebResourceRequest?): Boolean {
                         val reqUrl = r?.url?.toString() ?: return false
                         if (AdBlocker.isExternalRedirect(reqUrl)) return true
-                        val liveUrl = v?.url ?: currentUrl
+                        val liveUrl = v?.url ?: livePageUrl
                         if (isChallenge || AdBlocker.isVerificationOrCaptcha(reqUrl) || AdBlocker.isVerificationOrCaptcha(liveUrl) || (v?.title?.contains("Just a moment", ignoreCase = true) == true)) return false
                         val curHost = try { java.net.URI(liveUrl).host?.lowercase() } catch (_: Throwable) { null }
                         val targetHost = try { r.url.host?.lowercase() } catch (_: Throwable) { null }
@@ -193,8 +192,9 @@ fun BrowserWebView(
                                     WebResourceResponse("application/javascript", "UTF-8", stream)
                                 } catch (_: Throwable) { super.shouldInterceptRequest(v, r) }
                             }
-                            val docUrl = r.requestHeaders?.get("Referer") ?: currentUrl
-                            if (isAdBlockEnabled && (AdBlocker.isAd(reqUrl) || AdBlocker.isVideoAd(reqUrl) || NativeAdBlockEngine.shouldBlock(reqUrl, docUrl))) {
+                            val docUrl = r.requestHeaders?.get("Referer") ?: livePageUrl
+                            val isDocWhitelisted = AdBlockWhitelistManager.isWhitelisted(docUrl)
+                            if (isAdBlockEnabled && !isDocWhitelisted && (AdBlocker.isAd(reqUrl) || AdBlocker.isVideoAd(reqUrl) || NativeAdBlockEngine.shouldBlock(reqUrl, docUrl))) {
                                 return AdBlocker.createEmptyResponse()
                             }
                             if (com.omnicast.sender.nativeclassifier.NativeStreamClassifier.shouldDiscard(reqUrl) || AdBlocker.isVideoAd(reqUrl)) {
@@ -226,7 +226,7 @@ fun BrowserWebView(
                                 override fun shouldOverrideUrlLoading(v: WebView?, req: WebResourceRequest?): Boolean {
                                     val destUrl = req?.url?.toString()
                                     if (!destUrl.isNullOrBlank()) {
-                                        val liveUrl = view.url ?: currentUrl
+                                        val liveUrl = view.url ?: livePageUrl
                                         val curHost = try { java.net.URI(liveUrl).host?.lowercase() } catch (_: Throwable) { null }
                                         val targetHost = try { req.url.host?.lowercase() } catch (_: Throwable) { null }
                                         val isSameSite = AdBlocker.isSameSite(curHost, targetHost)

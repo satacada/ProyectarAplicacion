@@ -52,10 +52,7 @@ fun InAppBrowserScreen(
 
     fun deleteMovieFromSaved() {
         val primary = ActiveStreamHolder.streamUrl?.takeIf { it.isNotBlank() } ?: detectedStreams.firstOrNull() ?: ""
-        if (primary.isNotBlank()) {
-            historyManager.remove(primary); playlistManager.getPlaylists().forEach { pl -> playlistManager.removeItemFromPlaylist(pl.id, primary) }
-            playlistsVersion++; Toast.makeText(context, "🗑️ Video eliminado de guardados", Toast.LENGTH_SHORT).show()
-        }
+        if (primary.isNotBlank()) { historyManager.remove(primary); playlistManager.getPlaylists().forEach { pl -> playlistManager.removeItemFromPlaylist(pl.id, primary) }; playlistsVersion++; Toast.makeText(context, "🗑️ Video eliminado de guardados", Toast.LENGTH_SHORT).show() }
     }
 
     fun openOptionsSheet() {
@@ -130,7 +127,9 @@ fun InAppBrowserScreen(
         })
     }
 
+    val focusManager = androidx.compose.ui.platform.LocalFocusManager.current
     fun navigateTo(url: String) {
+        focusManager.clearFocus()
         detectedStreams.clear(); streamHeaders.clear(); streamLabels.clear(); streamDurations.clear(); qualityOptions = emptyList()
         userDismissedSheetForUrl = ""; autoOpenJob?.cancel(); ActiveStreamHolder.clearDetectedStream(); showBottomControls = false; pageTitle = "Cargando..."; val target = BrowserUrlHelper.normalizeUrl(url)
         inputUrl = target; currentUrl = target; isHome = false; prefs.edit().putString("saved_browser_last_url", target).apply()
@@ -205,14 +204,13 @@ fun InAppBrowserScreen(
                 onExitApp = { SenderMainActivity.exitCompletely(context) }
             )
 
-            if (progress in 1..99) LinearProgressIndicator(progress = { progress / 100f }, modifier = Modifier.fillMaxWidth().height(3.dp), color = Color(0xFF38BDF8))
-
             Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
                 BrowserWebView(
                     isHome = isHome, isAdBlockEnabled = isAdBlockEnabled, currentUrl = currentUrl,
                     hasStreams = detectedStreams.any { isRealMedia(it) },
                     onProgress = { progress = it },
                     onPageStarted = { newUrl ->
+                        focusManager.clearFocus()
                         if (currentUrl.isNotBlank() && currentUrl != newUrl && !newUrl.startsWith("about:")) {
                             detectedStreams.clear(); streamHeaders.clear(); streamLabels.clear(); qualityOptions = emptyList(); ActiveStreamHolder.clearDetectedStream(); pageTitle = "Cargando..."; userDismissedSheetForUrl = ""; autoOpenJob?.cancel()
                         }
@@ -253,7 +251,7 @@ fun InAppBrowserScreen(
                     onOpenPopup = { pView -> popupWebView = pView }, onClosePopup = { popupWebView?.destroy(); popupWebView = null },
                     onWebViewCreated = { webViewInstance = it; if (!isHome && currentUrl.isNotBlank() && it.url == null) it.loadUrl(currentUrl) }
                 )
-
+                if (progress in 1..99) LinearProgressIndicator(progress = { progress / 100f }, modifier = Modifier.fillMaxWidth().height(3.dp).align(Alignment.TopCenter), color = Color(0xFF38BDF8))
                 if (isHome) BrowserHomeScreen(onSelectUrl = { navigateTo(it) })
 
                 if (showBottomControls && isCasting && isPlaying) {

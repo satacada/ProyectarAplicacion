@@ -6,7 +6,9 @@ import java.io.ByteArrayInputStream
 object AdBlocker {
 
     private val KNOWN_MEDIA_HOSTS = hashSetOf(
-        "ok.ru", "mycdn.me", "vk.com", "dailymotion.com", "dmcdn.net", "youtube.com", "youtu.be", "ytimg.com", "googlevideo.com",
+        "ok.ru", "odnoklassniki.ru", "okcdn.ru", "mycdn.me", "vk.com", "vk.ru", "vkvideo.ru", "userapi.com",
+        "dailymotion.com", "dmcdn.net", "youtube.com", "youtu.be", "ytimg.com", "googlevideo.com",
+        "rumble.com", "vimeo.com", "mail.ru", "sibnet.ru", "mega.nz", "yourupload.com", "sendvid.com",
         "yandex.com", "yandex.ru", "ya.ru", "dzen.ru", "yastatic.net",
         "streamwish.to", "filemoon.sx", "doodstream.com", "mixdrop.co", "vidmoly.me",
         "voe.sx", "vidoza.net", "streamtape.com", "mp4upload.com", "upstream.to",

@@ -157,14 +157,13 @@ fun BrowserWebView(
                                 showBlockedToast(ctx)
                                 return true
                             }
-                            if (!isSameSite && !isSourceSearchEngine && targetHost != null) {
+                            if (!isSameSite && !isSourceSearchEngine && targetHost != null && !r.hasGesture()) {
                                 val isAllowedExternal = AdBlocker.isSearchEngine(targetHost) ||
                                     AdBlocker.isKnownMediaHost(targetHost) ||
                                     AdBlocker.isVerificationOrCaptcha(targetHost) ||
                                     AdBlockWhitelistManager.isWhitelistedHost(targetHost)
                                 if (!isAllowedExternal) {
-                                    android.util.Log.w("BrowserWebView", "🛑 Secuestro publicitario bloqueado hacia: $targetHost (aprendiendo dominio)")
-                                    AdBlocker.learnAndBlockAdHost(targetHost, curHost)
+                                    android.util.Log.w("BrowserWebView", "🛑 Redirección automática sin gesto bloqueada hacia: $targetHost")
                                     showBlockedToast(ctx)
                                     return true
                                 }
@@ -222,32 +221,30 @@ fun BrowserWebView(
                         val transport = resultMsg?.obj as? WebView.WebViewTransport
                         if (transport != null && view != null) {
                             val tempWebView = WebView(view.context)
+                            var handled = false
+                            fun handlePopupUrl(v: WebView?, destUrl: String?) {
+                                if (handled || destUrl.isNullOrBlank() || destUrl.startsWith("about:")) return
+                                handled = true
+                                val liveUrl = view.url ?: livePageUrl
+                                val curHost = try { java.net.URI(liveUrl).host?.lowercase() } catch (_: Throwable) { null }
+                                val targetHost = try { java.net.URI(destUrl).host?.lowercase() } catch (_: Throwable) { null }
+                                val isSourceWhitelisted = curHost?.let { AdBlockWhitelistManager.isWhitelistedHost(it) } ?: false
+                                val isBlockedAd = isAdBlockEnabled && !isSourceWhitelisted &&
+                                    (AdBlocker.isAd(destUrl) || AdBlocker.isExternalRedirect(destUrl) || NativeAdBlockEngine.shouldBlock(destUrl, liveUrl))
+                                if (!isBlockedAd) {
+                                    view.post { view.loadUrl(destUrl) }
+                                } else {
+                                    targetHost?.let { AdBlocker.learnAndBlockAdHost(it, curHost) }
+                                    showBlockedToast(ctx)
+                                }
+                                v?.post { try { v.destroy() } catch (_: Throwable) {} }
+                            }
                             tempWebView.webViewClient = object : WebViewClient() {
+                                override fun onPageStarted(v: WebView?, u: String?, f: Bitmap?) {
+                                    handlePopupUrl(v, u)
+                                }
                                 override fun shouldOverrideUrlLoading(v: WebView?, req: WebResourceRequest?): Boolean {
-                                    val destUrl = req?.url?.toString()
-                                    if (!destUrl.isNullOrBlank()) {
-                                        val liveUrl = view.url ?: livePageUrl
-                                        val curHost = try { java.net.URI(liveUrl).host?.lowercase() } catch (_: Throwable) { null }
-                                        val targetHost = try { req.url.host?.lowercase() } catch (_: Throwable) { null }
-                                        val isSameSite = AdBlocker.isSameSite(curHost, targetHost)
-                                        val isSourceWhitelisted = curHost?.let { AdBlockWhitelistManager.isWhitelistedHost(it) } ?: false
-                                        val isSourceSearchEngine = curHost?.let { AdBlocker.isSearchEngine(it) } ?: false
-                                        var allow = true
-                                        if (isAdBlockEnabled && !isSourceWhitelisted) {
-                                            if (AdBlocker.isAd(destUrl) || AdBlocker.isExternalRedirect(destUrl) || NativeAdBlockEngine.shouldBlock(destUrl, liveUrl)) {
-                                                allow = false
-                                            } else if (!isSameSite && !isSourceSearchEngine && targetHost != null) {
-                                                val ok = AdBlocker.isSearchEngine(targetHost) || AdBlocker.isKnownMediaHost(targetHost) ||
-                                                    AdBlocker.isVerificationOrCaptcha(targetHost) || AdBlockWhitelistManager.isWhitelistedHost(targetHost)
-                                                if (!ok) allow = false
-                                            }
-                                        }
-                                        if (allow) view.loadUrl(destUrl) else {
-                                            targetHost?.let { AdBlocker.learnAndBlockAdHost(it, curHost) }
-                                            showBlockedToast(ctx)
-                                        }
-                                    }
-                                    v?.post { try { v.destroy() } catch (_: Throwable) {} }
+                                    handlePopupUrl(v, req?.url?.toString())
                                     return true
                                 }
                             }

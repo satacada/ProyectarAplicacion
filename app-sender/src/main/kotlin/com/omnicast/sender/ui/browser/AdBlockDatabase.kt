@@ -19,7 +19,7 @@ class AdBlockDatabase private constructor(private val appContext: Context) :
     companion object {
         private const val TAG = "AdBlockDatabase"
         private const val DATABASE_NAME = "omnicast_adblock.db"
-        private const val DATABASE_VERSION = 4
+        private const val DATABASE_VERSION = 5
 
         private const val TABLE_DOMAINS = "ad_domains"
         private const val TABLE_KEYWORDS = "ad_keywords"
@@ -55,6 +55,7 @@ class AdBlockDatabase private constructor(private val appContext: Context) :
             if (host.isNullOrBlank()) return false
             val h = host.lowercase()
             if (h.contains("cloudflare") || h.contains("turnstile") || h.contains("challenge") || h.contains("hcaptcha") || h.contains("recaptcha") || h.contains("cdn-cgi")) return false
+            if (AdBlocker.isKnownMediaHost(h) || AdBlockWhitelistManager.isWhitelistedHost(h)) return false
             for (d in cachedDomains) {
                 if (h == d || h.endsWith(".$d")) return true
             }
@@ -118,6 +119,12 @@ class AdBlockDatabase private constructor(private val appContext: Context) :
             try {
                 db.execSQL("DELETE FROM $TABLE_DOMAINS WHERE $COL_VALUE LIKE '%cloudflare%' OR $COL_VALUE LIKE '%turnstile%' OR $COL_VALUE LIKE '%challenges%' OR $COL_VALUE LIKE '%hcaptcha%' OR $COL_VALUE LIKE '%recaptcha%'")
                 Log.i(TAG, "Base de datos AdBlock purgada de dominios de verificación Cloudflare en v4.")
+            } catch (_: Throwable) {}
+        }
+        if (oldVersion < 5) {
+            try {
+                db.execSQL("DELETE FROM $TABLE_DOMAINS WHERE $COL_VALUE LIKE '%vk.ru%' OR $COL_VALUE LIKE '%vk.com%' OR $COL_VALUE LIKE '%vkvideo%' OR $COL_VALUE LIKE '%ok.ru%' OR $COL_VALUE LIKE '%odnoklassniki%' OR $COL_VALUE LIKE '%mycdn%' OR $COL_VALUE LIKE '%rumble%' OR $COL_VALUE LIKE '%dailymotion%' OR $COL_VALUE LIKE '%dmcdn%' OR $COL_VALUE LIKE '%vimeo%' OR $COL_VALUE LIKE '%mail.ru%'")
+                Log.i(TAG, "Base de datos AdBlock purgada de portales de video en v5.")
             } catch (_: Throwable) {}
         }
     }
@@ -184,7 +191,11 @@ class AdBlockDatabase private constructor(private val appContext: Context) :
                 }
             }
 
-            val falsePositives = listOf("reypelis.net", "tioplus.app", "sololatino.net", "solo-latino.net", "lamovie.org", "lamovie.tv", "pelisgo.com", "pelisplus.lat", "pelisplus.to")
+            val falsePositives = listOf(
+                "reypelis.net", "tioplus.app", "sololatino.net", "solo-latino.net", "lamovie.org", "lamovie.tv",
+                "pelisgo.com", "pelisplus.lat", "pelisplus.to", "vk.ru", "m.vk.ru", "vk.com", "vkvideo.ru",
+                "ok.ru", "m.ok.ru", "odnoklassniki.ru", "mycdn.me", "okcdn.ru", "rumble.com", "dailymotion.com", "dmcdn.net", "vimeo.com"
+            )
             for (fp in falsePositives) {
                 domainsSet.remove(fp)
                 try { writableDatabase.delete(TABLE_DOMAINS, "$COL_VALUE = ?", arrayOf(fp)) } catch (_: Throwable) {}

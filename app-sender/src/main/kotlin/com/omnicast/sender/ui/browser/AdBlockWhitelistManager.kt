@@ -24,7 +24,16 @@ object AdBlockWhitelistManager {
         "dmcdn.net",
         "youtube.com",
         "ytimg.com",
-        "googlevideo.com"
+        "googlevideo.com",
+        "ok.ru",
+        "odnoklassniki.ru",
+        "okcdn.ru",
+        "mycdn.me",
+        "vk.com",
+        "vk.ru",
+        "vkvideo.ru",
+        "rumble.com",
+        "vimeo.com"
     )
 
     private val cachedDomains = mutableSetOf<String>()
@@ -38,7 +47,7 @@ object AdBlockWhitelistManager {
             cachedDomains.clear()
             cachedDomains.addAll(DEFAULT_WHITELIST)
             if (saved != null) cachedDomains.addAll(saved)
-            prefs.edit().putStringSet(KEY_WHITELIST_SET, cachedDomains).apply()
+            prefs.edit().putStringSet(KEY_WHITELIST_SET, cachedDomains.toSet()).apply()
         }
         isInitialized = true
     }

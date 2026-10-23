@@ -108,9 +108,10 @@ fun InAppBrowserScreen(
         val cleanT = if (pageTitle.isNotBlank() && pageTitle != "Cargando..." && pageTitle != "Transmisión") pageTitle else "Video Web"
         ActiveStreamHolder.update(primaryUrl, cleanT, streamHeaders[primaryUrl] ?: hdrs)
         android.util.Log.i("StreamDetection", "🎬 Flujo registrado [isMaster=$isM]: $cleanUrl")
-        if (!showOptionsSheet && !isCasting && userDismissedSheetForUrl != currentUrl) {
-            autoOpenJob?.cancel()
-            autoOpenJob = scope.launch { kotlinx.coroutines.delay(450); if (!showOptionsSheet && !isCasting && userDismissedSheetForUrl != currentUrl && detectedStreams.any { isRealMedia(it) }) openOptionsSheet() }
+        val lUrl = currentUrl.lowercase()
+        val isFeedOrSearch = (lUrl.contains("dailymotion.com") && !lUrl.contains("/video/")) || ((lUrl.contains("ok.ru") || lUrl.contains("vk.ru") || lUrl.contains("vk.com")) && !lUrl.contains("video") && !lUrl.contains("/live/")) || lUrl.contains("/search") || lUrl.contains("?q=") || lUrl.contains("&q=")
+        if (!showOptionsSheet && !isCasting && userDismissedSheetForUrl != currentUrl && !isFeedOrSearch) {
+            autoOpenJob?.cancel(); autoOpenJob = scope.launch { kotlinx.coroutines.delay(500); if (!showOptionsSheet && !isCasting && userDismissedSheetForUrl != currentUrl && detectedStreams.any { isRealMedia(it) }) webViewInstance?.evaluateJavascript("(function(){var a=document.activeElement;return (a&&(a.tagName==='INPUT'||a.tagName==='TEXTAREA'||a.isContentEditable))?'1':'0';})()") { r -> if (r?.contains("1") != true && !showOptionsSheet && !isCasting) openOptionsSheet() } }
         }
     }
 

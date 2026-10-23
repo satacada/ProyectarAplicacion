@@ -6,20 +6,12 @@ import kotlinx.coroutines.withContext
 import java.net.URI
 
 data class StreamQualityOption(
-    val label: String,
-    val resolution: String,
-    val bitrate: String,
-    val streamUrl: String,
-    val isMaster: Boolean = false,
-    val durationSeconds: Float = 0f,
-    val isMovie: Boolean = false,
-    val isSuggested: Boolean = false,
-    val healedHeaders: Map<String, String> = emptyMap(),
-    val isLive: Boolean = false,
-    val fileName: String = "",
-    val formatDetail: String = "",
-    val audioTracksSummary: String = "",
-    val subtitleTracksSummary: String = ""
+    val label: String, val resolution: String, val bitrate: String, val streamUrl: String,
+    val isMaster: Boolean = false, val durationSeconds: Float = 0f, val isMovie: Boolean = false,
+    val isSuggested: Boolean = false, val healedHeaders: Map<String, String> = emptyMap(),
+    val isLive: Boolean = false, val fileName: String = "", val formatDetail: String = "",
+    val audioTracksSummary: String = "", val subtitleTracksSummary: String = "",
+    val reputationScore: Int = 50, val isTestedSuccess: Boolean = false, val isTestedFailed: Boolean = false
 )
 
 object StreamQualityDetector {
@@ -268,6 +260,8 @@ object StreamQualityDetector {
     }
 
     fun calculateMovieProbability(opt: StreamQualityOption, pageUrl: String?): Int {
+        if (opt.isTestedFailed) return 0
+        if (opt.isTestedSuccess) return 150
         val url = opt.streamUrl
         val isM = opt.isMaster || url.contains("master", true) || url.contains("playlist", true) || url.contains(".urlset", true)
         val hasToken = StreamManifestProbe.hasSignedSecurityToken(url)
@@ -279,7 +273,7 @@ object StreamQualityDetector {
         val streamHost = runCatching { URI(url).host }.getOrNull()
         val isSameHost = pageHost != null && streamHost != null && (pageHost.equals(streamHost, true) || pageHost.endsWith(".$streamHost", true) || streamHost.endsWith(".$pageHost", true))
         val is404 = opt.bitrate.contains("HTTP 404", true) || opt.formatDetail.contains("HTTP 404", true) || opt.bitrate.contains("HTTP 410", true)
-        return when {
+        val base = when {
             is404 -> 0
             (hasToken || isCdn) && isM -> 100
             hasToken || isCdn -> 95
@@ -290,5 +284,7 @@ object StreamQualityDetector {
             !isSameHost -> 70
             else -> 30
         }
+        val repBonus = if (opt.reputationScore >= 75) 15 else if (opt.reputationScore <= 30) -25 else 0
+        return if (base == 0) 0 else (base + repBonus).coerceIn(1, 100)
     }
 }

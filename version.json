@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 182,
-  "versionCodeReceiver": 165,
-  "versionName": "3.4.32",
-  "releaseTag": "v3.4.32",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.32/omnicast-sender-v3.4.32.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.32/omnicast-receiver-v3.4.32.apk",
-  "changelog": "v3.4.32: Eliminación total de autoOpenJob para evitar interrupciones y robo de foco al navegar; liberación reactiva del foco de Compose hacia Chromium en WebView; habilitación inmediata de escritura en el cuadro de búsqueda de Dailymotion y navegación web idéntica a Web Video Caster."
+  "versionCodeSender": 183,
+  "versionCodeReceiver": 166,
+  "versionName": "3.4.33",
+  "releaseTag": "v3.4.33",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.33/omnicast-sender-v3.4.33.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.33/omnicast-receiver-v3.4.33.apk",
+  "changelog": "v3.4.33: Inteligencia colectiva y reputación ponderada de streams (HU-014); base SQLite local con caché RAM de 0ms; sincronización en background cada 4h con Supabase; marcado visual en lista de videos (🟢 EN EMISIÓN para streams verificados, 🔴 INACCESIBLE atenuado al 55% para errores 404/caídos, y ⭐ RECOMENDADO para servidores de alta reputación); preservación total de tokens y cabeceras para retransmisión confiable."
 }

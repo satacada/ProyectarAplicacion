@@ -22,6 +22,7 @@ Cada vez que se solicite un cambio, ajuste o nueva funcionalidad, se actualiza o
 | **HU-011** | [`HU-011-autocompletado-inteligente-selecciones-web.md`](./HU-011-autocompletado-inteligente-selecciones-web.md) | Autocompletado y Replicación Inteligente de Selecciones Web | 🟢 Aprobado / En Producción | v3.32.100 |
 | **HU-012** | [`HU-012-receptor-web-html5-resiliencia-cdn-tv.md`](./HU-012-receptor-web-html5-resiliencia-cdn-tv.md) | Receptor Web HTML5 (Chromium / Hls.js) y Resiliencia CDN | 🟢 Aprobado / En Producción | v3.32.95 |
 | **HU-013** | [`HU-013-screen-mirroring-proyeccion-pantalla-completa.md`](./HU-013-screen-mirroring-proyeccion-pantalla-completa.md) | Screen Mirroring — Proyección de Pantalla Completa Vertical y Horizontal | 🟢 Aprobado / En Producción | v3.4.8 |
+| **HU-014** | [`HU-014-inteligencia-colectiva-reputacion-streams.md`](./HU-014-inteligencia-colectiva-reputacion-streams.md) | Inteligencia Colectiva y Reputación Ponderada de Streams | 🟢 Aprobado / En Producción | v3.4.33 |
 
 ---
 

@@ -17,6 +17,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -190,18 +191,39 @@ fun WvcVideoListItem(
         else "m3u8"
     }
 
+    val isTestedSuccess = option.isTestedSuccess
+    val isTestedFailed = option.isTestedFailed
+    val isRecommended = option.reputationScore >= 75 || option.isSuggested
+    val thumbBg = when {
+        isTestedSuccess -> Color(0xFF10B981)
+        isTestedFailed -> Color(0xFF4B5563)
+        isRecommended -> Color(0xFFF59E0B)
+        else -> Color(0xFFFF9800)
+    }
+    val statusBadge = when {
+        isTestedSuccess -> " • 🟢 [EN EMISIÓN]"
+        isTestedFailed -> " • 🔴 [INACCESIBLE]"
+        isRecommended -> " • ⭐ [RECOMENDADO]"
+        else -> ""
+    }
+    val statusColor = when {
+        isTestedSuccess -> Color(0xFF10B981)
+        isTestedFailed -> Color(0xFFEF4444)
+        isRecommended -> Color(0xFFF59E0B)
+        else -> Color(0xFF4CAF50)
+    }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .alpha(if (isTestedFailed) 0.55f else 1.0f)
+            .then(if (isTestedSuccess) Modifier.background(Color(0x1A10B981)) else Modifier)
             .clickable { onTransmit() }
             .padding(horizontal = 16.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Thumbnail cuadrado naranja idéntico a Web Video Caster
         Box(
-            modifier = Modifier
-                .size(60.dp)
-                .background(Color(0xFFFF9800), RoundedCornerShape(4.dp)),
+            modifier = Modifier.size(60.dp).background(thumbBg, RoundedCornerShape(4.dp)),
             contentAlignment = Alignment.Center
         ) {
             Icon(Icons.Rounded.Movie, contentDescription = null, tint = Color.White, modifier = Modifier.size(28.dp))
@@ -209,37 +231,11 @@ fun WvcVideoListItem(
 
         Spacer(Modifier.width(14.dp))
 
-        // Desglose de 4 líneas exactas de WVC
         Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = displayName,
-                color = Color.White,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 14.sp,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-            Text(
-                text = streamHostOrUrl,
-                color = Color(0xFF9E9E9E),
-                fontSize = 12.sp,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-            Text(
-                text = variantName,
-                color = Color(0xFF9E9E9E),
-                fontSize = 12.sp,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-            Text(
-                text = displayFormat,
-                color = Color(0xFF4CAF50),
-                fontSize = 12.sp,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
+            Text(text = displayName, color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 14.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(text = streamHostOrUrl, color = Color(0xFF9E9E9E), fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(text = variantName, color = Color(0xFF9E9E9E), fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(text = displayFormat + statusBadge, color = statusColor, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
 
         Box {

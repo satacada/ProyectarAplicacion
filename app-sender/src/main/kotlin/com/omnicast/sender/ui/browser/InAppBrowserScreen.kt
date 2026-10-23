@@ -40,6 +40,8 @@ fun InAppBrowserScreen(
     var qualityOptions by remember { mutableStateOf<List<StreamQualityOption>>(emptyList()) }; var showOptionsSheet by remember { mutableStateOf(false) }; var showSideDrawer by remember { mutableStateOf(false) }; var showWhitelistDialog by remember { mutableStateOf(false) }
     var showBottomControls by rememberSaveable { mutableStateOf(ActiveStreamHolder.isCasting.value && ActiveStreamHolder.isPlaying.value) }; var videoToSave by remember { mutableStateOf<HistoryItem?>(null) }; var webViewInstance by remember { mutableStateOf<WebView?>(null) }; var popupWebView by remember { mutableStateOf<WebView?>(null) }
     var playlistsVersion by remember { mutableIntStateOf(0) }; val scope = rememberCoroutineScope(); var userDismissedSheetForUrl by rememberSaveable { mutableStateOf("") }
+    val testedSuccess = remember { mutableStateListOf<String>() }; val testedFailed = remember { mutableStateListOf<String>() }
+    LaunchedEffect(Unit) { com.omnicast.sender.ui.browser.reputation.StreamReputationSyncManager.initAndSync(context) }
     val isCasting by ActiveStreamHolder.isCasting.collectAsState(); val isPlaying by ActiveStreamHolder.isPlaying.collectAsState(); val posMs by ActiveStreamHolder.positionMs.collectAsState(); val durMs by ActiveStreamHolder.durationMs.collectAsState(); val volume by ActiveStreamHolder.volume.collectAsState(); val castTitle by ActiveStreamHolder.currentMediaTitle.collectAsState()
     fun isRealMedia(s: String) = BrowserUrlHelper.isRealMedia(s, streamDurations[s] ?: 0f)
 
@@ -65,13 +67,15 @@ fun InAppBrowserScreen(
         }
         qualityOptions = currentStreams.flatMap { u ->
             val ytId = BrowserUrlHelper.extractYouTubeId(u)
+            val rep = com.omnicast.sender.ui.browser.reputation.StreamReputationDatabase.getScore(currentUrl, u)
+            val isSucc = testedSuccess.contains(u); val isFail = testedFailed.contains(u)
             if (ytId != null) BrowserUrlHelper.createYouTubeQualityOptions(ytId, cleanTitle)
             else {
                 val lbl = streamLabels[u]; val isM = u.contains("master", true) || u.contains("playlist", true) || lbl?.contains("auto", true) == true
                 val vName = lbl?.takeIf { it.isNotBlank() } ?: StreamQualityDetector.extractFileName(u, if (isM) "master" else "video")
                 val fmt = when { isM -> "m3u8 (adaptive)"; u.contains(".mp4", true) || u.contains("mycdn.me", true) -> "mp4 (Directo)"; else -> "m3u8" }
                 val res = lbl?.takeIf { it.contains("p", true) } ?: if (isM) "Auto" else "Original"
-                listOf(StreamQualityOption("▶ [${cleanTitle.take(16)}] $vName", res, if (isM) "Adaptativa" else "Directo", u, isMovie = true, isSuggested = isM, healedHeaders = streamHeaders[u] ?: emptyMap(), fileName = vName, formatDetail = fmt))
+                listOf(StreamQualityOption("▶ [${cleanTitle.take(16)}] $vName", res, if (isM) "Adaptativa" else "Directo", u, isMaster = true, isMovie = true, isSuggested = isM, healedHeaders = streamHeaders[u] ?: emptyMap(), fileName = vName, formatDetail = fmt, reputationScore = rep, isTestedSuccess = isSucc, isTestedFailed = isFail))
             }
         }.sortedByDescending { StreamQualityDetector.calculateMovieProbability(it, currentUrl) }
         showOptionsSheet = true
@@ -79,6 +83,9 @@ fun InAppBrowserScreen(
             val deep = currentStreams.filter { BrowserUrlHelper.extractYouTubeId(it) == null }.flatMap { u ->
                 val opts = StreamQualityDetector.detectQualities(u, streamHeaders[u] ?: emptyMap(), cleanTitle, currentUrl)
                 opts.forEach { o -> if (o.healedHeaders.isNotEmpty()) streamHeaders[o.streamUrl] = o.healedHeaders }; opts
+            }.map { o ->
+                val rep = com.omnicast.sender.ui.browser.reputation.StreamReputationDatabase.getScore(currentUrl, o.streamUrl)
+                o.copy(reputationScore = rep, isTestedSuccess = testedSuccess.contains(o.streamUrl), isTestedFailed = testedFailed.contains(o.streamUrl))
             }
             if (deep.isNotEmpty()) {
                 val sorted = (deep + qualityOptions).filterNot { it.streamUrl.contains("iframes", true) }.distinctBy { it.streamUrl }.sortedByDescending { StreamQualityDetector.calculateMovieProbability(it, currentUrl) }
@@ -143,19 +150,21 @@ fun InAppBrowserScreen(
             val probe = StreamQualityDetector.probeAndHealStream(finalUrl, finalHdrs, refPage)
             if (!probe.isPlayable && (probe.httpCode == 404 || probe.httpCode == 410)) {
                 withContext(Dispatchers.Main) {
+                    testedFailed.add(url); testedFailed.add(finalUrl)
+                    com.omnicast.sender.ui.browser.reputation.StreamReputationSyncManager.reportStreamResult(refPage, url, false)
                     detectedStreams.removeAll(listOf(url, finalUrl)); qualityOptions = qualityOptions.filterNot { it.streamUrl == url || it.streamUrl == finalUrl }
                     if (!savedPageUrl.isNullOrBlank() && savedPageUrl.startsWith("http")) {
-                        Toast.makeText(context, "🔄 Token vencido: abriendo página para renovar...", Toast.LENGTH_LONG).show(); navigateTo(savedPageUrl)
+                        Toast.makeText(context, "🔄 Token vencido: abriendo página...", Toast.LENGTH_LONG).show(); navigateTo(savedPageUrl)
                     } else Toast.makeText(context, "⚠️ Enlace inválido descartado", Toast.LENGTH_SHORT).show()
                 }
                 return@launch
             }
             val baseHdrs = if (probe.isPlayable && probe.healedHeaders.isNotEmpty()) probe.healedHeaders else finalHdrs
             withContext(Dispatchers.Main) {
-                streamHeaders[finalUrl] = baseHdrs
-                historyManager.addOrUpdate(finalUrl, cleanT, refPage, baseHdrs)
-                onSendStreamToTv(finalUrl, cleanT, baseHdrs)
-                showBottomControls = true
+                testedSuccess.add(url); testedSuccess.add(finalUrl)
+                com.omnicast.sender.ui.browser.reputation.StreamReputationSyncManager.reportStreamResult(refPage, url, true)
+                streamHeaders[finalUrl] = baseHdrs; historyManager.addOrUpdate(finalUrl, cleanT, refPage, baseHdrs)
+                onSendStreamToTv(finalUrl, cleanT, baseHdrs); showBottomControls = true
             }
         }
     }
@@ -188,16 +197,12 @@ fun InAppBrowserScreen(
     ) {
         Column(modifier = Modifier.fillMaxSize().background(Color(0xFF0F172A))) {
             BrowserTopBar(
-                inputUrl = inputUrl, onInputUrlChange = { inputUrl = it }, onNavigate = { navigateTo(it) }, onClose = onCloseBrowser,
-                onBack = { handleBrowserBack() }, onForward = { if (webViewInstance?.canGoForward() == true) webViewInstance?.goForward() }, canGoForward = webViewInstance?.canGoForward() == true, onReload = { webViewInstance?.reload() },
-                isDesktopMode = isDesktopMode, onToggleDesktopMode = { isDesktopMode = !isDesktopMode; webViewInstance?.settings?.userAgentString = if (isDesktopMode) UA_DESKTOP else UA_MOBILE; webViewInstance?.reload() },
-                isAdBlockEnabled = isAdBlockEnabled, onToggleAdBlock = { isAdBlockEnabled = !isAdBlockEnabled },
+                inputUrl = inputUrl, onInputUrlChange = { inputUrl = it }, onNavigate = { navigateTo(it) }, onClose = onCloseBrowser, onBack = { handleBrowserBack() }, onForward = { if (webViewInstance?.canGoForward() == true) webViewInstance?.goForward() }, canGoForward = webViewInstance?.canGoForward() == true, onReload = { webViewInstance?.reload() },
+                isDesktopMode = isDesktopMode, onToggleDesktopMode = { isDesktopMode = !isDesktopMode; webViewInstance?.settings?.userAgentString = if (isDesktopMode) UA_DESKTOP else UA_MOBILE; webViewInstance?.reload() }, isAdBlockEnabled = isAdBlockEnabled, onToggleAdBlock = { isAdBlockEnabled = !isAdBlockEnabled },
                 onForceRescan = { webViewInstance?.evaluateJavascript(WvcSnifferScripts.buildAggressiveRescanScript(WvcDomSniffer.CONSOLE_PREFIX), null) },
                 onClearData = { webViewInstance?.clearCache(true); webViewInstance?.clearHistory(); detectedStreams.clear(); qualityOptions = emptyList(); isHome = true; inputUrl = ""; currentUrl = ""; ActiveStreamHolder.clear(); prefs.edit().remove("saved_browser_last_url").apply() },
-                detectedStreamsCount = maxOf(detectedStreams.count { isRealMedia(it) }, qualityOptions.size), onToggleBottomControls = { showBottomControls = !showBottomControls },
-                onOpenDetectedVideos = { openOptionsSheet() }, isCasting = isCasting, isPlaying = isPlaying, showBottomControls = showBottomControls,
-                onOpenHistory = { showSideDrawer = true }, onOpenPlaylists = { showSideDrawer = true }, onOpenDrawer = { showSideDrawer = true }, onOpenWhitelist = { showWhitelistDialog = true },
-                onExitApp = { SenderMainActivity.exitCompletely(context) }
+                detectedStreamsCount = maxOf(detectedStreams.count { isRealMedia(it) }, qualityOptions.size), onToggleBottomControls = { showBottomControls = !showBottomControls }, onOpenDetectedVideos = { openOptionsSheet() }, isCasting = isCasting, isPlaying = isPlaying, showBottomControls = showBottomControls,
+                onOpenHistory = { showSideDrawer = true }, onOpenPlaylists = { showSideDrawer = true }, onOpenDrawer = { showSideDrawer = true }, onOpenWhitelist = { showWhitelistDialog = true }, onExitApp = { SenderMainActivity.exitCompletely(context) }
             )
 
             Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
@@ -289,7 +294,6 @@ fun InAppBrowserScreen(
         onClearOptions = { detectedStreams.clear(); qualityOptions = emptyList(); showOptionsSheet = false },
         onRescanOptions = { webViewInstance?.evaluateJavascript(WvcSnifferScripts.buildAggressiveRescanScript(WvcDomSniffer.CONSOLE_PREFIX), null); Toast.makeText(context, "🔍 Buscando videos...", Toast.LENGTH_SHORT).show() },
         onDeleteHistory = { historyManager.remove(it) }, onClearHistory = { historyManager.clear() }, onToggleFavorite = { historyManager.toggleFavorite(it) },
-        onDismissHistory = {}, onDismissPlaylists = {}, onDismissSaveDialog = { videoToSave = null }, onSavedToPlaylist = { playlistsVersion++; Toast.makeText(context, "💾 Guardado en $it", Toast.LENGTH_SHORT).show() },
-        showWhitelistDialog = showWhitelistDialog, currentUrl = currentUrl, onDismissWhitelist = { showWhitelistDialog = false }, onWhitelistUpdated = { webViewInstance?.reload() }
+        onDismissHistory = {}, onDismissPlaylists = {}, onDismissSaveDialog = { videoToSave = null }, onSavedToPlaylist = { playlistsVersion++; Toast.makeText(context, "💾 Guardado en $it", Toast.LENGTH_SHORT).show() }, showWhitelistDialog = showWhitelistDialog, currentUrl = currentUrl, onDismissWhitelist = { showWhitelistDialog = false }, onWhitelistUpdated = { webViewInstance?.reload() }
     )
 }

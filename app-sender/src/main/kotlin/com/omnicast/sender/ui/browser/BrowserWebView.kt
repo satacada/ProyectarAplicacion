@@ -220,7 +220,11 @@ fun BrowserWebView(
                     override fun onCreateWindow(view: WebView?, isDialog: Boolean, isUserGesture: Boolean, resultMsg: android.os.Message?): Boolean {
                         val transport = resultMsg?.obj as? WebView.WebViewTransport
                         if (transport != null && view != null) {
-                            val tempWebView = WebView(view.context)
+                            val tempWebView = WebView(view.context).apply {
+                                settings.javaScriptEnabled = true
+                                settings.domStorageEnabled = true
+                                settings.userAgentString = view.settings.userAgentString
+                            }
                             var handled = false
                             fun handlePopupUrl(v: WebView?, destUrl: String?) {
                                 if (handled || destUrl.isNullOrBlank() || destUrl.startsWith("about:")) return

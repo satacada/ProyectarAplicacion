@@ -31,18 +31,42 @@ class ProjectionSession(
     private var audioCaptureManager: AudioCaptureManager? = null
     private var signalingClient: SignalingClient? = null
     var isDeviceLandscape: Boolean = false; private set
+    private var currentZoom: Float = 1.0f
+    private var currentPanY: Float = 0.0f
+    private var currentPanX: Float = 0.0f
+
+    fun checkDeviceLandscape(): Boolean {
+        val dm = context.getSystemService(Context.DISPLAY_SERVICE) as? android.hardware.display.DisplayManager
+        val display = dm?.getDisplay(android.view.Display.DEFAULT_DISPLAY)
+        val rot = display?.rotation ?: android.view.Surface.ROTATION_0
+        if (rot == android.view.Surface.ROTATION_90 || rot == android.view.Surface.ROTATION_270) return true
+        val metrics = android.util.DisplayMetrics()
+        @Suppress("DEPRECATION")
+        display?.getRealMetrics(metrics)
+        if (metrics.widthPixels > metrics.heightPixels && metrics.heightPixels > 0) return true
+        return context.resources.configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
+    }
 
     fun setTvScaleMode(mode: String) {
         tvScaleMode = mode
         webRtcManager?.tvScaleMode = mode
         val preset = TvZoomManager.findPreset(mode)
-        signalingClient?.sendMessage(TvZoomManager.toSignalingMessage(preset, isLandscape = isDeviceLandscape))
+        currentZoom = preset.zoom
+        currentPanY = preset.panY
+        isDeviceLandscape = checkDeviceLandscape()
+        val isLand = if (tvScaleMode == "APP") null else isDeviceLandscape
+        signalingClient?.sendMessage(TvZoomManager.toSignalingMessage(preset, isLandscape = isLand))
     }
 
     fun setDisplayMode(mode: String, zoom: Float = 1.0f, panY: Float = 0.0f, panX: Float = 0.0f) {
         tvScaleMode = mode
+        currentZoom = zoom
+        currentPanY = panY
+        currentPanX = panX
         webRtcManager?.tvScaleMode = mode
-        signalingClient?.sendMessage(SignalingMessage.SetDisplayMode(mode, zoom, panY, panX, isLandscape = isDeviceLandscape))
+        isDeviceLandscape = checkDeviceLandscape()
+        val isLand = if (tvScaleMode == "APP") null else isDeviceLandscape
+        signalingClient?.sendMessage(SignalingMessage.SetDisplayMode(mode, zoom, panY, panX, isLandscape = isLand))
     }
 
     fun toggleTvScaleMode(): String {
@@ -124,10 +148,11 @@ class ProjectionSession(
                     // CRÍTICO: iniciar captura DESPUÉS de enviar la oferta, no antes
                     // El encoder ya está negociado y puede recibir frames inmediatamente
                     webRtcManager?.beginCapture()
-                    val initOrientation = context.resources.configuration.orientation
-                    isDeviceLandscape = (initOrientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE)
+                    isDeviceLandscape = checkDeviceLandscape()
                     val isLandscape = if (tvScaleMode == "APP") null else isDeviceLandscape
                     val initPreset = TvZoomManager.findPreset(tvScaleMode)
+                    currentZoom = initPreset.zoom
+                    currentPanY = initPreset.panY
                     client.sendMessage(TvZoomManager.toSignalingMessage(initPreset, isLandscape = isLandscape))
                 }
             },
@@ -137,12 +162,15 @@ class ProjectionSession(
         val configCallback = object : android.content.ComponentCallbacks {
             override fun onConfigurationChanged(newConfig: android.content.res.Configuration) {
                 if (tvScaleMode == "APP") return
-                val isLand = (newConfig.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE)
+                val isLand = checkDeviceLandscape()
                 if (isLand != isDeviceLandscape) {
                     isDeviceLandscape = isLand
-                    val targetMode = if (isLand) "FILL" else "FIT"
+                    val targetMode = if (tvScaleMode == "ZOOM") "ZOOM" else (if (isLand) "FILL" else "FIT")
+                    val z = if (targetMode == "ZOOM") currentZoom else 1.0f
+                    val py = if (targetMode == "ZOOM") currentPanY else 0.0f
+                    val px = if (targetMode == "ZOOM") currentPanX else 0.0f
                     Log.i("ProjectionSession", "📱 Giro real de imagen en celular: modo $targetMode (landscape=$isLand)")
-                    signalingClient?.sendMessage(SignalingMessage.SetDisplayMode(targetMode, isLandscape = isLand))
+                    signalingClient?.sendMessage(SignalingMessage.SetDisplayMode(targetMode, zoom = z, panY = py, panX = px, isLandscape = isLand))
                 }
             }
             override fun onLowMemory() = Unit

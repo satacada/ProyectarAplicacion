@@ -43,22 +43,24 @@ class WebRtcReceiverManager(private val context: Context) {
     val effectiveFrameH: Int get() = if (isRotated) lastFrameW else lastFrameH
 
     val isLandscape: Boolean
-        get() = if (effectiveFrameW > 0 && effectiveFrameH > 0) {
+        get() = if (isAppProjectionMode) {
             effectiveFrameW > effectiveFrameH
-        } else if (isAppProjectionMode) {
-            false
         } else {
-            isPhoneLandscape
+            (effectiveFrameW > effectiveFrameH) || isPhoneLandscape
         }
 
     fun isVertical(res: String = ""): Boolean {
-        if (effectiveFrameW > 0 && effectiveFrameH > 0) return effectiveFrameW < effectiveFrameH
         if (isLandscape) return false
+        if (effectiveFrameW > 0 && effectiveFrameH > 0) return effectiveFrameW < effectiveFrameH
         val p = res.split("x"); val w = p.getOrNull(0)?.toIntOrNull() ?: 0; val h = p.getOrNull(1)?.toIntOrNull() ?: 0
         return w in 1..<h
     }
 
     fun streamAspect(res: String = ""): Float {
+        if (isLandscape) {
+            if (effectiveFrameW > effectiveFrameH && effectiveFrameH > 0) return effectiveFrameW.toFloat() / effectiveFrameH.toFloat()
+            return 16f / 9f
+        }
         if (effectiveFrameW > 0 && effectiveFrameH > 0) return effectiveFrameW.toFloat() / effectiveFrameH.toFloat()
         val p = res.split("x"); val h = p.getOrNull(1)?.toFloatOrNull() ?: 16f
         return if (h > 0f) (p.getOrNull(0)?.toFloatOrNull() ?: 9f) / h else (9f / 16f)
@@ -102,7 +104,7 @@ class WebRtcReceiverManager(private val context: Context) {
             val frameW = if (isRot) lastFrameH else lastFrameW
             val frameH = if (isRot) lastFrameW else lastFrameH
             if (frameW <= 0 || frameH <= 0) return@post
-            val land = (frameW > frameH)
+            val land = isLandscape
 
             if (renderer.width > 0 && renderer.height > 0) {
                 renderer.pivotX = renderer.width / 2f

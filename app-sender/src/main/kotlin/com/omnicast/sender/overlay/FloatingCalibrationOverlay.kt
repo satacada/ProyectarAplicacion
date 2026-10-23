@@ -200,7 +200,10 @@ object FloatingCalibrationOverlay {
         if (ProjectionForegroundService.isProjecting) {
             ProjectionForegroundService.setDisplayMode(mode, zoom, panY, panX)
         } else {
-            val msg = com.omnicast.core.protocol.SignalingMessage.SetDisplayMode(mode, zoom, panY, panX)
+            val dm = context.getSystemService(Context.DISPLAY_SERVICE) as? android.hardware.display.DisplayManager
+            val rot = dm?.getDisplay(android.view.Display.DEFAULT_DISPLAY)?.rotation ?: android.view.Surface.ROTATION_0
+            val isLand = (rot == android.view.Surface.ROTATION_90 || rot == android.view.Surface.ROTATION_270)
+            val msg = com.omnicast.core.protocol.SignalingMessage.SetDisplayMode(mode, zoom, panY, panX, isLandscape = isLand)
             com.omnicast.sender.network.QuickSignalingHelper.sendQuickMessage(context, msg)
         }
     }

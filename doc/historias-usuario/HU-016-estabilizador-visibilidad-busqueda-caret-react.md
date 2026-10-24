@@ -46,6 +46,15 @@
    - La estabilización es pasiva y reactiva; no utiliza `MutationObserver` ni bucles `setInterval`.
    - No altera formularios, botones de envío ni listeners nativos del sitio web.
 
-4. **Reglas de Hardware y Límites de Código:**
-   - Mantener el archivo `InputCaretStabilizer.kt` estrictamente $\le 300$ líneas de código.
+4. **Asistente Flotante Nativo de Entrada de Texto (`WebInputAssistantBar.kt` - v3.4.43 a v3.4.45):**
+   - Para erradicar definitivamente la escritura a ciegas en cualquier pantalla o web con layouts complejos:
+     - Al detectar foco en cualquier campo de entrada web, se despliega una barra flotante en Compose nativo posicionada exactamente sobre el teclado virtual (`imePadding()`).
+     - El usuario visualiza de forma 100% nítida el texto que escribe, con cursor desplazable, borrado nativo y autocompletado de teclado.
+     - **Preservación de Referencia (`window.__omniLastFocusedInput`):** El elemento enfocado se almacena en el DOM durante `focusin`, permitiendo que la sincronización letra por letra inyecte el valor al componente web sin perder la referencia cuando Compose adquiere el foco.
+     - **Codificación Limpia de Espacios (%20):** Se prohíbe el uso de `URLEncoder.encode` (que genera signos `+` incompatibles con rutas URL de Dailymotion); se utiliza estrictamente `Uri.encode` asegurando espacios naturales `%20`.
+     - **Chips Nativos de Sugerencias en Vivo (v3.4.45):** Debajo de la barra de texto se presenta una lista horizontal desplazable con sugerencias en tiempo real consultadas de la API oficial de Dailymotion y el motor universal de búsqueda. Tocar cualquier sugerencia autocompleta el texto y ejecuta la búsqueda en un solo paso.
+     - **Ejecución Directa de Búsqueda:** Al presionar Buscar o presionar Enter, en Dailymotion se navega directamente a la URL canónica (`/search/{query}`) para garantizar la búsqueda inmediata en SPAs con formularios controlados.
+
+5. **Reglas de Hardware y Límites de Código:**
+   - Mantener los archivos `WebInputAssistantBar.kt` e `InputCaretStabilizer.kt` estrictamente $\le 300$ líneas de código cada uno.
    - Prohibido modificar `TvScreens.kt` o `WebRtcReceiverManager.kt` para resolver problemas del navegador web (Ley Inviolable 8 de `AGENTS.md`).

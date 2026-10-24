@@ -193,8 +193,9 @@ class SenderMainActivity : ComponentActivity() {
                             return@collect
                         }
                         com.omnicast.sender.log.SenderLogger.w("SenderMain", "⚠️ HTTP 403 en TV: Flujo protegido o expirado en origen")
-                        ActiveStreamHolder.stopCasting(notifyTv = false); com.omnicast.sender.service.CastMediaNotificationService.stop(this@SenderMainActivity)
+                        ActiveStreamHolder.notifyPlaybackError("HTTP_403"); ActiveStreamHolder.stopCasting(notifyTv = false); com.omnicast.sender.service.CastMediaNotificationService.stop(this@SenderMainActivity)
                     } else if ((msg.state == "PLAYING" || msg.state == "PAUSED") && !mUrl.isNullOrBlank()) {
+                        ActiveStreamHolder.clearPlaybackError()
                         if (!ActiveStreamHolder.isCasting.value || ActiveStreamHolder.streamUrl != mUrl) {
                             val streamTitle = msg.title?.ifBlank { "Película en TV" } ?: "Película en TV"
                             ActiveStreamHolder.startCasting(mUrl, streamTitle, emptyMap()); ActiveStreamHolder.onSendPlayControl = { act, pos, vol, par -> sendPlayControl(act, pos, vol, par) }

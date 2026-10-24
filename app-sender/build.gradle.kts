@@ -12,8 +12,8 @@ android {
         applicationId = "com.omnicast.sender"
         minSdk = 26 // Android 8.0+ y Android 9 (Pie) compatible; AudioPlaybackCapture se activa dinámicamente en Android 10+
         targetSdk = 34
-        versionCode = 195
-        versionName = "3.4.45"
+        versionCode = 196
+        versionName = "3.4.46"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {

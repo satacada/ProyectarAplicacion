@@ -193,12 +193,12 @@ fun WvcVideoListItem(
 
     val isTestedSuccess = option.isTestedSuccess
     val isTestedFailed = option.isTestedFailed
-    val isRecommended = option.reputationScore >= 75 || option.isSuggested
+    val isRecommended = (option.reputationScore >= 75 || option.isSuggested) && !isTestedFailed && !isTestedSuccess
     val thumbBg = when {
         isTestedSuccess -> Color(0xFF10B981)
         isTestedFailed -> Color(0xFF4B5563)
         isRecommended -> Color(0xFFF59E0B)
-        else -> Color(0xFFFF9800)
+        else -> Color(0xFF475569)
     }
     val statusBadge = when {
         isTestedSuccess -> " • 🟢 [EN EMISIÓN]"
@@ -210,7 +210,7 @@ fun WvcVideoListItem(
         isTestedSuccess -> Color(0xFF10B981)
         isTestedFailed -> Color(0xFFEF4444)
         isRecommended -> Color(0xFFF59E0B)
-        else -> Color(0xFF4CAF50)
+        else -> Color(0xFF94A3B8)
     }
 
     Row(

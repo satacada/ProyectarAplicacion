@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 195,
-  "versionCodeReceiver": 178,
-  "versionName": "3.4.45",
-  "releaseTag": "v3.4.45",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.45/omnicast-sender-v3.4.45.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.45/omnicast-receiver-v3.4.45.apk",
-  "changelog": "v3.4.45: Envío de texto letra por letra con sugerencias interactivas y corrección de espacios (%20). Despliegue de chips nativos con autocompletado en tiempo real debajo de la caja de texto y codificación limpia de espacios sin signos más (+)."
+  "versionCodeSender": 196,
+  "versionCodeReceiver": 179,
+  "versionName": "3.4.46",
+  "releaseTag": "v3.4.46",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.46/omnicast-sender-v3.4.46.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.46/omnicast-receiver-v3.4.46.apk",
+  "changelog": "v3.4.46: Solución a CORS en reproductor web de TV (Same-Origin en baseUrl para PelisGO / tnmr.org) y saneamiento de colores en lista de streams (sólo verde en emisión real)."
 }

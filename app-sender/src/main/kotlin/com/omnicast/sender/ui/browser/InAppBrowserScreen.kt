@@ -43,6 +43,9 @@ fun InAppBrowserScreen(
     val testedSuccess = remember { mutableStateListOf<String>() }; val testedFailed = remember { mutableStateListOf<String>() }
     LaunchedEffect(Unit) { com.omnicast.sender.ui.browser.reputation.StreamReputationSyncManager.initAndSync(context) }
     val isCasting by ActiveStreamHolder.isCasting.collectAsState(); val isPlaying by ActiveStreamHolder.isPlaying.collectAsState(); val posMs by ActiveStreamHolder.positionMs.collectAsState(); val durMs by ActiveStreamHolder.durationMs.collectAsState(); val volume by ActiveStreamHolder.volume.collectAsState(); val castTitle by ActiveStreamHolder.currentMediaTitle.collectAsState()
+    val pErr by ActiveStreamHolder.playbackError.collectAsState()
+    LaunchedEffect(isCasting, isPlaying) { val c = ActiveStreamHolder.streamUrl; if (isCasting && isPlaying && !c.isNullOrBlank()) { if (!testedSuccess.contains(c)) testedSuccess.add(c); testedFailed.remove(c) } }
+    LaunchedEffect(pErr) { val c = ActiveStreamHolder.streamUrl; if (!pErr.isNullOrBlank() && !c.isNullOrBlank()) { if (!testedFailed.contains(c)) testedFailed.add(c); testedSuccess.remove(c) } }
     fun isRealMedia(s: String) = BrowserUrlHelper.isRealMedia(s, streamDurations[s] ?: 0f)
 
     val isMovieSaved = remember(detectedStreams.size, playlistsVersion, castTitle, pageTitle) {
@@ -152,16 +155,12 @@ fun InAppBrowserScreen(
                     testedFailed.add(url); testedFailed.add(finalUrl)
                     com.omnicast.sender.ui.browser.reputation.StreamReputationSyncManager.reportStreamResult(refPage, url, false)
                     detectedStreams.removeAll(listOf(url, finalUrl)); qualityOptions = qualityOptions.filterNot { it.streamUrl == url || it.streamUrl == finalUrl }
-                    if (!savedPageUrl.isNullOrBlank() && savedPageUrl.startsWith("http")) {
-                        Toast.makeText(context, "🔄 Token vencido: abriendo página...", Toast.LENGTH_LONG).show(); navigateTo(savedPageUrl)
-                    } else Toast.makeText(context, "⚠️ Enlace inválido descartado", Toast.LENGTH_SHORT).show()
+                    if (!savedPageUrl.isNullOrBlank() && savedPageUrl.startsWith("http")) { Toast.makeText(context, "🔄 Token vencido: abriendo página...", Toast.LENGTH_LONG).show(); navigateTo(savedPageUrl) } else Toast.makeText(context, "⚠️ Enlace inválido descartado", Toast.LENGTH_SHORT).show()
                 }
                 return@launch
             }
             val baseHdrs = if (probe.isPlayable && probe.healedHeaders.isNotEmpty()) probe.healedHeaders else finalHdrs
             withContext(Dispatchers.Main) {
-                testedSuccess.add(url); testedSuccess.add(finalUrl)
-                com.omnicast.sender.ui.browser.reputation.StreamReputationSyncManager.reportStreamResult(refPage, url, true)
                 streamHeaders[finalUrl] = baseHdrs; historyManager.addOrUpdate(finalUrl, cleanT, refPage, baseHdrs)
                 onSendStreamToTv(finalUrl, cleanT, baseHdrs); showBottomControls = true
             }

@@ -134,25 +134,21 @@ fun TvWebStreamScreen(
                             settings.allowFileAccessFromFileURLs = true; settings.allowUniversalAccessFromFileURLs = true
                             settings.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
                             settings.userAgentString = headers["User-Agent"] ?: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
+                            val streamOrigin = try { val uri = Uri.parse(streamUrl); if (!uri.scheme.isNullOrBlank() && !uri.host.isNullOrBlank()) "${uri.scheme}://${uri.host}/" else null } catch (_: Throwable) { null }
+                            val baseUrl = streamOrigin ?: headers["Referer"]?.takeIf { it.isNotBlank() } ?: "https://omnicast.tv/"
                             CookieManager.getInstance().setAcceptCookie(true); CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
-                            headers["Cookie"]?.let { ck -> runCatching { CookieManager.getInstance().setCookie(headers["Referer"] ?: streamUrl, ck) } }
+                            headers["Cookie"]?.let { ck -> runCatching { CookieManager.getInstance().setCookie(streamUrl, ck); headers["Referer"]?.takeIf { it.isNotBlank() }?.let { CookieManager.getInstance().setCookie(it, ck) }; streamOrigin?.let { CookieManager.getInstance().setCookie(it, ck) } } }
                             addJavascriptInterface(WebStreamBridge(onPlaybackStatus, onPlaybackFailed), "AndroidBridge")
                             webViewClient = WebViewClient()
                             webChromeClient = object : WebChromeClient() {
                                 override fun onShowCustomView(v: View?, c: CustomViewCallback?) { customView = v }
                                 override fun onHideCustomView() { customView = null }
-                                override fun onConsoleMessage(cm: ConsoleMessage?): Boolean {
-                                    cm?.let { com.omnicast.receiver.log.ReceiverLogger.log("TvWebStreamJS", "[${it.messageLevel()}] ${it.message()}") }
-                                    return super.onConsoleMessage(cm)
-                                }
+                                override fun onConsoleMessage(cm: ConsoleMessage?): Boolean { cm?.let { com.omnicast.receiver.log.ReceiverLogger.log("TvWebStreamJS", "[${it.messageLevel()}] ${it.message()}") }; return super.onConsoleMessage(cm) }
                             }
 
                             val hlsCode = WebPlayerAssetHelper.getHlsJs(ctx)
                             val safeUrl = streamUrl.replace("\\", "\\\\").replace("\"", "\\\"")
                             val startSec = (startPositionMs / 1000.0).coerceAtLeast(0.0)
-                            val baseUrl = headers["Referer"]?.takeIf { it.isNotBlank() } ?: try {
-                                val uri = Uri.parse(streamUrl); "${uri.scheme}://${uri.host}/"
-                            } catch (_: Throwable) { "https://omnicast.tv/" }
 
                             val html = """
                                 <!DOCTYPE html>
@@ -217,10 +213,13 @@ fun TvWebStreamScreen(
                                         hls.loadSource(streamUrl);
                                         hls.attachMedia(vid);
                                         hls.on(Hls.Events.MANIFEST_PARSED, function() { tryPlay(); });
+                                        var hlsNetRetries = 0;
                                         hls.on(Hls.Events.ERROR, function(ev, data) {
                                           if (data.fatal) {
-                                            if (data.type === Hls.ErrorTypes.NETWORK_ERROR) hls.startLoad();
-                                            else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) hls.recoverMediaError();
+                                            if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
+                                              if (++hlsNetRetries <= 3) hls.startLoad();
+                                              else { try { hls.destroy(); } catch(_) {} if (window.AndroidBridge && window.AndroidBridge.onPlaybackFailed) window.AndroidBridge.onPlaybackFailed('HLS_NET_FAIL'); }
+                                            } else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) hls.recoverMediaError();
                                             else { try { hls.destroy(); } catch(_) {} vid.src = streamUrl; tryPlay(); }
                                           }
                                         });

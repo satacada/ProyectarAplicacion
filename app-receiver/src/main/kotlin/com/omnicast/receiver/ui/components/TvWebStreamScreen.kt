@@ -136,8 +136,8 @@ fun TvWebStreamScreen(
                             settings.userAgentString = headers["User-Agent"] ?: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
                             val streamOrigin = try { val uri = Uri.parse(streamUrl); if (!uri.scheme.isNullOrBlank() && !uri.host.isNullOrBlank()) "${uri.scheme}://${uri.host}/" else null } catch (_: Throwable) { null }
                             val baseUrl = streamOrigin ?: headers["Referer"]?.takeIf { it.isNotBlank() } ?: "https://omnicast.tv/"
-                            CookieManager.getInstance().setAcceptCookie(true); CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
-                            headers["Cookie"]?.let { ck -> runCatching { CookieManager.getInstance().setCookie(streamUrl, ck); headers["Referer"]?.takeIf { it.isNotBlank() }?.let { CookieManager.getInstance().setCookie(it, ck) }; streamOrigin?.let { CookieManager.getInstance().setCookie(it, ck) } } }
+                            val cm = CookieManager.getInstance(); cm.setAcceptCookie(true); cm.setAcceptThirdPartyCookies(this, true)
+                            headers["Cookie"]?.let { ck -> runCatching { ck.split("; ").map { it.trim() }.filter { it.isNotBlank() }.forEach { p -> cm.setCookie(streamUrl, p); streamOrigin?.let { cm.setCookie(it, p) }; headers["Referer"]?.takeIf { it.isNotBlank() }?.let { cm.setCookie(it, p) } }; cm.flush() } }
                             addJavascriptInterface(WebStreamBridge(onPlaybackStatus, onPlaybackFailed), "AndroidBridge")
                             webViewClient = WebViewClient()
                             webChromeClient = object : WebChromeClient() {

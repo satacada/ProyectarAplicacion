@@ -42,7 +42,7 @@ object MoviePagePreScanner {
                 var t = (document.title || '').toLowerCase();
                 if (h.indexOf('dailymotion.com') !== -1 || h.indexOf('youtube.com') !== -1 || h.indexOf('ok.ru') !== -1 || h.indexOf('google.') !== -1 || h.indexOf('cloudflare') !== -1 || t.indexOf('just a moment') !== -1) return;
 
-                // 1. Pre-análisis y activación de iframes de servidores (Streamtape, Voe, Filemoon, Dood, etc.)
+                // 1. Activación de lazy-src en iframes para permitir carga interactiva
                 var iframes = document.querySelectorAll('iframe');
                 for (var i = 0; i < iframes.length; i++) {
                     var ifr = iframes[i];
@@ -50,24 +50,9 @@ object MoviePagePreScanner {
                     if (!ifr.src && lazySrc && lazySrc.indexOf('http') === 0) {
                         ifr.src = lazySrc;
                     }
-                    var effectiveSrc = (ifr.src || lazySrc || '').toLowerCase();
-                    if (effectiveSrc && (effectiveSrc.indexOf('/embed') !== -1 || effectiveSrc.indexOf('/player') !== -1 || effectiveSrc.indexOf('/v/') !== -1 || effectiveSrc.indexOf('stream') !== -1 || effectiveSrc.indexOf('filemoon') !== -1 || effectiveSrc.indexOf('voe') !== -1 || effectiveSrc.indexOf('dood') !== -1)) {
-                        console.log('OMNICAST_SERVER_CANDIDATE:' + (ifr.src || lazySrc));
-                    }
                 }
 
-                // 2. Pre-análisis de tabs de servidores y opciones de idioma (Dooplay / Cuevana / Pelisplus)
-                var serverBtns = document.querySelectorAll('[data-url], [data-src], [data-video], .server-item, .play-server, li[id*="player"]');
-                var maxCount = Math.min(serverBtns.length, 12);
-                for (var j = 0; j < maxCount; j++) {
-                    var btn = serverBtns[j];
-                    var sUrl = btn.getAttribute('data-url') || btn.getAttribute('data-src') || btn.getAttribute('data-video') || '';
-                    if (sUrl && sUrl.indexOf('http') === 0 && !sUrl.match(/\.(png|jpe?g|gif|webp|svg|css|js)$/i)) {
-                        console.log('OMNICAST_SERVER_CANDIDATE:' + sUrl);
-                    }
-                }
-
-                // 3. Neutralización reactiva de click-shields y velos transparentes
+                // 2. Neutralización reactiva de click-shields y velos transparentes
                 var overlays = document.querySelectorAll('.click-shield, .play-overlay, .vp_layer_fake, div[class*="click-shield"], div[class*="fake-player"], div[id*="click-shield"]');
                 for (var k = 0; k < overlays.length; k++) {
                     var ov = overlays[k];
@@ -86,15 +71,6 @@ object MoviePagePreScanner {
         pageTitle: String?,
         onStreamFound: (url: String, headers: Map<String, String>, isMaster: Boolean) -> Unit
     ) {
-        if (serverUrl.isBlank() || serverUrl.contains("favicon")) return
-        val candidate = com.omnicast.core.domain.models.StreamCandidate(
-            url = serverUrl, pageUrl = pageUrl,
-            headers = emptyMap(), userAgent = UA_MOBILE, pageTitle = pageTitle
-        )
-        val detected = com.omnicast.sender.ui.browser.extractors.StreamExtractorRegistry.useCase.execute(candidate)
-        if (detected != null) {
-            val hdrs = BrowserUrlHelper.buildSafeHeaders(detected.url, pageUrl, UA_MOBILE, detected.headers)
-            onStreamFound(detected.url, hdrs, detected.isMaster)
-        }
+        // Opción 2 (Play-First): No pre-detectar especulativamente en frío para evitar tokens 403
     }
 }

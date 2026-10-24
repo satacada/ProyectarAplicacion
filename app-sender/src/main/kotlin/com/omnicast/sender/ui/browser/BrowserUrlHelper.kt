@@ -100,7 +100,10 @@ object BrowserUrlHelper {
             val c4 = cm?.getCookie("https://dr0pstream.com")
             val c5 = cm?.getCookie("https://dropcdn.io")
             val c6 = cm?.getCookie("https://fastream.to")
-            val mergedCookies = listOfNotNull(c1, c2, c3, c4, c5, c6, rawHeaders?.get("Cookie"), rawHeaders?.get("cookie"))
+            val c7 = cm?.getCookie("https://luluvdo.com")
+            val c8 = cm?.getCookie("https://lulustream.com")
+            val c9 = cm?.getCookie("https://pelisgo.online")
+            val mergedCookies = listOfNotNull(c1, c2, c3, c4, c5, c6, c7, c8, c9, rawHeaders?.get("Cookie"), rawHeaders?.get("cookie"))
                 .flatMap { it.split("; ") }
                 .map { it.trim() }
                 .filter { it.isNotBlank() }

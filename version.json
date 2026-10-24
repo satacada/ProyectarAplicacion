@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 198,
-  "versionCodeReceiver": 181,
-  "versionName": "3.4.48",
-  "releaseTag": "v3.4.48",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.48/omnicast-sender-v3.4.48.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.48/omnicast-receiver-v3.4.48.apk",
-  "changelog": "v3.4.48: Erradicación de falsos verdes (ActiveStreamHolder inicia isPlaying en false y solo se confirma verde tras avance real de posición posMs > 0); timeout de 12s a enlaces inactivos y auto-reproducción al cargar metadata en TV."
+  "versionCodeSender": 199,
+  "versionCodeReceiver": 182,
+  "versionName": "3.4.49",
+  "releaseTag": "v3.4.49",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.49/omnicast-sender-v3.4.49.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.49/omnicast-receiver-v3.4.49.apk",
+  "changelog": "v3.4.49: Detección Play-First (eliminación de candidatos especulativos en frío para evitar rechazo 403) y transferencia integral de cookies a CookieManager de la TV Box."
 }

@@ -94,8 +94,8 @@ fun BrowserWebView(
                 CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
                 settings.apply {
                     javaScriptEnabled = true; domStorageEnabled = true; databaseEnabled = true
-                    allowFileAccess = true; allowContentAccess = true; useWideViewPort = true
-                    loadWithOverviewMode = true; textZoom = 100
+                    allowFileAccess = true; allowContentAccess = true; useWideViewPort = false
+                    loadWithOverviewMode = false; textZoom = 100
                     layoutAlgorithm = WebSettings.LayoutAlgorithm.NORMAL
                     mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
                     mediaPlaybackRequiresUserGesture = false; setSupportMultipleWindows(true)

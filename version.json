@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 191,
-  "versionCodeReceiver": 174,
-  "versionName": "3.4.41",
-  "releaseTag": "v3.4.41",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.41/omnicast-sender-v3.4.41.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.41/omnicast-receiver-v3.4.41.apk",
-  "changelog": "v3.4.41: Blindaje total de plataformas oficiales (Modo A - Guantes de Seda). Exclusión estricta de Dailymotion, YouTube y buscadores de inyecciones de foco, caret y scroll en InputCaretStabilizer, permitiendo visibilidad inmediata de la caja de búsqueda sin desplazamiento de encabezados sticky ni interferencias de IME."
+  "versionCodeSender": 192,
+  "versionCodeReceiver": 175,
+  "versionName": "3.4.42",
+  "releaseTag": "v3.4.42",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.42/omnicast-sender-v3.4.42.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.42/omnicast-receiver-v3.4.42.apk",
+  "changelog": "v3.4.42: Estabilizador universal adaptativo y geométrico de encabezados e inputs. Corrección del viewport móvil estándar 1:1 en BrowserWebView (useWideViewPort=false) y re-anclaje geométrico automático de contenedores sticky/fixed sin sesgo por URLs ni interferencias de scroll."
 }

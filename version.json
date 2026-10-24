@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 196,
-  "versionCodeReceiver": 179,
-  "versionName": "3.4.46",
-  "releaseTag": "v3.4.46",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.46/omnicast-sender-v3.4.46.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.46/omnicast-receiver-v3.4.46.apk",
-  "changelog": "v3.4.46: Solución a CORS en reproductor web de TV (Same-Origin en baseUrl para PelisGO / tnmr.org) y saneamiento de colores en lista de streams (sólo verde en emisión real)."
+  "versionCodeSender": 197,
+  "versionCodeReceiver": 180,
+  "versionName": "3.4.47",
+  "releaseTag": "v3.4.47",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.47/omnicast-sender-v3.4.47.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.47/omnicast-receiver-v3.4.47.apk",
+  "changelog": "v3.4.47: Blindaje anti-cierre prematuro en TV (cooldown 1.5s ante teclas residuales del mando/caja al iniciar reproducción y remoción de KEYCODE_DEL)."
 }

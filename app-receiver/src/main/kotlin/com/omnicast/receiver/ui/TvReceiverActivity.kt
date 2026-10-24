@@ -178,6 +178,7 @@ class TvReceiverActivity : ComponentActivity() {
             is SignalingMessage.IceCandidate -> webRtcReceiver.addRemoteIceCandidate(message.sdpMid, message.sdpMLineIndex, message.candidate)
             is SignalingMessage.DirectStreamHandoff -> {
                 runCatching {
+                    TvRemoteKeyHandler.notifyPlaybackStarted()
                     lastDirectHeaders = message.headers; digitalAudioReceiver?.stop(); webRtcReceiver.resetConnection()
                     val title = message.title?.ifBlank { "Transmisión Web" } ?: "Transmisión Web"
                     val exp = expiredItemForRenew.value
@@ -268,7 +269,7 @@ class TvReceiverActivity : ComponentActivity() {
     }
 
     private fun playHistoryItem(item: com.omnicast.receiver.directstream.TvHistoryItem) {
-        digitalAudioReceiver?.stop(); webRtcReceiver.resetConnection()
+        digitalAudioReceiver?.stop(); webRtcReceiver.resetConnection(); TvRemoteKeyHandler.notifyPlaybackStarted()
         if (com.omnicast.core.domain.usecases.StreamManifestProbe.hasSignedSecurityToken(item.mediaUrl)) {
             exoPlayerManager.stop()
             receiverState.value = ReceiverUiState.WebStreamPlaying(item.mediaUrl, item.title, item.headers, item.lastPositionMs)
@@ -279,7 +280,7 @@ class TvReceiverActivity : ComponentActivity() {
     }
 
     private fun playPlaylistItem(item: com.omnicast.receiver.directstream.TvPlaylistItem) {
-        digitalAudioReceiver?.stop(); webRtcReceiver.resetConnection()
+        digitalAudioReceiver?.stop(); webRtcReceiver.resetConnection(); TvRemoteKeyHandler.notifyPlaybackStarted()
         if (com.omnicast.core.domain.usecases.StreamManifestProbe.hasSignedSecurityToken(item.url)) {
             exoPlayerManager.stop()
             receiverState.value = ReceiverUiState.WebStreamPlaying(item.url, item.title, item.headers, playlistManager.getResumePosition(item))

@@ -17,6 +17,12 @@ import kotlinx.coroutines.launch
  */
 object TvRemoteKeyHandler {
 
+    private var lastPlaybackStartTime: Long = 0L
+
+    fun notifyPlaybackStarted() {
+        lastPlaybackStartTime = System.currentTimeMillis()
+    }
+
     fun handleKeyDown(
         context: Context,
         keyCode: Int,
@@ -33,9 +39,14 @@ object TvRemoteKeyHandler {
         val isExitKey = keyCode == KeyEvent.KEYCODE_BACK ||
                         keyCode == KeyEvent.KEYCODE_ESCAPE ||
                         keyCode == KeyEvent.KEYCODE_BUTTON_B ||
-                        keyCode == KeyEvent.KEYCODE_MEDIA_STOP ||
-                        keyCode == KeyEvent.KEYCODE_DEL
+                        keyCode == KeyEvent.KEYCODE_MEDIA_STOP
         if (isExitKey && currentState !is ReceiverUiState.Standby) {
+            val elapsed = System.currentTimeMillis() - lastPlaybackStartTime
+            if (elapsed < 1500L) {
+                com.omnicast.receiver.log.ReceiverLogger.log("TvRemoteKeyHandler", "⏳ Tecla de salida ($keyCode) ignorada por cooldown inicial ($elapsed ms)")
+                return true
+            }
+            com.omnicast.receiver.log.ReceiverLogger.log("TvRemoteKeyHandler", "🚪 Salida solicitada por tecla $keyCode tras $elapsed ms")
             val pv = exoPlayerManager.playerView
             if (currentState is ReceiverUiState.DirectStreamPlaying && pv != null && pv.isControllerFullyVisible) {
                 pv.hideController()

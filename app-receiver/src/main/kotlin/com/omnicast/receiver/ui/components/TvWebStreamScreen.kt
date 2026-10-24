@@ -196,7 +196,7 @@ fun TvWebStreamScreen(
                                     vid.addEventListener('playing', function() { hideSpin(); hideCurtain(); }); vid.addEventListener('waiting', showSpin); vid.addEventListener('seeking', showSpin); vid.addEventListener('seeked', hideSpin);
                                     vid.addEventListener('pause', reportStatus); vid.addEventListener('ended', reportStatus);
                                     function seekStart() { if (startSec > 0 && !hasResumed && vid) { hasResumed = true; vid.currentTime = startSec; } }
-                                    vid.addEventListener('loadedmetadata', seekStart); vid.addEventListener('canplay', function() { seekStart(); tryPlay(); });
+                                    vid.addEventListener('loadedmetadata', function() { seekStart(); tryPlay(); }); vid.addEventListener('canplay', function() { seekStart(); tryPlay(); });
                                     var hasTriedHls = false;
                                     vid.addEventListener('error', function() {
                                       if (!hasTriedHls && window.Hls && Hls.isSupported() && streamUrl.indexOf('.mp4') === -1) {
@@ -213,6 +213,7 @@ fun TvWebStreamScreen(
                                         hls.loadSource(streamUrl);
                                         hls.attachMedia(vid);
                                         hls.on(Hls.Events.MANIFEST_PARSED, function() { tryPlay(); });
+                                        hls.on(Hls.Events.LEVEL_LOADED, function() { tryPlay(); });
                                         var hlsNetRetries = 0;
                                         hls.on(Hls.Events.ERROR, function(ev, data) {
                                           if (data.fatal) {

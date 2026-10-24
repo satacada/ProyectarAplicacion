@@ -44,7 +44,7 @@ fun InAppBrowserScreen(
     LaunchedEffect(Unit) { com.omnicast.sender.ui.browser.reputation.StreamReputationSyncManager.initAndSync(context) }
     val isCasting by ActiveStreamHolder.isCasting.collectAsState(); val isPlaying by ActiveStreamHolder.isPlaying.collectAsState(); val posMs by ActiveStreamHolder.positionMs.collectAsState(); val durMs by ActiveStreamHolder.durationMs.collectAsState(); val volume by ActiveStreamHolder.volume.collectAsState(); val castTitle by ActiveStreamHolder.currentMediaTitle.collectAsState()
     val pErr by ActiveStreamHolder.playbackError.collectAsState()
-    LaunchedEffect(isCasting, isPlaying) { val c = ActiveStreamHolder.streamUrl; if (isCasting && isPlaying && !c.isNullOrBlank()) { if (!testedSuccess.contains(c)) testedSuccess.add(c); testedFailed.remove(c) } }
+    LaunchedEffect(isCasting, isPlaying, posMs) { val c = ActiveStreamHolder.streamUrl; if (isCasting && isPlaying && posMs > 0L && !c.isNullOrBlank()) { if (!testedSuccess.contains(c)) testedSuccess.add(c); testedFailed.remove(c) } }
     LaunchedEffect(pErr) { val c = ActiveStreamHolder.streamUrl; if (!pErr.isNullOrBlank() && !c.isNullOrBlank()) { if (!testedFailed.contains(c)) testedFailed.add(c); testedSuccess.remove(c) } }
     fun isRealMedia(s: String) = BrowserUrlHelper.isRealMedia(s, streamDurations[s] ?: 0f)
 
@@ -163,6 +163,7 @@ fun InAppBrowserScreen(
             withContext(Dispatchers.Main) {
                 streamHeaders[finalUrl] = baseHdrs; historyManager.addOrUpdate(finalUrl, cleanT, refPage, baseHdrs)
                 onSendStreamToTv(finalUrl, cleanT, baseHdrs); showBottomControls = true
+                scope.launch { kotlinx.coroutines.delay(12000L); if (ActiveStreamHolder.streamUrl == finalUrl && (!ActiveStreamHolder.isPlaying.value || ActiveStreamHolder.positionMs.value == 0L)) { if (!testedFailed.contains(finalUrl)) testedFailed.add(finalUrl); testedSuccess.remove(finalUrl) } }
             }
         }
     }

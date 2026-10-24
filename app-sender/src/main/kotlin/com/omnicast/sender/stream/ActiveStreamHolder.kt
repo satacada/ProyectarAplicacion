@@ -77,7 +77,7 @@ object ActiveStreamHolder {
         update(url, videoTitle, hdrs)
         _currentMediaTitle.value = videoTitle?.takeIf { it.isNotBlank() } ?: "Video en Transmisión"
         _isCasting.value = true
-        _isPlaying.value = true
+        _isPlaying.value = false
         _positionMs.value = 0L
         _durationMs.value = 0L
         _tracksInfo.value = null

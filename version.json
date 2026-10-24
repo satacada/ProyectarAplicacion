@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 197,
-  "versionCodeReceiver": 180,
-  "versionName": "3.4.47",
-  "releaseTag": "v3.4.47",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.47/omnicast-sender-v3.4.47.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.47/omnicast-receiver-v3.4.47.apk",
-  "changelog": "v3.4.47: Blindaje anti-cierre prematuro en TV (cooldown 1.5s ante teclas residuales del mando/caja al iniciar reproducción y remoción de KEYCODE_DEL)."
+  "versionCodeSender": 198,
+  "versionCodeReceiver": 181,
+  "versionName": "3.4.48",
+  "releaseTag": "v3.4.48",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.48/omnicast-sender-v3.4.48.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.48/omnicast-receiver-v3.4.48.apk",
+  "changelog": "v3.4.48: Erradicación de falsos verdes (ActiveStreamHolder inicia isPlaying en false y solo se confirma verde tras avance real de posición posMs > 0); timeout de 12s a enlaces inactivos y auto-reproducción al cargar metadata en TV."
 }

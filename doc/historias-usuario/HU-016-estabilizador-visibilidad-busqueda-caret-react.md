@@ -33,17 +33,17 @@
 
 ## 3. Criterios de Aceptación (Contrato Inamovible)
 
-1. **Centrado Inmediato de Búsqueda sobre el Teclado (`InputCaretStabilizer.kt`):**
+1. **Centrado Inmediato y Despliegue de Header Sticky (`InputCaretStabilizer.kt`):**
    - Ante el evento `focusin` en cualquier `<input>`, `<textarea>`, elemento con `role="search"` o `isContentEditable`:
-     - Se ejecuta `target.scrollIntoView({ block: 'center', behavior: 'smooth' })` con un retardo estabilizado de 120ms.
-     - Queda **terminantemente prohibido** usar `block: 'nearest'` o suprimir este desplazamiento, ya que garantiza que el cuadro de búsqueda emerja hacia el centro visible despejado del viewport sobre el teclado.
+     - Si `window.scrollY > 0` o `rect.top < 0`, se ejecuta `window.scrollTo(0, 0)` para des-colapsar y expandir inmediatamente los encabezados sticky/fijos (como Dailymotion) que se esconden al navegar.
+     - Se ejecuta `target.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'auto' })` con retardo estabilizado de 80ms, asegurando visibilidad inmediata sobre el teclado virtual.
 
-2. **Estabilización de Caret React sin Inversión de Texto:**
-   - **Intercepción del Setter de Prototipo:** Se intercepta el descriptor de propiedad `Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')`. Si el campo está enfocado y React reasigna un nuevo valor (`originalSet.call(this, val)`), se verifica si la selección colapsó a `(0, 0)`; de ser así, se restaura inmediatamente al final mediante `this.setSelectionRange(val.length, val.length)`.
-   - **Anclaje en requestAnimationFrame:** En el listener de evento `input`, se programa un micro-callback en `requestAnimationFrame` que asegura que el cursor permanezca en la longitud actual del valor (`setSelectionRange(len, len)`), garantizando compatibilidad con teclados virtuales (Gboard, Samsung, SwiftKey).
+2. **Edición Total y No Invasión de Prototipos en React:**
+   - **Queda terminantemente prohibido** redefinir `HTMLInputElement.prototype.value` mediante `Object.defineProperty` o usar bucles de `requestAnimationFrame` que fuercen el cursor en cada renderizado. Dicha intercepción rompe el sistema `_valueTracker` de React y bloquea por completo la edición, borrado y modificación de texto.
+   - **Guardia Anti-Inversión Específico en Inserción:** La estabilización de caret actúa EXCLUSIVAMENTE ante eventos de inserción de texto (`e.inputType.indexOf('insert') === 0 && !e.isComposing`). Si el cursor colapsa accidentalmente a `(0, 0)`, se restaura al final (`v.length, v.length`). Nunca interviene en borrado (`backspace`), selecciones ni reposicionamiento del cursor por el usuario.
 
-3. **Inmunidad de la Navegación y No Invasión de Formularios:**
-   - La estabilización es pasiva y reactiva a eventos del usuario; no utiliza `MutationObserver` ni bucles `setInterval`.
+3. **Inmunidad de la Navegación y Formularios:**
+   - La estabilización es pasiva y reactiva; no utiliza `MutationObserver` ni bucles `setInterval`.
    - No altera formularios, botones de envío ni listeners nativos del sitio web.
 
 4. **Reglas de Hardware y Límites de Código:**

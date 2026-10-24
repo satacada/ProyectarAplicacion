@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 189,
-  "versionCodeReceiver": 172,
-  "versionName": "3.4.39",
-  "releaseTag": "v3.4.39",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.39/omnicast-sender-v3.4.39.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.39/omnicast-receiver-v3.4.39.apk",
-  "changelog": "v3.4.39: Restitución íntegra del estabilizador de caret React (intercepción de HTMLInputElement.prototype.value y requestAnimationFrame en input) erradicando la escritura inversa (aCrro -> carro); desplazamiento central automático (scrollIntoView block: center) que ubica el cuadro de búsqueda directamente sobre el teclado virtual en Dailymotion."
+  "versionCodeSender": 190,
+  "versionCodeReceiver": 173,
+  "versionName": "3.4.40",
+  "releaseTag": "v3.4.40",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.40/omnicast-sender-v3.4.40.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.40/omnicast-receiver-v3.4.40.apk",
+  "changelog": "v3.4.40: Solución definitiva a la edición del cuadro de búsqueda y visibilidad en Dailymotion. Eliminación de la intercepción destructiva de prototype.value que bloqueaba el tracking de React, restablecimiento automático del scroll a top: 0 en focus para desplegar encabezados sticky ocultos (-16px) y guardia anti-inversión exclusivo para inserción de texto sin afectar edición ni borrado."
 }

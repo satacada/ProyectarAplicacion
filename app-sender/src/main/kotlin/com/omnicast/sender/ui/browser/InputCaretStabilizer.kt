@@ -41,64 +41,47 @@ object InputCaretStabilizer {
                 } catch(_) {}
             }
 
-            // 1. Intercepción del setter de valor en HTMLInputElement para reconciliación React
-            try {
-                var desc = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
-                if (desc && desc.set) {
-                    var originalSet = desc.set;
-                    desc.set = function(val) {
-                        var isFocused = (document.activeElement === this);
-                        var oldLen = this.value ? this.value.length : 0;
-                        originalSet.call(this, val);
-                        if (isFocused && typeof val === 'string' && val.length > oldLen) {
-                            if (this.selectionStart === 0 && this.selectionEnd === 0) {
-                                try {
-                                    this.setSelectionRange(val.length, val.length);
-                                    log('CARET_SETTER', 'Caret restaurado a fin=' + val.length);
-                                } catch(_) {}
-                            }
-                        }
-                    };
-                    Object.defineProperty(HTMLInputElement.prototype, 'value', desc);
-                }
-            } catch(_) {}
-
-            // 2. Anclaje de caret post-renderizado para inputs controlados
-            document.addEventListener('input', function(e) {
-                var target = e.target;
-                if (!target || (target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA')) return;
-                var currentLen = (target.value || '').length;
-                if (currentLen === 0) return;
-
-                requestAnimationFrame(function() {
-                    if (document.activeElement === target) {
-                        var len = (target.value || '').length;
-                        if (target.selectionStart === 0 && target.selectionEnd === 0 && len > 0) {
-                            try {
-                                target.setSelectionRange(len, len);
-                                log('CARET_RAF', 'Caret restaurado en RAF a fin=' + len);
-                            } catch(_) {}
-                        }
-                    }
-                });
-            }, true);
-
-            // 3. Desplazamiento visible inmediato al centro sobre el teclado (Erradicación de escritura a ciegas)
+            // 1. Visibilidad garantizada en focus: llevar el encabezado y el input al viewport visible
             document.addEventListener('focusin', function(e) {
                 var target = e.target;
                 if (!target) return;
                 var tag = target.tagName ? target.tagName.toUpperCase() : '';
                 if (tag === 'INPUT' || tag === 'TEXTAREA' || target.getAttribute('role') === 'search' || target.isContentEditable) {
                     var r = target.getBoundingClientRect();
-                    log('FOCUSIN', '<' + tag + ' id="' + (target.id || '') + '"> top=' + Math.round(r.top) + ', h=' + Math.round(r.height));
+                    log('FOCUSIN', '<' + tag + ' id="' + (target.id || '') + '"> top=' + Math.round(r.top) + ', h=' + Math.round(r.height) + ', scrollY=' + Math.round(window.scrollY || 0));
+
+                    // Si la página está desplazada hacia abajo, las barras sticky (como Dailymotion)
+                    // quedan recortadas o en top negativo (-16px). Llevar la ventana a top: 0 expande el header.
+                    if ((window.scrollY || 0) > 0 || r.top < 0) {
+                        try { window.scrollTo(0, 0); log('SCROLL_TOP', 'Ventana restablecida a top: 0'); } catch(_) {}
+                    }
+
                     setTimeout(function() {
                         try {
-                            target.scrollIntoView({ block: 'center', behavior: 'smooth' });
-                            log('SCROLL_CENTER', 'Centrado en viewport visible');
+                            target.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'auto' });
+                            log('SCROLL_CENTER', 'Centrado en viewport');
                         } catch(_) {
                             try { target.scrollIntoView(); } catch(__) {}
                         }
-                    }, 120);
+                    }, 80);
+                }
+            }, true);
+
+            // 2. Erradicación de escritura inversa en inserción sin bloquear edición ni borrado
+            document.addEventListener('input', function(e) {
+                var target = e.target;
+                if (!target || (target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA')) return;
+                var v = target.value || '';
+                if (v.length <= 1) return;
+
+                // Solo intervenir si el evento es de inserción de texto y el cursor colapsó erróneamente a 0
+                if (e.inputType && e.inputType.indexOf('insert') === 0 && !e.isComposing) {
+                    if (target.selectionStart === 0 && target.selectionEnd === 0) {
+                        try {
+                            target.setSelectionRange(v.length, v.length);
+                            log('CARET_RESTORED', 'Caret restaurado a fin=' + v.length);
+                        } catch(_) {}
+                    }
                 }
             }, true);
         })();

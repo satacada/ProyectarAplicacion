@@ -148,6 +148,43 @@ object MediaPlatformResolver {
         }
     }
 
+    fun resolveLuluStreamSync(url: String, referer: String? = null): Triple<String, String?, Map<String, String>>? {
+        val id = extractLuluStreamId(url) ?: return null
+        return try {
+            val embedUrl = "https://luluvdo.com/e/$id"
+            val conn = (URL(embedUrl).openConnection() as HttpURLConnection).apply {
+                connectTimeout = 4000
+                readTimeout = 4000
+                setRequestProperty("User-Agent", UA_MOBILE)
+                setRequestProperty("Referer", referer?.takeIf { it.isNotBlank() } ?: "https://pelisgo.online/")
+            }
+            if (conn.responseCode !in 200..299) {
+                conn.disconnect()
+                return null
+            }
+            val html = conn.inputStream.bufferedReader().use { it.readText() }
+            conn.disconnect()
+            val unpacked = unpackDeanEdwards(html) ?: html
+            val streamUrlMatch = Regex("file:\\s*\"([^\"]+)\"").find(unpacked)
+                ?: Regex("https?://[^\\s\"',]+\\.m3u8[^\\s\"',]*").find(unpacked)
+            val streamUrl = streamUrlMatch?.groupValues?.get(1) ?: streamUrlMatch?.value ?: return null
+            val cleanStreamUrl = BrowserUrlHelper.sanitizeMediaUrl(streamUrl)
+            val hdrs = mapOf(
+                "User-Agent" to UA_MOBILE,
+                "Referer" to embedUrl,
+                "Origin" to "https://luluvdo.com",
+                "Sec-Fetch-Mode" to "cors",
+                "Sec-Fetch-Dest" to "empty",
+                "Sec-Fetch-Site" to "cross-site"
+            )
+            Log.i(TAG, "🎬 LuluStream resuelto exitosamente: $id -> $cleanStreamUrl")
+            Triple(cleanStreamUrl, null, hdrs)
+        } catch (e: Throwable) {
+            Log.w(TAG, "No se pudo resolver LuluStream ($id): ${e.message}")
+            null
+        }
+    }
+
     fun prepareStreamForPlayback(streamUrl: String, pageUrl: String, rawHeaders: Map<String, String>): Pair<String, Map<String, String>> {
         var finalUrl = BrowserUrlHelper.sanitizeMediaUrl(streamUrl)
         val hdrs = rawHeaders.toMutableMap()
@@ -174,10 +211,16 @@ object MediaPlatformResolver {
         }
         val isLulu = lower.contains("tnmr.org") || lower.contains("luluvdo.com") || lower.contains("lulustream.com")
         if (isLulu) {
-            val luluId = extractLuluStreamId(finalUrl)
-            if (luluId != null) {
-                hdrs["Referer"] = "https://luluvdo.com/e/$luluId"
-                hdrs["Origin"] = "https://luluvdo.com"
+            val resolved = resolveLuluStreamSync(finalUrl, pageUrl)
+            if (resolved != null) {
+                finalUrl = resolved.first
+                resolved.third.forEach { (k, v) -> hdrs[k] = v }
+            } else {
+                val luluId = extractLuluStreamId(finalUrl)
+                if (luluId != null) {
+                    hdrs["Referer"] = "https://luluvdo.com/e/$luluId"
+                    hdrs["Origin"] = "https://luluvdo.com"
+                }
             }
         }
         val safeHeaders = BrowserUrlHelper.buildSafeHeaders(finalUrl, pageUrl, UA_MOBILE, hdrs)

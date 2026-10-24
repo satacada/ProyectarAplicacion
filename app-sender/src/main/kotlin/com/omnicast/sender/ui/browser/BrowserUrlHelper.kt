@@ -41,6 +41,8 @@ object BrowserUrlHelper {
         val isPhpStream = lower.endsWith(".php") && (url.contains(".m3u8", true) || url.contains(".mp4", true) || url.contains("p.php?", true) || url.contains("url=", true) || url.contains("stream", true))
         if (lower.endsWith(".php") && !isPhpStream) return false
         val fullLower = url.lowercase()
+        if (fullLower.contains("/lang/") || fullLower.contains("/subtitles/") || fullLower.contains("/subs/") ||
+            fullLower.contains("_sub.") || fullLower.contains("_spa/index") || fullLower.contains("_eng/index")) return false
         if (fullLower.contains("dmxleo.dailymotion.com") || fullLower.contains("geo.dailymotion.com")) return false
         if (fullLower.contains("/embed/") || fullLower.contains("/embed69") || fullLower.contains("/widget/")) return false
         if (url.contains("bytes=", true) || url.contains("&bytes", true) || url.contains("ct=11") || url.contains("ct=12")) return false
@@ -52,6 +54,9 @@ object BrowserUrlHelper {
 
     fun isRealMedia(s: String, dur: Float = 0f): Boolean {
         if (s.isBlank() || s.contains("dmxleo.dailymotion.com") || AdBlocker.isAd(s)) return false
+        val lowerFull = s.lowercase()
+        if (lowerFull.contains("/lang/") || lowerFull.contains("/subtitles/") || lowerFull.contains("/subs/") ||
+            lowerFull.contains("_sub.") || lowerFull.contains("_spa/index") || lowerFull.contains("_eng/index")) return false
         if (s.contains("bytes=", true) || s.contains("&bytes", true) || s.contains("ct=11") || s.contains("ct=12")) return false
         if (dur in 0.1f..59.9f) return false
         val clean = s.substringBefore('?').lowercase()

@@ -24,6 +24,19 @@ object InputCaretStabilizer {
             android.util.Log.i("OmniInput", "⌨️ [NATIVE_FOCUS] text='$text', ph='$placeholder'")
             WebInputAssistantManager.open(text, placeholder, webView)
         }
+
+        @JavascriptInterface
+        fun onSuggestions(json: String) {
+            try {
+                val arr = org.json.JSONArray(json)
+                val list = mutableListOf<String>()
+                for (i in 0 until arr.length()) {
+                    val s = arr.optString(i).trim()
+                    if (s.isNotBlank() && !list.contains(s)) list.add(s)
+                }
+                if (list.isNotEmpty()) WebInputAssistantManager.setSuggestions(list)
+            } catch (_: Throwable) {}
+        }
     }
 
     fun attach(webView: WebView?) {
@@ -46,6 +59,23 @@ object InputCaretStabilizer {
                     if (setter) { setter.call(el, $escaped); } else { el.value = $escaped; }
                     el.dispatchEvent(new Event('input', { bubbles: true }));
                     el.dispatchEvent(new Event('change', { bubbles: true }));
+                    try {
+                        el.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true }));
+                        el.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true }));
+                    } catch(_) {}
+                    setTimeout(function() {
+                        try {
+                            var items = document.querySelectorAll('[role="option"], [role="listbox"] li, [class*="suggestion" i], [class*="SearchSuggestion" i], [class*="Autocomplete" i] li, [data-testid*="suggestion" i]');
+                            var list = [];
+                            for (var i = 0; i < items.length && list.length < 6; i++) {
+                                var t = (items[i].innerText || items[i].textContent || '').trim();
+                                if (t && t.length > 1 && list.indexOf(t) === -1) list.push(t);
+                            }
+                            if (list.length > 0 && window.OmniInputBridge && window.OmniInputBridge.onSuggestions) {
+                                window.OmniInputBridge.onSuggestions(JSON.stringify(list));
+                            }
+                        } catch(_) {}
+                    }, 180);
                 }
             })();
         """.trimIndent()
@@ -60,7 +90,7 @@ object InputCaretStabilizer {
             val pageUrl = wv.url ?: ""
             if (pageUrl.contains("dailymotion.com")) {
                 android.util.Log.i("OmniInput", "🚀 [SEARCH_NAV] Navegando en Dailymotion: '$q'")
-                val encoded = java.net.URLEncoder.encode(q, "UTF-8")
+                val encoded = android.net.Uri.encode(q)
                 wv.loadUrl("https://www.dailymotion.com/search/$encoded")
                 return@post
             }

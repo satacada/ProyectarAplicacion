@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 194,
-  "versionCodeReceiver": 177,
-  "versionName": "3.4.44",
-  "releaseTag": "v3.4.44",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.44/omnicast-sender-v3.4.44.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.44/omnicast-receiver-v3.4.44.apk",
-  "changelog": "v3.4.44: Asistente nativo y navegación directa de búsqueda. Preservación estricta de referencia al elemento enfocado (window.__omniLastFocusedInput) para sincronización en tiempo real, navegación nativa a la URL de búsqueda en Dailymotion y soporte para formularios de búsqueda generales."
+  "versionCodeSender": 195,
+  "versionCodeReceiver": 178,
+  "versionName": "3.4.45",
+  "releaseTag": "v3.4.45",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.45/omnicast-sender-v3.4.45.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.45/omnicast-receiver-v3.4.45.apk",
+  "changelog": "v3.4.45: Envío de texto letra por letra con sugerencias interactivas y corrección de espacios (%20). Despliegue de chips nativos con autocompletado en tiempo real debajo de la caja de texto y codificación limpia de espacios sin signos más (+)."
 }

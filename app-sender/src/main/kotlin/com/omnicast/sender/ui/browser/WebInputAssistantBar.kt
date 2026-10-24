@@ -49,6 +49,8 @@ object WebInputAssistantManager {
         webViewRef = if (wv != null) WeakReference(wv) else null
     }
 
+    fun getWebView(): WebView? = webViewRef?.get()
+
     fun open(initialText: String, ph: String, wv: WebView? = null) {
         if (wv != null) webViewRef = WeakReference(wv)
         Handler(Looper.getMainLooper()).post {

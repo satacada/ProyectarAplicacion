@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 193,
-  "versionCodeReceiver": 176,
-  "versionName": "3.4.43",
-  "releaseTag": "v3.4.43",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.43/omnicast-sender-v3.4.43.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.43/omnicast-receiver-v3.4.43.apk",
-  "changelog": "v3.4.43: Caja de texto flotante nativa y asistente de entrada visible (WebInputAssistantBar). Permite ver con total nitidez lo que se escribe directamente sobre el teclado con Gboard en cualquier web (Dailymotion/Buscadores), editar, corregir y sincronizar/enviar la búsqueda sin depender de elementos DOM ocultos o desfasados."
+  "versionCodeSender": 194,
+  "versionCodeReceiver": 177,
+  "versionName": "3.4.44",
+  "releaseTag": "v3.4.44",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.44/omnicast-sender-v3.4.44.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.44/omnicast-receiver-v3.4.44.apk",
+  "changelog": "v3.4.44: Asistente nativo y navegación directa de búsqueda. Preservación estricta de referencia al elemento enfocado (window.__omniLastFocusedInput) para sincronización en tiempo real, navegación nativa a la URL de búsqueda en Dailymotion y soporte para formularios de búsqueda generales."
 }

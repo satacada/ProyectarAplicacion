@@ -33,11 +33,11 @@ object InputCaretStabilizer {
     }
 
     fun injectText(webView: WebView?, text: String) {
-        if (webView == null) return
+        val wv = webView ?: WebInputAssistantManager.getWebView() ?: return
         val escaped = org.json.JSONObject.quote(text)
         val js = """
             (function() {
-                var el = document.activeElement;
+                var el = window.__omniLastFocusedInput || document.activeElement;
                 if (!el || (el.tagName !== 'INPUT' && el.tagName !== 'TEXTAREA')) {
                     el = document.querySelector('input[type="search"], input[name="q"], input[name="search"], input[id*="search"], input:not([type="hidden"]), textarea');
                 }
@@ -49,39 +49,49 @@ object InputCaretStabilizer {
                 }
             })();
         """.trimIndent()
-        webView.evaluateJavascript(js, null)
+        wv.post { wv.evaluateJavascript(js, null) }
     }
 
     fun submitInput(webView: WebView?, text: String) {
-        if (webView == null) return
-        val escaped = org.json.JSONObject.quote(text)
-        val js = """
-            (function() {
-                var el = document.activeElement;
-                if (!el || (el.tagName !== 'INPUT' && el.tagName !== 'TEXTAREA')) {
-                    el = document.querySelector('input[type="search"], input[name="q"], input[name="search"], input[id*="search"], input:not([type="hidden"]), textarea');
-                }
-                if (el) {
-                    var setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set;
-                    if (setter) { setter.call(el, $escaped); } else { el.value = $escaped; }
-                    el.dispatchEvent(new Event('input', { bubbles: true }));
-                    el.dispatchEvent(new Event('change', { bubbles: true }));
-                    if (el.form) {
-                        try { el.form.submit(); return; } catch(_) {}
+        val wv = webView ?: WebInputAssistantManager.getWebView() ?: return
+        val q = text.trim()
+        if (q.isEmpty()) return
+        wv.post {
+            val pageUrl = wv.url ?: ""
+            if (pageUrl.contains("dailymotion.com")) {
+                android.util.Log.i("OmniInput", "🚀 [SEARCH_NAV] Navegando en Dailymotion: '$q'")
+                val encoded = java.net.URLEncoder.encode(q, "UTF-8")
+                wv.loadUrl("https://www.dailymotion.com/search/$encoded")
+                return@post
+            }
+            val escaped = org.json.JSONObject.quote(q)
+            val js = """
+                (function() {
+                    var el = window.__omniLastFocusedInput || document.activeElement;
+                    if (!el || (el.tagName !== 'INPUT' && el.tagName !== 'TEXTAREA')) {
+                        el = document.querySelector('input[type="search"], input[name="q"], input[name="search"], input[id*="search"], input:not([type="hidden"]), textarea');
                     }
-                    var ev = { key: 'Enter', code: 'Enter', keyCode: 13, which: 13, bubbles: true };
-                    el.dispatchEvent(new KeyboardEvent('keydown', ev));
-                    el.dispatchEvent(new KeyboardEvent('keypress', ev));
-                    el.dispatchEvent(new KeyboardEvent('keyup', ev));
-                }
-                var host = window.location.hostname || '';
-                var query = $escaped.trim();
-                if (host.indexOf('dailymotion.com') !== -1 && query.length > 0) {
-                    window.location.href = 'https://www.dailymotion.com/search/' + encodeURIComponent(query);
-                }
-            })();
-        """.trimIndent()
-        webView.evaluateJavascript(js, null)
+                    if (el) {
+                        var setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set;
+                        if (setter) { setter.call(el, $escaped); } else { el.value = $escaped; }
+                        el.dispatchEvent(new Event('input', { bubbles: true }));
+                        el.dispatchEvent(new Event('change', { bubbles: true }));
+                        var form = el.closest ? el.closest('form') : el.form;
+                        if (form) {
+                            try {
+                                var submitEvent = new Event('submit', { bubbles: true, cancelable: true });
+                                form.dispatchEvent(submitEvent);
+                            } catch(_) {}
+                        }
+                        var ev = { key: 'Enter', code: 'Enter', keyCode: 13, which: 13, bubbles: true };
+                        el.dispatchEvent(new KeyboardEvent('keydown', ev));
+                        el.dispatchEvent(new KeyboardEvent('keypress', ev));
+                        el.dispatchEvent(new KeyboardEvent('keyup', ev));
+                    }
+                })();
+            """.trimIndent()
+            wv.evaluateJavascript(js, null)
+        }
     }
 
     fun inject(webView: WebView?, url: String? = null) {
@@ -118,9 +128,10 @@ object InputCaretStabilizer {
                 if (!target) return;
                 var tag = target.tagName ? target.tagName.toUpperCase() : '';
                 if (tag === 'INPUT' || tag === 'TEXTAREA' || target.getAttribute('role') === 'search' || target.isContentEditable) {
+                    window.__omniLastFocusedInput = target;
                     try {
                         var textVal = target.value || '';
-                        var phVal = target.placeholder || target.getAttribute('aria-label') || 'Escribe aquí...';
+                        var phVal = target.placeholder || target.getAttribute('aria-label') || 'Buscar...';
                         if (window.OmniInputBridge && window.OmniInputBridge.onFocusIn) {
                             window.OmniInputBridge.onFocusIn(textVal, phVal);
                         }

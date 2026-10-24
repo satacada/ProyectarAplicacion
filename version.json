@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 199,
-  "versionCodeReceiver": 182,
-  "versionName": "3.4.49",
-  "releaseTag": "v3.4.49",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.49/omnicast-sender-v3.4.49.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.49/omnicast-receiver-v3.4.49.apk",
-  "changelog": "v3.4.49: Detección Play-First (eliminación de candidatos especulativos en frío para evitar rechazo 403) y transferencia integral de cookies a CookieManager de la TV Box."
+  "versionCodeSender": 200,
+  "versionCodeReceiver": 183,
+  "versionName": "3.4.50",
+  "releaseTag": "v3.4.50",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.50/omnicast-sender-v3.4.50.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.50/omnicast-receiver-v3.4.50.apk",
+  "changelog": "v3.4.50: Activación de withCredentials en XHR de Hls.js y auto-recuperación a video HTML5 nativo ante errores de red de CDN."
 }

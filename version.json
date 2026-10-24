@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 200,
-  "versionCodeReceiver": 183,
-  "versionName": "3.4.50",
-  "releaseTag": "v3.4.50",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.50/omnicast-sender-v3.4.50.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.50/omnicast-receiver-v3.4.50.apk",
-  "changelog": "v3.4.50: Activación de withCredentials en XHR de Hls.js y auto-recuperación a video HTML5 nativo ante errores de red de CDN."
+  "versionCodeSender": 201,
+  "versionCodeReceiver": 184,
+  "versionName": "3.4.51",
+  "releaseTag": "v3.4.51",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.51/omnicast-sender-v3.4.51.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.51/omnicast-receiver-v3.4.51.apk",
+  "changelog": "v3.4.51: Inyección selectiva de withCredentials en Hls.js basada en cookies activas y fallback automático sin credenciales ante comodín CORS."
 }

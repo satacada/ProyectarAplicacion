@@ -149,6 +149,7 @@ fun TvWebStreamScreen(
                             val hlsCode = WebPlayerAssetHelper.getHlsJs(ctx)
                             val safeUrl = streamUrl.replace("\\", "\\\\").replace("\"", "\\\"")
                             val startSec = (startPositionMs / 1000.0).coerceAtLeast(0.0)
+                            val hasCookies = headers["Cookie"]?.isNotBlank() == true
 
                             val html = """
                                 <!DOCTYPE html>
@@ -173,7 +174,7 @@ fun TvWebStreamScreen(
                                   <div id="loader" class="spinner"></div>
                                   <script>
                                     var vid = document.getElementById('vplayer'), spinner = document.getElementById('loader'), curtain = document.getElementById('black-curtain');
-                                    var streamUrl = "$safeUrl", startSec = $startSec, hasResumed = false;
+                                    var streamUrl = "$safeUrl", startSec = $startSec, hasResumed = false, hasCookies = $hasCookies;
                                     function hideSpin() { if (spinner) spinner.style.opacity = '0'; }
                                     function showSpin() { if (spinner) spinner.style.opacity = '1'; }
                                     function hideCurtain() { if (curtain) { curtain.style.opacity = '0'; curtain.style.pointerEvents = 'none'; } }
@@ -209,7 +210,7 @@ fun TvWebStreamScreen(
                                     function initHls() {
                                       hasTriedHls = true;
                                       if (window.Hls && Hls.isSupported()) {
-                                        var hls = new Hls({ enableWorker: true, lowLatencyMode: false, backBufferLength: 90, xhrSetup: function(xhr, url) { try { xhr.withCredentials = true; } catch(_) {} } });
+                                        var hls = new Hls({ enableWorker: true, lowLatencyMode: false, backBufferLength: 90, xhrSetup: function(xhr, url) { if (hasCookies) { try { xhr.withCredentials = true; } catch(_) {} } } });
                                         hls.loadSource(streamUrl);
                                         hls.attachMedia(vid);
                                         hls.on(Hls.Events.MANIFEST_PARSED, function() { tryPlay(); });
@@ -218,7 +219,8 @@ fun TvWebStreamScreen(
                                         hls.on(Hls.Events.ERROR, function(ev, data) {
                                           if (data.fatal) {
                                             if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
-                                              if (++hlsNetRetries <= 2) hls.startLoad();
+                                              if (++hlsNetRetries === 1 && hasCookies) { hasCookies = false; hls.startLoad(); }
+                                              else if (hlsNetRetries <= 2) { hls.startLoad(); }
                                               else { try { hls.destroy(); } catch(_) {} vid.src = streamUrl; tryPlay(); }
                                             } else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) hls.recoverMediaError();
                                             else { try { hls.destroy(); } catch(_) {} vid.src = streamUrl; tryPlay(); }

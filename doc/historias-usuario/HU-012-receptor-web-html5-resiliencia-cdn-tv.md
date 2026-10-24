@@ -30,3 +30,15 @@
 
 4. **Regla de No Regresión:**
    - Queda estrictamente prohibido desmantelar o descartar `TvWebStreamScreen` en favor de llamadas puras a ExoPlayer, o eliminar la verificación heurística `hasSignedSecurityToken`.
+
+5. **Aislamiento Hexagonal por Proveedor Evaluado (Principio "Poner y Sacar"):**
+   - El componente `TvWebStreamScreen.kt` es **100% agnóstico y universal**: NUNCA hardcodea dominios, orígenes ni cabeceras específicas de ningún sitio web. Recibe dinámicamente el mapa `headers` enviado por el emisor.
+   - Toda resolución de orígenes o cabeceras especializadas (como `Referer`, `Origin` o tokens dinámicos) debe residir exclusivamente en el emisor dentro de `MediaPlatformResolver.kt`, evaluando de forma aislada y previa los dominios específicos que lo requieran:
+     - **Fastream / DropCDN:** `fastream.to`, `dropcdn.io`, `dr0pstream.com`.
+     - **LuluStream / TNMR:** `tnmr.org`, `luluvdo.com`, `lulustream.com`.
+   - Cualquier otra página o flujo genérico utiliza su `pageUrl` legítimo como Referer o el origen natural del manifiesto (`streamOrigin`), sin alterar el comportamiento de las plataformas oficiales ni de sitios estándar.
+
+6. **Estándar CORS de Navegador y Compatibilidad con Comodín (`*`):**
+   - Las CDNs de distribución de video públicas y oficiales responden con el encabezado HTTP estándar `Access-Control-Allow-Origin: *` (asterisco / comodín).
+   - Según el estándar W3C / WHATWG, activar `xhr.withCredentials = true` en Chromium ante una respuesta con `*` provoca el rechazo y aborto inmediato de la conexión por seguridad del navegador (`The value of 'Access-Control-Allow-Origin' must not be the wildcard '*' when credentials mode is 'include'`).
+   - Por tanto, `TvWebStreamScreen` opera bajo el estándar limpio sin `withCredentials` en `Hls.js`, permitiendo que toda CDN que emita `*` sea consumida de forma transparente sin bloqueos de seguridad.

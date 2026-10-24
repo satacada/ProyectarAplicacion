@@ -25,8 +25,14 @@ object InputCaretStabilizer {
         webView.addJavascriptInterface(OmniInputTelemetryBridge(), BRIDGE_NAME)
     }
 
-    fun inject(webView: WebView?) {
+    fun inject(webView: WebView?, url: String? = null) {
         if (webView == null) return
+        val currentUrl = url ?: webView.url
+        val mode = BrowserPageClassifier.classify(currentUrl)
+        if (mode == BrowserPageMode.OFFICIAL_PLATFORM) {
+            android.util.Log.i("OmniInput", "🛡️ Modo A (Guantes de Seda): Cero inyecciones DOM para plataforma oficial: $currentUrl")
+            return
+        }
         webView.evaluateJavascript(SCRIPT, null)
     }
 

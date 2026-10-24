@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 190,
-  "versionCodeReceiver": 173,
-  "versionName": "3.4.40",
-  "releaseTag": "v3.4.40",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.40/omnicast-sender-v3.4.40.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.40/omnicast-receiver-v3.4.40.apk",
-  "changelog": "v3.4.40: Solución definitiva a la edición del cuadro de búsqueda y visibilidad en Dailymotion. Eliminación de la intercepción destructiva de prototype.value que bloqueaba el tracking de React, restablecimiento automático del scroll a top: 0 en focus para desplegar encabezados sticky ocultos (-16px) y guardia anti-inversión exclusivo para inserción de texto sin afectar edición ni borrado."
+  "versionCodeSender": 191,
+  "versionCodeReceiver": 174,
+  "versionName": "3.4.41",
+  "releaseTag": "v3.4.41",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.41/omnicast-sender-v3.4.41.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.41/omnicast-receiver-v3.4.41.apk",
+  "changelog": "v3.4.41: Blindaje total de plataformas oficiales (Modo A - Guantes de Seda). Exclusión estricta de Dailymotion, YouTube y buscadores de inyecciones de foco, caret y scroll en InputCaretStabilizer, permitiendo visibilidad inmediata de la caja de búsqueda sin desplazamiento de encabezados sticky ni interferencias de IME."
 }

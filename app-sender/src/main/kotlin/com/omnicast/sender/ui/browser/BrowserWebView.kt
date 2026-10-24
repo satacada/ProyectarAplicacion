@@ -113,7 +113,7 @@ fun BrowserWebView(
                     override fun onPageStarted(v: WebView?, u: String?, f: Bitmap?) {
                         CookieManager.getInstance().flush()
                         v?.evaluateJavascript("try{if(!window.chrome)window.chrome={runtime:{},app:{}};Object.defineProperty(navigator,'webdriver',{get:()=>false});}catch(_){}", null)
-                        InputCaretStabilizer.inject(v)
+                        InputCaretStabilizer.inject(v, u ?: livePageUrl)
                         u?.let { if (!it.startsWith("about:") && !it.contains("favicon")) { livePageUrl = it; onPageStarted(it) } }
                         isChallenge = AdBlocker.isVerificationOrCaptcha(u)
                         MoviePagePreScanner.injectPageScripts(v, u, 0, isAdBlockEnabled, isChallenge, ctx)
@@ -122,7 +122,7 @@ fun BrowserWebView(
                     override fun onPageFinished(v: WebView?, u: String?) {
                         swipeRefresh.isRefreshing = false
                         CookieManager.getInstance().flush()
-                        InputCaretStabilizer.inject(v)
+                        InputCaretStabilizer.inject(v, u ?: livePageUrl)
                         u?.let { if (!it.startsWith("about:")) livePageUrl = it }
                         val title = v?.title ?: "Transmisión"
                         currentKnownTitle = title
@@ -256,7 +256,7 @@ fun BrowserWebView(
                     override fun onProgressChanged(v: WebView?, p: Int) {
                         onProgress(p)
                         if (p >= 80) swipeRefresh.isRefreshing = false
-                        if (p in 40..60) InputCaretStabilizer.inject(v)
+                        if (p in 40..60) InputCaretStabilizer.inject(v, v?.url ?: livePageUrl)
                         val isChl = isChallenge || AdBlocker.isVerificationOrCaptcha(v?.url) || (v?.title?.contains("Just a moment", ignoreCase = true) == true)
                         if (!isChl && (p == 60 || p == 85 || p == 100)) v?.evaluateJavascript(WvcDomSniffer.getInjectionScript(ctx), null)
                         MoviePagePreScanner.injectPageScripts(v, v?.url, p, isAdBlockEnabled, isChl, ctx)

@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 192,
-  "versionCodeReceiver": 175,
-  "versionName": "3.4.42",
-  "releaseTag": "v3.4.42",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.42/omnicast-sender-v3.4.42.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.42/omnicast-receiver-v3.4.42.apk",
-  "changelog": "v3.4.42: Estabilizador universal adaptativo y geométrico de encabezados e inputs. Corrección del viewport móvil estándar 1:1 en BrowserWebView (useWideViewPort=false) y re-anclaje geométrico automático de contenedores sticky/fixed sin sesgo por URLs ni interferencias de scroll."
+  "versionCodeSender": 193,
+  "versionCodeReceiver": 176,
+  "versionName": "3.4.43",
+  "releaseTag": "v3.4.43",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.43/omnicast-sender-v3.4.43.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.43/omnicast-receiver-v3.4.43.apk",
+  "changelog": "v3.4.43: Caja de texto flotante nativa y asistente de entrada visible (WebInputAssistantBar). Permite ver con total nitidez lo que se escribe directamente sobre el teclado con Gboard en cualquier web (Dailymotion/Buscadores), editar, corregir y sincronizar/enviar la búsqueda sin depender de elementos DOM ocultos o desfasados."
 }

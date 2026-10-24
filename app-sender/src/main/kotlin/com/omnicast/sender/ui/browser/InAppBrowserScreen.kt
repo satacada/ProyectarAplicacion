@@ -46,10 +46,9 @@ fun InAppBrowserScreen(
     fun isRealMedia(s: String) = BrowserUrlHelper.isRealMedia(s, streamDurations[s] ?: 0f)
 
     val isMovieSaved = remember(detectedStreams.size, playlistsVersion, castTitle, pageTitle) {
-        val active = ActiveStreamHolder.streamUrl ?: ""
-        val primary = if (active.isNotBlank()) active else detectedStreams.firstOrNull { isRealMedia(it) } ?: ""
-        val t = if (castTitle.isNotBlank()) castTitle else if (pageTitle.isNotBlank() && pageTitle != "Cargando...") pageTitle else ""
-        if (primary.isBlank()) false else playlistManager.isVideoSaved(primary, t)
+        val pri = ActiveStreamHolder.streamUrl?.takeIf { it.isNotBlank() } ?: detectedStreams.firstOrNull { isRealMedia(it) } ?: ""
+        val t = castTitle.takeIf { it.isNotBlank() } ?: pageTitle.takeIf { it.isNotBlank() && it != "Cargando..." } ?: ""
+        if (pri.isBlank()) false else playlistManager.isVideoSaved(pri, t)
     }
 
     fun deleteMovieFromSaved() {
@@ -274,6 +273,7 @@ fun InAppBrowserScreen(
                         onDismiss = { showBottomControls = false }, modifier = Modifier.align(Alignment.BottomCenter)
                     )
                 }
+                WebInputAssistantBar(modifier = Modifier.align(Alignment.BottomCenter).imePadding())
                 popupWebView?.let { pView ->
                     BrowserPopupOverlay(popupView = pView, onDismiss = {
                         val curHost = try { java.net.URI(currentUrl).host?.lowercase() } catch (_: Throwable) { null }

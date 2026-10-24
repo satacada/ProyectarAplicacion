@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 205,
-  "versionCodeReceiver": 188,
-  "versionName": "3.4.55",
-  "releaseTag": "v3.4.55",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.55/omnicast-sender-v3.4.55.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.55/omnicast-receiver-v3.4.55.apk",
-  "changelog": "v3.4.55: Interceptor nativo anti-CORS TvWebResourceInterceptor para eliminación total de restricciones CORS en TV Box."
+  "versionCodeSender": 206,
+  "versionCodeReceiver": 189,
+  "versionName": "3.4.56",
+  "releaseTag": "v3.4.56",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.56/omnicast-sender-v3.4.56.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.56/omnicast-receiver-v3.4.56.apk",
+  "changelog": "v3.4.56: Control dual de subtítulos y calidad de video HLS en TV Box (D-Pad Arriba/Abajo) y Celular (barra remota)."
 }

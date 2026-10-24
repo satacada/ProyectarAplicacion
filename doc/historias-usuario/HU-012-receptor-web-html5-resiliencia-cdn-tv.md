@@ -42,3 +42,8 @@
    - Las CDNs de distribución de video públicas y oficiales responden con el encabezado HTTP estándar `Access-Control-Allow-Origin: *` (asterisco / comodín).
    - Según el estándar W3C / WHATWG, activar `xhr.withCredentials = true` en Chromium ante una respuesta con `*` provoca el rechazo y aborto inmediato de la conexión por seguridad del navegador (`The value of 'Access-Control-Allow-Origin' must not be the wildcard '*' when credentials mode is 'include'`).
    - Por tanto, `TvWebStreamScreen` opera bajo el estándar limpio sin `withCredentials` en `Hls.js`, permitiendo que toda CDN que emita `*` sea consumida de forma transparente sin bloqueos de seguridad.
+
+7. **Interceptor Nativo Anti-CORS (`TvWebResourceInterceptor.kt` / v3.4.55):**
+   - `TvWebStreamScreen` delega sus peticiones de red en `WebViewClient.shouldInterceptRequest` hacia `TvWebResourceInterceptor.kt`.
+   - Toda petición de preflight `OPTIONS` es respondida localmente en 0ms con código HTTP 200 y cabeceras de autorización total (`Access-Control-Allow-Origin: *`, `Access-Control-Allow-Methods: *`, `Access-Control-Allow-Headers: *`).
+   - Cada solicitud a listas `.m3u8` y fragmentos `.ts`, `.m4s` y subtítulos `.vtt` es descargada directamente vía conexión socket Java nativa con las cabeceras `User-Agent` y `Referer` legítimas, e inyectada con `Access-Control-Allow-Origin: *` hacia Chromium. Esto garantiza inmunidad total e incondicional contra bloqueos de CORS en cualquier CDN.

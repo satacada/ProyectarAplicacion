@@ -156,6 +156,14 @@ object TvRemoteKeyHandler {
                         Toast.makeText(context, "⏪ -10s", Toast.LENGTH_SHORT).show()
                         return true
                     }
+                    KeyEvent.KEYCODE_DPAD_UP -> {
+                        youTubeControlFlow.tryEmit(SignalingMessage.PlayControl("TOGGLE_SUBTITLES"))
+                        return true
+                    }
+                    KeyEvent.KEYCODE_DPAD_DOWN -> {
+                        youTubeControlFlow.tryEmit(SignalingMessage.PlayControl("CYCLE_QUALITY"))
+                        return true
+                    }
                     KeyEvent.KEYCODE_MENU -> {
                         youTubeControlFlow.tryEmit(SignalingMessage.PlayControl("CYCLE_ZOOM"))
                         return true

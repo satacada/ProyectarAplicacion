@@ -10,8 +10,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AspectRatio
 import androidx.compose.material.icons.rounded.Forward10
+import androidx.compose.material.icons.rounded.Hd
 import androidx.compose.material.icons.rounded.Pause
 import androidx.compose.material.icons.rounded.PlayArrow
+import androidx.compose.material.icons.rounded.Subtitles
+import com.omnicast.core.protocol.SignalingMessage
 import androidx.compose.material.icons.rounded.Replay10
 import androidx.compose.material.icons.rounded.Stop
 import androidx.compose.material.icons.rounded.VolumeMute
@@ -118,6 +121,30 @@ fun RemoteExpandedControls(
                             .border(1.dp, Color(0xFF3B82F6), RoundedCornerShape(8.dp))
                     ) {
                         Icon(Icons.Rounded.AspectRatio, contentDescription = "Zoom TV", tint = Color(0xFF60A5FA), modifier = Modifier.size(17.dp))
+                    }
+                    IconButton(
+                        onClick = {
+                            SignalingClientHolder.get().sendMessage(SignalingMessage.PlayControl("TOGGLE_SUBTITLES"))
+                            Toast.makeText(context, "💬 Alternando Subtítulos", Toast.LENGTH_SHORT).show()
+                        },
+                        modifier = Modifier
+                            .size(34.dp)
+                            .background(Color(0xFF1E2B4A), RoundedCornerShape(8.dp))
+                            .border(1.dp, Color(0xFF3B82F6), RoundedCornerShape(8.dp))
+                    ) {
+                        Icon(Icons.Rounded.Subtitles, contentDescription = "Subtítulos", tint = Color(0xFF60A5FA), modifier = Modifier.size(17.dp))
+                    }
+                    IconButton(
+                        onClick = {
+                            SignalingClientHolder.get().sendMessage(SignalingMessage.PlayControl("CYCLE_QUALITY"))
+                            Toast.makeText(context, "📺 Cambiando Calidad", Toast.LENGTH_SHORT).show()
+                        },
+                        modifier = Modifier
+                            .size(34.dp)
+                            .background(Color(0xFF1E2B4A), RoundedCornerShape(8.dp))
+                            .border(1.dp, Color(0xFF3B82F6), RoundedCornerShape(8.dp))
+                    ) {
+                        Icon(Icons.Rounded.Hd, contentDescription = "Calidad", tint = Color(0xFF60A5FA), modifier = Modifier.size(17.dp))
                     }
                 }
             }

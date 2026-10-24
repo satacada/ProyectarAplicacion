@@ -111,5 +111,9 @@ Queda terminantemente PROHIBIDO compilar o proponer una versión sin auditar pre
    Si un flujo falla en el reproductor contratado (ExoPlayer o HTML5), queda TERMINANTEMENTE PROHIBIDO desviar la arquitectura hacia proxies o mecanismos improvisados no solicitados. Se debe inspeccionar el log local de la TV (`/logs`), identificar el fallo exacto en ese reproductor y corregirlo en su propio pilar sin romper los demás.
 5. **Inmunidad e Intocabilidad del Canvas WebRTC (`TvScreens.kt`):**
    Auditar obligatoriamente que ningún cambio en extractores web, bloqueador de anuncios o reproductores de streaming modifique `TvScreens.kt` ni `WebRtcReceiverManager.kt`. Ambos archivos están sellados para preservar la proyección por aplicación y pantalla completa.
+6. **Interceptor Nativo Anti-CORS y Renovación Síncrona de Flujos Web (`v3.4.55` / HU-012) [LEY INVIOLABLE]:**
+   - En `TvWebStreamScreen.kt`, `webViewClient` DEBE delegar incondicionalmente `shouldInterceptRequest` a `TvWebResourceInterceptor.shouldIntercept(r, headers)`. Queda TERMINANTEMENTE PROHIBIDO eliminar o alterar este interceptor. Responde preflights OPTIONS en 0ms y descarga los fragmentos (.m3u8, .ts, .vtt) inyectando obligatoriamente `Access-Control-Allow-Origin: *`, erradicando cualquier bloqueo CORS de Chromium.
+   - En `MediaPlatformResolver.kt`, toda transmisión de streams protegidos (LuluStream/TNMR/Fastream) DEBE ejecutar la renovación síncrona en `prepareStreamForPlayback` al momento exacto de transmitir (token fresco de 0ms).
+   - En `BrowserUrlHelper.kt`, las listas secundarias de subtítulos VTT (`/lang/`, `/subs/`, `_spa/index`) quedan permanentemente excluidas de la detección como videos primarios.
 
 

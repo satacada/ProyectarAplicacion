@@ -139,7 +139,10 @@ fun TvWebStreamScreen(
                             val cm = CookieManager.getInstance(); cm.setAcceptCookie(true); cm.setAcceptThirdPartyCookies(this, true)
                             headers["Cookie"]?.let { ck -> runCatching { ck.split("; ").map { it.trim() }.filter { it.isNotBlank() }.forEach { p -> cm.setCookie(streamUrl, p); streamOrigin?.let { cm.setCookie(it, p) }; headers["Referer"]?.takeIf { it.isNotBlank() }?.let { cm.setCookie(it, p) } }; cm.flush() } }
                             addJavascriptInterface(WebStreamBridge(onPlaybackStatus, onPlaybackFailed), "AndroidBridge")
-                            webViewClient = WebViewClient()
+                            webViewClient = object : WebViewClient() {
+                                override fun shouldInterceptRequest(v: WebView?, r: WebResourceRequest?): WebResourceResponse? =
+                                    TvWebResourceInterceptor.shouldIntercept(r, headers) ?: super.shouldInterceptRequest(v, r)
+                            }
                             webChromeClient = object : WebChromeClient() {
                                 override fun onShowCustomView(v: View?, c: CustomViewCallback?) { customView = v }
                                 override fun onHideCustomView() { customView = null }

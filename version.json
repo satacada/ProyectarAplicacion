@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 204,
-  "versionCodeReceiver": 187,
-  "versionName": "3.4.54",
-  "releaseTag": "v3.4.54",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.54/omnicast-sender-v3.4.54.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.54/omnicast-receiver-v3.4.54.apk",
-  "changelog": "v3.4.54: Restauración de baseUrl a streamOrigin para ejecución Same-Origin en TvWebStreamScreen (Cero CORS)."
+  "versionCodeSender": 205,
+  "versionCodeReceiver": 188,
+  "versionName": "3.4.55",
+  "releaseTag": "v3.4.55",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.55/omnicast-sender-v3.4.55.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.55/omnicast-receiver-v3.4.55.apk",
+  "changelog": "v3.4.55: Interceptor nativo anti-CORS TvWebResourceInterceptor para eliminación total de restricciones CORS en TV Box."
 }

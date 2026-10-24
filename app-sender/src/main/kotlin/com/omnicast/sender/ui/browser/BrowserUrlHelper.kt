@@ -136,7 +136,8 @@ object BrowserUrlHelper {
             } else if (!headers.containsKey("Referer") && currentUrl.isNotBlank()) {
                 headers["Referer"] = currentUrl
             }
-            if (!headers.containsKey("User-Agent")) headers["User-Agent"] = userAgent
+            if (isFast || isDrop) headers["User-Agent"] = userAgent
+            else if (!headers.containsKey("User-Agent")) headers["User-Agent"] = userAgent
         } catch (_: Throwable) {}
         return headers
     }

@@ -25,12 +25,14 @@ object StreamQualityDetector {
         val prefix = if (!title.isNullOrBlank() && title != "Transmisión") "[${title.take(20)}] " else ""
 
         var currentMediaUrl = BrowserUrlHelper.sanitizeMediaUrl(mediaUrl)
-        var safeHeaders = BrowserUrlHelper.buildSafeHeaders(currentMediaUrl, headers["Referer"] ?: pageUrl ?: "", UA_MOBILE, headers)
-        if (currentMediaUrl.contains("fastream.to", ignoreCase = true) && !currentMediaUrl.contains(".m3u8", ignoreCase = true)) {
+        val isFastHost = currentMediaUrl.contains("fastream.to", ignoreCase = true) || currentMediaUrl.contains("dropcdn.io", ignoreCase = true)
+        val initialUa = if (isFastHost) MediaPlatformResolver.UA_FASTREAM else UA_MOBILE
+        var safeHeaders = BrowserUrlHelper.buildSafeHeaders(currentMediaUrl, headers["Referer"] ?: pageUrl ?: "", initialUa, headers)
+        if (isFastHost && !currentMediaUrl.contains(".m3u8", ignoreCase = true)) {
             val resolved = MediaPlatformResolver.resolveFastreamSync(currentMediaUrl, headers["Referer"] ?: pageUrl)
             if (resolved != null) {
                 currentMediaUrl = resolved.first
-                safeHeaders = BrowserUrlHelper.buildSafeHeaders(currentMediaUrl, resolved.third["Referer"] ?: "", UA_MOBILE, resolved.third)
+                safeHeaders = BrowserUrlHelper.buildSafeHeaders(currentMediaUrl, resolved.third["Referer"] ?: "", MediaPlatformResolver.UA_FASTREAM, resolved.third)
             }
         }
 

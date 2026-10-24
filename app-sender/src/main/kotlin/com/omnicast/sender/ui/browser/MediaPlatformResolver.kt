@@ -14,6 +14,7 @@ import java.net.URL
  */
 object MediaPlatformResolver {
     private const val TAG = "MediaPlatformResolver"
+    const val UA_FASTREAM = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
     private val scope = CoroutineScope(Dispatchers.IO)
 
     fun resolveDailymotion(
@@ -118,8 +119,8 @@ object MediaPlatformResolver {
             val conn = (URL(embedUrl).openConnection() as HttpURLConnection).apply {
                 connectTimeout = 4000
                 readTimeout = 4000
-                setRequestProperty("User-Agent", UA_MOBILE)
-                setRequestProperty("Referer", referer?.takeIf { it.isNotBlank() } ?: "https://reypelis.net/")
+                setRequestProperty("User-Agent", UA_FASTREAM)
+                setRequestProperty("Referer", referer?.takeIf { it.isNotBlank() } ?: "https://reypelis.vip/")
             }
             if (conn.responseCode !in 200..299) {
                 conn.disconnect()
@@ -133,7 +134,7 @@ object MediaPlatformResolver {
             val streamUrl = streamUrlMatch?.groupValues?.get(1) ?: streamUrlMatch?.value ?: return null
             val cleanStreamUrl = BrowserUrlHelper.sanitizeMediaUrl(streamUrl)
             val hdrs = mapOf(
-                "User-Agent" to UA_MOBILE,
+                "User-Agent" to UA_FASTREAM,
                 "Referer" to embedUrl,
                 "Origin" to origin,
                 "Sec-Fetch-Mode" to "cors",
@@ -197,13 +198,16 @@ object MediaPlatformResolver {
         val isDrop = lower.contains("dropcdn.io") || lower.contains("dr0pstream.com")
         val isFastream = lower.contains("fastream.to")
         if (isDrop || isFastream) {
-            val id = extractFastreamId(finalUrl)
-            if (id != null) {
-                val embed = if (isDrop) "https://dr0pstream.com/e/$id" else "https://fastream.to/embed-$id.html"
-                val origin = if (isDrop) "https://dr0pstream.com" else "https://fastream.to"
-                val curRef = hdrs["Referer"] ?: ""
-                val targetHost = if (isDrop) "dr0pstream.com" else "fastream.to"
-                if (curRef.isBlank() || !curRef.contains(targetHost)) {
+            val resolved = resolveFastreamSync(finalUrl, pageUrl)
+            if (resolved != null) {
+                finalUrl = resolved.first
+                resolved.third.forEach { (k, v) -> hdrs[k] = v }
+            } else {
+                val id = extractFastreamId(finalUrl)
+                if (id != null) {
+                    val embed = if (isDrop) "https://dr0pstream.com/e/$id" else "https://fastream.to/embed-$id.html"
+                    val origin = if (isDrop) "https://dr0pstream.com" else "https://fastream.to"
+                    hdrs["User-Agent"] = UA_FASTREAM
                     hdrs["Referer"] = embed
                     hdrs["Origin"] = origin
                 }
@@ -223,7 +227,8 @@ object MediaPlatformResolver {
                 }
             }
         }
-        val safeHeaders = BrowserUrlHelper.buildSafeHeaders(finalUrl, pageUrl, UA_MOBILE, hdrs)
+        val reqUa = if (isDrop || isFastream) UA_FASTREAM else UA_MOBILE
+        val safeHeaders = BrowserUrlHelper.buildSafeHeaders(finalUrl, pageUrl, reqUa, hdrs)
         return Pair(finalUrl, safeHeaders)
     }
 

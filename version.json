@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 206,
-  "versionCodeReceiver": 189,
-  "versionName": "3.4.56",
-  "releaseTag": "v3.4.56",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.56/omnicast-sender-v3.4.56.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.56/omnicast-receiver-v3.4.56.apk",
-  "changelog": "v3.4.56: Control dual de subtítulos y calidad de video HLS en TV Box (D-Pad Arriba/Abajo) y Celular (barra remota)."
+  "versionCodeSender": 207,
+  "versionCodeReceiver": 190,
+  "versionName": "3.4.57",
+  "releaseTag": "v3.4.57",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.57/omnicast-sender-v3.4.57.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.57/omnicast-receiver-v3.4.57.apk",
+  "changelog": "v3.4.57: Resolución síncrona y User-Agent de escritorio para servidores Fastream / DropCDN (Reypelis)."
 }

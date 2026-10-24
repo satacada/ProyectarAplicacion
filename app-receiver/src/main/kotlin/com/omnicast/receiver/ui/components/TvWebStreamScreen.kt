@@ -133,9 +133,9 @@ fun TvWebStreamScreen(
                             settings.loadWithOverviewMode = true; settings.allowFileAccess = true; settings.allowContentAccess = true
                             settings.allowFileAccessFromFileURLs = true; settings.allowUniversalAccessFromFileURLs = true
                             settings.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
-                            settings.userAgentString = headers["User-Agent"] ?: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
+                            settings.userAgentString = headers["User-Agent"] ?: "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36"
                             val streamOrigin = try { val uri = Uri.parse(streamUrl); if (!uri.scheme.isNullOrBlank() && !uri.host.isNullOrBlank()) "${uri.scheme}://${uri.host}/" else null } catch (_: Throwable) { null }
-                            val baseUrl = streamOrigin ?: headers["Referer"]?.takeIf { it.isNotBlank() } ?: "https://omnicast.tv/"
+                            val baseUrl = headers["Referer"]?.takeIf { it.isNotBlank() } ?: streamOrigin ?: "https://omnicast.tv/"
                             val cm = CookieManager.getInstance(); cm.setAcceptCookie(true); cm.setAcceptThirdPartyCookies(this, true)
                             headers["Cookie"]?.let { ck -> runCatching { ck.split("; ").map { it.trim() }.filter { it.isNotBlank() }.forEach { p -> cm.setCookie(streamUrl, p); streamOrigin?.let { cm.setCookie(it, p) }; headers["Referer"]?.takeIf { it.isNotBlank() }?.let { cm.setCookie(it, p) } }; cm.flush() } }
                             addJavascriptInterface(WebStreamBridge(onPlaybackStatus, onPlaybackFailed), "AndroidBridge")
@@ -149,7 +149,6 @@ fun TvWebStreamScreen(
                             val hlsCode = WebPlayerAssetHelper.getHlsJs(ctx)
                             val safeUrl = streamUrl.replace("\\", "\\\\").replace("\"", "\\\"")
                             val startSec = (startPositionMs / 1000.0).coerceAtLeast(0.0)
-                            val hasCookies = headers["Cookie"]?.isNotBlank() == true
 
                             val html = """
                                 <!DOCTYPE html>
@@ -174,7 +173,7 @@ fun TvWebStreamScreen(
                                   <div id="loader" class="spinner"></div>
                                   <script>
                                     var vid = document.getElementById('vplayer'), spinner = document.getElementById('loader'), curtain = document.getElementById('black-curtain');
-                                    var streamUrl = "$safeUrl", startSec = $startSec, hasResumed = false, hasCookies = $hasCookies;
+                                    var streamUrl = "$safeUrl", startSec = $startSec, hasResumed = false;
                                     function hideSpin() { if (spinner) spinner.style.opacity = '0'; }
                                     function showSpin() { if (spinner) spinner.style.opacity = '1'; }
                                     function hideCurtain() { if (curtain) { curtain.style.opacity = '0'; curtain.style.pointerEvents = 'none'; } }
@@ -210,7 +209,7 @@ fun TvWebStreamScreen(
                                     function initHls() {
                                       hasTriedHls = true;
                                       if (window.Hls && Hls.isSupported()) {
-                                        var hls = new Hls({ enableWorker: true, lowLatencyMode: false, backBufferLength: 90, xhrSetup: function(xhr, url) { if (hasCookies) { try { xhr.withCredentials = true; } catch(_) {} } } });
+                                        var hls = new Hls({ enableWorker: true, lowLatencyMode: false, backBufferLength: 90 });
                                         hls.loadSource(streamUrl);
                                         hls.attachMedia(vid);
                                         hls.on(Hls.Events.MANIFEST_PARSED, function() { tryPlay(); });
@@ -219,8 +218,7 @@ fun TvWebStreamScreen(
                                         hls.on(Hls.Events.ERROR, function(ev, data) {
                                           if (data.fatal) {
                                             if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
-                                              if (++hlsNetRetries === 1 && hasCookies) { hasCookies = false; hls.startLoad(); }
-                                              else if (hlsNetRetries <= 2) { hls.startLoad(); }
+                                              if (++hlsNetRetries <= 3) hls.startLoad();
                                               else { try { hls.destroy(); } catch(_) {} vid.src = streamUrl; tryPlay(); }
                                             } else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) hls.recoverMediaError();
                                             else { try { hls.destroy(); } catch(_) {} vid.src = streamUrl; tryPlay(); }

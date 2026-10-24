@@ -112,8 +112,10 @@ object BrowserUrlHelper {
             if (mergedCookies.isNotBlank()) headers["Cookie"] = mergedCookies
 
             val id = MediaPlatformResolver.extractFastreamId(streamUrl)
+            val luluId = MediaPlatformResolver.extractLuluStreamId(streamUrl)
             val isDrop = streamUrl.contains("dropcdn.io", true) || streamUrl.contains("dr0pstream.com", true)
             val isFast = streamUrl.contains("fastream.to", true)
+            val isLulu = streamUrl.contains("tnmr.org", true) || streamUrl.contains("luluvdo.com", true) || streamUrl.contains("lulustream.com", true)
             if (isDrop && id != null) {
                 headers["Referer"] = "https://dr0pstream.com/e/$id"
                 headers["Origin"] = "https://dr0pstream.com"
@@ -121,6 +123,10 @@ object BrowserUrlHelper {
             } else if (isFast && id != null) {
                 headers["Referer"] = "https://fastream.to/embed-$id.html"
                 headers["Origin"] = "https://fastream.to"
+                headers["Sec-Fetch-Mode"] = "cors"; headers["Sec-Fetch-Site"] = "cross-site"; headers["Sec-Fetch-Dest"] = "empty"
+            } else if (isLulu && luluId != null) {
+                headers["Referer"] = "https://luluvdo.com/e/$luluId"
+                headers["Origin"] = "https://luluvdo.com"
                 headers["Sec-Fetch-Mode"] = "cors"; headers["Sec-Fetch-Site"] = "cross-site"; headers["Sec-Fetch-Dest"] = "empty"
             } else if (!headers.containsKey("Referer") && currentUrl.isNotBlank()) {
                 headers["Referer"] = currentUrl

@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 201,
-  "versionCodeReceiver": 184,
-  "versionName": "3.4.51",
-  "releaseTag": "v3.4.51",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.51/omnicast-sender-v3.4.51.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.51/omnicast-receiver-v3.4.51.apk",
-  "changelog": "v3.4.51: Inyección selectiva de withCredentials en Hls.js basada en cookies activas y fallback automático sin credenciales ante comodín CORS."
+  "versionCodeSender": 202,
+  "versionCodeReceiver": 185,
+  "versionName": "3.4.52",
+  "releaseTag": "v3.4.52",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.52/omnicast-sender-v3.4.52.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.52/omnicast-receiver-v3.4.52.apk",
+  "changelog": "v3.4.52: Resolución autónoma de Referer y Origin para LuluStream/TNMR, baseUrl de inserción fiel y erradicación del conflicto CORS wildcard en Hls.js."
 }

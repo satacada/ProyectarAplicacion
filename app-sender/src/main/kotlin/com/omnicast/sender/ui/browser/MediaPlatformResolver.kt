@@ -101,6 +101,14 @@ object MediaPlatformResolver {
         return Regex("(?:/hls\\d*/\\d+/\\d+/|/embed-|/e/|/d/)([a-zA-Z0-9]{8,16})(?:[_,.]|$)").find(url)?.groupValues?.get(1)
     }
 
+    fun extractLuluStreamId(url: String): String? {
+        val lower = url.lowercase()
+        if (!lower.contains("tnmr.org") && !lower.contains("luluvdo.com") && !lower.contains("lulustream.com")) return null
+        val paramMatch = Regex("[?&]fr=([a-zA-Z0-9]+)").find(url)?.groupValues?.get(1)
+        if (paramMatch != null) return paramMatch
+        return Regex("(?:/hls\\d*/\\d+/\\d+/|,|/e/|/d/)([a-zA-Z0-9]{8,16})(?:[_,.]|$)").find(url)?.groupValues?.get(1)
+    }
+
     fun resolveFastreamSync(url: String, referer: String? = null): Triple<String, String?, Map<String, String>>? {
         val id = extractFastreamId(url) ?: return null
         return try {
@@ -162,6 +170,14 @@ object MediaPlatformResolver {
                     hdrs["Referer"] = embed
                     hdrs["Origin"] = origin
                 }
+            }
+        }
+        val isLulu = lower.contains("tnmr.org") || lower.contains("luluvdo.com") || lower.contains("lulustream.com")
+        if (isLulu) {
+            val luluId = extractLuluStreamId(finalUrl)
+            if (luluId != null) {
+                hdrs["Referer"] = "https://luluvdo.com/e/$luluId"
+                hdrs["Origin"] = "https://luluvdo.com"
             }
         }
         val safeHeaders = BrowserUrlHelper.buildSafeHeaders(finalUrl, pageUrl, UA_MOBILE, hdrs)

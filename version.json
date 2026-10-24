@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 203,
-  "versionCodeReceiver": 186,
-  "versionName": "3.4.53",
-  "releaseTag": "v3.4.53",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.53/omnicast-sender-v3.4.53.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.53/omnicast-receiver-v3.4.53.apk",
-  "changelog": "v3.4.53: Renovación síncrona de token activo LuluStream/TNMR al proyectar y exclusión de listas de subtítulos VTT."
+  "versionCodeSender": 204,
+  "versionCodeReceiver": 187,
+  "versionName": "3.4.54",
+  "releaseTag": "v3.4.54",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.54/omnicast-sender-v3.4.54.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.54/omnicast-receiver-v3.4.54.apk",
+  "changelog": "v3.4.54: Restauración de baseUrl a streamOrigin para ejecución Same-Origin en TvWebStreamScreen (Cero CORS)."
 }

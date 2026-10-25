@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 213,
-  "versionCodeReceiver": 196,
-  "versionName": "3.4.63",
-  "releaseTag": "v3.4.63",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.63/omnicast-sender-v3.4.63.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.63/omnicast-receiver-v3.4.63.apk",
-  "changelog": "v3.4.63: Eliminación de sopa de cookies multidominio (aislamiento estricto same-site), permutaciones de auto-reparación limpia en DropCDN/CDNs protegidas y corte de bucle infinito de fallback ExoPlayer/HTML5."
+  "versionCodeSender": 214,
+  "versionCodeReceiver": 197,
+  "versionName": "3.4.64",
+  "releaseTag": "v3.4.64",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.64/omnicast-sender-v3.4.64.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.64/omnicast-receiver-v3.4.64.apk",
+  "changelog": "v3.4.64: Supresión nativa de popups en sitios de streaming (cero pérdida de página), bloqueo de redirecciones click-shield y descarte automático de listas de fotogramas estáticos (iframes-v1-a1)."
 }

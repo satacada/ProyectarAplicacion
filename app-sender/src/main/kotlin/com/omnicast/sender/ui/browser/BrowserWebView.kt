@@ -155,15 +155,18 @@ fun BrowserWebView(
                                 showBlockedToast(ctx)
                                 return true
                             }
-                            if (!isSameSite && !isSourceSearchEngine && targetHost != null && !r.hasGesture()) {
-                                val isAllowedExternal = isSameSite ||
-                                    AdBlocker.isMediaOrStreamingHost(targetHost) ||
-                                    AdBlocker.isSearchEngine(targetHost) ||
-                                    AdBlocker.isKnownMediaHost(targetHost) ||
-                                    AdBlocker.isVerificationOrCaptcha(targetHost) ||
-                                    AdBlockWhitelistManager.isWhitelistedHost(targetHost)
+                            val isMoviePage = BrowserUrlHelper.isMovieOrVideoPage(liveUrl)
+                            val isAllowedExternal = isSameSite ||
+                                AdBlocker.isMediaOrStreamingHost(targetHost) ||
+                                AdBlocker.isSearchEngine(targetHost) ||
+                                AdBlocker.isKnownMediaHost(targetHost ?: "") ||
+                                AdBlocker.isVerificationOrCaptcha(targetHost ?: "") ||
+                                AdBlockWhitelistManager.isWhitelistedHost(targetHost ?: "")
+
+                            if (!isSameSite && !isSourceSearchEngine && targetHost != null && (!r.hasGesture() || (isMoviePage && !isAllowedExternal))) {
                                 if (!isAllowedExternal) {
-                                    android.util.Log.w("BrowserWebView", "🛑 Redirección automática bloqueada hacia: $targetHost")
+                                    android.util.Log.w("BrowserWebView", "🛑 Redirección no autorizada en página de video bloqueada: $targetHost")
+                                    targetHost.let { AdBlocker.learnAndBlockAdHost(it, curHost) }
                                     showBlockedToast(ctx)
                                     return true
                                 }

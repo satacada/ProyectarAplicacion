@@ -40,8 +40,16 @@ class BrowserPopupInterceptor(
         val isSourceWhitelisted = curHost?.let { AdBlockWhitelistManager.isWhitelistedHost(it) } ?: false
         val isSourceSearchEngine = curHost?.let { AdBlocker.isSearchEngine(it) } ?: false
 
-        // 1. Suprime popups automáticos de scripts sin gesto del usuario
-        if (!isUserGesture && !isSourceWhitelisted && !isSourceSearchEngine) {
+        // 1. En sitios de películas y portales web, suprimir 100% de popups (Ley Inviolable 8.8)
+        // Por qué: Los sitios de películas disparan popups en cada clic. Permitir que un popup
+        // navegue en mainWebView destruye la página donde se reproduce el video.
+        if (!isSourceSearchEngine && !isSourceWhitelisted) {
+            onBlocked()
+            return false
+        }
+
+        // 2. En buscadores oficiales, suprime popups automáticos de scripts sin gesto del usuario
+        if (!isUserGesture) {
             return false
         }
 

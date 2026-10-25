@@ -57,7 +57,9 @@ object BrowserUrlHelper {
         if (s.isBlank() || s.contains("dmxleo.dailymotion.com") || AdBlocker.isAd(s)) return false
         val lowerFull = s.lowercase()
         if (lowerFull.contains("/lang/") || lowerFull.contains("/subtitles/") || lowerFull.contains("/subs/") ||
-            lowerFull.contains("_sub.") || lowerFull.contains("_spa/index") || lowerFull.contains("_eng/index")) return false
+            lowerFull.contains("_sub.") || lowerFull.contains("_spa/index") || lowerFull.contains("_eng/index") ||
+            lowerFull.contains("iframes-") || lowerFull.contains("/iframe-") || lowerFull.contains("iframes.") ||
+            lowerFull.contains("keyframes")) return false
         if (s.contains("bytes=", true) || s.contains("&bytes", true) || s.contains("ct=11") || s.contains("ct=12")) return false
         if (dur in 0.1f..59.9f) return false
         val clean = s.substringBefore('?').lowercase()

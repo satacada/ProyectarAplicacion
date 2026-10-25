@@ -40,3 +40,11 @@ y además, quiero que los flujos de video detectados que se están reproduciendo
   2. En el inicio del navegador o sincronización periódica (`syncCrowdLearnedDomains`), todos los demás dispositivos consultan los dominios descubiertos por otros usuarios y los incorporan a su SQLite local.
   3. Esto confiere inmunidad colectiva previa a toda la comunidad de usuarios antes de que el nuevo anuncio llegue a desplegarse en sus pantallas.
 
+### Criterio 5: Supresión Nativa de Popups sin WebViews Temporales (Anti-OOM) y Calibración de Gestos (v3.4.59)
+- **Dado** que un sitio de streaming con alta densidad publicitaria ejecuta llamadas repetitivas a `window.open()` (popups / popunders),
+- **Cuando** se activa el evento `WebChromeClient.onCreateWindow`,
+- **Entonces** el sistema:
+  1. Retorna inmediatamente `false` de forma nativa para suprimir la creación de la ventana emergente sin instanciar ningún `WebView` temporal.
+  2. Garantiza un consumo de 0 MB de memoria RAM adicional, impidiendo que el heap de la aplicación alcance el límite de 512 MB y previniendo el error `OutOfMemoryError`.
+  3. En `shouldOverrideUrlLoading`, respeta los clics intencionales del usuario mediante `r.hasGesture() == true`, permitiendo navegar normalmente hacia enlaces de películas o servidores externos que no sean anuncios comprobados.
+

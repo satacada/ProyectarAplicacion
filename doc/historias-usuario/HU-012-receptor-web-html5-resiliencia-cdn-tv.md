@@ -47,3 +47,10 @@
    - `TvWebStreamScreen` delega sus peticiones de red en `WebViewClient.shouldInterceptRequest` hacia `TvWebResourceInterceptor.kt`.
    - Toda petición de preflight `OPTIONS` es respondida localmente en 0ms con código HTTP 200 y cabeceras de autorización total (`Access-Control-Allow-Origin: *`, `Access-Control-Allow-Methods: *`, `Access-Control-Allow-Headers: *`).
    - Cada solicitud a listas `.m3u8` y fragmentos `.ts`, `.m4s` y subtítulos `.vtt` es descargada directamente vía conexión socket Java nativa con las cabeceras `User-Agent` y `Referer` legítimas, e inyectada con `Access-Control-Allow-Origin: *` hacia Chromium. Esto garantiza inmunidad total e incondicional contra bloqueos de CORS en cualquier CDN.
+
+8. **Control Dual de Subtítulos y Calidad HLS en TV Box y Móvil (v3.4.56):**
+   - **Control Remoto de TV:** Tecla D-Pad Arriba para alternar subtítulos (Español / Desactivados) y D-Pad Abajo para ciclar niveles de calidad HLS (Automática, 1080p, 720p, etc.). La TV Box emite un badge flotante semi-transparente de confirmación durante 2.5s ("💬 Subtítulos: Español", "📺 Calidad: 1080p").
+   - **Control Remoto en Teléfono:** Botones dedicados de Subtítulos e Ícono HD en la barra inferior expandida (`RemoteExpandedControls.kt`), enviando comandos `TOGGLE_SUBTITLES` y `CYCLE_QUALITY` en tiempo real sin requerir mando a distancia.
+
+9. **Resolución Síncrona Fastream / DropCDN con User-Agent de Escritorio (v3.4.57):**
+   - Para servidores de video Fastream / DropCDN (`fastream.to`, `dropcdn.io`, `dr0pstream.com`), las solicitudes de manifiesto y fragmentos se envían con identidad de Escritorio Windows (`UA_FASTREAM`) y cabecera `Referer: https://fastream.to/embed-$id.html`, resolviendo de raíz el rechazo `HTTP 403 Forbidden` que las CDNs de Fastream aplican a navegadores móviles.

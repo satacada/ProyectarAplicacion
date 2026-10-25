@@ -1,7 +1,7 @@
 # 📘 ESPECIFICACIÓN GENERAL DE DISEÑO Y REQUERIMIENTOS: OMNICAST PRO
 
 **Documento Canónico de Diseño y Contrato Funcional del Sistema**  
-**Última actualización:** 2026-10-15  
+**Última actualización:** 2026-10-25 (v3.4.59)  
 **Estado:** Activo y Vigente  
 
 ---
@@ -21,15 +21,17 @@ OmniCast Pro es un ecosistema cliente-servidor (Emisor Móvil y Receptor Android
    - Proyección de fotos vía WebSocket Base64 (~15ms) en reposo de video.
    - Selector universal de galería con swipe continuo y retorno seguro con botón Atrás.
    - Servidor HTTP local embebido (`LocalImageServer`) con soporte de peticiones parciales `HEAD` y `206 Partial Content`.
-3. **Navegador Web Integrado con Web Caster & AdBlocker C++:**
-   - Interceptación de flujos multimedia HLS (`.m3u8`), MP4 y DASH.
-   - Motor AdBlock nativo en C++ (`libadblock-client.so`) y base de datos relacional SQLite (`omnicast_adblock.db`) con reglas dinámicas.
-   - Neutralización reactiva de trampas y popups sin secuestro de pantalla durante reproducción de películas.
+3. **Navegador Web Integrado con Web Caster & AdBlocker C++ / Kotlin:**
+   - Interceptación de flujos multimedia HLS (`.m3u8`), MP4 y DASH en 6 ramas (`MediaBranch`).
+   - Motor AdBlock nativo en C++ (`libadblock-client.so`) y base de datos relacional SQLite (`omnicast_adblock.db`) con reglas dinámicas y sincronización colectiva en Supabase.
+   - Neutralización reactiva de trampas DOM (`click-shield.js`) y filtrado de redes VAST / popunders embebidos.
+   - Supresión nativa de ventanas emergentes en `onCreateWindow` (`return false`) consumiendo 0 MB de RAM y erradicando colapsos de heap OOM (512 MB). Preservación estricta de gestos táctiles del usuario (`r.hasGesture()`).
    - Filtrado estricto de anuncios cortos (<60s) y descarte de videos basura.
-4. **Reproductor Autónomo ExoPlayer en TV Receiver:**
+4. **Reproductor Autónomo Híbrido en TV Receiver (ExoPlayer + HTML5/Chromium):**
    - Recepción directa de flujos web (Handoff) para que el celular quede libre.
+   - Enrutamiento híbrido dual: ExoPlayer para flujos directos/universales y `TvWebStreamScreen` (Chromium + `Hls.js`) con `TvWebResourceInterceptor` (Anti-CORS en 0ms) para CDNs protegidas (LuluStream, Fastream).
    - Sincronización continua de estado de reproducción (`PLAY`, `PAUSE`, `SEEK`, `VOLUME`).
-   - Navegación optimizada para control remoto D-Pad y Leanback UI.
+   - Navegación y control ergonómico por mando a distancia D-Pad: D-Pad Arriba (Subtítulos), D-Pad Abajo (Calidad HLS), OK (Play/Pause), Left/Right (Seek ±10s) y tecla MENU (Zoom TV).
 
 ---
 
@@ -78,5 +80,19 @@ OmniCast Pro es un ecosistema cliente-servidor (Emisor Móvil y Receptor Android
 | **3. Reparar error `403 Forbidden` al reproducir en TV o Celular** | **Clases Kotlin (`$0`)** | **Clase `HeaderSelfHealer`:** Prueba en <1s las 4 combinaciones lógicas de cabeceras (Iframe real $\rightarrow$ `pageUrl` $\rightarrow$ Propio CDN $\rightarrow$ Limpio sin Referer) y guarda en memoria local (`learned_rules.json`) la que dé `HTTP 200`. |
 | **4. Limpiar títulos sucios de películas guardadas** | **Clases Kotlin (`$0`)** | **Objeto `MediaTitleCleaner`:** Expresiones regulares (Regex) que limpian *"Ver Película X (2024) Online HD Gratis"* $\rightarrow$ *"X (2024)"*. |
 | **5. Sitios nuevos con ofuscación compleja que bloquean incluso al `HeaderSelfHealer`** | **IA Gratuita en Nube (`$0`)** | **Único punto con IA (`ai_stream_healer.py`):** Corre en lote cada 6h en GitHub Actions usando la **capa gratuita de Gemini Flash** (1,500 peticiones/día gratis) sobre dominios fallidos en Supabase y publica la regla en `live_stream_rules.json` (OTA). |
+
+### E. Navegación Web Anti-OOM, Calibración de Gestos y Control Dual D-Pad en TV Box (v3.4.56 - v3.4.59)
+- **Supresión Nativa de Popups (Anti-OOM) en Chromium (`BrowserWebView.kt` / HU-007):**
+  - En sitios de películas con ventanas emergentes masivas (`window.open`), `onCreateWindow` retorna `false` directamente en 0ms.
+  - Esto erradica la asignación de `WebView` temporales que saturaban el heap de ART (512 MB) provocando `OutOfMemoryError`. Consumo de memoria adicional: **0 MB**.
+- **Preservación de Gestos Táctiles (`r.hasGesture()`):**
+  - En `shouldOverrideUrlLoading`, se respeta estrictamente `!r.hasGesture()`, permitiendo que los clics voluntarios del usuario a servidores de películas y pestañas externas naveguen con fluidez.
+- **Control Ergonómico por D-Pad en TV Box (`TvRemoteKeyHandler.kt` / HU-012):**
+  - **D-Pad Arriba:** Alterna pistas de subtítulos (Español / Desactivado) con badge semi-transparente de confirmación de 2.5s.
+  - **D-Pad Abajo:** Cicla secuencialmente la calidad HLS (Auto -> 1080p -> 720p -> 480p) con badge flotante.
+  - **Paridad Móvil:** La barra expandida del emisor (`RemoteExpandedControls.kt`) incluye botones remotos directos de subtítulos y calidad.
+- **Interceptor Nativo Anti-CORS en TV Box (`TvWebResourceInterceptor.kt` / HU-012):**
+  - Responde peticiones preflight `OPTIONS` en 0ms e inyecta `Access-Control-Allow-Origin: *` a todos los fragmentos descargados vía sockets nativos Java, neutralizando bloqueos de CORS en Chromium para CDNs protegidas (LuluStream, Fastream).
+
 
 

@@ -237,7 +237,6 @@ class ExoPlayerTvManager(private val context: Context) {
             if (v.isNotBlank()) {
                 when {
                     k.equals("referer", true) -> allowed["Referer"] = v
-                    k.equals("origin", true) -> allowed["Origin"] = v
                     k.equals("user-agent", true) -> allowed["User-Agent"] = v
                     k.equals("cookie", true) -> allowed["Cookie"] = v
                     k.equals("authorization", true) -> allowed["Authorization"] = v
@@ -245,8 +244,8 @@ class ExoPlayerTvManager(private val context: Context) {
             }
         }
         if (!allowed.containsKey("User-Agent")) allowed["User-Agent"] = DEFAULT_UA
-        // Por qué: En sockets nativos de ExoPlayer no se debe inventar 'Origin' si no vino en cabeceras;
-        // CDNs como DropCDN activan validaciones CORS innecesarias y devuelven 403 ante Origin no permitido.
+        // Por qué: En sockets nativos de ExoPlayer queda prohibido enviar 'Origin';
+        // CDNs como DropCDN/Fastream activan validaciones CORS innecesarias y devuelven 403.
         return allowed
     }
 

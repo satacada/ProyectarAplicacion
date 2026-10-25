@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 214,
-  "versionCodeReceiver": 197,
-  "versionName": "3.4.64",
-  "releaseTag": "v3.4.64",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.64/omnicast-sender-v3.4.64.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.64/omnicast-receiver-v3.4.64.apk",
-  "changelog": "v3.4.64: Supresión nativa de popups en sitios de streaming (cero pérdida de página), bloqueo de redirecciones click-shield y descarte automático de listas de fotogramas estáticos (iframes-v1-a1)."
+  "versionCodeSender": 215,
+  "versionCodeReceiver": 198,
+  "versionName": "3.4.65",
+  "releaseTag": "v3.4.65",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.65/omnicast-sender-v3.4.65.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.65/omnicast-receiver-v3.4.65.apk",
+  "changelog": "v3.4.65: Erradicación de bloqueo CORS 403 en DropCDN/Fastream (omisión de cabecera Origin en video), Referer exacto con ID de embed y asignación de User-Agent de escritorio UA_FASTREAM."
 }

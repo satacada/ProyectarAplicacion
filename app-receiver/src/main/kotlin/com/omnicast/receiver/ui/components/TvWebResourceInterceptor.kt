@@ -41,7 +41,7 @@ object TvWebResourceInterceptor {
                 readTimeout = 12000
                 instanceFollowRedirects = true
                 requestMethod = method
-                defaultHeaders.forEach { (k, v) -> setRequestProperty(k, v) }
+                defaultHeaders.forEach { (k, v) -> if (!k.equals("Origin", true)) setRequestProperty(k, v) }
                 req.requestHeaders?.forEach { (k, v) ->
                     if (!defaultHeaders.containsKey(k) && !k.equals("Origin", true)) {
                         setRequestProperty(k, v)

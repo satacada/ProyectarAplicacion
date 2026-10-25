@@ -1,7 +1,7 @@
 # 📊 PROJECT DASHBOARD — OmniCast Pro
 
 **Última actualización:** 2026-10-25  
-**Versión de producción actual:** v3.4.64 (Sender) / v3.4.64 (Receiver)  
+**Versión de producción actual:** v3.4.65 (Sender) / v3.4.65 (Receiver)  
 **Estándar de calidad:** AGENTS.md (Archivos <= 300 líneas, Clean Architecture, 100% Offline/Local)
 
 ---
@@ -10,10 +10,10 @@
 
 | Módulo | Componente Clave | Estado | Capacidades |
 |---|---|---|---|
-| `:core:domain` | `StreamManifestProbe`, `StreamProfile`, `QualityMode`, `MediaBranch`, `DetectMediaStreamUseCase` | 🟢 Estable | **Filtrado de Fotogramas Clave y Auto-Reparación Limpia (`v3.4.64` / HU-012):** Exclusión estricta de listas `iframes-` y `keyframes` en `isRealMedia()`. Permutaciones prioritarias `EMBED_CLEAN` y `REFERER_ONLY` sin cabeceras 'Cookie' ni 'Origin'. |
+| `:core:domain` | `StreamManifestProbe`, `StreamProfile`, `QualityMode`, `MediaBranch`, `DetectMediaStreamUseCase` | 🟢 Estable | **Filtrado de Fotogramas Clave y Auto-Reparación Limpia (`v3.4.65` / HU-012):** Exclusión estricta de listas `iframes-` y `keyframes` en `isRealMedia()`. Permutaciones prioritarias `EMBED_CLEAN` y `REFERER_ONLY` sin cabeceras 'Cookie' ni 'Origin'. |
 | `:core:protocol` | `SignalingMessage`, `SignalingProtocolTest` | 🟢 Estable | Soporte para campo `isLandscape` en `SetDisplayMode`, `branch` en `DirectStreamHandoff`, `panX`/`panY`, `rotation` en `ImageTransform`, `smoothBuffer` en `Offer` WebRTC, y metadatos `mediaUrl`/`title` en `PlaybackStatus`. |
-| `:app-sender` | `BrowserPopupInterceptor`, `BrowserWebView`, `BrowserUrlHelper`, `StreamQualityDetector`, `WvcVideoListSheet` | 🟢 Estable | **Blindaje Anti-Popups y Protección de Página de Películas (`v3.4.64` / HU-007, HU-012):** Supresión nativa de ventanas emergentes (100% `return false` en `onCreateWindow` fuera de buscadores). Bloqueo de redirecciones click-shield para no perder la página web. |
-| `:app-receiver` | `TvWebStreamScreen`, `TvWebResourceInterceptor`, `TvWebPlayerHtmlBuilder`, `ExoPlayerTvManager`, `TvScreens`, `TvStandbyCleanScreen` | 🟢 Estable | **Corte de Bucle Ping-Pong y Sockets Limpios (`v3.4.64` / HU-012):** Flag `isFallbackFromExoPlayer` en `WebStreamPlaying` para finalizar limpiamente la sesión sin rebote infinito. Eliminada la síntesis forzada de 'Origin' en ExoPlayer. |
+| `:app-sender` | `BrowserPopupInterceptor`, `BrowserWebView`, `BrowserUrlHelper`, `MediaPlatformResolver`, `LocalStreamProxyServer` | 🟢 Estable | **Erradicación de Restricción CORS en CDNs (`v3.4.65` / HU-012):** Omisión absoluta de cabecera 'Origin' hacia CDNs de video (DropCDN/Fastream) evitando respuesta 403 de Nginx. Referer exacto con ID de embed (`https://dr0pstream.com/e/$id`) e identidad de escritorio Windows `UA_FASTREAM`. |
+| `:app-receiver` | `TvWebStreamScreen`, `TvWebResourceInterceptor`, `ExoPlayerTvManager`, `TvScreens`, `TvStandbyCleanScreen` | 🟢 Estable | **Blindaje Anti-CORS Dual en TV (`v3.4.65` / HU-012):** Supresión de 'Origin' en sockets ExoPlayer y en `TvWebResourceInterceptor` con inyección obligatoria de `Access-Control-Allow-Origin: *` hacia Chromium. |
 
 ---
 

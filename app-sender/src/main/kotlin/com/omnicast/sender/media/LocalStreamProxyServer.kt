@@ -85,10 +85,12 @@ object LocalStreamProxyServer {
         val isFastream = cleanUrl.contains("fastream.to", true)
         if (isDrop && id != null) {
             mutableHeaders["Referer"] = "https://dr0pstream.com/e/$id"
-            mutableHeaders["Origin"] = "https://dr0pstream.com"
+            mutableHeaders["User-Agent"] = MediaPlatformResolver.UA_FASTREAM
+            mutableHeaders.remove("Origin")
         } else if (isFastream && id != null) {
             mutableHeaders["Referer"] = "https://fastream.to/embed-$id.html"
-            mutableHeaders["Origin"] = "https://fastream.to"
+            mutableHeaders["User-Agent"] = MediaPlatformResolver.UA_FASTREAM
+            mutableHeaders.remove("Origin")
         } else {
             val ref = mutableHeaders["Referer"] ?: headers["Referer"]
             if (!ref.isNullOrBlank() && !mutableHeaders.containsKey("Origin")) {
@@ -100,20 +102,10 @@ object LocalStreamProxyServer {
         if (!mutableHeaders.containsKey("Sec-Fetch-Dest")) mutableHeaders["Sec-Fetch-Dest"] = "empty"
         if (!mutableHeaders.containsKey("Accept")) mutableHeaders["Accept"] = "*/*"
         try {
+            // Por qué: Solo enviar la cookie que pertenezca al host de la petición para evitar Nginx 494
             val cm = CookieManager.getInstance()
-            val c1 = cm?.getCookie(cleanUrl)
-            val c2 = mutableHeaders["Referer"]?.let { cm?.getCookie(it) }
-            val c3 = mutableHeaders["Origin"]?.let { cm?.getCookie(it) }
-            val c4 = cm?.getCookie("https://dr0pstream.com")
-            val c5 = cm?.getCookie("https://dropcdn.io")
-            val c6 = cm?.getCookie("https://fastream.to")
-            val mergedCookies = listOfNotNull(c1, c2, c3, c4, c5, c6, mutableHeaders["Cookie"])
-                .flatMap { it.split("; ") }
-                .map { it.trim() }
-                .filter { it.isNotBlank() }
-                .distinct()
-                .joinToString("; ")
-            if (mergedCookies.isNotBlank()) mutableHeaders["Cookie"] = mergedCookies
+            val specificCookie = cm?.getCookie(cleanUrl)?.takeIf { it.isNotBlank() } ?: mutableHeaders["Cookie"]
+            if (!specificCookie.isNullOrBlank()) mutableHeaders["Cookie"] = specificCookie else mutableHeaders.remove("Cookie")
         } catch (_: Throwable) {}
         return mutableHeaders
     }

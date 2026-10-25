@@ -115,7 +115,6 @@ object MediaPlatformResolver {
         return try {
             val isDrop = url.contains("dropcdn.io", true) || url.contains("dr0pstream.com", true)
             val embedUrl = if (isDrop) "https://dr0pstream.com/e/$id" else "https://fastream.to/embed-$id.html"
-            val origin = if (isDrop) "https://dr0pstream.com" else "https://fastream.to"
             val conn = (URL(embedUrl).openConnection() as HttpURLConnection).apply {
                 connectTimeout = 4000
                 readTimeout = 4000
@@ -136,7 +135,6 @@ object MediaPlatformResolver {
             val hdrs = mapOf(
                 "User-Agent" to UA_FASTREAM,
                 "Referer" to embedUrl,
-                "Origin" to origin,
                 "Sec-Fetch-Mode" to "cors",
                 "Sec-Fetch-Dest" to "empty",
                 "Sec-Fetch-Site" to "cross-site"
@@ -205,11 +203,10 @@ object MediaPlatformResolver {
             } else {
                 val id = extractFastreamId(finalUrl)
                 if (id != null) {
-                    val embed = if (isDrop) "https://dr0pstream.com/e/" else "https://fastream.to/embed-$id.html"
-                    val origin = if (isDrop) "https://dr0pstream.com" else "https://fastream.to"
-                    hdrs["User-Agent"] = if (isFastream) UA_FASTREAM else UA_MOBILE
+                    val embed = if (isDrop) "https://dr0pstream.com/e/$id" else "https://fastream.to/embed-$id.html"
+                    hdrs["User-Agent"] = UA_FASTREAM
                     hdrs["Referer"] = embed
-                    hdrs["Origin"] = origin
+                    hdrs.remove("Origin")
                 }
             }
         }
@@ -227,7 +224,7 @@ object MediaPlatformResolver {
                 }
             }
         }
-        val reqUa = if (isFastream) UA_FASTREAM else UA_MOBILE
+        val reqUa = if (isFastream || isDrop) UA_FASTREAM else UA_MOBILE
         val safeHeaders = BrowserUrlHelper.buildSafeHeaders(finalUrl, pageUrl, reqUa, hdrs)
         return Pair(finalUrl, safeHeaders)
     }

@@ -131,12 +131,14 @@ object BrowserUrlHelper {
             val isFast = streamUrl.contains("fastream.to", true)
             val isLulu = streamUrl.contains("tnmr.org", true) || streamUrl.contains("luluvdo.com", true) || streamUrl.contains("lulustream.com", true)
             if (isDrop && id != null) {
-                headers["Referer"] = "https://dr0pstream.com/e/"
-                headers["Origin"] = "https://dr0pstream.com"
+                headers["Referer"] = "https://dr0pstream.com/e/$id"
+                headers.remove("Origin")
+                headers["User-Agent"] = MediaPlatformResolver.UA_FASTREAM
                 headers["Sec-Fetch-Mode"] = "cors"; headers["Sec-Fetch-Site"] = "cross-site"; headers["Sec-Fetch-Dest"] = "empty"
             } else if (isFast && id != null) {
                 headers["Referer"] = "https://fastream.to/embed-$id.html"
-                headers["Origin"] = "https://fastream.to"
+                headers.remove("Origin")
+                headers["User-Agent"] = MediaPlatformResolver.UA_FASTREAM
                 headers["Sec-Fetch-Mode"] = "cors"; headers["Sec-Fetch-Site"] = "cross-site"; headers["Sec-Fetch-Dest"] = "empty"
             } else if (isLulu && luluId != null) {
                 headers["Referer"] = "https://luluvdo.com/e/$luluId"
@@ -145,8 +147,7 @@ object BrowserUrlHelper {
             } else if (!headers.containsKey("Referer") && currentUrl.isNotBlank()) {
                 headers["Referer"] = currentUrl
             }
-            if (isFast) headers["User-Agent"] = userAgent
-            else if (!headers.containsKey("User-Agent")) headers["User-Agent"] = userAgent
+            if (!headers.containsKey("User-Agent")) headers["User-Agent"] = userAgent
         } catch (_: Throwable) {}
         return headers
     }

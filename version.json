@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 208,
-  "versionCodeReceiver": 191,
-  "versionName": "3.4.58",
-  "releaseTag": "v3.4.58",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.58/omnicast-sender-v3.4.58.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.58/omnicast-receiver-v3.4.58.apk",
-  "changelog": "v3.4.58: Neutralización estricta de popups en onCreateWindow, bloqueo de redirecciones externas y filtrado de scripts VAST/AMSP."
+  "versionCodeSender": 209,
+  "versionCodeReceiver": 192,
+  "versionName": "3.4.59",
+  "releaseTag": "v3.4.59",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.59/omnicast-sender-v3.4.59.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.59/omnicast-receiver-v3.4.59.apk",
+  "changelog": "v3.4.59: Supresión nativa de popups en onCreateWindow sin WebViews temporales (anti-OOM), habilitación de clics con gesto del usuario y throttle de estadísticas."
 }

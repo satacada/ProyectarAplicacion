@@ -154,14 +154,13 @@ fun BrowserWebView(
                                 showBlockedToast(ctx)
                                 return true
                             }
-                            if (!isSameSite && !isSourceSearchEngine && targetHost != null) {
+                            if (!isSameSite && !isSourceSearchEngine && targetHost != null && !r.hasGesture()) {
                                 val isAllowedExternal = AdBlocker.isSearchEngine(targetHost) ||
                                     AdBlocker.isKnownMediaHost(targetHost) ||
                                     AdBlocker.isVerificationOrCaptcha(targetHost) ||
                                     AdBlockWhitelistManager.isWhitelistedHost(targetHost)
                                 if (!isAllowedExternal) {
-                                    android.util.Log.w("BrowserWebView", "🛑 Redirección externa bloqueada hacia: $targetHost")
-                                    targetHost.let { AdBlocker.learnAndBlockAdHost(it, curHost) }
+                                    android.util.Log.w("BrowserWebView", "🛑 Redirección automática bloqueada hacia: $targetHost")
                                     showBlockedToast(ctx)
                                     return true
                                 }
@@ -217,42 +216,12 @@ fun BrowserWebView(
 
                 webChromeClient = object : WebChromeClient() {
                     override fun onCreateWindow(view: WebView?, isDialog: Boolean, isUserGesture: Boolean, resultMsg: android.os.Message?): Boolean {
-                        val transport = resultMsg?.obj as? WebView.WebViewTransport
-                        if (transport != null && view != null) {
-                            val tempWebView = WebView(view.context).apply {
-                                settings.javaScriptEnabled = true
-                                settings.domStorageEnabled = true
-                                settings.userAgentString = view.settings.userAgentString
-                            }
-                            var handled = false
-                            fun handlePopupUrl(v: WebView?, destUrl: String?) {
-                                if (handled || destUrl.isNullOrBlank() || destUrl.startsWith("about:")) return
-                                handled = true
-                                val liveUrl = view.url ?: livePageUrl
-                                val curHost = try { java.net.URI(liveUrl).host?.lowercase() } catch (_: Throwable) { null }
-                                val targetHost = try { java.net.URI(destUrl).host?.lowercase() } catch (_: Throwable) { null }
-                                val isSourceWhitelisted = curHost?.let { AdBlockWhitelistManager.isWhitelistedHost(it) } ?: false
-                                val isAllowedTarget = AdBlocker.isSameSite(curHost, targetHost) || isSourceWhitelisted ||
-                                    (targetHost != null && (AdBlocker.isSearchEngine(targetHost) || AdBlocker.isKnownMediaHost(targetHost) ||
-                                                           AdBlocker.isVerificationOrCaptcha(targetHost) || AdBlockWhitelistManager.isWhitelistedHost(targetHost)))
-                                val isBlocked = isAdBlockEnabled && !isSourceWhitelisted &&
-                                    (!isAllowedTarget || AdBlocker.isAd(destUrl) || AdBlocker.isExternalRedirect(destUrl) || NativeAdBlockEngine.shouldBlock(destUrl, liveUrl))
-                                if (!isBlocked) {
-                                    view.post { view.loadUrl(destUrl) }
-                                } else {
-                                    targetHost?.let { AdBlocker.learnAndBlockAdHost(it, curHost) }
-                                    showBlockedToast(ctx)
-                                }
-                                v?.post { try { v.destroy() } catch (_: Throwable) {} }
-                            }
-                            tempWebView.webViewClient = object : WebViewClient() {
-                                override fun onPageStarted(v: WebView?, u: String?, f: Bitmap?) { handlePopupUrl(v, u) }
-                                override fun shouldOverrideUrlLoading(v: WebView?, req: WebResourceRequest?): Boolean { handlePopupUrl(v, req?.url?.toString()); return true }
-                            }
-                            tempWebView.postDelayed({ try { tempWebView.destroy() } catch (_: Throwable) {} }, 10000)
-                            transport.webView = tempWebView
-                            resultMsg.sendToTarget()
-                            return true
+                        val liveUrl = view?.url ?: livePageUrl
+                        val curHost = try { java.net.URI(liveUrl).host?.lowercase() } catch (_: Throwable) { null }
+                        val isSourceWhitelisted = curHost?.let { AdBlockWhitelistManager.isWhitelistedHost(it) } ?: false
+                        if (isAdBlockEnabled && !isSourceWhitelisted) {
+                            showBlockedToast(ctx)
+                            return false // Suprime popups de forma nativa sin alojar WebViews temporales en RAM
                         }
                         return false
                     }

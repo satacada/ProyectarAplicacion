@@ -64,6 +64,7 @@ class SenderMainActivity : ComponentActivity() {
     private val signalingClient: SignalingClient get() = SignalingClientHolder.get()
     private val autoPromptCapture = androidx.compose.runtime.mutableStateOf(false); private val isTvConnected = androidx.compose.runtime.mutableStateOf(false); private val openBrowserDirectly = androidx.compose.runtime.mutableStateOf(false); private val openGalleryDirectly = androidx.compose.runtime.mutableStateOf(false)
     private lateinit var historyManager: PlayHistoryManager; private lateinit var playlistManager: com.omnicast.sender.playlist.PlaylistManager
+    private var lastProfileRecordTs = 0L
     private val audioPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         if (!granted) Toast.makeText(this, "Audio interno desactivado. Transmitirá solo video.", Toast.LENGTH_SHORT).show()
     }
@@ -212,7 +213,9 @@ class SenderMainActivity : ComponentActivity() {
                         ActiveStreamHolder.streamUrl?.let { sUrl ->
                             com.omnicast.sender.history.PlayHistoryManager(this@SenderMainActivity).updateProgress(sUrl, msg.positionMs, msg.durationMs)
                             playlistManager.updateProgress(sUrl, msg.positionMs, msg.durationMs)
-                            if (msg.positionMs > 60000L && (msg.positionMs % 30000L < 2000L)) {
+                            val nowTs = System.currentTimeMillis()
+                            if (msg.positionMs > 60000L && nowTs - lastProfileRecordTs > 30000L) {
+                                lastProfileRecordTs = nowTs
                                 val host = com.omnicast.sender.stream.StreamProfileDatabase.extractHost(sUrl)
                                 val br = com.omnicast.sender.nativeclassifier.NativeStreamClassifier.classify(sUrl)
                                 com.omnicast.sender.stream.StreamProfileDatabase.get().recordSuccess(host, ActiveStreamHolder.headers, !ActiveStreamHolder.isProxied.value, br)

@@ -122,7 +122,7 @@ object BrowserUrlHelper {
             val isFast = streamUrl.contains("fastream.to", true)
             val isLulu = streamUrl.contains("tnmr.org", true) || streamUrl.contains("luluvdo.com", true) || streamUrl.contains("lulustream.com", true)
             if (isDrop && id != null) {
-                headers["Referer"] = "https://dr0pstream.com/e/$id"
+                headers["Referer"] = "https://dr0pstream.com/e/"
                 headers["Origin"] = "https://dr0pstream.com"
                 headers["Sec-Fetch-Mode"] = "cors"; headers["Sec-Fetch-Site"] = "cross-site"; headers["Sec-Fetch-Dest"] = "empty"
             } else if (isFast && id != null) {
@@ -136,7 +136,7 @@ object BrowserUrlHelper {
             } else if (!headers.containsKey("Referer") && currentUrl.isNotBlank()) {
                 headers["Referer"] = currentUrl
             }
-            if (isFast || isDrop) headers["User-Agent"] = userAgent
+            if (isFast) headers["User-Agent"] = userAgent
             else if (!headers.containsKey("User-Agent")) headers["User-Agent"] = userAgent
         } catch (_: Throwable) {}
         return headers

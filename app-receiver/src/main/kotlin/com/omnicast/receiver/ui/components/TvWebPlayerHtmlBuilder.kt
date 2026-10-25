@@ -81,10 +81,16 @@ object TvWebPlayerHtmlBuilder {
                     hls.on(Hls.Events.ERROR, function(ev, data) {
                       if (data.fatal) {
                         if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
-                          if (++hlsNetRetries <= 3) hls.startLoad();
-                          else { try { hls.destroy(); } catch(_) {} vid.src = streamUrl; tryPlay(); }
+                          if (++hlsNetRetries <= 2) hls.startLoad();
+                          else {
+                            try { hls.destroy(); } catch(_) {}
+                            if (window.AndroidBridge && window.AndroidBridge.onPlaybackFailed) window.AndroidBridge.onPlaybackFailed('HLS_NET_403');
+                          }
                         } else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) hls.recoverMediaError();
-                        else { try { hls.destroy(); } catch(_) {} vid.src = streamUrl; tryPlay(); }
+                        else {
+                          try { hls.destroy(); } catch(_) {}
+                          if (window.AndroidBridge && window.AndroidBridge.onPlaybackFailed) window.AndroidBridge.onPlaybackFailed('HLS_FATAL');
+                        }
                       }
                     });
                   } else {

@@ -198,16 +198,16 @@ object MediaPlatformResolver {
         val isDrop = lower.contains("dropcdn.io") || lower.contains("dr0pstream.com")
         val isFastream = lower.contains("fastream.to")
         if (isDrop || isFastream) {
-            val resolved = resolveFastreamSync(finalUrl, pageUrl)
+            val resolved = if (!finalUrl.contains(".m3u8", ignoreCase = true)) resolveFastreamSync(finalUrl, pageUrl) else null
             if (resolved != null) {
                 finalUrl = resolved.first
                 resolved.third.forEach { (k, v) -> hdrs[k] = v }
             } else {
                 val id = extractFastreamId(finalUrl)
                 if (id != null) {
-                    val embed = if (isDrop) "https://dr0pstream.com/e/$id" else "https://fastream.to/embed-$id.html"
+                    val embed = if (isDrop) "https://dr0pstream.com/e/" else "https://fastream.to/embed-$id.html"
                     val origin = if (isDrop) "https://dr0pstream.com" else "https://fastream.to"
-                    hdrs["User-Agent"] = UA_FASTREAM
+                    hdrs["User-Agent"] = if (isFastream) UA_FASTREAM else UA_MOBILE
                     hdrs["Referer"] = embed
                     hdrs["Origin"] = origin
                 }
@@ -215,7 +215,7 @@ object MediaPlatformResolver {
         }
         val isLulu = lower.contains("tnmr.org") || lower.contains("luluvdo.com") || lower.contains("lulustream.com")
         if (isLulu) {
-            val resolved = resolveLuluStreamSync(finalUrl, pageUrl)
+            val resolved = if (!finalUrl.contains(".m3u8", ignoreCase = true)) resolveLuluStreamSync(finalUrl, pageUrl) else null
             if (resolved != null) {
                 finalUrl = resolved.first
                 resolved.third.forEach { (k, v) -> hdrs[k] = v }
@@ -227,7 +227,7 @@ object MediaPlatformResolver {
                 }
             }
         }
-        val reqUa = if (isDrop || isFastream) UA_FASTREAM else UA_MOBILE
+        val reqUa = if (isFastream) UA_FASTREAM else UA_MOBILE
         val safeHeaders = BrowserUrlHelper.buildSafeHeaders(finalUrl, pageUrl, reqUa, hdrs)
         return Pair(finalUrl, safeHeaders)
     }

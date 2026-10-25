@@ -187,10 +187,6 @@ class TvReceiverActivity : ComponentActivity() {
                     val ytId = message.headers["X-YouTube-Id"] ?: TvReceiverHelper.extractYouTubeId(message.mediaUrl)
                     if (!ytId.isNullOrBlank()) {
                         exoPlayerManager.stop(); receiverState.value = ReceiverUiState.YouTubePlaying(ytId, title, System.currentTimeMillis())
-                    } else if (com.omnicast.core.domain.usecases.StreamManifestProbe.hasSignedSecurityToken(message.mediaUrl)) {
-                        exoPlayerManager.stop()
-                        receiverState.value = ReceiverUiState.WebStreamPlaying(message.mediaUrl, title, message.headers, message.startPositionMs)
-                        lifecycleScope.launch { historyManager.addOrUpdate(message.mediaUrl, title, message.headers, message.startPositionMs) }
                     } else {
                         val br = com.omnicast.core.domain.models.MediaBranch.entries.firstOrNull { it.name.equals(message.branch, true) } ?: com.omnicast.core.domain.models.MediaBranch.VOD_HLS_MP4
                         receiverState.value = ReceiverUiState.DirectStreamPlaying(message.mediaUrl, title)

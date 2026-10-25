@@ -50,9 +50,13 @@ object TvWebResourceInterceptor {
             }
 
             val code = conn.responseCode
-            val msg = conn.responseMessage ?: "OK"
             val isSuccess = code in 200..299
-            val inStream: InputStream = if (isSuccess) conn.inputStream else (conn.errorStream ?: ByteArrayInputStream(ByteArray(0)))
+            if (!isSuccess) {
+                conn.disconnect()
+                return null
+            }
+            val inStream: InputStream = conn.inputStream
+            val msg = conn.responseMessage ?: "OK"
 
             val mime = when {
                 lower.contains(".m3u8") -> "application/vnd.apple.mpegurl"

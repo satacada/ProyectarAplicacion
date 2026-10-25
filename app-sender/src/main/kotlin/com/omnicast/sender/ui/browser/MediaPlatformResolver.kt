@@ -195,7 +195,7 @@ object MediaPlatformResolver {
         val lower = finalUrl.lowercase()
         val isDrop = lower.contains("dropcdn.io") || lower.contains("dr0pstream.com")
         val isFastream = lower.contains("fastream.to")
-        if (isDrop || isFastream) {
+        if (isFastream) {
             val resolved = if (!finalUrl.contains(".m3u8", ignoreCase = true)) resolveFastreamSync(finalUrl, pageUrl) else null
             if (resolved != null) {
                 finalUrl = resolved.first
@@ -203,11 +203,17 @@ object MediaPlatformResolver {
             } else {
                 val id = extractFastreamId(finalUrl)
                 if (id != null) {
-                    val embed = if (isDrop) "https://dr0pstream.com/e/$id" else "https://fastream.to/embed-$id.html"
                     hdrs["User-Agent"] = UA_FASTREAM
-                    hdrs["Referer"] = embed
+                    hdrs["Referer"] = "https://fastream.to/embed-$id.html"
                     hdrs.remove("Origin")
                 }
+            }
+        } else if (isDrop) {
+            val id = extractFastreamId(finalUrl)
+            if (id != null) {
+                hdrs["Referer"] = "https://dr0pstream.com/e/$id"
+                hdrs["User-Agent"] = UA_MOBILE
+                hdrs.remove("Origin")
             }
         }
         val isLulu = lower.contains("tnmr.org") || lower.contains("luluvdo.com") || lower.contains("lulustream.com")
@@ -224,7 +230,7 @@ object MediaPlatformResolver {
                 }
             }
         }
-        val reqUa = if (isFastream || isDrop) UA_FASTREAM else UA_MOBILE
+        val reqUa = if (isFastream) UA_FASTREAM else UA_MOBILE
         val safeHeaders = BrowserUrlHelper.buildSafeHeaders(finalUrl, pageUrl, reqUa, hdrs)
         return Pair(finalUrl, safeHeaders)
     }

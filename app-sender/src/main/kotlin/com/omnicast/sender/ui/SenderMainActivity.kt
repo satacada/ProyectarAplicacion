@@ -182,7 +182,8 @@ class SenderMainActivity : ComponentActivity() {
                         val origUrl = ActiveStreamHolder.streamUrl
                         val now = System.currentTimeMillis()
                         if (now - lastProxyTime < 5000L) return@collect
-                        if (!mUrl.isNullOrBlank() && origUrl != null && !origUrl.contains(mUrl) && !mUrl.contains(origUrl)) return@collect
+                        val isSameStream = if (mUrl.isNullOrBlank() || origUrl.isNullOrBlank()) true else (origUrl.contains(mUrl) || mUrl.contains(origUrl) || com.omnicast.sender.ui.browser.BrowserUrlHelper.isSameLogicalStream(origUrl, mUrl) || (try { java.net.URI(origUrl).host.equals(java.net.URI(mUrl).host, true) } catch (_: Throwable) { false }))
+                        if (!isSameStream) return@collect
                         if (!ActiveStreamHolder.isProxied.value && !origUrl.isNullOrBlank()) {
                             lastProxyTime = now
                             com.omnicast.sender.log.SenderLogger.i("SenderMain", "🛡️ HTTP 403 en TV: Recuperación automática vía Proxy Jetty...")

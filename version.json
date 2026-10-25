@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 215,
-  "versionCodeReceiver": 198,
-  "versionName": "3.4.65",
-  "releaseTag": "v3.4.65",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.65/omnicast-sender-v3.4.65.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.65/omnicast-receiver-v3.4.65.apk",
-  "changelog": "v3.4.65: Erradicación de bloqueo CORS 403 en DropCDN/Fastream (omisión de cabecera Origin en video), Referer exacto con ID de embed y asignación de User-Agent de escritorio UA_FASTREAM."
+  "versionCodeSender": 216,
+  "versionCodeReceiver": 199,
+  "versionName": "3.4.66",
+  "releaseTag": "v3.4.66",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.66/omnicast-sender-v3.4.66.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.66/omnicast-receiver-v3.4.66.apk",
+  "changelog": "v3.4.66: Relegación de tráilers en páginas de películas dando prioridad absoluta a la película real (.m3u8), identidad Chrome Mobile para DropCDN y soporte de variantes HLS en auto-recuperación 403."
 }

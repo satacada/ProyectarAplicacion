@@ -25,7 +25,7 @@ object StreamQualityDetector {
         val prefix = if (!title.isNullOrBlank() && title != "Transmisión") "[${title.take(20)}] " else ""
 
         var currentMediaUrl = BrowserUrlHelper.sanitizeMediaUrl(mediaUrl)
-        val isFastHost = currentMediaUrl.contains("fastream.to", ignoreCase = true) || currentMediaUrl.contains("dropcdn.io", ignoreCase = true)
+        val isFastHost = currentMediaUrl.contains("fastream.to", ignoreCase = true)
         val initialUa = if (isFastHost) MediaPlatformResolver.UA_FASTREAM else UA_MOBILE
         var safeHeaders = BrowserUrlHelper.buildSafeHeaders(currentMediaUrl, headers["Referer"] ?: pageUrl ?: "", initialUa, headers)
         if (isFastHost && !currentMediaUrl.contains(".m3u8", ignoreCase = true)) {
@@ -265,6 +265,8 @@ object StreamQualityDetector {
         if (opt.isTestedFailed) return 0
         if (opt.isTestedSuccess) return 150
         val url = opt.streamUrl
+        val isYt = BrowserUrlHelper.extractYouTubeId(url) != null
+        if (isYt && pageUrl != null && BrowserUrlHelper.isMovieOrVideoPage(pageUrl)) return 10
         val isM = opt.isMaster || url.contains("master", true) || url.contains("playlist", true) || url.contains(".urlset", true)
         val hasToken = StreamManifestProbe.hasSignedSecurityToken(url)
         val isCdn = url.contains("tnmr.org", true) || url.contains("dropcdn", true) || url.contains("fastream", true) ||

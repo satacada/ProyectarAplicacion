@@ -21,11 +21,12 @@ object BrowserUrlHelper {
         return DAILYMOTION_REGEX.find(url)?.groupValues?.get(1)
     }
 
-    fun createYouTubeQualityOptions(videoId: String, title: String? = null): List<StreamQualityOption> {
+    fun createYouTubeQualityOptions(videoId: String, title: String? = null, isTrailer: Boolean = false): List<StreamQualityOption> {
         val ytUrl = "https://www.youtube.com/watch?v=$videoId"
         val prefix = if (!title.isNullOrBlank() && title != "Transmisión") "[${title.take(20)}] " else ""
+        val tag = if (isTrailer) "Tráiler YouTube" else "Full HD"
         return listOf(
-            StreamQualityOption("${prefix}1080p Full HD", "1080p", "Original", ytUrl, isMaster = true),
+            StreamQualityOption("${prefix}1080p $tag", "1080p", if (isTrailer) "Tráiler" else "Original", ytUrl, isMaster = !isTrailer, isMovie = !isTrailer),
             StreamQualityOption("${prefix}720p HD", "720p", "Estándar HD", ytUrl),
             StreamQualityOption("${prefix}480p SD", "480p", "SD", ytUrl),
             StreamQualityOption("${prefix}360p", "360p", "Bajo Consumo", ytUrl)
@@ -86,9 +87,9 @@ object BrowserUrlHelper {
         if (url.isNullOrBlank()) return false
         val l = url.lowercase()
         if (l.startsWith("about:") || l.contains("google.") || l.contains("yandex.") || l.contains("bing.")) return false
-        return l.contains("/pelicula/") || l.contains("/pelis/") || l.contains("/movie/") ||
+        return l.contains("pelicula") || l.contains("pelis") || l.contains("movie") ||
                l.contains("/ver-") || l.contains("/ver/") || l.contains("/watch/") ||
-               l.contains("/video/") || l.contains("/serie/") || l.contains("/episode/") ||
+               l.contains("/video/") || l.contains("serie") || l.contains("episode") ||
                l.contains("/ep-") || l.contains("/stream/") || l.contains("/play")
     }
 
@@ -133,7 +134,7 @@ object BrowserUrlHelper {
             if (isDrop && id != null) {
                 headers["Referer"] = "https://dr0pstream.com/e/$id"
                 headers.remove("Origin")
-                headers["User-Agent"] = MediaPlatformResolver.UA_FASTREAM
+                headers["User-Agent"] = userAgent
                 headers["Sec-Fetch-Mode"] = "cors"; headers["Sec-Fetch-Site"] = "cross-site"; headers["Sec-Fetch-Dest"] = "empty"
             } else if (isFast && id != null) {
                 headers["Referer"] = "https://fastream.to/embed-$id.html"

@@ -67,11 +67,12 @@ fun InAppBrowserScreen(
             webViewInstance?.evaluateJavascript(WvcSnifferScripts.buildAggressiveRescanScript(WvcDomSniffer.CONSOLE_PREFIX), null)
             return
         }
+        val isMovieSite = BrowserUrlHelper.isMovieOrVideoPage(currentUrl); val hasNonYt = currentStreams.any { BrowserUrlHelper.extractYouTubeId(it) == null }
         qualityOptions = currentStreams.flatMap { u ->
             val ytId = BrowserUrlHelper.extractYouTubeId(u)
             val rep = com.omnicast.sender.ui.browser.reputation.StreamReputationDatabase.getScore(currentUrl, u)
             val isSucc = testedSuccess.contains(u); val isFail = testedFailed.contains(u)
-            if (ytId != null) BrowserUrlHelper.createYouTubeQualityOptions(ytId, cleanTitle)
+            if (ytId != null) BrowserUrlHelper.createYouTubeQualityOptions(ytId, cleanTitle, isTrailer = isMovieSite && hasNonYt)
             else {
                 val lbl = streamLabels[u]; val isM = u.contains("master", true) || u.contains("playlist", true) || lbl?.contains("auto", true) == true
                 val vName = lbl?.takeIf { it.isNotBlank() } ?: StreamQualityDetector.extractFileName(u, if (isM) "master" else "video")
@@ -112,8 +113,8 @@ fun InAppBrowserScreen(
         if (detectedStreams.size >= 12) return
         val nonM = detectedStreams.indexOfFirst { !it.contains("master", true) && !it.contains("playlist", true) && !it.contains("video.m3u8", true) }
         if (isM) detectedStreams.add(0, cleanUrl) else if (nonM >= 0) detectedStreams.add(nonM, cleanUrl) else detectedStreams.add(cleanUrl)
-        if (hdrs.isNotEmpty()) streamHeaders[cleanUrl] = hdrs; if (!label.isNullOrBlank()) streamLabels[cleanUrl] = label
-        val primaryUrl = detectedStreams.firstOrNull { it.contains("master", true) || it.contains("video.m3u8", true) } ?: cleanUrl
+        val isMov = BrowserUrlHelper.isMovieOrVideoPage(currentUrl); val nonYt = detectedStreams.firstOrNull { BrowserUrlHelper.extractYouTubeId(it) == null && (it.contains("master", true) || it.contains("video.m3u8", true)) }
+        val primaryUrl = if (isMov && nonYt != null) nonYt else (detectedStreams.firstOrNull { it.contains("master", true) || it.contains("video.m3u8", true) } ?: cleanUrl)
         val cleanT = if (pageTitle.isNotBlank() && pageTitle != "Cargando..." && pageTitle != "Transmisión") pageTitle else "Video Web"
         ActiveStreamHolder.update(primaryUrl, cleanT, streamHeaders[primaryUrl] ?: hdrs)
         android.util.Log.i("StreamDetection", "🎬 Flujo registrado [isMaster=$isM]: $cleanUrl")

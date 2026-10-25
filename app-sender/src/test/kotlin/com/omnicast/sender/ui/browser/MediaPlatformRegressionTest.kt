@@ -100,4 +100,32 @@ class MediaPlatformRegressionTest {
         assertTrue(defaultList.contains("yandex.ru"))
         assertTrue(defaultList.contains("ya.ru"))
     }
+
+    @Test
+    fun testTrailerRelegationOnMoviePages() {
+        val ytOpt = StreamQualityOption("Tráiler", "1080p", "Original", "https://www.youtube.com/watch?v=bwcADuJZDNA", isMaster = true)
+        val movieOpt = StreamQualityOption("Película", "Auto", "Adaptativa", "https://ds4.dropcdn.io/hls2/01/00038/argalp6ab1fu_n/master.m3u8?t=123&s=abc", isMaster = true)
+        val moviePage = "https://pelisplus.hair/peliculas/8536-mad-max-2-el-guerrero-de-la-carretera-ver-online-hd.html"
+
+        val ytProb = StreamQualityDetector.calculateMovieProbability(ytOpt, moviePage)
+        val movieProb = StreamQualityDetector.calculateMovieProbability(movieOpt, moviePage)
+
+        assertEquals("El tráiler de YouTube en página de películas debe tener probabilidad baja (10)", 10, ytProb)
+        assertTrue("La película real debe tener mayor probabilidad que el tráiler", movieProb > ytProb)
+    }
+
+    @Test
+    fun testDropCdnHeadersUseMobileUa() {
+        val dropUrl = "https://ds4.dropcdn.io/hls2/01/00038/argalp6ab1fu_n/master.m3u8?t=123&s=abc"
+        val fastUrl = "https://s40.fastream.to/hls2/01/00010/abcdefgh_n/master.m3u8"
+        val page = "https://pelisplus.hair/peliculas/8536-mad-max-2.html"
+
+        val (_, dropHeaders) = MediaPlatformResolver.prepareStreamForPlayback(dropUrl, page, emptyMap())
+        val (_, fastHeaders) = MediaPlatformResolver.prepareStreamForPlayback(fastUrl, page, emptyMap())
+
+        assertEquals(UA_MOBILE, dropHeaders["User-Agent"])
+        assertEquals(MediaPlatformResolver.UA_FASTREAM, fastHeaders["User-Agent"])
+        assertEquals("https://dr0pstream.com/e/argalp6ab1fu", dropHeaders["Referer"])
+        assertEquals("https://fastream.to/embed-abcdefgh.html", fastHeaders["Referer"])
+    }
 }

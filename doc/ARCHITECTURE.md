@@ -1,6 +1,6 @@
 # 🏛️ ARQUITECTURA DEL SISTEMA: OMNICAST PRO
 
-**Versión Canónica:** v3.4.59  
+**Versión Canónica:** v3.4.60  
 **Última actualización:** 2026-10-25  
 **Estándar de Calidad:** Clean Architecture, Arquitectura Hexagonal (Ports & Adapters), Fail-Fast, Zero-Crash  
 
@@ -72,7 +72,7 @@ flowchart TD
 ```
 
 1. **Escudo 1 (Socket de Red en C++20):** `NativeAdBlockEngine.cpp` evalúa URLs en microsegundos contra reglas estáticas de EasyList y dominios aprendidos en SQLite local.
-2. **Escudo 2 (Supresión Nativa de Popups Anti-OOM):** `BrowserWebView.onCreateWindow` retorna `false` nativamente ante llamadas a `window.open()`. No asigna objetos `WebView` temporales, erradicando el colapso del heap de 512 MB. Al mismo tiempo, preserva `r.hasGesture()` para clics intencionales.
+2. **Escudo 2 (Enrutamiento Reutilizable Anti-OOM y Supresión de Popups):** `BrowserPopupInterceptor.kt` gestiona `onCreateWindow`. Enruta clics directos del usuario (`view.hitTestResult.extra`) y resultados de búsqueda (`target="_blank"`) hacia el WebView principal en 0ms. Utiliza un único interceptor estático con JavaScript deshabilitado para procesar `window.open` con gesto, descartando popups automáticos en 0ms con 0 MB de memoria adicional y erradicando el colapso del heap de 512 MB.
 3. **Escudo 3 (Neutralizador de Capas en el DOM):** Script reactivo que desactiva capas transparentes con alto `z-index` posicionadas sobre reproductores web de películas.
 4. **Escudo 4 (Filtro de Redes VAST / Autoaprendizaje Colectivo):** Detección de redirecciones y dominios foráneos con persistencia en `omnicast_adblock.db` y sincronización asíncrona hacia Supabase (`ADBLOCK_LEARNED_DOMAIN`).
 

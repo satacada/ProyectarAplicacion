@@ -80,4 +80,19 @@ class MediaPlatformRegressionTest {
         assertTrue(AdBlocker.isVerificationOrCaptcha("challenges.cloudflare.com"))
         assertFalse(AdBlocker.isVerificationOrCaptcha("https://pelisplus.lat/movie/123"))
     }
+
+    @Test
+    fun testSearchEngineDetectionAndWhitelist() {
+        assertTrue(AdBlocker.isSearchEngine("yandex.com"))
+        assertTrue(AdBlocker.isSearchEngine("yandex.ru"))
+        assertTrue(AdBlocker.isSearchEngine("ya.ru"))
+        assertTrue(AdBlocker.isSearchEngine("google.com"))
+        assertTrue(AdBlocker.isSearchEngine("duckduckgo.com"))
+        assertFalse(AdBlocker.isSearchEngine("pelisplus.lat"))
+
+        val defaultList = AdBlockWhitelistManager.DEFAULT_WHITELIST
+        assertTrue(defaultList.contains("yandex.com"))
+        assertTrue(defaultList.contains("yandex.ru"))
+        assertTrue(defaultList.contains("ya.ru"))
+    }
 }

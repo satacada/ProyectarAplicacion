@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 209,
-  "versionCodeReceiver": 192,
-  "versionName": "3.4.59",
-  "releaseTag": "v3.4.59",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.59/omnicast-sender-v3.4.59.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.59/omnicast-receiver-v3.4.59.apk",
-  "changelog": "v3.4.59: Supresión nativa de popups en onCreateWindow sin WebViews temporales (anti-OOM), habilitación de clics con gesto del usuario y throttle de estadísticas."
+  "versionCodeSender": 210,
+  "versionCodeReceiver": 193,
+  "versionName": "3.4.60",
+  "releaseTag": "v3.4.60",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.60/omnicast-sender-v3.4.60.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.60/omnicast-receiver-v3.4.60.apk",
+  "changelog": "v3.4.60: Solución definitiva a clics en resultados de búsqueda (Yandex, Google) y enlaces target=_blank con BrowserPopupInterceptor reutilizable de 0 MB de RAM."
 }

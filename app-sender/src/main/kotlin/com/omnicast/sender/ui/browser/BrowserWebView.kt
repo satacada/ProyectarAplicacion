@@ -79,6 +79,7 @@ fun BrowserWebView(
             }
 
             val webView = WebView(ctx)
+            val popupInterceptor = BrowserPopupInterceptor(ctx, webView, { isAdBlockEnabled }, { livePageUrl }) { showBlockedToast(ctx) }
             val swipeRefresh = SwipeRefreshLayout(ctx).apply {
                 isEnabled = false; isFocusable = false; isFocusableInTouchMode = false
                 descendantFocusability = android.view.ViewGroup.FOCUS_AFTER_DESCENDANTS
@@ -216,14 +217,7 @@ fun BrowserWebView(
 
                 webChromeClient = object : WebChromeClient() {
                     override fun onCreateWindow(view: WebView?, isDialog: Boolean, isUserGesture: Boolean, resultMsg: android.os.Message?): Boolean {
-                        val liveUrl = view?.url ?: livePageUrl
-                        val curHost = try { java.net.URI(liveUrl).host?.lowercase() } catch (_: Throwable) { null }
-                        val isSourceWhitelisted = curHost?.let { AdBlockWhitelistManager.isWhitelistedHost(it) } ?: false
-                        if (isAdBlockEnabled && !isSourceWhitelisted) {
-                            showBlockedToast(ctx)
-                            return false // Suprime popups de forma nativa sin alojar WebViews temporales en RAM
-                        }
-                        return false
+                        return popupInterceptor.handleCreateWindow(view, isUserGesture, resultMsg)
                     }
 
                     override fun onProgressChanged(v: WebView?, p: Int) {

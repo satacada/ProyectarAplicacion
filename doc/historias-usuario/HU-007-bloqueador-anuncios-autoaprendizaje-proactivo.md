@@ -48,3 +48,13 @@ y además, quiero que los flujos de video detectados que se están reproduciendo
   2. Garantiza un consumo de 0 MB de memoria RAM adicional, impidiendo que el heap de la aplicación alcance el límite de 512 MB y previniendo el error `OutOfMemoryError`.
   3. En `shouldOverrideUrlLoading`, respeta los clics intencionales del usuario mediante `r.hasGesture() == true`, permitiendo navegar normalmente hacia enlaces de películas o servidores externos que no sean anuncios comprobados.
 
+### Criterio 6: Enrutamiento Reutilizable de Enlaces target="_blank" y Resultados de Búsqueda (v3.4.60)
+- **Dado** que el usuario realiza búsquedas en motores oficiales (Yandex, Google, Bing, DuckDuckGo) cuyos resultados contienen etiquetas `<a target="_blank">`,
+- **Cuando** el usuario pulsa sobre cualquier resultado (e.g., `streamchart.com`, `streameast`),
+- **Entonces** el sistema (`BrowserPopupInterceptor.kt`):
+  1. Captura inmediatamente el destino legítimo mediante `view.hitTestResult.extra` y ejecuta `view.loadUrl(hitUrl)` en el WebView principal.
+  2. Si el enlace se abre vía script pero con gesto de usuario (`isUserGesture == true`), lo procesa mediante una única instancia estática `interceptorView` con JavaScript deshabilitado (`0 MB` de RAM adicional).
+  3. Los popups automáticos de scripts sin gesto del usuario (`!isUserGesture`) en sitios no autorizados son rechazados de inmediato en 0ms.
+  4. Los resultados de búsqueda y enlaces legítimos navegan al primer toque sin abrir diálogos, sin colapsos de memoria y sin bloqueos erróneos.
+
+

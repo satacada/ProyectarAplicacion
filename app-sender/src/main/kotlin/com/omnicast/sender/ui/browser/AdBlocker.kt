@@ -49,7 +49,10 @@ object AdBlocker {
                lower.contains("vast") || lower.contains("spotx") ||
                lower.contains("doubleclick") || lower.contains("holdbitter") ||
                lower.contains("/gambling/") || lower.contains("bonus-") ||
-               lower.contains("subduepaler") || lower.contains("/lp/v/")
+               lower.contains("subduepaler") || lower.contains("/lp/v/") ||
+               lower.contains("franecki.") || lower.contains("franeski.") ||
+               lower.contains("player-oxserver") || lower.contains("refusedconsulting.") ||
+               lower.contains("reichelcormier") || lower.contains("bashirian") || lower.contains("godsave.lgbt")
     }
 
     fun isAd(url: String): Boolean {

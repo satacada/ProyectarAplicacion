@@ -154,13 +154,14 @@ fun BrowserWebView(
                                 showBlockedToast(ctx)
                                 return true
                             }
-                            if (!isSameSite && !isSourceSearchEngine && targetHost != null && !r.hasGesture()) {
+                            if (!isSameSite && !isSourceSearchEngine && targetHost != null) {
                                 val isAllowedExternal = AdBlocker.isSearchEngine(targetHost) ||
                                     AdBlocker.isKnownMediaHost(targetHost) ||
                                     AdBlocker.isVerificationOrCaptcha(targetHost) ||
                                     AdBlockWhitelistManager.isWhitelistedHost(targetHost)
                                 if (!isAllowedExternal) {
-                                    android.util.Log.w("BrowserWebView", "🛑 Redirección automática sin gesto bloqueada hacia: $targetHost")
+                                    android.util.Log.w("BrowserWebView", "🛑 Redirección externa bloqueada hacia: $targetHost")
+                                    targetHost.let { AdBlocker.learnAndBlockAdHost(it, curHost) }
                                     showBlockedToast(ctx)
                                     return true
                                 }
@@ -231,9 +232,12 @@ fun BrowserWebView(
                                 val curHost = try { java.net.URI(liveUrl).host?.lowercase() } catch (_: Throwable) { null }
                                 val targetHost = try { java.net.URI(destUrl).host?.lowercase() } catch (_: Throwable) { null }
                                 val isSourceWhitelisted = curHost?.let { AdBlockWhitelistManager.isWhitelistedHost(it) } ?: false
-                                val isBlockedAd = isAdBlockEnabled && !isSourceWhitelisted &&
-                                    (AdBlocker.isAd(destUrl) || AdBlocker.isExternalRedirect(destUrl) || NativeAdBlockEngine.shouldBlock(destUrl, liveUrl))
-                                if (!isBlockedAd) {
+                                val isAllowedTarget = AdBlocker.isSameSite(curHost, targetHost) || isSourceWhitelisted ||
+                                    (targetHost != null && (AdBlocker.isSearchEngine(targetHost) || AdBlocker.isKnownMediaHost(targetHost) ||
+                                                           AdBlocker.isVerificationOrCaptcha(targetHost) || AdBlockWhitelistManager.isWhitelistedHost(targetHost)))
+                                val isBlocked = isAdBlockEnabled && !isSourceWhitelisted &&
+                                    (!isAllowedTarget || AdBlocker.isAd(destUrl) || AdBlocker.isExternalRedirect(destUrl) || NativeAdBlockEngine.shouldBlock(destUrl, liveUrl))
+                                if (!isBlocked) {
                                     view.post { view.loadUrl(destUrl) }
                                 } else {
                                     targetHost?.let { AdBlocker.learnAndBlockAdHost(it, curHost) }

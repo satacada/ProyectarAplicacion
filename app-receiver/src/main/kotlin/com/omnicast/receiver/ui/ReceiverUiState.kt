@@ -14,7 +14,8 @@ sealed class ReceiverUiState {
         val title: String,
         val headers: Map<String, String> = emptyMap(),
         val startPositionMs: Long = 0L,
-        val timestamp: Long = System.currentTimeMillis()
+        val timestamp: Long = System.currentTimeMillis(),
+        val isFallbackFromExoPlayer: Boolean = false
     ) : ReceiverUiState()
     data class ImageDisplaying(
         val imageUrl: String,

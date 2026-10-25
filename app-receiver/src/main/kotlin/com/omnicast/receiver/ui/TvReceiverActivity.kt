@@ -56,7 +56,7 @@ class TvReceiverActivity : ComponentActivity() {
                 val titleToReport = failedTitle ?: (receiverState.value as? ReceiverUiState.DirectStreamPlaying)?.title
                 if (!streamToReport.isNullOrBlank() && (streamToReport.startsWith("http://") || streamToReport.startsWith("https://")) && !streamToReport.contains(":8089")) {
                     com.omnicast.receiver.log.ReceiverLogger.log("TV_RECEIVER", "ExoPlayer 403 detectado, fallback a WebView HTML5: $streamToReport")
-                    receiverState.value = ReceiverUiState.WebStreamPlaying(streamToReport, titleToReport ?: "Transmisión Web", headers = lastDirectHeaders)
+                    receiverState.value = ReceiverUiState.WebStreamPlaying(streamToReport, titleToReport ?: "Transmisión Web", headers = lastDirectHeaders, isFallbackFromExoPlayer = true)
                 } else {
                     (receiverState.value as? ReceiverUiState.DirectStreamPlaying)?.let { cur ->
                         val found = playlistManager.findItemByUrlOrTitle(cur.streamUrl, cur.title)
@@ -148,10 +148,18 @@ class TvReceiverActivity : ComponentActivity() {
                             }
                         },
                         onPlaybackFailed = { reason -> runOnUiThread {
-                            com.omnicast.receiver.log.ReceiverLogger.log("TvReceiverActivity", "⚠️ WebStream falló ($reason). Fallback a ExoPlayer...")
-                            receiverState.value = ReceiverUiState.DirectStreamPlaying(state.streamUrl, state.title)
-                            exoPlayerManager.playStream(state.streamUrl, state.headers, state.title, state.startPositionMs)
-                            startPlaybackStatusReporting()
+                            if (state.isFallbackFromExoPlayer) {
+                                com.omnicast.receiver.log.ReceiverLogger.log("TvReceiverActivity", "⚠️ WebStream falló ($reason). Fallback previo agotado, finalizando.")
+                                val found = playlistManager.findItemByUrlOrTitle(state.streamUrl, state.title)
+                                if (found != null) expiredItemForRenew.value = found else Toast.makeText(this@TvReceiverActivity, "⚠️ Flujo no disponible (HTTP 403)", Toast.LENGTH_SHORT).show()
+                                receiverState.value = ReceiverUiState.Standby
+                                lifecycleScope.launch { signalingServer.sendMessage(SignalingMessage.PlaybackStatus("ERROR_FORBIDDEN_403", 0L, 0L, mediaUrl = state.streamUrl, title = state.title)) }
+                            } else {
+                                com.omnicast.receiver.log.ReceiverLogger.log("TvReceiverActivity", "⚠️ WebStream falló ($reason). Fallback a ExoPlayer...")
+                                receiverState.value = ReceiverUiState.DirectStreamPlaying(state.streamUrl, state.title)
+                                exoPlayerManager.playStream(state.streamUrl, state.headers, state.title, state.startPositionMs)
+                                startPlaybackStatusReporting()
+                            }
                         } },
                         onCloseClick = { receiverState.value = ReceiverUiState.Standby }
                     )
@@ -204,15 +212,9 @@ class TvReceiverActivity : ComponentActivity() {
                     youTubeControlFlow.tryEmit(message)
                 }
                 when (message.action) {
-                    "PLAY" -> {
-                        if (message.positionMs > 0L && !exoPlayerManager.isNearEnd()) exoPlayerManager.seekTo(message.positionMs)
-                        exoPlayerManager.resume()
-                    }
+                    "PLAY" -> { if (message.positionMs > 0L && !exoPlayerManager.isNearEnd()) exoPlayerManager.seekTo(message.positionMs); exoPlayerManager.resume() }
                     "PAUSE" -> exoPlayerManager.pause()
-                    "STOP" -> {
-                        digitalAudioReceiver?.stop(); exoPlayerManager.stop("Comando STOP celular"); webRtcReceiver.resetConnection()
-                        receiverState.value = ReceiverUiState.Standby
-                    }
+                    "STOP" -> { digitalAudioReceiver?.stop(); exoPlayerManager.stop("Comando STOP celular"); webRtcReceiver.resetConnection(); receiverState.value = ReceiverUiState.Standby }
                     "SEEK" -> exoPlayerManager.seekTo(message.positionMs)
                     "VOLUME" -> TvReceiverHelper.applySystemAndPlayerVolume(this, exoPlayerManager, message.volume)
                     "SUBTITLE_TOGGLE", "TOGGLE_SUBTITLES" -> exoPlayerManager.toggleSubtitles()

@@ -99,7 +99,7 @@ class ExoPlayerTvManager(private val context: Context) {
                                 if (!isRetryingClean && targetUrl != null) {
                                     isRetryingClean = true
                                     ioScope.launch {
-                                        val probe = com.omnicast.core.domain.usecases.StreamManifestProbe.probeAndHeal(targetUrl, currentHeaders)
+                                        val probe = com.omnicast.core.domain.usecases.StreamManifestProbe.probeAndHeal(targetUrl, currentHeaders, isHealingAttempt = true)
                                         android.os.Handler(android.os.Looper.getMainLooper()).post {
                                             if (probe.isPlayable) {
                                                 com.omnicast.receiver.log.ReceiverLogger.log(TAG, "✅ HeaderSelfHealer recuperó el flujo (live=${probe.isLiveStream})")
@@ -245,13 +245,8 @@ class ExoPlayerTvManager(private val context: Context) {
             }
         }
         if (!allowed.containsKey("User-Agent")) allowed["User-Agent"] = DEFAULT_UA
-        val ref = allowed["Referer"]
-        if (!ref.isNullOrBlank() && !allowed.containsKey("Origin")) {
-            runCatching {
-                val u = java.net.URI(ref)
-                if (!u.scheme.isNullOrBlank() && !u.host.isNullOrBlank()) allowed["Origin"] = "${u.scheme}://${u.host}"
-            }
-        }
+        // Por qué: En sockets nativos de ExoPlayer no se debe inventar 'Origin' si no vino en cabeceras;
+        // CDNs como DropCDN activan validaciones CORS innecesarias y devuelven 403 ante Origin no permitido.
         return allowed
     }
 

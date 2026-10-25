@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 212,
-  "versionCodeReceiver": 195,
-  "versionName": "3.4.62",
-  "releaseTag": "v3.4.62",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.62/omnicast-sender-v3.4.62.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.62/omnicast-receiver-v3.4.62.apk",
-  "changelog": "v3.4.62: Arquitectura de streaming universal ExoPlayer-First (reproducción por hardware nativo para todo flujo HLS/MP4) con fallback reactivo a HTML5 y fin de bucle de carga en hls.js."
+  "versionCodeSender": 213,
+  "versionCodeReceiver": 196,
+  "versionName": "3.4.63",
+  "releaseTag": "v3.4.63",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.63/omnicast-sender-v3.4.63.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.63/omnicast-receiver-v3.4.63.apk",
+  "changelog": "v3.4.63: Eliminación de sopa de cookies multidominio (aislamiento estricto same-site), permutaciones de auto-reparación limpia en DropCDN/CDNs protegidas y corte de bucle infinito de fallback ExoPlayer/HTML5."
 }

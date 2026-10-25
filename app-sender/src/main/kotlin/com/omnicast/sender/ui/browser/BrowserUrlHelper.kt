@@ -1,5 +1,6 @@
 package com.omnicast.sender.ui.browser
 
+import android.net.Uri
 import android.webkit.CookieManager
 
 /**
@@ -98,23 +99,29 @@ object BrowserUrlHelper {
         val headers = StreamIntelligenceEngine.resolveDynamicHeaders(streamUrl, currentUrl, rawHeaders).toMutableMap()
         try {
             val refererUrl = headers["Referer"] ?: currentUrl
+            // Por qué: Servidores CDN (Nginx en DropCDN/Fastream) rechazan con 403 solicitudes con
+            // cabeceras 'Cookie' sobredimensionadas o con tokens/Cloudflare de dominios ajenos.
+            val streamHost = runCatching { Uri.parse(streamUrl).host?.lowercase() }.getOrNull()
+            val refererHost = runCatching { Uri.parse(refererUrl).host?.lowercase() }.getOrNull()
+            val isSameSite = streamHost != null && refererHost != null &&
+                (streamHost == refererHost || streamHost.endsWith(".$refererHost") || refererHost.endsWith(".$streamHost"))
+
             val cm = CookieManager.getInstance()
-            val c1 = cm?.getCookie(streamUrl)
-            val c2 = if (refererUrl.isNotBlank()) cm?.getCookie(refererUrl) else null
-            val c3 = if (currentUrl.isNotBlank()) cm?.getCookie(currentUrl) else null
-            val c4 = cm?.getCookie("https://dr0pstream.com")
-            val c5 = cm?.getCookie("https://dropcdn.io")
-            val c6 = cm?.getCookie("https://fastream.to")
-            val c7 = cm?.getCookie("https://luluvdo.com")
-            val c8 = cm?.getCookie("https://lulustream.com")
-            val c9 = cm?.getCookie("https://pelisgo.online")
-            val mergedCookies = listOfNotNull(c1, c2, c3, c4, c5, c6, c7, c8, c9, rawHeaders?.get("Cookie"), rawHeaders?.get("cookie"))
-                .flatMap { it.split("; ") }
-                .map { it.trim() }
-                .filter { it.isNotBlank() }
-                .distinct()
-                .joinToString("; ")
-            if (mergedCookies.isNotBlank()) headers["Cookie"] = mergedCookies
+            val streamCookie = cm?.getCookie(streamUrl)
+            val refererCookie = if (isSameSite && refererUrl.isNotBlank()) cm?.getCookie(refererUrl) else null
+            val rawCookie = rawHeaders?.get("Cookie") ?: rawHeaders?.get("cookie")
+
+            val cleanCookie = when {
+                !streamCookie.isNullOrBlank() -> streamCookie
+                !refererCookie.isNullOrBlank() -> refererCookie
+                !rawCookie.isNullOrBlank() -> rawCookie
+                else -> null
+            }
+            if (!cleanCookie.isNullOrBlank()) {
+                headers["Cookie"] = cleanCookie
+            } else {
+                headers.remove("Cookie")
+            }
 
             val id = MediaPlatformResolver.extractFastreamId(streamUrl)
             val luluId = MediaPlatformResolver.extractLuluStreamId(streamUrl)

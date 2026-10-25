@@ -61,7 +61,8 @@ object StreamManifestProbe {
     fun probeAndHeal(
         streamUrl: String,
         initialHeaders: Map<String, String> = emptyMap(),
-        pageUrl: String? = null
+        pageUrl: String? = null,
+        isHealingAttempt: Boolean = false
     ): ProbeResult {
         if (streamUrl.isBlank()) return ProbeResult(false, streamUrl, initialHeaders)
         val cleanUrl = sanitizeMediaUrl(streamUrl)
@@ -70,7 +71,9 @@ object StreamManifestProbe {
         if ((lower.contains("youtube.com/watch") || lower.contains("youtu.be/")) && !lower.contains(".m3u8") && !lower.contains("googlevideo.com")) {
             return ProbeResult(false, cleanUrl, initialHeaders, httpCode = 415)
         }
-        if (hasSignedSecurityToken(cleanUrl)) {
+        // Por qué: Solo se salta la sonda previa en el primer análisis para no consumir tokens efímeros.
+        // Si ya falló la reproducción (isHealingAttempt == true), se deben probar las permutaciones.
+        if (!isHealingAttempt && hasSignedSecurityToken(cleanUrl)) {
             val isLive = !cleanUrl.contains(".m3u8") || cleanUrl.contains("live", true)
             val isMaster = cleanUrl.contains("master", true) || cleanUrl.contains("playlist", true)
             return ProbeResult(isPlayable = true, resolvedUrl = cleanUrl, healedHeaders = initialHeaders, isLiveStream = isLive, isMasterPlaylist = isMaster, durationSeconds = 7200f)
@@ -133,16 +136,10 @@ object StreamManifestProbe {
                 val isDrop = lower.contains("dropcdn.io") || lower.contains("dr0pstream.com")
                 val embedUrl = if (isDrop) "https://dr0pstream.com/e/$id" else "https://fastream.to/embed-$id.html"
                 val origin = if (isDrop) "https://dr0pstream.com" else "https://fastream.to"
-                val embedMap = mutableMapOf(
-                    "User-Agent" to baseUa,
-                    "Referer" to embedUrl,
-                    "Origin" to origin,
-                    "Sec-Fetch-Mode" to "cors",
-                    "Sec-Fetch-Dest" to "empty",
-                    "Sec-Fetch-Site" to "cross-site"
-                )
+                list.add(0, "EMBED_CLEAN" to mapOf("User-Agent" to baseUa, "Referer" to embedUrl))
+                val embedMap = mutableMapOf("User-Agent" to baseUa, "Referer" to embedUrl, "Origin" to origin, "Sec-Fetch-Mode" to "cors", "Sec-Fetch-Dest" to "empty", "Sec-Fetch-Site" to "cross-site")
                 if (baseCookie.isNotBlank()) embedMap["Cookie"] = baseCookie
-                list.add(0, "EMBED_HOST" to embedMap)
+                list.add(1, "EMBED_HOST" to embedMap)
             }
         }
 
@@ -162,10 +159,11 @@ object StreamManifestProbe {
             list.add("SELF_CDN" to selfMap)
         }
 
-        // 4. Petición limpia (Sin Referer ni Origin)
-        val cleanMap = mutableMapOf("User-Agent" to baseUa)
-        if (baseCookie.isNotBlank()) cleanMap["Cookie"] = baseCookie
-        list.add("CLEAN" to cleanMap)
+        // 4. Petición limpia sin cookies (Referer limpio sin Cookie ni Origin)
+        if (orig.containsKey("Referer")) {
+            list.add("REFERER_ONLY" to mapOf("User-Agent" to baseUa, "Referer" to orig["Referer"]!!))
+        }
+        list.add("CLEAN" to mapOf("User-Agent" to baseUa))
 
         // Si ya aprendimos qué estrategia funciona para este host, ponerla de primera
         val host = extractHost(streamUrl)

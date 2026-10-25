@@ -71,8 +71,9 @@ class BrowserPopupInterceptor(
         val isSourceSearchEngine = curHost?.let { AdBlocker.isSearchEngine(it) } ?: false
 
         val isAllowedTarget = isSourceSearchEngine || isSourceWhitelisted || AdBlocker.isSameSite(curHost, targetHost) ||
-            (targetHost != null && (AdBlocker.isSearchEngine(targetHost) || AdBlocker.isKnownMediaHost(targetHost) ||
-                                   AdBlocker.isVerificationOrCaptcha(targetHost) || AdBlockWhitelistManager.isWhitelistedHost(targetHost)))
+            (targetHost != null && (AdBlocker.isMediaOrStreamingHost(targetHost) || AdBlocker.isSearchEngine(targetHost) ||
+                                   AdBlocker.isKnownMediaHost(targetHost) || AdBlocker.isVerificationOrCaptcha(targetHost) ||
+                                   AdBlockWhitelistManager.isWhitelistedHost(targetHost)))
 
         val isBlocked = isAdBlockEnabled() && !isSourceWhitelisted && !isSourceSearchEngine &&
             (!isAllowedTarget || AdBlocker.isAd(destUrl) || AdBlocker.isExternalRedirect(destUrl) || NativeAdBlockEngine.shouldBlock(destUrl, liveUrl))

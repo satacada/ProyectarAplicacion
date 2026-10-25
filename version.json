@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 210,
-  "versionCodeReceiver": 193,
-  "versionName": "3.4.60",
-  "releaseTag": "v3.4.60",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.60/omnicast-sender-v3.4.60.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.60/omnicast-receiver-v3.4.60.apk",
-  "changelog": "v3.4.60: Solución definitiva a clics en resultados de búsqueda (Yandex, Google) y enlaces target=_blank con BrowserPopupInterceptor reutilizable de 0 MB de RAM."
+  "versionCodeSender": 211,
+  "versionCodeReceiver": 194,
+  "versionName": "3.4.61",
+  "releaseTag": "v3.4.61",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.61/omnicast-sender-v3.4.61.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.61/omnicast-receiver-v3.4.61.apk",
+  "changelog": "v3.4.61: Desbloqueo definitivo de sitios deportivos y de streaming con dominios espejo o redirecciones JS/302 (808ball, RojaDirecta, StreamEast) y similitud de marca en isSameSite."
 }

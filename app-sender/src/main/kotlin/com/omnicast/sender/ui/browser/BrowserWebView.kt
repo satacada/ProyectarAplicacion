@@ -156,7 +156,9 @@ fun BrowserWebView(
                                 return true
                             }
                             if (!isSameSite && !isSourceSearchEngine && targetHost != null && !r.hasGesture()) {
-                                val isAllowedExternal = AdBlocker.isSearchEngine(targetHost) ||
+                                val isAllowedExternal = isSameSite ||
+                                    AdBlocker.isMediaOrStreamingHost(targetHost) ||
+                                    AdBlocker.isSearchEngine(targetHost) ||
                                     AdBlocker.isKnownMediaHost(targetHost) ||
                                     AdBlocker.isVerificationOrCaptcha(targetHost) ||
                                     AdBlockWhitelistManager.isWhitelistedHost(targetHost)

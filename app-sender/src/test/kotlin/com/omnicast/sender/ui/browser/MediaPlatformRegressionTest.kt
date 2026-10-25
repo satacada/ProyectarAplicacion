@@ -58,8 +58,13 @@ class MediaPlatformRegressionTest {
     fun testSameSiteDetection() {
         assertTrue(AdBlocker.isSameSite("pelisplus.lat", "ww3.pelisplus.lat"))
         assertTrue(AdBlocker.isSameSite("www.ok.ru", "ok.ru"))
+        assertTrue(AdBlocker.isSameSite("808ball.com", "www.808ball16.com"))
+        assertTrue(AdBlocker.isSameSite("pelisplus.lat", "pelisplus2.lat"))
         assertFalse(AdBlocker.isSameSite("pelisplus.lat", "adnetwork.com"))
         assertFalse(AdBlocker.isSameSite("reypelis.net", "bet365.com"))
+        assertTrue(AdBlocker.isMediaOrStreamingHost("www.808ball16.com"))
+        assertTrue(AdBlocker.isMediaOrStreamingHost("thestreameast.to"))
+        assertFalse(AdBlocker.isMediaOrStreamingHost("adnetwork.com"))
     }
 
     @Test

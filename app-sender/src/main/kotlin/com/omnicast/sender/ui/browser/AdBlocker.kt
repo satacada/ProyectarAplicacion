@@ -89,9 +89,26 @@ object AdBlocker {
         if (p1.size >= 2 && p2.size >= 2) {
             val root1 = "${p1[p1.size - 2]}.${p1.last()}"
             val root2 = "${p2[p2.size - 2]}.${p2.last()}"
-            return root1 == root2
+            if (root1 == root2) return true
+            val raw1 = p1[p1.size - 2]
+            val raw2 = p2[p2.size - 2]
+            if (raw1.length >= 4 && (raw1.startsWith(raw2) || raw2.startsWith(raw1))) return true
+            val name1 = raw1.filter { !it.isDigit() }
+            val name2 = raw2.filter { !it.isDigit() }
+            if (name1.length >= 4 && (name1 == name2 || name1.contains(name2) || name2.contains(name1))) return true
         }
         return false
+    }
+
+    fun isMediaOrStreamingHost(host: String?): Boolean {
+        if (host == null) return false
+        val h = host.lowercase()
+        return h.contains("ball") || h.contains("sport") || h.contains("live") ||
+               h.contains("stream") || h.contains("tv") || h.contains("match") ||
+               h.contains("futbol") || h.contains("soccer") || h.contains("score") ||
+               h.contains("movie") || h.contains("pelis") || h.contains("cine") ||
+               h.contains("series") || h.contains("film") || h.contains("video") ||
+               h.contains("play")
     }
 
     fun isKnownMediaHost(host: String): Boolean {
@@ -112,7 +129,7 @@ object AdBlocker {
             if (host == cur || host.endsWith(".$cur") || cur.endsWith(".$host")) return false
         }
         if (isVerificationOrCaptcha(host)) return false
-        if (AdBlockWhitelistManager.isWhitelistedHost(host) || isSearchEngine(host) || isKnownMediaHost(host)) return false
+        if (AdBlockWhitelistManager.isWhitelistedHost(host) || isSearchEngine(host) || isKnownMediaHost(host) || isMediaOrStreamingHost(host)) return false
         if (host.contains("movie") || host.contains("pelis") || host.contains("cine") || host.contains("series") || host.contains("film") || host.contains("stream")) return false
         if (host.endsWith("reypelis.net") || host.endsWith("tioplus.app") || host.contains("sololatino") || host.contains("pelisserieshoy")) return false
         if (AdBlockDatabase.isAdDomain(host)) return false

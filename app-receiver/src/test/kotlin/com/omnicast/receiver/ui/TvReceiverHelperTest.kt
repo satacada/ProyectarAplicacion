@@ -18,9 +18,6 @@ class TvReceiverHelperTest {
     @Test
     fun testShouldUseWebPlayerProtectedEmbeds() {
         val protectedReferers = listOf(
-            "https://dr0pstream.com/e/123",
-            "https://dropcdn.io/embed",
-            "https://fastream.to/embed-123.html",
             "https://luluvdo.com/e/abc",
             "https://lulustream.com/e/abc",
             "https://pelisgo.online/ver/abc"
@@ -33,6 +30,19 @@ class TvReceiverHelperTest {
     }
 
     @Test
+    fun testShouldUseExoPlayerForDropCdnAndFastream() {
+        val dropUrls = listOf(
+            "https://ds4.dropcdn.io/hls2/01/00038/master.m3u8?t=abcdef&s=1730000000",
+            "https://dr0pstream.com/hls/master.m3u8",
+            "https://fastream.to/hls/master.m3u8"
+        )
+        for (url in dropUrls) {
+            val hdrs = mapOf("Referer" to "https://dr0pstream.com/e/123")
+            assertFalse("DropCDN/Fastream debe usar ExoPlayer: $url", TvReceiverHelper.shouldUseWebPlayer(url, hdrs))
+        }
+    }
+
+    @Test
     fun testShouldUseWebPlayerSessionCookies() {
         val hdrs = mapOf("Cookie" to "session=abc123xyz")
         val dummyUrl = "https://example.com/stream.m3u8"
@@ -41,7 +51,7 @@ class TvReceiverHelperTest {
 
     @Test
     fun testShouldUseWebPlayerSignedSecurityTokens() {
-        val signedUrl = "https://ds4.dropcdn.io/hls2/01/00038/master.m3u8?t=abcdef1234567890abcdef&s=1730000000"
+        val signedUrl = "https://s1.tnmr.org/hls/master.m3u8?t=abcdef1234567890abcdef&s=1730000000"
         assertTrue(TvReceiverHelper.shouldUseWebPlayer(signedUrl, emptyMap()))
     }
 

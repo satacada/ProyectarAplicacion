@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 226,
-  "versionCodeReceiver": 209,
-  "versionName": "3.4.76",
-  "releaseTag": "v3.4.76",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.76/omnicast-sender-v3.4.76.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.76/omnicast-receiver-v3.4.76.apk",
-  "changelog": "v3.4.76: Exclusión de DropCDN y Fastream de la intercepción Java en TvWebResourceInterceptor para preservar el stack de red C++ nativo de Chromium con huella TLS genuina de Google Chrome; restauración de baseUrl con Referer canónico de embed en TvWebStreamScreen."
+  "versionCodeSender": 227,
+  "versionCodeReceiver": 210,
+  "versionName": "3.4.77",
+  "releaseTag": "v3.4.77",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.77/omnicast-sender-v3.4.77.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.77/omnicast-receiver-v3.4.77.apk",
+  "changelog": "v3.4.77: Desmantelamiento del desvío forzado a WebView en TvReceiverHelper para flujos DropCDN y Fastream, permitiendo su reproducción limpia, directa y autónoma en ExoPlayer sin restricciones de CORS ni errores XMLHttpRequest; preservación estricta de WebPlayer para LuluStream (tnmr.org), PelisGO y flujos con sesión."
 }

@@ -35,10 +35,14 @@ object TvReceiverHelper {
         if (headers["X-Target-Player"]?.equals("WEBVIEW", true) == true) return true
         if (headers["X-Target-Player"]?.equals("EXOPLAYER", true) == true) return false
 
+        val lowerUrl = url.lowercase()
         val ref = headers["Referer"]?.lowercase() ?: ""
-        val isProtectedEmbed = ref.contains("dr0pstream.com") || ref.contains("dropcdn.io") ||
-                               ref.contains("fastream.to") || ref.contains("luluvdo.com") ||
-                               ref.contains("lulustream.com") || ref.contains("pelisgo")
+        // DropCDN y Fastream operan de forma directa y autónoma en ExoPlayer (sin restricciones CORS de navegador)
+        val isDropOrFast = lowerUrl.contains("dropcdn.io") || lowerUrl.contains("dr0pstream.com") || lowerUrl.contains("fastream.to") ||
+                ref.contains("dr0pstream.com") || ref.contains("dropcdn.io") || ref.contains("fastream.to")
+        if (isDropOrFast) return false
+
+        val isProtectedEmbed = ref.contains("luluvdo.com") || ref.contains("lulustream.com") || ref.contains("pelisgo")
         val hasSessionCookies = !headers["Cookie"].isNullOrBlank()
         val hasSignedToken = com.omnicast.core.domain.usecases.StreamManifestProbe.hasSignedSecurityToken(url)
 

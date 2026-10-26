@@ -102,16 +102,36 @@ object BrowserUrlHelper {
         val headers = StreamIntelligenceEngine.resolveDynamicHeaders(streamUrl, currentUrl, rawHeaders).toMutableMap()
         try {
             val refererUrl = headers["Referer"] ?: currentUrl
+            val id = MediaPlatformResolver.extractFastreamId(streamUrl)
+            val luluId = MediaPlatformResolver.extractLuluStreamId(streamUrl)
+            val isDrop = streamUrl.contains("dropcdn.io", true) || streamUrl.contains("dr0pstream.com", true)
+            val isFast = streamUrl.contains("fastream.to", true)
+            val isLulu = streamUrl.contains("tnmr.org", true) || streamUrl.contains("luluvdo.com", true) || streamUrl.contains("lulustream.com", true)
+
+            val embedUrl = when {
+                isDrop && id != null -> "https://dr0pstream.com/e/$id"
+                isFast && id != null -> "https://fastream.to/embed-$id.html"
+                isLulu && luluId != null -> "https://luluvdo.com/e/$luluId"
+                else -> refererUrl
+            }
+
             // Por qué: Servidores CDN (Nginx en DropCDN/Fastream) rechazan con 403 solicitudes con
-            // cabeceras 'Cookie' sobredimensionadas o con tokens/Cloudflare de dominios ajenos.
+            // cabeceras 'Cookie' sobredimensionadas. Solo se heredan cookies del embed canónico o same-site.
             val streamHost = runCatching { Uri.parse(streamUrl).host?.lowercase() }.getOrNull()
             val refererHost = runCatching { Uri.parse(refererUrl).host?.lowercase() }.getOrNull()
-            val isSameSite = streamHost != null && refererHost != null &&
-                (streamHost == refererHost || streamHost.endsWith(".$refererHost") || refererHost.endsWith(".$streamHost"))
+            val isSameSite = (streamHost != null && refererHost != null &&
+                (streamHost == refererHost || streamHost.endsWith(".$refererHost") || refererHost.endsWith(".$streamHost"))) ||
+                (isDrop && (refererHost == "dr0pstream.com" || refererHost?.contains("dropcdn") == true)) ||
+                (isFast && refererHost == "fastream.to")
 
             val cm = CookieManager.getInstance()
             val streamCookie = cm?.getCookie(streamUrl)
-            val refererCookie = if (isSameSite && refererUrl.isNotBlank()) cm?.getCookie(refererUrl) else null
+            val refererCookie = when {
+                isDrop -> cm?.getCookie("https://dr0pstream.com") ?: cm?.getCookie(embedUrl)
+                isFast -> cm?.getCookie("https://fastream.to") ?: cm?.getCookie(embedUrl)
+                isSameSite && refererUrl.isNotBlank() -> cm?.getCookie(refererUrl)
+                else -> null
+            }
             val rawCookie = rawHeaders?.get("Cookie") ?: rawHeaders?.get("cookie")
 
             val cleanCookie = when {
@@ -125,11 +145,6 @@ object BrowserUrlHelper {
             } else {
                 headers.remove("Cookie")
             }
-            val id = MediaPlatformResolver.extractFastreamId(streamUrl)
-            val luluId = MediaPlatformResolver.extractLuluStreamId(streamUrl)
-            val isDrop = streamUrl.contains("dropcdn.io", true) || streamUrl.contains("dr0pstream.com", true)
-            val isFast = streamUrl.contains("fastream.to", true)
-            val isLulu = streamUrl.contains("tnmr.org", true) || streamUrl.contains("luluvdo.com", true) || streamUrl.contains("lulustream.com", true)
             if (isDrop && id != null) {
                 headers["Referer"] = "https://dr0pstream.com/e/$id"
                 headers.remove("Origin")

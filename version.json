@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 227,
-  "versionCodeReceiver": 210,
-  "versionName": "3.4.77",
-  "releaseTag": "v3.4.77",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.77/omnicast-sender-v3.4.77.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.77/omnicast-receiver-v3.4.77.apk",
-  "changelog": "v3.4.77: Desmantelamiento del desvío forzado a WebView en TvReceiverHelper para flujos DropCDN y Fastream, permitiendo su reproducción limpia, directa y autónoma en ExoPlayer sin restricciones de CORS ni errores XMLHttpRequest; preservación estricta de WebPlayer para LuluStream (tnmr.org), PelisGO y flujos con sesión."
+  "versionCodeSender": 228,
+  "versionCodeReceiver": 211,
+  "versionName": "3.4.78",
+  "releaseTag": "v3.4.78",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.78/omnicast-sender-v3.4.78.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.78/omnicast-receiver-v3.4.78.apk",
+  "changelog": "v3.4.78: Herencia limpia de cookies de sesión de embed canónico (dr0pstream.com / fastream.to) para servidores CDN DropCDN y Fastream hacia ExoPlayer, garantizando autorización de streaming sin descarte same-site."
 }

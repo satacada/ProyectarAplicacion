@@ -134,14 +134,17 @@ fun BrowserWebView(
                     }
 
                     override fun doUpdateVisitedHistory(v: WebView?, u: String?, isR: Boolean) {
-                        u?.let { if (!it.startsWith("about:")) livePageUrl = it; onHistoryUpdated(it, v?.title) }
+                        u?.let { if (!it.startsWith("about:")) { livePageUrl = it; if (!AdBlocker.isVerificationOrCaptcha(it)) isChallenge = false }; onHistoryUpdated(it, v?.title) }
                     }
 
                     override fun shouldOverrideUrlLoading(v: WebView?, r: WebResourceRequest?): Boolean {
                         val reqUrl = r?.url?.toString() ?: return false
                         if (AdBlocker.isExternalRedirect(reqUrl)) return true
                         val liveUrl = v?.url ?: livePageUrl
-                        if (isChallenge || AdBlocker.isVerificationOrCaptcha(reqUrl) || AdBlocker.isVerificationOrCaptcha(liveUrl) || (v?.title?.contains("Just a moment", ignoreCase = true) == true)) return false
+                        val isVerificationTarget = reqUrl.contains("challenges.cloudflare.com") || reqUrl.contains("cdn-cgi/challenge-platform") || AdBlocker.isVerificationOrCaptcha(reqUrl)
+                        if (isVerificationTarget) return false
+                        val isPageChallenge = (v?.title?.contains("Just a moment", ignoreCase = true) == true) || AdBlocker.isVerificationOrCaptcha(liveUrl)
+                        if (isPageChallenge && !r.hasGesture()) return false
                         val curHost = try { java.net.URI(liveUrl).host?.lowercase() } catch (_: Throwable) { null }
                         val targetHost = try { r.url.host?.lowercase() } catch (_: Throwable) { null }
                         val isSameSite = AdBlocker.isSameSite(curHost, targetHost)
@@ -187,7 +190,6 @@ fun BrowserWebView(
                         return try {
                             if (r?.isForMainFrame == true) return super.shouldInterceptRequest(v, r)
                             val reqUrl = r?.url?.toString() ?: return super.shouldInterceptRequest(v, r)
-                            if (reqUrl.contains("challenges.cloudflare.com") || reqUrl.contains("cdn-cgi/challenge-platform")) isChallenge = true
                             if (reqUrl.contains("/ibjslib/wai2iku6/")) {
                                 val assetName = if (reqUrl.contains("json2.js")) "json2.js" else "wvc_sniffer.js"
                                 return try {
@@ -210,6 +212,7 @@ fun BrowserWebView(
                             )
                             val detectedStream = com.omnicast.sender.ui.browser.extractors.StreamExtractorRegistry.useCase.execute(candidate)
                             if (detectedStream != null) {
+                                isChallenge = false
                                 val hdrs = BrowserUrlHelper.buildSafeHeaders(detectedStream.url, docUrl, UA_MOBILE, detectedStream.headers)
                                 post { onStreamIntercepted(detectedStream.url, hdrs, detectedStream.isMaster) }
                             }
@@ -247,12 +250,13 @@ fun BrowserWebView(
                     override fun onConsoleMessage(cm: ConsoleMessage?): Boolean {
                         val msg = cm?.message() ?: return super.onConsoleMessage(cm)
                         if (msg.startsWith("OMNICAST_SERVER_CANDIDATE:")) {
+                            isChallenge = false
                             val sUrl = msg.removePrefix("OMNICAST_SERVER_CANDIDATE:").trim()
                             MoviePagePreScanner.handleServerCandidate(sUrl, livePageUrl, currentKnownTitle) { u, h, m -> post { onStreamIntercepted(u, h, m) } }
                             return true
                         }
                         val sniffedList = WvcDomSniffer.parseConsoleMessage(msg)
-                        if (sniffedList.isNotEmpty()) { post { sniffedList.forEach { onSniffedVideo(it) } }; return true }
+                        if (sniffedList.isNotEmpty()) { isChallenge = false; post { sniffedList.forEach { onSniffedVideo(it) } }; return true }
                         return super.onConsoleMessage(cm)
                     }
                 }

@@ -144,16 +144,31 @@ fun WvcVideoListSheet(
                     }
                 }
             } else {
+                val groups = remember(options) {
+                    options.groupBy { opt ->
+                        if (opt.groupTitle.isNotBlank()) opt.groupTitle
+                        else if (opt.streamUrl.contains("youtu", true)) opt.streamUrl
+                        else opt.fileName.takeIf { it.isNotBlank() && it != "master" && it != "video" }
+                            ?: opt.label.substringBefore(" (").substringBefore(" [").trim().ifBlank { opt.streamUrl.substringBefore('?').substringBeforeLast('/') }
+                    }.values.map { gList ->
+                        gList.sortedWith(
+                            compareByDescending<StreamQualityOption> { it.isSuggested }
+                                .thenByDescending { it.isMaster }
+                                .thenByDescending { it.resolution.removeSuffix("p").toIntOrNull() ?: 0 }
+                        )
+                    }
+                }
+
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f)
                 ) {
-                    items(options) { opt ->
-                        WvcVideoListItem(
-                            option = opt,
+                    items(groups) { groupList ->
+                        WvcVideoGroupItem(
+                            options = groupList,
                             pageTitle = pageTitle,
-                            onTransmit = {
+                            onTransmit = { opt ->
                                 val effectiveOpt = if (routeThroughPhone) opt.copy(
                                     healedHeaders = opt.healedHeaders.toMutableMap().apply { put("X-Force-Proxy", "true") }
                                 ) else opt
@@ -161,122 +176,6 @@ fun WvcVideoListSheet(
                             }
                         )
                     }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun WvcVideoListItem(
-    option: StreamQualityOption,
-    pageTitle: String,
-    onTransmit: () -> Unit
-) {
-    val context = androidx.compose.ui.platform.LocalContext.current
-    var showMenu by remember { mutableStateOf(false) }
-    val isLive = option.isLive
-    val displayName = pageTitle.takeIf { it.isNotBlank() && it != "Cargando..." && it != "Transmisión Web" }
-        ?: option.fileName.ifBlank { "Video Web" }
-
-    val streamHostOrUrl = option.streamUrl
-    val variantName = option.fileName.ifBlank {
-        if (option.isMaster) "master" else "video"
-    }
-
-    val displayFormat = option.formatDetail.ifBlank {
-        if (isLive) "m3u8 (en vivo)"
-        else if (option.isMaster) "m3u8"
-        else if (option.resolution.isNotBlank()) "m3u8 (${option.resolution})"
-        else "m3u8"
-    }
-
-    val isTestedSuccess = option.isTestedSuccess
-    val isTestedFailed = option.isTestedFailed
-    val isRecommended = (option.reputationScore >= 75 || option.isSuggested) && !isTestedFailed && !isTestedSuccess
-    val thumbBg = when {
-        isTestedSuccess -> Color(0xFF10B981)
-        isTestedFailed -> Color(0xFF4B5563)
-        isRecommended -> Color(0xFFF59E0B)
-        else -> Color(0xFF475569)
-    }
-    val statusBadge = when {
-        isTestedSuccess -> " • 🟢 [EN EMISIÓN]"
-        isTestedFailed -> " • 🔴 [INACCESIBLE]"
-        isRecommended -> " • ⭐ [RECOMENDADO]"
-        else -> ""
-    }
-    val statusColor = when {
-        isTestedSuccess -> Color(0xFF10B981)
-        isTestedFailed -> Color(0xFFEF4444)
-        isRecommended -> Color(0xFFF59E0B)
-        else -> Color(0xFF94A3B8)
-    }
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .alpha(if (isTestedFailed) 0.55f else 1.0f)
-            .then(if (isTestedSuccess) Modifier.background(Color(0x1A10B981)) else Modifier)
-            .clickable { onTransmit() }
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Box(
-            modifier = Modifier.size(60.dp).background(thumbBg, RoundedCornerShape(4.dp)),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(Icons.Rounded.Movie, contentDescription = null, tint = Color.White, modifier = Modifier.size(28.dp))
-        }
-
-        Spacer(Modifier.width(14.dp))
-
-        Column(modifier = Modifier.weight(1f)) {
-            Text(text = displayName, color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 14.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text(text = streamHostOrUrl, color = Color(0xFF9E9E9E), fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text(text = variantName, color = Color(0xFF9E9E9E), fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text(text = displayFormat + statusBadge, color = statusColor, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
-        }
-
-        Box {
-            IconButton(
-                onClick = { showMenu = true },
-                modifier = Modifier.size(32.dp)
-            ) {
-                Icon(Icons.Rounded.MoreVert, contentDescription = "Opciones", tint = Color(0xFF9E9E9E), modifier = Modifier.size(18.dp))
-            }
-            DropdownMenu(
-                expanded = showMenu,
-                onDismissRequest = { showMenu = false },
-                modifier = Modifier.background(Color(0xFF1E293B))
-            ) {
-                DropdownMenuItem(
-                    text = { Text("Emitir ahora", color = Color.White, maxLines = 1, overflow = TextOverflow.Ellipsis) },
-                    onClick = { showMenu = false; onTransmit() }
-                )
-                DropdownMenuItem(
-                    text = { Text("⬇️ Descargar película", color = Color(0xFF10B981), maxLines = 1, overflow = TextOverflow.Ellipsis) },
-                    onClick = {
-                        showMenu = false
-                        com.omnicast.sender.ui.utils.MediaDownloadHelper.downloadMedia(
-                            context,
-                            option.streamUrl,
-                            displayName,
-                            option.healedHeaders
-                        )
-                    }
-                )
-                if (option.audioTracksSummary.isNotBlank()) {
-                    DropdownMenuItem(
-                        text = { Text("Audio: ${option.audioTracksSummary}", color = Color(0xFF38BDF8), maxLines = 1, overflow = TextOverflow.Ellipsis) },
-                        onClick = { showMenu = false }
-                    )
-                }
-                if (option.subtitleTracksSummary.isNotBlank()) {
-                    DropdownMenuItem(
-                        text = { Text("Subtítulos: ${option.subtitleTracksSummary}", color = Color(0xFFA78BFA), maxLines = 1, overflow = TextOverflow.Ellipsis) },
-                        onClick = { showMenu = false }
-                    )
                 }
             }
         }

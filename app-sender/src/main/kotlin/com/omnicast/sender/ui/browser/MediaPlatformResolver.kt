@@ -115,10 +115,11 @@ object MediaPlatformResolver {
         return try {
             val isDrop = url.contains("dropcdn.io", true) || url.contains("dr0pstream.com", true)
             val embedUrl = if (isDrop) "https://dr0pstream.com/e/$id" else "https://fastream.to/embed-$id.html"
+            val targetUa = if (isDrop) UA_MOBILE else UA_FASTREAM
             val conn = (URL(embedUrl).openConnection() as HttpURLConnection).apply {
                 connectTimeout = 4000
                 readTimeout = 4000
-                setRequestProperty("User-Agent", UA_FASTREAM)
+                setRequestProperty("User-Agent", targetUa)
                 setRequestProperty("Referer", referer?.takeIf { it.isNotBlank() } ?: "https://reypelis.vip/")
             }
             if (conn.responseCode !in 200..299) {
@@ -133,7 +134,7 @@ object MediaPlatformResolver {
             val streamUrl = streamUrlMatch?.groupValues?.get(1) ?: streamUrlMatch?.value ?: return null
             val cleanStreamUrl = BrowserUrlHelper.sanitizeMediaUrl(streamUrl)
             val hdrs = mapOf(
-                "User-Agent" to UA_FASTREAM,
+                "User-Agent" to targetUa,
                 "Referer" to embedUrl,
                 "Sec-Fetch-Mode" to "cors",
                 "Sec-Fetch-Dest" to "empty",
@@ -209,11 +210,17 @@ object MediaPlatformResolver {
                 }
             }
         } else if (isDrop) {
-            val id = extractFastreamId(finalUrl)
-            if (id != null) {
-                hdrs["Referer"] = "https://dr0pstream.com/e/$id"
-                hdrs["User-Agent"] = UA_MOBILE
-                hdrs.remove("Origin")
+            val resolved = if (!finalUrl.contains(".m3u8", ignoreCase = true)) resolveFastreamSync(finalUrl, pageUrl) else null
+            if (resolved != null) {
+                finalUrl = resolved.first
+                resolved.third.forEach { (k, v) -> hdrs[k] = v }
+            } else {
+                val id = extractFastreamId(finalUrl)
+                if (id != null) {
+                    hdrs["Referer"] = "https://dr0pstream.com/e/$id"
+                    hdrs["User-Agent"] = UA_MOBILE
+                    hdrs.remove("Origin")
+                }
             }
         }
         val isLulu = lower.contains("tnmr.org") || lower.contains("luluvdo.com") || lower.contains("lulustream.com")

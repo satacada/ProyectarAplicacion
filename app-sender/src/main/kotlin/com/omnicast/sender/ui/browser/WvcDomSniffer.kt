@@ -18,11 +18,27 @@ object WvcDomSniffer {
         val isPlaying: Boolean = false,
         val label: String? = null,
         val duration: Float = 0f,
-        val frameUrl: String = ""
+        val frameUrl: String = "",
+        val subtitles: List<com.omnicast.core.protocol.SignalingMessage.SubtitleTrack> = emptyList()
     )
 
     fun getInjectionScript(context: android.content.Context): String =
         DynamicSnifferManager.getInjectionScript(context)
+
+    private fun parseTextTracks(json: JSONObject?): List<com.omnicast.core.protocol.SignalingMessage.SubtitleTrack> {
+        if (json == null) return emptyList()
+        val arr = json.optJSONArray("textTracks") ?: return emptyList()
+        val res = mutableListOf<com.omnicast.core.protocol.SignalingMessage.SubtitleTrack>()
+        for (i in 0 until arr.length()) {
+            val t = arr.optJSONObject(i) ?: continue
+            val url = t.optString("url").ifBlank { t.optString("src").ifBlank { t.optString("file") } }
+            if (url.isNotBlank() && (url.startsWith("http://") || url.startsWith("https://"))) {
+                val lang = t.optString("lang").ifBlank { t.optString("label").takeIf { it.isNotBlank() } }
+                res.add(com.omnicast.core.protocol.SignalingMessage.SubtitleTrack(url = url, lang = lang))
+            }
+        }
+        return res
+    }
 
     fun parseConsoleMessage(message: String): List<SniffedVideo> {
         val list = mutableListOf<SniffedVideo>()
@@ -44,7 +60,8 @@ object WvcDomSniffer {
                                     poster = json.optString("poster", ""),
                                     isPlaying = true,
                                     duration = dur,
-                                    frameUrl = frameUrl
+                                    frameUrl = frameUrl,
+                                    subtitles = parseTextTracks(json)
                                 )
                             )
                         }
@@ -60,6 +77,7 @@ object WvcDomSniffer {
                                 if (itemDur in 0.1f..59.9f) continue
                                 val poster = item.optString("poster", "")
                                 val itemTitle = item.optString("title").takeIf { it.isNotBlank() } ?: pageTitle
+                                val itemSubs = parseTextTracks(item)
                                 val sources = item.optJSONArray("sources")
                                 if (sources != null) {
                                     for (j in 0 until sources.length()) {
@@ -69,8 +87,9 @@ object WvcDomSniffer {
                                         if (sDur in 0.1f..59.9f) continue
                                         val sUrl = sObj.optString("source")
                                         val label = sObj.optString("label", "Calidad Original")
+                                        val sSubs = parseTextTracks(sObj).ifEmpty { itemSubs }
                                         if (isValidMediaUrl(sUrl)) {
-                                            list.add(SniffedVideo(sUrl, itemTitle, poster, false, label, sDur, frameUrl))
+                                            list.add(SniffedVideo(sUrl, itemTitle, poster, false, label, sDur, frameUrl, sSubs))
                                         }
                                     }
                                 }
@@ -83,7 +102,7 @@ object WvcDomSniffer {
                         val lbl = json.optString("label").takeIf { it.isNotBlank() }
                         if (dur in 0.1f..59.9f) return emptyList()
                         if (isValidMediaUrl(src)) {
-                            list.add(SniffedVideo(src, json.optString("title", "Transmisión Web"), json.optString("poster", ""), duration = dur, label = lbl, frameUrl = frameUrl))
+                            list.add(SniffedVideo(src, json.optString("title", "Transmisión Web"), json.optString("poster", ""), duration = dur, label = lbl, frameUrl = frameUrl, subtitles = parseTextTracks(json)))
                         }
                     }
                 }
@@ -96,7 +115,7 @@ object WvcDomSniffer {
                 val frameUrl = json.optString("from").ifBlank { json.optString("frameUrl", "") }
                 if (dur in 0.1f..59.9f) return emptyList()
                 if (isValidMediaUrl(src)) {
-                    list.add(SniffedVideo(src, json.optString("title", "Transmisión Web"), json.optString("poster", ""), duration = dur, label = lbl, frameUrl = frameUrl))
+                    list.add(SniffedVideo(src, json.optString("title", "Transmisión Web"), json.optString("poster", ""), duration = dur, label = lbl, frameUrl = frameUrl, subtitles = parseTextTracks(json)))
                 }
             }
         } catch (_: Throwable) {}

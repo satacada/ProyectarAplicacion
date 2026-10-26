@@ -15,7 +15,8 @@ sealed class ReceiverUiState {
         val headers: Map<String, String> = emptyMap(),
         val startPositionMs: Long = 0L,
         val timestamp: Long = System.currentTimeMillis(),
-        val isFallbackFromExoPlayer: Boolean = false
+        val isFallbackFromExoPlayer: Boolean = false,
+        val subtitles: List<com.omnicast.core.protocol.SignalingMessage.SubtitleTrack> = emptyList()
     ) : ReceiverUiState()
     data class ImageDisplaying(
         val imageUrl: String,

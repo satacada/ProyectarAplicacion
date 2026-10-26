@@ -14,6 +14,8 @@ object ActiveStreamHolder {
         private set
     var headers: Map<String, String> = emptyMap()
         private set
+    var subtitles: List<com.omnicast.core.protocol.SignalingMessage.SubtitleTrack> = emptyList()
+        private set
 
     private val _isCasting = MutableStateFlow(false)
     val isCasting = _isCasting.asStateFlow()
@@ -45,23 +47,26 @@ object ActiveStreamHolder {
 
     var onSendPlayControl: ((action: String, posMs: Long, vol: Float, param: String?) -> Unit)? = null
 
-    fun update(url: String, videoTitle: String? = null, hdrs: Map<String, String> = emptyMap()) {
+    fun update(url: String, videoTitle: String? = null, hdrs: Map<String, String> = emptyMap(), subs: List<com.omnicast.core.protocol.SignalingMessage.SubtitleTrack> = emptyList()) {
         streamUrl = url
         val clean = videoTitle?.takeIf { it.isNotBlank() && it != "Cargando..." && it != "Transmisión" } ?: "Video Detectado"
         title = clean
         headers = hdrs
+        if (subs.isNotEmpty()) subtitles = subs
     }
 
     fun clearDetectedStream() {
         streamUrl = null
         title = null
         headers = emptyMap()
+        subtitles = emptyList()
     }
 
     fun clear() {
         streamUrl = null
         title = null
         headers = emptyMap()
+        subtitles = emptyList()
         _isCasting.value = false
         _isPlaying.value = false
         _positionMs.value = 0L
@@ -73,8 +78,8 @@ object ActiveStreamHolder {
         com.omnicast.sender.overlay.FloatingIndicatorService.updateMode()
     }
 
-    fun startCasting(url: String, videoTitle: String? = null, hdrs: Map<String, String> = emptyMap()) {
-        update(url, videoTitle, hdrs)
+    fun startCasting(url: String, videoTitle: String? = null, hdrs: Map<String, String> = emptyMap(), subs: List<com.omnicast.core.protocol.SignalingMessage.SubtitleTrack> = emptyList()) {
+        update(url, videoTitle, hdrs, subs)
         _currentMediaTitle.value = videoTitle?.takeIf { it.isNotBlank() } ?: "Video en Transmisión"
         _isCasting.value = true
         _isPlaying.value = false

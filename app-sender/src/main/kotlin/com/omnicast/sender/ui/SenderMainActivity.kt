@@ -33,12 +33,11 @@ class SenderMainActivity : ComponentActivity() {
         private var instance: SenderMainActivity? = null
         private var lastHandoffTime = 0L
         private var lastHandoffUrl: String? = null
-        private var lastProxyTime = 0L
         var onRequestReturnToMain: (() -> Unit)? = null
 
-        fun sendDirectStreamStatic(context: Context, url: String, title: String? = null, headers: Map<String, String> = emptyMap()) {
+        fun sendDirectStreamStatic(context: Context, url: String, title: String? = null, headers: Map<String, String> = emptyMap(), subtitles: List<SignalingMessage.SubtitleTrack> = emptyList()) {
             val pos = com.omnicast.sender.stream.StreamResumeManager.getPosition(context, url); val br = com.omnicast.sender.nativeclassifier.NativeStreamClassifier.classify(url).name
-            instance?.sendDirectStreamToTv(url, title, headers) ?: QuickSignalingHelper.sendQuickMessage(context, SignalingMessage.DirectStreamHandoff(mediaUrl = url, title = title, headers = headers, startPositionMs = pos, branch = br))
+            instance?.sendDirectStreamToTv(url, title, headers, subtitles = subtitles) ?: QuickSignalingHelper.sendQuickMessage(context, SignalingMessage.DirectStreamHandoff(mediaUrl = url, title = title, headers = headers, startPositionMs = pos, branch = br, subtitles = subtitles))
         }
 
         fun sendPlayControlStatic(context: Context, action: String, positionMs: Long = 0L, volume: Float = 1.0f) {
@@ -179,21 +178,6 @@ class SenderMainActivity : ComponentActivity() {
                 if (msg is SignalingMessage.PlaybackStatus) {
                     val mUrl = msg.mediaUrl
                     if (msg.state == "ERROR_FORBIDDEN_403") {
-                        val origUrl = ActiveStreamHolder.streamUrl
-                        val now = System.currentTimeMillis()
-                        if (now - lastProxyTime < 5000L) return@collect
-                        val isSameStream = if (mUrl.isNullOrBlank() || origUrl.isNullOrBlank()) true else (origUrl.contains(mUrl) || mUrl.contains(origUrl) || com.omnicast.sender.ui.browser.BrowserUrlHelper.isSameLogicalStream(origUrl, mUrl) || (try { java.net.URI(origUrl).host.equals(java.net.URI(mUrl).host, true) } catch (_: Throwable) { false }))
-                        if (!isSameStream) return@collect
-                        if (!ActiveStreamHolder.isProxied.value && !origUrl.isNullOrBlank()) {
-                            lastProxyTime = now
-                            com.omnicast.sender.log.SenderLogger.i("SenderMain", "🛡️ HTTP 403 en TV: Recuperación automática vía Proxy Jetty...")
-                            val pUrl = com.omnicast.sender.media.LocalStreamProxyServer.startAndGetProxyUrl(this@SenderMainActivity, origUrl, ActiveStreamHolder.headers)
-                            val sTitle = ActiveStreamHolder.title ?: "Transmisión Web"
-                            val br = com.omnicast.sender.nativeclassifier.NativeStreamClassifier.classify(origUrl).name
-                            val pMsg = SignalingMessage.DirectStreamHandoff(mediaUrl = pUrl, title = sTitle, headers = ActiveStreamHolder.headers, startPositionMs = 0L, branch = br)
-                            sendSignalingMessage(pMsg); ActiveStreamHolder.startCasting(pUrl, sTitle, ActiveStreamHolder.headers)
-                            return@collect
-                        }
                         com.omnicast.sender.log.SenderLogger.w("SenderMain", "⚠️ HTTP 403 en TV: Flujo protegido o expirado en origen")
                         ActiveStreamHolder.notifyPlaybackError("HTTP_403"); ActiveStreamHolder.stopCasting(notifyTv = false); com.omnicast.sender.service.CastMediaNotificationService.stop(this@SenderMainActivity)
                     } else if ((msg.state == "PLAYING" || msg.state == "PAUSED") && !mUrl.isNullOrBlank()) {
@@ -242,21 +226,20 @@ class SenderMainActivity : ComponentActivity() {
         SharedIntentHandler.handle(this, intent, clipboardExtractor, { u, t -> sendDirectStreamToTv(u, t) }, { u, t -> sendImageToTv(u, t) }, { moveTaskToBack(true) })
     }
 
-    fun sendDirectStreamToTv(url: String, title: String? = null, headers: Map<String, String> = emptyMap(), resumePositionMs: Long? = null) {
+    fun sendDirectStreamToTv(url: String, title: String? = null, headers: Map<String, String> = emptyMap(), resumePositionMs: Long? = null, subtitles: List<SignalingMessage.SubtitleTrack> = emptyList()) {
         val now = System.currentTimeMillis()
         if (now - lastHandoffTime < 1000L && url == lastHandoffUrl) return
         lastHandoffTime = now; lastHandoffUrl = url
         val safeTitle = title?.ifBlank { "Transmisión Web" } ?: "Transmisión Web"
         val (cleanUrl, preparedHeaders) = com.omnicast.sender.ui.browser.MediaPlatformResolver.prepareStreamForPlayback(url, headers["Referer"] ?: "", headers)
-        val isForceProxy = headers["X-Force-Proxy"] == "true" || preparedHeaders["X-Force-Proxy"] == "true"
-        val finalMediaUrl = if (isForceProxy) com.omnicast.sender.media.LocalStreamProxyServer.startAndGetProxyUrl(this, cleanUrl, preparedHeaders) else cleanUrl
         val savedPos = resumePositionMs ?: com.omnicast.sender.stream.StreamResumeManager.getPosition(this, cleanUrl).takeIf { it > 0 } ?: playlistManager.getLastPosition(cleanUrl)
-        historyManager.addOrUpdate(cleanUrl, safeTitle, headers = preparedHeaders, requiresProxy = isForceProxy)
-        ActiveStreamHolder.startCasting(finalMediaUrl, safeTitle, preparedHeaders)
+        historyManager.addOrUpdate(cleanUrl, safeTitle, headers = preparedHeaders, requiresProxy = false)
+        val effSubs = if (subtitles.isNotEmpty()) subtitles else ActiveStreamHolder.subtitles
+        ActiveStreamHolder.startCasting(cleanUrl, safeTitle, preparedHeaders, effSubs)
         com.omnicast.sender.service.CastMediaNotificationService.start(this)
         ActiveStreamHolder.onSendPlayControl = { act, pos, vol, par -> sendPlayControl(act, pos, vol, par) }
         val br = com.omnicast.sender.nativeclassifier.NativeStreamClassifier.classify(cleanUrl).name
-        val msg = SignalingMessage.DirectStreamHandoff(mediaUrl = finalMediaUrl, title = safeTitle, headers = preparedHeaders, startPositionMs = savedPos, branch = br)
+        val msg = SignalingMessage.DirectStreamHandoff(mediaUrl = cleanUrl, title = safeTitle, headers = preparedHeaders, startPositionMs = savedPos, branch = br, subtitles = effSubs)
         sendSignalingMessage(msg); com.omnicast.sender.discovery.MultiReceiverManager.broadcastToSecondary(msg, nsdScanner.discoveredDevices.value)
         val toastMsg = if (savedPos > 0L) "Reanudando en ${com.omnicast.sender.stream.StreamResumeManager.formatTime(savedPos)}" else "Enviando video a receptores..."
         Toast.makeText(this, toastMsg, Toast.LENGTH_SHORT).show()

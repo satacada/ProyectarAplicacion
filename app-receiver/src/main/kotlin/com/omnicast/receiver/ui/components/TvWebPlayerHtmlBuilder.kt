@@ -6,9 +6,14 @@ package com.omnicast.receiver.ui.components
  */
 object TvWebPlayerHtmlBuilder {
 
-    fun build(hlsCode: String, streamUrl: String, startPositionMs: Long): String {
+    fun build(hlsCode: String, streamUrl: String, startPositionMs: Long, subtitles: List<com.omnicast.core.protocol.SignalingMessage.SubtitleTrack> = emptyList()): String {
         val safeUrl = streamUrl.replace("\\", "\\\\").replace("\"", "\\\"")
         val startSec = (startPositionMs / 1000.0).coerceAtLeast(0.0)
+        val tracksHtml = subtitles.joinToString("") { sub ->
+            val lang = (sub.lang ?: "es").replace("\"", "&quot;")
+            val safeSubUrl = sub.url.replace("\"", "&quot;")
+            """<track src="$safeSubUrl" label="$lang" kind="subtitles" srclang="$lang">"""
+        }
 
         return """
             <!DOCTYPE html>
@@ -29,12 +34,19 @@ object TvWebPlayerHtmlBuilder {
             </head>
             <body>
               <div id="black-curtain" style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:#000;z-index:5;transition:opacity 0.3s ease;"></div>
-              <video id="vplayer" autoplay playsinline controls poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"></video>
+              <video id="vplayer" autoplay playsinline controls poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7">$tracksHtml</video>
               <div id="loader" class="spinner"></div>
               <script>
                 var vid = document.getElementById('vplayer'), spinner = document.getElementById('loader'), curtain = document.getElementById('black-curtain');
                 var streamUrl = "$safeUrl", startSec = $startSec, hasResumed = false;
                 var hlsInstance = null;
+
+                var watchdogTimer = setTimeout(function() {
+                  if (vid && (vid.currentTime === 0 || vid.paused) && vid.readyState < 3) {
+                    if (window.AndroidBridge && window.AndroidBridge.onPlaybackFailed) window.AndroidBridge.onPlaybackFailed('WATCHDOG_TIMEOUT');
+                  }
+                }, 6000);
+                function clearWatchdog() { if (watchdogTimer) { clearTimeout(watchdogTimer); watchdogTimer = null; } }
 
                 function hideSpin() { if (spinner) spinner.style.opacity = '0'; }
                 function showSpin() { if (spinner) spinner.style.opacity = '1'; }
@@ -43,19 +55,20 @@ object TvWebPlayerHtmlBuilder {
                   if (!vid) return;
                   var p = vid.play();
                   if (p !== undefined) {
-                    p.then(function() { hideSpin(); hideCurtain(); }).catch(function() {
+                    p.then(function() { clearWatchdog(); hideSpin(); hideCurtain(); }).catch(function() {
                       vid.muted = true;
-                      vid.play().then(function() { setTimeout(function() { if (vid) vid.muted = false; hideSpin(); hideCurtain(); }, 250); }).catch(function(){});
+                      vid.play().then(function() { setTimeout(function() { if (vid) vid.muted = false; clearWatchdog(); hideSpin(); hideCurtain(); }, 250); }).catch(function(){});
                     });
                   }
                 }
                 function reportStatus() {
+                  if (vid && vid.currentTime > 0 && !vid.paused) clearWatchdog();
                   if (window.AndroidBridge && vid) {
                     window.AndroidBridge.onPlaybackStatus(vid.currentTime || 0, vid.duration || 0, !vid.paused && !vid.ended && vid.readyState > 2);
                   }
                 }
                 vid.addEventListener('timeupdate', reportStatus); vid.addEventListener('play', function() { hideSpin(); hideCurtain(); reportStatus(); });
-                vid.addEventListener('playing', function() { hideSpin(); hideCurtain(); }); vid.addEventListener('waiting', showSpin); vid.addEventListener('seeking', showSpin); vid.addEventListener('seeked', hideSpin);
+                vid.addEventListener('playing', function() { clearWatchdog(); hideSpin(); hideCurtain(); }); vid.addEventListener('waiting', showSpin); vid.addEventListener('seeking', showSpin); vid.addEventListener('seeked', hideSpin);
                 vid.addEventListener('pause', reportStatus); vid.addEventListener('ended', reportStatus);
                 function seekStart() { if (startSec > 0 && !hasResumed && vid) { hasResumed = true; vid.currentTime = startSec; } }
                 vid.addEventListener('loadedmetadata', function() { seekStart(); tryPlay(); }); vid.addEventListener('canplay', function() { seekStart(); tryPlay(); });
@@ -64,6 +77,7 @@ object TvWebPlayerHtmlBuilder {
                   if (!hasTriedHls && window.Hls && Hls.isSupported() && streamUrl.indexOf('.mp4') === -1) {
                     initHls(); return;
                   }
+                  clearWatchdog();
                   var c = vid.error ? vid.error.code : 0;
                   if (window.AndroidBridge && window.AndroidBridge.onPlaybackFailed) window.AndroidBridge.onPlaybackFailed('VID_ERR_' + c);
                 });
@@ -83,11 +97,13 @@ object TvWebPlayerHtmlBuilder {
                         if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
                           if (++hlsNetRetries <= 2) hls.startLoad();
                           else {
+                            clearWatchdog();
                             try { hls.destroy(); } catch(_) {}
                             if (window.AndroidBridge && window.AndroidBridge.onPlaybackFailed) window.AndroidBridge.onPlaybackFailed('HLS_NET_403');
                           }
                         } else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) hls.recoverMediaError();
                         else {
+                          clearWatchdog();
                           try { hls.destroy(); } catch(_) {}
                           if (window.AndroidBridge && window.AndroidBridge.onPlaybackFailed) window.AndroidBridge.onPlaybackFailed('HLS_FATAL');
                         }

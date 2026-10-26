@@ -71,6 +71,7 @@ fun TvWebStreamScreen(
     title: String,
     headers: Map<String, String> = emptyMap(),
     startPositionMs: Long = 0L,
+    subtitles: List<SignalingMessage.SubtitleTrack> = emptyList(),
     timestamp: Long = 0L,
     commandFlow: Flow<SignalingMessage.PlayControl>? = null,
     displayMode: SignalingMessage.SetDisplayMode? = null,
@@ -176,7 +177,7 @@ fun TvWebStreamScreen(
                             }
 
                             val hlsCode = WebPlayerAssetHelper.getHlsJs(ctx)
-                            val html = TvWebPlayerHtmlBuilder.build(hlsCode, streamUrl, startPositionMs)
+                            val html = TvWebPlayerHtmlBuilder.build(hlsCode, streamUrl, startPositionMs, subtitles)
                             loadDataWithBaseURL(baseUrl, html, "text/html", "UTF-8", null)
                         }
                     },

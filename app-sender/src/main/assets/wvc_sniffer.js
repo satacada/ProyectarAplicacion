@@ -422,6 +422,7 @@ function ibSendListOfVideos(videos) {
     if (metaTitle) {
         listHolder.title = metaTitle;
     }
+    ibAddTCPlayerVideos(videoList);
     //might make more sense to run this on all documents
     if (typeof jwplayer == 'function') {
         try {
@@ -721,6 +722,46 @@ function ibAddVideoToList(videoList, source, videoTracks, mimeType = null, poste
     v.textTracks = videoTracks;
     sources.push(current);
 }
+
+function ibAddTCPlayerVideos(videoList) {
+    if (typeof TCPlayer === 'undefined' || typeof TCPlayer.getPlayers !== 'function') return;
+    try {
+        var players = TCPlayer.getPlayers();
+        var seen = Object.create(null);
+        Object.keys(players || {}).forEach(function (id) {
+            try {
+                var player = players[id];
+                if (!player || (player.isDisposed && player.isDisposed())) return;
+                var options = typeof player.options === 'function' ? player.options() : {};
+                var sources = typeof player.currentSources === 'function' ? player.currentSources() : null;
+                if (!sources || !sources.length) sources = options.sources || [];
+                if (!Array.isArray(sources)) sources = [sources];
+                sources.forEach(function (source) {
+                    var src = typeof source === 'string' ? source : source && source.src;
+                    if (typeof src !== 'string' || !/^webrtc:\/\//i.test(src)) return;
+                    var fallback = options.webrtcConfig && options.webrtcConfig.fallbackUrl;
+                    var url;
+                    if (typeof fallback === 'string' && fallback) {
+                        url = new URL(fallback, document.baseURI);
+                    } else {
+                        url = new URL(src.replace(/^webrtc:\/\//i, 'https://'));
+                        if (Array.from(url.searchParams.keys()).some(function (key) { return key.indexOf('tabr_') === 0; })) return;
+                        url.pathname = /\.sdp$/.test(url.pathname)
+                            ? url.pathname.replace(/\.sdp$/, '.m3u8') : url.pathname + '.m3u8';
+                    }
+                    if (!/^https?:$/.test(url.protocol) || seen[url.href]) return;
+                    seen[url.href] = true;
+                    ibAddVideoToList(videoList, url.href, null, 'application/vnd.apple.mpegurl',
+                        typeof player.poster === 'function' ? player.poster() : null);
+                    if (videoList.length > 0 && videoList[videoList.length - 1].sources && videoList[videoList.length - 1].sources[0]) {
+                        videoList[videoList.length - 1].sources[0].validateHls = true;
+                    }
+                });
+            } catch (e) { ibLog(e); }
+        });
+    } catch (e) { ibLog(e); }
+}
+
 function getFlowPlayer() {
     if (window.flowplayer && typeof window.flowplayer === 'function') {
         return window.flowplayer();

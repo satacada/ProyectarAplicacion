@@ -127,5 +127,7 @@ class MediaPlatformRegressionTest {
         assertEquals(MediaPlatformResolver.UA_FASTREAM, fastHeaders["User-Agent"])
         assertEquals("https://dr0pstream.com/e/argalp6ab1fu", dropHeaders["Referer"])
         assertEquals("https://fastream.to/embed-abcdefgh.html", fastHeaders["Referer"])
+        assertNull(dropHeaders["Origin"])
+        assertNull(fastHeaders["Origin"])
     }
 }

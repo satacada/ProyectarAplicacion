@@ -30,4 +30,18 @@ object TvReceiverHelper {
         } catch (_: Throwable) {}
         exoPlayerManager.setVolume(vol)
     }
+
+    fun shouldUseWebPlayer(url: String, headers: Map<String, String>): Boolean {
+        if (headers["X-Target-Player"]?.equals("WEBVIEW", true) == true) return true
+        if (headers["X-Target-Player"]?.equals("EXOPLAYER", true) == true) return false
+
+        val ref = headers["Referer"]?.lowercase() ?: ""
+        val isProtectedEmbed = ref.contains("dr0pstream.com") || ref.contains("dropcdn.io") ||
+                               ref.contains("fastream.to") || ref.contains("luluvdo.com") ||
+                               ref.contains("lulustream.com") || ref.contains("pelisgo")
+        val hasSessionCookies = !headers["Cookie"].isNullOrBlank()
+        val hasSignedToken = com.omnicast.core.domain.usecases.StreamManifestProbe.hasSignedSecurityToken(url)
+
+        return isProtectedEmbed || hasSessionCookies || hasSignedToken
+    }
 }

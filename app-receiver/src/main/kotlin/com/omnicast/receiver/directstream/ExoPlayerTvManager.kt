@@ -139,7 +139,7 @@ class ExoPlayerTvManager(private val context: Context) {
     }
 
     @OptIn(UnstableApi::class)
-    fun playStream(url: String, headers: Map<String, String> = emptyMap(), title: String? = null, startPositionMs: Long = 0L, branch: com.omnicast.core.domain.models.MediaBranch = com.omnicast.core.domain.models.MediaBranch.VOD_HLS_MP4) {
+    fun playStream(url: String, headers: Map<String, String> = emptyMap(), title: String? = null, startPositionMs: Long = 0L, branch: com.omnicast.core.domain.models.MediaBranch = com.omnicast.core.domain.models.MediaBranch.VOD_HLS_MP4, subtitles: List<com.omnicast.core.protocol.SignalingMessage.SubtitleTrack> = emptyList()) {
         if (url.contains("stub.mp4", ignoreCase = true) || url.contains("dummy.mp4", ignoreCase = true)) {
             com.omnicast.receiver.log.ReceiverLogger.log(TAG, "⚠️ Ignorando video dummy/placeholder: $url")
             return
@@ -152,10 +152,10 @@ class ExoPlayerTvManager(private val context: Context) {
         isRetryingClean = false
 
         val safeHeaders = filterSafeHeaders(cleanUrl, headers)
-        val mediaItem = buildMediaItem(cleanUrl, title, branch)
+        val mediaItem = buildMediaItem(cleanUrl, title, branch, subtitles)
 
         if (safeHeaders.isEmpty()) {
-            playClean(cleanUrl, title, startPositionMs, branch)
+            playClean(cleanUrl, title, startPositionMs, branch, subtitles)
             return
         }
 
@@ -186,12 +186,12 @@ class ExoPlayerTvManager(private val context: Context) {
         }
     }
 
-    fun playClean(url: String, title: String? = null, startPositionMs: Long = 0L, branch: com.omnicast.core.domain.models.MediaBranch = activeBranch) {
+    fun playClean(url: String, title: String? = null, startPositionMs: Long = 0L, branch: com.omnicast.core.domain.models.MediaBranch = activeBranch, subtitles: List<com.omnicast.core.protocol.SignalingMessage.SubtitleTrack> = emptyList()) {
         if (url.contains("stub.mp4", ignoreCase = true) || url.contains("dummy.mp4", ignoreCase = true)) return
         initialize(branch)
         val cleanUrl = com.omnicast.core.domain.usecases.StreamManifestProbe.sanitizeMediaUrl(url)
         runCatching {
-            val mediaItem = buildMediaItem(cleanUrl, title, branch)
+            val mediaItem = buildMediaItem(cleanUrl, title, branch, subtitles)
             val safe = filterSafeHeaders(cleanUrl, emptyMap())
             val httpFactory = DefaultHttpDataSource.Factory()
                 .setUserAgent(safe["User-Agent"] ?: DEFAULT_UA).setAllowCrossProtocolRedirects(true).setConnectTimeoutMs(15000).setReadTimeoutMs(15000)
@@ -208,9 +208,16 @@ class ExoPlayerTvManager(private val context: Context) {
         }
     }
 
-    private fun buildMediaItem(url: String, title: String?, branch: com.omnicast.core.domain.models.MediaBranch = activeBranch): MediaItem {
+    private fun buildMediaItem(url: String, title: String?, branch: com.omnicast.core.domain.models.MediaBranch = activeBranch, subtitles: List<com.omnicast.core.protocol.SignalingMessage.SubtitleTrack> = emptyList()): MediaItem {
         val metadata = MediaMetadata.Builder().setTitle(title ?: "Transmisión Web").setDisplayTitle(title ?: "Transmisión Web").build()
         val builder = MediaItem.Builder().setUri(url).setMediaMetadata(metadata)
+        if (subtitles.isNotEmpty()) {
+            val subConfigs = subtitles.map { sub ->
+                val mime = if (sub.url.contains(".srt", true)) androidx.media3.common.MimeTypes.APPLICATION_SUBRIP else androidx.media3.common.MimeTypes.TEXT_VTT
+                MediaItem.SubtitleConfiguration.Builder(android.net.Uri.parse(sub.url)).setMimeType(mime).setLanguage(sub.lang).setSelectionFlags(androidx.media3.common.C.SELECTION_FLAG_DEFAULT).build()
+            }
+            builder.setSubtitleConfigurations(subConfigs)
+        }
         if (branch == com.omnicast.core.domain.models.MediaBranch.LIVE_HLS) {
             builder.setLiveConfiguration(MediaItem.LiveConfiguration.Builder().setMaxPlaybackSpeed(1.02f).setMinPlaybackSpeed(0.98f).build())
         }

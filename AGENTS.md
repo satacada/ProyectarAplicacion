@@ -52,6 +52,8 @@ Este repositorio sigue el estándar abierto AGENTS.md para el desarrollo de la a
   4. Detección de Streams (Núcleo Hexagonal puro).
   Ningún pilar puede invadir, depender o alterar el ciclo de vida de los otros tres.
 - **Prohibición en WebViews:** PROHIBIDO usar bucles 'MutationObserver' o 'querySelectorAll' masivos que saturen el hilo de JavaScript. Toda neutralización de trampas debe ser reactiva al evento del usuario.
+- **Catálogo Técnico de Variantes (Obligatorio):** Todo análisis de compatibilidad, selección de reproductor y gestión de cabeceras DEBE consultar y respetar el catálogo técnico documentado en `doc/referencias/CATALOGO_VARIANTES_STREAMING.md` antes de proponer cambios en red o reproductores.
+
 
 ---
 
@@ -121,5 +123,17 @@ Queda terminantemente PROHIBIDO compilar o proponer una versión sin auditar pre
 8. **Supresión Nativa de Popups sin WebViews Temporales y Protección de Gestos (`v3.4.59` / HU-007) [LEY INVIOLABLE]:**
    - En `BrowserWebView.kt`, `WebChromeClient.onCreateWindow` DEBE retornar `false` directamente para suprimir popups publicitarios de forma nativa. Queda TERMINANTEMENTE PROHIBIDO instanciar `WebView` temporales dentro de `onCreateWindow` para evaluar URLs emergentes; cada WebView consume 40-80 MB de RAM y en sitios con alta densidad publicitaria satura el límite de 512 MB de la máquina virtual Android provocando `OutOfMemoryError` y cierre abrupto del navegador.
    - En `shouldOverrideUrlLoading`, las navegaciones externas no autorizadas se bloquean únicamente en redirecciones automáticas sin intervención del usuario (`!r.hasGesture()`). Queda PROHIBIDO bloquear clics intencionales del usuario (`r.hasGesture() == true`) que no pertenezcan a dominios de publicidad conocidos.
+9. **Erradicación Definitiva de Proxies Locales y Transmisión Directa Autónoma (Estándar Web Video Caster / v3.32.88, v3.4.17) [LEY INVIOLABLE]:**
+   - Queda TERMINANTEMENTE PROHIBIDO reactivar o forzar proxies locales (`LocalStreamProxyServer`, puerto 8092, o servidores NanoHTTPD/Jetty en el móvil) para enrutar flujos de video hacia la TV Box. Dicho enfoque fue eliminado definitivamente en los commits `a689254` y `56982a3`.
+   - Web Video Caster y OmniCast operan transmitiendo directamente la URL de internet con las cabeceras exactas (`Referer` y `User-Agent`) hacia la TV Box, garantizando reproducción autónoma sin consumo de batería ni saturación de sockets en el celular.
+   - La TV Box reproduce de forma autónoma con decodificación por hardware en ExoPlayer o mediante el reproductor HTML5 nativo `TvWebStreamScreen`.
+10. **Aislamiento Estricto de Captchas (Cloudflare Turnstile) y Blindaje Anti-Spam (HU-007) [LEY INVIOLABLE]:**
+   - La bandera `isChallenge` en `BrowserWebView.kt` aplica ÚNICA Y EXCLUSIVAMENTE dentro del subframe o petición hacia el dominio oficial de verificación (`challenges.cloudflare.com`).
+   - Queda TERMINANTEMENTE PROHIBIDO que `isChallenge` permanezca en `true` para la página principal o para clics/navegaciones posteriores.
+   - Todo toque o gesto del usuario sobre el reproductor o elementos emergentes que redirija a dominios publicitarios, de apuestas o desconocidos DEBE ser bloqueado (`return true`).
+11. **Cláusula Cerrojo de Inviolabilidad Arquitectónica y Protección de Flujos Operativos [BLOQUEANTE]:**
+   - Antes de proponer o aplicar cualquier cambio para un portal de películas o videos específico, el agente DEBE verificar que no altere el funcionamiento ni degrade los sitios que ya operan con total estabilidad: PelisGO, Spider-Man, LuluStream, TNMR, Canela.tv, ok.ru, YouTube, Dailymotion y portales de fútbol/deportes en vivo (808ball).
+   - Queda TERMINANTEMENTE PROHIBIDO romper o desestabilizar flujos globales por intentar parchar un sitio individual. Toda adaptación para un nuevo portal debe ser un adaptador modular aislado según el Principio "Poner y Sacar" (Sección 6).
+
 
 

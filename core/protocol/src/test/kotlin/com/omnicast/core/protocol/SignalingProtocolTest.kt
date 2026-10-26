@@ -84,6 +84,27 @@ class SignalingProtocolTest {
         val decodedHandoff = decoded as SignalingMessage.DirectStreamHandoff
         assertEquals("https://example.com/live/stream.m3u8", decodedHandoff.mediaUrl)
         assertEquals("Evento Deportivo en Vivo", decodedHandoff.title)
+        assertTrue(decodedHandoff.subtitles.isEmpty())
+    }
+
+    @Test
+    fun testDirectStreamHandoffWithSubtitlesSerialization() {
+        val subs = listOf(
+            SignalingMessage.SubtitleTrack(url = "https://example.com/sub_es.vtt", lang = "es"),
+            SignalingMessage.SubtitleTrack(url = "https://example.com/sub_en.vtt", lang = "en")
+        )
+        val handoff = SignalingMessage.DirectStreamHandoff(
+            mediaUrl = "https://example.com/movie/master.m3u8",
+            title = "Película con Subtítulos",
+            subtitles = subs
+        )
+
+        val encoded = json.encodeToString<SignalingMessage>(handoff)
+        assertTrue(encoded.contains("sub_es.vtt"))
+
+        val decoded = json.decodeFromString<SignalingMessage>(encoded) as SignalingMessage.DirectStreamHandoff
+        assertEquals(2, decoded.subtitles.size)
+        assertEquals("es", decoded.subtitles[0].lang)
     }
 
     @Test

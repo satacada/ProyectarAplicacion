@@ -35,6 +35,12 @@ sealed class SignalingMessage {
     ) : SignalingMessage()
 
     @Serializable
+    data class SubtitleTrack(
+        val url: String,
+        val lang: String? = null
+    )
+
+    @Serializable
     @SerialName("DIRECT_STREAM_HANDOFF")
     data class DirectStreamHandoff(
         val mediaUrl: String,
@@ -42,7 +48,8 @@ sealed class SignalingMessage {
         val headers: Map<String, String> = emptyMap(),
         val title: String? = null,
         val startPositionMs: Long = 0L,
-        val branch: String = "VOD_HLS_MP4"
+        val branch: String = "VOD_HLS_MP4",
+        val subtitles: List<SubtitleTrack> = emptyList()
     ) : SignalingMessage()
 
     @Serializable

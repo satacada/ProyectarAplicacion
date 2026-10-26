@@ -51,7 +51,7 @@ class TvReceiverActivity : ComponentActivity() {
         exoPlayerManager = ExoPlayerTvManager(this).apply {
             onTracksChanged = { info -> lifecycleScope.launch { signalingServer.sendMessage(info) } }
             onPlaybackFailed = { failedUrl, failedTitle -> runOnUiThread {
-                statusJob?.cancel()
+                statusJob?.cancel(); exoPlayerManager.stop("Fallback 403")
                 val streamToReport = failedUrl ?: (receiverState.value as? ReceiverUiState.DirectStreamPlaying)?.streamUrl
                 val titleToReport = failedTitle ?: (receiverState.value as? ReceiverUiState.DirectStreamPlaying)?.title
                 if (!streamToReport.isNullOrBlank() && (streamToReport.startsWith("http://") || streamToReport.startsWith("https://")) && !streamToReport.contains(":8089")) {
@@ -140,7 +140,7 @@ class TvReceiverActivity : ComponentActivity() {
                     )
                     is ReceiverUiState.WebStreamPlaying -> TvWebStreamScreen(
                         streamUrl = state.streamUrl, title = state.title, headers = state.headers, startPositionMs = state.startPositionMs,
-                        timestamp = state.timestamp, commandFlow = youTubeControlFlow, displayMode = currentDisplayMode.value,
+                        subtitles = state.subtitles, timestamp = state.timestamp, commandFlow = youTubeControlFlow, displayMode = currentDisplayMode.value,
                         onPlaybackStatus = { pos, dur, playing ->
                             lifecycleScope.launch {
                                 signalingServer.sendMessage(SignalingMessage.PlaybackStatus(if (playing) "PLAYING" else "PAUSED", pos, dur, state.streamUrl, state.title))
@@ -148,16 +148,16 @@ class TvReceiverActivity : ComponentActivity() {
                             }
                         },
                         onPlaybackFailed = { reason -> runOnUiThread {
-                            if (state.isFallbackFromExoPlayer) {
-                                com.omnicast.receiver.log.ReceiverLogger.log("TvReceiverActivity", "⚠️ WebStream falló ($reason). Fallback previo agotado, finalizando.")
+                            if (state.isFallbackFromExoPlayer || reason == "WATCHDOG_TIMEOUT" || TvReceiverHelper.shouldUseWebPlayer(state.streamUrl, state.headers)) {
+                                com.omnicast.receiver.log.ReceiverLogger.log("TvReceiverActivity", "⚠️ WebStream falló ($reason). Finalizando y retornando a Standby.")
                                 val found = playlistManager.findItemByUrlOrTitle(state.streamUrl, state.title)
-                                if (found != null) expiredItemForRenew.value = found else Toast.makeText(this@TvReceiverActivity, "⚠️ Flujo no disponible (HTTP 403)", Toast.LENGTH_SHORT).show()
+                                if (found != null) expiredItemForRenew.value = found else Toast.makeText(this@TvReceiverActivity, "⚠️ Flujo no disponible ($reason)", Toast.LENGTH_SHORT).show()
                                 receiverState.value = ReceiverUiState.Standby
                                 lifecycleScope.launch { signalingServer.sendMessage(SignalingMessage.PlaybackStatus("ERROR_FORBIDDEN_403", 0L, 0L, mediaUrl = state.streamUrl, title = state.title)) }
                             } else {
                                 com.omnicast.receiver.log.ReceiverLogger.log("TvReceiverActivity", "⚠️ WebStream falló ($reason). Fallback a ExoPlayer...")
                                 receiverState.value = ReceiverUiState.DirectStreamPlaying(state.streamUrl, state.title)
-                                exoPlayerManager.playStream(state.streamUrl, state.headers, state.title, state.startPositionMs)
+                                exoPlayerManager.playStream(state.streamUrl, state.headers, state.title, state.startPositionMs, subtitles = state.subtitles)
                                 startPlaybackStatusReporting()
                             }
                         } },
@@ -195,10 +195,13 @@ class TvReceiverActivity : ComponentActivity() {
                     val ytId = message.headers["X-YouTube-Id"] ?: TvReceiverHelper.extractYouTubeId(message.mediaUrl)
                     if (!ytId.isNullOrBlank()) {
                         exoPlayerManager.stop(); receiverState.value = ReceiverUiState.YouTubePlaying(ytId, title, System.currentTimeMillis())
+                    } else if (TvReceiverHelper.shouldUseWebPlayer(message.mediaUrl, message.headers)) {
+                        exoPlayerManager.stop()
+                        receiverState.value = ReceiverUiState.WebStreamPlaying(message.mediaUrl, title, message.headers, message.startPositionMs, subtitles = message.subtitles)
                     } else {
                         val br = com.omnicast.core.domain.models.MediaBranch.entries.firstOrNull { it.name.equals(message.branch, true) } ?: com.omnicast.core.domain.models.MediaBranch.VOD_HLS_MP4
                         receiverState.value = ReceiverUiState.DirectStreamPlaying(message.mediaUrl, title)
-                        exoPlayerManager.playStream(message.mediaUrl, message.headers, title, message.startPositionMs, br)
+                        exoPlayerManager.playStream(message.mediaUrl, message.headers, title, message.startPositionMs, br, message.subtitles)
                         lifecycleScope.launch { historyManager.addOrUpdate(message.mediaUrl, title, message.headers, message.startPositionMs) }
                         startPlaybackStatusReporting()
                     }
@@ -268,9 +271,8 @@ class TvReceiverActivity : ComponentActivity() {
 
     private fun playHistoryItem(item: com.omnicast.receiver.directstream.TvHistoryItem) {
         digitalAudioReceiver?.stop(); webRtcReceiver.resetConnection(); TvRemoteKeyHandler.notifyPlaybackStarted()
-        if (com.omnicast.core.domain.usecases.StreamManifestProbe.hasSignedSecurityToken(item.mediaUrl)) {
-            exoPlayerManager.stop()
-            receiverState.value = ReceiverUiState.WebStreamPlaying(item.mediaUrl, item.title, item.headers, item.lastPositionMs)
+        if (TvReceiverHelper.shouldUseWebPlayer(item.mediaUrl, item.headers)) {
+            exoPlayerManager.stop(); receiverState.value = ReceiverUiState.WebStreamPlaying(item.mediaUrl, item.title, item.headers, item.lastPositionMs)
         } else {
             receiverState.value = ReceiverUiState.DirectStreamPlaying(item.mediaUrl, item.title)
             exoPlayerManager.playStream(item.mediaUrl, item.headers, item.title, item.lastPositionMs); startPlaybackStatusReporting()
@@ -279,12 +281,12 @@ class TvReceiverActivity : ComponentActivity() {
 
     private fun playPlaylistItem(item: com.omnicast.receiver.directstream.TvPlaylistItem) {
         digitalAudioReceiver?.stop(); webRtcReceiver.resetConnection(); TvRemoteKeyHandler.notifyPlaybackStarted()
-        if (com.omnicast.core.domain.usecases.StreamManifestProbe.hasSignedSecurityToken(item.url)) {
-            exoPlayerManager.stop()
-            receiverState.value = ReceiverUiState.WebStreamPlaying(item.url, item.title, item.headers, playlistManager.getResumePosition(item))
+        val pos = playlistManager.getResumePosition(item)
+        if (TvReceiverHelper.shouldUseWebPlayer(item.url, item.headers)) {
+            exoPlayerManager.stop(); receiverState.value = ReceiverUiState.WebStreamPlaying(item.url, item.title, item.headers, pos)
         } else {
             receiverState.value = ReceiverUiState.DirectStreamPlaying(item.url, item.title)
-            exoPlayerManager.playStream(item.url, item.headers, item.title, playlistManager.getResumePosition(item)); startPlaybackStatusReporting()
+            exoPlayerManager.playStream(item.url, item.headers, item.title, pos); startPlaybackStatusReporting()
         }
     }
 

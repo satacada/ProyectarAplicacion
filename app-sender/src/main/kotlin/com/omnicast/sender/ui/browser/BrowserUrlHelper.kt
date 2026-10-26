@@ -148,7 +148,7 @@ object BrowserUrlHelper {
             if (isDrop && id != null) {
                 headers["Referer"] = "https://dr0pstream.com/e/$id"
                 headers.remove("Origin")
-                headers["User-Agent"] = UA_MOBILE
+                headers["User-Agent"] = MediaPlatformResolver.UA_FASTREAM
                 headers["Sec-Fetch-Mode"] = "cors"; headers["Sec-Fetch-Site"] = "cross-site"; headers["Sec-Fetch-Dest"] = "empty"
             } else if (isFast && id != null) {
                 headers["Referer"] = "https://fastream.to/embed-$id.html"

@@ -87,8 +87,8 @@ fun InAppBrowserScreen(
                 o.copy(reputationScore = rep, isTestedSuccess = testedSuccess.contains(o.streamUrl), isTestedFailed = testedFailed.contains(o.streamUrl))
             }
             if (deep.isNotEmpty()) {
-                val sorted = (deep + qualityOptions).filterNot { it.streamUrl.contains("iframes", true) }.distinctBy { it.streamUrl }.sortedByDescending { StreamQualityDetector.calculateMovieProbability(it, currentUrl) }
-                qualityOptions = sorted.mapIndexed { idx, opt -> if (idx == 0 && StreamQualityDetector.calculateMovieProbability(opt, currentUrl) >= 50) opt.copy(isSuggested = true) else if (idx > 0) opt.copy(isSuggested = false) else opt }
+                val sorted = (deep + qualityOptions).distinctBy { it.streamUrl }.sortedWith(compareByDescending<StreamQualityOption> { it.isMaster }.thenByDescending { StreamQualityDetector.calculateMovieProbability(it, currentUrl) }.thenByDescending { it.resolution.removeSuffix("p").toIntOrNull() ?: 0 })
+                qualityOptions = sorted.mapIndexed { idx, opt -> opt.copy(isSuggested = (idx == 0)) }
             }
         }
     }

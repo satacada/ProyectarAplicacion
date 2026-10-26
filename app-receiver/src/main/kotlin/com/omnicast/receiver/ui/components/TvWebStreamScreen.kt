@@ -149,7 +149,10 @@ fun TvWebStreamScreen(
                             CookieManager.getInstance().setAcceptCookie(true)
                             CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
                             addJavascriptInterface(WebStreamBridge(onPlaybackStatus, onPlaybackFailed), "AndroidBridge")
-                            webViewClient = WebViewClient()
+                            webViewClient = object : WebViewClient() {
+                                override fun shouldInterceptRequest(v: WebView?, r: WebResourceRequest?): WebResourceResponse? =
+                                    TvWebResourceInterceptor.shouldIntercept(r, headers) ?: super.shouldInterceptRequest(v, r)
+                            }
                             webChromeClient = object : WebChromeClient() {
                                 override fun onShowCustomView(v: View?, c: CustomViewCallback?) { customView = v }
                                 override fun onHideCustomView() { customView = null }
@@ -214,7 +217,7 @@ fun TvWebStreamScreen(
 
                                     function initHls() {
                                       if (window.Hls && Hls.isSupported()) {
-                                        var hls = new Hls({ enableWorker: true, lowLatencyMode: false, backBufferLength: 90 });
+                                        var hls = new Hls({ enableWorker: false, lowLatencyMode: false, backBufferLength: 90 });
                                         hls.loadSource(streamUrl);
                                         hls.attachMedia(vid);
                                         hls.on(Hls.Events.MANIFEST_PARSED, function() { vid.play().catch(function(){}); });

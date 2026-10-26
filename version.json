@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 234,
-  "versionCodeReceiver": 217,
-  "versionName": "3.4.84",
-  "releaseTag": "v3.4.84",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.84/omnicast-sender-v3.4.84.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.84/omnicast-receiver-v3.4.84.apk",
-  "changelog": "v3.4.84: Restauración de arquitectura limpia estilo v3.32.94 para DropCDN/Fastream: fusión multidominio de cookies, exclusión de Java HttpURLConnection en TvWebResourceInterceptor para fluir por Chromium C++ nativo, Referer y Origin de embed canónico, y desactivación de cortina negra tras 4s o error para evitar pantallas congeladas."
+  "versionCodeSender": 235,
+  "versionCodeReceiver": 218,
+  "versionName": "3.4.85",
+  "releaseTag": "v3.4.85",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.85/omnicast-sender-v3.4.85.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.85/omnicast-receiver-v3.4.85.apk",
+  "changelog": "v3.4.85: Enrutamiento directo de DropCDN y Fastream a ExoPlayer (decodificación nativa por hardware, sin restricciones CORS de navegador) e interceptor anti-CORS en TvWebResourceInterceptor para inyectar Access-Control-Allow-Origin: * en cualquier fallback web."
 }

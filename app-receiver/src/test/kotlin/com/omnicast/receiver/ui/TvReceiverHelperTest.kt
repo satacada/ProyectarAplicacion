@@ -32,7 +32,7 @@ class TvReceiverHelperTest {
     @Test
     fun testShouldUseExoPlayerForDropCdnAndFastream() {
         val dropUrls = listOf(
-            "https://ds4.dropcdn.io/hls2/01/00038/master.m3u8?t=abcdef&s=1730000000",
+            "https://ds4.dropcdn.io/hls2/01/00038/master.m3u8?t=oV8cxTiNEmX1J6c4kfT1aAmW6u0Xt0p-5zKXBPvMoWc&s=1730000000",
             "https://dr0pstream.com/hls/master.m3u8",
             "https://fastream.to/hls/master.m3u8"
         )

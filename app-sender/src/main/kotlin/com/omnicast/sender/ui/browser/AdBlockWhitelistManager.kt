@@ -22,27 +22,10 @@ object AdBlockWhitelistManager {
         "dailymotion.com",
         "geo.dailymotion.com",
         "dmcdn.net",
+        "static1.dmcdn.net",
         "youtube.com",
         "ytimg.com",
-        "googlevideo.com",
-        "ok.ru",
-        "odnoklassniki.ru",
-        "okcdn.ru",
-        "mycdn.me",
-        "vk.com",
-        "vk.ru",
-        "vkvideo.ru",
-        "rumble.com",
-        "vimeo.com",
-        "pelisplus.hair",
-        "pelisultra.hair",
-        "dr0pstream.com",
-        "dropcdn.io",
-        "fastream.to",
-        "lulustream.com",
-        "luluvdo.com",
-        "tnmr.org",
-        "pelisgo.online"
+        "googlevideo.com"
     )
 
     private val cachedDomains = mutableSetOf<String>()
@@ -54,9 +37,12 @@ object AdBlockWhitelistManager {
         val saved = prefs.getStringSet(KEY_WHITELIST_SET, null)
         synchronized(cachedDomains) {
             cachedDomains.clear()
-            cachedDomains.addAll(DEFAULT_WHITELIST)
-            if (saved != null) cachedDomains.addAll(saved)
-            prefs.edit().putStringSet(KEY_WHITELIST_SET, cachedDomains.toSet()).apply()
+            if (saved != null) {
+                cachedDomains.addAll(saved)
+            } else {
+                cachedDomains.addAll(DEFAULT_WHITELIST)
+                prefs.edit().putStringSet(KEY_WHITELIST_SET, DEFAULT_WHITELIST).apply()
+            }
         }
         isInitialized = true
     }

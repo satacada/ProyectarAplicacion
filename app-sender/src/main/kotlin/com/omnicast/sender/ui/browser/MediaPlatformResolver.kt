@@ -102,61 +102,17 @@ object MediaPlatformResolver {
         return Regex("(?:/hls\\d*/\\d+/\\d+/|/embed-|/e/|/d/)([a-zA-Z0-9]{8,16})(?:[_,.]|$)").find(url)?.groupValues?.get(1)
     }
 
-    fun extractLuluStreamId(url: String): String? {
-        val lower = url.lowercase()
-        if (!lower.contains("tnmr.org") && !lower.contains("luluvdo.com") && !lower.contains("lulustream.com")) return null
-        val paramMatch = Regex("[?&]fr=([a-zA-Z0-9]+)").find(url)?.groupValues?.get(1)
-        if (paramMatch != null) return paramMatch
-        return Regex("(?:/hls\\d*/\\d+/\\d+/|,|/e/|/d/)([a-zA-Z0-9]{8,16})(?:[_,.]|$)").find(url)?.groupValues?.get(1)
-    }
-
     fun resolveFastreamSync(url: String, referer: String? = null): Triple<String, String?, Map<String, String>>? {
         val id = extractFastreamId(url) ?: return null
         return try {
             val isDrop = url.contains("dropcdn.io", true) || url.contains("dr0pstream.com", true)
             val embedUrl = if (isDrop) "https://dr0pstream.com/e/$id" else "https://fastream.to/embed-$id.html"
-            val targetUa = UA_FASTREAM
-            val conn = (URL(embedUrl).openConnection() as HttpURLConnection).apply {
-                connectTimeout = 4000
-                readTimeout = 4000
-                setRequestProperty("User-Agent", targetUa)
-                setRequestProperty("Referer", referer?.takeIf { it.isNotBlank() } ?: "https://reypelis.vip/")
-            }
-            if (conn.responseCode !in 200..299) {
-                conn.disconnect()
-                return null
-            }
-            val html = conn.inputStream.bufferedReader().use { it.readText() }
-            conn.disconnect()
-            val unpacked = unpackDeanEdwards(html) ?: html
-            val streamUrlMatch = Regex("file:\\s*\"([^\"]+)\"").find(unpacked)
-                ?: Regex("https?://[^\\s\"',]+\\.m3u8[^\\s\"',]*").find(unpacked)
-            val streamUrl = streamUrlMatch?.groupValues?.get(1) ?: streamUrlMatch?.value ?: return null
-            val cleanStreamUrl = BrowserUrlHelper.sanitizeMediaUrl(streamUrl)
-            val hdrs = mapOf(
-                "User-Agent" to targetUa,
-                "Referer" to embedUrl,
-                "Sec-Fetch-Mode" to "cors",
-                "Sec-Fetch-Dest" to "empty",
-                "Sec-Fetch-Site" to "cross-site"
-            )
-            Log.i(TAG, "🎬 Fastream/DropCDN resuelto exitosamente: $id -> $cleanStreamUrl")
-            Triple(cleanStreamUrl, null, hdrs)
-        } catch (e: Throwable) {
-            Log.w(TAG, "No se pudo resolver Fastream ($id): ${e.message}")
-            null
-        }
-    }
-
-    fun resolveLuluStreamSync(url: String, referer: String? = null): Triple<String, String?, Map<String, String>>? {
-        val id = extractLuluStreamId(url) ?: return null
-        return try {
-            val embedUrl = "https://luluvdo.com/e/$id"
+            val origin = if (isDrop) "https://dr0pstream.com" else "https://fastream.to"
             val conn = (URL(embedUrl).openConnection() as HttpURLConnection).apply {
                 connectTimeout = 4000
                 readTimeout = 4000
                 setRequestProperty("User-Agent", UA_MOBILE)
-                setRequestProperty("Referer", referer?.takeIf { it.isNotBlank() } ?: "https://pelisgo.online/")
+                setRequestProperty("Referer", referer?.takeIf { it.isNotBlank() } ?: "https://reypelis.net/")
             }
             if (conn.responseCode !in 200..299) {
                 conn.disconnect()
@@ -172,15 +128,15 @@ object MediaPlatformResolver {
             val hdrs = mapOf(
                 "User-Agent" to UA_MOBILE,
                 "Referer" to embedUrl,
-                "Origin" to "https://luluvdo.com",
+                "Origin" to origin,
                 "Sec-Fetch-Mode" to "cors",
                 "Sec-Fetch-Dest" to "empty",
                 "Sec-Fetch-Site" to "cross-site"
             )
-            Log.i(TAG, "🎬 LuluStream resuelto exitosamente: $id -> $cleanStreamUrl")
+            Log.i(TAG, "🎬 Fastream/DropCDN resuelto exitosamente: $id -> $cleanStreamUrl")
             Triple(cleanStreamUrl, null, hdrs)
         } catch (e: Throwable) {
-            Log.w(TAG, "No se pudo resolver LuluStream ($id): ${e.message}")
+            Log.w(TAG, "No se pudo resolver Fastream ($id): ${e.message}")
             null
         }
     }
@@ -196,51 +152,20 @@ object MediaPlatformResolver {
         val lower = finalUrl.lowercase()
         val isDrop = lower.contains("dropcdn.io") || lower.contains("dr0pstream.com")
         val isFastream = lower.contains("fastream.to")
-        if (isFastream) {
-            val resolved = if (!finalUrl.contains(".m3u8", ignoreCase = true)) resolveFastreamSync(finalUrl, pageUrl) else null
-            if (resolved != null) {
-                finalUrl = resolved.first
-                resolved.third.forEach { (k, v) -> hdrs[k] = v }
-            } else {
-                val id = extractFastreamId(finalUrl)
-                if (id != null) {
-                    hdrs["User-Agent"] = UA_FASTREAM
-                    hdrs["Referer"] = "https://fastream.to/embed-$id.html"
-                    hdrs["Origin"] = "https://fastream.to"
-                    hdrs["X-Target-Player"] = "CHROMIUM_PURE"
-                }
-            }
-        } else if (isDrop) {
-            val resolved = if (!finalUrl.contains(".m3u8", ignoreCase = true)) resolveFastreamSync(finalUrl, pageUrl) else null
-            if (resolved != null) {
-                finalUrl = resolved.first
-                resolved.third.forEach { (k, v) -> hdrs[k] = v }
-            } else {
-                val id = extractFastreamId(finalUrl)
-                if (id != null) {
-                    hdrs["Referer"] = "https://dr0pstream.com/e/$id"
-                    hdrs["Origin"] = "https://dr0pstream.com"
-                    hdrs["User-Agent"] = UA_FASTREAM
-                    hdrs["X-Target-Player"] = "CHROMIUM_PURE"
+        if (isDrop || isFastream) {
+            val id = extractFastreamId(finalUrl)
+            if (id != null) {
+                val embed = if (isDrop) "https://dr0pstream.com/e/$id" else "https://fastream.to/embed-$id.html"
+                val origin = if (isDrop) "https://dr0pstream.com" else "https://fastream.to"
+                val curRef = hdrs["Referer"] ?: ""
+                val targetHost = if (isDrop) "dr0pstream.com" else "fastream.to"
+                if (curRef.isBlank() || !curRef.contains(targetHost)) {
+                    hdrs["Referer"] = embed
+                    hdrs["Origin"] = origin
                 }
             }
         }
-        val isLulu = lower.contains("tnmr.org") || lower.contains("luluvdo.com") || lower.contains("lulustream.com")
-        if (isLulu) {
-            val resolved = if (!finalUrl.contains(".m3u8", ignoreCase = true)) resolveLuluStreamSync(finalUrl, pageUrl) else null
-            if (resolved != null) {
-                finalUrl = resolved.first
-                resolved.third.forEach { (k, v) -> hdrs[k] = v }
-            } else {
-                val luluId = extractLuluStreamId(finalUrl)
-                if (luluId != null) {
-                    hdrs["Referer"] = "https://luluvdo.com/e/$luluId"
-                    hdrs["Origin"] = "https://luluvdo.com"
-                }
-            }
-        }
-        val reqUa = if (isFastream || isDrop) UA_FASTREAM else UA_MOBILE
-        val safeHeaders = BrowserUrlHelper.buildSafeHeaders(finalUrl, pageUrl, reqUa, hdrs)
+        val safeHeaders = BrowserUrlHelper.buildSafeHeaders(finalUrl, pageUrl, UA_MOBILE, hdrs)
         return Pair(finalUrl, safeHeaders)
     }
 

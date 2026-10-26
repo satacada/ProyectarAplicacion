@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 243,
-  "versionCodeReceiver": 226,
-  "versionName": "3.4.93",
-  "releaseTag": "v3.4.93",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.93/omnicast-sender-v3.4.93.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.93/omnicast-receiver-v3.4.93.apk",
-  "changelog": "v3.4.93: Conexión de TvWebResourceInterceptor en TvWebStreamScreen (erradicación definitiva de bloqueo CORS para DropCDN/Hls.js en TV Box) y enableWorker: false en Hls.js."
+  "versionCodeSender": 244,
+  "versionCodeReceiver": 227,
+  "versionName": "3.4.94",
+  "releaseTag": "v3.4.94",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.94/omnicast-sender-v3.4.94.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.94/omnicast-receiver-v3.4.94.apk",
+  "changelog": "v3.4.94: Copia íntegra y exacta del motor de captura original de la versión 3.32.94 (BrowserWebView, BrowserUrlHelper, MediaPlatformResolver, WvcDomSniffer, WvcVideoListSheet, DynamicSnifferManager y AdBlocker de commit 3f1f03f) sin modificaciones ni interceptores inventados, manteniendo módulos de Proyectar y Galería sellados de v3.4.64."
 }

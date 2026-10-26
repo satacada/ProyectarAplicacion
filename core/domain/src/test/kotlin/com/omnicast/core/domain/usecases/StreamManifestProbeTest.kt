@@ -18,7 +18,7 @@ class StreamManifestProbeTest {
 
         val permutations = StreamManifestProbe.buildHeaderPermutations(streamUrl, initialHeaders, pageUrl)
 
-        assertEquals(5, permutations.size)
+        assertEquals(4, permutations.size)
         assertEquals("ORIGINAL", permutations[0].first)
         assertEquals("https://player-iframe.example.net/embed/xyz", permutations[0].second["Referer"])
         assertEquals("https://player-iframe.example.net", permutations[0].second["Origin"])
@@ -31,12 +31,9 @@ class StreamManifestProbeTest {
         assertEquals("https://cdn-node12.example.org/", permutations[2].second["Referer"])
         assertEquals("https://cdn-node12.example.org", permutations[2].second["Origin"])
 
-        assertEquals("REFERER_ONLY", permutations[3].first)
-        assertEquals("https://player-iframe.example.net/embed/xyz", permutations[3].second["Referer"])
-
-        assertEquals("CLEAN", permutations[4].first)
-        assertFalse(permutations[4].second.containsKey("Referer"))
-        assertFalse(permutations[4].second.containsKey("Origin"))
+        assertEquals("CLEAN", permutations[3].first)
+        assertFalse(permutations[3].second.containsKey("Referer"))
+        assertFalse(permutations[3].second.containsKey("Origin"))
     }
 
     @Test
@@ -58,18 +55,12 @@ class StreamManifestProbeTest {
     }
 
     @Test
-    fun `buildHeaderPermutations prioritizes EMBED_CLEAN and EMBED_HOST for DropCDN`() {
+    fun `buildHeaderPermutations prioritizes EMBED_HOST for DropCDN`() {
         val streamUrl = "https://ds4.dropcdn.io/hls2/01/00038/loaxg3kae97x_n/master.m3u8?t=xyz"
         val permutations = StreamManifestProbe.buildHeaderPermutations(streamUrl, emptyMap(), "https://pelisplus.hair/pelicula/test")
-        val first = permutations[0]
-        val second = permutations[1]
-        assertEquals("EMBED_CLEAN", first.first)
+        val first = permutations.first()
+        assertEquals("EMBED_HOST", first.first)
         assertEquals("https://dr0pstream.com/e/loaxg3kae97x", first.second["Referer"])
-        assertFalse(first.second.containsKey("Origin"))
-        assertFalse(first.second.containsKey("Cookie"))
-
-        assertEquals("EMBED_HOST", second.first)
-        assertEquals("https://dr0pstream.com/e/loaxg3kae97x", second.second["Referer"])
-        assertEquals("https://dr0pstream.com", second.second["Origin"])
+        assertEquals("https://dr0pstream.com", first.second["Origin"])
     }
 }

@@ -57,12 +57,6 @@ class TelemetryFilterAdapter : IStreamTelemetryFilterPort {
         if (pathOnly.endsWith(".ts") || pathOnly.endsWith(".m4s") || lower.contains(".ts?") || lower.contains(".m4s?") ||
             lower.contains("init.mp4") || lower.contains("/init-") || lower.contains("-init.")) return true
 
-        // 5b. Descartar miniaturas, previews y chunks de buffer por rango (bytes)
-        if (lower.contains("videopreview") || lower.contains("video_preview") || lower.contains("/preview") ||
-            lower.contains("i.okcdn.ru") || lower.contains("st.okcdn.ru") || lower.contains("i.mycdn.me") || lower.contains("st.mycdn.me") ||
-            lower.contains("bytes=") || lower.contains("&bytes") || lower.contains("?bytes") ||
-            lower.contains("ct=11") || lower.contains("ct=12") || lower.contains("ct=6")) return true
-
         // 6. Descartar audio aislado si se busca el flujo de video compuesto
         if (lower.contains("/audio") || lower.contains("_audio.m3u8") || lower.contains("-audio.m3u8")) return true
 

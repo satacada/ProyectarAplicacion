@@ -60,7 +60,7 @@ private object WebPlayerAssetHelper {
 }
 
 /**
- * Reproductor Web HTML5 / Chromium para TV Box (v3.32.94).
+ * Reproductor Web HTML5 / Chromium para TV Box.
  * Ejecuta flujos web protegidos con tokens de seguridad (DropCDN, Fastream, HLS)
  * dentro del stack de red nativo de Chromium sin riesgo de HTTP 403.
  */
@@ -149,10 +149,7 @@ fun TvWebStreamScreen(
                             CookieManager.getInstance().setAcceptCookie(true)
                             CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
                             addJavascriptInterface(WebStreamBridge(onPlaybackStatus, onPlaybackFailed), "AndroidBridge")
-                            webViewClient = object : WebViewClient() {
-                                override fun shouldInterceptRequest(v: WebView?, r: WebResourceRequest?): WebResourceResponse? =
-                                    TvWebResourceInterceptor.shouldIntercept(r, headers) ?: super.shouldInterceptRequest(v, r)
-                            }
+                            webViewClient = WebViewClient()
                             webChromeClient = object : WebChromeClient() {
                                 override fun onShowCustomView(v: View?, c: CustomViewCallback?) { customView = v }
                                 override fun onHideCustomView() { customView = null }
@@ -169,8 +166,6 @@ fun TvWebStreamScreen(
                                 val uri = Uri.parse(streamUrl)
                                 "${uri.scheme}://${uri.host}/"
                             } catch (_: Throwable) { "https://omnicast.tv" }
-
-                            com.omnicast.receiver.log.ReceiverLogger.log("TvWebStreamScreen", "🚀 Iniciando WebView para: $streamUrl con baseUrl: $baseUrl")
 
                             val html = """
                                 <!DOCTYPE html>
@@ -217,7 +212,7 @@ fun TvWebStreamScreen(
 
                                     function initHls() {
                                       if (window.Hls && Hls.isSupported()) {
-                                        var hls = new Hls({ enableWorker: false, lowLatencyMode: false, backBufferLength: 90 });
+                                        var hls = new Hls({ enableWorker: true, lowLatencyMode: false, backBufferLength: 90 });
                                         hls.loadSource(streamUrl);
                                         hls.attachMedia(vid);
                                         hls.on(Hls.Events.MANIFEST_PARSED, function() { vid.play().catch(function(){}); });

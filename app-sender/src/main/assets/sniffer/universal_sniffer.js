@@ -21,23 +21,11 @@
                 }
             };
         }
-    } catch(e) {}
-
     // 1b. Intercepción segura de window.open contra popups publicitarios
     try {
         window.open = function(u, t, f) {
-            if (!u || typeof u !== 'string') return null;
-            var l = u.toLowerCase();
-            if (l.indexOf('bet365') !== -1 || l.indexOf('1xbet') !== -1 || l.indexOf('popunder') !== -1 ||
-                l.indexOf('adcash') !== -1 || l.indexOf('clickadu') !== -1 || l.indexOf('propeller') !== -1 ||
-                l.indexOf('holdbitter') !== -1 || l.indexOf('/gambling/') !== -1 || l.indexOf('bonus') !== -1) {
-                console.warn('OMNICAST_AD_POPUP_BLOCKED: ' + u);
-                return null;
-            }
-            try {
-                window.location.href = u;
-            } catch(_) {}
-            return window;
+            console.warn('OMNICAST_AD_POPUP_BLOCKED: ' + u);
+            return null;
         };
     } catch(e) {}
 
@@ -47,23 +35,17 @@
         var l = u.toLowerCase();
         if (l.indexOf('.jpg') !== -1 || l.indexOf('.png') !== -1 || l.indexOf('.webp') !== -1 ||
             l.indexOf('.gif') !== -1 || l.indexOf('.css') !== -1 || l.indexOf('.js') !== -1 ||
-            l.indexOf('i.mycdn.me') !== -1 || l.indexOf('st.mycdn.me') !== -1 ||
-            l.indexOf('i.okcdn.ru') !== -1 || l.indexOf('st.okcdn.ru') !== -1 ||
-            l.indexOf('videopreview') !== -1 || l.indexOf('preview') !== -1 || l.indexOf('/i?') !== -1) return false;
+            l.indexOf('i.mycdn.me') !== -1 || l.indexOf('st.mycdn.me') !== -1) return false;
         if (l.indexOf('stub.mp4') !== -1 || l.indexOf('dummy.mp4') !== -1 || l.indexOf('blank.mp4') !== -1) return false;
         if (l.indexOf('/embed/') !== -1 || l.indexOf('/embed69') !== -1 || l.indexOf('/vidurl/') !== -1) return false;
         if (l.indexOf('init.mp4') !== -1 || l.indexOf('/init-') !== -1 || l.indexOf('.m4s') !== -1) return false;
         if (l.indexOf('.ts') !== -1 && l.indexOf('.m3u8') === -1) return false;
         if (l.indexOf('holdbitter') !== -1 || l.indexOf('/gambling/') !== -1 || l.indexOf('bonus-') !== -1 || l.indexOf('bonus_') !== -1) return false;
-        if (l.indexOf('bytes=') !== -1 || l.indexOf('&bytes') !== -1 || l.indexOf('?bytes') !== -1 || l.indexOf('ct=11') !== -1 || l.indexOf('ct=12') !== -1 || l.indexOf('ct=6') !== -1) return false;
-        var isOkRuCdn = (l.indexOf('mycdn.me') !== -1 || l.indexOf('okcdn.ru') !== -1) &&
-                        (l.indexOf('vd') !== -1 || l.indexOf('cmd=video') !== -1 || l.indexOf('/cmd/') !== -1 || l.indexOf('.m3u8') !== -1) &&
-                        (l.indexOf('sig=') !== -1 || l.indexOf('expires=') !== -1 || l.indexOf('.m3u8') !== -1);
         return l.indexOf('.m3u8') !== -1 || l.indexOf('.mp4') !== -1 || l.indexOf('.mpd') !== -1 ||
                l.indexOf('/hls') !== -1 || l.indexOf('/stream/') !== -1 || l.indexOf('/manifest') !== -1 ||
                l.indexOf('/live') !== -1 || l.indexOf('chunklist') !== -1 ||
                l.indexOf('p.php?url=') !== -1 || (l.indexOf('/p.php') !== -1 && l.indexOf('sig=') !== -1) ||
-               isOkRuCdn ||
+               ((l.indexOf('mycdn.me') !== -1 || l.indexOf('okcdn.ru') !== -1) && (l.indexOf('vd') !== -1 || l.indexOf('video') !== -1 || l.indexOf('cmd=video') !== -1 || l.indexOf('/cmd/') !== -1 || l.indexOf('sig=') !== -1)) ||
                (l.indexOf('master.txt') !== -1 && l.indexOf('/hls') !== -1);
     }
 
@@ -93,7 +75,8 @@
             try {
                 var vids = document.getElementsByTagName('video');
                 for (var k = 0; k < vids.length; k++) {
-                    if (vids[k].duration && !isNaN(vids[k].duration) && vids[k].duration >= 60) {
+                    if (vids[k].duration && !isNaN(vids[k].duration) && vids[k].duration > 0) {
+                        if (vids[k].duration < 60) return;
                         dur = vids[k].duration;
                         break;
                     }
@@ -197,24 +180,7 @@
                     updateLiveStreamIfFresher(u);
                     reportMedia(u, document.title, 0, false);
                 }
-                var p = origFetch.apply(this, arguments);
-                try {
-                    p.then(function(res) {
-                        try {
-                            var ru = res.url || '';
-                            if (ru.indexOf('metadata') !== -1 || ru.indexOf('video') !== -1 || ru.indexOf('ok.ru') !== -1) {
-                                res.clone().text().then(function(txt) {
-                                    if (txt && txt.indexOf('hlsManifestUrl') !== -1) {
-                                        var jp = JSON.parse(txt);
-                                        var meta = (jp.flashvars && jp.flashvars.metadata) ? jp.flashvars.metadata : (jp.metadata || jp.video || jp);
-                                        parseOkRuMetadata(meta);
-                                    }
-                                }).catch(function(){});
-                            }
-                        } catch(_) {}
-                    }).catch(function(){});
-                } catch(_) {}
-                return p;
+                return origFetch.apply(this, arguments);
             };
         }
     } catch(e) {}
@@ -227,17 +193,6 @@
                     updateLiveStreamIfFresher(u);
                     reportMedia(u, document.title, 0, false);
                 }
-                try {
-                    this.addEventListener('load', function() {
-                        try {
-                            if (this.responseText && this.responseText.indexOf('hlsManifestUrl') !== -1) {
-                                var pj = JSON.parse(this.responseText);
-                                var meta = (pj.flashvars && pj.flashvars.metadata) ? pj.flashvars.metadata : (pj.metadata || pj.video || pj);
-                                parseOkRuMetadata(meta);
-                            }
-                        } catch(_) {}
-                    });
-                } catch(_) {}
                 return origOpen.apply(this, arguments);
             };
         }
@@ -263,115 +218,37 @@
         return null;
     };
 
-    // 6. Extractor específico para OK.ru (OneVideoPlayer, DOM data-options, scripts inline y calidades)
-    function mapOkRuQuality(name) {
-        if (!name) return 'Calidad Original';
-        var n = String(name).toLowerCase().trim();
-        if (n === 'ultra' || n === '2160' || n === '4k') return '2160p 4K';
-        if (n === 'quad' || n === '1440' || n === '2k') return '1440p 2K';
-        if (n === 'full' || n === '1080' || n === '1080p') return '1080p FHD';
-        if (n === 'hd' || n === '720' || n === '720p') return '720p HD';
-        if (n === 'sd' || n === '480' || n === '480p') return '480p SD';
-        if (n === 'low' || n === '360' || n === '360p') return '360p';
-        if (n === 'lowest' || n === '240' || n === '240p') return '240p';
-        if (n === 'mobile' || n === '144' || n === '144p') return '144p Móvil';
-        return n;
-    }
-
-    window.__reportedOkRuStreams = window.__reportedOkRuStreams || {};
-    function parseOkRuMetadata(meta, defaultTitle) {
-        if (!meta) return;
-        if (typeof meta === 'string') {
-            try { meta = JSON.parse(meta); } catch(e) { return; }
-        }
-        var mId = (meta.movie && meta.movie.id) ? String(meta.movie.id) : (document.title || 'okvid');
-        var t = (meta.movie && meta.movie.title) ? meta.movie.title : (defaultTitle || document.title);
-        var dur = (meta.movie && meta.movie.duration) ? meta.movie.duration : 0;
-        var hlsKey = mId + '_hls';
-        if (meta.hlsManifestUrl && !window.__reportedOkRuStreams[hlsKey]) {
-            window.__reportedOkRuStreams[hlsKey] = true;
-            reportMedia(meta.hlsManifestUrl, t, dur, false, 'Auto (Adaptativo)');
-        }
-        if (meta.videos && meta.videos.length > 0) {
-            for (var v = 0; v < meta.videos.length; v++) {
-                var vidItem = meta.videos[v];
-                var qKey = mId + '_' + (vidItem.name || v);
-                if (vidItem && vidItem.url && !window.__reportedOkRuStreams[qKey]) {
-                    window.__reportedOkRuStreams[qKey] = true;
-                    reportMedia(vidItem.url, t, dur, false, mapOkRuQuality(vidItem.name));
-                }
-            }
-        }
-    }
-
+    // 6. Extractor DOM específico para OK.ru (Metadata JSON en elemento reproductor)
     function sniffOkRuDom() {
         try {
-            // A. Instancia OneVideoPlayer (reproductor oficial de ok.ru)
-            if (typeof OneVideoPlayer === 'object' && OneVideoPlayer.getInstance) {
-                try {
-                    var ov = OneVideoPlayer.getInstance();
-                    if (ov && ov.options && ov.options.flashvars && ov.options.flashvars.metadata) {
-                        parseOkRuMetadata(ov.options.flashvars.metadata, ov.options.title);
-                    }
-                } catch(_) {}
-            }
-            // B. Elementos del DOM con metadata
-            var elms = document.querySelectorAll('[data-options*="metadata"], [data-module="OKVideo"], div.vp-layer, div[data-video], [data-options*="video"], [data-player]');
+            var elms = document.querySelectorAll('[data-options*="metadata"], [data-module="OKVideo"], div.vp-layer');
             for (var i = 0; i < elms.length; i++) {
-                var raw = elms[i].getAttribute('data-options') || elms[i].getAttribute('data-video');
+                var raw = elms[i].getAttribute('data-options');
                 if (!raw) continue;
                 try {
                     var p = JSON.parse(raw);
-                    var meta = (p.flashvars && p.flashvars.metadata) ? p.flashvars.metadata : (p.metadata || p.video || null);
-                    parseOkRuMetadata(meta, p.title);
-                } catch(e) {}
-            }
-            // C. Globales de OKVideo
-            if (window.OKVideo && window.OKVideo.metadata) {
-                parseOkRuMetadata(window.OKVideo.metadata);
-            }
-            // D. Scripts inline que contengan hlsManifestUrl
-            var scrs = document.querySelectorAll('script');
-            for (var si = 0; si < scrs.length; si++) {
-                var txt = scrs[si].textContent || '';
-                if (txt.indexOf('hlsManifestUrl') !== -1 && txt.indexOf('videos') !== -1) {
-                    var match = txt.match(/\{[\s\S]*?"hlsManifestUrl"[\s\S]*?\}/);
-                    if (match) {
-                        try { parseOkRuMetadata(JSON.parse(match[0])); } catch(_) {}
+                    var meta = (p.flashvars && p.flashvars.metadata) ? p.flashvars.metadata : null;
+                    if (typeof meta === 'string') { try { meta = JSON.parse(meta); } catch(e) {} }
+                    if (meta) {
+                        var t = (meta.movie && meta.movie.title) ? meta.movie.title : document.title;
+                        if (meta.hlsManifestUrl) {
+                            reportMedia(meta.hlsManifestUrl, t, 0, false);
+                        }
+                        if (meta.videos && meta.videos.length > 0) {
+                            for (var v = 0; v < meta.videos.length; v++) {
+                                if (meta.videos[v].url) {
+                                    reportMedia(meta.videos[v].url, t, 0, false);
+                                }
+                            }
+                        }
                     }
-                }
+                } catch(e) {}
             }
         } catch(e) {}
     }
     sniffOkRuDom();
-    setTimeout(sniffOkRuDom, 1200);
-    setTimeout(sniffOkRuDom, 3000);
-    document.addEventListener('click', function() { setTimeout(sniffOkRuDom, 800); setTimeout(sniffOkRuDom, 2000); }, true);
-
-    // Detección reactiva de navegación SPA (pushState/replaceState/popstate) para feeds y canales
-    try {
-        var origPush = history.pushState;
-        if (origPush) {
-            history.pushState = function() {
-                var r = origPush.apply(this, arguments);
-                setTimeout(sniffOkRuDom, 800);
-                setTimeout(sniffOkRuDom, 2200);
-                return r;
-            };
-        }
-        var origRepl = history.replaceState;
-        if (origRepl) {
-            history.replaceState = function() {
-                var r = origRepl.apply(this, arguments);
-                setTimeout(sniffOkRuDom, 800);
-                setTimeout(sniffOkRuDom, 2200);
-                return r;
-            };
-        }
-        window.addEventListener('popstate', function() {
-            setTimeout(sniffOkRuDom, 800);
-        });
-    } catch(_) {}
+    setTimeout(sniffOkRuDom, 1500);
+    setTimeout(sniffOkRuDom, 3500);
 
     // 6b. Extractor DOM para APIs de reproductores web (JWPlayer, Clappr, Flowplayer) estilo WVC
     function sniffPlayerApis() {

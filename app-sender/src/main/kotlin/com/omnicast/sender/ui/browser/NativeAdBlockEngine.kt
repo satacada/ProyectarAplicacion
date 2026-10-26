@@ -63,7 +63,6 @@ object NativeAdBlockEngine {
         }
     }
 
-    @Synchronized
     fun shouldBlock(url: String, pageUrl: String? = null): Boolean {
         if (AdBlocker.isVerificationOrCaptcha(url) || (pageUrl != null && AdBlocker.isVerificationOrCaptcha(pageUrl))) return false
         if (AdBlockWhitelistManager.isWhitelisted(url) || (pageUrl != null && AdBlockWhitelistManager.isWhitelisted(pageUrl))) {

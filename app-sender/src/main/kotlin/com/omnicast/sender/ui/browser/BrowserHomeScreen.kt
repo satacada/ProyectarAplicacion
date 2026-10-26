@@ -4,24 +4,19 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.ChevronRight
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.omnicast.sender.history.NavigationTrackManager
 
 data class SpeedDialBookmark(val title: String, val url: String, val icon: String, val category: String)
 
@@ -32,9 +27,6 @@ data class SpeedDialBookmark(val title: String, val url: String, val icon: Strin
 fun BrowserHomeScreen(
     onSelectUrl: (String) -> Unit
 ) {
-    val context = LocalContext.current
-    val recentLinks = remember { NavigationTrackManager.getRecentVisitedSteps(context, 3) }
-
     val shortcuts = listOf(
         SpeedDialBookmark("Yandex", "https://yandex.com", "🔴", "Búsqueda"),
         SpeedDialBookmark("Fútbol Libre", "https://www.google.com/search?q=futbol+libre+en+vivo", "⚽", "Deportes"),
@@ -51,11 +43,10 @@ fun BrowserHomeScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFF0D111A))
-            .verticalScroll(rememberScrollState())
             .padding(18.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(16.dp))
 
         Text(
             text = "OmniCast Web Browser",
@@ -69,7 +60,7 @@ fun BrowserHomeScreen(
             color = Color(0xFF94A3B8),
             fontSize = 12.sp,
             textAlign = TextAlign.Center,
-            modifier = Modifier.padding(top = 4.dp, bottom = 18.dp)
+            modifier = Modifier.padding(top = 4.dp, bottom = 22.dp)
         )
 
         // Card Bloqueo de Publicidad Activo
@@ -77,7 +68,7 @@ fun BrowserHomeScreen(
             color = Color(0xFF101B2B),
             shape = RoundedCornerShape(16.dp),
             border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF1E354F)),
-            modifier = Modifier.fillMaxWidth().padding(bottom = 18.dp)
+            modifier = Modifier.fillMaxWidth().padding(bottom = 20.dp)
         ) {
             Row(
                 modifier = Modifier.padding(14.dp),
@@ -132,7 +123,7 @@ fun BrowserHomeScreen(
 
         // Fila Marcadores y Accesos Rápidos
         Row(
-            modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
+            modifier = Modifier.fillMaxWidth().padding(bottom = 14.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -150,125 +141,37 @@ fun BrowserHomeScreen(
             )
         }
 
-        shortcuts.chunked(4).forEach { rowItems ->
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                rowItems.forEach { item ->
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(4),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            items(shortcuts) { item ->
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier
+                        .clickable { onSelectUrl(item.url) }
+                        .padding(vertical = 2.dp)
+                ) {
+                    Box(
                         modifier = Modifier
-                            .weight(1f)
-                            .clickable { onSelectUrl(item.url) }
-                            .padding(vertical = 2.dp)
+                            .size(54.dp)
+                            .background(Color(0xFF162030), RoundedCornerShape(14.dp))
+                            .border(1.dp, Color(0xFF24334C), RoundedCornerShape(14.dp)),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .size(52.dp)
-                                .background(Color(0xFF162030), RoundedCornerShape(14.dp))
-                                .border(1.dp, Color(0xFF24334C), RoundedCornerShape(14.dp)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(item.icon, fontSize = 22.sp)
-                        }
-                        Spacer(Modifier.height(5.dp))
-                        Text(
-                            text = item.title,
-                            color = Color(0xFFCBD5E1),
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Medium,
-                            textAlign = TextAlign.Center,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
+                        Text(item.icon, fontSize = 22.sp)
                     }
-                }
-                repeat(4 - rowItems.size) {
-                    Spacer(Modifier.weight(1f))
-                }
-            }
-        }
-
-        // Sección Inferior: Últimos 3 Enlaces Visitados
-        if (recentLinks.isNotEmpty()) {
-            Spacer(Modifier.height(20.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Text("🕒", fontSize = 15.sp)
-                Text(
-                    text = "Últimos enlaces visitados",
-                    color = Color.White,
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                recentLinks.forEach { step ->
-                    val host = try {
-                        val h = java.net.URI(step.url).host?.removePrefix("www.")
-                        if (!h.isNullOrBlank()) h else step.url
-                    } catch (_: Throwable) { step.url }
-
-                    val displayTitle = if (step.title.isNotBlank() && !step.title.startsWith("http") && step.title != "Cargando...") {
-                        step.title
-                    } else host
-
-                    Surface(
-                        color = Color(0xFF101B2B),
-                        shape = RoundedCornerShape(12.dp),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF1E2E42)),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { onSelectUrl(step.url) }
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(36.dp)
-                                    .background(Color(0xFF1B2A3E), RoundedCornerShape(10.dp))
-                                    .border(1.dp, Color(0xFF24334C), RoundedCornerShape(10.dp)),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text("🌐", fontSize = 16.sp)
-                            }
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = displayTitle,
-                                    color = Color.White,
-                                    fontSize = 13.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                                Spacer(Modifier.height(2.dp))
-                                Text(
-                                    text = step.url,
-                                    color = Color(0xFF64748B),
-                                    fontSize = 11.sp,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                            }
-                            Icon(
-                                imageVector = Icons.Rounded.ChevronRight,
-                                contentDescription = "Abrir enlace",
-                                tint = Color(0xFF38BDF8),
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
-                    }
+                    Spacer(Modifier.height(6.dp))
+                    Text(
+                        text = item.title,
+                        color = Color(0xFFCBD5E1),
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Medium,
+                        textAlign = TextAlign.Center,
+                        maxLines = 1
+                    )
                 }
             }
         }

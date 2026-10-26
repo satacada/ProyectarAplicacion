@@ -238,17 +238,4 @@ object StreamQualityDetector {
     fun probeAndHealStream(urlStr: String, safeHeaders: Map<String, String>, pageUrl: String? = null): StreamManifestProbe.ProbeResult {
         return StreamManifestProbe.probeAndHeal(urlStr, safeHeaders, pageUrl)
     }
-
-    fun calculateMovieProbability(opt: StreamQualityOption, pageUrl: String? = null): Int {
-        val u = opt.streamUrl.lowercase()
-        val p = pageUrl?.lowercase() ?: ""
-        val isMovieSite = p.contains("pelis") || p.contains("cuevana") || p.contains("cine") || p.contains("movie") || p.contains("film")
-        if (BrowserUrlHelper.extractYouTubeId(opt.streamUrl) != null) {
-            return if (isMovieSite) 10 else 70
-        }
-        var score = 50
-        if (opt.isMaster || u.contains("master.m3u8") || u.contains("playlist.m3u8")) score += 30
-        if (u.contains("dropcdn") || u.contains("dr0pstream") || u.contains("fastream") || u.contains("tnmr") || u.contains("luluvdo")) score += 20
-        return score
-    }
 }

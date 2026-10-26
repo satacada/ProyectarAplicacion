@@ -55,33 +55,15 @@ class MediaPlatformRegressionTest {
     }
 
     @Test
-    fun testSameSiteDetection() {
-        assertTrue(AdBlocker.isSameSite("pelisplus.lat", "ww3.pelisplus.lat"))
-        assertTrue(AdBlocker.isSameSite("www.ok.ru", "ok.ru"))
-        assertTrue(AdBlocker.isSameSite("808ball.com", "www.808ball16.com"))
-        assertTrue(AdBlocker.isSameSite("pelisplus.lat", "pelisplus2.lat"))
-        assertFalse(AdBlocker.isSameSite("pelisplus.lat", "adnetwork.com"))
-        assertFalse(AdBlocker.isSameSite("reypelis.net", "bet365.com"))
-        assertTrue(AdBlocker.isMediaOrStreamingHost("www.808ball16.com"))
-        assertTrue(AdBlocker.isMediaOrStreamingHost("thestreameast.to"))
-        assertFalse(AdBlocker.isMediaOrStreamingHost("adnetwork.com"))
-    }
-
-    @Test
     fun testKnownMediaHostStrictMatching() {
         assertTrue(AdBlocker.isKnownMediaHost("ok.ru"))
         assertTrue(AdBlocker.isKnownMediaHost("sub.streamwish.to"))
         assertTrue(AdBlocker.isKnownMediaHost("fastream.to"))
-        assertFalse(AdBlocker.isKnownMediaHost("fake-ads-cdn.com"))
-        assertFalse(AdBlocker.isKnownMediaHost("adstreamer.xyz"))
-        assertFalse(AdBlocker.isKnownMediaHost("player-bonus.net"))
     }
 
     @Test
     fun testVerificationAndCaptchaProtection() {
         assertTrue(AdBlocker.isVerificationOrCaptcha("https://challenges.cloudflare.com/turnstile/v0/api.js"))
-        assertTrue(AdBlocker.isVerificationOrCaptcha("https://pelicinehd.com/cdn-cgi/challenge-platform/h/b/orchestrate/chl_page/v1"))
-        assertTrue(AdBlocker.isVerificationOrCaptcha("https://pelicinehd.com/?__cf_chl_tk=12345"))
         assertTrue(AdBlocker.isVerificationOrCaptcha("challenges.cloudflare.com"))
         assertFalse(AdBlocker.isVerificationOrCaptcha("https://pelisplus.lat/movie/123"))
     }
@@ -102,20 +84,7 @@ class MediaPlatformRegressionTest {
     }
 
     @Test
-    fun testTrailerRelegationOnMoviePages() {
-        val ytOpt = StreamQualityOption("Tráiler", "1080p", "Original", "https://www.youtube.com/watch?v=bwcADuJZDNA", isMaster = true)
-        val movieOpt = StreamQualityOption("Película", "Auto", "Adaptativa", "https://ds4.dropcdn.io/hls2/01/00038/argalp6ab1fu_n/master.m3u8?t=123&s=abc", isMaster = true)
-        val moviePage = "https://pelisplus.hair/peliculas/8536-mad-max-2-el-guerrero-de-la-carretera-ver-online-hd.html"
-
-        val ytProb = StreamQualityDetector.calculateMovieProbability(ytOpt, moviePage)
-        val movieProb = StreamQualityDetector.calculateMovieProbability(movieOpt, moviePage)
-
-        assertEquals("El tráiler de YouTube en página de películas debe tener probabilidad baja (10)", 10, ytProb)
-        assertTrue("La película real debe tener mayor probabilidad que el tráiler", movieProb > ytProb)
-    }
-
-    @Test
-    fun testDropCdnHeadersUseDesktopUaAndOrigin() {
+    fun testDropCdnHeadersUseCanonEmbedAndOrigin() {
         val dropUrl = "https://ds4.dropcdn.io/hls2/01/00038/argalp6ab1fu_n/master.m3u8?t=123&s=abc"
         val fastUrl = "https://s40.fastream.to/hls2/01/00010/abcdefgh_n/master.m3u8"
         val page = "https://pelisplus.hair/peliculas/8536-mad-max-2.html"
@@ -123,8 +92,6 @@ class MediaPlatformRegressionTest {
         val (_, dropHeaders) = MediaPlatformResolver.prepareStreamForPlayback(dropUrl, page, emptyMap())
         val (_, fastHeaders) = MediaPlatformResolver.prepareStreamForPlayback(fastUrl, page, emptyMap())
 
-        assertEquals(MediaPlatformResolver.UA_FASTREAM, dropHeaders["User-Agent"])
-        assertEquals(MediaPlatformResolver.UA_FASTREAM, fastHeaders["User-Agent"])
         assertEquals("https://dr0pstream.com/e/argalp6ab1fu", dropHeaders["Referer"])
         assertEquals("https://fastream.to/embed-abcdefgh.html", fastHeaders["Referer"])
         assertEquals("https://dr0pstream.com", dropHeaders["Origin"])

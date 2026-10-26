@@ -6,9 +6,7 @@ import java.io.ByteArrayInputStream
 object AdBlocker {
 
     private val KNOWN_MEDIA_HOSTS = hashSetOf(
-        "ok.ru", "odnoklassniki.ru", "okcdn.ru", "mycdn.me", "vk.com", "vk.ru", "vkvideo.ru", "userapi.com",
-        "dailymotion.com", "dmcdn.net", "youtube.com", "youtu.be", "ytimg.com", "googlevideo.com",
-        "rumble.com", "vimeo.com", "mail.ru", "sibnet.ru", "mega.nz", "yourupload.com", "sendvid.com",
+        "ok.ru", "mycdn.me", "vk.com", "dailymotion.com", "youtube.com", "youtu.be",
         "yandex.com", "yandex.ru", "ya.ru", "dzen.ru", "yastatic.net",
         "streamwish.to", "filemoon.sx", "doodstream.com", "mixdrop.co", "vidmoly.me",
         "voe.sx", "vidoza.net", "streamtape.com", "mp4upload.com", "upstream.to",
@@ -17,7 +15,7 @@ object AdBlocker {
         "vidhide.com", "vidhidepro.com", "vidhidepre.com", "embed69.org",
         "pelismart.mov", "pelismart.com", "pelismart.online", "pelismart.vip", "pelismart.net", "pelismart.lat", "pelismart.app", "pelismart.org",
         "vidurl.to", "fembed.com", "fplayer.info", "swdyu.com",
-        "doo.la", "ds2play.com", "ds2video.com", "fastream.to", "dropcdn.io", "dr0pstream.com"
+        "doo.la", "ds2play.com", "ds2video.com"
     )
 
     fun init(context: android.content.Context) {
@@ -35,10 +33,8 @@ object AdBlocker {
         if (urlOrHost.isNullOrBlank()) return false
         val h = urlOrHost.lowercase()
         return h.contains("cloudflare") || h.contains("turnstile") ||
-               h.contains("challenge") || h.contains("hcaptcha") ||
-               h.contains("recaptcha") || h.contains("captcha") ||
-               h.contains("cdn-cgi") || h.contains("cf_chl") || h.contains("cf-chl") ||
-               h.contains("cf_clearance")
+               h.contains("challenges") || h.contains("hcaptcha") ||
+               h.contains("recaptcha") || h.contains("captcha")
     }
 
     fun isVideoAd(url: String): Boolean {
@@ -49,20 +45,17 @@ object AdBlocker {
                lower.contains("vast") || lower.contains("spotx") ||
                lower.contains("doubleclick") || lower.contains("holdbitter") ||
                lower.contains("/gambling/") || lower.contains("bonus-") ||
-               lower.contains("subduepaler") || lower.contains("/lp/v/") ||
-               lower.contains("franecki.") || lower.contains("franeski.") ||
-               lower.contains("player-oxserver") || lower.contains("refusedconsulting.") ||
-               lower.contains("reichelcormier") || lower.contains("bashirian") || lower.contains("godsave.lgbt")
+               lower.contains("subduepaler") || lower.contains("/lp/v/")
     }
 
     fun isAd(url: String): Boolean {
         if (isVerificationOrCaptcha(url)) return false
+        if (isVideoAd(url)) return true
         if (AdBlockWhitelistManager.isWhitelisted(url)) {
             val lower = url.lowercase()
             if (lower.contains("an.yandex.") || lower.contains("mc.yandex.")) return true
             return false
         }
-        if (isVideoAd(url)) return true
         val lower = url.lowercase()
         // Permitir completamente Yandex (.com, .ru, ya.ru, yastatic.net, dzen.ru) salvo subdominios de anuncios/métricas
         if (lower.contains("yandex.") || lower.contains("ya.ru") || lower.contains("dzen.ru") || lower.contains("yastatic.net")) {
@@ -79,41 +72,12 @@ object AdBlocker {
     fun addAdKeyword(keyword: String) = AdBlockDatabase.get().addKeyword(keyword)
     fun removeAdDomain(domain: String) = AdBlockDatabase.get().removeDomain(domain)
 
-    fun isSameSite(host1: String?, host2: String?): Boolean {
-        if (host1.isNullOrBlank() || host2.isNullOrBlank()) return false
-        val h1 = host1.lowercase().removePrefix("www.")
-        val h2 = host2.lowercase().removePrefix("www.")
-        if (h1 == h2 || h1.endsWith(".$h2") || h2.endsWith(".$h1")) return true
-        val p1 = h1.split('.')
-        val p2 = h2.split('.')
-        if (p1.size >= 2 && p2.size >= 2) {
-            val root1 = "${p1[p1.size - 2]}.${p1.last()}"
-            val root2 = "${p2[p2.size - 2]}.${p2.last()}"
-            if (root1 == root2) return true
-            val raw1 = p1[p1.size - 2]
-            val raw2 = p2[p2.size - 2]
-            if (raw1.length >= 4 && (raw1.startsWith(raw2) || raw2.startsWith(raw1))) return true
-            val name1 = raw1.filter { !it.isDigit() }
-            val name2 = raw2.filter { !it.isDigit() }
-            if (name1.length >= 4 && (name1 == name2 || name1.contains(name2) || name2.contains(name1))) return true
-        }
-        return false
-    }
-
-    fun isMediaOrStreamingHost(host: String?): Boolean {
-        if (host == null) return false
-        val h = host.lowercase()
-        return h.contains("ball") || h.contains("sport") || h.contains("live") ||
-               h.contains("stream") || h.contains("tv") || h.contains("match") ||
-               h.contains("futbol") || h.contains("soccer") || h.contains("score") ||
-               h.contains("movie") || h.contains("pelis") || h.contains("cine") ||
-               h.contains("series") || h.contains("film") || h.contains("video") ||
-               h.contains("play")
-    }
-
     fun isKnownMediaHost(host: String): Boolean {
         val lower = host.lowercase()
-        return KNOWN_MEDIA_HOSTS.any { m -> lower == m || lower.endsWith(".$m") }
+        for (m in KNOWN_MEDIA_HOSTS) {
+            if (lower == m || lower.endsWith(".$m") || lower.contains(m.substringBefore("."))) return true
+        }
+        return lower.contains("embed") || lower.contains("player") || lower.contains("video") || lower.contains("stream") || lower.contains("cdn")
     }
 
     fun learnAndBlockAdHost(urlOrHost: String?, currentMovieHost: String? = null): Boolean {
@@ -129,7 +93,7 @@ object AdBlocker {
             if (host == cur || host.endsWith(".$cur") || cur.endsWith(".$host")) return false
         }
         if (isVerificationOrCaptcha(host)) return false
-        if (AdBlockWhitelistManager.isWhitelistedHost(host) || isSearchEngine(host) || isKnownMediaHost(host) || isMediaOrStreamingHost(host)) return false
+        if (AdBlockWhitelistManager.isWhitelistedHost(host) || isSearchEngine(host) || isKnownMediaHost(host)) return false
         if (host.contains("movie") || host.contains("pelis") || host.contains("cine") || host.contains("series") || host.contains("film") || host.contains("stream")) return false
         if (host.endsWith("reypelis.net") || host.endsWith("tioplus.app") || host.contains("sololatino") || host.contains("pelisserieshoy")) return false
         if (AdBlockDatabase.isAdDomain(host)) return false
@@ -155,53 +119,23 @@ object AdBlocker {
         (function() {
             try {
                 var h = (window.location.hostname || '').toLowerCase();
-                if (h.indexOf('dailymotion.com') !== -1 || h.indexOf('dmcdn.net') !== -1 || h.indexOf('youtube.com') !== -1 || h.indexOf('ytimg.com') !== -1 || h.indexOf('googlevideo.com') !== -1 || h.indexOf('google.') !== -1 || h.indexOf('bing.') !== -1 || h.indexOf('yandex.') !== -1 || h.indexOf('ok.ru') !== -1 || h.indexOf('odnoklassniki.ru') !== -1 || h.indexOf('vk.com') !== -1 || h.indexOf('canela.tv') !== -1 || h.indexOf('cloudflare') !== -1) {
-                    return;
-                }
-                if ((document.title || '').indexOf('Just a moment') !== -1 || (window.location.pathname || '').indexOf('cdn-cgi') !== -1 || (window.location.search || '').indexOf('__cf_chl') !== -1) {
+                if (h.indexOf('dailymotion.com') !== -1 || h.indexOf('youtube.com') !== -1 || h.indexOf('google.') !== -1 || h.indexOf('bing.') !== -1 || h.indexOf('yandex.') !== -1) {
                     return;
                 }
                 function cleanDoc(doc) {
                     if (!doc) return;
                     try {
-                        var css = 'img[src*="banner"], img[alt*="banner"], img[src*="ad."], img[src*="/ad/"], img[src*="ads."], a[href*="banner"], a[href*="bet365"], a[href*="1xbet"], div[class*="popunder"], div[id*="popunder"], .ad-overlay, #ad-overlay, .click-shield, div[class*="click-shield"], div[class*="banner"], div[id*="banner"], div[class*="player-ad"], div[id*="player-ad"], div[class*="video-ads"], div[id*="video-ads"], div[class*="ad_holder"], div[class*="advertising"], div[id*="ads_"], .vp_layer_fake, div[class*="fake-player"] { display: none !important; pointer-events: none !important; visibility: hidden !important; width: 0 !important; height: 0 !important; opacity: 0 !important; }';
+                        var css = 'div[class*="popunder"], div[id*="popunder"], .ad-overlay, #ad-overlay, .click-shield, div[class*="click-shield"] { display: none !important; pointer-events: none !important; }';
                         var st = doc.createElement('style');
                         st.textContent = css;
                         (doc.head || doc.documentElement).appendChild(st);
                     } catch(__) {}
-                    try {
-                        var imgs = doc.querySelectorAll('img');
-                        for (var m = 0; m < imgs.length; m++) {
-                            var im = imgs[m];
-                            var isrc = (im.src || '').toLowerCase();
-                            if (!im.src || im.naturalWidth === 0 || isrc.indexOf('banner') !== -1 || isrc.indexOf('ad.') !== -1 || isrc.indexOf('/ad/') !== -1 || isrc.indexOf('bet') !== -1) {
-                                if (!im.closest('button, form, nav, header')) {
-                                    im.style.setProperty('display', 'none', 'important');
-                                    im.style.setProperty('pointer-events', 'none', 'important');
-                                    if (im.parentElement && im.parentElement.tagName === 'A') {
-                                        im.parentElement.style.setProperty('display', 'none', 'important');
-                                        im.parentElement.style.setProperty('pointer-events', 'none', 'important');
-                                    }
-                                }
-                            }
-                        }
-                        doc.addEventListener('error', function(e) {
-                            if (e.target && e.target.tagName === 'IMG') {
-                                e.target.style.setProperty('display', 'none', 'important');
-                                if (e.target.parentElement && e.target.parentElement.tagName === 'A') {
-                                    e.target.parentElement.style.setProperty('display', 'none', 'important');
-                                }
-                            }
-                        }, true);
-                    } catch(_) {}
                     var selectors = [
                         'div[class*="ad-box"]', 'div[class*="ad-container"]', 'div[id*="ad-banner"]',
-                        'div[class*="ad-banner"]', 'div[class*="banner"]', 'a[href*="bet365"]', 'a[href*="1xbet"]',
+                        'div[class*="ad-banner"]', 'a[href*="bet365"]', 'a[href*="1xbet"]',
                         'div[class*="popunder"]', 'div[id*="popunder"]', '.ad-overlay', '#ad-overlay',
                         'div[class*="click-shield"]', 'div[class*="video-click-shield"]',
-                        '.vp_layer_fake', 'div[class*="fake-player"]', 'div[class*="player-ad"]',
-                        'div[id*="player-ad"]', 'div[class*="video-ads"]', 'div[id*="video-ads"]',
-                        'div[class*="ad_holder"]', 'div[class*="advertising"]'
+                        '.vp_layer_fake', 'div[class*="fake-player"]'
                     ];
                     for (var s = 0; s < selectors.length; s++) {
                         try {
@@ -212,31 +146,12 @@ object AdBlocker {
                             }
                         } catch(e) {}
                     }
-                    try {
-                        var badPhases = ['actualización del bloqueador', 'actualizar bloqueador', 'actualizar reproductor', 'actualiza tu reproductor', 'update adblocker', 'update player'];
-                        var candidates = doc.querySelectorAll('div, section, p, span, a');
-                        for (var b = 0; b < candidates.length; b++) {
-                            var el = candidates[b];
-                            var tx = (el.textContent || '').toLowerCase().trim();
-                            if (tx.length > 5 && tx.length < 100) {
-                                for (var p = 0; p < badPhases.length; p++) {
-                                    if (tx.indexOf(badPhases[p]) !== -1) {
-                                        var modal = (el.closest && el.closest('div[style*="fixed"], div[style*="absolute"], div[class*="modal"], div[class*="popup"], div[class*="overlay"]')) || el;
-                                        if (!modal.querySelector('video, iframe')) modal.remove();
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                    } catch(___) {}
                 }
 
                 function cleanAll() {
                     cleanDoc(document);
                     var iframes = document.querySelectorAll('iframe');
                     for (var k = 0; k < iframes.length; k++) {
-                        var isrc = (iframes[k].src || '').toLowerCase();
-                        if (isrc.indexOf('cloudflare') !== -1 || isrc.indexOf('turnstile') !== -1 || isrc.indexOf('challenge') !== -1) continue;
                         try { cleanDoc(iframes[k].contentDocument); } catch(e) {}
                     }
                 }
@@ -251,13 +166,8 @@ object AdBlocker {
                 document.addEventListener('click', function(e) {
                     var el = e.target;
                     if (!el) return;
-                    var aTag = el.closest ? el.closest('a') : null;
-                    if (aTag) {
-                        var href = (aTag.getAttribute('href') || '').trim();
-                        if (href && href !== '#' && href.indexOf('javascript:') !== 0) return;
-                    }
                     if (el.closest && el.closest('input, textarea, select, button, form, [role="button"], [contenteditable="true"], [role="search"], [role="textbox"], [role="combobox"]')) return;
-                    if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT' || el.tagName === 'FORM' || el.tagName === 'BUTTON' || el.tagName === 'A') return;
+                    if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT' || el.tagName === 'FORM' || el.tagName === 'BUTTON') return;
                     if (el !== document.body && el !== document.documentElement) {
                         var cs = window.getComputedStyle(el);
                         if (cs && (cs.position === 'fixed' || cs.position === 'absolute')) {
@@ -270,7 +180,7 @@ object AdBlocker {
                                 var bg = cs.backgroundColor;
                                 var isTrans = (bg === 'transparent' || bg === 'rgba(0, 0, 0, 0)' || bg === 'rgba(255, 255, 255, 0)');
                                 var noText = !el.innerText || el.innerText.trim().length === 0;
-                                if ((op <= 0.08 || (isTrans && noText)) && !el.querySelector('video, iframe, button, input, form')) {
+                                if ((op <= 0.08 || (isTrans && noText)) && !el.querySelector('video, iframe, button, input, a')) {
                                     e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
                                     el.style.pointerEvents = 'none';
                                     el.remove();

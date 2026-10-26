@@ -1,6 +1,5 @@
 package com.omnicast.sender.ui.browser
 
-import android.net.Uri
 import android.webkit.CookieManager
 
 /**
@@ -21,15 +20,14 @@ object BrowserUrlHelper {
         return DAILYMOTION_REGEX.find(url)?.groupValues?.get(1)
     }
 
-    fun createYouTubeQualityOptions(videoId: String, title: String? = null, isTrailer: Boolean = false): List<StreamQualityOption> {
+    fun createYouTubeQualityOptions(videoId: String, title: String? = null): List<StreamQualityOption> {
         val ytUrl = "https://www.youtube.com/watch?v=$videoId"
         val prefix = if (!title.isNullOrBlank() && title != "Transmisión") "[${title.take(20)}] " else ""
-        val tag = if (isTrailer) "Tráiler YouTube" else "Full HD"
         return listOf(
-            StreamQualityOption("${prefix}1080p $tag", "1080p", if (isTrailer) "Tráiler" else "Original", ytUrl, isMaster = !isTrailer, isMovie = !isTrailer),
-            StreamQualityOption("${prefix}720p HD", "720p", "Estándar HD", ytUrl, isMaster = false, isMovie = !isTrailer),
-            StreamQualityOption("${prefix}480p SD", "480p", "SD", ytUrl, isMaster = false, isMovie = !isTrailer),
-            StreamQualityOption("${prefix}360p", "360p", "Bajo Consumo", ytUrl, isMaster = false, isMovie = !isTrailer)
+            StreamQualityOption("${prefix}1080p Full HD", "1080p", "Original", ytUrl, isMaster = true),
+            StreamQualityOption("${prefix}720p HD", "720p", "Estándar HD", ytUrl),
+            StreamQualityOption("${prefix}480p SD", "480p", "SD", ytUrl),
+            StreamQualityOption("${prefix}360p", "360p", "Bajo Consumo", ytUrl)
         )
     }
 
@@ -43,11 +41,8 @@ object BrowserUrlHelper {
         val isPhpStream = lower.endsWith(".php") && (url.contains(".m3u8", true) || url.contains(".mp4", true) || url.contains("p.php?", true) || url.contains("url=", true) || url.contains("stream", true))
         if (lower.endsWith(".php") && !isPhpStream) return false
         val fullLower = url.lowercase()
-        if (fullLower.contains("/lang/") || fullLower.contains("/subtitles/") || fullLower.contains("/subs/") ||
-            fullLower.contains("_sub.") || fullLower.contains("_spa/index") || fullLower.contains("_eng/index")) return false
         if (fullLower.contains("dmxleo.dailymotion.com") || fullLower.contains("geo.dailymotion.com")) return false
         if (fullLower.contains("/embed/") || fullLower.contains("/embed69") || fullLower.contains("/widget/")) return false
-        if (url.contains("bytes=", true) || url.contains("&bytes", true) || url.contains("ct=11") || url.contains("ct=12")) return false
         val isWebPage = (fullLower.contains("dailymotion.com/video/") || fullLower.contains("ok.ru/video/")) &&
                         !fullLower.contains(".m3u8") && !fullLower.contains(".mpd") && !fullLower.contains(".mp4") && !fullLower.contains("cmd=video")
         if (isWebPage) return false
@@ -56,12 +51,6 @@ object BrowserUrlHelper {
 
     fun isRealMedia(s: String, dur: Float = 0f): Boolean {
         if (s.isBlank() || s.contains("dmxleo.dailymotion.com") || AdBlocker.isAd(s)) return false
-        val lowerFull = s.lowercase()
-        if (lowerFull.contains("/lang/") || lowerFull.contains("/subtitles/") || lowerFull.contains("/subs/") ||
-            lowerFull.contains("_sub.") || lowerFull.contains("_spa/index") || lowerFull.contains("_eng/index") ||
-            lowerFull.contains("iframes-") || lowerFull.contains("/iframe-") || lowerFull.contains("iframes.") ||
-            lowerFull.contains("keyframes")) return false
-        if (s.contains("bytes=", true) || s.contains("&bytes", true) || s.contains("ct=11") || s.contains("ct=12")) return false
         if (dur in 0.1f..59.9f) return false
         val clean = s.substringBefore('?').lowercase()
         if (clean.endsWith(".vtt") || clean.endsWith(".srt") || clean.endsWith(".key") ||
@@ -73,23 +62,17 @@ object BrowserUrlHelper {
         val isWeb = (s.contains("dailymotion.com/video/") || s.contains("ok.ru/video/")) &&
                     !s.contains(".m3u8") && !s.contains(".mpd") && !s.contains(".mp4") && !s.contains("cmd=video")
         val isTxtHls = (clean.endsWith(".txt") || s.contains(".txt?", true)) && (s.contains("/hls", true) || s.contains("master", true) || s.contains("index", true))
-        val isOkRuCdn = (s.contains("mycdn.me", true) || s.contains("okcdn.ru", true)) &&
-                        (s.contains("vd", true) || s.contains("cmd=video", true) || s.contains("/cmd/", true) || s.contains(".m3u8", true)) &&
-                        (s.contains("sig=", true) || s.contains("expires=", true) || s.contains(".m3u8", true)) &&
-                        !s.contains("i.mycdn.me", true) && !s.contains("st.mycdn.me", true) &&
-                        !s.contains("i.okcdn.ru", true) && !s.contains("st.okcdn.ru", true) &&
-                        !s.contains("videopreview", true) && !s.contains("preview", true) && !s.contains("/i?", true)
         return !isWeb && (s.contains(".m3u8", true) || s.contains(".mp4", true) || s.contains(".mpd", true) || isTxtHls ||
-                          s.contains("/hls", true) || s.contains("chunklist", true) || s.contains("p.php?", true) || isOkRuCdn || extractYouTubeId(s) != null)
+                          s.contains("/hls", true) || s.contains("chunklist", true) || s.contains("p.php?", true) || extractYouTubeId(s) != null)
     }
 
     fun isMovieOrVideoPage(url: String?): Boolean {
         if (url.isNullOrBlank()) return false
         val l = url.lowercase()
         if (l.startsWith("about:") || l.contains("google.") || l.contains("yandex.") || l.contains("bing.")) return false
-        return l.contains("pelicula") || l.contains("pelis") || l.contains("movie") ||
+        return l.contains("/pelicula/") || l.contains("/pelis/") || l.contains("/movie/") ||
                l.contains("/ver-") || l.contains("/ver/") || l.contains("/watch/") ||
-               l.contains("/video/") || l.contains("serie") || l.contains("episode") ||
+               l.contains("/video/") || l.contains("/serie/") || l.contains("/episode/") ||
                l.contains("/ep-") || l.contains("/stream/") || l.contains("/play")
     }
 
@@ -102,69 +85,32 @@ object BrowserUrlHelper {
         val headers = StreamIntelligenceEngine.resolveDynamicHeaders(streamUrl, currentUrl, rawHeaders).toMutableMap()
         try {
             val refererUrl = headers["Referer"] ?: currentUrl
+            val cm = CookieManager.getInstance()
+            val c1 = cm?.getCookie(streamUrl)
+            val c2 = if (refererUrl.isNotBlank()) cm?.getCookie(refererUrl) else null
+            val c3 = if (currentUrl.isNotBlank()) cm?.getCookie(currentUrl) else null
+            val c4 = cm?.getCookie("https://dr0pstream.com")
+            val c5 = cm?.getCookie("https://dropcdn.io")
+            val c6 = cm?.getCookie("https://fastream.to")
+            val mergedCookies = listOfNotNull(c1, c2, c3, c4, c5, c6, rawHeaders?.get("Cookie"), rawHeaders?.get("cookie"))
+                .flatMap { it.split("; ") }
+                .map { it.trim() }
+                .filter { it.isNotBlank() }
+                .distinct()
+                .joinToString("; ")
+            if (mergedCookies.isNotBlank()) headers["Cookie"] = mergedCookies
+
             val id = MediaPlatformResolver.extractFastreamId(streamUrl)
-            val luluId = MediaPlatformResolver.extractLuluStreamId(streamUrl)
             val isDrop = streamUrl.contains("dropcdn.io", true) || streamUrl.contains("dr0pstream.com", true)
             val isFast = streamUrl.contains("fastream.to", true)
-            val isLulu = streamUrl.contains("tnmr.org", true) || streamUrl.contains("luluvdo.com", true) || streamUrl.contains("lulustream.com", true)
-
-            val embedUrl = when {
-                isDrop && id != null -> "https://dr0pstream.com/e/$id"
-                isFast && id != null -> "https://fastream.to/embed-$id.html"
-                isLulu && luluId != null -> "https://luluvdo.com/e/$luluId"
-                else -> refererUrl
-            }
-
-            // Por qué: Servidores CDN (Nginx en DropCDN/Fastream) rechazan con 403 solicitudes con
-            // cabeceras 'Cookie' sobredimensionadas. Solo se heredan cookies del embed canónico o same-site.
-            val streamHost = runCatching { Uri.parse(streamUrl).host?.lowercase() }.getOrNull()
-            val refererHost = runCatching { Uri.parse(refererUrl).host?.lowercase() }.getOrNull()
-            val isSameSite = (streamHost != null && refererHost != null &&
-                (streamHost == refererHost || streamHost.endsWith(".$refererHost") || refererHost.endsWith(".$streamHost"))) ||
-                (isDrop && (refererHost == "dr0pstream.com" || refererHost?.contains("dropcdn") == true)) ||
-                (isFast && refererHost == "fastream.to")
-
-            val cm = CookieManager.getInstance()
-            if (isDrop || isFast) {
-                val c1 = cm?.getCookie(streamUrl)
-                val c2 = cm?.getCookie(embedUrl)
-                val c4 = cm?.getCookie("https://dr0pstream.com")
-                val c5 = cm?.getCookie("https://dropcdn.io")
-                val c6 = cm?.getCookie("https://fastream.to")
-                val mergedCookies = listOfNotNull(c1, c2, c4, c5, c6, rawHeaders?.get("Cookie"), rawHeaders?.get("cookie"))
-                    .flatMap { it.split("; ") }
-                    .map { it.trim() }
-                    .filter { it.isNotBlank() }
-                    .distinct()
-                    .joinToString("; ")
-                if (mergedCookies.isNotBlank()) headers["Cookie"] = mergedCookies
-            } else {
-                val streamCookie = cm?.getCookie(streamUrl)
-                val refererCookie = when {
-                    isSameSite && refererUrl.isNotBlank() -> cm?.getCookie(refererUrl)
-                    else -> null
-                }
-                val rawCookie = rawHeaders?.get("Cookie") ?: rawHeaders?.get("cookie")
-                val cleanCookie = streamCookie ?: refererCookie ?: rawCookie
-                if (!cleanCookie.isNullOrBlank()) headers["Cookie"] = cleanCookie else headers.remove("Cookie")
-            }
             if (isDrop && id != null) {
                 headers["Referer"] = "https://dr0pstream.com/e/$id"
                 headers["Origin"] = "https://dr0pstream.com"
-                headers["User-Agent"] = MediaPlatformResolver.UA_FASTREAM
                 headers["Sec-Fetch-Mode"] = "cors"; headers["Sec-Fetch-Site"] = "cross-site"; headers["Sec-Fetch-Dest"] = "empty"
-                headers["X-Target-Player"] = "CHROMIUM_PURE"
             } else if (isFast && id != null) {
                 headers["Referer"] = "https://fastream.to/embed-$id.html"
                 headers["Origin"] = "https://fastream.to"
-                headers["User-Agent"] = MediaPlatformResolver.UA_FASTREAM
                 headers["Sec-Fetch-Mode"] = "cors"; headers["Sec-Fetch-Site"] = "cross-site"; headers["Sec-Fetch-Dest"] = "empty"
-                headers["X-Target-Player"] = "CHROMIUM_PURE"
-            } else if (isLulu && luluId != null) {
-                headers["Referer"] = "https://luluvdo.com/e/$luluId"
-                headers["Origin"] = "https://luluvdo.com"
-                headers["Sec-Fetch-Mode"] = "cors"; headers["Sec-Fetch-Site"] = "cross-site"; headers["Sec-Fetch-Dest"] = "empty"
-                headers["X-Target-Player"] = "CHROMIUM_PURE"
             } else if (!headers.containsKey("Referer") && currentUrl.isNotBlank()) {
                 headers["Referer"] = currentUrl
             }
@@ -197,31 +143,6 @@ object BrowserUrlHelper {
         } else {
             "https://www.google.com/search?q=${java.net.URLEncoder.encode(trimmed, "UTF-8")}"
         }
-    }
-
-    fun isSameLogicalStream(url1: String, url2: String): Boolean {
-        if (url1 == url2) return true
-        val y1 = extractYouTubeId(url1); val y2 = extractYouTubeId(url2)
-        if (y1 != null && y2 != null) return y1 == y2
-        val isOk1 = url1.contains("mycdn.me", true) || url1.contains("okcdn.ru", true)
-        val isOk2 = url2.contains("mycdn.me", true) || url2.contains("okcdn.ru", true)
-        if (isOk1 && isOk2) {
-            val isM1 = url1.contains("video.m3u8", true) || url1.contains(".m3u8", true)
-            val isM2 = url2.contains("video.m3u8", true) || url2.contains(".m3u8", true)
-            if (isM1 && isM2) return true
-            val t1 = Regex("[?&]type=([0-9]+)").find(url1)?.groupValues?.get(1)
-            val t2 = Regex("[?&]type=([0-9]+)").find(url2)?.groupValues?.get(1)
-            val id1 = Regex("[?&]id=([0-9]+)").find(url1)?.groupValues?.get(1)
-            val id2 = Regex("[?&]id=([0-9]+)").find(url2)?.groupValues?.get(1)
-            if (t1 != null && t2 != null && t1 == t2) {
-                return id1 == null || id2 == null || id1 == id2
-            }
-        }
-        val c1 = url1.substringBefore('?').lowercase()
-        val c2 = url2.substringBefore('?').lowercase()
-        if (c1 == c2 && c1.isNotBlank()) return true
-        val p1 = c1.substringBeforeLast('/'); val p2 = c2.substringBeforeLast('/')
-        return p1.isNotBlank() && p1 == p2 && c1.endsWith(".m3u8") && c2.endsWith(".m3u8")
     }
 
     fun hasSignedSecurityToken(url: String): Boolean = com.omnicast.core.domain.usecases.StreamManifestProbe.hasSignedSecurityToken(url)

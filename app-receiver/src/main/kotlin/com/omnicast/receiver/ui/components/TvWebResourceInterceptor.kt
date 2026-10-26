@@ -35,24 +35,21 @@ object TvWebResourceInterceptor {
                 lower.contains(".mp4") || lower.contains(".vtt") || lower.contains("/hls")
         if (!isMedia) return null
 
+        val isDropOrFast = lower.contains("dropcdn.io") || lower.contains("dr0pstream.com") || lower.contains("fastream.to")
         return try {
-            val conn = (URL(urlStr).openConnection() as HttpURLConnection).apply {
-                connectTimeout = 8000
-                readTimeout = 12000
-                instanceFollowRedirects = true
-                requestMethod = method
-                defaultHeaders.forEach { (k, v) -> if (!k.equals("Origin", true)) setRequestProperty(k, v) }
-                req.requestHeaders?.forEach { (k, v) ->
-                    if (!defaultHeaders.containsKey(k) && !k.equals("Origin", true)) {
-                        setRequestProperty(k, v)
-                    }
-                }
+            var conn = openHttpConnection(urlStr, method, defaultHeaders, req.requestHeaders, isDropOrFast, useMobileUa = false)
+            var code = conn.responseCode
+            if (isDropOrFast && code == 403) {
+                conn.disconnect()
+                // Auto-reintento con identidad móvil por si el token fue firmado contra el WebView del móvil
+                conn = openHttpConnection(urlStr, method, defaultHeaders, req.requestHeaders, isDropOrFast, useMobileUa = true)
+                code = conn.responseCode
             }
 
-            val code = conn.responseCode
             val isSuccess = code in 200..299
             if (!isSuccess) {
-                com.omnicast.receiver.log.ReceiverLogger.log("TvWebResourceInterceptor", "⚠️ Error HTTP $code en recurso web: $urlStr")
+                val errBody = runCatching { conn.errorStream?.bufferedReader()?.use { it.readText() }?.take(150) }.getOrNull() ?: ""
+                com.omnicast.receiver.log.ReceiverLogger.log("TvWebResourceInterceptor", "⚠️ Error HTTP $code en recurso web: $urlStr $errBody")
                 conn.disconnect()
                 return null
             }
@@ -82,5 +79,37 @@ object TvWebResourceInterceptor {
         } catch (_: Throwable) {
             null
         }
+    }
+
+    private fun openHttpConnection(
+        urlStr: String,
+        method: String,
+        defaultHeaders: Map<String, String>,
+        requestHeaders: Map<String, String>?,
+        isDropOrFast: Boolean,
+        useMobileUa: Boolean
+    ): HttpURLConnection {
+        val conn = (URL(urlStr).openConnection() as HttpURLConnection).apply {
+            connectTimeout = 8000
+            readTimeout = 12000
+            instanceFollowRedirects = true
+            requestMethod = method
+            if (isDropOrFast) {
+                val ref = defaultHeaders["Referer"] ?: "https://dr0pstream.com/"
+                val ua = if (useMobileUa) "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36"
+                         else (defaultHeaders["User-Agent"] ?: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36")
+                setRequestProperty("Referer", ref)
+                setRequestProperty("User-Agent", ua)
+                setRequestProperty("Accept", "*/*")
+            } else {
+                defaultHeaders.forEach { (k, v) -> if (!k.equals("Origin", true)) setRequestProperty(k, v) }
+                requestHeaders?.forEach { (k, v) ->
+                    if (!defaultHeaders.containsKey(k) && !k.equals("Origin", true)) {
+                        setRequestProperty(k, v)
+                    }
+                }
+            }
+        }
+        return conn
     }
 }

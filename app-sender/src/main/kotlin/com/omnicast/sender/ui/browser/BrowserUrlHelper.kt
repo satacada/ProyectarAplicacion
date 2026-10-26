@@ -127,18 +127,17 @@ object BrowserUrlHelper {
             val cm = CookieManager.getInstance()
             if (isDrop || isFast) {
                 val c1 = cm?.getCookie(streamUrl)
-                val c2 = if (refererUrl.isNotBlank()) cm?.getCookie(refererUrl) else null
-                val c3 = if (currentUrl.isNotBlank()) cm?.getCookie(currentUrl) else null
+                val c2 = cm?.getCookie(embedUrl)
                 val c4 = cm?.getCookie("https://dr0pstream.com")
                 val c5 = cm?.getCookie("https://dropcdn.io")
                 val c6 = cm?.getCookie("https://fastream.to")
-                val mergedCookies = listOfNotNull(c1, c2, c3, c4, c5, c6, rawHeaders?.get("Cookie"), rawHeaders?.get("cookie"))
+                val mergedCookies = listOfNotNull(c1, c2, c4, c5, c6, rawHeaders?.get("Cookie"), rawHeaders?.get("cookie"))
                     .flatMap { it.split("; ") }
                     .map { it.trim() }
-                    .filter { it.isNotBlank() }
+                    .filter { it.isNotBlank() && !it.contains("cf_clearance") && !it.contains("__cf_bm") }
                     .distinct()
                     .joinToString("; ")
-                if (mergedCookies.isNotBlank()) headers["Cookie"] = mergedCookies
+                if (mergedCookies.isNotBlank()) headers["Cookie"] = mergedCookies else headers.remove("Cookie")
             } else {
                 val streamCookie = cm?.getCookie(streamUrl)
                 val refererCookie = when {

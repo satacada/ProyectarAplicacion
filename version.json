@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 236,
-  "versionCodeReceiver": 219,
-  "versionName": "3.4.86",
-  "releaseTag": "v3.4.86",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.86/omnicast-sender-v3.4.86.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.86/omnicast-receiver-v3.4.86.apk",
-  "changelog": "v3.4.86: Arquitectura nativa Navegador Web v3.32.94 restituida: TvWebStreamScreen sin fondo de webplayer (eliminacion de cortina negra y spinner de carga), interceptor anti-CORS activo con inyeccion de Access-Control-Allow-Origin: * y reproduccion pura en Chromium."
+  "versionCodeSender": 237,
+  "versionCodeReceiver": 220,
+  "versionName": "3.4.87",
+  "releaseTag": "v3.4.87",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.87/omnicast-sender-v3.4.87.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.87/omnicast-receiver-v3.4.87.apk",
+  "changelog": "v3.4.87: Limpieza de cookies ajenas en DropCDN/Fastream erradicando HTTP 403, auto-reintento con identidad móvil/escritorio en TvWebResourceInterceptor e inyección garantizada de Access-Control-Allow-Origin: *."
 }

@@ -209,10 +209,6 @@ object MediaPlatformResolver {
                     hdrs["Origin"] = "https://fastream.to"
                 }
             }
-            val rawFastCookie = hdrs["Cookie"]
-            if (rawFastCookie != null && (rawFastCookie.contains("cf_clearance") || rawFastCookie.contains("__cf_bm") || rawFastCookie.contains("pelisplus"))) {
-                hdrs.remove("Cookie")
-            }
         } else if (isDrop) {
             val resolved = if (!finalUrl.contains(".m3u8", ignoreCase = true)) resolveFastreamSync(finalUrl, pageUrl) else null
             if (resolved != null) {
@@ -225,10 +221,6 @@ object MediaPlatformResolver {
                     hdrs["Origin"] = "https://dr0pstream.com"
                     hdrs["User-Agent"] = UA_FASTREAM
                 }
-            }
-            val rawCookie = hdrs["Cookie"]
-            if (rawCookie != null && (rawCookie.contains("cf_clearance") || rawCookie.contains("__cf_bm") || rawCookie.contains("pelisplus"))) {
-                hdrs.remove("Cookie")
             }
         }
         val isLulu = lower.contains("tnmr.org") || lower.contains("luluvdo.com") || lower.contains("lulustream.com")

@@ -149,10 +149,8 @@ fun TvWebStreamScreen(
                             settings.userAgentString = headers["User-Agent"] ?: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
                             val streamOrigin = try { val uri = Uri.parse(streamUrl); if (!uri.scheme.isNullOrBlank() && !uri.host.isNullOrBlank()) "${uri.scheme}://${uri.host}/" else null } catch (_: Throwable) { null }
                             val ref = headers["Referer"]
-                            val lowerStream = streamUrl.lowercase()
-                            val isDropOrFast = lowerStream.contains("dropcdn.io") || lowerStream.contains("dr0pstream.com") || lowerStream.contains("fastream.to") ||
-                                    (ref?.contains("dr0pstream.com") == true) || (ref?.contains("fastream.to") == true)
-                            val baseUrl = if (isDropOrFast) (ref ?: streamOrigin ?: "https://omnicast.tv/") else (streamOrigin ?: ref ?: "https://omnicast.tv/")
+                            // Por qué: Usar el origen del propio stream como base URL garantiza que las peticiones XHR de Hls.js sean Same-Origin y no sean bloqueadas por CORS en Chromium.
+                            val baseUrl = streamOrigin ?: ref ?: "https://omnicast.tv/"
                             val cm = CookieManager.getInstance(); cm.setAcceptCookie(true); cm.setAcceptThirdPartyCookies(this, true)
                             headers["Cookie"]?.let { ck -> runCatching { ck.split("; ").map { it.trim() }.filter { it.isNotBlank() }.forEach { p -> cm.setCookie(streamUrl, p); streamOrigin?.let { cm.setCookie(it, p) }; headers["Referer"]?.takeIf { it.isNotBlank() }?.let { cm.setCookie(it, p) }; cm.setCookie("https://dr0pstream.com", p); cm.setCookie("https://dropcdn.io", p); cm.setCookie("https://fastream.to", p) }; cm.flush() } }
                             addJavascriptInterface(

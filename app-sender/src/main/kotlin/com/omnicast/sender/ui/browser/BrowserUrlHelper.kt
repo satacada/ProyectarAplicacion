@@ -134,10 +134,10 @@ object BrowserUrlHelper {
                 val mergedCookies = listOfNotNull(c1, c2, c4, c5, c6, rawHeaders?.get("Cookie"), rawHeaders?.get("cookie"))
                     .flatMap { it.split("; ") }
                     .map { it.trim() }
-                    .filter { it.isNotBlank() && !it.contains("cf_clearance") && !it.contains("__cf_bm") }
+                    .filter { it.isNotBlank() }
                     .distinct()
                     .joinToString("; ")
-                if (mergedCookies.isNotBlank()) headers["Cookie"] = mergedCookies else headers.remove("Cookie")
+                if (mergedCookies.isNotBlank()) headers["Cookie"] = mergedCookies
             } else {
                 val streamCookie = cm?.getCookie(streamUrl)
                 val refererCookie = when {

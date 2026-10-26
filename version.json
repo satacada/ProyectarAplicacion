@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 237,
-  "versionCodeReceiver": 220,
-  "versionName": "3.4.87",
-  "releaseTag": "v3.4.87",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.87/omnicast-sender-v3.4.87.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.87/omnicast-receiver-v3.4.87.apk",
-  "changelog": "v3.4.87: Limpieza de cookies ajenas en DropCDN/Fastream erradicando HTTP 403, auto-reintento con identidad móvil/escritorio en TvWebResourceInterceptor e inyección garantizada de Access-Control-Allow-Origin: *."
+  "versionCodeSender": 238,
+  "versionCodeReceiver": 221,
+  "versionName": "3.4.88",
+  "releaseTag": "v3.4.88",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.88/omnicast-sender-v3.4.88.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.88/omnicast-receiver-v3.4.88.apk",
+  "changelog": "v3.4.88: Exclusión estricta de DropCDN y Fastream de la intercepción Java para preservar la huella TLS genuina de Chromium (anti-quema de tokens), baseUrl con streamOrigin erradicando bloqueos de CORS por Same-Origin nativo y transferencia íntegra de cookies de sesión."
 }

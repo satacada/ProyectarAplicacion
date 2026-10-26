@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 223,
-  "versionCodeReceiver": 206,
-  "versionName": "3.4.73",
-  "releaseTag": "v3.4.73",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.73/omnicast-sender-v3.4.73.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.73/omnicast-receiver-v3.4.73.apk",
-  "changelog": "v3.4.73: Supresión total de contornos de imágenes rotas y marcos publicitarios sobre el reproductor con listeners de error y limpieza profunda, resolución de reproducción activa de streams blob: en reportVid() para disparar la apertura automática de la lista al tocar Play, erradicación de URLs index-v1-a1 falsas que provocaban 403 por token criptográfico de master en Nginx."
+  "versionCodeSender": 224,
+  "versionCodeReceiver": 207,
+  "versionName": "3.4.74",
+  "releaseTag": "v3.4.74",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.74/omnicast-sender-v3.4.74.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.74/omnicast-receiver-v3.4.74.apk",
+  "changelog": "v3.4.74: Restauración del comportamiento proactivo exitoso de v3.32.83 en el navegador móvil: auto-apertura proactiva (450ms debounce) de la lista de reproducción al detectar flujos multimedia reales (m3u8/mp4) en el tráfico de red, eliminando la necesidad de interactuar con el reproductor web o lidiar con trampas publicitarias sobre la película."
 }

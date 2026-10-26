@@ -39,8 +39,7 @@ fun InAppBrowserScreen(
     val detectedStreams = remember { mutableStateListOf<String>() }; val streamHeaders = remember { mutableStateMapOf<String, Map<String, String>>() }; val streamLabels = remember { mutableStateMapOf<String, String>() }; val streamDurations = remember { mutableStateMapOf<String, Float>() }
     var qualityOptions by remember { mutableStateOf<List<StreamQualityOption>>(emptyList()) }; var showOptionsSheet by remember { mutableStateOf(false) }; var showSideDrawer by remember { mutableStateOf(false) }; var showWhitelistDialog by remember { mutableStateOf(false) }
     var showBottomControls by rememberSaveable { mutableStateOf(ActiveStreamHolder.isCasting.value && ActiveStreamHolder.isPlaying.value) }; var videoToSave by remember { mutableStateOf<HistoryItem?>(null) }; var webViewInstance by remember { mutableStateOf<WebView?>(null) }; var popupWebView by remember { mutableStateOf<WebView?>(null) }
-    var playlistsVersion by remember { mutableIntStateOf(0) }; val scope = rememberCoroutineScope(); var userDismissedSheetForUrl by rememberSaveable { mutableStateOf("") }
-    val testedSuccess = remember { mutableStateListOf<String>() }; val testedFailed = remember { mutableStateListOf<String>() }
+    var playlistsVersion by remember { mutableIntStateOf(0) }; val scope = rememberCoroutineScope(); var userDismissedSheetForUrl by rememberSaveable { mutableStateOf("") }; var autoOpenJob by remember { mutableStateOf<kotlinx.coroutines.Job?>(null) }; val testedSuccess = remember { mutableStateListOf<String>() }; val testedFailed = remember { mutableStateListOf<String>() }
     LaunchedEffect(Unit) { com.omnicast.sender.ui.browser.reputation.StreamReputationSyncManager.initAndSync(context) }
     val isCasting by ActiveStreamHolder.isCasting.collectAsState(); val isPlaying by ActiveStreamHolder.isPlaying.collectAsState(); val posMs by ActiveStreamHolder.positionMs.collectAsState(); val durMs by ActiveStreamHolder.durationMs.collectAsState(); val volume by ActiveStreamHolder.volume.collectAsState(); val castTitle by ActiveStreamHolder.currentMediaTitle.collectAsState()
     val pErr by ActiveStreamHolder.playbackError.collectAsState()
@@ -49,9 +48,7 @@ fun InAppBrowserScreen(
     fun isRealMedia(s: String) = BrowserUrlHelper.isRealMedia(s, streamDurations[s] ?: 0f)
 
     val isMovieSaved = remember(detectedStreams.size, playlistsVersion, castTitle, pageTitle) {
-        val pri = ActiveStreamHolder.streamUrl?.takeIf { it.isNotBlank() } ?: detectedStreams.firstOrNull { isRealMedia(it) } ?: ""
-        val t = castTitle.takeIf { it.isNotBlank() } ?: pageTitle.takeIf { it.isNotBlank() && it != "Cargando..." } ?: ""
-        if (pri.isBlank()) false else playlistManager.isVideoSaved(pri, t)
+        val pri = ActiveStreamHolder.streamUrl?.takeIf { it.isNotBlank() } ?: detectedStreams.firstOrNull { isRealMedia(it) } ?: ""; val t = castTitle.takeIf { it.isNotBlank() } ?: pageTitle.takeIf { it.isNotBlank() && it != "Cargando..." } ?: ""; if (pri.isBlank()) false else playlistManager.isVideoSaved(pri, t)
     }
 
     fun deleteMovieFromSaved() {
@@ -118,6 +115,9 @@ fun InAppBrowserScreen(
         val cleanT = if (pageTitle.isNotBlank() && pageTitle != "Cargando..." && pageTitle != "Transmisión") pageTitle else "Video Web"
         ActiveStreamHolder.update(primaryUrl, cleanT, streamHeaders[primaryUrl] ?: hdrs)
         android.util.Log.i("StreamDetection", "🎬 Flujo registrado [isMaster=$isM]: $cleanUrl")
+        if (!showOptionsSheet && !isCasting && userDismissedSheetForUrl != currentUrl) {
+            autoOpenJob?.cancel(); autoOpenJob = scope.launch { kotlinx.coroutines.delay(450L); if (!showOptionsSheet && !isCasting && userDismissedSheetForUrl != currentUrl && detectedStreams.any { isRealMedia(it) }) openOptionsSheet() }
+        }
     }
 
     fun checkPlatformUrls(url: String?, title: String? = null) {

@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 221,
-  "versionCodeReceiver": 204,
-  "versionName": "3.4.71",
-  "releaseTag": "v3.4.71",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.71/omnicast-sender-v3.4.71.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.71/omnicast-receiver-v3.4.71.apk",
-  "changelog": "v3.4.71: Erradicación definitiva de bloqueo CORS en TvWebStreamScreen (restauración de baseUrl al origen del stream), User-Agent de escritorio Windows (UA_FASTREAM) para DropCDN/Fastream según Regla 7, y reactivación del fallback reactivo bidireccional ExoPlayer <-> HTML5 ante fallos de reproducción."
+  "versionCodeSender": 222,
+  "versionCodeReceiver": 205,
+  "versionName": "3.4.72",
+  "releaseTag": "v3.4.72",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.72/omnicast-sender-v3.4.72.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.72/omnicast-receiver-v3.4.72.apk",
+  "changelog": "v3.4.72: Paridad total con Web Video Caster: Limpieza cosmética agresiva de banners/overlays sobre el reproductor dejando la pantalla limpia para dar play, apertura automática de la Lista de Videos al iniciar reproducción activa, descarte de stubs iframes-v1-a1, priorización de la variante directa de video (index-v1-a1.m3u8), preservación del Referer del iframe y restauración estricta de UA_MOBILE para DropCDN."
 }

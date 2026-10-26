@@ -26,7 +26,7 @@ object MoviePagePreScanner {
         }
 
         // Modo B: "Escaneo Total de Películas"
-        if (isAdBlockEnabled && (progress == 30 || progress == 60 || progress == 100)) {
+        if (isAdBlockEnabled && (progress == 0 || progress == 30 || progress == 60 || progress == 85 || progress == 100)) {
             webView.evaluateJavascript(AdBlocker.getAdHidingScript(), null)
         }
         if (progress == 60 || progress == 85 || progress == 100) {

@@ -98,22 +98,23 @@ fun InAppBrowserScreen(
 
     fun registerStream(url: String, hdrs: Map<String, String>, isPrimary: Boolean = false, label: String? = null) {
         val cleanUrl = BrowserUrlHelper.sanitizeMediaUrl(url)
-        if (cleanUrl.isBlank() || AdBlocker.isAd(cleanUrl) || AdBlocker.isVideoAd(cleanUrl) || !isRealMedia(cleanUrl) || (BrowserUrlHelper.isMovieOrVideoPage(currentUrl) && BrowserUrlHelper.extractYouTubeId(cleanUrl) != null)) return
+        if (cleanUrl.isBlank() || cleanUrl.contains("iframes-", true) || AdBlocker.isAd(cleanUrl) || AdBlocker.isVideoAd(cleanUrl) || !isRealMedia(cleanUrl) || (BrowserUrlHelper.isMovieOrVideoPage(currentUrl) && BrowserUrlHelper.extractYouTubeId(cleanUrl) != null)) return
         val existingIndex = detectedStreams.indexOfFirst { BrowserUrlHelper.isSameLogicalStream(it, cleanUrl) }
-        val isM = isPrimary || cleanUrl.contains("master", true) || cleanUrl.contains("playlist", true) || cleanUrl.contains("video.m3u8", true)
+        val isVar = cleanUrl.contains("index-", true) || cleanUrl.contains("video.m3u8", true)
+        val isM = isPrimary || cleanUrl.contains("master", true) || cleanUrl.contains("playlist", true) || isVar
         if (existingIndex >= 0) {
-            val oldUrl = detectedStreams[existingIndex]; detectedStreams[existingIndex] = cleanUrl
-            streamHeaders.remove(oldUrl); val oldLbl = streamLabels.remove(oldUrl)
-            if (hdrs.isNotEmpty()) streamHeaders[cleanUrl] = hdrs
-            (label?.takeIf { it.isNotBlank() } ?: oldLbl)?.let { streamLabels[cleanUrl] = it }
-            if (isM) ActiveStreamHolder.update(cleanUrl, pageTitle, streamHeaders[cleanUrl] ?: hdrs)
-            return
+            val oldUrl = detectedStreams[existingIndex]
+            if (isVar || !oldUrl.contains("index-", true)) {
+                detectedStreams[existingIndex] = cleanUrl; streamHeaders.remove(oldUrl); val oldLbl = streamLabels.remove(oldUrl)
+                if (hdrs.isNotEmpty()) streamHeaders[cleanUrl] = hdrs; (label?.takeIf { it.isNotBlank() } ?: oldLbl)?.let { streamLabels[cleanUrl] = it }
+            }
+            val active = detectedStreams[existingIndex]; if (isM) ActiveStreamHolder.update(active, pageTitle, streamHeaders[active] ?: hdrs); return
         }
         if (detectedStreams.size >= 12) return
-        val nonM = detectedStreams.indexOfFirst { !it.contains("master", true) && !it.contains("playlist", true) && !it.contains("video.m3u8", true) }
-        if (isM) detectedStreams.add(0, cleanUrl) else if (nonM >= 0) detectedStreams.add(nonM, cleanUrl) else detectedStreams.add(cleanUrl)
-        val isMov = BrowserUrlHelper.isMovieOrVideoPage(currentUrl); val nonYt = detectedStreams.firstOrNull { BrowserUrlHelper.extractYouTubeId(it) == null && (it.contains("master", true) || it.contains("video.m3u8", true)) }
-        val primaryUrl = if (isMov && nonYt != null) nonYt else (detectedStreams.firstOrNull { it.contains("master", true) || it.contains("video.m3u8", true) } ?: cleanUrl)
+        val nonM = detectedStreams.indexOfFirst { !it.contains("master", true) && !it.contains("playlist", true) && !it.contains("video.m3u8", true) }; if (isM) detectedStreams.add(0, cleanUrl) else if (nonM >= 0) detectedStreams.add(nonM, cleanUrl) else detectedStreams.add(cleanUrl)
+        val isMov = BrowserUrlHelper.isMovieOrVideoPage(currentUrl); val varUrl = detectedStreams.firstOrNull { it.contains("index-", true) }
+        val nonYt = detectedStreams.firstOrNull { BrowserUrlHelper.extractYouTubeId(it) == null && (it.contains("master", true) || it.contains("video.m3u8", true)) }
+        val primaryUrl = varUrl ?: if (isMov && nonYt != null) nonYt else (detectedStreams.firstOrNull { it.contains("master", true) || it.contains("video.m3u8", true) } ?: cleanUrl)
         val cleanT = if (pageTitle.isNotBlank() && pageTitle != "Cargando..." && pageTitle != "Transmisión") pageTitle else "Video Web"
         ActiveStreamHolder.update(primaryUrl, cleanT, streamHeaders[primaryUrl] ?: hdrs)
         android.util.Log.i("StreamDetection", "🎬 Flujo registrado [isMaster=$isM]: $cleanUrl")
@@ -245,7 +246,7 @@ fun InAppBrowserScreen(
                         val hdrs = BrowserUrlHelper.buildSafeHeaders(sniffed.src, sourceFrameUrl, UA_MOBILE); if (sniffed.duration > 0f) streamDurations[sniffed.src] = sniffed.duration
                         if (sniffed.title.isNotBlank() && sniffed.title != "Video Web" && sniffed.title != "Transmisión Web") pageTitle = sniffed.title; if (sniffed.subtitles.isNotEmpty()) ActiveStreamHolder.update(sniffed.src, pageTitle, hdrs, sniffed.subtitles)
                         registerStream(sniffed.src, hdrs, isPrimary = sniffed.isPlaying, label = sniffed.label ?: pageTitle)
-                        if (sniffed.isPlaying) Toast.makeText(context, "▶ Video activo: " + pageTitle.take(24), Toast.LENGTH_SHORT).show()
+                        if (sniffed.isPlaying) { Toast.makeText(context, "▶ Video activo: " + pageTitle.take(24), Toast.LENGTH_SHORT).show(); if (userDismissedSheetForUrl != currentUrl && !showOptionsSheet) openOptionsSheet() }
                     },
                     onTitleReceived = { t -> if (t.isNotBlank() && t != "Transmisión" && !t.contains("about:blank")) pageTitle = t },
                     onOpenPopup = { pView -> popupWebView = pView }, onClosePopup = { popupWebView?.destroy(); popupWebView = null },

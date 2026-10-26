@@ -126,15 +126,16 @@ object BrowserUrlHelper {
                 headers.remove("Cookie")
             }
 
+            val rawRef = rawHeaders?.get("Referer") ?: rawHeaders?.get("referer")
             val id = MediaPlatformResolver.extractFastreamId(streamUrl)
             val luluId = MediaPlatformResolver.extractLuluStreamId(streamUrl)
             val isDrop = streamUrl.contains("dropcdn.io", true) || streamUrl.contains("dr0pstream.com", true)
             val isFast = streamUrl.contains("fastream.to", true)
             val isLulu = streamUrl.contains("tnmr.org", true) || streamUrl.contains("luluvdo.com", true) || streamUrl.contains("lulustream.com", true)
             if (isDrop && id != null) {
-                headers["Referer"] = "https://dr0pstream.com/e/$id"
+                headers["Referer"] = if (!rawRef.isNullOrBlank()) rawRef else "https://dr0pstream.com/e/$id"
                 headers.remove("Origin")
-                headers["User-Agent"] = MediaPlatformResolver.UA_FASTREAM
+                headers["User-Agent"] = UA_MOBILE
                 headers["Sec-Fetch-Mode"] = "cors"; headers["Sec-Fetch-Site"] = "cross-site"; headers["Sec-Fetch-Dest"] = "empty"
             } else if (isFast && id != null) {
                 headers["Referer"] = "https://fastream.to/embed-$id.html"
@@ -199,7 +200,9 @@ object BrowserUrlHelper {
         }
         val c1 = url1.substringBefore('?').lowercase()
         val c2 = url2.substringBefore('?').lowercase()
-        return c1 == c2 && c1.isNotBlank()
+        if (c1 == c2 && c1.isNotBlank()) return true
+        val p1 = c1.substringBeforeLast('/'); val p2 = c2.substringBeforeLast('/')
+        return p1.isNotBlank() && p1 == p2 && c1.endsWith(".m3u8") && c2.endsWith(".m3u8")
     }
 
     fun hasSignedSecurityToken(url: String): Boolean = com.omnicast.core.domain.usecases.StreamManifestProbe.hasSignedSecurityToken(url)

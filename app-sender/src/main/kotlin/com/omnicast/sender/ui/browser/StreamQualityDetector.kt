@@ -28,7 +28,7 @@ object StreamQualityDetector {
         val prefix = if (grpTitle.isNotBlank()) "[${grpTitle.take(20)}] " else ""
 
         var currentMediaUrl = BrowserUrlHelper.sanitizeMediaUrl(mediaUrl)
-        val isFastHost = currentMediaUrl.contains("fastream.to", ignoreCase = true) || currentMediaUrl.contains("dropcdn.io", ignoreCase = true) || currentMediaUrl.contains("dr0pstream.com", ignoreCase = true)
+        val isFastHost = currentMediaUrl.contains("fastream.to", ignoreCase = true)
         val initialUa = if (isFastHost) MediaPlatformResolver.UA_FASTREAM else UA_MOBILE
         var safeHeaders = BrowserUrlHelper.buildSafeHeaders(currentMediaUrl, headers["Referer"] ?: pageUrl ?: "", initialUa, headers)
         if (isFastHost && !currentMediaUrl.contains(".m3u8", ignoreCase = true)) {
@@ -44,8 +44,8 @@ object StreamQualityDetector {
             if (currentMediaUrl.contains("master.m3u8", ignoreCase = true)) {
                 val uIndex = currentMediaUrl.replace("master.m3u8", "index-v1-a1.m3u8", ignoreCase = true)
                 return@withContext listOf(
-                    StreamQualityOption("${prefix}Película Adaptativa (Auto)", "Auto", "Adaptativa", currentMediaUrl, isMaster = true, isMovie = true, isSuggested = true, healedHeaders = safeHeaders, fileName = "master", formatDetail = "m3u8 (adaptive)", groupTitle = grpTitle),
-                    StreamQualityOption("${prefix}1080p Full HD", "1080p", "Full HD", uIndex, isMaster = false, isMovie = true, isSuggested = false, healedHeaders = safeHeaders, fileName = "index-v1-a1", formatDetail = "m3u8 (1080p)", groupTitle = grpTitle)
+                    StreamQualityOption("${prefix}1080p Full HD", "1080p", "Full HD", uIndex, isMaster = false, isMovie = true, isSuggested = true, healedHeaders = safeHeaders, fileName = "index-v1-a1", formatDetail = "m3u8 (1920x800)", groupTitle = grpTitle),
+                    StreamQualityOption("${prefix}Película Adaptativa (Auto)", "Auto", "Adaptativa", currentMediaUrl, isMaster = true, isMovie = true, isSuggested = false, healedHeaders = safeHeaders, fileName = "master", formatDetail = "m3u8 (adaptive)", groupTitle = grpTitle)
                 )
             }
             val okQuality = if (currentMediaUrl.contains("mycdn.me", true) || currentMediaUrl.contains("okcdn.ru", true)) {

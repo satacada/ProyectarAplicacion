@@ -217,8 +217,9 @@ object MediaPlatformResolver {
             } else {
                 val id = extractFastreamId(finalUrl)
                 if (id != null) {
-                    hdrs["Referer"] = "https://dr0pstream.com/e/$id"
-                    hdrs["User-Agent"] = UA_FASTREAM
+                    val rawRef = hdrs["Referer"]
+                    if (rawRef.isNullOrBlank()) hdrs["Referer"] = "https://dr0pstream.com/e/$id"
+                    hdrs["User-Agent"] = UA_MOBILE
                     hdrs.remove("Origin")
                 }
             }
@@ -237,7 +238,7 @@ object MediaPlatformResolver {
                 }
             }
         }
-        val reqUa = if (isFastream || isDrop) UA_FASTREAM else UA_MOBILE
+        val reqUa = if (isFastream) UA_FASTREAM else UA_MOBILE
         val safeHeaders = BrowserUrlHelper.buildSafeHeaders(finalUrl, pageUrl, reqUa, hdrs)
         return Pair(finalUrl, safeHeaders)
     }

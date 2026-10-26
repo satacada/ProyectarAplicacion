@@ -149,8 +149,7 @@ fun TvWebStreamScreen(
                             settings.userAgentString = headers["User-Agent"] ?: "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36"
                             val streamOrigin = try { val uri = Uri.parse(streamUrl); if (!uri.scheme.isNullOrBlank() && !uri.host.isNullOrBlank()) "${uri.scheme}://${uri.host}/" else null } catch (_: Throwable) { null }
                             val ref = headers["Referer"]?.takeIf { it.isNotBlank() }
-                            val baseUrl = if (ref != null && (ref.contains("dr0pstream") || ref.contains("dropcdn") || ref.contains("fastream"))) ref
-                                else streamOrigin ?: ref ?: "https://omnicast.tv/"
+                            val baseUrl = streamOrigin ?: ref ?: "https://omnicast.tv/"
                             val cm = CookieManager.getInstance(); cm.setAcceptCookie(true); cm.setAcceptThirdPartyCookies(this, true)
                             headers["Cookie"]?.let { ck -> runCatching { ck.split("; ").map { it.trim() }.filter { it.isNotBlank() }.forEach { p -> cm.setCookie(streamUrl, p); streamOrigin?.let { cm.setCookie(it, p) }; headers["Referer"]?.takeIf { it.isNotBlank() }?.let { cm.setCookie(it, p) } }; cm.flush() } }
                             addJavascriptInterface(

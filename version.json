@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 220,
-  "versionCodeReceiver": 203,
-  "versionName": "3.4.70",
-  "releaseTag": "v3.4.70",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.70/omnicast-sender-v3.4.70.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.70/omnicast-receiver-v3.4.70.apk",
-  "changelog": "v3.4.70: Supresión total de tráilers de YouTube en sitios de películas (estándar Web Video Caster) y restauración de baseUrl de embed en TvWebStreamScreen (dr0pstream/dropcdn) erradicando rechazo HTTP 403 por Referer incorrecto."
+  "versionCodeSender": 221,
+  "versionCodeReceiver": 204,
+  "versionName": "3.4.71",
+  "releaseTag": "v3.4.71",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.71/omnicast-sender-v3.4.71.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.71/omnicast-receiver-v3.4.71.apk",
+  "changelog": "v3.4.71: Erradicación definitiva de bloqueo CORS en TvWebStreamScreen (restauración de baseUrl al origen del stream), User-Agent de escritorio Windows (UA_FASTREAM) para DropCDN/Fastream según Regla 7, y reactivación del fallback reactivo bidireccional ExoPlayer <-> HTML5 ante fallos de reproducción."
 }

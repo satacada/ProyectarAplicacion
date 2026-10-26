@@ -123,7 +123,7 @@ class MediaPlatformRegressionTest {
         val (_, dropHeaders) = MediaPlatformResolver.prepareStreamForPlayback(dropUrl, page, emptyMap())
         val (_, fastHeaders) = MediaPlatformResolver.prepareStreamForPlayback(fastUrl, page, emptyMap())
 
-        assertEquals(UA_MOBILE, dropHeaders["User-Agent"])
+        assertEquals(MediaPlatformResolver.UA_FASTREAM, dropHeaders["User-Agent"])
         assertEquals(MediaPlatformResolver.UA_FASTREAM, fastHeaders["User-Agent"])
         assertEquals("https://dr0pstream.com/e/argalp6ab1fu", dropHeaders["Referer"])
         assertEquals("https://fastream.to/embed-abcdefgh.html", fastHeaders["Referer"])

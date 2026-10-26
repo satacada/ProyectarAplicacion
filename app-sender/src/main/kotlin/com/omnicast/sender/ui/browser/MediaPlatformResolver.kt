@@ -115,7 +115,7 @@ object MediaPlatformResolver {
         return try {
             val isDrop = url.contains("dropcdn.io", true) || url.contains("dr0pstream.com", true)
             val embedUrl = if (isDrop) "https://dr0pstream.com/e/$id" else "https://fastream.to/embed-$id.html"
-            val targetUa = if (isDrop) UA_MOBILE else UA_FASTREAM
+            val targetUa = UA_FASTREAM
             val conn = (URL(embedUrl).openConnection() as HttpURLConnection).apply {
                 connectTimeout = 4000
                 readTimeout = 4000
@@ -218,7 +218,7 @@ object MediaPlatformResolver {
                 val id = extractFastreamId(finalUrl)
                 if (id != null) {
                     hdrs["Referer"] = "https://dr0pstream.com/e/$id"
-                    hdrs["User-Agent"] = UA_MOBILE
+                    hdrs["User-Agent"] = UA_FASTREAM
                     hdrs.remove("Origin")
                 }
             }
@@ -237,7 +237,7 @@ object MediaPlatformResolver {
                 }
             }
         }
-        val reqUa = if (isFastream) UA_FASTREAM else UA_MOBILE
+        val reqUa = if (isFastream || isDrop) UA_FASTREAM else UA_MOBILE
         val safeHeaders = BrowserUrlHelper.buildSafeHeaders(finalUrl, pageUrl, reqUa, hdrs)
         return Pair(finalUrl, safeHeaders)
     }

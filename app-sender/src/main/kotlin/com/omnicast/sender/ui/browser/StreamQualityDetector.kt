@@ -28,7 +28,7 @@ object StreamQualityDetector {
         val prefix = if (grpTitle.isNotBlank()) "[${grpTitle.take(20)}] " else ""
 
         var currentMediaUrl = BrowserUrlHelper.sanitizeMediaUrl(mediaUrl)
-        val isFastHost = currentMediaUrl.contains("fastream.to", ignoreCase = true)
+        val isFastHost = currentMediaUrl.contains("fastream.to", ignoreCase = true) || currentMediaUrl.contains("dropcdn.io", ignoreCase = true) || currentMediaUrl.contains("dr0pstream.com", ignoreCase = true)
         val initialUa = if (isFastHost) MediaPlatformResolver.UA_FASTREAM else UA_MOBILE
         var safeHeaders = BrowserUrlHelper.buildSafeHeaders(currentMediaUrl, headers["Referer"] ?: pageUrl ?: "", initialUa, headers)
         if (isFastHost && !currentMediaUrl.contains(".m3u8", ignoreCase = true)) {

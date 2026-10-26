@@ -52,6 +52,7 @@ object TvWebResourceInterceptor {
             val code = conn.responseCode
             val isSuccess = code in 200..299
             if (!isSuccess) {
+                com.omnicast.receiver.log.ReceiverLogger.log("TvWebResourceInterceptor", "⚠️ Error HTTP $code en recurso web: $urlStr")
                 conn.disconnect()
                 return null
             }

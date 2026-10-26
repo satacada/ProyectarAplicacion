@@ -148,7 +148,7 @@ class TvReceiverActivity : ComponentActivity() {
                             }
                         },
                         onPlaybackFailed = { reason -> runOnUiThread {
-                            if (state.isFallbackFromExoPlayer || reason == "WATCHDOG_TIMEOUT" || TvReceiverHelper.shouldUseWebPlayer(state.streamUrl, state.headers)) {
+                            if (state.isFallbackFromExoPlayer) {
                                 com.omnicast.receiver.log.ReceiverLogger.log("TvReceiverActivity", "⚠️ WebStream falló ($reason). Finalizando y retornando a Standby.")
                                 val found = playlistManager.findItemByUrlOrTitle(state.streamUrl, state.title)
                                 if (found != null) expiredItemForRenew.value = found else Toast.makeText(this@TvReceiverActivity, if (reason == "WATCHDOG_TIMEOUT") "⚠️ Tiempo de espera agotado (buffer lento)" else "⚠️ Flujo no disponible ($reason)", Toast.LENGTH_SHORT).show()
@@ -156,7 +156,7 @@ class TvReceiverActivity : ComponentActivity() {
                                 val errCode = if (reason == "WATCHDOG_TIMEOUT") "ERROR_TIMEOUT" else "ERROR_FORBIDDEN_403"
                                 lifecycleScope.launch { signalingServer.sendMessage(SignalingMessage.PlaybackStatus(errCode, 0L, 0L, mediaUrl = state.streamUrl, title = state.title)) }
                             } else {
-                                com.omnicast.receiver.log.ReceiverLogger.log("TvReceiverActivity", "⚠️ WebStream falló ($reason). Fallback a ExoPlayer...")
+                                com.omnicast.receiver.log.ReceiverLogger.log("TvReceiverActivity", "⚠️ WebStream falló ($reason). Fallback reactivo a ExoPlayer...")
                                 receiverState.value = ReceiverUiState.DirectStreamPlaying(state.streamUrl, state.title)
                                 exoPlayerManager.playStream(state.streamUrl, state.headers, state.title, state.startPositionMs, subtitles = state.subtitles)
                                 startPlaybackStatusReporting()

@@ -64,32 +64,25 @@ fun InAppBrowserScreen(
             webViewInstance?.evaluateJavascript(WvcSnifferScripts.buildAggressiveRescanScript(WvcDomSniffer.CONSOLE_PREFIX), null)
             return
         }
-        val isMovieSite = BrowserUrlHelper.isMovieOrVideoPage(currentUrl)
-        qualityOptions = currentStreams.flatMap { u ->
-            val ytId = BrowserUrlHelper.extractYouTubeId(u); val rep = com.omnicast.sender.ui.browser.reputation.StreamReputationDatabase.getScore(currentUrl, u)
-            val isSucc = testedSuccess.contains(u); val isFail = testedFailed.contains(u)
-            if (ytId != null) { if (isMovieSite) emptyList() else BrowserUrlHelper.createYouTubeQualityOptions(ytId, cleanTitle) }
-            else {
-                val lbl = streamLabels[u]; val isM = u.contains("master", true) || u.contains("playlist", true) || lbl?.contains("auto", true) == true
-                val vName = lbl?.takeIf { it.isNotBlank() } ?: StreamQualityDetector.extractFileName(u, if (isM) "master" else "video")
-                val fmt = when { isM -> "m3u8 (adaptive)"; u.contains(".mp4", true) || u.contains("mycdn.me", true) -> "mp4 (Directo)"; else -> "m3u8" }
-                val res = lbl?.takeIf { it.contains("p", true) } ?: if (isM) "Auto" else "Original"
-                listOf(StreamQualityOption("▶ [${cleanTitle.take(16)}] $vName", res, if (isM) "Adaptativa" else "Directo", u, isMaster = true, isMovie = true, isSuggested = isM, healedHeaders = streamHeaders[u] ?: emptyMap(), fileName = vName, formatDetail = fmt, reputationScore = rep, isTestedSuccess = isSucc, isTestedFailed = isFail))
-            }
-        }.sortedByDescending { StreamQualityDetector.calculateMovieProbability(it, currentUrl) }
+        qualityOptions = currentStreams.map { u ->
+            val vName = StreamQualityDetector.extractFileName(u, if (u.contains("master", true)) "master" else "video")
+            val isM = u.contains("master", true) || u.contains("playlist", true)
+            val fmt = when { isM -> "m3u8 (adaptive)"; u.contains(".mp4", true) -> "mp4 (Directo)"; u.contains(".mpd", true) -> "mpd (adaptive)"; else -> "m3u8" }
+            StreamQualityOption("▶ [${cleanTitle.take(16)}] $vName", "Auto", "Original", u, isMovie = true, isSuggested = isM, healedHeaders = streamHeaders[u] ?: emptyMap(), fileName = vName, formatDetail = fmt)
+        }
         showOptionsSheet = true
         scope.launch {
-            val deep = currentStreams.filter { BrowserUrlHelper.extractYouTubeId(it) == null }.flatMap { u ->
+            val deep = currentStreams.flatMap { u ->
                 val opts = StreamQualityDetector.detectQualities(u, streamHeaders[u] ?: emptyMap(), cleanTitle, currentUrl)
-                opts.forEach { o -> if (o.healedHeaders.isNotEmpty()) streamHeaders[o.streamUrl] = o.healedHeaders }; opts
-            }.map { o ->
-                val rep = com.omnicast.sender.ui.browser.reputation.StreamReputationDatabase.getScore(currentUrl, o.streamUrl)
-                o.copy(reputationScore = rep, isTestedSuccess = testedSuccess.contains(o.streamUrl), isTestedFailed = testedFailed.contains(o.streamUrl))
+                opts.forEach { o -> if (o.healedHeaders.isNotEmpty()) streamHeaders[o.streamUrl] = o.healedHeaders }
+                opts
             }
-            if (deep.isNotEmpty()) {
-                val sorted = (deep + qualityOptions).distinctBy { it.streamUrl }.sortedWith(compareByDescending<StreamQualityOption> { it.isMaster }.thenByDescending { StreamQualityDetector.calculateMovieProbability(it, currentUrl) }.thenByDescending { it.resolution.removeSuffix("p").toIntOrNull() ?: 0 })
-                qualityOptions = sorted.mapIndexed { idx, opt -> opt.copy(isSuggested = (idx == 0)) }
-            }
+            val finalOpts = (qualityOptions + deep).distinctBy { it.streamUrl }
+            val orderMap = currentStreams.withIndex().associate { it.value to it.index }
+            qualityOptions = finalOpts.sortedWith(
+                compareByDescending<StreamQualityOption> { it.isMaster || it.streamUrl.contains("master", true) }
+                    .thenBy { opt -> orderMap[opt.streamUrl] ?: currentStreams.indexOfFirst { opt.streamUrl.startsWith(it.substringBefore('?')) }.takeIf { it >= 0 } ?: 999 }
+            )
         }
     }
 
@@ -289,7 +282,11 @@ fun InAppBrowserScreen(
     BrowserModalSheets(
         showOptionsSheet = showOptionsSheet, showHistorySheet = false, showSavedPlaylistsSheet = false, videoToSave = videoToSave,
         playlistManager = playlistManager, pageTitle = pageTitle, qualityOptions = qualityOptions, historyList = emptyList(),
-        onTransmitOption = { opt -> showOptionsSheet = false; if (opt.subtitles.isNotEmpty()) ActiveStreamHolder.update(opt.streamUrl, pageTitle, (streamHeaders[opt.streamUrl] ?: emptyMap()) + opt.healedHeaders, opt.subtitles); val bT = webViewInstance?.title?.takeIf { it.isNotBlank() && !it.contains("about:blank") && it != "Transmisión" } ?: pageTitle; transmitWithHistory(opt.streamUrl, bT, (streamHeaders[opt.streamUrl] ?: emptyMap()) + opt.healedHeaders) },
+        onTransmitOption = { opt ->
+            showOptionsSheet = false
+            val bT = webViewInstance?.title?.takeIf { it.isNotBlank() && !it.contains("about:blank") && it != "Transmisión" } ?: pageTitle
+            transmitWithHistory(opt.streamUrl, bT, (streamHeaders[opt.streamUrl] ?: emptyMap()) + opt.healedHeaders)
+        },
         onTransmitHistory = { transmitWithHistory(it.url, it.title, it.headers, it.pageUrl) }, onDismissOptions = { showOptionsSheet = false; userDismissedSheetForUrl = currentUrl },
         onClearOptions = { detectedStreams.clear(); qualityOptions = emptyList(); showOptionsSheet = false },
         onRescanOptions = { webViewInstance?.evaluateJavascript(WvcSnifferScripts.buildAggressiveRescanScript(WvcDomSniffer.CONSOLE_PREFIX), null); Toast.makeText(context, "🔍 Buscando videos...", Toast.LENGTH_SHORT).show() },

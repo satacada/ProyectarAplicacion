@@ -59,11 +59,27 @@ object StreamQualityDetector {
                 val isOkMaster = okQuality.contains("Auto")
                 return@withContext listOf(StreamQualityOption("${prefix}$okQuality", if (isOkMaster) "Auto" else okQuality, if (isOkMaster) "Adaptativa" else "Directo", currentMediaUrl, isMaster = isOkMaster, isMovie = true, isSuggested = isOkMaster, healedHeaders = safeHeaders, fileName = okQuality, formatDetail = if (isOkMaster) "m3u8 (adaptive)" else "mp4 (Directo)", groupTitle = grpTitle))
             }
-            if (currentMediaUrl.contains("master.m3u8", ignoreCase = true)) {
-                val uIframe = currentMediaUrl.replace("master.m3u8", "iframes-v1-a1.m3u8", ignoreCase = true)
-                val uIndex = currentMediaUrl.replace("master.m3u8", "index-v1-a1.m3u8", ignoreCase = true)
+            val hasHlsVariants = currentMediaUrl.contains("master.m3u8", ignoreCase = true) ||
+                                  currentMediaUrl.contains("index-v1-a1.m3u8", ignoreCase = true) ||
+                                  currentMediaUrl.contains("iframes-v1-a1.m3u8", ignoreCase = true)
+            if (hasHlsVariants) {
+                val uMaster = when {
+                    currentMediaUrl.contains("master.m3u8", ignoreCase = true) -> currentMediaUrl
+                    currentMediaUrl.contains("index-v1-a1.m3u8", ignoreCase = true) -> currentMediaUrl.replace("index-v1-a1.m3u8", "master.m3u8", ignoreCase = true)
+                    else -> currentMediaUrl.replace("iframes-v1-a1.m3u8", "master.m3u8", ignoreCase = true)
+                }
+                val uIframe = when {
+                    currentMediaUrl.contains("iframes-v1-a1.m3u8", ignoreCase = true) -> currentMediaUrl
+                    currentMediaUrl.contains("master.m3u8", ignoreCase = true) -> currentMediaUrl.replace("master.m3u8", "iframes-v1-a1.m3u8", ignoreCase = true)
+                    else -> currentMediaUrl.replace("index-v1-a1.m3u8", "iframes-v1-a1.m3u8", ignoreCase = true)
+                }
+                val uIndex = when {
+                    currentMediaUrl.contains("index-v1-a1.m3u8", ignoreCase = true) -> currentMediaUrl
+                    currentMediaUrl.contains("master.m3u8", ignoreCase = true) -> currentMediaUrl.replace("master.m3u8", "index-v1-a1.m3u8", ignoreCase = true)
+                    else -> currentMediaUrl.replace("iframes-v1-a1.m3u8", "index-v1-a1.m3u8", ignoreCase = true)
+                }
                 return@withContext listOf(
-                    StreamQualityOption("${prefix}Película Adaptativa (Auto)", "Auto", "Adaptativa", currentMediaUrl, isMaster = true, isMovie = true, isSuggested = true, healedHeaders = safeHeaders, fileName = "master", formatDetail = "m3u8 (adaptive)", groupTitle = grpTitle),
+                    StreamQualityOption("${prefix}Película Adaptativa (Auto)", "Auto", "Adaptativa", uMaster, isMaster = true, isMovie = true, isSuggested = true, healedHeaders = safeHeaders, fileName = "master", formatDetail = "m3u8 (adaptive)", groupTitle = grpTitle),
                     StreamQualityOption("${prefix}I-Frames (1920x816)", "1920x816", "I-Frame", uIframe, isMaster = false, isMovie = true, isSuggested = false, healedHeaders = safeHeaders, fileName = "iframes-v1-a1", formatDetail = "m3u8 (1920x816)", groupTitle = grpTitle),
                     StreamQualityOption("${prefix}1080p Full HD", "1080p", "Full HD", uIndex, isMaster = false, isMovie = true, isSuggested = false, healedHeaders = safeHeaders, fileName = "index-v1-a1", formatDetail = "m3u8 (1920x816)", groupTitle = grpTitle)
                 )

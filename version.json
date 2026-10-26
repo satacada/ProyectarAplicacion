@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 240,
-  "versionCodeReceiver": 223,
-  "versionName": "3.4.90",
-  "releaseTag": "v3.4.90",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.90/omnicast-sender-v3.4.90.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.90/omnicast-receiver-v3.4.90.apk",
-  "changelog": "v3.4.90: Erradicación del error CORS en TvWebStreamScreen (restauración de baseUrl = streamOrigin para requests Same-Origin nativos en Chromium) y fallback acelerado a reproductor nativo ante error de red fatal en Hls.js."
+  "versionCodeSender": 241,
+  "versionCodeReceiver": 224,
+  "versionName": "3.4.91",
+  "releaseTag": "v3.4.91",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.91/omnicast-sender-v3.4.91.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.91/omnicast-receiver-v3.4.91.apk",
+  "changelog": "v3.4.91: Base limpia y blindada de streaming v3.32.94 con módulos completos de Proyección (WebRTC HU-013) y Galería (Fotos/Videos HU-001) de la versión moderna, catálogo completo de 18 películas precargado en historial con Mad Max (PelisPlus) en primer lugar prioritario permanente."
 }

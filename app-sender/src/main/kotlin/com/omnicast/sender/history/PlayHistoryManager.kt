@@ -35,7 +35,12 @@ class PlayHistoryManager(private val context: Context) {
             try { json.decodeFromString<List<HistoryItem>>(raw) } catch (_: Throwable) { emptyList() }
         } else emptyList()
         val defaults = getPreloadedCatalog()
-        val combined = (saved + defaults.filterNot { d -> saved.any { s -> (s.pageUrl != null && s.pageUrl == d.pageUrl) || s.url == d.url } })
+        val defaultsByUrl = defaults.associateBy { it.url }
+        val mergedSaved = saved.map { s ->
+            val d = defaultsByUrl[s.url] ?: (if (s.pageUrl != null) defaults.firstOrNull { it.pageUrl == s.pageUrl } else null)
+            if (d != null && d.isFavorite) s.copy(isFavorite = true, timestamp = maxOf(s.timestamp, d.timestamp)) else s
+        }
+        val combined = (mergedSaved + defaults.filterNot { d -> saved.any { s -> (s.pageUrl != null && s.pageUrl == d.pageUrl) || s.url == d.url } })
         return combined.sortedWith(
             compareByDescending<HistoryItem> { it.isFavorite }
                 .thenByDescending { it.timestamp }
@@ -103,6 +108,20 @@ class PlayHistoryManager(private val context: Context) {
                 pageUrl = "https://pelismart.mov/pelicula/the-senior-class",
                 headers = mapOf("Referer" to "https://pelismart.mov/"),
                 timestamp = now + 30_000_000L
+            ),
+            HistoryItem(
+                url = "https://pelismart.mov/pelicula/extraterrestrial-Q4d13b",
+                title = "Extraterrestrial (Pelismart)",
+                pageUrl = "https://pelismart.mov/pelicula/extraterrestrial-Q4d13b",
+                headers = mapOf("Referer" to "https://pelismart.mov/"),
+                timestamp = now + 28_000_000L
+            ),
+            HistoryItem(
+                url = "https://pelismart.mov/anime/chainsmoker-cat-3JywjI/temporada/1/capitulo/9",
+                title = "Chainsmoker Cat (Pelismart Anime)",
+                pageUrl = "https://pelismart.mov/anime/chainsmoker-cat-3JywjI/temporada/1/capitulo/9",
+                headers = mapOf("Referer" to "https://pelismart.mov/"),
+                timestamp = now + 26_000_000L
             ),
             HistoryItem(
                 url = "https://wcm.cuevana3.nu/ver-el-episodio/118048/episodio-3-de-amia-el-fin-de-la-verdad-temporada-1/",

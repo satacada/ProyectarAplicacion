@@ -148,7 +148,8 @@ class TvReceiverActivity : ComponentActivity() {
                             }
                         },
                         onPlaybackFailed = { reason -> runOnUiThread {
-                            if (state.isFallbackFromExoPlayer) {
+                            val isSigned = com.omnicast.core.domain.usecases.StreamManifestProbe.hasSignedSecurityToken(state.streamUrl)
+                            if (state.isFallbackFromExoPlayer || isSigned) {
                                 com.omnicast.receiver.log.ReceiverLogger.log("TvReceiverActivity", "⚠️ WebStream falló ($reason). Finalizando y retornando a Standby.")
                                 val found = playlistManager.findItemByUrlOrTitle(state.streamUrl, state.title)
                                 if (found != null) expiredItemForRenew.value = found else Toast.makeText(this@TvReceiverActivity, if (reason == "WATCHDOG_TIMEOUT") "⚠️ Tiempo de espera agotado (buffer lento)" else "⚠️ Flujo no disponible ($reason)", Toast.LENGTH_SHORT).show()

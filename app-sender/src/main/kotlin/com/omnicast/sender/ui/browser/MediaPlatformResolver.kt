@@ -217,8 +217,7 @@ object MediaPlatformResolver {
             } else {
                 val id = extractFastreamId(finalUrl)
                 if (id != null) {
-                    val rawRef = hdrs["Referer"]
-                    if (rawRef.isNullOrBlank()) hdrs["Referer"] = "https://dr0pstream.com/e/$id"
+                    hdrs["Referer"] = "https://dr0pstream.com/e/$id"
                     hdrs["User-Agent"] = UA_MOBILE
                     hdrs.remove("Origin")
                 }

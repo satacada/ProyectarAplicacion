@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 224,
-  "versionCodeReceiver": 207,
-  "versionName": "3.4.74",
-  "releaseTag": "v3.4.74",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.74/omnicast-sender-v3.4.74.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.74/omnicast-receiver-v3.4.74.apk",
-  "changelog": "v3.4.74: Restauración del comportamiento proactivo exitoso de v3.32.83 en el navegador móvil: auto-apertura proactiva (450ms debounce) de la lista de reproducción al detectar flujos multimedia reales (m3u8/mp4) en el tráfico de red, eliminando la necesidad de interactuar con el reproductor web o lidiar con trampas publicitarias sobre la película."
+  "versionCodeSender": 225,
+  "versionCodeReceiver": 208,
+  "versionName": "3.4.75",
+  "releaseTag": "v3.4.75",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.75/omnicast-sender-v3.4.75.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.75/omnicast-receiver-v3.4.75.apk",
+  "changelog": "v3.4.75: Corrección crítica de Referer en servidores de video embebidos (DropCDN / dr0pstream): inyección incondicional del Referer del embed canónico https://dr0pstream.com/e/$id erradicando el error HTTP 403 causado por filtración del dominio externo (PelisPlus); supresión de rebote inútil a ExoPlayer cuando fallan flujos con tokens criptográficos firmados."
 }

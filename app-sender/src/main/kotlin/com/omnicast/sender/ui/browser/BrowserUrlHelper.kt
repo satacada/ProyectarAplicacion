@@ -125,15 +125,13 @@ object BrowserUrlHelper {
             } else {
                 headers.remove("Cookie")
             }
-
-            val rawRef = rawHeaders?.get("Referer") ?: rawHeaders?.get("referer")
             val id = MediaPlatformResolver.extractFastreamId(streamUrl)
             val luluId = MediaPlatformResolver.extractLuluStreamId(streamUrl)
             val isDrop = streamUrl.contains("dropcdn.io", true) || streamUrl.contains("dr0pstream.com", true)
             val isFast = streamUrl.contains("fastream.to", true)
             val isLulu = streamUrl.contains("tnmr.org", true) || streamUrl.contains("luluvdo.com", true) || streamUrl.contains("lulustream.com", true)
             if (isDrop && id != null) {
-                headers["Referer"] = if (!rawRef.isNullOrBlank()) rawRef else "https://dr0pstream.com/e/$id"
+                headers["Referer"] = "https://dr0pstream.com/e/$id"
                 headers.remove("Origin")
                 headers["User-Agent"] = UA_MOBILE
                 headers["Sec-Fetch-Mode"] = "cors"; headers["Sec-Fetch-Site"] = "cross-site"; headers["Sec-Fetch-Dest"] = "empty"

@@ -27,9 +27,9 @@ object BrowserUrlHelper {
         val tag = if (isTrailer) "Tráiler YouTube" else "Full HD"
         return listOf(
             StreamQualityOption("${prefix}1080p $tag", "1080p", if (isTrailer) "Tráiler" else "Original", ytUrl, isMaster = !isTrailer, isMovie = !isTrailer),
-            StreamQualityOption("${prefix}720p HD", "720p", "Estándar HD", ytUrl),
-            StreamQualityOption("${prefix}480p SD", "480p", "SD", ytUrl),
-            StreamQualityOption("${prefix}360p", "360p", "Bajo Consumo", ytUrl)
+            StreamQualityOption("${prefix}720p HD", "720p", "Estándar HD", ytUrl, isMaster = false, isMovie = !isTrailer),
+            StreamQualityOption("${prefix}480p SD", "480p", "SD", ytUrl, isMaster = false, isMovie = !isTrailer),
+            StreamQualityOption("${prefix}360p", "360p", "Bajo Consumo", ytUrl, isMaster = false, isMovie = !isTrailer)
         )
     }
 

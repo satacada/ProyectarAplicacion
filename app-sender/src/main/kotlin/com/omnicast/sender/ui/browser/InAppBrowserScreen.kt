@@ -67,12 +67,11 @@ fun InAppBrowserScreen(
             webViewInstance?.evaluateJavascript(WvcSnifferScripts.buildAggressiveRescanScript(WvcDomSniffer.CONSOLE_PREFIX), null)
             return
         }
-        val isMovieSite = BrowserUrlHelper.isMovieOrVideoPage(currentUrl); val hasNonYt = currentStreams.any { BrowserUrlHelper.extractYouTubeId(it) == null }
+        val isMovieSite = BrowserUrlHelper.isMovieOrVideoPage(currentUrl)
         qualityOptions = currentStreams.flatMap { u ->
-            val ytId = BrowserUrlHelper.extractYouTubeId(u)
-            val rep = com.omnicast.sender.ui.browser.reputation.StreamReputationDatabase.getScore(currentUrl, u)
+            val ytId = BrowserUrlHelper.extractYouTubeId(u); val rep = com.omnicast.sender.ui.browser.reputation.StreamReputationDatabase.getScore(currentUrl, u)
             val isSucc = testedSuccess.contains(u); val isFail = testedFailed.contains(u)
-            if (ytId != null) BrowserUrlHelper.createYouTubeQualityOptions(ytId, cleanTitle, isTrailer = isMovieSite && hasNonYt)
+            if (ytId != null) { if (isMovieSite) emptyList() else BrowserUrlHelper.createYouTubeQualityOptions(ytId, cleanTitle) }
             else {
                 val lbl = streamLabels[u]; val isM = u.contains("master", true) || u.contains("playlist", true) || lbl?.contains("auto", true) == true
                 val vName = lbl?.takeIf { it.isNotBlank() } ?: StreamQualityDetector.extractFileName(u, if (isM) "master" else "video")
@@ -99,7 +98,7 @@ fun InAppBrowserScreen(
 
     fun registerStream(url: String, hdrs: Map<String, String>, isPrimary: Boolean = false, label: String? = null) {
         val cleanUrl = BrowserUrlHelper.sanitizeMediaUrl(url)
-        if (cleanUrl.isBlank() || AdBlocker.isAd(cleanUrl) || AdBlocker.isVideoAd(cleanUrl) || !isRealMedia(cleanUrl)) return
+        if (cleanUrl.isBlank() || AdBlocker.isAd(cleanUrl) || AdBlocker.isVideoAd(cleanUrl) || !isRealMedia(cleanUrl) || (BrowserUrlHelper.isMovieOrVideoPage(currentUrl) && BrowserUrlHelper.extractYouTubeId(cleanUrl) != null)) return
         val existingIndex = detectedStreams.indexOfFirst { BrowserUrlHelper.isSameLogicalStream(it, cleanUrl) }
         val isM = isPrimary || cleanUrl.contains("master", true) || cleanUrl.contains("playlist", true) || cleanUrl.contains("video.m3u8", true)
         if (existingIndex >= 0) {
@@ -237,7 +236,7 @@ fun InAppBrowserScreen(
                     },
                     onStreamIntercepted = { sUrl, hdrs, isM -> registerStream(sUrl, hdrs, isPrimary = isM) },
                     onSniffedVideo = { sniffed ->
-                        if (AdBlocker.isAd(sniffed.src) || sniffed.duration in 0.1f..59.9f) return@BrowserWebView
+                        if (AdBlocker.isAd(sniffed.src) || sniffed.duration in 0.1f..59.9f || (BrowserUrlHelper.isMovieOrVideoPage(currentUrl) && BrowserUrlHelper.extractYouTubeId(sniffed.src) != null)) return@BrowserWebView
                         val sourceFrameUrl = sniffed.frameUrl.takeIf { it.startsWith("http") } ?: currentUrl
                         if (sniffed.src.contains("fastream.to") && !sniffed.src.contains(".m3u8")) {
                             scope.launch(Dispatchers.IO) { MediaPlatformResolver.resolveFastreamSync(sniffed.src, sourceFrameUrl)?.let { res -> withContext(Dispatchers.Main) { registerStream(res.first, res.third, isPrimary = true, label = sniffed.title) } } }

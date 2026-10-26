@@ -147,10 +147,13 @@ fun TvWebStreamScreen(
                             settings.allowFileAccessFromFileURLs = true; settings.allowUniversalAccessFromFileURLs = true
                             settings.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
                             settings.userAgentString = headers["User-Agent"] ?: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
-                            val baseUrl = headers["Referer"]?.takeIf { it.isNotBlank() } ?: "https://dr0pstream.com/"
+                            val streamOrigin = try { val uri = Uri.parse(streamUrl); if (!uri.scheme.isNullOrBlank() && !uri.host.isNullOrBlank()) "${uri.scheme}://${uri.host}/" else null } catch (_: Throwable) { null }
+                            val ref = headers["Referer"]
+                            // Por qué: Fijar baseUrl = streamOrigin garantiza que las peticiones XHR de Hls.js sean Same-Origin (ej: ds4.dropcdn.io -> ds4.dropcdn.io), erradicando el bloqueo de CORS en Chromium nativo.
+                            val baseUrl = streamOrigin ?: ref ?: "https://omnicast.tv/"
                             com.omnicast.receiver.log.ReceiverLogger.log("TvWebStreamScreen", "🚀 Iniciando WebView para: $streamUrl con baseUrl: $baseUrl")
                             val cm = CookieManager.getInstance(); cm.setAcceptCookie(true); cm.setAcceptThirdPartyCookies(this, true)
-                            headers["Cookie"]?.let { ck -> runCatching { ck.split("; ").map { it.trim() }.filter { it.isNotBlank() }.forEach { p -> cm.setCookie(streamUrl, p); cm.setCookie(baseUrl, p); cm.setCookie("https://dr0pstream.com", p); cm.setCookie("https://dropcdn.io", p); cm.setCookie("https://fastream.to", p) }; cm.flush() } }
+                            headers["Cookie"]?.let { ck -> runCatching { ck.split("; ").map { it.trim() }.filter { it.isNotBlank() }.forEach { p -> cm.setCookie(streamUrl, p); streamOrigin?.let { cm.setCookie(it, p) }; ref?.takeIf { it.isNotBlank() }?.let { cm.setCookie(it, p) }; cm.setCookie("https://dr0pstream.com", p); cm.setCookie("https://dropcdn.io", p); cm.setCookie("https://fastream.to", p) }; cm.flush() } }
                             addJavascriptInterface(
                                 WebStreamBridge(
                                     onPlaybackStatus,

@@ -100,7 +100,7 @@ object TvWebPlayerHtmlBuilder {
                       if (data.fatal) {
                         hideCurtain();
                         if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
-                          if (++hlsNetRetries <= 2) { resetWatchdog(15000); hls.startLoad(); }
+                          if (++hlsNetRetries <= 1) { resetWatchdog(10000); hls.startLoad(); }
                           else {
                             try { hls.destroy(); } catch(_) {}
                             vid.src = streamUrl;

@@ -31,10 +31,6 @@ object TvWebResourceInterceptor {
         }
 
         val lower = urlStr.lowercase()
-        // Servidores con TLS Fingerprinting (DropCDN, Fastream) deben fluir por Blink/Chromium C++ nativo
-        if (lower.contains("dropcdn.io") || lower.contains("dr0pstream.com") || lower.contains("fastream.to")) {
-            return null
-        }
         val isMedia = lower.contains(".m3u8") || lower.contains(".ts") || lower.contains(".m4s") ||
                 lower.contains(".mp4") || lower.contains(".vtt") || lower.contains("/hls")
         if (!isMedia) return null

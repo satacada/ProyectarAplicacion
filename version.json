@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 232,
-  "versionCodeReceiver": 215,
-  "versionName": "3.4.82",
-  "releaseTag": "v3.4.82",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.82/omnicast-sender-v3.4.82.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.82/omnicast-receiver-v3.4.82.apk",
-  "changelog": "v3.4.82: Ejecución Same-Origin pura en TvWebStreamScreen (baseUrl = streamOrigin eliminando bloqueo CORS), recuperación de la opción I-Frames en el modal, prioridad absoluta a Película Adaptativa (Auto) como predeterminada, y User-Agent de escritorio para DropCDN."
+  "versionCodeSender": 233,
+  "versionCodeReceiver": 216,
+  "versionName": "3.4.83",
+  "releaseTag": "v3.4.83",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.83/omnicast-sender-v3.4.83.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.83/omnicast-receiver-v3.4.83.apk",
+  "changelog": "v3.4.83: Intercepción activa de DropCDN y Fastream en TvWebResourceInterceptor para inyectar Access-Control-Allow-Origin: * y enviar Referer legítimo sin cabecera Origin, desbloqueando la reproducción HLS en TV Box."
 }

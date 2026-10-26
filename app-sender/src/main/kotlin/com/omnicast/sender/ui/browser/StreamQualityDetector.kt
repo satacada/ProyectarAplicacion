@@ -41,13 +41,8 @@ object StreamQualityDetector {
 
         val isSigned = StreamManifestProbe.hasSignedSecurityToken(currentMediaUrl)
         if (isSigned) {
-            if (currentMediaUrl.contains("master.m3u8", ignoreCase = true)) {
-                val uIndex = currentMediaUrl.replace("master.m3u8", "index-v1-a1.m3u8", ignoreCase = true)
-                return@withContext listOf(
-                    StreamQualityOption("${prefix}1080p Full HD", "1080p", "Full HD", uIndex, isMaster = false, isMovie = true, isSuggested = true, healedHeaders = safeHeaders, fileName = "index-v1-a1", formatDetail = "m3u8 (1920x800)", groupTitle = grpTitle),
-                    StreamQualityOption("${prefix}Película Adaptativa (Auto)", "Auto", "Adaptativa", currentMediaUrl, isMaster = true, isMovie = true, isSuggested = false, healedHeaders = safeHeaders, fileName = "master", formatDetail = "m3u8 (adaptive)", groupTitle = grpTitle)
-                )
-            }
+            val isIndex = currentMediaUrl.contains("index-", ignoreCase = true)
+            val isMaster = currentMediaUrl.contains("master", ignoreCase = true) || currentMediaUrl.contains("playlist", ignoreCase = true)
             val okQuality = if (currentMediaUrl.contains("mycdn.me", true) || currentMediaUrl.contains("okcdn.ru", true)) {
                 when {
                     currentMediaUrl.contains("/type/5") || currentMediaUrl.contains("type=5") -> "1080p FHD"
@@ -61,13 +56,13 @@ object StreamQualityDetector {
                 }
             } else null
             if (okQuality != null) {
-                val isMaster = okQuality.contains("Auto")
-                return@withContext listOf(StreamQualityOption("${prefix}$okQuality", if (isMaster) "Auto" else okQuality, if (isMaster) "Adaptativa" else "Directo", currentMediaUrl, isMaster = isMaster, isMovie = true, isSuggested = isMaster, healedHeaders = safeHeaders, fileName = okQuality, formatDetail = if (isMaster) "m3u8 (adaptive)" else "mp4 (Directo)", groupTitle = grpTitle))
+                val isOkMaster = okQuality.contains("Auto")
+                return@withContext listOf(StreamQualityOption("${prefix}$okQuality", if (isOkMaster) "Auto" else okQuality, if (isOkMaster) "Adaptativa" else "Directo", currentMediaUrl, isMaster = isOkMaster, isMovie = true, isSuggested = isOkMaster, healedHeaders = safeHeaders, fileName = okQuality, formatDetail = if (isOkMaster) "m3u8 (adaptive)" else "mp4 (Directo)", groupTitle = grpTitle))
             }
-            val defName = extractFileName(currentMediaUrl, "master")
-            val defFmt = if (currentMediaUrl.contains(".mp4", true)) "mp4 (Directo)" else "m3u8 (adaptive)"
-            val label = if (currentMediaUrl.contains(".mp4", ignoreCase = true)) "${prefix}Video MP4 Directo" else "${prefix}Película Directa"
-            return@withContext listOf(StreamQualityOption(label, "Auto", "Original", currentMediaUrl, isMovie = true, isSuggested = true, healedHeaders = safeHeaders, fileName = defName, formatDetail = defFmt, groupTitle = grpTitle))
+            val defName = extractFileName(currentMediaUrl, if (isIndex) "index-v1-a1" else "master")
+            val defFmt = if (currentMediaUrl.contains(".mp4", true)) "mp4 (Directo)" else if (isIndex) "m3u8 (1080p Full HD)" else "m3u8 (adaptive)"
+            val label = if (currentMediaUrl.contains(".mp4", ignoreCase = true)) "${prefix}Video MP4 Directo" else if (isIndex) "${prefix}1080p Full HD (index-v1-a1)" else if (isMaster) "${prefix}Película Adaptativa (Auto)" else "${prefix}Película Directa"
+            return@withContext listOf(StreamQualityOption(label, if (isIndex) "1080p" else "Auto", if (isIndex) "Full HD" else "Original", currentMediaUrl, isMaster = isMaster, isMovie = true, isSuggested = true, healedHeaders = safeHeaders, fileName = defName, formatDetail = defFmt, groupTitle = grpTitle))
         }
 
         // Sonda Pre-Cast + Auto-Reparador de Cabeceras (4 permutaciones deterministas)

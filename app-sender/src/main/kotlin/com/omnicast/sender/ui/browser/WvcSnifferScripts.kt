@@ -35,8 +35,15 @@ object WvcSnifferScripts {
                     if (!v || isShortCommercial(v)) return;
                     var d = v.duration || 0;
                     if (d > 0 && d < 60) return;
-                    var s = v.currentSrc || v.src;
-                    if (!s || s.indexOf('blob:') === 0 || s.indexOf('data:') === 0) return;
+                    var s = v.currentSrc || v.src || '';
+                    if (s.indexOf('data:') === 0) return;
+                    var hlsUrl = (v.__hls && v.__hls.url) || (v._hls && v._hls.url) || (window.hls && window.hls.url);
+                    var captured = (window.__omniCapturedMedia && window.__omniCapturedMedia.length) ? window.__omniCapturedMedia[window.__omniCapturedMedia.length - 1] : '';
+                    var realStream = (hlsUrl && typeof hlsUrl === 'string') ? hlsUrl : captured;
+                    if (!s || s.indexOf('blob:') === 0) {
+                        if (!realStream) return;
+                        s = realStream;
+                    }
                     if (!isMediaStr(s)) return;
                     var t = title || document.title || 'Video Web';
                     console.log('$consolePrefix' + JSON.stringify({type:'videoPlaying', video:s, title:t, duration:d, frameUrl:window.location.href || ''}));

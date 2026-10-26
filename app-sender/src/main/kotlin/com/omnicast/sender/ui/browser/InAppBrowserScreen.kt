@@ -246,7 +246,7 @@ fun InAppBrowserScreen(
                         val hdrs = BrowserUrlHelper.buildSafeHeaders(sniffed.src, sourceFrameUrl, UA_MOBILE); if (sniffed.duration > 0f) streamDurations[sniffed.src] = sniffed.duration
                         if (sniffed.title.isNotBlank() && sniffed.title != "Video Web" && sniffed.title != "Transmisión Web") pageTitle = sniffed.title; if (sniffed.subtitles.isNotEmpty()) ActiveStreamHolder.update(sniffed.src, pageTitle, hdrs, sniffed.subtitles)
                         registerStream(sniffed.src, hdrs, isPrimary = sniffed.isPlaying, label = sniffed.label ?: pageTitle)
-                        if (sniffed.isPlaying) { Toast.makeText(context, "▶ Video activo: " + pageTitle.take(24), Toast.LENGTH_SHORT).show(); if (userDismissedSheetForUrl != currentUrl && !showOptionsSheet) openOptionsSheet() }
+                        if (sniffed.isPlaying) { userDismissedSheetForUrl = ""; Toast.makeText(context, "▶ Video activo: " + pageTitle.take(24), Toast.LENGTH_SHORT).show(); if (!showOptionsSheet) openOptionsSheet() }
                     },
                     onTitleReceived = { t -> if (t.isNotBlank() && t != "Transmisión" && !t.contains("about:blank")) pageTitle = t },
                     onOpenPopup = { pView -> popupWebView = pView }, onClosePopup = { popupWebView?.destroy(); popupWebView = null },

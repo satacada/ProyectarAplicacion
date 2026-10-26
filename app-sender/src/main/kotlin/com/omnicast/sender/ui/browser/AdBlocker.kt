@@ -164,11 +164,36 @@ object AdBlocker {
                 function cleanDoc(doc) {
                     if (!doc) return;
                     try {
-                        var css = 'div[class*="popunder"], div[id*="popunder"], .ad-overlay, #ad-overlay, .click-shield, div[class*="click-shield"], div[class*="banner"], div[id*="banner"], div[class*="player-ad"], div[id*="player-ad"], div[class*="video-ads"], div[id*="video-ads"], div[class*="ad_holder"], div[class*="advertising"], div[id*="ads_"], .vp_layer_fake, div[class*="fake-player"] { display: none !important; pointer-events: none !important; }';
+                        var css = 'img[src*="banner"], img[alt*="banner"], img[src*="ad."], img[src*="/ad/"], img[src*="ads."], a[href*="banner"], a[href*="bet365"], a[href*="1xbet"], div[class*="popunder"], div[id*="popunder"], .ad-overlay, #ad-overlay, .click-shield, div[class*="click-shield"], div[class*="banner"], div[id*="banner"], div[class*="player-ad"], div[id*="player-ad"], div[class*="video-ads"], div[id*="video-ads"], div[class*="ad_holder"], div[class*="advertising"], div[id*="ads_"], .vp_layer_fake, div[class*="fake-player"] { display: none !important; pointer-events: none !important; visibility: hidden !important; width: 0 !important; height: 0 !important; opacity: 0 !important; }';
                         var st = doc.createElement('style');
                         st.textContent = css;
                         (doc.head || doc.documentElement).appendChild(st);
                     } catch(__) {}
+                    try {
+                        var imgs = doc.querySelectorAll('img');
+                        for (var m = 0; m < imgs.length; m++) {
+                            var im = imgs[m];
+                            var isrc = (im.src || '').toLowerCase();
+                            if (!im.src || im.naturalWidth === 0 || isrc.indexOf('banner') !== -1 || isrc.indexOf('ad.') !== -1 || isrc.indexOf('/ad/') !== -1 || isrc.indexOf('bet') !== -1) {
+                                if (!im.closest('button, form, nav, header')) {
+                                    im.style.setProperty('display', 'none', 'important');
+                                    im.style.setProperty('pointer-events', 'none', 'important');
+                                    if (im.parentElement && im.parentElement.tagName === 'A') {
+                                        im.parentElement.style.setProperty('display', 'none', 'important');
+                                        im.parentElement.style.setProperty('pointer-events', 'none', 'important');
+                                    }
+                                }
+                            }
+                        }
+                        doc.addEventListener('error', function(e) {
+                            if (e.target && e.target.tagName === 'IMG') {
+                                e.target.style.setProperty('display', 'none', 'important');
+                                if (e.target.parentElement && e.target.parentElement.tagName === 'A') {
+                                    e.target.parentElement.style.setProperty('display', 'none', 'important');
+                                }
+                            }
+                        }, true);
+                    } catch(_) {}
                     var selectors = [
                         'div[class*="ad-box"]', 'div[class*="ad-container"]', 'div[id*="ad-banner"]',
                         'div[class*="ad-banner"]', 'div[class*="banner"]', 'a[href*="bet365"]', 'a[href*="1xbet"]',

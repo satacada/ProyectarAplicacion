@@ -1,7 +1,7 @@
 # 🏛️ ARQUITECTURA DEL SISTEMA: OMNICAST PRO
 
-**Versión Canónica:** v3.4.60  
-**Última actualización:** 2026-10-25  
+**Versión Canónica:** v3.4.94  
+**Última actualización:** 2026-10-26  
 **Estándar de Calidad:** Clean Architecture, Arquitectura Hexagonal (Ports & Adapters), Fail-Fast, Zero-Crash  
 
 ---
@@ -43,8 +43,8 @@ graph TD
         ReceiverApp --> HWDecoder["MediaCodec Hardware Decoder"]
         ReceiverApp --> DualPlayer{"Enrutador Híbrido"}
         DualPlayer -->|Flujos VOD / Live / MP4| ExoPlayerTV["ExoPlayer Hardware"]
-        DualPlayer -->|CDNs Protegidas / Lulu / Fastream| TvWebStream["TvWebStreamScreen (HTML5/Hls.js)"]
-        TvWebStream --> AntiCors["TvWebResourceInterceptor (Anti-CORS 0ms)"]
+        DualPlayer -->|CDNs Protegidas / Tokens HMAC / PelisPlus| TvWebStream["TvWebStreamScreen (HTML5/Hls.js)"]
+        TvWebStream --> SameOrigin["Same-Origin Nativo (baseUrl = streamOrigin)"]
         ReceiverApp --> TVPlaylists["TvPlaylistsManager (Guardados / Historial)"]
     end
 ```
@@ -124,22 +124,22 @@ flowchart LR
 
 ---
 
-## 5. Arquitectura Híbrida Dual en la TV Box
+## 5. Arquitectura Híbrida Dual y Despacho de Reproductores en TV Box
 
-La TV Box dispone de 3 motores autónomos según la naturaleza del flujo recibido vía `SignalingMessage.DirectStreamHandoff`:
+La TV Box dispone de 4 motores autónomos especializados según el tipo de flujo recibido vía `SignalingMessage.DirectStreamHandoff`:
 
 ```mermaid
 flowchart TD
-    Handoff["DirectStreamHandoff(url, headers, branch)"] --> Check{"¿Tipo de Enlace?"}
-    Check -->|YouTube ID| YT["TvYouTubeScreen\n(Embed TV sin anuncios)"]
-    Check -->|Token Firmado / CDN Protegida\n(LuluStream / Fastream)| WebPlayer["TvWebStreamScreen\n(Chromium + Hls.js)"]
-    Check -->|MP4 / HLS Abierto / En Vivo / IPTV| Exo["ExoPlayerTvManager\n(Decodificación HW)"]
-    Exo -->|Fallback ante HTTP 403| WebPlayer
+    Handoff["DirectStreamHandoff(url, headers, branch)"] --> Router{"Enrutador TvReceiverActivity"}
+    Router -->|ID de YouTube| YT["1. TvYouTubeScreen\n(Embed IFrame sin anuncios)"]
+    Router -->|Token HMAC / DropCDN / PelisPlus| WebPlayer["2. TvWebStreamScreen\n(Chromium + Hls.js Nativo)"]
+    Router -->|VOD / MP4 / HLS / Reypelis / PelisGO| Exo["3. ExoPlayerTvManager\n(MediaCodec HW 60fps)"]
+    Router -->|Screen Mirroring WebRTC| WebRtc["4. WebRtcReceiverManager\n(Hardware H.264 <60ms)"]
+    Exo -->|Fallback ante HTTP 403 / Fallo Formato| WebPlayer
     
-    subgraph Blindaje de Red en TV
-        WebPlayer --> Interceptor["TvWebResourceInterceptor"]
-        Interceptor -->|OPTIONS Preflight| Resp200["Respuesta 200 (0ms)"]
-        Interceptor -->|Segmentos .ts / .m3u8| JavaSocket["Socket Nativo Java + CORS *"]
+    subgraph Blindaje de Red Chromium en TV
+        WebPlayer --> SameOrigin["Same-Origin Nativo (baseUrl = streamOrigin)"]
+        SameOrigin --> BlinkNet["Stack de Red Chromium (BoringSSL)\nHuella TLS Genuina sin Interceptores"]
     end
 
     subgraph Ergonomía D-Pad
@@ -190,3 +190,5 @@ El subsistema de Screen Mirroring conecta la pantalla del móvil con la TV Box v
 - [ADR-008: Estabilización de Caret React y Scroll Centrado en Búsqueda](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/adr/ADR-008-estabilizacion-caret-react-y-scroll-centrado-busqueda.md)
 - [ADR-009: Asistente Nativo Flotante de Entrada de Texto Web y Pipeline de Sugerencias en Vivo](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/adr/ADR-009-asistente-nativo-flotante-entrada-web-sugerencias.md)
 - [ADR-010: Supresión Nativa de Popups Anti-OOM, Blindaje de Gestos y Control Dual D-Pad en TV](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/adr/ADR-010-supresion-nativa-popups-anti-oom-control-dual-dpad.md)
+- [ADR-011: Arquitectura Fiel de Captura v3.32.94 y Despacho Dual de Reproductores en TV Box](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/adr/ADR-011-arquitectura-captura-v3.32-y-despacho-dual-tv.md)
+

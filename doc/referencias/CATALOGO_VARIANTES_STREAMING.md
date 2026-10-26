@@ -88,3 +88,16 @@ SI (X-YouTube-Id presente) -> TvYouTubeScreen
 SI (hasSignedSecurityToken O Referer es Embed Protegido O tiene Cookies de Sesión) -> TvWebStreamScreen (HTML5 en 0ms)
 SINO -> ExoPlayer (Hardware Nativo 60fps)
 ```
+
+---
+
+## 4. MATRIZ DE REPRODUCTORES Y CASOS PROBADOS EN PRODUCCIÓN (v3.4.94)
+
+| Portal / Servicio | Dominio / CDN | Firma Detectada | Reproductor Asignado en TV Box | Comportamiento Técnico |
+|---|---|---|---|---|
+| **PelisPlus** | `pelisplus.hair`<br>CDN: `ds4.dropcdn.io` | `hasSignedSecurityToken = true`<br>(Token HMAC efímero) | **`TvWebStreamScreen`**<br>(Chromium Nativo + `Hls.js`) | Carga en Same-Origin (`baseUrl = streamOrigin`). Stack C++ BoringSSL con huella TLS de Google Chrome. Cero bloqueo 403 y cero CORS. |
+| **Reypelis** | `reypelis.vip`<br>CDN: `spark.9bg.net` | Flujo HLS VOD directo<br>(Fastream resolutivo) | **`ExoPlayerTvManager`**<br>(AndroidX Media3 HW) | Decodificación por hardware a 1080p nativo, respuesta ultra-rápida al mando D-Pad y salto ±10s. |
+| **PelisGO** | `pelisgo.online`<br>CDN: `*.tnmr.org` | Flujo HLS VOD directo<br>(LuluStream resuelto) | **`ExoPlayerTvManager`**<br>(AndroidX Media3 HW) | Perfil resuelto y guardado en `StreamProfileDb`. Decodificación continua por hardware con jitter-buffer anti-tirones. |
+| **YouTube** | `youtube.com` | ID de video oficial | **`TvYouTubeScreen`** | Reproducción en visor IFrame oficial de TV sin publicidad invasiva. |
+| **Screen Mirroring** | Celular en vivo | Socket WebRTC LAN | **`WebRtcReceiverManager`** | Pipeline H.264 acelerado por hardware (<60ms) con modos Pantalla Completa y Por Aplicación (HU-013). |
+

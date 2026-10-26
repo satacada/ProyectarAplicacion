@@ -30,15 +30,14 @@ class TvReceiverHelperTest {
     }
 
     @Test
-    fun testShouldUseExoPlayerForDropCdnAndFastream() {
+    fun testShouldUseWebPlayerForSignedTokensDropCdn() {
         val dropUrls = listOf(
             "https://ds4.dropcdn.io/hls2/01/00038/master.m3u8?t=oV8cxTiNEmX1J6c4kfT1aAmW6u0Xt0p-5zKXBPvMoWc&s=1730000000",
-            "https://dr0pstream.com/hls/master.m3u8",
-            "https://fastream.to/hls/master.m3u8"
+            "https://fastream.to/hls2/01/00038/master.m3u8?t=oV8cxTiNEmX1J6c4kfT1aAmW6u0Xt0p-5zKXBPvMoWc&s=1730000000"
         )
         for (url in dropUrls) {
             val hdrs = mapOf("Referer" to "https://dr0pstream.com/e/123")
-            assertFalse("DropCDN/Fastream debe usar ExoPlayer: $url", TvReceiverHelper.shouldUseWebPlayer(url, hdrs))
+            assertTrue("DropCDN con token firmado debe usar WebPlayer (Navegador): $url", TvReceiverHelper.shouldUseWebPlayer(url, hdrs))
         }
     }
 

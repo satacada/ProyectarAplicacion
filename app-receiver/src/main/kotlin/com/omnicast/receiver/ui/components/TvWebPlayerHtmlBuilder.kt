@@ -27,17 +27,13 @@ object TvWebPlayerHtmlBuilder {
               video::-webkit-media-controls-overlay-play-button { display:none !important; opacity:0 !important; pointer-events:none !important; width:0 !important; height:0 !important; }
               video::-webkit-media-controls-start-playback-button { display:none !important; opacity:0 !important; pointer-events:none !important; width:0 !important; height:0 !important; }
               video::-webkit-media-controls-overlay-enclosure { display:none !important; }
-              .spinner { position:absolute; top:50%; left:50%; width:60px; height:60px; margin:-30px 0 0 -30px; border:4px solid rgba(255,255,255,0.15); border-top-color:#38bdf8; border-radius:50%; animation:spin 0.8s linear infinite; pointer-events:none; z-index:10; opacity:1; transition:opacity 0.3s ease; }
-              @keyframes spin { 0% { transform:rotate(0deg); } 100% { transform:rotate(360deg); } }
             </style>
             <script>$hlsCode</script>
             </head>
             <body>
-              <div id="black-curtain" style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:#000;z-index:5;transition:opacity 0.3s ease;"></div>
-              <video id="vplayer" autoplay playsinline controls poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7">$tracksHtml</video>
-              <div id="loader" class="spinner"></div>
+              <video id="vplayer" autoplay playsinline controls>$tracksHtml</video>
               <script>
-                var vid = document.getElementById('vplayer'), spinner = document.getElementById('loader'), curtain = document.getElementById('black-curtain');
+                var vid = document.getElementById('vplayer');
                 var streamUrl = "$safeUrl", startSec = $startSec, hasResumed = false;
                 var hlsInstance = null, watchdogTimer = null;
 
@@ -52,10 +48,9 @@ object TvWebPlayerHtmlBuilder {
                 }
                 resetWatchdog(15000);
 
-                function hideSpin() { if (spinner) spinner.style.opacity = '0'; }
-                function showSpin() { if (spinner) spinner.style.opacity = '1'; }
-                function hideCurtain() { if (curtain) { curtain.style.opacity = '0'; curtain.style.pointerEvents = 'none'; } }
-                setTimeout(function() { hideCurtain(); }, 4000);
+                function hideSpin() {}
+                function showSpin() {}
+                function hideCurtain() {}
                 function tryPlay() {
                   if (!vid) return;
                   var p = vid.play();

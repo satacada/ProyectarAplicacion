@@ -78,10 +78,11 @@ object StreamQualityDetector {
                     currentMediaUrl.contains("master.m3u8", ignoreCase = true) -> currentMediaUrl.replace("master.m3u8", "index-v1-a1.m3u8", ignoreCase = true)
                     else -> currentMediaUrl.replace("iframes-v1-a1.m3u8", "index-v1-a1.m3u8", ignoreCase = true)
                 }
+                val pureHeaders = safeHeaders.toMutableMap().apply { put("X-Target-Player", "CHROMIUM_PURE") }
                 return@withContext listOf(
-                    StreamQualityOption("${prefix}Película Adaptativa (Auto)", "Auto", "Adaptativa", uMaster, isMaster = true, isMovie = true, isSuggested = true, healedHeaders = safeHeaders, fileName = "master", formatDetail = "m3u8 (adaptive)", groupTitle = grpTitle),
-                    StreamQualityOption("${prefix}I-Frames (1920x816)", "1920x816", "I-Frame", uIframe, isMaster = false, isMovie = true, isSuggested = false, healedHeaders = safeHeaders, fileName = "iframes-v1-a1", formatDetail = "m3u8 (1920x816)", groupTitle = grpTitle),
-                    StreamQualityOption("${prefix}1080p Full HD", "1080p", "Full HD", uIndex, isMaster = false, isMovie = true, isSuggested = false, healedHeaders = safeHeaders, fileName = "index-v1-a1", formatDetail = "m3u8 (1920x816)", groupTitle = grpTitle)
+                    StreamQualityOption("${prefix}Película Adaptativa (Auto)", "Auto", "Adaptativa", uMaster, isMaster = true, isMovie = true, isSuggested = true, healedHeaders = pureHeaders, fileName = "master", formatDetail = "m3u8 (adaptive)", groupTitle = grpTitle),
+                    StreamQualityOption("${prefix}I-Frames (1920x816)", "1920x816", "I-Frame", uIframe, isMaster = false, isMovie = true, isSuggested = false, healedHeaders = pureHeaders, fileName = "iframes-v1-a1", formatDetail = "m3u8 (1920x816)", groupTitle = grpTitle),
+                    StreamQualityOption("${prefix}1080p Full HD", "1080p", "Full HD", uIndex, isMaster = false, isMovie = true, isSuggested = false, healedHeaders = pureHeaders, fileName = "index-v1-a1", formatDetail = "m3u8 (1920x816)", groupTitle = grpTitle)
                 )
             }
             val defName = extractFileName(currentMediaUrl, if (isIndex) "index-v1-a1" else "master")

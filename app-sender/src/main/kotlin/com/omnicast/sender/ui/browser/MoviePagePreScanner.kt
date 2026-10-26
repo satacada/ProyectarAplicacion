@@ -64,13 +64,4 @@ object MoviePagePreScanner {
             } catch(e) {}
         })();
     """.trimIndent()
-
-    fun handleServerCandidate(
-        serverUrl: String,
-        pageUrl: String,
-        pageTitle: String?,
-        onStreamFound: (url: String, headers: Map<String, String>, isMaster: Boolean) -> Unit
-    ) {
-        // Opción 2 (Play-First): No pre-detectar especulativamente en frío para evitar tokens 403
-    }
 }

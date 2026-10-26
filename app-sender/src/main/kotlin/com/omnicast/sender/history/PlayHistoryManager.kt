@@ -46,19 +46,19 @@ class PlayHistoryManager(private val context: Context) {
         val now = System.currentTimeMillis()
         return listOf(
             HistoryItem(
+                url = "https://pelisplus.hair/peliculas/8551-mad-max-salvajes-de-la-autopista-ver-online-hd.html",
+                title = "Mad Max: Salvajes de la autopista (1979 - PelisPlus)",
+                pageUrl = "https://pelisplus.hair/peliculas/8551-mad-max-salvajes-de-la-autopista-ver-online-hd.html",
+                headers = mapOf("Referer" to "https://pelisplus.hair/"),
+                timestamp = now + 120_000_000L,
+                isFavorite = true
+            ),
+            HistoryItem(
                 url = "https://pelisplus.hair/peliculas/8536-mad-max-2-el-guerrero-de-la-carretera-ver-online-hd.html",
                 title = "Mad Max 2: El guerrero de la carretera (PelisPlus)",
                 pageUrl = "https://pelisplus.hair/peliculas/8536-mad-max-2-el-guerrero-de-la-carretera-ver-online-hd.html",
                 headers = mapOf("Referer" to "https://pelisplus.hair/"),
                 timestamp = now + 100_000_000L,
-                isFavorite = true
-            ),
-            HistoryItem(
-                url = "https://pelisplus.hair/peliculas/8551-mad-max-salvajes-de-la-autopista-ver-online-hd.html",
-                title = "Mad Max: Salvajes de la autopista (1979 - PelisPlus)",
-                pageUrl = "https://pelisplus.hair/peliculas/8551-mad-max-salvajes-de-la-autopista-ver-online-hd.html",
-                headers = mapOf("Referer" to "https://pelisplus.hair/"),
-                timestamp = now + 90_000_000L,
                 isFavorite = true
             ),
             HistoryItem(

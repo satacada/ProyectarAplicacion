@@ -61,4 +61,12 @@ class TvReceiverHelperTest {
         assertFalse(TvReceiverHelper.shouldUseWebPlayer(normalMp4, emptyMap()))
         assertFalse(TvReceiverHelper.shouldUseWebPlayer(directM3u8, emptyMap()))
     }
+
+    @Test
+    fun testShouldUseAntiCorsInterceptor() {
+        assertFalse(TvReceiverHelper.shouldUseAntiCorsInterceptor("https://ds4.dropcdn.io/hls/master.m3u8", emptyMap()))
+        assertFalse(TvReceiverHelper.shouldUseAntiCorsInterceptor("https://fastream.to/hls/master.m3u8", emptyMap()))
+        assertFalse(TvReceiverHelper.shouldUseAntiCorsInterceptor("https://example.com/stream.m3u8", mapOf("X-Target-Player" to "CHROMIUM_PURE")))
+        assertTrue(TvReceiverHelper.shouldUseAntiCorsInterceptor("https://pelisgo.online/stream/master.txt", emptyMap()))
+    }
 }

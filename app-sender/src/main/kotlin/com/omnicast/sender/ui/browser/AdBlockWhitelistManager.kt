@@ -33,7 +33,16 @@ object AdBlockWhitelistManager {
         "vk.ru",
         "vkvideo.ru",
         "rumble.com",
-        "vimeo.com"
+        "vimeo.com",
+        "pelisplus.hair",
+        "pelisultra.hair",
+        "dr0pstream.com",
+        "dropcdn.io",
+        "fastream.to",
+        "lulustream.com",
+        "luluvdo.com",
+        "tnmr.org",
+        "pelisgo.online"
     )
 
     private val cachedDomains = mutableSetOf<String>()

@@ -158,7 +158,6 @@ fun BrowserWebView(
                                 showBlockedToast(ctx)
                                 return true
                             }
-                            val isMoviePage = BrowserUrlHelper.isMovieOrVideoPage(liveUrl)
                             val isAllowedExternal = isSameSite ||
                                 AdBlocker.isMediaOrStreamingHost(targetHost) ||
                                 AdBlocker.isSearchEngine(targetHost) ||
@@ -166,9 +165,9 @@ fun BrowserWebView(
                                 AdBlocker.isVerificationOrCaptcha(targetHost ?: "") ||
                                 AdBlockWhitelistManager.isWhitelistedHost(targetHost ?: "")
 
-                            if (!isSameSite && !isSourceSearchEngine && targetHost != null && (!r.hasGesture() || (isMoviePage && !isAllowedExternal))) {
+                            if (!r.hasGesture() && !isSameSite && !isSourceSearchEngine && targetHost != null) {
                                 if (!isAllowedExternal) {
-                                    android.util.Log.w("BrowserWebView", "🛑 Redirección no autorizada en página de video bloqueada: $targetHost")
+                                    android.util.Log.w("BrowserWebView", "🛑 Redirección publicitaria automática bloqueada: $targetHost")
                                     targetHost.let { AdBlocker.learnAndBlockAdHost(it, curHost) }
                                     showBlockedToast(ctx)
                                     return true
@@ -249,14 +248,12 @@ fun BrowserWebView(
 
                     override fun onConsoleMessage(cm: ConsoleMessage?): Boolean {
                         val msg = cm?.message() ?: return super.onConsoleMessage(cm)
-                        if (msg.startsWith("OMNICAST_SERVER_CANDIDATE:")) {
+                        val sniffedList = WvcDomSniffer.parseConsoleMessage(msg)
+                        if (sniffedList.isNotEmpty()) {
                             isChallenge = false
-                            val sUrl = msg.removePrefix("OMNICAST_SERVER_CANDIDATE:").trim()
-                            MoviePagePreScanner.handleServerCandidate(sUrl, livePageUrl, currentKnownTitle) { u, h, m -> post { onStreamIntercepted(u, h, m) } }
+                            post { sniffedList.forEach { onSniffedVideo(it) } }
                             return true
                         }
-                        val sniffedList = WvcDomSniffer.parseConsoleMessage(msg)
-                        if (sniffedList.isNotEmpty()) { isChallenge = false; post { sniffedList.forEach { onSniffedVideo(it) } }; return true }
                         return super.onConsoleMessage(cm)
                     }
                 }

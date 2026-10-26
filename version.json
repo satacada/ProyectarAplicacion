@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 238,
-  "versionCodeReceiver": 221,
-  "versionName": "3.4.88",
-  "releaseTag": "v3.4.88",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.88/omnicast-sender-v3.4.88.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.88/omnicast-receiver-v3.4.88.apk",
-  "changelog": "v3.4.88: Exclusión estricta de DropCDN y Fastream de la intercepción Java para preservar la huella TLS genuina de Chromium (anti-quema de tokens), baseUrl con streamOrigin erradicando bloqueos de CORS por Same-Origin nativo y transferencia íntegra de cookies de sesión."
+  "versionCodeSender": 239,
+  "versionCodeReceiver": 222,
+  "versionName": "3.4.89",
+  "releaseTag": "v3.4.89",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.89/omnicast-sender-v3.4.89.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.89/omnicast-receiver-v3.4.89.apk",
+  "changelog": "v3.4.89: Fusión maestra de captura de flujos v3.32.94 y v3.4.64. Protección absoluta de PelisPlus/PelisUltra (3 opciones en memoria sin quema de token), delegación nativa a Chromium puro sin interceptor Java, protección de gestos del usuario en selección de servidores de películas y catálogo histórico precargado con Mad Max 1979 en primer lugar."
 }

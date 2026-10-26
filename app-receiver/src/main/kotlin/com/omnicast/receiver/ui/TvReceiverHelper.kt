@@ -32,14 +32,33 @@ object TvReceiverHelper {
     }
 
     fun shouldUseWebPlayer(url: String, headers: Map<String, String>): Boolean {
-        if (headers["X-Target-Player"]?.equals("WEBVIEW", true) == true) return true
-        if (headers["X-Target-Player"]?.equals("EXOPLAYER", true) == true) return false
+        val target = headers["X-Target-Player"]?.uppercase()
+        if (target == "WEBVIEW" || target == "CHROMIUM_PURE" || target == "CHROMIUM_ANTI_CORS") return true
+        if (target == "EXOPLAYER") return false
 
+        val lowerUrl = url.lowercase()
         val ref = headers["Referer"]?.lowercase() ?: ""
-        val isProtectedEmbed = ref.contains("luluvdo.com") || ref.contains("lulustream.com") || ref.contains("pelisgo")
+        val isProtectedEmbed = ref.contains("dr0pstream.com") || ref.contains("dropcdn.io") ||
+                               ref.contains("fastream.to") || ref.contains("luluvdo.com") ||
+                               ref.contains("lulustream.com") || ref.contains("pelisgo") ||
+                               lowerUrl.contains("dropcdn.io") || lowerUrl.contains("dr0pstream.com") ||
+                               lowerUrl.contains("fastream.to")
         val hasSessionCookies = !headers["Cookie"].isNullOrBlank()
         val hasSignedToken = com.omnicast.core.domain.usecases.StreamManifestProbe.hasSignedSecurityToken(url)
 
         return isProtectedEmbed || hasSessionCookies || hasSignedToken
+    }
+
+    fun shouldUseAntiCorsInterceptor(url: String, headers: Map<String, String>): Boolean {
+        val target = headers["X-Target-Player"]?.uppercase()
+        if (target == "CHROMIUM_PURE") return false
+        if (target == "CHROMIUM_ANTI_CORS") return true
+
+        val lower = url.lowercase()
+        val ref = headers["Referer"]?.lowercase() ?: ""
+        val isDropOrFast = lower.contains("dropcdn.io") || lower.contains("dr0pstream.com") || lower.contains("fastream.to") ||
+                           ref.contains("dr0pstream.com") || ref.contains("dropcdn.io") || ref.contains("fastream.to")
+        if (isDropOrFast) return false
+        return true
     }
 }

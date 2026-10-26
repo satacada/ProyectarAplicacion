@@ -31,8 +31,11 @@ object TvWebResourceInterceptor {
         }
 
         val lower = urlStr.lowercase()
-        // Servidores con tokens criptográficos (DropCDN, Fastream) deben fluir por Chromium C++ nativo
-        if (lower.contains("dropcdn.io") || lower.contains("dr0pstream.com") || lower.contains("fastream.to")) {
+        // Servidores con tokens criptográficos / anti-scrape (DropCDN, Fastream) deben fluir por Chromium C++ nativo
+        val ref = defaultHeaders["Referer"]?.lowercase() ?: ""
+        val targetPure = defaultHeaders["X-Target-Player"]?.equals("CHROMIUM_PURE", true) == true
+        if (targetPure || lower.contains("dropcdn.io") || lower.contains("dr0pstream.com") || lower.contains("fastream.to") ||
+            ref.contains("dr0pstream.com") || ref.contains("dropcdn.io") || ref.contains("fastream.to")) {
             return null
         }
 
@@ -42,20 +45,27 @@ object TvWebResourceInterceptor {
 
         return try {
             val conn = (URL(urlStr).openConnection() as HttpURLConnection).apply {
-                connectTimeout = 8000
-                readTimeout = 12000
+                connectTimeout = 10000
+                readTimeout = 15000
                 instanceFollowRedirects = true
                 requestMethod = method
-                defaultHeaders.forEach { (k, v) -> if (!k.equals("Origin", true)) setRequestProperty(k, v) }
-                req.requestHeaders?.forEach { (k, v) ->
-                    if (!defaultHeaders.containsKey(k) && !k.equals("Origin", true)) {
+                defaultHeaders.forEach { (k, v) ->
+                    if (!k.equals("Origin", true) && !k.equals("Accept-Encoding", true)) {
                         setRequestProperty(k, v)
                     }
+                }
+                req.requestHeaders?.forEach { (k, v) ->
+                    if (!defaultHeaders.containsKey(k) && !k.equals("Origin", true) && !k.equals("Accept-Encoding", true)) {
+                        setRequestProperty(k, v)
+                    }
+                }
+                val activeCookie = defaultHeaders["Cookie"] ?: runCatching { android.webkit.CookieManager.getInstance().getCookie(urlStr) }.getOrNull()
+                if (!activeCookie.isNullOrBlank()) {
+                    setRequestProperty("Cookie", activeCookie)
                 }
             }
 
             val code = conn.responseCode
-
             val isSuccess = code in 200..299
             if (!isSuccess) {
                 val errBody = runCatching { conn.errorStream?.bufferedReader()?.use { it.readText() }?.take(150) }.getOrNull() ?: ""
@@ -66,13 +76,16 @@ object TvWebResourceInterceptor {
             val inStream: InputStream = conn.inputStream
             val msg = conn.responseMessage ?: "OK"
 
+            val isM3u8 = lower.contains(".m3u8")
+            val isVtt = lower.contains(".vtt")
             val mime = when {
-                lower.contains(".m3u8") -> "application/vnd.apple.mpegurl"
+                isM3u8 -> "application/vnd.apple.mpegurl"
                 lower.contains(".ts") -> "video/mp2t"
-                lower.contains(".vtt") -> "text/vtt"
+                isVtt -> "text/vtt"
                 lower.contains(".mp4") -> "video/mp4"
                 else -> conn.contentType?.substringBefore(';') ?: "application/octet-stream"
             }
+            val encoding = if (isM3u8 || isVtt) "UTF-8" else null
 
             val respHeaders = mutableMapOf(
                 "Access-Control-Allow-Origin" to "*",
@@ -80,13 +93,14 @@ object TvWebResourceInterceptor {
                 "Access-Control-Allow-Headers" to "*"
             )
             conn.headerFields.forEach { (k, list) ->
-                if (k != null && !respHeaders.containsKey(k)) {
+                if (k != null && !respHeaders.containsKey(k) && !k.equals("Content-Encoding", true)) {
                     respHeaders[k] = list.joinToString(", ")
                 }
             }
 
-            WebResourceResponse(mime, conn.contentEncoding ?: "UTF-8", code, msg, respHeaders, inStream)
-        } catch (_: Throwable) {
+            WebResourceResponse(mime, encoding, code, msg, respHeaders, inStream)
+        } catch (e: Throwable) {
+            com.omnicast.receiver.log.ReceiverLogger.log("TvWebResourceInterceptor", "Excepción en recurso web: ${e.message}")
             null
         }
     }

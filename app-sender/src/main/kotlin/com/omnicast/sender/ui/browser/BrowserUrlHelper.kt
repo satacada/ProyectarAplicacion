@@ -153,15 +153,18 @@ object BrowserUrlHelper {
                 headers["Origin"] = "https://dr0pstream.com"
                 headers["User-Agent"] = MediaPlatformResolver.UA_FASTREAM
                 headers["Sec-Fetch-Mode"] = "cors"; headers["Sec-Fetch-Site"] = "cross-site"; headers["Sec-Fetch-Dest"] = "empty"
+                headers["X-Target-Player"] = "CHROMIUM_PURE"
             } else if (isFast && id != null) {
                 headers["Referer"] = "https://fastream.to/embed-$id.html"
                 headers["Origin"] = "https://fastream.to"
                 headers["User-Agent"] = MediaPlatformResolver.UA_FASTREAM
                 headers["Sec-Fetch-Mode"] = "cors"; headers["Sec-Fetch-Site"] = "cross-site"; headers["Sec-Fetch-Dest"] = "empty"
+                headers["X-Target-Player"] = "CHROMIUM_PURE"
             } else if (isLulu && luluId != null) {
                 headers["Referer"] = "https://luluvdo.com/e/$luluId"
                 headers["Origin"] = "https://luluvdo.com"
                 headers["Sec-Fetch-Mode"] = "cors"; headers["Sec-Fetch-Site"] = "cross-site"; headers["Sec-Fetch-Dest"] = "empty"
+                headers["X-Target-Player"] = "CHROMIUM_PURE"
             } else if (!headers.containsKey("Referer") && currentUrl.isNotBlank()) {
                 headers["Referer"] = currentUrl
             }

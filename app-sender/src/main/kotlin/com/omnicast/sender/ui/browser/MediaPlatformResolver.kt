@@ -207,6 +207,7 @@ object MediaPlatformResolver {
                     hdrs["User-Agent"] = UA_FASTREAM
                     hdrs["Referer"] = "https://fastream.to/embed-$id.html"
                     hdrs["Origin"] = "https://fastream.to"
+                    hdrs["X-Target-Player"] = "CHROMIUM_PURE"
                 }
             }
         } else if (isDrop) {
@@ -220,6 +221,7 @@ object MediaPlatformResolver {
                     hdrs["Referer"] = "https://dr0pstream.com/e/$id"
                     hdrs["Origin"] = "https://dr0pstream.com"
                     hdrs["User-Agent"] = UA_FASTREAM
+                    hdrs["X-Target-Player"] = "CHROMIUM_PURE"
                 }
             }
         }

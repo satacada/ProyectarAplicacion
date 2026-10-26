@@ -125,34 +125,38 @@ object BrowserUrlHelper {
                 (isFast && refererHost == "fastream.to")
 
             val cm = CookieManager.getInstance()
-            val streamCookie = cm?.getCookie(streamUrl)
-            val refererCookie = when {
-                isDrop -> cm?.getCookie("https://dr0pstream.com") ?: cm?.getCookie(embedUrl)
-                isFast -> cm?.getCookie("https://fastream.to") ?: cm?.getCookie(embedUrl)
-                isSameSite && refererUrl.isNotBlank() -> cm?.getCookie(refererUrl)
-                else -> null
-            }
-            val rawCookie = rawHeaders?.get("Cookie") ?: rawHeaders?.get("cookie")
-
-            val cleanCookie = when {
-                !streamCookie.isNullOrBlank() -> streamCookie
-                !refererCookie.isNullOrBlank() -> refererCookie
-                !rawCookie.isNullOrBlank() -> rawCookie
-                else -> null
-            }
-            if (!cleanCookie.isNullOrBlank()) {
-                headers["Cookie"] = cleanCookie
+            if (isDrop || isFast) {
+                val c1 = cm?.getCookie(streamUrl)
+                val c2 = if (refererUrl.isNotBlank()) cm?.getCookie(refererUrl) else null
+                val c3 = if (currentUrl.isNotBlank()) cm?.getCookie(currentUrl) else null
+                val c4 = cm?.getCookie("https://dr0pstream.com")
+                val c5 = cm?.getCookie("https://dropcdn.io")
+                val c6 = cm?.getCookie("https://fastream.to")
+                val mergedCookies = listOfNotNull(c1, c2, c3, c4, c5, c6, rawHeaders?.get("Cookie"), rawHeaders?.get("cookie"))
+                    .flatMap { it.split("; ") }
+                    .map { it.trim() }
+                    .filter { it.isNotBlank() }
+                    .distinct()
+                    .joinToString("; ")
+                if (mergedCookies.isNotBlank()) headers["Cookie"] = mergedCookies
             } else {
-                headers.remove("Cookie")
+                val streamCookie = cm?.getCookie(streamUrl)
+                val refererCookie = when {
+                    isSameSite && refererUrl.isNotBlank() -> cm?.getCookie(refererUrl)
+                    else -> null
+                }
+                val rawCookie = rawHeaders?.get("Cookie") ?: rawHeaders?.get("cookie")
+                val cleanCookie = streamCookie ?: refererCookie ?: rawCookie
+                if (!cleanCookie.isNullOrBlank()) headers["Cookie"] = cleanCookie else headers.remove("Cookie")
             }
             if (isDrop && id != null) {
                 headers["Referer"] = "https://dr0pstream.com/e/$id"
-                headers.remove("Origin")
+                headers["Origin"] = "https://dr0pstream.com"
                 headers["User-Agent"] = MediaPlatformResolver.UA_FASTREAM
                 headers["Sec-Fetch-Mode"] = "cors"; headers["Sec-Fetch-Site"] = "cross-site"; headers["Sec-Fetch-Dest"] = "empty"
             } else if (isFast && id != null) {
                 headers["Referer"] = "https://fastream.to/embed-$id.html"
-                headers.remove("Origin")
+                headers["Origin"] = "https://fastream.to"
                 headers["User-Agent"] = MediaPlatformResolver.UA_FASTREAM
                 headers["Sec-Fetch-Mode"] = "cors"; headers["Sec-Fetch-Site"] = "cross-site"; headers["Sec-Fetch-Dest"] = "empty"
             } else if (isLulu && luluId != null) {

@@ -55,6 +55,7 @@ object TvWebPlayerHtmlBuilder {
                 function hideSpin() { if (spinner) spinner.style.opacity = '0'; }
                 function showSpin() { if (spinner) spinner.style.opacity = '1'; }
                 function hideCurtain() { if (curtain) { curtain.style.opacity = '0'; curtain.style.pointerEvents = 'none'; } }
+                setTimeout(function() { hideCurtain(); }, 4000);
                 function tryPlay() {
                   if (!vid) return;
                   var p = vid.play();
@@ -78,6 +79,7 @@ object TvWebPlayerHtmlBuilder {
                 vid.addEventListener('loadedmetadata', function() { seekStart(); tryPlay(); }); vid.addEventListener('canplay', function() { seekStart(); tryPlay(); });
                 var hasTriedHls = false;
                 vid.addEventListener('error', function() {
+                  hideCurtain();
                   if (!hasTriedHls && window.Hls && Hls.isSupported() && streamUrl.indexOf('.mp4') === -1) {
                     initHls(); return;
                   }
@@ -101,6 +103,7 @@ object TvWebPlayerHtmlBuilder {
                     var hlsNetRetries = 0;
                     hls.on(Hls.Events.ERROR, function(ev, data) {
                       if (data.fatal) {
+                        hideCurtain();
                         if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
                           if (++hlsNetRetries <= 2) { resetWatchdog(15000); hls.startLoad(); }
                           else {

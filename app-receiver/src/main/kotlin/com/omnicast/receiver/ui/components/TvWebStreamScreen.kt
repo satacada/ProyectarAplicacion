@@ -143,6 +143,7 @@ fun TvWebStreamScreen(
                             settings.mediaPlaybackRequiresUserGesture = false
                             settings.useWideViewPort = true
                             settings.loadWithOverviewMode = true; settings.allowFileAccess = true; settings.allowContentAccess = true
+                            settings.cacheMode = WebSettings.LOAD_NO_CACHE
                             settings.allowFileAccessFromFileURLs = true; settings.allowUniversalAccessFromFileURLs = true
                             settings.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
                             settings.userAgentString = headers["User-Agent"] ?: "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36"

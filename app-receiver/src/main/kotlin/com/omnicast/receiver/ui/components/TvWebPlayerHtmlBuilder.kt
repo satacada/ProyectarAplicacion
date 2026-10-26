@@ -39,14 +39,18 @@ object TvWebPlayerHtmlBuilder {
               <script>
                 var vid = document.getElementById('vplayer'), spinner = document.getElementById('loader'), curtain = document.getElementById('black-curtain');
                 var streamUrl = "$safeUrl", startSec = $startSec, hasResumed = false;
-                var hlsInstance = null;
+                var hlsInstance = null, watchdogTimer = null;
 
-                var watchdogTimer = setTimeout(function() {
-                  if (vid && (vid.currentTime === 0 || vid.paused) && vid.readyState < 3) {
-                    if (window.AndroidBridge && window.AndroidBridge.onPlaybackFailed) window.AndroidBridge.onPlaybackFailed('WATCHDOG_TIMEOUT');
-                  }
-                }, 6000);
                 function clearWatchdog() { if (watchdogTimer) { clearTimeout(watchdogTimer); watchdogTimer = null; } }
+                function resetWatchdog(ms) {
+                  clearWatchdog();
+                  watchdogTimer = setTimeout(function() {
+                    if (vid && (vid.currentTime === 0 || vid.paused) && vid.readyState < 3) {
+                      if (window.AndroidBridge && window.AndroidBridge.onPlaybackFailed) window.AndroidBridge.onPlaybackFailed('WATCHDOG_TIMEOUT');
+                    }
+                  }, ms || 15000);
+                }
+                resetWatchdog(15000);
 
                 function hideSpin() { if (spinner) spinner.style.opacity = '0'; }
                 function showSpin() { if (spinner) spinner.style.opacity = '1'; }
@@ -85,17 +89,20 @@ object TvWebPlayerHtmlBuilder {
                 function initHls() {
                   hasTriedHls = true;
                   if (window.Hls && Hls.isSupported()) {
-                    var hls = new Hls({ enableWorker: true, lowLatencyMode: false, backBufferLength: 90 });
+                    var hls = new Hls({ enableWorker: true, lowLatencyMode: false, backBufferLength: 30, maxBufferLength: 30, maxMaxBufferLength: 60, maxBufferSize: 30 * 1000 * 1000, startFragPrefetch: true });
                     hlsInstance = hls;
                     hls.loadSource(streamUrl);
                     hls.attachMedia(vid);
-                    hls.on(Hls.Events.MANIFEST_PARSED, function() { tryPlay(); });
-                    hls.on(Hls.Events.LEVEL_LOADED, function() { tryPlay(); });
+                    hls.on(Hls.Events.MANIFEST_PARSED, function() { resetWatchdog(12000); tryPlay(); });
+                    hls.on(Hls.Events.LEVEL_LOADED, function() { resetWatchdog(12000); tryPlay(); });
+                    hls.on(Hls.Events.FRAG_LOADING, function() { resetWatchdog(15000); });
+                    hls.on(Hls.Events.FRAG_LOADED, function() { resetWatchdog(12000); });
+                    hls.on(Hls.Events.FRAG_PARSED, function() { tryPlay(); });
                     var hlsNetRetries = 0;
                     hls.on(Hls.Events.ERROR, function(ev, data) {
                       if (data.fatal) {
                         if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
-                          if (++hlsNetRetries <= 2) hls.startLoad();
+                          if (++hlsNetRetries <= 2) { resetWatchdog(15000); hls.startLoad(); }
                           else {
                             clearWatchdog();
                             try { hls.destroy(); } catch(_) {}

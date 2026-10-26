@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 218,
-  "versionCodeReceiver": 201,
-  "versionName": "3.4.68",
-  "releaseTag": "v3.4.68",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.68/omnicast-sender-v3.4.68.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.68/omnicast-receiver-v3.4.68.apk",
-  "changelog": "v3.4.68: Optimización inspirada en Web Video Caster. Hooking y fallback HLS para TCPlayer (Tencent), captura y propagación de subtítulos al vuelo (textTracks), agrupación de calidades en UI con chips de resolución y sonda de enlaces vivos marcando enlaces inaccesibles."
+  "versionCodeSender": 219,
+  "versionCodeReceiver": 202,
+  "versionName": "3.4.69",
+  "releaseTag": "v3.4.69",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.69/omnicast-sender-v3.4.69.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.69/omnicast-receiver-v3.4.69.apk",
+  "changelog": "v3.4.69: Watchdog adaptativo inteligente y aceleración de precaching en TvWebStreamScreen (Hls.js). Erradicación de falso timeout en TV Box de hardware lento (Mad Max/DropCDN), prefetching paralelo de fragmentos (startFragPrefetch), y reporte diferenciado de buffer lento vs HTTP 403."
 }

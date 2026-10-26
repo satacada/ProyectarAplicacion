@@ -115,8 +115,8 @@ fun InAppBrowserScreen(
         val cleanT = if (pageTitle.isNotBlank() && pageTitle != "Cargando..." && pageTitle != "Transmisión") pageTitle else "Video Web"
         ActiveStreamHolder.update(primaryUrl, cleanT, streamHeaders[primaryUrl] ?: hdrs)
         android.util.Log.i("StreamDetection", "🎬 Flujo registrado [isMaster=$isM]: $cleanUrl")
-        if (!showOptionsSheet && !isCasting && userDismissedSheetForUrl != currentUrl) {
-            autoOpenJob?.cancel(); autoOpenJob = scope.launch { kotlinx.coroutines.delay(450L); if (!showOptionsSheet && !isCasting && userDismissedSheetForUrl != currentUrl && detectedStreams.any { isRealMedia(it) }) openOptionsSheet() }
+        if (!showOptionsSheet && userDismissedSheetForUrl != currentUrl) {
+            autoOpenJob?.cancel(); autoOpenJob = scope.launch { kotlinx.coroutines.delay(450L); if (!showOptionsSheet && userDismissedSheetForUrl != currentUrl && detectedStreams.any { isRealMedia(it) }) openOptionsSheet() }
         }
     }
 
@@ -137,7 +137,7 @@ fun InAppBrowserScreen(
     fun navigateTo(url: String) {
         focusManager.clearFocus()
         detectedStreams.clear(); streamHeaders.clear(); streamLabels.clear(); streamDurations.clear(); qualityOptions = emptyList()
-        userDismissedSheetForUrl = ""; ActiveStreamHolder.clearDetectedStream(); showBottomControls = false; pageTitle = "Cargando..."; val target = BrowserUrlHelper.normalizeUrl(url)
+        userDismissedSheetForUrl = ""; ActiveStreamHolder.clear(); showBottomControls = false; pageTitle = "Cargando..."; val target = BrowserUrlHelper.normalizeUrl(url)
         inputUrl = target; currentUrl = target; isHome = false; prefs.edit().putString("saved_browser_last_url", target).apply()
         checkPlatformUrls(target); webViewInstance?.loadUrl(target)
     }

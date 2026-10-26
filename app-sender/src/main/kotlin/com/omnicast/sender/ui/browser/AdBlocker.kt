@@ -212,6 +212,23 @@ object AdBlocker {
                             }
                         } catch(e) {}
                     }
+                    try {
+                        var badPhases = ['actualización del bloqueador', 'actualizar bloqueador', 'actualizar reproductor', 'actualiza tu reproductor', 'update adblocker', 'update player'];
+                        var candidates = doc.querySelectorAll('div, section, p, span, a');
+                        for (var b = 0; b < candidates.length; b++) {
+                            var el = candidates[b];
+                            var tx = (el.textContent || '').toLowerCase().trim();
+                            if (tx.length > 5 && tx.length < 100) {
+                                for (var p = 0; p < badPhases.length; p++) {
+                                    if (tx.indexOf(badPhases[p]) !== -1) {
+                                        var modal = (el.closest && el.closest('div[style*="fixed"], div[style*="absolute"], div[class*="modal"], div[class*="popup"], div[class*="overlay"]')) || el;
+                                        if (!modal.querySelector('video, iframe')) modal.remove();
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    } catch(___) {}
                 }
 
                 function cleanAll() {

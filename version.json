@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 229,
-  "versionCodeReceiver": 212,
-  "versionName": "3.4.79",
-  "releaseTag": "v3.4.79",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.79/omnicast-sender-v3.4.79.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.79/omnicast-receiver-v3.4.79.apk",
-  "changelog": "v3.4.79: Pureza nativa en TvWebStreamScreen (Chromium puro, sin interceptor Java intermediario ni withCredentials artificial), omisión de sondeo Java para flujos con token firmado, catálogo precargado de películas y streamings en historial, badge de calidad dinámico en control remoto y ergonomía táctil en barra de navegación."
+  "versionCodeSender": 230,
+  "versionCodeReceiver": 213,
+  "versionName": "3.4.80",
+  "releaseTag": "v3.4.80",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.80/omnicast-sender-v3.4.80.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.80/omnicast-receiver-v3.4.80.apk",
+  "changelog": "v3.4.80: Restauración pura de v3.32.94: 3 opciones de calidad HLS para master.m3u8, apertura automática del modal de calidad sin bloqueo por isCasting, eliminación del falso modal publicitario de actualización de bloqueador, y en TV Box fallback nativo de video sin expulsión artificial a Standby por watchdog."
 }

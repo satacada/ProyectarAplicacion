@@ -46,7 +46,7 @@ object TvWebPlayerHtmlBuilder {
                   clearWatchdog();
                   watchdogTimer = setTimeout(function() {
                     if (vid && (vid.currentTime === 0 || vid.paused) && vid.readyState < 3) {
-                      if (window.AndroidBridge && window.AndroidBridge.onPlaybackFailed) window.AndroidBridge.onPlaybackFailed('WATCHDOG_TIMEOUT');
+                      tryPlay();
                     }
                   }, ms || 15000);
                 }
@@ -104,15 +104,15 @@ object TvWebPlayerHtmlBuilder {
                         if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
                           if (++hlsNetRetries <= 2) { resetWatchdog(15000); hls.startLoad(); }
                           else {
-                            clearWatchdog();
                             try { hls.destroy(); } catch(_) {}
-                            if (window.AndroidBridge && window.AndroidBridge.onPlaybackFailed) window.AndroidBridge.onPlaybackFailed('HLS_NET_403');
+                            vid.src = streamUrl;
+                            tryPlay();
                           }
                         } else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) hls.recoverMediaError();
                         else {
-                          clearWatchdog();
                           try { hls.destroy(); } catch(_) {}
-                          if (window.AndroidBridge && window.AndroidBridge.onPlaybackFailed) window.AndroidBridge.onPlaybackFailed('HLS_FATAL');
+                          vid.src = streamUrl;
+                          tryPlay();
                         }
                       }
                     });

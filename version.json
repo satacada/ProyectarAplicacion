@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 228,
-  "versionCodeReceiver": 211,
-  "versionName": "3.4.78",
-  "releaseTag": "v3.4.78",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.78/omnicast-sender-v3.4.78.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.78/omnicast-receiver-v3.4.78.apk",
-  "changelog": "v3.4.78: Herencia limpia de cookies de sesión de embed canónico (dr0pstream.com / fastream.to) para servidores CDN DropCDN y Fastream hacia ExoPlayer, garantizando autorización de streaming sin descarte same-site."
+  "versionCodeSender": 229,
+  "versionCodeReceiver": 212,
+  "versionName": "3.4.79",
+  "releaseTag": "v3.4.79",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.79/omnicast-sender-v3.4.79.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.79/omnicast-receiver-v3.4.79.apk",
+  "changelog": "v3.4.79: Pureza nativa en TvWebStreamScreen (Chromium puro, sin interceptor Java intermediario ni withCredentials artificial), omisión de sondeo Java para flujos con token firmado, catálogo precargado de películas y streamings en historial, badge de calidad dinámico en control remoto y ergonomía táctil en barra de navegación."
 }

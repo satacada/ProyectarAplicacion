@@ -51,6 +51,8 @@ fun RemoteExpandedControls(
     isSaved: Boolean = false
 ) {
     val context = LocalContext.current
+    val qualityLabels = remember { listOf("Auto", "1080p", "720p", "480p", "360p") }
+    var qualityIdx by remember { mutableIntStateOf(0) }
     Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 2.dp)) {
 
         // ========================================================
@@ -134,17 +136,27 @@ fun RemoteExpandedControls(
                     ) {
                         Icon(Icons.Rounded.Subtitles, contentDescription = "Subtítulos", tint = Color(0xFF60A5FA), modifier = Modifier.size(17.dp))
                     }
-                    IconButton(
-                        onClick = {
-                            SignalingClientHolder.get().sendMessage(SignalingMessage.PlayControl("CYCLE_QUALITY"))
-                            Toast.makeText(context, "📺 Cambiando Calidad", Toast.LENGTH_SHORT).show()
-                        },
+                    Box(
                         modifier = Modifier
-                            .size(34.dp)
-                            .background(Color(0xFF1E2B4A), RoundedCornerShape(8.dp))
+                            .height(34.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(Color(0xFF1E2B4A))
                             .border(1.dp, Color(0xFF3B82F6), RoundedCornerShape(8.dp))
+                            .clickable {
+                                qualityIdx = (qualityIdx + 1) % qualityLabels.size
+                                SignalingClientHolder.get().sendMessage(SignalingMessage.PlayControl("CYCLE_QUALITY"))
+                                Toast.makeText(context, "📺 Calidad: ${qualityLabels[qualityIdx]}", Toast.LENGTH_SHORT).show()
+                            }
+                            .padding(horizontal = 6.dp),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Icon(Icons.Rounded.Hd, contentDescription = "Calidad", tint = Color(0xFF60A5FA), modifier = Modifier.size(17.dp))
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(2.dp)
+                        ) {
+                            Icon(Icons.Rounded.Hd, contentDescription = "Calidad", tint = Color(0xFF60A5FA), modifier = Modifier.size(16.dp))
+                            Text(qualityLabels[qualityIdx], color = Color(0xFF38BDF8), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                        }
                     }
                 }
             }

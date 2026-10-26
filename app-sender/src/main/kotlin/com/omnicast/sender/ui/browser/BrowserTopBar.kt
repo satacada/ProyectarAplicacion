@@ -86,16 +86,16 @@ fun BrowserTopBar(
                 .fillMaxWidth()
                 .padding(horizontal = 4.dp, vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(2.dp)
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            IconButton(onClick = onOpenDrawer, modifier = Modifier.size(26.dp)) {
-                Icon(Icons.Rounded.Menu, contentDescription = "Menú", tint = Color(0xFF94A3B8), modifier = Modifier.size(16.dp))
+            IconButton(onClick = onOpenDrawer, modifier = Modifier.size(29.dp)) {
+                Icon(Icons.Rounded.Menu, contentDescription = "Menú", tint = Color(0xFF94A3B8), modifier = Modifier.size(20.dp))
             }
-            IconButton(onClick = onBack, modifier = Modifier.size(26.dp)) {
-                Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Atrás", tint = Color(0xFFCBD5E1), modifier = Modifier.size(16.dp))
+            IconButton(onClick = onBack, modifier = Modifier.size(29.dp)) {
+                Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Atrás", tint = Color(0xFFCBD5E1), modifier = Modifier.size(20.dp))
             }
-            IconButton(onClick = onForward, enabled = canGoForward, modifier = Modifier.size(26.dp)) {
-                Icon(Icons.AutoMirrored.Rounded.ArrowForward, contentDescription = "Adelante", tint = if (canGoForward) Color(0xFFCBD5E1) else Color(0xFF475569), modifier = Modifier.size(16.dp))
+            IconButton(onClick = onForward, enabled = canGoForward, modifier = Modifier.size(29.dp)) {
+                Icon(Icons.AutoMirrored.Rounded.ArrowForward, contentDescription = "Adelante", tint = if (canGoForward) Color(0xFFCBD5E1) else Color(0xFF475569), modifier = Modifier.size(20.dp))
             }
 
             Row(
@@ -135,26 +135,22 @@ fun BrowserTopBar(
                 )
                 if (textFieldValue.text.isNotBlank()) {
                     IconButton(onClick = { textFieldValue = TextFieldValue(""); onInputUrlChange("") }, modifier = Modifier.size(22.dp)) {
-                        Icon(Icons.Rounded.Close, contentDescription = "Borrar", tint = Color(0xFF94A3B8), modifier = Modifier.size(13.dp))
+                        Icon(Icons.Rounded.Close, contentDescription = "Borrar", tint = Color(0xFF94A3B8), modifier = Modifier.size(14.dp))
                     }
-                    Spacer(modifier = Modifier.width(2.dp))
-                }
-                IconButton(onClick = onReload, modifier = Modifier.size(22.dp)) {
-                    Icon(Icons.Rounded.Refresh, contentDescription = "Recargar", tint = Color(0xFFCBD5E1), modifier = Modifier.size(15.dp))
                 }
             }
 
             if (isCasting && isPlaying) {
                 IconButton(
                     onClick = onToggleBottomControls,
-                    modifier = Modifier.size(26.dp)
+                    modifier = Modifier.size(29.dp)
                 ) {
                     Box(contentAlignment = Alignment.TopEnd) {
                         Icon(
                             Icons.Rounded.PlayArrow,
                             contentDescription = "Controles Multimedia",
                             tint = if (showBottomControls) Color(0xFF38BDF8) else Color(0xFF10B981),
-                            modifier = Modifier.size(19.dp)
+                            modifier = Modifier.size(20.dp)
                         )
                         Box(
                             modifier = Modifier
@@ -163,18 +159,19 @@ fun BrowserTopBar(
                         )
                     }
                 }
+                Spacer(modifier = Modifier.width(2.dp))
             }
 
             Box(contentAlignment = Alignment.TopEnd) {
                 IconButton(
                     onClick = onOpenDetectedVideos,
-                    modifier = Modifier.size(26.dp)
+                    modifier = Modifier.size(29.dp)
                 ) {
                     Icon(
                         Icons.Rounded.Tv,
                         contentDescription = "Videos Detectados",
                         tint = if (detectedStreamsCount > 0) Color(0xFFFF9800) else Color(0xFF94A3B8),
-                        modifier = Modifier.size(18.dp)
+                        modifier = Modifier.size(20.dp)
                     )
                 }
 
@@ -197,8 +194,8 @@ fun BrowserTopBar(
             }
 
             Box {
-                IconButton(onClick = { showMenu = true }, modifier = Modifier.size(26.dp)) {
-                    Icon(Icons.Rounded.MoreVert, contentDescription = "Opciones", tint = Color.White, modifier = Modifier.size(16.dp))
+                IconButton(onClick = { showMenu = true }, modifier = Modifier.size(29.dp)) {
+                    Icon(Icons.Rounded.MoreVert, contentDescription = "Opciones", tint = Color.White, modifier = Modifier.size(20.dp))
                 }
 
                 DropdownMenu(

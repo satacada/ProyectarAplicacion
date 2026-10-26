@@ -149,8 +149,8 @@ fun InAppBrowserScreen(
         val refPage = savedPageUrl?.takeIf { it.isNotBlank() } ?: currentUrl
         pageTitle = cleanT; com.omnicast.sender.history.NavigationTrackManager.saveTrackLocally(context, refPage, cleanT)
         scope.launch(Dispatchers.IO) {
-            val (finalUrl, finalHdrs) = MediaPlatformResolver.prepareStreamForPlayback(url, refPage, hdrs)
-            val probe = StreamQualityDetector.probeAndHealStream(finalUrl, finalHdrs, refPage)
+            val (finalUrl, finalHdrs) = MediaPlatformResolver.prepareStreamForPlayback(url, refPage, hdrs); val isSigned = com.omnicast.core.domain.usecases.StreamManifestProbe.hasSignedSecurityToken(finalUrl)
+            val probe = if (isSigned) com.omnicast.core.domain.usecases.StreamManifestProbe.ProbeResult(true, finalUrl, finalHdrs, httpCode = 200) else StreamQualityDetector.probeAndHealStream(finalUrl, finalHdrs, refPage)
             if (!probe.isPlayable && (probe.httpCode == 404 || probe.httpCode == 410)) {
                 withContext(Dispatchers.Main) {
                     testedFailed.add(url); testedFailed.add(finalUrl)

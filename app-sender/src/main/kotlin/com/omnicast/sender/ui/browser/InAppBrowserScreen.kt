@@ -56,10 +56,7 @@ fun InAppBrowserScreen(
 
     fun deleteMovieFromSaved() {
         val primary = ActiveStreamHolder.streamUrl?.takeIf { it.isNotBlank() } ?: detectedStreams.firstOrNull() ?: ""
-        if (primary.isNotBlank()) {
-            historyManager.remove(primary); playlistManager.getPlaylists().forEach { pl -> playlistManager.removeItemFromPlaylist(pl.id, primary) }
-            playlistsVersion++; Toast.makeText(context, "🗑️ Video eliminado de guardados", Toast.LENGTH_SHORT).show()
-        }
+        if (primary.isNotBlank()) { historyManager.remove(primary); playlistManager.getPlaylists().forEach { pl -> playlistManager.removeItemFromPlaylist(pl.id, primary) }; playlistsVersion++; Toast.makeText(context, "🗑️ Video eliminado de guardados", Toast.LENGTH_SHORT).show() }
     }
 
     fun toggleBookmark() {
@@ -110,22 +107,24 @@ fun InAppBrowserScreen(
     fun registerStream(url: String, hdrs: Map<String, String>, isPrimary: Boolean = false, label: String? = null) {
         val cleanUrl = BrowserUrlHelper.sanitizeMediaUrl(url)
         if (cleanUrl.isBlank() || AdBlocker.isAd(cleanUrl) || AdBlocker.isVideoAd(cleanUrl) || !isRealMedia(cleanUrl) || BrowserUrlHelper.extractYouTubeId(cleanUrl) != null) return
-        val isM = isPrimary || cleanUrl.contains("master", true) || cleanUrl.contains("playlist", true)
-        val key = BrowserUrlHelper.extractMediaIdentityKey(cleanUrl)
-        val existingIndex = detectedStreams.indexOfFirst { it == cleanUrl || (key.isNotBlank() && BrowserUrlHelper.extractMediaIdentityKey(it) == key) }
+        val derivedMaster = BrowserUrlHelper.deriveMasterPlaylistUrl(cleanUrl)
+        val targetUrl = if (derivedMaster != null && !cleanUrl.contains("master", true)) derivedMaster else cleanUrl
+        val isM = targetUrl.contains("master", true) || targetUrl.contains("playlist", true) || targetUrl.contains(".mpd", true)
+        val key = BrowserUrlHelper.extractMediaIdentityKey(targetUrl)
+        val existingIndex = detectedStreams.indexOfFirst { it == targetUrl || (key.isNotBlank() && BrowserUrlHelper.extractMediaIdentityKey(it) == key) }
         if (existingIndex >= 0) {
             val existingUrl = detectedStreams[existingIndex]
-            val existingIsM = existingUrl.contains("master", true) || existingUrl.contains("playlist", true)
+            val existingIsM = existingUrl.contains("master", true) || existingUrl.contains("playlist", true) || existingUrl.contains(".mpd", true)
             if (existingIsM && !isM) return
             detectedStreams.removeAt(existingIndex); streamHeaders.remove(existingUrl); streamLabels.remove(existingUrl)
         }
-        val nonM = detectedStreams.indexOfFirst { !it.contains("master", true) && !it.contains("playlist", true) }
-        if (isM) detectedStreams.add(0, cleanUrl) else if (nonM >= 0) detectedStreams.add(nonM, cleanUrl) else detectedStreams.add(cleanUrl)
-        if (hdrs.isNotEmpty()) streamHeaders[cleanUrl] = hdrs; if (!label.isNullOrBlank()) streamLabels[cleanUrl] = label
-        val primaryUrl = detectedStreams.firstOrNull { it.contains("master", true) } ?: detectedStreams.firstOrNull { isRealMedia(it) } ?: cleanUrl
+        val nonM = detectedStreams.indexOfFirst { !it.contains("master", true) && !it.contains("playlist", true) && !it.contains(".mpd", true) }
+        if (isM) detectedStreams.add(0, targetUrl) else if (nonM >= 0) detectedStreams.add(nonM, targetUrl) else detectedStreams.add(targetUrl)
+        if (hdrs.isNotEmpty()) streamHeaders[targetUrl] = hdrs; if (!label.isNullOrBlank()) streamLabels[targetUrl] = label
+        val primaryUrl = detectedStreams.firstOrNull { it.contains("master", true) } ?: detectedStreams.firstOrNull { isRealMedia(it) } ?: targetUrl
         val cleanT = if (pageTitle.isNotBlank() && pageTitle != "Cargando..." && pageTitle != "Transmisión") pageTitle else "Video Web"
         ActiveStreamHolder.update(primaryUrl, cleanT, streamHeaders[primaryUrl] ?: hdrs)
-        android.util.Log.i("StreamDetection", "🎬 Flujo registrado [isMaster=$isM, freshToken=true]: $cleanUrl")
+        android.util.Log.i("StreamDetection", "🎬 Flujo registrado [isMaster=$isM, freshToken=true]: $targetUrl")
         if (!showOptionsSheet && !isCasting && userDismissedSheetForUrl != currentUrl) {
             autoOpenJob?.cancel()
             autoOpenJob = scope.launch {

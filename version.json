@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 257,
-  "versionCodeReceiver": 240,
-  "versionName": "3.5.6",
-  "releaseTag": "v3.5.6",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.6/omnicast-sender-v3.5.6.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.6/omnicast-receiver-v3.5.6.apk",
-  "changelog": "v3.5.6: Principio del Token Fresco (limpieza total de flujos al refrescar, reemplazo síncrono del token más nuevo sobre el antiguo), absorción de sub-variantes de Fastream (master.m3u8 sobre index-v1-a1), botón de casteo circular (#FF9800 CircleShape) con icono Google Cast blanco e insignia roja, botón de controles multimedia Play (Icons.Rounded.PlayArrow) visible únicamente al proyectar a TV, y arquitectura modular de blindaje Web Video Caster (WvcShieldSecurityEngine: anulación preventiva de window.open, neutralización de pushState abusivo, corte de WebSockets de anuncios y supresión de redirecciones retardadas sin gestos)."
+  "versionCodeSender": 258,
+  "versionCodeReceiver": 241,
+  "versionName": "3.5.7",
+  "releaseTag": "v3.5.7",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.7/omnicast-sender-v3.5.7.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.7/omnicast-receiver-v3.5.7.apk",
+  "changelog": "v3.5.7: Blindaje anti-congelamiento en TV Box (Hls.js con límite estricto de 30MB en RAM, backBuffer de 10s, supresión de timeupdate, guardado en disco del historial throttled a 15s/30s y limpieza de memoria periódica freeMemory) e intocabilidad del master.m3u8 en Sender (prohibición estricta de que index-v1-a1 o el DOM sniffer sobreescriban al maestro, con reconstrucción automática de master.m3u8 en Fastream/DropCDN para garantizar selectores de resolución 1080p, 720p y Adaptive permanentemente)."
 }

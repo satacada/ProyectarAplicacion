@@ -196,7 +196,7 @@ class TvReceiverActivity : ComponentActivity() {
                     if (!ytId.isNullOrBlank()) {
                         exoPlayerManager.stop(); receiverState.value = ReceiverUiState.YouTubePlaying(ytId, title, System.currentTimeMillis())
                     } else if (TvReceiverHelper.shouldUseWebPlayer(message.mediaUrl, message.headers)) {
-                        exoPlayerManager.stop()
+                        exoPlayerManager.stop("WebStream"); webRtcReceiver.resetConnection()
                         receiverState.value = ReceiverUiState.WebStreamPlaying(message.mediaUrl, title, message.headers, message.startPositionMs, subtitles = message.subtitles)
                     } else {
                         val br = com.omnicast.core.domain.models.MediaBranch.entries.firstOrNull { it.name.equals(message.branch, true) } ?: com.omnicast.core.domain.models.MediaBranch.VOD_HLS_MP4

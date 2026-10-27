@@ -51,12 +51,9 @@ class WebStreamBridge(
 
 private object WebPlayerAssetHelper {
     private var cachedHlsJs: String? = null
-    fun getHlsJs(context: Context): String {
-        cachedHlsJs?.let { return it }
-        return try {
-            context.assets.open("hls.light.min.js").bufferedReader().use { it.readText() }.also { cachedHlsJs = it }
-        } catch (_: Throwable) { "" }
-    }
+    fun getHlsJs(context: Context): String = cachedHlsJs ?: try {
+        context.assets.open("hls.light.min.js").bufferedReader().use { it.readText() }.also { cachedHlsJs = it }
+    } catch (_: Throwable) { "" }
 }
 
 /**
@@ -92,6 +89,13 @@ fun TvWebStreamScreen(
         val dm = displayMode ?: return@LaunchedEffect
         val wv = webViewRef ?: return@LaunchedEffect
         wv.evaluateJavascript("if (typeof setDisplayMode === 'function') setDisplayMode('${dm.mode}', ${dm.zoom}, ${dm.panY});", null)
+    }
+
+    LaunchedEffect(webViewRef) {
+        while (true) {
+            delay(300_000L)
+            try { webViewRef?.freeMemory() } catch (_: Throwable) {}
+        }
     }
 
     LaunchedEffect(commandFlow, webViewRef) {
@@ -196,7 +200,6 @@ fun TvWebStreamScreen(
                                       }
                                     }
 
-                                    vid.addEventListener('timeupdate', reportStatus);
                                     vid.addEventListener('play', reportStatus);
                                     vid.addEventListener('pause', reportStatus);
                                     vid.addEventListener('ended', reportStatus);
@@ -212,7 +215,7 @@ fun TvWebStreamScreen(
 
                                     function initHls() {
                                       if (window.Hls && Hls.isSupported()) {
-                                        var hls = new Hls({ enableWorker: true, lowLatencyMode: false, backBufferLength: 90 });
+                                        var hls = new Hls({ enableWorker: true, lowLatencyMode: false, backBufferLength: 10, maxBufferLength: 20, maxMaxBufferLength: 30, maxBufferSize: 30 * 1024 * 1024 });
                                         hls.loadSource(streamUrl);
                                         hls.attachMedia(vid);
                                         hls.on(Hls.Events.MANIFEST_PARSED, function() { vid.play().catch(function(){}); });
@@ -251,7 +254,7 @@ fun TvWebStreamScreen(
                                       else { vid.style.objectFit = 'contain'; vid.style.transform = 'scale(' + (zoom || 1.0) + ') translateY(' + (panY || 0) + 'px)'; }
                                     }
 
-                                    setInterval(reportStatus, 1000);
+                                    setInterval(reportStatus, 5000);
                                   </script>
                                 </body>
                                 </html>
@@ -267,6 +270,7 @@ fun TvWebStreamScreen(
                             webView.loadUrl("about:blank")
                             webView.clearHistory()
                             webView.removeAllViews()
+                            webView.freeMemory()
                             webView.destroy()
                         } catch (_: Throwable) {}
                     },

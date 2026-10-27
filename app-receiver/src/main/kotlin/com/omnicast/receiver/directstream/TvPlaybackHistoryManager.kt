@@ -37,6 +37,8 @@ class TvPlaybackHistoryManager(private val context: Context) {
 
     private val _history = MutableStateFlow<List<TvHistoryItem>>(emptyList())
     val history: StateFlow<List<TvHistoryItem>> = _history.asStateFlow()
+    private var lastDiskSaveTime = 0L
+    private var lastDiskSavePosition = 0L
 
     init {
         loadHistory()
@@ -110,7 +112,13 @@ class TvPlaybackHistoryManager(private val context: Context) {
             val old = current[idx]
             current[idx] = old.copy(lastPositionMs = positionMs, durationMs = durationMs, updatedAt = System.currentTimeMillis())
             _history.value = current
-            try { historyFile.writeText(json.encodeToString(current)) } catch (_: Throwable) {}
+            val now = System.currentTimeMillis()
+            val posDelta = kotlin.math.abs(positionMs - lastDiskSavePosition)
+            if (posDelta >= 15_000L || now - lastDiskSaveTime >= 30_000L) {
+                lastDiskSaveTime = now
+                lastDiskSavePosition = positionMs
+                try { historyFile.writeText(json.encodeToString(current)) } catch (_: Throwable) {}
+            }
         }
     }
 

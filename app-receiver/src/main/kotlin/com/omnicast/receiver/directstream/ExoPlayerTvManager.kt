@@ -223,11 +223,12 @@ class ExoPlayerTvManager(private val context: Context) {
         }
         val lower = url.lowercase()
         val isOk = lower.contains("mycdn.me") || lower.contains("okcdn.ru")
+        val isOkDash = isOk && (lower.contains("ct=6") || lower.contains("format=dash"))
         val isOkHls = isOk && (lower.contains("/hls") || lower.contains("m3u8") || lower.contains("format=hls"))
         val isTxtHls = (lower.contains(".txt") || lower.contains(".txt?")) && (lower.contains("/hls") || lower.contains("master") || lower.contains("index"))
         val inferred = when {
             branch == com.omnicast.core.domain.models.MediaBranch.AUDIO_ONLY || lower.contains(".mp3") || lower.contains(".aac") -> androidx.media3.common.MimeTypes.AUDIO_MPEG
-            branch == com.omnicast.core.domain.models.MediaBranch.DASH_MPD || lower.contains(".mpd") || lower.contains("dash") -> androidx.media3.common.MimeTypes.APPLICATION_MPD
+            branch == com.omnicast.core.domain.models.MediaBranch.DASH_MPD || lower.contains(".mpd") || lower.contains("dash") || isOkDash -> androidx.media3.common.MimeTypes.APPLICATION_MPD
             lower.contains(".m3u8") || lower.contains("m3u8") || lower.contains("/hls") || isOkHls || isTxtHls -> androidx.media3.common.MimeTypes.APPLICATION_M3U8
             lower.contains(".webm") -> androidx.media3.common.MimeTypes.VIDEO_WEBM
             else -> androidx.media3.common.MimeTypes.APPLICATION_MP4
@@ -238,7 +239,7 @@ class ExoPlayerTvManager(private val context: Context) {
         return builder.build()
     }
 
-    private fun filterSafeHeaders(@Suppress("UNUSED_PARAMETER") url: String, headers: Map<String, String>): Map<String, String> {
+    private fun filterSafeHeaders(url: String, headers: Map<String, String>): Map<String, String> {
         val allowed = mutableMapOf<String, String>()
         headers.forEach { (k, v) ->
             if (v.isNotBlank()) {
@@ -250,9 +251,11 @@ class ExoPlayerTvManager(private val context: Context) {
                 }
             }
         }
+        val lower = url.lowercase()
+        if ((lower.contains("mycdn.me") || lower.contains("okcdn.ru")) && !allowed.containsKey("Referer")) {
+            allowed["Referer"] = "https://ok.ru/"
+        }
         if (!allowed.containsKey("User-Agent")) allowed["User-Agent"] = DEFAULT_UA
-        // Por qué: En sockets nativos de ExoPlayer queda prohibido enviar 'Origin';
-        // CDNs como DropCDN/Fastream activan validaciones CORS innecesarias y devuelven 403.
         return allowed
     }
 

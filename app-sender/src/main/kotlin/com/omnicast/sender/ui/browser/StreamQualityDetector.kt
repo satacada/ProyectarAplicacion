@@ -57,12 +57,15 @@ object StreamQualityDetector {
                 currentMediaUrl.replace(Regex("/type/\\d+"), "/type/$t")
             } else currentMediaUrl.replace(Regex("type=\\d+"), "type=$t")
             val u1080 = withType(5); val u720 = withType(4); val u480 = withType(3); val u360 = withType(2)
+            val isDash = lower.contains("ct=6")
+            val masterFmt = if (isDash) "mpd (DASH)" else "mp4 (Adaptive)"
+            val subFmt = if (isDash) "mpd" else "mp4"
             return@withContext listOf(
-                StreamQualityOption("${prefix}Película Adaptativa", "Adaptive", "Adaptativa", currentMediaUrl, isMaster = true, isMovie = true, isSuggested = true, healedHeaders = okHeaders, fileName = "master", formatDetail = "mp4 (Adaptive)", groupKey = mediaUrl),
-                StreamQualityOption("${prefix}1080p Full HD", "1080p", "Full HD", u1080, isMaster = false, isMovie = true, isSuggested = false, healedHeaders = okHeaders, fileName = "video-1080p", formatDetail = "mp4 (1080p)", groupKey = mediaUrl),
-                StreamQualityOption("${prefix}720p HD", "720p", "HD", u720, isMaster = false, isMovie = true, isSuggested = false, healedHeaders = okHeaders, fileName = "video-720p", formatDetail = "mp4 (720p)", groupKey = mediaUrl),
-                StreamQualityOption("${prefix}480p SD", "480p", "SD", u480, isMaster = false, isMovie = true, isSuggested = false, healedHeaders = okHeaders, fileName = "video-480p", formatDetail = "mp4 (480p)", groupKey = mediaUrl),
-                StreamQualityOption("${prefix}360p", "360p", "Baja", u360, isMaster = false, isMovie = true, isSuggested = false, healedHeaders = okHeaders, fileName = "video-360p", formatDetail = "mp4 (360p)", groupKey = mediaUrl)
+                StreamQualityOption("${prefix}Película Adaptativa", "Adaptive", "Adaptativa", currentMediaUrl, isMaster = true, isMovie = true, isSuggested = true, healedHeaders = okHeaders, fileName = "master", formatDetail = masterFmt, groupKey = mediaUrl),
+                StreamQualityOption("${prefix}1080p Full HD", "1080p", "Full HD", u1080, isMaster = false, isMovie = true, isSuggested = false, healedHeaders = okHeaders, fileName = "video-1080p", formatDetail = "$subFmt (1080p)", groupKey = mediaUrl),
+                StreamQualityOption("${prefix}720p HD", "720p", "HD", u720, isMaster = false, isMovie = true, isSuggested = false, healedHeaders = okHeaders, fileName = "video-720p", formatDetail = "$subFmt (720p)", groupKey = mediaUrl),
+                StreamQualityOption("${prefix}480p SD", "480p", "SD", u480, isMaster = false, isMovie = true, isSuggested = false, healedHeaders = okHeaders, fileName = "video-480p", formatDetail = "$subFmt (480p)", groupKey = mediaUrl),
+                StreamQualityOption("${prefix}360p", "360p", "Baja", u360, isMaster = false, isMovie = true, isSuggested = false, healedHeaders = okHeaders, fileName = "video-360p", formatDetail = "$subFmt (360p)", groupKey = mediaUrl)
             )
         }
 

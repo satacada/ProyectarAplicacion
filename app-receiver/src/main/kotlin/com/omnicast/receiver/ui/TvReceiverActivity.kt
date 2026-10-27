@@ -199,7 +199,8 @@ class TvReceiverActivity : ComponentActivity() {
                         exoPlayerManager.stop("WebStream"); webRtcReceiver.resetConnection()
                         receiverState.value = ReceiverUiState.WebStreamPlaying(message.mediaUrl, title, message.headers, message.startPositionMs, subtitles = message.subtitles)
                     } else {
-                        val br = com.omnicast.core.domain.models.MediaBranch.entries.firstOrNull { it.name.equals(message.branch, true) } ?: com.omnicast.core.domain.models.MediaBranch.VOD_HLS_MP4
+                        val defBr = if (message.mediaUrl.contains(".mpd", true) || message.mediaUrl.contains("ct=6")) com.omnicast.core.domain.models.MediaBranch.DASH_MPD else com.omnicast.core.domain.models.MediaBranch.VOD_HLS_MP4
+                        val br = com.omnicast.core.domain.models.MediaBranch.entries.firstOrNull { it.name.equals(message.branch, true) } ?: defBr
                         receiverState.value = ReceiverUiState.DirectStreamPlaying(message.mediaUrl, title)
                         exoPlayerManager.playStream(message.mediaUrl, message.headers, title, message.startPositionMs, br, message.subtitles)
                         lifecycleScope.launch { historyManager.addOrUpdate(message.mediaUrl, title, message.headers, message.startPositionMs) }

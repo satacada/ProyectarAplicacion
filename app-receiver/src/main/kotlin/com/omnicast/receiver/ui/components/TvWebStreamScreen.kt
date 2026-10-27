@@ -81,6 +81,10 @@ fun TvWebStreamScreen(
     var webViewRef by remember(streamUrl, timestamp) { mutableStateOf<WebView?>(null) }
 
     LaunchedEffect(streamUrl, timestamp) { delay(4000); showBanner = false }
+    LaunchedEffect(streamUrl) {
+        val l = streamUrl.lowercase()
+        if (l.contains("ct=6") || l.contains("format=dash") || l.contains(".mpd")) onPlaybackFailed?.invoke("DASH_FLOW")
+    }
     LaunchedEffect(displayMode, webViewRef) {
         val dm = displayMode ?: return@LaunchedEffect; val wv = webViewRef ?: return@LaunchedEffect
         wv.evaluateJavascript("if (typeof setDisplayMode === 'function') setDisplayMode('${dm.mode}', ${dm.zoom}, ${dm.panY});", null)
@@ -141,6 +145,10 @@ fun TvWebStreamScreen(
                             settings.userAgentString = headers["User-Agent"] ?: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
                             CookieManager.getInstance().setAcceptCookie(true)
                             CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
+                            addJavascriptInterface(object {
+                                @android.webkit.JavascriptInterface
+                                fun onPlaybackStatus(c: Double, d: Double, p: Boolean) { onPlaybackStatus?.invoke((c * 1000).toLong(), (d * 1000).toLong(), p) }
+                            }, "AndroidBridge")
                             webViewClient = object : WebViewClient() {
                                 override fun shouldInterceptRequest(v: WebView?, r: WebResourceRequest?): WebResourceResponse? =
                                     TvWebResourceInterceptor.shouldIntercept(r, headers) ?: super.shouldInterceptRequest(v, r)

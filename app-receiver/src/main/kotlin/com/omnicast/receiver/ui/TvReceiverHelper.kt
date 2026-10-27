@@ -37,14 +37,17 @@ object TvReceiverHelper {
         if (target == "EXOPLAYER") return false
 
         val lowerUrl = url.lowercase()
+        val isDash = lowerUrl.contains(".mpd") || lowerUrl.contains("format=dash") ||
+                     ((lowerUrl.contains("okcdn.ru") || lowerUrl.contains("mycdn.me")) && (lowerUrl.contains("ct=6") || !lowerUrl.contains(".m3u8")))
+        if (isDash) return false
+
         val ref = headers["Referer"]?.lowercase() ?: ""
         val isProtectedEmbed = ref.contains("dr0pstream.com") || ref.contains("dropcdn.io") ||
                                ref.contains("fastream.to") || ref.contains("luluvdo.com") ||
                                ref.contains("lulustream.com") || ref.contains("pelisgo") ||
-                               ref.contains("ok.ru") || ref.contains("vk.com") ||
+                               ref.contains("vk.com") ||
                                lowerUrl.contains("dropcdn.io") || lowerUrl.contains("dr0pstream.com") ||
-                               lowerUrl.contains("fastream.to") || lowerUrl.contains("okcdn.ru") ||
-                               lowerUrl.contains("mycdn.me")
+                               lowerUrl.contains("fastream.to")
         val hasSessionCookies = !headers["Cookie"].isNullOrBlank()
         val hasSignedToken = com.omnicast.core.domain.usecases.StreamManifestProbe.hasSignedSecurityToken(url)
 

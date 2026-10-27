@@ -235,22 +235,6 @@ fun BrowserWebView(
 
                 webChromeClient = object : WebChromeClient() {
                     override fun onCreateWindow(view: WebView?, isDialog: Boolean, isUserGesture: Boolean, resultMsg: android.os.Message?): Boolean {
-                        val transport = resultMsg?.obj as? WebView.WebViewTransport
-                        if (transport != null && view != null) {
-                            val tempWebView = WebView(view.context)
-                            tempWebView.webViewClient = object : WebViewClient() {
-                                override fun shouldOverrideUrlLoading(v: WebView?, req: WebResourceRequest?): Boolean {
-                                    val destUrl = req?.url?.toString()
-                                    if (!destUrl.isNullOrBlank() && !AdBlocker.isAd(destUrl)) {
-                                        view.loadUrl(destUrl)
-                                    }
-                                    return true
-                                }
-                            }
-                            transport.webView = tempWebView
-                            resultMsg.sendToTarget()
-                            return true
-                        }
                         return false
                     }
 

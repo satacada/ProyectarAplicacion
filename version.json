@@ -1,9 +1,10 @@
 {
-  "versionCodeSender": 246,
-  "versionCodeReceiver": 229,
-  "versionName": "3.4.96",
-  "releaseTag": "v3.4.96",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.96/omnicast-sender-v3.4.96.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.96/omnicast-receiver-v3.4.96.apk",
-  "changelog": "v3.4.96: Detección universal de flujos por patrón de comportamiento puro (hasActiveDirectStream / hasBlobOrMseVideo) en universal_sniffer.js, capturando payloads de OK.ru, VK, Vimeo y reproductores MSE sin nombres en duro y con exclusión mutua estricta de portales directos ya resueltos."
+  "versionCodeSender": 247,
+  "versionCodeReceiver": 230,
+  "versionName": "3.4.97",
+  "releaseTag": "v3.4.97",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.97/omnicast-sender-v3.4.97.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.97/omnicast-receiver-v3.4.97.apk",
+  "changelog": "v3.4.97: Deduplicación limpia por raíz de enlace multimedia con token fresco permanente, auto-apertura proactiva restaurada sin bloqueo por descarte previo, supresión nativa de popups en onCreateWindow y deduplicación estricta de claves de cookies."
 }
+

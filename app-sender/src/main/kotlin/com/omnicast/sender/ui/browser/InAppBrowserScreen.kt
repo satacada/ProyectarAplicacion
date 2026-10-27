@@ -96,7 +96,9 @@ fun InAppBrowserScreen(
     fun registerStream(url: String, hdrs: Map<String, String>, isPrimary: Boolean = false, label: String? = null) {
         val cleanUrl = BrowserUrlHelper.sanitizeMediaUrl(url)
         if (cleanUrl.isBlank() || AdBlocker.isAd(cleanUrl) || AdBlocker.isVideoAd(cleanUrl) || !isRealMedia(cleanUrl) || BrowserUrlHelper.extractYouTubeId(cleanUrl) != null) return
-        if (detectedStreams.contains(cleanUrl)) detectedStreams.remove(cleanUrl)
+        val rootPath = cleanUrl.substringBefore('?')
+        val sameRoots = detectedStreams.filter { it.substringBefore('?') == rootPath }
+        for (old in sameRoots) { detectedStreams.remove(old); streamHeaders.remove(old); streamLabels.remove(old); streamDurations.remove(old) }
         val isM = isPrimary || cleanUrl.contains("master", true) || cleanUrl.contains("playlist", true)
         val nonM = detectedStreams.indexOfFirst { !it.contains("master", true) && !it.contains("playlist", true) }
         if (isM) detectedStreams.add(0, cleanUrl) else if (nonM >= 0) detectedStreams.add(nonM, cleanUrl) else detectedStreams.add(cleanUrl)
@@ -105,12 +107,9 @@ fun InAppBrowserScreen(
         val cleanT = if (pageTitle.isNotBlank() && pageTitle != "Cargando..." && pageTitle != "Transmisión") pageTitle else "Video Web"
         ActiveStreamHolder.update(primaryUrl, cleanT, streamHeaders[primaryUrl] ?: hdrs)
         android.util.Log.i("StreamDetection", "🎬 Flujo registrado [isMaster=$isM]: $cleanUrl")
-        if (!showOptionsSheet && !isCasting && userDismissedSheetForUrl != currentUrl) {
-            autoOpenJob?.cancel()
-            autoOpenJob = scope.launch {
-                kotlinx.coroutines.delay(450)
-                if (!showOptionsSheet && !isCasting && userDismissedSheetForUrl != currentUrl && detectedStreams.any { isRealMedia(it) }) openOptionsSheet()
-            }
+        if (!showOptionsSheet && !isCasting) {
+            userDismissedSheetForUrl = ""; autoOpenJob?.cancel()
+            autoOpenJob = scope.launch { kotlinx.coroutines.delay(450); if (!showOptionsSheet && !isCasting && detectedStreams.any { isRealMedia(it) }) openOptionsSheet() }
         }
     }
 

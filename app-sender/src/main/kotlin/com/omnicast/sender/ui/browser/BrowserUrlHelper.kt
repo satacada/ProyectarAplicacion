@@ -63,7 +63,9 @@ object BrowserUrlHelper {
                     !s.contains(".m3u8") && !s.contains(".mpd") && !s.contains(".mp4") && !s.contains("cmd=video")
         val isTxtHls = (clean.endsWith(".txt") || s.contains(".txt?", true)) && (s.contains("/hls", true) || s.contains("master", true) || s.contains("index", true))
         return !isWeb && (s.contains(".m3u8", true) || s.contains(".mp4", true) || s.contains(".mpd", true) || isTxtHls ||
-                          s.contains("/hls", true) || s.contains("chunklist", true) || s.contains("p.php?", true) || extractYouTubeId(s) != null)
+                          s.contains("/hls", true) || s.contains("chunklist", true) || s.contains("p.php?", true) ||
+                          com.omnicast.sender.ui.browser.extractors.StreamExtractorRegistry.useCase.isStreamCandidate(s) ||
+                          extractYouTubeId(s) != null)
     }
 
     fun isMovieOrVideoPage(url: String?): Boolean {

@@ -15,8 +15,10 @@ class OkRuSiteExtractorAdapter : IMediaStreamExtractorPort {
     override fun canHandle(candidate: StreamCandidate): Boolean {
         val lower = candidate.url.lowercase()
 
-        // Rechazar explícitamente estadísticas y beacons
-        if (lower.contains("videostat") || lower.contains("statnew") || lower.contains("tracking")) {
+        // Rechazar explícitamente estadísticas, beacons y miniaturas de preview del catálogo
+        if (lower.contains("videostat") || lower.contains("statnew") || lower.contains("tracking") ||
+            lower.contains("videopreview") || lower.contains("preview") || lower.contains("bytes=") ||
+            lower.contains("ct=11") || lower.contains("ct=12")) {
             return false
         }
 
@@ -25,7 +27,8 @@ class OkRuSiteExtractorAdapter : IMediaStreamExtractorPort {
                       (lower.contains("vd") || lower.contains("video") || lower.contains("cmd=video") ||
                        lower.contains("/cmd/") || lower.contains(".m3u8") || lower.contains(".mp4") || lower.contains(".mpd") ||
                        lower.contains("sig") || lower.contains("expires") || lower.contains("mid=")) &&
-                      !lower.contains("i.mycdn.me") && !lower.contains("st.mycdn.me") && !lower.contains("static.mycdn.me")
+                      !lower.contains("i.mycdn.me") && !lower.contains("st.mycdn.me") && !lower.contains("static.mycdn.me") &&
+                      !lower.contains("i.okcdn.ru") && !lower.contains("st.okcdn.ru")
 
         val isOkRuVideo = (lower.contains("ok.ru/") || lower.contains("odnoklassniki.ru/")) &&
                           (lower.contains("video") || lower.contains("cmd=video") || lower.contains("hlsmanifest"))

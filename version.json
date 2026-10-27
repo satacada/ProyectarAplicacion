@@ -1,10 +1,10 @@
 {
-  "versionCodeSender": 251,
-  "versionCodeReceiver": 234,
-  "versionName": "3.5.0",
-  "releaseTag": "v3.5.0",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.0/omnicast-sender-v3.5.0.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.0/omnicast-receiver-v3.5.0.apk",
-  "changelog": "v3.5.0: Optimización integral de Proyectar y Galería: purga de interfaces huérfanas, inlining de captura transparente, throttling a 60fps en gestos táctiles de fotos, eliminación de consultas redundantes a MediaStore y cierre automático de servidor HTTP local."
+  "versionCodeSender": 252,
+  "versionCodeReceiver": 235,
+  "versionName": "3.5.1",
+  "releaseTag": "v3.5.1",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.1/omnicast-sender-v3.5.1.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.1/omnicast-receiver-v3.5.1.apk",
+  "changelog": "v3.5.1: Integración de detección hexagonal pura para OK.ru y portales con API de metadatos (delegación en isRealMedia y filtro anti-preview en OkRuSiteExtractorAdapter)."
 }
 

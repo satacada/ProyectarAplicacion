@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 259,
-  "versionCodeReceiver": 242,
-  "versionName": "3.5.8",
-  "releaseTag": "v3.5.8",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.8/omnicast-sender-v3.5.8.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.8/omnicast-receiver-v3.5.8.apk",
-  "changelog": "v3.5.8: Rediseño ergonómico con barra superior de doble fila compacta (Fila 1: buscador amplio con candado SSL, limpiar y menú de opciones; Fila 2: navegación rápida con Atrás, Adelante, Refrescar, Inicio, Favoritos, botón de flujos estilizado con fondo oscuro y líneas naranjas, controles multimedia y botón de 3 líneas horizontales para acceder al historial y guardados), iconos vectoriales Material 3 modernos de tamaño reducido, y aceleración Ultra Rápida del bloqueador de anuncios mediante Caché L1 en RAM (LruCache) para dominios validados (<0.0001 ms) y script de blindaje WVC precompilado."
+  "versionCodeSender": 260,
+  "versionCodeReceiver": 243,
+  "versionName": "3.5.9",
+  "releaseTag": "v3.5.9",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.9/omnicast-sender-v3.5.9.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.9/omnicast-receiver-v3.5.9.apk",
+  "changelog": "v3.5.9: Ajustes ergonómicos en la barra superior (el icono de 3 líneas horizontales para Historial y Guardados ahora se ubica en la Fila 1 en la posición original de la X; el botón de Cerrar X se traslada al extremo derecho de la barra de herramientas en la Fila 2; el botón de captura de flujos adopta el diseño limpio sin contorno redondo idéntico al de Home con vector naranja; y el botón X dentro de la caja de búsqueda se amplía y destaca en color claro para borrar texto de forma instantánea y accesible)."
 }

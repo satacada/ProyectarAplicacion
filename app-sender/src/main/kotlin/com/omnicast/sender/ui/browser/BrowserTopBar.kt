@@ -13,11 +13,12 @@ import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.HelpOutline
+import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.Lock
-import androidx.compose.material.icons.rounded.Menu
 import androidx.compose.material.icons.rounded.MoreVert
-import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.Refresh
+import androidx.compose.material.icons.rounded.Star
+import androidx.compose.material.icons.rounded.StarBorder
 import androidx.compose.material.icons.rounded.Tv
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -33,10 +34,12 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.omnicast.sender.ui.components.CastTvIcon
 
 /**
- * Barra superior del navegador web con diseño idéntico a Web Video Caster.
- * Contiene el icónico botón amarillo de reproducción con insignia de conteo de videos detectados.
+ * Barra superior del navegador web con diseño moderno y minimalista.
+ * Botones de navegación (Cerrar, Inicio, Atrás), barra de URL con favoritos y recargar,
+ * botón de casteo con fondo naranja e icono Google Cast, y controles TV visibles al castear.
  */
 @Composable
 fun BrowserTopBar(
@@ -44,6 +47,7 @@ fun BrowserTopBar(
     onInputUrlChange: (String) -> Unit,
     onNavigate: (String) -> Unit,
     onClose: () -> Unit,
+    onHome: () -> Unit = {},
     onBack: () -> Unit,
     onForward: () -> Unit = {},
     canGoForward: Boolean = false,
@@ -60,6 +64,8 @@ fun BrowserTopBar(
     isCasting: Boolean = false,
     isPlaying: Boolean = false,
     showBottomControls: Boolean = false,
+    isBookmarked: Boolean = false,
+    onToggleBookmark: () -> Unit = {},
     onOpenHistory: () -> Unit = {},
     onOpenPlaylists: () -> Unit = {},
     onOpenDrawer: () -> Unit = {},
@@ -86,16 +92,16 @@ fun BrowserTopBar(
                 .fillMaxWidth()
                 .padding(horizontal = 4.dp, vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(2.dp)
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            IconButton(onClick = onOpenDrawer, modifier = Modifier.size(26.dp)) {
-                Icon(Icons.Rounded.Menu, contentDescription = "Menú", tint = Color(0xFF94A3B8), modifier = Modifier.size(16.dp))
+            IconButton(onClick = onClose, modifier = Modifier.size(28.dp)) {
+                Icon(Icons.Rounded.Close, contentDescription = "Cerrar", tint = Color(0xFFEF4444), modifier = Modifier.size(18.dp))
             }
-            IconButton(onClick = onBack, modifier = Modifier.size(26.dp)) {
-                Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Atrás", tint = Color(0xFFCBD5E1), modifier = Modifier.size(16.dp))
+            IconButton(onClick = onHome, modifier = Modifier.size(28.dp)) {
+                Icon(Icons.Rounded.Home, contentDescription = "Inicio", tint = Color(0xFF38BDF8), modifier = Modifier.size(18.dp))
             }
-            IconButton(onClick = onForward, enabled = canGoForward, modifier = Modifier.size(26.dp)) {
-                Icon(Icons.AutoMirrored.Rounded.ArrowForward, contentDescription = "Adelante", tint = if (canGoForward) Color(0xFFCBD5E1) else Color(0xFF475569), modifier = Modifier.size(16.dp))
+            IconButton(onClick = onBack, modifier = Modifier.size(28.dp)) {
+                Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Atrás", tint = Color(0xFFCBD5E1), modifier = Modifier.size(18.dp))
             }
 
             Row(
@@ -107,7 +113,7 @@ fun BrowserTopBar(
                     .padding(horizontal = 8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(Icons.Rounded.Lock, contentDescription = "Seguro", tint = Color(0xFF38BDF8), modifier = Modifier.size(12.dp))
+                Icon(Icons.Rounded.Lock, contentDescription = "Seguro", tint = Color(0xFF38BDF8), modifier = Modifier.size(13.dp))
                 Spacer(modifier = Modifier.width(4.dp))
                 BasicTextField(
                     value = textFieldValue,
@@ -139,15 +145,24 @@ fun BrowserTopBar(
                     }
                     Spacer(modifier = Modifier.width(2.dp))
                 }
-                IconButton(onClick = onReload, modifier = Modifier.size(22.dp)) {
-                    Icon(Icons.Rounded.Refresh, contentDescription = "Recargar", tint = Color(0xFFCBD5E1), modifier = Modifier.size(15.dp))
+                IconButton(onClick = onToggleBookmark, modifier = Modifier.size(24.dp)) {
+                    Icon(
+                        if (isBookmarked) Icons.Rounded.Star else Icons.Rounded.StarBorder,
+                        contentDescription = "Favoritos",
+                        tint = if (isBookmarked) Color(0xFFFFC107) else Color(0xFF94A3B8),
+                        modifier = Modifier.size(17.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.width(2.dp))
+                IconButton(onClick = onReload, modifier = Modifier.size(24.dp)) {
+                    Icon(Icons.Rounded.Refresh, contentDescription = "Recargar", tint = Color(0xFFCBD5E1), modifier = Modifier.size(16.dp))
                 }
             }
 
-            if (isCasting && isPlaying) {
+            if (isCasting) {
                 IconButton(
                     onClick = onToggleBottomControls,
-                    modifier = Modifier.size(26.dp)
+                    modifier = Modifier.size(28.dp)
                 ) {
                     Box(contentAlignment = Alignment.TopEnd) {
                         Icon(
@@ -158,7 +173,7 @@ fun BrowserTopBar(
                         )
                         Box(
                             modifier = Modifier
-                                .size(5.dp)
+                                .size(6.dp)
                                 .background(if (showBottomControls) Color(0xFF38BDF8) else Color(0xFF10B981), CircleShape)
                         )
                     }
@@ -168,28 +183,31 @@ fun BrowserTopBar(
             Box(contentAlignment = Alignment.TopEnd) {
                 IconButton(
                     onClick = onOpenDetectedVideos,
-                    modifier = Modifier.size(26.dp)
+                    modifier = Modifier
+                        .size(28.dp)
+                        .background(
+                            if (detectedStreamsCount > 0) Color(0xFFFF9800) else Color(0xFF334155),
+                            RoundedCornerShape(6.dp)
+                        )
                 ) {
-                    Icon(
-                        Icons.Rounded.PlayArrow,
-                        contentDescription = "Videos",
-                        tint = if (detectedStreamsCount > 0) Color(0xFFFF9800) else Color(0xFF94A3B8),
-                        modifier = Modifier.size(17.dp)
+                    CastTvIcon(
+                        modifier = Modifier.size(18.dp),
+                        color = if (detectedStreamsCount > 0) Color.White else Color(0xFF94A3B8)
                     )
                 }
 
                 if (detectedStreamsCount > 0) {
                     Box(
                         modifier = Modifier
-                            .offset(x = 1.dp, y = (-1).dp)
+                            .offset(x = 3.dp, y = (-3).dp)
                             .background(Color(0xFFEF4444), CircleShape)
-                            .padding(horizontal = 2.5.dp, vertical = 0.5.dp),
+                            .padding(horizontal = 3.dp, vertical = 0.5.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
                             text = if (detectedStreamsCount > 9) "9+" else detectedStreamsCount.toString(),
                             color = Color.White,
-                            fontSize = 7.sp,
+                            fontSize = 8.sp,
                             fontWeight = FontWeight.Bold
                         )
                     }
@@ -197,8 +215,8 @@ fun BrowserTopBar(
             }
 
             Box {
-                IconButton(onClick = { showMenu = true }, modifier = Modifier.size(26.dp)) {
-                    Icon(Icons.Rounded.MoreVert, contentDescription = "Opciones", tint = Color.White, modifier = Modifier.size(16.dp))
+                IconButton(onClick = { showMenu = true }, modifier = Modifier.size(28.dp)) {
+                    Icon(Icons.Rounded.MoreVert, contentDescription = "Opciones", tint = Color.White, modifier = Modifier.size(18.dp))
                 }
 
                 DropdownMenu(
@@ -211,6 +229,12 @@ fun BrowserTopBar(
                         onClick = { showHelpDialog = true; showMenu = false }
                     )
                     HorizontalDivider(color = Color(0xFF334155))
+                    if (canGoForward) {
+                        DropdownMenuItem(
+                            text = { Text("➡️ Adelante", color = Color.White) },
+                            onClick = { onForward(); showMenu = false }
+                        )
+                    }
                     DropdownMenuItem(
                         text = { Text(if (isAdBlockEnabled) "🛡️ Bloqueador (Activo)" else "🛡️ Bloquear Anuncios", color = Color.White) },
                         onClick = { onToggleAdBlock(); showMenu = false }
@@ -254,36 +278,7 @@ fun BrowserTopBar(
     }
 
     if (showHelpDialog) {
-        AlertDialog(
-            onDismissRequest = { showHelpDialog = false },
-            containerColor = Color(0xFF1E293B),
-            title = {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Icon(Icons.Rounded.HelpOutline, contentDescription = null, tint = Color(0xFF38BDF8), modifier = Modifier.size(18.dp))
-                    Text("Detalle de Controles", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                }
-            },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    HelpItem("Flujos", "Muestra la lista de videos capturados para emitir a la TV.")
-                    HelpItem("Control", "Muestra u oculta los controles de reproducción de la TV.")
-                    HelpItem("Recargar", "Actualiza la página actual dentro del buscador.")
-                    HelpItem("Pausa / Reproducir", "Pausa o reanuda la reproducción en el televisor.")
-                    HelpItem("Retroceder / Adelantar", "Salta 10 segundos en la película.")
-                    HelpItem("Volumen", "Regula el volumen de sonido en el televisor.")
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = { showHelpDialog = false }) { Text("Entendido", color = Color(0xFF38BDF8), fontWeight = FontWeight.Bold) }
-            }
-        )
+        BrowserHelpDialog(onDismiss = { showHelpDialog = false })
     }
 }
 
-@Composable
-private fun HelpItem(title: String, desc: String) {
-    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-        Text(title, color = Color(0xFFFBBF24), fontSize = 11.sp, fontWeight = FontWeight.Bold)
-        Text(desc, color = Color(0xFFCBD5E1), fontSize = 11.sp)
-    }
-}

@@ -62,6 +62,16 @@ fun InAppBrowserScreen(
         }
     }
 
+    fun toggleBookmark() {
+        if (isMovieSaved) { deleteMovieFromSaved(); return }
+        val active = ActiveStreamHolder.streamUrl ?: ""; val primary = if (active.isNotBlank()) active else detectedStreams.firstOrNull { isRealMedia(it) } ?: ""
+        val target = if (primary.isNotBlank()) primary else if (currentUrl.startsWith("http")) currentUrl else ""
+        if (target.isNotBlank()) {
+            val t = if (castTitle.isNotBlank()) castTitle else if (pageTitle.isNotBlank() && pageTitle != "Cargando...") pageTitle else "Película / Video"
+            videoToSave = HistoryItem(target, t, currentUrl, streamHeaders[primary] ?: emptyMap(), requiresProxy = ActiveStreamHolder.isProxied.value)
+        } else Toast.makeText(context, "No hay video para guardar en esta página", Toast.LENGTH_SHORT).show()
+    }
+
     fun openOptionsSheet() {
         val currentStreams = detectedStreams.filter { isRealMedia(it) }
         val cleanTitle = pageTitle.replace(" - YouTube", "").replace(" | OK", "").trim().take(22)
@@ -164,10 +174,7 @@ fun InAppBrowserScreen(
     }
 
     BackHandler(enabled = true) {
-        if (showSideDrawer) showSideDrawer = false else if (showWhitelistDialog) showWhitelistDialog = false
-        else if (popupWebView != null) { popupWebView?.destroy(); popupWebView = null }
-        else if (videoToSave != null) videoToSave = null else if (showOptionsSheet) { showOptionsSheet = false; userDismissedSheetForUrl = currentUrl }
-        else handleBrowserBack()
+        if (showSideDrawer) showSideDrawer = false else if (showWhitelistDialog) showWhitelistDialog = false else if (popupWebView != null) { popupWebView?.destroy(); popupWebView = null } else if (videoToSave != null) videoToSave = null else if (showOptionsSheet) { showOptionsSheet = false; userDismissedSheetForUrl = currentUrl } else handleBrowserBack()
     }
 
     DisposableEffect(webViewInstance) {
@@ -187,8 +194,9 @@ fun InAppBrowserScreen(
         Column(modifier = Modifier.fillMaxSize().background(Color(0xFF0F172A))) {
             BrowserTopBar(
                 inputUrl = inputUrl, onInputUrlChange = { inputUrl = it }, onNavigate = { navigateTo(it) }, onClose = onCloseBrowser,
-                onBack = { handleBrowserBack() }, onForward = { if (webViewInstance?.canGoForward() == true) webViewInstance?.goForward() },
-                canGoForward = webViewInstance?.canGoForward() == true, onReload = { webViewInstance?.reload() }, isDesktopMode = isDesktopMode,
+                onHome = { isHome = true; inputUrl = "" }, onBack = { handleBrowserBack() },
+                onForward = { if (webViewInstance?.canGoForward() == true) webViewInstance?.goForward() }, canGoForward = webViewInstance?.canGoForward() == true,
+                onReload = { webViewInstance?.reload() }, isDesktopMode = isDesktopMode,
                 onToggleDesktopMode = { isDesktopMode = !isDesktopMode; webViewInstance?.settings?.userAgentString = if (isDesktopMode) UA_DESKTOP else UA_MOBILE; webViewInstance?.reload() },
                 isAdBlockEnabled = isAdBlockEnabled, onToggleAdBlock = { isAdBlockEnabled = !isAdBlockEnabled },
                 onForceRescan = { webViewInstance?.evaluateJavascript(WvcSnifferScripts.buildAggressiveRescanScript(WvcDomSniffer.CONSOLE_PREFIX), null) },
@@ -198,8 +206,8 @@ fun InAppBrowserScreen(
                 },
                 detectedStreamsCount = detectedStreams.count { isRealMedia(it) }, onToggleBottomControls = { showBottomControls = !showBottomControls },
                 onOpenDetectedVideos = { openOptionsSheet() }, isCasting = isCasting, isPlaying = isPlaying, showBottomControls = showBottomControls,
-                onOpenHistory = { showSideDrawer = true }, onOpenPlaylists = { showSideDrawer = true }, onOpenDrawer = { showSideDrawer = true }, onOpenWhitelist = { showWhitelistDialog = true },
-                onExitApp = { SenderMainActivity.exitCompletely(context) }
+                isBookmarked = isMovieSaved, onToggleBookmark = { toggleBookmark() }, onOpenHistory = { showSideDrawer = true }, onOpenPlaylists = { showSideDrawer = true },
+                onOpenDrawer = { showSideDrawer = true }, onOpenWhitelist = { showWhitelistDialog = true }, onExitApp = { SenderMainActivity.exitCompletely(context) }
             )
 
             if (progress in 1..99) LinearProgressIndicator(progress = { progress / 100f }, modifier = Modifier.fillMaxWidth().height(3.dp), color = Color(0xFF38BDF8))
@@ -258,14 +266,7 @@ fun InAppBrowserScreen(
                         onOpenQualities = { openOptionsSheet() },
                         onPlayControl = { act, pos, vol -> if (act == "VOLUME") ActiveStreamHolder.setVolume(vol); ActiveStreamHolder.onSendPlayControl?.invoke(act, pos, vol, null) },
                         onStopCasting = { ActiveStreamHolder.stopCasting(); com.omnicast.sender.service.CastMediaNotificationService.stop(context); Toast.makeText(context, "🛑 Transmisión detenida", Toast.LENGTH_SHORT).show() },
-                        onSaveToPlaylist = {
-                            val active = ActiveStreamHolder.streamUrl ?: ""; val primary = if (active.isNotBlank()) active else detectedStreams.firstOrNull { isRealMedia(it) } ?: ""
-                            val target = if (primary.isNotBlank()) primary else if (currentUrl.startsWith("http")) currentUrl else ""
-                            if (target.isNotBlank()) {
-                                val t = if (castTitle.isNotBlank()) castTitle else if (pageTitle.isNotBlank() && pageTitle != "Cargando...") pageTitle else "Película / Video"
-                                val isProx = ActiveStreamHolder.isProxied.value; videoToSave = HistoryItem(target, t, currentUrl, streamHeaders[primary] ?: emptyMap(), requiresProxy = isProx)
-                            }
-                        },
+                        onSaveToPlaylist = { toggleBookmark() },
                         onDeleteFromSaved = { deleteMovieFromSaved() }, isSaved = isMovieSaved,
                         onDismiss = { showBottomControls = false }, modifier = Modifier.align(Alignment.BottomCenter)
                     )

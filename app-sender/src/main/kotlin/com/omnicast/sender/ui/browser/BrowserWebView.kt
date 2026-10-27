@@ -79,7 +79,7 @@ fun BrowserWebView(
                     webView.reload()
                 }
                 setOnChildScrollUpCallback { _, _ ->
-                    webView.scrollY > 0
+                    webView.canScrollVertically(-1)
                 }
             }
 

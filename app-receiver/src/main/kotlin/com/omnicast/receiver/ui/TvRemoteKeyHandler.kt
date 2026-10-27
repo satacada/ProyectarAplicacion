@@ -47,6 +47,11 @@ object TvRemoteKeyHandler {
                 return true
             }
             com.omnicast.receiver.log.ReceiverLogger.log("TvRemoteKeyHandler", "🚪 Salida solicitada por tecla $keyCode tras $elapsed ms")
+            if (currentState is ReceiverUiState.DirectStreamPlaying && exoPlayerManager.isControlsShowing) {
+                exoPlayerManager.isControlsShowing = false
+                exoPlayerManager.onWakeControls?.invoke()
+                return true
+            }
             val pv = exoPlayerManager.playerView
             if (currentState is ReceiverUiState.DirectStreamPlaying && pv != null && pv.isControllerFullyVisible) {
                 pv.hideController()
@@ -68,48 +73,27 @@ object TvRemoteKeyHandler {
 
         when (currentState) {
             is ReceiverUiState.DirectStreamPlaying -> {
-                val pv = exoPlayerManager.playerView
-                if (pv != null && pv.isControllerFullyVisible && event != null) {
-                    if (pv.dispatchKeyEvent(event)) return true
-                }
-
                 when (keyCode) {
-                    KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER -> {
-                        if (pv != null && !pv.isControllerFullyVisible) {
-                            pv.showController()
-                            return true
-                        }
-                        if (exoPlayerManager.isPlaying) exoPlayerManager.pause() else exoPlayerManager.resume()
-                        pv?.showController()
-                        return true
-                    }
                     KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE, KeyEvent.KEYCODE_MEDIA_PLAY, KeyEvent.KEYCODE_MEDIA_PAUSE,
                     KeyEvent.KEYCODE_SPACE -> {
                         if (exoPlayerManager.isPlaying) exoPlayerManager.pause() else exoPlayerManager.resume()
-                        pv?.showController()
+                        exoPlayerManager.isControlsShowing = true
+                        exoPlayerManager.onWakeControls?.invoke()
                         return true
                     }
-                    KeyEvent.KEYCODE_DPAD_RIGHT, KeyEvent.KEYCODE_MEDIA_FAST_FORWARD, KeyEvent.KEYCODE_MEDIA_NEXT -> {
+                    KeyEvent.KEYCODE_MEDIA_FAST_FORWARD, KeyEvent.KEYCODE_MEDIA_NEXT -> {
                         val newPos = (exoPlayerManager.currentPositionMs + 10_000L).coerceAtMost(exoPlayerManager.durationMs)
                         exoPlayerManager.seekTo(newPos)
-                        pv?.showController()
+                        exoPlayerManager.isControlsShowing = true
+                        exoPlayerManager.onWakeControls?.invoke()
                         return true
                     }
-                    KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.KEYCODE_MEDIA_REWIND, KeyEvent.KEYCODE_MEDIA_PREVIOUS -> {
+                    KeyEvent.KEYCODE_MEDIA_REWIND, KeyEvent.KEYCODE_MEDIA_PREVIOUS -> {
                         val newPos = (exoPlayerManager.currentPositionMs - 10_000L).coerceAtLeast(0L)
                         exoPlayerManager.seekTo(newPos)
-                        pv?.showController()
+                        exoPlayerManager.isControlsShowing = true
+                        exoPlayerManager.onWakeControls?.invoke()
                         return true
-                    }
-                    KeyEvent.KEYCODE_DPAD_UP -> {
-                        val st = exoPlayerManager.toggleSubtitles()
-                        Toast.makeText(context, if (st) "💬 Subtítulos Activados" else "💬 Subtítulos Desactivados", Toast.LENGTH_SHORT).show()
-                        pv?.showController(); return true
-                    }
-                    KeyEvent.KEYCODE_DPAD_DOWN -> {
-                        val q = exoPlayerManager.cycleVideoQuality()
-                        Toast.makeText(context, "📺 Calidad: $q", Toast.LENGTH_SHORT).show()
-                        pv?.showController(); return true
                     }
                     KeyEvent.KEYCODE_MENU -> {
                         exoPlayerManager.toggleResizeMode()
@@ -118,6 +102,19 @@ object TvRemoteKeyHandler {
                         return true
                     }
                 }
+
+                if (!exoPlayerManager.isControlsShowing) {
+                    when (keyCode) {
+                        KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER,
+                        KeyEvent.KEYCODE_DPAD_DOWN, KeyEvent.KEYCODE_DPAD_UP,
+                        KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.KEYCODE_DPAD_RIGHT -> {
+                            exoPlayerManager.isControlsShowing = true
+                            exoPlayerManager.onWakeControls?.invoke()
+                            return true
+                        }
+                    }
+                }
+                return false
             }
             is ReceiverUiState.YouTubePlaying -> {
                 when (keyCode) {

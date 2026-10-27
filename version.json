@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 263,
-  "versionCodeReceiver": 246,
-  "versionName": "3.5.12",
-  "releaseTag": "v3.5.12",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.12/omnicast-sender-v3.5.12.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.12/omnicast-receiver-v3.5.12.apk",
-  "changelog": "v3.5.12: Captura limpia de flujos DASH con opción adaptativa única sin URLs con firmas HMAC rotas; ciclo dinámico de resolución de video en TV Box con D-Pad Abajo (CYCLE_QUALITY) vía TrackSelector sin reinicio de sockets; rediseño de barra superior con iconos de 18dp (+2dp) en botones de 28dp; y controles remotos multimedia sin bordes con espaciado de 4dp."
+  "versionCodeSender": 264,
+  "versionCodeReceiver": 247,
+  "versionName": "3.5.13",
+  "releaseTag": "v3.5.13",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.13/omnicast-sender-v3.5.13.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.13/omnicast-receiver-v3.5.13.apk",
+  "changelog": "v3.5.13: Barra inferior interactiva en TV Box con controles nativos (Pausa/Play, -10s, +10s, Calidad, Subtítulos, Aspecto, Ajustes, Salir) navegables con control remoto y resaltado visual de alto contraste; inclusión de selección de Calidad y Subtítulos en diálogo de tuerca; e iconos de 18dp en control multimedia de celular."
 }

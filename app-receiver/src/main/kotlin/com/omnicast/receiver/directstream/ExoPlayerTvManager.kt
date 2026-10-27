@@ -263,6 +263,8 @@ class ExoPlayerTvManager(private val context: Context) {
     var onResizeModeChanged: ((Int) -> Unit)? = null
     var currentZoom: Float = 1.0f; private set
     var onZoomChanged: ((Float) -> Unit)? = null
+    var isControlsShowing: Boolean = false
+    var onWakeControls: (() -> Unit)? = null
 
     fun toggleResizeMode(): Int { resizeMode = aspectRatioHelper.cycleNextMode().resizeMode; onResizeModeChanged?.invoke(resizeMode); return resizeMode }
     fun setResizeMode(isZoom169: Boolean) { resizeMode = if (isZoom169) androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_ZOOM else androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_FIT; onResizeModeChanged?.invoke(resizeMode) }
@@ -274,6 +276,8 @@ class ExoPlayerTvManager(private val context: Context) {
     fun selectTextTrack(idx: Int) { player?.let { trackManager?.selectTextTrack(it, idx); trackManager?.getTracksInfo(it)?.let { info -> onTracksChanged?.invoke(info) } } }
     fun selectAudioTrack(idx: Int) { player?.let { trackManager?.selectAudioTrack(it, idx); trackManager?.getTracksInfo(it)?.let { info -> onTracksChanged?.invoke(info) } } }
     fun cycleVideoQuality(): String = player?.let { trackManager?.cycleVideoQuality(it) } ?: "Auto"
+    fun getCurrentVideoQuality(): String = trackManager?.getCurrentVideoQuality() ?: "Auto"
+    val areSubtitlesEnabled: Boolean get() = trackManager?.subtitlesEnabled ?: false
     val currentPositionMs: Long get() = player?.currentPosition?.coerceAtLeast(0L) ?: 0L
     val durationMs: Long get() = player?.duration?.coerceAtLeast(0L) ?: 0L
     val isPlaying: Boolean get() = player?.isPlaying ?: false

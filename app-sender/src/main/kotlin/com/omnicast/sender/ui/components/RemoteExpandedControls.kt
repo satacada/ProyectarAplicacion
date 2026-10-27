@@ -88,10 +88,10 @@ fun RemoteExpandedControls(
                     if (onSaveToPlaylist != null) {
                         IconButton(
                             onClick = onSaveToPlaylist,
-                            modifier = Modifier.size(24.dp)
+                            modifier = Modifier.size(26.dp)
                         ) {
                             BookmarkOutlineIcon(
-                                modifier = Modifier.size(16.dp),
+                                modifier = Modifier.size(18.dp),
                                 color = if (isSaved) Color(0xFF10B981) else Color(0xFF38BDF8),
                                 isFilled = isSaved
                             )
@@ -100,9 +100,9 @@ fun RemoteExpandedControls(
                     if (onDeleteFromSaved != null) {
                         IconButton(
                             onClick = onDeleteFromSaved,
-                            modifier = Modifier.size(24.dp)
+                            modifier = Modifier.size(26.dp)
                         ) {
-                            BookmarkRemoveIcon(modifier = Modifier.size(16.dp))
+                            BookmarkRemoveIcon(modifier = Modifier.size(18.dp))
                         }
                     }
                     IconButton(
@@ -111,22 +111,22 @@ fun RemoteExpandedControls(
                             SignalingClientHolder.get().sendMessage(TvZoomManager.toSignalingMessage(preset))
                             Toast.makeText(context, preset.label, Toast.LENGTH_SHORT).show()
                         },
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(26.dp)
                     ) {
-                        Icon(Icons.Rounded.AspectRatio, contentDescription = "Zoom TV", tint = Color(0xFF60A5FA), modifier = Modifier.size(16.dp))
+                        Icon(Icons.Rounded.AspectRatio, contentDescription = "Zoom TV", tint = Color(0xFF60A5FA), modifier = Modifier.size(18.dp))
                     }
                     IconButton(
                         onClick = {
                             SignalingClientHolder.get().sendMessage(SignalingMessage.PlayControl("TOGGLE_SUBTITLES"))
                             Toast.makeText(context, "💬 Alternando Subtítulos", Toast.LENGTH_SHORT).show()
                         },
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(26.dp)
                     ) {
-                        Icon(Icons.Rounded.Subtitles, contentDescription = "Subtítulos", tint = Color(0xFF60A5FA), modifier = Modifier.size(16.dp))
+                        Icon(Icons.Rounded.Subtitles, contentDescription = "Subtítulos", tint = Color(0xFF60A5FA), modifier = Modifier.size(18.dp))
                     }
                     Box(
                         modifier = Modifier
-                            .height(24.dp)
+                            .height(26.dp)
                             .clickable {
                                 qualityIdx = (qualityIdx + 1) % qualityLabels.size
                                 SignalingClientHolder.get().sendMessage(SignalingMessage.PlayControl("CYCLE_QUALITY"))
@@ -137,10 +137,10 @@ fun RemoteExpandedControls(
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(1.dp)
+                            horizontalArrangement = Arrangement.spacedBy(2.dp)
                         ) {
-                            Icon(Icons.Rounded.Hd, contentDescription = "Calidad", tint = Color(0xFF60A5FA), modifier = Modifier.size(15.dp))
-                            Text(qualityLabels[qualityIdx], color = Color(0xFF38BDF8), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                            Icon(Icons.Rounded.Hd, contentDescription = "Calidad", tint = Color(0xFF60A5FA), modifier = Modifier.size(18.dp))
+                            Text(qualityLabels[qualityIdx], color = Color(0xFF38BDF8), fontSize = 11.sp, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -199,25 +199,25 @@ fun RemoteExpandedControls(
                     ) {
                         Text(text = "-10s", color = Color(0xFF94A3B8), fontSize = 10.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(end = 4.dp))
                         Box(
-                            modifier = Modifier.size(28.dp).background(Color(0xFF161F2E), CircleShape).border(1.dp, Color(0xFF26354D), CircleShape).clickable { onSkip(-10000L) },
+                            modifier = Modifier.size(30.dp).background(Color(0xFF161F2E), CircleShape).border(1.dp, Color(0xFF26354D), CircleShape).clickable { onSkip(-10000L) },
                             contentAlignment = Alignment.Center
-                        ) { Icon(Icons.Rounded.Replay10, contentDescription = "-10s", tint = Color(0xFFCBD5E1), modifier = Modifier.size(16.dp)) }
+                        ) { Icon(Icons.Rounded.Replay10, contentDescription = "-10s", tint = Color(0xFFCBD5E1), modifier = Modifier.size(18.dp)) }
 
                         Spacer(modifier = Modifier.width(12.dp))
 
                         Box(
-                            modifier = Modifier.size(32.dp).background(Color(0xFFFF7A00), CircleShape).clickable { onPlayPause() },
+                            modifier = Modifier.size(34.dp).background(Color(0xFFFF7A00), CircleShape).clickable { onPlayPause() },
                             contentAlignment = Alignment.Center
                         ) {
-                            Icon(if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow, contentDescription = if (isPlaying) "Pausa" else "Reproducir", tint = Color.White, modifier = Modifier.size(18.dp))
+                            Icon(if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow, contentDescription = if (isPlaying) "Pausa" else "Reproducir", tint = Color.White, modifier = Modifier.size(20.dp))
                         }
 
                         Spacer(modifier = Modifier.width(12.dp))
 
                         Box(
-                            modifier = Modifier.size(28.dp).background(Color(0xFF161F2E), CircleShape).border(1.dp, Color(0xFF26354D), CircleShape).clickable { onSkip(10000L) },
+                            modifier = Modifier.size(30.dp).background(Color(0xFF161F2E), CircleShape).border(1.dp, Color(0xFF26354D), CircleShape).clickable { onSkip(10000L) },
                             contentAlignment = Alignment.Center
-                        ) { Icon(Icons.Rounded.Forward10, contentDescription = "+10s", tint = Color(0xFFCBD5E1), modifier = Modifier.size(16.dp)) }
+                        ) { Icon(Icons.Rounded.Forward10, contentDescription = "+10s", tint = Color(0xFFCBD5E1), modifier = Modifier.size(18.dp)) }
 
                         Text(text = "+10s", color = Color(0xFF94A3B8), fontSize = 10.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(start = 4.dp))
                     }
@@ -231,7 +231,7 @@ fun RemoteExpandedControls(
                                 .background(Color(0xFF2D1515), RoundedCornerShape(6.dp))
                                 .border(1.dp, Color(0xFFEF4444).copy(alpha = 0.5f), RoundedCornerShape(6.dp))
                         ) {
-                            Icon(Icons.Rounded.Stop, contentDescription = "Detener flujo", tint = Color(0xFFEF4444), modifier = Modifier.size(16.dp))
+                            Icon(Icons.Rounded.Stop, contentDescription = "Detener flujo", tint = Color(0xFFEF4444), modifier = Modifier.size(18.dp))
                         }
                     }
                 }
@@ -242,7 +242,7 @@ fun RemoteExpandedControls(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     var curVol by remember(volume) { mutableFloatStateOf(volume) }
-                    Icon(if (curVol <= 0.01f) Icons.Rounded.VolumeMute else Icons.Rounded.VolumeUp, contentDescription = "Volumen", tint = Color(0xFF94A3B8), modifier = Modifier.size(16.dp))
+                    Icon(if (curVol <= 0.01f) Icons.Rounded.VolumeMute else Icons.Rounded.VolumeUp, contentDescription = "Volumen", tint = Color(0xFF94A3B8), modifier = Modifier.size(18.dp))
                     Slider(
                         value = curVol,
                         onValueChange = { curVol = it },

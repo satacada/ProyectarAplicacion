@@ -26,10 +26,17 @@ import androidx.compose.ui.window.Dialog
 fun TvPlayerSettingsDialog(
     title: String,
     isSaved: Boolean,
+    currentQuality: String = "Auto",
+    onCycleQuality: () -> String = { "Auto" },
+    subtitlesEnabled: Boolean = true,
+    onToggleSubtitles: () -> Boolean = { true },
     onSaveToWatchLater: () -> Unit,
     onExitPlayback: () -> Unit,
     onDismiss: () -> Unit
 ) {
+    var quality by remember { mutableStateOf(currentQuality) }
+    var subsEnabled by remember { mutableStateOf(subtitlesEnabled) }
+
     Dialog(onDismissRequest = onDismiss) {
         Card(
             colors = CardDefaults.cardColors(containerColor = Color(0xFF1E182A)),
@@ -44,7 +51,7 @@ fun TvPlayerSettingsDialog(
                     .fillMaxWidth()
                     .padding(22.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 Text(
                     text = "⚙️ Opciones de Reproducción",
@@ -63,7 +70,23 @@ fun TvPlayerSettingsDialog(
                     overflow = TextOverflow.Ellipsis
                 )
 
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(2.dp))
+
+                TvSettingsButton(
+                    text = "📺 Calidad de Video: $quality",
+                    isPrimary = true,
+                    onClick = {
+                        quality = onCycleQuality()
+                    }
+                )
+
+                TvSettingsButton(
+                    text = if (subsEnabled) "💬 Subtítulos: Activados" else "💬 Subtítulos: Desactivados",
+                    isPrimary = false,
+                    onClick = {
+                        subsEnabled = onToggleSubtitles()
+                    }
+                )
 
                 TvSettingsButton(
                     text = if (isSaved) "✅ Película ya guardada en Ver más tarde" else "🔖 Guardar en \"Ver más tarde\"",

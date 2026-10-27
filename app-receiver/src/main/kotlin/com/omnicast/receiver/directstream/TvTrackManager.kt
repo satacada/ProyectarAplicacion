@@ -117,6 +117,11 @@ class TvTrackManager(
         }
     }
 
+    fun getCurrentVideoQuality(): String {
+        val currentMax = trackSelector.parameters.maxVideoHeight
+        return if (currentMax == Int.MAX_VALUE || currentMax <= 0) "Auto" else "${currentMax}p"
+    }
+
     fun cycleVideoQuality(player: ExoPlayer): String {
         val currentTracks = player.currentTracks
         val videoHeights = mutableListOf<Int>()
@@ -144,7 +149,7 @@ class TvTrackManager(
             trackSelector.parameters = trackSelector.buildUponParameters()
                 .clearVideoSizeConstraints()
                 .build()
-            "Auto (Adaptativa)"
+            "Auto"
         } else {
             val targetH = videoHeights[nextIdx]
             trackSelector.parameters = trackSelector.buildUponParameters()

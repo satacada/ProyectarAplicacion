@@ -293,8 +293,7 @@ class TvReceiverActivity : ComponentActivity() {
     }
 
     override fun onDestroy() {
-        super.onDestroy(); com.omnicast.receiver.log.ReceiverLogger.stop()
-        digitalAudioReceiver?.stop(); nsdAdvertiser.unregisterService()
-        signalingServer.stop(); webRtcReceiver.release(); exoPlayerManager.release()
+        super.onDestroy(); com.omnicast.receiver.log.ReceiverLogger.stop(); digitalAudioReceiver?.stop()
+        nsdAdvertiser.unregisterService(); signalingServer.stop(); webRtcReceiver.release(); exoPlayerManager.release()
     }
 }

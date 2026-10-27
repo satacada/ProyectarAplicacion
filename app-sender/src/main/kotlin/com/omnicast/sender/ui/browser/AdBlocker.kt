@@ -52,29 +52,38 @@ object AdBlocker {
                lower.contains("banner-ads") || lower.contains("player-banner")
     }
 
+    private val l1HostCache = android.util.LruCache<String, Boolean>(1024)
+
     fun isAd(url: String): Boolean {
         if (isVerificationOrCaptcha(url)) return false
         if (isVideoAd(url)) return true
+        val host = try { java.net.URI(url).host?.lowercase() } catch (_: Throwable) { null }
+        if (host != null) {
+            val cached = l1HostCache.get(host)
+            if (cached != null) return cached
+        }
+        val isBlocked = evaluateIsAd(url, host)
+        if (host != null) l1HostCache.put(host, isBlocked)
+        return isBlocked
+    }
+
+    private fun evaluateIsAd(url: String, host: String?): Boolean {
         if (AdBlockWhitelistManager.isWhitelisted(url)) {
             val lower = url.lowercase()
-            if (lower.contains("an.yandex.") || lower.contains("mc.yandex.")) return true
-            return false
+            return lower.contains("an.yandex.") || lower.contains("mc.yandex.")
         }
         val lower = url.lowercase()
-        // Permitir completamente Yandex (.com, .ru, ya.ru, yastatic.net, dzen.ru) salvo subdominios de anuncios/métricas
         if (lower.contains("yandex.") || lower.contains("ya.ru") || lower.contains("dzen.ru") || lower.contains("yastatic.net")) {
-            if (lower.contains("an.yandex.") || lower.contains("mc.yandex.")) return true
-            return false
+            return lower.contains("an.yandex.") || lower.contains("mc.yandex.")
         }
-        val host = try { java.net.URI(url).host?.lowercase() } catch (_: Throwable) { null }
         if (AdBlockDatabase.isAdDomain(host)) return true
         if (AdBlockDatabase.matchesKeyword(lower)) return true
         return false
     }
 
-    fun addAdDomain(domain: String) = AdBlockDatabase.get().addDomain(domain)
-    fun addAdKeyword(keyword: String) = AdBlockDatabase.get().addKeyword(keyword)
-    fun removeAdDomain(domain: String) = AdBlockDatabase.get().removeDomain(domain)
+    fun addAdDomain(domain: String): Boolean { l1HostCache.evictAll(); return AdBlockDatabase.get().addDomain(domain) }
+    fun addAdKeyword(keyword: String): Boolean { l1HostCache.evictAll(); return AdBlockDatabase.get().addKeyword(keyword) }
+    fun removeAdDomain(domain: String): Boolean { l1HostCache.evictAll(); return AdBlockDatabase.get().removeDomain(domain) }
 
     fun isKnownMediaHost(host: String): Boolean {
         val lower = host.lowercase()

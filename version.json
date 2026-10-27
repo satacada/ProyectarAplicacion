@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 258,
-  "versionCodeReceiver": 241,
-  "versionName": "3.5.7",
-  "releaseTag": "v3.5.7",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.7/omnicast-sender-v3.5.7.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.7/omnicast-receiver-v3.5.7.apk",
-  "changelog": "v3.5.7: Blindaje anti-congelamiento en TV Box (Hls.js con límite estricto de 30MB en RAM, backBuffer de 10s, supresión de timeupdate, guardado en disco del historial throttled a 15s/30s y limpieza de memoria periódica freeMemory) e intocabilidad del master.m3u8 en Sender (prohibición estricta de que index-v1-a1 o el DOM sniffer sobreescriban al maestro, con reconstrucción automática de master.m3u8 en Fastream/DropCDN para garantizar selectores de resolución 1080p, 720p y Adaptive permanentemente)."
+  "versionCodeSender": 259,
+  "versionCodeReceiver": 242,
+  "versionName": "3.5.8",
+  "releaseTag": "v3.5.8",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.8/omnicast-sender-v3.5.8.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.8/omnicast-receiver-v3.5.8.apk",
+  "changelog": "v3.5.8: Rediseño ergonómico con barra superior de doble fila compacta (Fila 1: buscador amplio con candado SSL, limpiar y menú de opciones; Fila 2: navegación rápida con Atrás, Adelante, Refrescar, Inicio, Favoritos, botón de flujos estilizado con fondo oscuro y líneas naranjas, controles multimedia y botón de 3 líneas horizontales para acceder al historial y guardados), iconos vectoriales Material 3 modernos de tamaño reducido, y aceleración Ultra Rápida del bloqueador de anuncios mediante Caché L1 en RAM (LruCache) para dominios validados (<0.0001 ms) y script de blindaje WVC precompilado."
 }

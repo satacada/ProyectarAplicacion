@@ -116,4 +116,42 @@ class TvTrackManager(
             }
         }
     }
+
+    fun cycleVideoQuality(player: ExoPlayer): String {
+        val currentTracks = player.currentTracks
+        val videoHeights = mutableListOf<Int>()
+        for (group in currentTracks.groups) {
+            if (group.type == C.TRACK_TYPE_VIDEO) {
+                for (i in 0 until group.length) {
+                    val h = group.getTrackFormat(i).height
+                    if (h > 0 && !videoHeights.contains(h)) videoHeights.add(h)
+                }
+            }
+        }
+        if (videoHeights.isEmpty()) return "Auto"
+        videoHeights.sortDescending()
+
+        val currentMax = trackSelector.parameters.maxVideoHeight
+        val nextIdx = when {
+            currentMax == Int.MAX_VALUE -> 0
+            else -> {
+                val found = videoHeights.indexOf(currentMax)
+                if (found == -1 || found >= videoHeights.size - 1) -1 else found + 1
+            }
+        }
+
+        return if (nextIdx == -1) {
+            trackSelector.parameters = trackSelector.buildUponParameters()
+                .clearVideoSizeConstraints()
+                .build()
+            "Auto (Adaptativa)"
+        } else {
+            val targetH = videoHeights[nextIdx]
+            trackSelector.parameters = trackSelector.buildUponParameters()
+                .setMaxVideoSize(Int.MAX_VALUE, targetH)
+                .setMinVideoSize(0, targetH)
+                .build()
+            "${targetH}p"
+        }
+    }
 }

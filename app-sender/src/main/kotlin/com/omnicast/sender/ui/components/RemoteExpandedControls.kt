@@ -83,15 +83,12 @@ fun RemoteExpandedControls(
 
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     if (onSaveToPlaylist != null) {
                         IconButton(
                             onClick = onSaveToPlaylist,
-                            modifier = Modifier
-                                .size(28.dp)
-                                .background(if (isSaved) Color(0xFF064E3B) else Color(0xFF1A2335), RoundedCornerShape(6.dp))
-                                .border(1.dp, if (isSaved) Color(0xFF10B981) else Color(0xFF2C3B59), RoundedCornerShape(6.dp))
+                            modifier = Modifier.size(24.dp)
                         ) {
                             BookmarkOutlineIcon(
                                 modifier = Modifier.size(16.dp),
@@ -103,10 +100,7 @@ fun RemoteExpandedControls(
                     if (onDeleteFromSaved != null) {
                         IconButton(
                             onClick = onDeleteFromSaved,
-                            modifier = Modifier
-                                .size(28.dp)
-                                .background(Color(0xFF261922), RoundedCornerShape(6.dp))
-                                .border(1.dp, Color(0xFF4C1D24), RoundedCornerShape(6.dp))
+                            modifier = Modifier.size(24.dp)
                         ) {
                             BookmarkRemoveIcon(modifier = Modifier.size(16.dp))
                         }
@@ -117,10 +111,7 @@ fun RemoteExpandedControls(
                             SignalingClientHolder.get().sendMessage(TvZoomManager.toSignalingMessage(preset))
                             Toast.makeText(context, preset.label, Toast.LENGTH_SHORT).show()
                         },
-                        modifier = Modifier
-                            .size(28.dp)
-                            .background(Color(0xFF1E2B4A), RoundedCornerShape(6.dp))
-                            .border(1.dp, Color(0xFF3B82F6), RoundedCornerShape(6.dp))
+                        modifier = Modifier.size(24.dp)
                     ) {
                         Icon(Icons.Rounded.AspectRatio, contentDescription = "Zoom TV", tint = Color(0xFF60A5FA), modifier = Modifier.size(16.dp))
                     }
@@ -129,30 +120,24 @@ fun RemoteExpandedControls(
                             SignalingClientHolder.get().sendMessage(SignalingMessage.PlayControl("TOGGLE_SUBTITLES"))
                             Toast.makeText(context, "💬 Alternando Subtítulos", Toast.LENGTH_SHORT).show()
                         },
-                        modifier = Modifier
-                            .size(28.dp)
-                            .background(Color(0xFF1E2B4A), RoundedCornerShape(6.dp))
-                            .border(1.dp, Color(0xFF3B82F6), RoundedCornerShape(6.dp))
+                        modifier = Modifier.size(24.dp)
                     ) {
                         Icon(Icons.Rounded.Subtitles, contentDescription = "Subtítulos", tint = Color(0xFF60A5FA), modifier = Modifier.size(16.dp))
                     }
                     Box(
                         modifier = Modifier
-                            .height(28.dp)
-                            .clip(RoundedCornerShape(6.dp))
-                            .background(Color(0xFF1E2B4A))
-                            .border(1.dp, Color(0xFF3B82F6), RoundedCornerShape(6.dp))
+                            .height(24.dp)
                             .clickable {
                                 qualityIdx = (qualityIdx + 1) % qualityLabels.size
                                 SignalingClientHolder.get().sendMessage(SignalingMessage.PlayControl("CYCLE_QUALITY"))
                                 Toast.makeText(context, "📺 Calidad: ${qualityLabels[qualityIdx]}", Toast.LENGTH_SHORT).show()
                             }
-                            .padding(horizontal = 6.dp),
+                            .padding(horizontal = 2.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(2.dp)
+                            horizontalArrangement = Arrangement.spacedBy(1.dp)
                         ) {
                             Icon(Icons.Rounded.Hd, contentDescription = "Calidad", tint = Color(0xFF60A5FA), modifier = Modifier.size(15.dp))
                             Text(qualityLabels[qualityIdx], color = Color(0xFF38BDF8), fontSize = 10.sp, fontWeight = FontWeight.Bold)

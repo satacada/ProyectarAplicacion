@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 262,
-  "versionCodeReceiver": 245,
-  "versionName": "3.5.11",
-  "releaseTag": "v3.5.11",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.11/omnicast-sender-v3.5.11.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.11/omnicast-receiver-v3.5.11.apk",
-  "changelog": "v3.5.11: Soporte nativo para flujos MPEG-DASH (OK.ru / okcdn.ru ct=6) en ExoPlayer con aceleración por hardware; enrutamiento inteligente sin desvío erróneo a Chromium; inyección automática de Referer ok.ru; y fallback reactivo defensivo ante flujos DASH."
+  "versionCodeSender": 263,
+  "versionCodeReceiver": 246,
+  "versionName": "3.5.12",
+  "releaseTag": "v3.5.12",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.12/omnicast-sender-v3.5.12.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.12/omnicast-receiver-v3.5.12.apk",
+  "changelog": "v3.5.12: Captura limpia de flujos DASH con opción adaptativa única sin URLs con firmas HMAC rotas; ciclo dinámico de resolución de video en TV Box con D-Pad Abajo (CYCLE_QUALITY) vía TrackSelector sin reinicio de sockets; rediseño de barra superior con iconos de 18dp (+2dp) en botones de 28dp; y controles remotos multimedia sin bordes con espaciado de 4dp."
 }

@@ -101,11 +101,15 @@ object TvRemoteKeyHandler {
                         pv?.showController()
                         return true
                     }
-                    KeyEvent.KEYCODE_DPAD_UP, KeyEvent.KEYCODE_DPAD_DOWN -> {
-                        if (pv != null && !pv.isControllerFullyVisible) {
-                            pv.showController()
-                            return true
-                        }
+                    KeyEvent.KEYCODE_DPAD_UP -> {
+                        val st = exoPlayerManager.toggleSubtitles()
+                        Toast.makeText(context, if (st) "💬 Subtítulos Activados" else "💬 Subtítulos Desactivados", Toast.LENGTH_SHORT).show()
+                        pv?.showController(); return true
+                    }
+                    KeyEvent.KEYCODE_DPAD_DOWN -> {
+                        val q = exoPlayerManager.cycleVideoQuality()
+                        Toast.makeText(context, "📺 Calidad: $q", Toast.LENGTH_SHORT).show()
+                        pv?.showController(); return true
                     }
                     KeyEvent.KEYCODE_MENU -> {
                         exoPlayerManager.toggleResizeMode()

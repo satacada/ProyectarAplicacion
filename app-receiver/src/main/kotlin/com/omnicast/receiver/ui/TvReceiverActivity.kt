@@ -224,6 +224,7 @@ class TvReceiverActivity : ComponentActivity() {
                     "SUBTITLE_TOGGLE", "TOGGLE_SUBTITLES" -> exoPlayerManager.toggleSubtitles()
                     "SET_SUBTITLE_TRACK" -> message.param?.toIntOrNull()?.let { exoPlayerManager.selectTextTrack(it) }
                     "SET_AUDIO_TRACK" -> message.param?.toIntOrNull()?.let { exoPlayerManager.selectAudioTrack(it) }
+                    "CYCLE_QUALITY" -> { val q = exoPlayerManager.cycleVideoQuality(); Toast.makeText(this@TvReceiverActivity, "📺 Calidad: $q", Toast.LENGTH_SHORT).show() }
                     "ROTATE" -> (receiverState.value as? ReceiverUiState.ImageDisplaying)?.let { receiverState.value = it.copy(rotation = (it.rotation + 90f) % 360f) }
                 }
             }

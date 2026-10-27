@@ -28,7 +28,7 @@ class OkRuSiteExtractorAdapter : IMediaStreamExtractorPort {
                       !lower.contains("i.mycdn.me") && !lower.contains("st.mycdn.me") && !lower.contains("static.mycdn.me")
 
         val isOkRuVideo = (lower.contains("ok.ru/") || lower.contains("odnoklassniki.ru/")) &&
-                          (lower.contains("video") || lower.contains("cmd=video") || lower.contains("hlsmanifest"))
+                          (lower.contains("cmd=video") || lower.contains("hlsmanifest") || lower.contains(".m3u8") || lower.contains(".mpd") || lower.contains(".mp4"))
 
         return isMyCdn || isOkRuVideo
     }

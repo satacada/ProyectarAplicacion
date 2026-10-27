@@ -193,6 +193,17 @@
                     updateLiveStreamIfFresher(u);
                     reportMedia(u, document.title, 0, false);
                 }
+                try {
+                    this.addEventListener('load', function() {
+                        try {
+                            if (this.responseText && this.responseText.indexOf('hlsManifestUrl') !== -1) {
+                                var pj = JSON.parse(this.responseText);
+                                var meta = (pj.flashvars && pj.flashvars.metadata) ? pj.flashvars.metadata : (pj.metadata || pj.video || pj);
+                                parseOkRuMetadata(meta);
+                            }
+                        } catch(_) {}
+                    });
+                } catch(_) {}
                 return origOpen.apply(this, arguments);
             };
         }
@@ -218,37 +229,103 @@
         return null;
     };
 
-    // 6. Extractor DOM específico para OK.ru (Metadata JSON en elemento reproductor)
+    // 6. Extractor específico para OK.ru (OneVideoPlayer, DOM data-options, scripts inline y calidades)
+    function mapOkRuQuality(name) {
+        if (!name) return 'Calidad Original';
+        var n = String(name).toLowerCase().trim();
+        if (n === 'ultra' || n === '2160' || n === '4k') return '2160p 4K';
+        if (n === 'quad' || n === '1440' || n === '2k') return '1440p 2K';
+        if (n === 'full' || n === '1080' || n === '1080p') return '1080p FHD';
+        if (n === 'hd' || n === '720' || n === '720p') return '720p HD';
+        if (n === 'sd' || n === '480' || n === '480p') return '480p SD';
+        if (n === 'low' || n === '360' || n === '360p') return '360p';
+        if (n === 'lowest' || n === '240' || n === '240p') return '240p';
+        if (n === 'mobile' || n === '144' || n === '144p') return '144p Móvil';
+        return n;
+    }
+
+    window.__reportedOkRuStreams = window.__reportedOkRuStreams || {};
+    function parseOkRuMetadata(meta, defaultTitle) {
+        if (!meta) return;
+        if (typeof meta === 'string') {
+            try { meta = JSON.parse(meta); } catch(e) { return; }
+        }
+        var mId = (meta.movie && meta.movie.id) ? String(meta.movie.id) : (document.title || 'okvid');
+        var t = (meta.movie && meta.movie.title) ? meta.movie.title : (defaultTitle || document.title);
+        var dur = (meta.movie && meta.movie.duration) ? meta.movie.duration : 0;
+        var hlsKey = mId + '_hls';
+        if (meta.hlsManifestUrl && !window.__reportedOkRuStreams[hlsKey]) {
+            window.__reportedOkRuStreams[hlsKey] = true;
+            reportMedia(meta.hlsManifestUrl, t, dur, false, 'Auto (Adaptativo)');
+        }
+        if (meta.videos && meta.videos.length > 0) {
+            for (var v = 0; v < meta.videos.length; v++) {
+                var vidItem = meta.videos[v];
+                var qKey = mId + '_' + (vidItem.name || v);
+                if (vidItem && vidItem.url && !window.__reportedOkRuStreams[qKey]) {
+                    window.__reportedOkRuStreams[qKey] = true;
+                    reportMedia(vidItem.url, t, dur, false, mapOkRuQuality(vidItem.name));
+                }
+            }
+        }
+    }
+
+    function isOkRuContext() {
+        var h = (window.location.hostname || '').toLowerCase();
+        return h.indexOf('ok.ru') !== -1 || h.indexOf('odnoklassniki') !== -1 || h.indexOf('mycdn.me') !== -1;
+    }
+
     function sniffOkRuDom() {
         try {
-            var elms = document.querySelectorAll('[data-options*="metadata"], [data-module="OKVideo"], div.vp-layer');
+            var isOk = isOkRuContext();
+            // A. Instancia OneVideoPlayer (reproductor oficial de ok.ru)
+            if (isOk && typeof OneVideoPlayer === 'object' && OneVideoPlayer.getInstance) {
+                try {
+                    var ov = OneVideoPlayer.getInstance();
+                    if (ov && ov.options && ov.options.flashvars && ov.options.flashvars.metadata) {
+                        parseOkRuMetadata(ov.options.flashvars.metadata, ov.options.title);
+                    }
+                } catch(_) {}
+            }
+            // B. Elementos del DOM con metadata
+            var elms = document.querySelectorAll('[data-options*="metadata"], [data-module="OKVideo"], div.vp-layer, div[data-video], [data-options*="video"], [data-player]');
             for (var i = 0; i < elms.length; i++) {
-                var raw = elms[i].getAttribute('data-options');
+                var raw = elms[i].getAttribute('data-options') || elms[i].getAttribute('data-video');
                 if (!raw) continue;
                 try {
                     var p = JSON.parse(raw);
-                    var meta = (p.flashvars && p.flashvars.metadata) ? p.flashvars.metadata : null;
-                    if (typeof meta === 'string') { try { meta = JSON.parse(meta); } catch(e) {} }
-                    if (meta) {
-                        var t = (meta.movie && meta.movie.title) ? meta.movie.title : document.title;
-                        if (meta.hlsManifestUrl) {
-                            reportMedia(meta.hlsManifestUrl, t, 0, false);
-                        }
-                        if (meta.videos && meta.videos.length > 0) {
-                            for (var v = 0; v < meta.videos.length; v++) {
-                                if (meta.videos[v].url) {
-                                    reportMedia(meta.videos[v].url, t, 0, false);
-                                }
-                            }
+                    var meta = (p.flashvars && p.flashvars.metadata) ? p.flashvars.metadata : (p.metadata || p.video || null);
+                    parseOkRuMetadata(meta, p.title);
+                } catch(e) {}
+            }
+            // C. Globales de OKVideo
+            if (isOk && window.OKVideo && window.OKVideo.metadata) {
+                parseOkRuMetadata(window.OKVideo.metadata);
+            }
+            // D. Scripts inline que contengan hlsManifestUrl
+            if (isOk) {
+                var scrs = document.querySelectorAll('script');
+                for (var si = 0; si < scrs.length; si++) {
+                    var txt = scrs[si].textContent || '';
+                    if (txt.indexOf('hlsManifestUrl') !== -1 && txt.indexOf('videos') !== -1) {
+                        var match = txt.match(/\{[\s\S]*?"hlsManifestUrl"[\s\S]*?\}/);
+                        if (match) {
+                            try { parseOkRuMetadata(JSON.parse(match[0])); } catch(_) {}
                         }
                     }
-                } catch(e) {}
+                }
             }
         } catch(e) {}
     }
     sniffOkRuDom();
-    setTimeout(sniffOkRuDom, 1500);
-    setTimeout(sniffOkRuDom, 3500);
+    setTimeout(sniffOkRuDom, 1200);
+    setTimeout(sniffOkRuDom, 3000);
+    document.addEventListener('click', function() {
+        if (isOkRuContext()) {
+            setTimeout(sniffOkRuDom, 800);
+            setTimeout(sniffOkRuDom, 2000);
+        }
+    }, true);
 
     // 6b. Extractor DOM para APIs de reproductores web (JWPlayer, Clappr, Flowplayer) estilo WVC
     function sniffPlayerApis() {

@@ -19,7 +19,7 @@ class AdBlockDatabase private constructor(private val appContext: Context) :
     companion object {
         private const val TAG = "AdBlockDatabase"
         private const val DATABASE_NAME = "omnicast_adblock.db"
-        private const val DATABASE_VERSION = 4
+        private const val DATABASE_VERSION = 5
 
         private const val TABLE_DOMAINS = "ad_domains"
         private const val TABLE_KEYWORDS = "ad_keywords"
@@ -120,6 +120,23 @@ class AdBlockDatabase private constructor(private val appContext: Context) :
                 Log.i(TAG, "Base de datos AdBlock purgada de dominios de verificación Cloudflare en v4.")
             } catch (_: Throwable) {}
         }
+        if (oldVersion < 5) {
+            try {
+                db.execSQL("DELETE FROM $TABLE_DOMAINS WHERE $COL_VALUE LIKE '%vk.ru%' OR $COL_VALUE LIKE '%vk.com%' OR $COL_VALUE LIKE '%vkvideo%' OR $COL_VALUE LIKE '%ok.ru%' OR $COL_VALUE LIKE '%odnoklassniki%' OR $COL_VALUE LIKE '%mycdn%' OR $COL_VALUE LIKE '%rumble%' OR $COL_VALUE LIKE '%dailymotion%' OR $COL_VALUE LIKE '%dmcdn%' OR $COL_VALUE LIKE '%vimeo%' OR $COL_VALUE LIKE '%mail.ru%'")
+                Log.i(TAG, "Base de datos AdBlock purgada de portales oficiales y migrada a v5.")
+            } catch (_: Throwable) {}
+        }
+    }
+
+    override fun onDowngrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
+        Log.w(TAG, "Degradación segura de base de datos AdBlock de v$oldVersion a v$newVersion (recuperación limpia sin excepciones).")
+        try {
+            db.execSQL("DROP TABLE IF EXISTS $TABLE_DOMAINS")
+            db.execSQL("DROP TABLE IF EXISTS $TABLE_KEYWORDS")
+            onCreate(db)
+        } catch (e: Throwable) {
+            Log.e(TAG, "Error durante degradación segura de base de datos: ${e.message}", e)
+        }
     }
 
     private fun seedInitialData(db: SQLiteDatabase) {
@@ -198,6 +215,21 @@ class AdBlockDatabase private constructor(private val appContext: Context) :
             Log.i(TAG, "Caché AdBlock recargado desde SQLite: ${cachedDomains.size} dominios, ${cachedKeywords.size} palabras clave.")
         } catch (e: Throwable) {
             Log.e(TAG, "Error cargando caché desde base de datos: ${e.message}", e)
+            if (cachedDomains.isEmpty()) {
+                try {
+                    val stream = appContext.assets.open("adblock/default_ad_rules.json")
+                    val jsonStr = stream.bufferedReader().use { it.readText() }
+                    val root = JSONObject(jsonStr)
+                    val domains = root.optJSONArray("domains")
+                    if (domains != null) {
+                        for (i in 0 until domains.length()) {
+                            val d = domains.optString(i).trim().lowercase()
+                            if (d.isNotBlank()) cachedDomains.add(d)
+                        }
+                    }
+                    Log.i(TAG, "Fallback de emergencia: ${cachedDomains.size} dominios cargados desde assets.")
+                } catch (_: Throwable) {}
+            }
         }
     }
 

@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 244,
-  "versionCodeReceiver": 227,
-  "versionName": "3.4.94",
-  "releaseTag": "v3.4.94",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.94/omnicast-sender-v3.4.94.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.94/omnicast-receiver-v3.4.94.apk",
-  "changelog": "v3.4.94: Copia íntegra y exacta del motor de captura original de la versión 3.32.94 (BrowserWebView, BrowserUrlHelper, MediaPlatformResolver, WvcDomSniffer, WvcVideoListSheet, DynamicSnifferManager y AdBlocker de commit 3f1f03f) sin modificaciones ni interceptores inventados, manteniendo módulos de Proyectar y Galería sellados de v3.4.64."
+  "versionCodeSender": 245,
+  "versionCodeReceiver": 228,
+  "versionName": "3.4.95",
+  "releaseTag": "v3.4.95",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.95/omnicast-sender-v3.4.95.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.95/omnicast-receiver-v3.4.95.apk",
+  "changelog": "v3.4.95: Corrección de SQLite en AdBlockDatabase (DATABASE_VERSION=5 con onDowngrade tolerante a fallos para aprendizaje y bloqueo en PelisGO) y restauración de captura aislada de OK.ru en universal_sniffer.js y OkRuSiteExtractorAdapter según arquitectura hexagonal."
 }

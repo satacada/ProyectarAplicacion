@@ -1,10 +1,10 @@
 {
-  "versionCodeSender": 248,
-  "versionCodeReceiver": 231,
-  "versionName": "3.4.98",
-  "releaseTag": "v3.4.98",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.98/omnicast-sender-v3.4.98.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.98/omnicast-receiver-v3.4.98.apk",
-  "changelog": "v3.4.98: Fiel restauración del motor de captura original de v3.32.94 sin inventos ni mutaciones, Proyectar WebRTC y Galería sellados de v3.4.94, y catálogo completo de 18 películas de prueba en historial."
+  "versionCodeSender": 249,
+  "versionCodeReceiver": 232,
+  "versionName": "3.4.99",
+  "releaseTag": "v3.4.99",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.99/omnicast-sender-v3.4.99.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.99/omnicast-receiver-v3.4.99.apk",
+  "changelog": "v3.4.99: Depuración de código muerto en captura: eliminación de funciones redundantes en StreamIntelligenceEngine, purga de adaptador huérfano Dailymotion y erradicación de referencia residual a LocalStreamProxyServer."
 }
 

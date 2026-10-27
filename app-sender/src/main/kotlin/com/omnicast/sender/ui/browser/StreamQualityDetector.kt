@@ -61,11 +61,7 @@ object StreamQualityDetector {
 
         // Sonda Pre-Cast + Auto-Reparador de Cabeceras (4 permutaciones deterministas)
         val probe = StreamManifestProbe.probeAndHeal(currentMediaUrl, safeHeaders, pageUrl)
-        val rawManifest = if (probe.isPlayable && probe.manifestContent.isNotBlank()) {
-            probe.manifestContent
-        } else {
-            com.omnicast.sender.media.LocalStreamProxyServer.fetchManifestContent(currentMediaUrl, safeHeaders) ?: probe.manifestContent
-        }
+        val rawManifest = probe.manifestContent
 
         if (!probe.isPlayable && rawManifest.isBlank()) {
             android.util.Log.w("StreamQualityDetector", "Flujo advertido por sonda (HTTP ${probe.httpCode}): $currentMediaUrl")

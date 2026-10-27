@@ -16,9 +16,20 @@ Esto provocó tres fallos críticos en producción:
 
 Para erradicar la duplicación de código y garantizar que ningún sitio nuevo degrade a los portales existentes, se implementa una arquitectura en dos capas:
 
-### 1. Barrera Universal de Higiene Previa (`TelemetryFilterAdapter.kt`)
-Se centraliza en el núcleo hexagonal (`IStreamTelemetryFilterPort`) el descarte inmediato (0ms) de toda URL que no sea un recurso reproducible:
-- **Telemetría y Analítica:** `/cdn-cgi/`, `tracker`, `top-fwz`, `videostat`, `statnew`, `beacon`, `heartbeat`.
+### 1. Barrera Universal de Higiene Previa: `isTelemetryOrGarbage(url)`
+Se centraliza en el núcleo hexagonal (`IStreamTelemetryFilterPort`) a través de la función canónica:
+```kotlin
+fun isTelemetryOrGarbage(url: String): Boolean
+```
+Implementada en `TelemetryFilterAdapter.kt` y consumida obligatoriamente por `DetectMediaStreamUseCase.kt` tanto en `execute()` como en `isStreamCandidate()` **antes de invocar a cualquier extractor**:
+
+```kotlin
+// Portero de 0ms en DetectMediaStreamUseCase:
+if (telemetryFilter.isTelemetryOrGarbage(url)) return false / null
+```
+
+Esta función única e inviolable descarta:
+- **Telemetría y Analítica:** `/cdn-cgi/`, `tracker`, `top-fwz`, `videostat`, `statnew`, `beacon`, `heartbeat`, `/ping`, `/event`, `counter`.
 - **Páginas de Iframe / Embed Web:** `/embed/`, `/embed-`, `/e/`, `/widget/`, `/iframe/` (excepto YouTube oficial).
 - **Catálogos y Portadas:** `anonymvideo`, `showcase`, `st.cmd`, `/dk?`.
 - **Extensiones Estáticas y HTML:** `.html`, `.htm`, `.css`, `.js`, etc.

@@ -15,8 +15,8 @@ Para que la lista de opciones no se contamine con llamadas de telemetría o esta
    - Cada sitio web no estándar debe ser un adaptador independiente (`IMediaStreamExtractorPort`) que se conecta o desconecta en `StreamExtractorRegistry`.
 
 2. **Filtrado Temprano de Telemetría e Iframes (ADR-012):**
-   - Toda llamada con patrones como `/cdn-cgi/`, `tracker`, `top-fwz`, `videostat`, `statnew`, `telemetry`, `analytics`, `beacon`, `heartbeat` o `ping` debe ser descartada por `TelemetryFilterAdapter` antes de llegar a los extractores.
-   - Las páginas web de iframe (`/embed/`, `/embed-`, `/e/`, `/widget/`) y portadas (`anonymvideo`, `showcase`, `st.cmd`, `/dk?`) quedan automáticamente excluidas como flujos de video para evitar el envío de HTML a la TV Box.
+   - Toda llamada con patrones como `/cdn-cgi/`, `tracker`, `top-fwz`, `videostat`, `statnew`, `telemetry`, `analytics`, `beacon`, `heartbeat` o `ping` debe ser descartada por la función central canónica `isTelemetryOrGarbage(url)` de `TelemetryFilterAdapter` antes de que se consulte a cualquier extractor.
+   - Las páginas web de iframe (`/embed/`, `/embed-`, `/e/`, `/widget/`) y portadas (`anonymvideo`, `showcase`, `st.cmd`, `/dk?`) quedan automáticamente excluidas como flujos de video por `isTelemetryOrGarbage(url)` para evitar el envío de HTML a la TV Box.
 
 3. **Aislamiento de OK.ru y CDNs con Firma:**
    - La extracción de `ok.ru` se realiza a través de su adaptador dedicado `OkRuSiteExtractorAdapter` capturando exclusivamente los flujos firmados de su CDN (`mycdn.me`, `okcdn.ru` con `sig=` y `type=`), mapeando calidades (1080p, 720p) e inyectando `Referer: https://ok.ru/`. Las páginas web HTML y los trackers rusos de Mail.ru quedan estrictamente excluidos.

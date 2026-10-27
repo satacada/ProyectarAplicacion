@@ -1,10 +1,9 @@
 {
-  "versionCodeSender": 254,
-  "versionCodeReceiver": 237,
-  "versionName": "3.5.3",
-  "releaseTag": "v3.5.3",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.3/omnicast-sender-v3.5.3.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.3/omnicast-receiver-v3.5.3.apk",
-  "changelog": "v3.5.3: Filtro centralizado universal de telemetría e iframes (ADR-012), purificación estricta de HLS (Pelismart) y OK.ru (eliminación de trackers/showcase), y fortalecimiento de AdBlocker contra banners in-page."
+  "versionCodeSender": 256,
+  "versionCodeReceiver": 239,
+  "versionName": "3.5.5",
+  "releaseTag": "v3.5.5",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.5/omnicast-sender-v3.5.5.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.5/omnicast-receiver-v3.5.5.apk",
+  "changelog": "v3.5.5: Barra superior ergonómica (+2px tamaño a 28dp, +2px espaciado a 4dp), botón de casteo oficial Google Cast con fondo naranja (#FF9800) e insignia de flujos, botón multimedia reactivo visible solo al proyectar a TV, botones de Inicio, Cerrar y Atrás, estrella de Favoritos integrada en la URL y recarga suave por deslizamiento superior (SwipeRefreshLayout)."
 }
-

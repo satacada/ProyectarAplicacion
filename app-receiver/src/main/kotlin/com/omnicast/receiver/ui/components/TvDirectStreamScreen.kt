@@ -19,7 +19,10 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -31,14 +34,13 @@ import kotlinx.coroutines.delay
 fun TvDirectStreamScreen(
     exoPlayerManager: ExoPlayerTvManager,
     title: String,
-    streamUrl: String,
+    streamUrl: String = "",
     isSaved: Boolean = false,
     onSaveToWatchLater: () -> Unit = {},
     onCloseClick: () -> Unit = {}
 ) {
     val context = LocalContext.current
     var showSettingsDialog by remember { mutableStateOf(false) }
-    var isGearFocused by remember { mutableStateOf(false) }
     var isControlsVisible by remember { mutableStateOf(true) }
     var userInteractionCount by remember { mutableIntStateOf(0) }
     var currentQuality by remember { mutableStateOf(exoPlayerManager.getCurrentVideoQuality()) }
@@ -119,23 +121,49 @@ fun TvDirectStreamScreen(
             )
         }
 
-        // Tuerca superior izquierda
-        Box(
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .padding(start = 24.dp, top = 24.dp)
-                .size(38.dp)
-                .background(if (isGearFocused) Color(0xFF38BDF8) else Color(0x990F172A), RoundedCornerShape(10.dp))
-                .border(if (isGearFocused) 2.dp else 1.dp, if (isGearFocused) Color.White else Color(0x6638BDF8), RoundedCornerShape(10.dp))
-                .onFocusChanged { isGearFocused = it.isFocused; if (it.isFocused) { isControlsVisible = true; userInteractionCount++ } }
-                .focusable()
-                .clickable { showSettingsDialog = true },
-            contentAlignment = Alignment.Center
+        // 1. Controles Centrales Clásicos de ExoPlayer (-10s, Play/Pausa, +10s)
+        AnimatedVisibility(
+            visible = isControlsVisible,
+            enter = fadeIn() + scaleIn(initialScale = 0.85f),
+            exit = fadeOut() + scaleOut(targetScale = 0.85f),
+            modifier = Modifier.align(Alignment.Center)
         ) {
-            Text("⚙", fontSize = 18.sp, color = if (isGearFocused) Color.Black else Color.White)
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(24.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                TvCircleButton(
+                    text = "⏪ -10s",
+                    size = 56.dp,
+                    fontSize = 12.sp,
+                    onClick = {
+                        exoPlayerManager.seekTo((currentPosMs - 10_000L).coerceAtLeast(0L))
+                        userInteractionCount++
+                    }
+                )
+                TvCircleButton(
+                    text = if (isPlaying) "⏸" else "▶",
+                    size = 76.dp,
+                    fontSize = 34.sp,
+                    isPrimary = true,
+                    onClick = {
+                        if (isPlaying) exoPlayerManager.pause() else exoPlayerManager.resume()
+                        userInteractionCount++
+                    }
+                )
+                TvCircleButton(
+                    text = "⏩ +10s",
+                    size = 56.dp,
+                    fontSize = 12.sp,
+                    onClick = {
+                        exoPlayerManager.seekTo((currentPosMs + 10_000L).coerceAtMost(durationMs))
+                        userInteractionCount++
+                    }
+                )
+            }
         }
 
-        // Barra inferior interactiva para TV (Navegable con control remoto)
+        // 2. Barra Inferior Interactiva para TV (Línea de tiempo, Opciones y Tuerca en la derecha)
         AnimatedVisibility(
             visible = isControlsVisible,
             enter = fadeIn() + slideInVertically { it / 2 },
@@ -146,72 +174,68 @@ fun TvDirectStreamScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(Brush.verticalGradient(listOf(Color.Transparent, Color(0xF2070D18))))
-                    .padding(horizontal = 28.dp, vertical = 18.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
+                    .padding(horizontal = 28.dp, vertical = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                // Título y estado
+                // Título
                 Text(
                     text = title.ifBlank { "Transmisión en TV Box" },
-                    color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.Bold,
+                    color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold,
                     maxLines = 1, overflow = TextOverflow.Ellipsis
                 )
 
                 // Línea de tiempo
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
                     val progress = if (durationMs > 0L) (currentPosMs.toFloat() / durationMs.toFloat()).coerceIn(0f, 1f) else 0f
                     LinearProgressIndicator(
                         progress = { progress },
-                        modifier = Modifier.fillMaxWidth().height(6.dp),
+                        modifier = Modifier.fillMaxWidth().height(5.dp),
                         color = Color(0xFFFF7A00),
                         trackColor = Color(0xFF334155)
                     )
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text(formatTvTime(currentPosMs), color = Color(0xFF94A3B8), fontSize = 12.sp, fontWeight = FontWeight.Medium)
-                        Text(formatTvTime(durationMs), color = Color(0xFF94A3B8), fontSize = 12.sp, fontWeight = FontWeight.Medium)
+                        Text(formatTvTime(currentPosMs), color = Color(0xFF94A3B8), fontSize = 11.sp, fontWeight = FontWeight.Medium)
+                        Text(formatTvTime(durationMs), color = Color(0xFF94A3B8), fontSize = 11.sp, fontWeight = FontWeight.Medium)
                     }
                 }
 
-                // Fila de botones de control nativo para TV
+                // Fila de Opciones: Subtítulos, Calidad, Escala, Salir y Tuerca Ajustes a la derecha
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    TvPlayerButton(label = "⏪ -10s", onClick = {
-                        exoPlayerManager.seekTo((currentPosMs - 10_000L).coerceAtLeast(0L))
-                        userInteractionCount++
-                    })
-                    TvPlayerButton(label = if (isPlaying) "⏸ Pausa" else "▶ Play", isPrimary = true, onClick = {
-                        if (isPlaying) exoPlayerManager.pause() else exoPlayerManager.resume()
-                        userInteractionCount++
-                    })
-                    TvPlayerButton(label = "⏩ +10s", onClick = {
-                        exoPlayerManager.seekTo((currentPosMs + 10_000L).coerceAtMost(durationMs))
-                        userInteractionCount++
-                    })
-                    TvPlayerButton(label = "📺 $currentQuality", onClick = {
-                        currentQuality = exoPlayerManager.cycleVideoQuality()
-                        Toast.makeText(context, "📺 Calidad: $currentQuality", Toast.LENGTH_SHORT).show()
-                        userInteractionCount++
-                    })
-                    TvPlayerButton(label = if (subsEnabled) "💬 Sub: Sí" else "💬 Sub: No", onClick = {
-                        subsEnabled = exoPlayerManager.toggleSubtitles()
-                        Toast.makeText(context, if (subsEnabled) "💬 Subtítulos Activados" else "💬 Subtítulos Desactivados", Toast.LENGTH_SHORT).show()
-                        userInteractionCount++
-                    })
-                    TvPlayerButton(label = "🔲 $currentResizeLabel", onClick = {
-                        exoPlayerManager.toggleResizeMode()
-                        currentResizeLabel = exoPlayerManager.aspectRatioHelper.currentMode.value.label
-                        userInteractionCount++
-                    })
-                    TvPlayerButton(label = "⚙ Ajustes", onClick = {
-                        showSettingsDialog = true
-                        userInteractionCount++
-                    })
-                    TvPlayerButton(label = "🚪 Salir", isDanger = true, onClick = {
-                        exoPlayerManager.stop("Botón Salir TV")
-                        onCloseClick()
-                    })
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                        TvPlayerButton(label = "📺 $currentQuality", onClick = {
+                            currentQuality = exoPlayerManager.cycleVideoQuality()
+                            Toast.makeText(context, "📺 Calidad: $currentQuality", Toast.LENGTH_SHORT).show()
+                            userInteractionCount++
+                        })
+                        TvPlayerButton(label = if (subsEnabled) "💬 Sub: Sí" else "💬 Sub: No", onClick = {
+                            subsEnabled = exoPlayerManager.toggleSubtitles()
+                            Toast.makeText(context, if (subsEnabled) "💬 Subtítulos Activados" else "💬 Subtítulos Desactivados", Toast.LENGTH_SHORT).show()
+                            userInteractionCount++
+                        })
+                        TvPlayerButton(label = "🔲 $currentResizeLabel", onClick = {
+                            exoPlayerManager.toggleResizeMode()
+                            currentResizeLabel = exoPlayerManager.aspectRatioHelper.currentMode.value.label
+                            userInteractionCount++
+                        })
+                        TvPlayerButton(label = "🚪 Salir", isDanger = true, onClick = {
+                            exoPlayerManager.stop("Botón Salir TV")
+                            onCloseClick()
+                        })
+                    }
+
+                    // Tuerca de Ajustes en la parte inferior derecha
+                    TvPlayerButton(
+                        label = "⚙ Ajustes",
+                        isSettings = true,
+                        onClick = {
+                            showSettingsDialog = true
+                            userInteractionCount++
+                        }
+                    )
                 }
             }
         }
@@ -240,51 +264,4 @@ fun TvDirectStreamScreen(
     }
 }
 
-@Composable
-private fun TvPlayerButton(
-    label: String,
-    onClick: () -> Unit,
-    isPrimary: Boolean = false,
-    isDanger: Boolean = false
-) {
-    var isFocused by remember { mutableStateOf(false) }
-    val bgColor = when {
-        isFocused -> if (isDanger) Color(0xFFEF4444) else if (isPrimary) Color(0xFFFF9500) else Color(0xFF38BDF8)
-        isDanger -> Color(0x992D1515)
-        isPrimary -> Color(0xD9E65100)
-        else -> Color(0xB31E293B)
-    }
 
-    Surface(
-        color = bgColor,
-        shape = RoundedCornerShape(8.dp),
-        modifier = Modifier
-            .height(38.dp)
-            .scale(if (isFocused) 1.1f else 1.0f)
-            .border(
-                width = if (isFocused) 2.dp else 1.dp,
-                color = if (isFocused) Color.White else Color(0xFF475569),
-                shape = RoundedCornerShape(8.dp)
-            )
-            .onFocusChanged { isFocused = it.isFocused }
-            .focusable()
-            .clickable(onClick = onClick)
-    ) {
-        Box(modifier = Modifier.padding(horizontal = 10.dp), contentAlignment = Alignment.Center) {
-            Text(
-                text = label,
-                color = if (isFocused && !isDanger) Color.Black else Color.White,
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Bold
-            )
-        }
-    }
-}
-
-private fun formatTvTime(ms: Long): String {
-    val totalSec = ms / 1000
-    val sec = totalSec % 60
-    val min = (totalSec / 60) % 60
-    val hrs = totalSec / 3600
-    return if (hrs > 0) String.format("%02d:%02d:%02d", hrs, min, sec) else String.format("%02d:%02d", min, sec)
-}

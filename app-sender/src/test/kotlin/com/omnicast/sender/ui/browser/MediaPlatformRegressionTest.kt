@@ -97,4 +97,32 @@ class MediaPlatformRegressionTest {
         assertEquals("https://dr0pstream.com", dropHeaders["Origin"])
         assertEquals("https://fastream.to", fastHeaders["Origin"])
     }
+
+    @Test
+    fun testFastreamExtractorStrictness() {
+        val adapter = com.omnicast.sender.ui.browser.extractors.FastreamExtractorAdapter()
+        val rumCandidate = com.omnicast.core.domain.models.StreamCandidate("https://dr0pstream.com/cdn-cgi/rum?")
+        val embedCandidate = com.omnicast.core.domain.models.StreamCandidate("https://dr0pstream.com/e/loaxgshq39l6")
+        val realHlsCandidate = com.omnicast.core.domain.models.StreamCandidate("https://dr0pstream.com/hls2/01/00038/loaxgshq39l6_n/master.m3u8?t=123")
+
+        assertFalse("Debe rechazar telemetría Cloudflare RUM", adapter.canHandle(rumCandidate))
+        assertFalse("Debe rechazar página web /e/", adapter.canHandle(embedCandidate))
+        assertTrue("Debe aceptar el flujo HLS real", adapter.canHandle(realHlsCandidate))
+
+        assertFalse("isRealMedia debe rechazar telemetría", BrowserUrlHelper.isRealMedia("https://dr0pstream.com/cdn-cgi/rum?"))
+        assertFalse("isRealMedia debe rechazar página /e/", BrowserUrlHelper.isRealMedia("https://dr0pstream.com/e/loaxgshq39l6"))
+        assertTrue("isRealMedia debe aceptar master.m3u8", BrowserUrlHelper.isRealMedia("https://dr0pstream.com/hls2/01/00038/loaxgshq39l6_n/master.m3u8?t=123"))
+    }
+
+    @Test
+    fun testOkRuExtractorStrictness() {
+        val adapter = com.omnicast.sender.ui.browser.extractors.OkRuSiteExtractorAdapter()
+        val previewCandidate = com.omnicast.core.domain.models.StreamCandidate("https://mycdn.me/videopreview?id=123")
+        val byteRangeCandidate = com.omnicast.core.domain.models.StreamCandidate("https://mycdn.me/video.mp4?bytes=0-1000")
+        val realVideoCandidate = com.omnicast.core.domain.models.StreamCandidate("https://mycdn.me/video.mp4?sig=abc&expires=999")
+
+        assertFalse("Debe rechazar videopreview", adapter.canHandle(previewCandidate))
+        assertFalse("Debe rechazar byte range preview", adapter.canHandle(byteRangeCandidate))
+        assertTrue("Debe aceptar video real", adapter.canHandle(realVideoCandidate))
+    }
 }

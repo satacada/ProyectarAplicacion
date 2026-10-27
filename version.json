@@ -1,10 +1,10 @@
 {
-  "versionCodeSender": 252,
-  "versionCodeReceiver": 235,
-  "versionName": "3.5.1",
-  "releaseTag": "v3.5.1",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.1/omnicast-sender-v3.5.1.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.1/omnicast-receiver-v3.5.1.apk",
-  "changelog": "v3.5.1: Integración de detección hexagonal pura para OK.ru y portales con API de metadatos (delegación en isRealMedia y filtro anti-preview en OkRuSiteExtractorAdapter)."
+  "versionCodeSender": 253,
+  "versionCodeReceiver": 236,
+  "versionName": "3.5.2",
+  "releaseTag": "v3.5.2",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.2/omnicast-sender-v3.5.2.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.2/omnicast-receiver-v3.5.2.apk",
+  "changelog": "v3.5.2: Filtro estricto anti-telemetría/páginas en FastreamExtractorAdapter y soporte ampliado para redes CDN rusas (OK.ru, VK, Mail.ru) con auto-apertura limpia en PelisPlus."
 }
 

@@ -51,7 +51,7 @@ class SenderMainActivity : ComponentActivity() {
         fun exitCompletely(context: Context) {
             try {
                 com.omnicast.sender.overlay.FloatingIndicatorService.stop(context); com.omnicast.sender.service.CastMediaNotificationService.stop(context)
-                com.omnicast.sender.service.ProjectionForegroundService.stopService(context); com.omnicast.sender.media.LocalStreamProxyServer.stop()
+                com.omnicast.sender.service.ProjectionForegroundService.stopService(context)
                 com.omnicast.sender.stream.ActiveStreamHolder.clear(); com.omnicast.sender.stream.ActiveStreamHolder.stopCasting(); sendDisconnectStatic(context)
                 (context.getSystemService(Context.NOTIFICATION_SERVICE) as? android.app.NotificationManager)?.cancelAll()
                 instance?.let { act -> act.runOnUiThread { act.finishAffinity(); android.os.Process.killProcess(android.os.Process.myPid()); kotlin.system.exitProcess(0) } }
@@ -275,7 +275,7 @@ class SenderMainActivity : ComponentActivity() {
     }
 
     override fun onDestroy() {
-        super.onDestroy(); instance = null; com.omnicast.sender.media.LocalImageServer.stop(); com.omnicast.sender.media.LocalStreamProxyServer.stop()
+        super.onDestroy(); instance = null; com.omnicast.sender.media.LocalImageServer.stop()
         try { nsdScanner.stopDiscovery() } catch (e: Throwable) { Log.e("Sender", "NSD stop", e) }
     }
 }

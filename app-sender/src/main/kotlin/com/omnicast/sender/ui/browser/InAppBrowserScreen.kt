@@ -263,8 +263,7 @@ fun InAppBrowserScreen(
                             val target = if (primary.isNotBlank()) primary else if (currentUrl.startsWith("http")) currentUrl else ""
                             if (target.isNotBlank()) {
                                 val t = if (castTitle.isNotBlank()) castTitle else if (pageTitle.isNotBlank() && pageTitle != "Cargando...") pageTitle else "Película / Video"
-                                val origUrl = com.omnicast.sender.media.LocalStreamProxyServer.getOriginalUrl(target) ?: target
-                                val isProx = ActiveStreamHolder.isProxied.value || target.contains(":8092"); videoToSave = HistoryItem(origUrl, t, currentUrl, streamHeaders[primary] ?: emptyMap(), requiresProxy = isProx)
+                                val isProx = ActiveStreamHolder.isProxied.value; videoToSave = HistoryItem(target, t, currentUrl, streamHeaders[primary] ?: emptyMap(), requiresProxy = isProx)
                             }
                         },
                         onDeleteFromSaved = { deleteMovieFromSaved() }, isSaved = isMovieSaved,

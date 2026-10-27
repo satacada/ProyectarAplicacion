@@ -17,27 +17,9 @@ object DynamicSnifferManager {
 
     fun getInjectionScript(context: Context): String {
         cachedScript?.let { return it }
-
-        val dynamicFile = File(context.filesDir, "sniffer/$SCRIPT_FILE_NAME")
-        val scriptContent = if (dynamicFile.exists() && dynamicFile.length() > 0) {
-            val text = try { dynamicFile.readText(Charsets.UTF_8) } catch (_: Throwable) { "" }
-            if (text.contains("triggerPointerSequence") || text.contains("autoSolveTurnstile") || !text.contains("OMNICAST_STREAM")) {
-                runCatching { dynamicFile.delete() }
-                loadFromAssets(context)
-            } else {
-                text
-            }
-        } else {
-            loadFromAssets(context)
-        }
-
-        val wvcFallback = try {
-            context.assets.open("wvc_sniffer.js").bufferedReader().use { it.readText() }
-        } catch (_: Throwable) { "" }
-
-        val combined = "$wvcFallback\n$scriptContent"
-        cachedScript = combined
-        return combined
+        val script = loadFromAssets(context)
+        cachedScript = script
+        return script
     }
 
     private fun loadFromAssets(context: Context): String {

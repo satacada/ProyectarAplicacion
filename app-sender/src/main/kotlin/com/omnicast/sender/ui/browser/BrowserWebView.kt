@@ -202,13 +202,6 @@ fun BrowserWebView(
                     override fun shouldInterceptRequest(v: WebView?, r: WebResourceRequest?): WebResourceResponse? {
                         return try {
                             val reqUrl = r?.url?.toString() ?: return super.shouldInterceptRequest(v, r)
-                            if (reqUrl.contains("/ibjslib/wai2iku6/")) {
-                                val assetName = if (reqUrl.contains("json2.js")) "json2.js" else "wvc_sniffer.js"
-                                return try {
-                                    val stream = ctx.assets.open(assetName)
-                                    WebResourceResponse("application/javascript", "UTF-8", stream)
-                                } catch (_: Throwable) { super.shouldInterceptRequest(v, r) }
-                            }
                             val docUrl = r.requestHeaders?.get("Referer") ?: currentUrl
                             if (isAdBlockEnabled && (AdBlocker.isAd(reqUrl) || AdBlocker.isVideoAd(reqUrl) || NativeAdBlockEngine.shouldBlock(reqUrl, docUrl))) {
                                 return AdBlocker.createEmptyResponse()
@@ -242,7 +235,7 @@ fun BrowserWebView(
                         onProgress(p)
                         if (p >= 80) swipeRefresh.isRefreshing = false
                         if (isAdBlockEnabled && (p == 30 || p == 60 || p == 100)) v?.evaluateJavascript(AdBlocker.getAdHidingScript(), null)
-                        if (p == 60 || p == 85 || p == 100) v?.evaluateJavascript(WvcDomSniffer.getInjectionScript(ctx), null)
+                        if (p == 100) v?.evaluateJavascript(WvcDomSniffer.getInjectionScript(ctx), null)
                     }
 
                     override fun onReceivedTitle(v: WebView?, title: String?) {

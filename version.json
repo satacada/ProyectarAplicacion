@@ -1,10 +1,10 @@
 {
-  "versionCodeSender": 249,
-  "versionCodeReceiver": 232,
-  "versionName": "3.4.99",
-  "releaseTag": "v3.4.99",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.99/omnicast-sender-v3.4.99.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.99/omnicast-receiver-v3.4.99.apk",
-  "changelog": "v3.4.99: Depuración de código muerto en captura: eliminación de funciones redundantes en StreamIntelligenceEngine, purga de adaptador huérfano Dailymotion y erradicación de referencia residual a LocalStreamProxyServer."
+  "versionCodeSender": 250,
+  "versionCodeReceiver": 233,
+  "versionName": "3.4.100",
+  "releaseTag": "v3.4.100",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.100/omnicast-sender-v3.4.100.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.100/omnicast-receiver-v3.4.100.apk",
+  "changelog": "v3.4.100: Segunda optimización integral de captura: eliminación de 4 componentes UI muertos, erradicación definitiva de LocalStreamProxyServer, supresión de wvc_sniffer.js/json2.js e inyección JS única e idempotente en WebView."
 }
 

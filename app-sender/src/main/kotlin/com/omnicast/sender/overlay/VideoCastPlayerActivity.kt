@@ -212,5 +212,9 @@ class VideoCastPlayerActivity : ComponentActivity() {
         videoView?.stopPlayback()
         videoView = null
         mediaPlayer = null
+        if (!com.omnicast.sender.service.CastSessionState.isGalleryCasting &&
+            !com.omnicast.sender.stream.ActiveStreamHolder.isCasting.value) {
+            com.omnicast.sender.media.LocalImageServer.stop()
+        }
     }
 }

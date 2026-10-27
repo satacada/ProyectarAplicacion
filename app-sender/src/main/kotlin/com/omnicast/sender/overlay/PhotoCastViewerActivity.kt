@@ -93,7 +93,7 @@ class PhotoCastViewerActivity : ComponentActivity() {
             val auth = it.authority ?: ""
             auth.contains("docs") || auth.contains("drive") || auth.contains("documents")
         }
-        if (!isCloudOrDoc) {
+        if (!isCloudOrDoc && holderPhotos.size <= 1) {
             if (GalleryMediaHelper.hasGalleryPermission(this)) {
                 loadFullGallery()
             } else {
@@ -218,5 +218,8 @@ class PhotoCastViewerActivity : ComponentActivity() {
         super.onDestroy()
         com.omnicast.sender.service.CastSessionState.isGalleryCasting = false
         signalingClient = null
+        if (!com.omnicast.sender.stream.ActiveStreamHolder.isCasting.value) {
+            LocalImageServer.stop()
+        }
     }
 }

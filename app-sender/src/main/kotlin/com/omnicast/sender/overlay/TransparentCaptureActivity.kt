@@ -8,7 +8,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
 import com.omnicast.core.domain.models.DeviceTarget
 import com.omnicast.core.domain.models.StreamProfile
-import com.omnicast.sender.capture.LegacyCaptureCompat
+import android.media.projection.MediaProjectionManager
 import com.omnicast.sender.service.ProjectionForegroundService
 
 /**
@@ -58,7 +58,8 @@ class TransparentCaptureActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val captureIntent = LegacyCaptureCompat.createCaptureIntent(this)
+        val mpm = getSystemService(Context.MEDIA_PROJECTION_SERVICE) as? MediaProjectionManager
+        val captureIntent = mpm?.createScreenCaptureIntent()
         if (captureIntent == null) {
             finish()
             return

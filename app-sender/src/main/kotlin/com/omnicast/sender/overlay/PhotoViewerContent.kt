@@ -106,7 +106,7 @@ fun PhotoViewerContent(
                     showGestureHint = false
                     var panAccumulator = Offset.Zero
                     var wasZooming = false
-
+                    var lastTransformTime = 0L
                     do {
                         val event = awaitPointerEvent()
                         val pointerCount = event.changes.count { it.pressed }
@@ -118,11 +118,19 @@ fun PhotoViewerContent(
                             wasZooming = true
                             scale = (scale * zoom).coerceIn(0.40f, 5.0f)
                             panX += pan.x; panY += pan.y
-                            onTransform(scale, panX, panY, rotation)
+                            val now = System.currentTimeMillis()
+                            if (now - lastTransformTime >= 16L) {
+                                onTransform(scale, panX, panY, rotation)
+                                lastTransformTime = now
+                            }
                             event.changes.forEach { if (it.positionChanged()) it.consume() }
                         } else if (scale > 1.05f) {
                             panX += pan.x; panY += pan.y
-                            onTransform(scale, panX, panY, rotation)
+                            val now = System.currentTimeMillis()
+                            if (now - lastTransformTime >= 16L) {
+                                onTransform(scale, panX, panY, rotation)
+                                lastTransformTime = now
+                            }
                             event.changes.forEach { if (it.positionChanged()) it.consume() }
                         } else {
                             panAccumulator += pan
@@ -132,7 +140,9 @@ fun PhotoViewerContent(
                         }
                     } while (event.changes.any { it.pressed })
 
-                    if (!wasZooming && scale <= 1.05f) {
+                    if (wasZooming || scale > 1.05f) {
+                        onTransform(scale, panX, panY, rotation)
+                    } else {
                         if (panAccumulator.x < -40f) onNext() else if (panAccumulator.x > 40f) onPrev()
                         panX = 0f; panY = 0f
                         onTransform(1.0f, 0f, 0f, rotation)

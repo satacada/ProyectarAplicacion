@@ -1,10 +1,10 @@
 {
-  "versionCodeSender": 250,
-  "versionCodeReceiver": 233,
-  "versionName": "3.4.100",
-  "releaseTag": "v3.4.100",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.100/omnicast-sender-v3.4.100.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.100/omnicast-receiver-v3.4.100.apk",
-  "changelog": "v3.4.100: Segunda optimización integral de captura: eliminación de 4 componentes UI muertos, erradicación definitiva de LocalStreamProxyServer, supresión de wvc_sniffer.js/json2.js e inyección JS única e idempotente en WebView."
+  "versionCodeSender": 251,
+  "versionCodeReceiver": 234,
+  "versionName": "3.5.0",
+  "releaseTag": "v3.5.0",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.0/omnicast-sender-v3.5.0.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.0/omnicast-receiver-v3.5.0.apk",
+  "changelog": "v3.5.0: Optimización integral de Proyectar y Galería: purga de interfaces huérfanas, inlining de captura transparente, throttling a 60fps en gestos táctiles de fotos, eliminación de consultas redundantes a MediaStore y cierre automático de servidor HTTP local."
 }
 

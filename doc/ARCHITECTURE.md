@@ -114,6 +114,31 @@ flowchart LR
     Adaptadores Aislados --> Las 6 Ramas de Dominio
 ```
 
+### 4.1. Pipeline de Higiene Previa a Extractores (`isTelemetryOrGarbage`)
+
+Para blindar el Principio "Poner y Sacar", toda URL candidata detectada por Chromium atraviesa un filtro previo de higiene centralizado (`TelemetryFilterAdapter.kt`) antes de ser entregada a la cadena de extractores:
+
+```mermaid
+flowchart TD
+    Req["URL Candidata capturada por WebView / Sniffer"] --> PreFilter{"Filtro Centralizado de Higiene\n(TelemetryFilterAdapter.kt)"}
+    
+    PreFilter -->|"/cdn-cgi/", "tracker", "top-fwz", "/ping"| Discard1["❌ Descarte Inmediato: Telemetría / Beacon"]
+    PreFilter -->|"/embed/", "/e/", "/widget/", "anonymvideo"| Discard2["❌ Descarte Inmediato: Iframe Web / HTML"]
+    PreFilter -->|".html", ".htm", ".css", ".js", ".vtt"| Discard3["❌ Descarte Inmediato: Recursos Estáticos / VTT"]
+    
+    PreFilter -->|Supera Higiene (Limpio)| ExtractorChain{"Cadena Hexagonal de Extractores\n(StreamExtractorRegistry)"}
+    
+    ExtractorChain -->|Dominios Rusos okcdn.ru / mycdn.me| ExtOk["OkRuSiteExtractorAdapter\n(Sintetiza Calidades y Referer)"]
+    ExtractorChain -->|Hosts DropCDN / Fastream| ExtFast["FastreamExtractorAdapter\n(User-Agent Windows + Referer)"]
+    ExtractorChain -->|Manifiestos HLS / VOD| ExtHls["UniversalHlsExtractorAdapter\n(Parseo Master Playlist)"]
+    ExtractorChain -->|YouTube Oficial| ExtYt["YouTubeQualityResolver\n(Extracción de ID limpia)"]
+    
+    ExtOk --> StreamValid["🎬 Flujo Válido con Metadatos y Cabeceras"]
+    ExtFast --> StreamValid
+    ExtHls --> StreamValid
+    ExtYt --> StreamValid
+```
+
 ### Las 6 Ramas de `MediaBranch`:
 1. **`VOD_HLS_MP4`:** Películas y series con soporte para saltos de tiempo (scrubbing), persistencia de posición y pistas múltiples.
 2. **`LIVE_HLS`:** Canales de televisión y partidos en vivo (sin `#EXT-X-ENDLIST`), con buffer ultracorto y enganche en el borde en vivo.
@@ -149,6 +174,41 @@ flowchart TD
         KeyHandler -->|D-Pad Center| PlayPause["⏯ Play / Pausa"]
         KeyHandler -->|D-Pad Left/Right| Seek["⏩ Salto ±10 segundos"]
         KeyHandler -->|MENU| Zoom["🔍 Ciclar Zoom (FIT / FILL / 75-130%)"]
+    end
+```
+
+### 5.1. Secuencia de Proyección Autónoma hacia TV Box (Cero-Proxy)
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor U as Usuario Móvil
+    participant Browser as BrowserWebView / Hex Core
+    participant Sender as TvCastManager / WebSocket :8088
+    participant TV as TvReceiverActivity (TV Box)
+    participant Exo as ExoPlayerTvManager (HW)
+    participant WebTV as TvWebStreamScreen (HTML5)
+    participant CDN as CDN Servidor Video (Remoto)
+
+    U->>Browser: Toca Play en sitio web (PelisGO / OK.ru)
+    Browser->>Browser: DetectMediaStreamUseCase + TelemetryFilter
+    Browser->>U: Muestra Video Card único con Selector de Calidad
+    U->>Browser: Selecciona Calidad y pulsa Proyectar
+    Browser->>Sender: handoffDirectStream(url, headers, branch)
+    Sender->>TV: WebSocket SignalingMessage.DirectStreamHandoff(url, headers)
+    
+    alt Reproducción Directa Estándar (ExoPlayer)
+        TV->>Exo: playStream(url, headers)
+        Exo->>CDN: GET url (con User-Agent & Referer del móvil)
+        CDN-->>Exo: HTTP 200 OK (Stream MP4/HLS)
+        Exo-->>TV: Decodificación por Hardware activa
+    else Fallback Reactivo ante HTTP 403 / CDN Protegida
+        Exo->>CDN: GET url
+        CDN-->>Exo: HTTP 403 Forbidden (Firma estricta / Token)
+        Exo->>TV: Notifica Error 403 a TvReceiverActivity
+        TV->>WebTV: Activa Fallback con headers originales
+        WebTV->>CDN: GET url vía Chromium nativo (Same-Origin)
+        CDN-->>WebTV: HTTP 200 OK (Hls.js / Video HTML5)
     end
 ```
 
@@ -191,4 +251,5 @@ El subsistema de Screen Mirroring conecta la pantalla del móvil con la TV Box v
 - [ADR-009: Asistente Nativo Flotante de Entrada de Texto Web y Pipeline de Sugerencias en Vivo](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/adr/ADR-009-asistente-nativo-flotante-entrada-web-sugerencias.md)
 - [ADR-010: Supresión Nativa de Popups Anti-OOM, Blindaje de Gestos y Control Dual D-Pad en TV](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/adr/ADR-010-supresion-nativa-popups-anti-oom-control-dual-dpad.md)
 - [ADR-011: Arquitectura Fiel de Captura v3.32.94 y Despacho Dual de Reproductores en TV Box](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/adr/ADR-011-arquitectura-captura-v3.32-y-despacho-dual-tv.md)
+- [ADR-012: Filtro Centralizado de Higiene de Red y Purificación de Extractores Hexagonales](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/adr/ADR-012-filtro-centralizado-higiene-streams-y-adaptadores-limpios.md)
 

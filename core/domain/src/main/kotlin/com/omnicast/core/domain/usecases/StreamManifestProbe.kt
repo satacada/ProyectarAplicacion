@@ -49,7 +49,7 @@ object StreamManifestProbe {
         val params = query.split('&').map { it.substringBefore('=') to it.substringAfter('=', "") }
         val hasToken = params.any { (k, v) ->
             k.lowercase() in setOf("t", "token", "sig", "signature", "hash", "h", "st", "sign", "hdnts", "md5", "hmac", "auth_key") &&
-            v.length >= 16
+            v.length >= 8
         }
         val hasTime = params.any { (k, v) ->
             k.lowercase() in setOf("s", "e", "exp", "expires", "validto", "endtime", "t_expire", "sp") &&

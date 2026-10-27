@@ -41,8 +41,10 @@ object TvReceiverHelper {
         val isProtectedEmbed = ref.contains("dr0pstream.com") || ref.contains("dropcdn.io") ||
                                ref.contains("fastream.to") || ref.contains("luluvdo.com") ||
                                ref.contains("lulustream.com") || ref.contains("pelisgo") ||
+                               ref.contains("ok.ru") || ref.contains("vk.com") ||
                                lowerUrl.contains("dropcdn.io") || lowerUrl.contains("dr0pstream.com") ||
-                               lowerUrl.contains("fastream.to")
+                               lowerUrl.contains("fastream.to") || lowerUrl.contains("okcdn.ru") ||
+                               lowerUrl.contains("mycdn.me")
         val hasSessionCookies = !headers["Cookie"].isNullOrBlank()
         val hasSignedToken = com.omnicast.core.domain.usecases.StreamManifestProbe.hasSignedSecurityToken(url)
 

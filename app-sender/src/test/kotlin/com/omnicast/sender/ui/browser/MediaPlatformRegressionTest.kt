@@ -153,4 +153,27 @@ class MediaPlatformRegressionTest {
         assertFalse("No debe descartar master.m3u8", filter.isTelemetryOrGarbage("https://morencius.com/stream/master.m3u8"))
         assertFalse("No debe descartar CDN firmada", filter.isTelemetryOrGarbage("https://vd45.mycdn.me/?sig=abc&type=4"))
     }
+
+    @Test
+    fun testOkRuMultiQualitySynthesis() = kotlinx.coroutines.runBlocking {
+        val okUrl = "https://vd736.okcdn.ru/?expires=1793204612101&type=4&sig=22L2HBBdWIk"
+        val options = StreamQualityDetector.detectQualities(okUrl, mapOf("Referer" to "https://ok.ru/"), "Caligula")
+        
+        assertEquals(5, options.size)
+        assertTrue("Debe tener calidad Adaptive por defecto", options.any { it.resolution == "Adaptive" && it.isMaster })
+        assertTrue("Debe sintetizar 1080p", options.any { it.resolution == "1080p" && it.streamUrl.contains("type=5") })
+        assertTrue("Debe sintetizar 720p", options.any { it.resolution == "720p" && it.streamUrl.contains("type=4") })
+        assertTrue("Debe sintetizar 480p", options.any { it.resolution == "480p" && it.streamUrl.contains("type=3") })
+        assertTrue("Debe sintetizar 360p", options.any { it.resolution == "360p" && it.streamUrl.contains("type=2") })
+        assertTrue("Todas las calidades deben compartir el mismo groupKey para consistencia 1:1", options.all { it.groupKey == okUrl })
+        assertTrue("Debe inyectar Referer hacia https://ok.ru/", options.all { it.healedHeaders["Referer"] == "https://ok.ru/" })
+    }
+
+    @Test
+    fun testInIframeBannerAdBlocking() {
+        assertTrue("Debe bloquear redes de banners adsterra", AdBlocker.isVideoAd("https://domain.com/adsterra/banner.js"))
+        assertTrue("Debe bloquear redes de banners propeller", AdBlocker.isVideoAd("https://domain.com/propeller/pop.js"))
+        assertTrue("Debe bloquear banners del reproductor", AdBlocker.isVideoAd("https://tnmr.org/assets/player-banner.png"))
+        assertTrue("Debe bloquear clases banner-ads", AdBlocker.isVideoAd("https://site.com/banner-ads/300x250.jpg"))
+    }
 }

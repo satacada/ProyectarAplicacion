@@ -74,7 +74,7 @@ fun InAppBrowserScreen(
             val vName = StreamQualityDetector.extractFileName(u, if (u.contains("master", true)) "master" else "video")
             val isM = u.contains("master", true) || u.contains("playlist", true)
             val fmt = when { isM -> "m3u8 (adaptive)"; u.contains(".mp4", true) -> "mp4 (Directo)"; u.contains(".mpd", true) -> "mpd (adaptive)"; else -> "m3u8" }
-            StreamQualityOption("▶ [${cleanTitle.take(16)}] $vName", "Auto", "Original", u, isMovie = true, isSuggested = isM, healedHeaders = streamHeaders[u] ?: emptyMap(), fileName = vName, formatDetail = fmt)
+            StreamQualityOption("▶ [${cleanTitle.take(16)}] $vName", "Adaptive", "Original", u, isMovie = true, isSuggested = isM, healedHeaders = streamHeaders[u] ?: emptyMap(), fileName = vName, formatDetail = fmt, groupKey = u)
         }
         showOptionsSheet = true
         scope.launch {
@@ -83,11 +83,11 @@ fun InAppBrowserScreen(
                 opts.forEach { o -> if (o.healedHeaders.isNotEmpty()) streamHeaders[o.streamUrl] = o.healedHeaders }
                 opts
             }
-            val finalOpts = (qualityOptions + deep).distinctBy { it.streamUrl }
+            val finalOpts = if (deep.isNotEmpty()) deep.distinctBy { it.streamUrl } else qualityOptions
             val orderMap = currentStreams.withIndex().associate { it.value to it.index }
             qualityOptions = finalOpts.sortedWith(
-                compareByDescending<StreamQualityOption> { it.isMaster || it.streamUrl.contains("master", true) }
-                    .thenBy { opt -> orderMap[opt.streamUrl] ?: currentStreams.indexOfFirst { opt.streamUrl.startsWith(it.substringBefore('?')) }.takeIf { it >= 0 } ?: 999 }
+                compareByDescending<StreamQualityOption> { it.isMaster || it.resolution.equals("Adaptive", true) }
+                    .thenBy { opt -> orderMap[opt.groupKey] ?: orderMap[opt.streamUrl] ?: 999 }
             )
         }
     }

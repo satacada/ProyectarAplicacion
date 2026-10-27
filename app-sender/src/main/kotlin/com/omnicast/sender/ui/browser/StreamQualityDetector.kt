@@ -19,7 +19,8 @@ data class StreamQualityOption(
     val fileName: String = "",
     val formatDetail: String = "",
     val audioTracksSummary: String = "",
-    val subtitleTracksSummary: String = ""
+    val subtitleTracksSummary: String = "",
+    val groupKey: String = ""
 )
 
 object StreamQualityDetector {
@@ -42,21 +43,42 @@ object StreamQualityDetector {
             }
         }
 
+        val lower = currentMediaUrl.lowercase()
+        val isRussianCdn = (lower.contains("okcdn.ru") || lower.contains("mycdn.me") || lower.contains("vkuser.net") || lower.contains("vk-cdn")) &&
+                           (lower.contains("type=") || lower.contains("/type/"))
+        if (isRussianCdn) {
+            val okHeaders = safeHeaders.toMutableMap().apply {
+                if (!containsKey("Referer")) put("Referer", "https://ok.ru/")
+                if (!containsKey("User-Agent")) put("User-Agent", UA_MOBILE)
+            }
+            fun withType(t: Int): String = if (currentMediaUrl.contains("/type/")) {
+                currentMediaUrl.replace(Regex("/type/\\d+"), "/type/$t")
+            } else currentMediaUrl.replace(Regex("type=\\d+"), "type=$t")
+            val u1080 = withType(5); val u720 = withType(4); val u480 = withType(3); val u360 = withType(2)
+            return@withContext listOf(
+                StreamQualityOption("${prefix}Película Adaptativa", "Adaptive", "Adaptativa", currentMediaUrl, isMaster = true, isMovie = true, isSuggested = true, healedHeaders = okHeaders, fileName = "master", formatDetail = "mp4 (Adaptive)", groupKey = mediaUrl),
+                StreamQualityOption("${prefix}1080p Full HD", "1080p", "Full HD", u1080, isMaster = false, isMovie = true, isSuggested = false, healedHeaders = okHeaders, fileName = "video-1080p", formatDetail = "mp4 (1080p)", groupKey = mediaUrl),
+                StreamQualityOption("${prefix}720p HD", "720p", "HD", u720, isMaster = false, isMovie = true, isSuggested = false, healedHeaders = okHeaders, fileName = "video-720p", formatDetail = "mp4 (720p)", groupKey = mediaUrl),
+                StreamQualityOption("${prefix}480p SD", "480p", "SD", u480, isMaster = false, isMovie = true, isSuggested = false, healedHeaders = okHeaders, fileName = "video-480p", formatDetail = "mp4 (480p)", groupKey = mediaUrl),
+                StreamQualityOption("${prefix}360p", "360p", "Baja", u360, isMaster = false, isMovie = true, isSuggested = false, healedHeaders = okHeaders, fileName = "video-360p", formatDetail = "mp4 (360p)", groupKey = mediaUrl)
+            )
+        }
+
         val isSigned = StreamManifestProbe.hasSignedSecurityToken(currentMediaUrl)
         if (isSigned) {
             if (currentMediaUrl.contains("master.m3u8", ignoreCase = true)) {
                 val uIframe = currentMediaUrl.replace("master.m3u8", "iframes-v1-a1.m3u8", ignoreCase = true)
                 val uIndex = currentMediaUrl.replace("master.m3u8", "index-v1-a1.m3u8", ignoreCase = true)
                 return@withContext listOf(
-                    StreamQualityOption("${prefix}Película Adaptativa (Auto)", "Auto", "Adaptativa", currentMediaUrl, isMaster = true, isMovie = true, isSuggested = true, healedHeaders = safeHeaders, fileName = "master", formatDetail = "m3u8 (adaptive)"),
-                    StreamQualityOption("${prefix}I-Frames (1920x816)", "1920x816", "I-Frame", uIframe, isMaster = false, isMovie = true, isSuggested = false, healedHeaders = safeHeaders, fileName = "iframes-v1-a1", formatDetail = "m3u8 (1920x816)"),
-                    StreamQualityOption("${prefix}1080p Full HD", "1080p", "Full HD", uIndex, isMaster = false, isMovie = true, isSuggested = false, healedHeaders = safeHeaders, fileName = "index-v1-a1", formatDetail = "m3u8 (1920x816)")
+                    StreamQualityOption("${prefix}Película Adaptativa", "Adaptive", "Adaptativa", currentMediaUrl, isMaster = true, isMovie = true, isSuggested = true, healedHeaders = safeHeaders, fileName = "master", formatDetail = "m3u8 (adaptive)", groupKey = mediaUrl),
+                    StreamQualityOption("${prefix}I-Frames (1920x816)", "1920x816", "I-Frame", uIframe, isMaster = false, isMovie = true, isSuggested = false, healedHeaders = safeHeaders, fileName = "iframes-v1-a1", formatDetail = "m3u8 (1920x816)", groupKey = mediaUrl),
+                    StreamQualityOption("${prefix}1080p Full HD", "1080p", "Full HD", uIndex, isMaster = false, isMovie = true, isSuggested = false, healedHeaders = safeHeaders, fileName = "index-v1-a1", formatDetail = "m3u8 (1920x816)", groupKey = mediaUrl)
                 )
             }
             val defName = extractFileName(currentMediaUrl, "master")
             val defFmt = if (currentMediaUrl.contains(".mp4", true)) "mp4 (Directo)" else "m3u8 (adaptive)"
             val label = if (currentMediaUrl.contains(".mp4", ignoreCase = true)) "${prefix}Video MP4 Directo" else "${prefix}Película Directa"
-            return@withContext listOf(StreamQualityOption(label, "Auto", "Original", currentMediaUrl, isMovie = true, isSuggested = true, healedHeaders = safeHeaders, fileName = defName, formatDetail = defFmt))
+            return@withContext listOf(StreamQualityOption(label, "Adaptive", "Original", currentMediaUrl, isMovie = true, isSuggested = true, healedHeaders = safeHeaders, fileName = defName, formatDetail = defFmt, groupKey = mediaUrl))
         }
 
         // Sonda Pre-Cast + Auto-Reparador de Cabeceras (4 permutaciones deterministas)
@@ -69,7 +91,7 @@ object StreamQualityDetector {
                 val label = if (currentMediaUrl.contains(".mp4", ignoreCase = true)) "${prefix}Video MP4 Directo" else "${prefix}Flujo Directo"
                 val defName = extractFileName(currentMediaUrl, "master")
                 val defFmt = if (currentMediaUrl.contains(".mp4", true)) "mp4 (Directo)" else "m3u8 (adaptive)"
-                return@withContext listOf(StreamQualityOption(label, "Auto", "Original", currentMediaUrl, isMovie = false, isSuggested = false, healedHeaders = safeHeaders, fileName = defName, formatDetail = defFmt))
+                return@withContext listOf(StreamQualityOption(label, "Adaptive", "Original", currentMediaUrl, isMovie = false, isSuggested = false, healedHeaders = safeHeaders, fileName = defName, formatDetail = defFmt, groupKey = mediaUrl))
             }
             return@withContext emptyList()
         }
@@ -88,14 +110,15 @@ object StreamQualityDetector {
             return@withContext listOf(
                 StreamQualityOption(
                     label = label,
-                    resolution = "Nativa",
+                    resolution = "Adaptive",
                     bitrate = "Original",
                     streamUrl = currentMediaUrl,
                     isMovie = true,
                     isSuggested = true,
                     healedHeaders = healed,
                     fileName = defaultMasterName,
-                    formatDetail = masterFormat
+                    formatDetail = masterFormat,
+                    groupKey = mediaUrl
                 )
             )
         }
@@ -105,7 +128,7 @@ object StreamQualityDetector {
         val mainBadge = when {
             probe.isLiveStream -> "${prefix}Stream en Vivo"
             probe.durationSeconds in 1f..180f -> "${prefix}Tráiler / Clip (${probe.durationSeconds.toInt()}s)"
-            else -> "${prefix}Película Adaptativa (Auto)"
+            else -> "${prefix}Película Adaptativa"
         }
 
         val audioList = mutableListOf<String>()
@@ -146,7 +169,8 @@ object StreamQualityDetector {
                             healedHeaders = healed,
                             isLive = probe.isLiveStream,
                             fileName = vName,
-                            formatDetail = "m3u8 ($res)"
+                            formatDetail = "m3u8 ($res)",
+                            groupKey = mediaUrl
                         )
                     )
                     pendingInf = null
@@ -169,7 +193,8 @@ object StreamQualityDetector {
                                 healedHeaders = healed,
                                 isLive = probe.isLiveStream,
                                 fileName = vName,
-                                formatDetail = "m3u8 ($res)"
+                                formatDetail = "m3u8 ($res)",
+                                groupKey = mediaUrl
                             )
                         )
                     }
@@ -187,7 +212,7 @@ object StreamQualityDetector {
             0,
             StreamQualityOption(
                 label = mainBadge,
-                resolution = if (probe.isLiveStream) "LIVE" else "Auto",
+                resolution = if (probe.isLiveStream) "LIVE" else "Adaptive",
                 bitrate = "Adaptativa",
                 streamUrl = currentMediaUrl,
                 isMaster = true,
@@ -199,7 +224,8 @@ object StreamQualityDetector {
                 fileName = defaultMasterName,
                 formatDetail = masterFormat,
                 audioTracksSummary = audioList.joinToString(", "),
-                subtitleTracksSummary = subList.joinToString(", ")
+                subtitleTracksSummary = subList.joinToString(", "),
+                groupKey = mediaUrl
             )
         )
 

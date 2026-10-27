@@ -95,8 +95,8 @@ object BrowserUrlHelper {
             val mergedCookies = listOfNotNull(c1, c2, c3, c4, c5, c6, rawHeaders?.get("Cookie"), rawHeaders?.get("cookie"))
                 .flatMap { it.split("; ") }
                 .map { it.trim() }
-                .filter { it.isNotBlank() && it.contains('=') }
-                .distinctBy { it.substringBefore('=').trim().lowercase() }
+                .filter { it.isNotBlank() }
+                .distinct()
                 .joinToString("; ")
             if (mergedCookies.isNotBlank()) headers["Cookie"] = mergedCookies
 

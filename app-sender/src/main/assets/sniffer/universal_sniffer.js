@@ -193,88 +193,10 @@
                     updateLiveStreamIfFresher(u);
                     reportMedia(u, document.title, 0, false);
                 }
-                try {
-                    this.addEventListener('load', function() {
-                        try {
-                            if (this.responseText) {
-                                inspectStreamingPatterns(this.responseText, document.title);
-                            }
-                        } catch(_) {}
-                    });
-                } catch(_) {}
                 return origOpen.apply(this, arguments);
             };
         }
     } catch(e) {}
-
-    // Detección pura por comportamiento y estado del reproductor (Cero nombres de dominio en duro)
-    function hasActiveDirectStream() {
-        return (window.__omniCapturedMedia && window.__omniCapturedMedia.length > 0) ||
-               (window.__omniActiveLiveStream && (Date.now() - window.__omniActiveLiveStream.timestamp < 180000));
-    }
-
-    function hasBlobOrMseVideo() {
-        try {
-            var vids = document.getElementsByTagName('video');
-            for (var i = 0; i < vids.length; i++) {
-                var s = vids[i].currentSrc || vids[i].src || '';
-                if (s.indexOf('blob:') === 0) return true;
-            }
-            if (typeof window.MediaSource !== 'undefined') {
-                if (window.OneVideoPlayer || window.Clappr || window.jwplayer) return true;
-            }
-        } catch(_) {}
-        return false;
-    }
-
-    function inspectStreamingPatterns(responseText, defaultTitle) {
-        if (!responseText || typeof responseText !== 'string' || responseText.length < 15) return;
-        
-        // Regla 1: Si ya existe un flujo directo capturado por red (PelisPlus, PelisGO, Reypelis), NO interferir.
-        if (hasActiveDirectStream()) return;
-
-        // Regla 2: Solo inspeccionar payload si el reproductor está operando con MSE / Blob en memoria
-        if (!hasBlobOrMseVideo()) return;
-
-        try {
-            // A. Manifiesto HLS dentro de respuestas JSON o de configuración
-            if (responseText.indexOf('.m3u8') !== -1) {
-                var matchHls = responseText.match(/https?:\/\/[^"'\s\\><]+\.m3u8[^"'\s\\><]*/i);
-                if (matchHls) {
-                    var cleanHls = matchHls[0].replace(/\\/g, '');
-                    // Excluir pistas secundarias de idioma/subtítulos
-                    if (cleanHls.indexOf('/lang/') === -1 && cleanHls.indexOf('/subs/') === -1 && cleanHls.indexOf('.vtt') === -1) {
-                        if (isMediaUrl(cleanHls)) {
-                            reportMedia(cleanHls, defaultTitle || document.title, 0, false, "Auto (Adaptativo)");
-                            return;
-                        }
-                    }
-                }
-            }
-
-            // B. Metadatos estructurados de reproductor (hlsManifestUrl / flashvars / videos)
-            if (responseText.indexOf('hlsManifestUrl') !== -1 || (responseText.indexOf('flashvars') !== -1 && responseText.indexOf('metadata') !== -1)) {
-                var pj = JSON.parse(responseText);
-                var meta = (pj.flashvars && pj.flashvars.metadata) ? pj.flashvars.metadata : (pj.metadata || pj.video || pj);
-                parseOkRuMetadata(meta, defaultTitle);
-                return;
-            }
-
-            // C. Estructura estándar de Vimeo / reproductores basados en configuración JSON
-            if (responseText.indexOf('request') !== -1 && responseText.indexOf('files') !== -1 && responseText.indexOf('hls') !== -1) {
-                var vj = JSON.parse(responseText);
-                var hlsCdn = vj.request && vj.request.files && vj.request.files.hls && vj.request.files.hls.cdns;
-                if (hlsCdn) {
-                    for (var c in hlsCdn) {
-                        if (hlsCdn[c] && hlsCdn[c].url && isMediaUrl(hlsCdn[c].url)) {
-                            reportMedia(hlsCdn[c].url, (vj.video && vj.video.title) || defaultTitle || document.title, 0, false, "Auto (HLS)");
-                            return;
-                        }
-                    }
-                }
-            }
-        } catch(_) {}
-    }
 
     // Función global invocable antes de transmitir para obtener el stream activo con token vivo (0s de retraso)
     window.__omniGetLiveStream = function() {
@@ -296,97 +218,37 @@
         return null;
     };
 
-    // 6. Extractor específico para reproductores MSE (OneVideoPlayer, DOM data-options, scripts inline y calidades)
-    function mapOkRuQuality(name) {
-        if (!name) return 'Calidad Original';
-        var n = String(name).toLowerCase().trim();
-        if (n === 'ultra' || n === '2160' || n === '4k') return '2160p 4K';
-        if (n === 'quad' || n === '1440' || n === '2k') return '1440p 2K';
-        if (n === 'full' || n === '1080' || n === '1080p') return '1080p FHD';
-        if (n === 'hd' || n === '720' || n === '720p') return '720p HD';
-        if (n === 'sd' || n === '480' || n === '480p') return '480p SD';
-        if (n === 'low' || n === '360' || n === '360p') return '360p';
-        if (n === 'lowest' || n === '240' || n === '240p') return '240p';
-        if (n === 'mobile' || n === '144' || n === '144p') return '144p Móvil';
-        return n;
-    }
-
-    window.__reportedOkRuStreams = window.__reportedOkRuStreams || {};
-    function parseOkRuMetadata(meta, defaultTitle) {
-        if (!meta) return;
-        if (typeof meta === 'string') {
-            try { meta = JSON.parse(meta); } catch(e) { return; }
-        }
-        var mId = (meta.movie && meta.movie.id) ? String(meta.movie.id) : (document.title || 'msevid');
-        var t = (meta.movie && meta.movie.title) ? meta.movie.title : (defaultTitle || document.title);
-        var dur = (meta.movie && meta.movie.duration) ? meta.movie.duration : 0;
-        var hlsKey = mId + '_hls';
-        if (meta.hlsManifestUrl && !window.__reportedOkRuStreams[hlsKey]) {
-            window.__reportedOkRuStreams[hlsKey] = true;
-            reportMedia(meta.hlsManifestUrl, t, dur, false, 'Auto (Adaptativo)');
-        }
-        if (meta.videos && meta.videos.length > 0) {
-            for (var v = 0; v < meta.videos.length; v++) {
-                var vidItem = meta.videos[v];
-                var qKey = mId + '_' + (vidItem.name || v);
-                if (vidItem && vidItem.url && !window.__reportedOkRuStreams[qKey]) {
-                    window.__reportedOkRuStreams[qKey] = true;
-                    reportMedia(vidItem.url, t, dur, false, mapOkRuQuality(vidItem.name));
-                }
-            }
-        }
-    }
-
-    function sniffMsePlayerDom() {
+    // 6. Extractor DOM específico para OK.ru (Metadata JSON en elemento reproductor)
+    function sniffOkRuDom() {
         try {
-            // A. Instancia OneVideoPlayer u objetos globales de reproductor
-            if (typeof OneVideoPlayer === 'object' && OneVideoPlayer.getInstance) {
-                try {
-                    var ov = OneVideoPlayer.getInstance();
-                    if (ov && ov.options && ov.options.flashvars && ov.options.flashvars.metadata) {
-                        parseOkRuMetadata(ov.options.flashvars.metadata, ov.options.title);
-                    }
-                } catch(_) {}
-            }
-            // B. Elementos del DOM con metadata
-            var elms = document.querySelectorAll('[data-options*="metadata"], [data-module="OKVideo"], div.vp-layer, div[data-video], [data-options*="video"], [data-player]');
+            var elms = document.querySelectorAll('[data-options*="metadata"], [data-module="OKVideo"], div.vp-layer');
             for (var i = 0; i < elms.length; i++) {
-                var raw = elms[i].getAttribute('data-options') || elms[i].getAttribute('data-video');
+                var raw = elms[i].getAttribute('data-options');
                 if (!raw) continue;
                 try {
                     var p = JSON.parse(raw);
-                    var meta = (p.flashvars && p.flashvars.metadata) ? p.flashvars.metadata : (p.metadata || p.video || null);
-                    parseOkRuMetadata(meta, p.title);
-                } catch(e) {}
-            }
-            // C. Globales de OKVideo
-            if (window.OKVideo && window.OKVideo.metadata) {
-                parseOkRuMetadata(window.OKVideo.metadata);
-            }
-            // D. Scripts inline cuando el video usa blob:
-            if (hasBlobOrMseVideo()) {
-                var scrs = document.querySelectorAll('script');
-                for (var si = 0; si < scrs.length; si++) {
-                    var txt = scrs[si].textContent || '';
-                    if (txt.indexOf('hlsManifestUrl') !== -1 && txt.indexOf('videos') !== -1) {
-                        var match = txt.match(/\{[\s\S]*?"hlsManifestUrl"[\s\S]*?\}/);
-                        if (match) {
-                            try { parseOkRuMetadata(JSON.parse(match[0])); } catch(_) {}
+                    var meta = (p.flashvars && p.flashvars.metadata) ? p.flashvars.metadata : null;
+                    if (typeof meta === 'string') { try { meta = JSON.parse(meta); } catch(e) {} }
+                    if (meta) {
+                        var t = (meta.movie && meta.movie.title) ? meta.movie.title : document.title;
+                        if (meta.hlsManifestUrl) {
+                            reportMedia(meta.hlsManifestUrl, t, 0, false);
+                        }
+                        if (meta.videos && meta.videos.length > 0) {
+                            for (var v = 0; v < meta.videos.length; v++) {
+                                if (meta.videos[v].url) {
+                                    reportMedia(meta.videos[v].url, t, 0, false);
+                                }
+                            }
                         }
                     }
-                }
+                } catch(e) {}
             }
         } catch(e) {}
     }
-    sniffMsePlayerDom();
-    setTimeout(sniffMsePlayerDom, 1200);
-    setTimeout(sniffMsePlayerDom, 3000);
-    document.addEventListener('click', function() {
-        if (hasBlobOrMseVideo()) {
-            setTimeout(sniffMsePlayerDom, 800);
-            setTimeout(sniffMsePlayerDom, 2000);
-        }
-    }, true);
+    sniffOkRuDom();
+    setTimeout(sniffOkRuDom, 1500);
+    setTimeout(sniffOkRuDom, 3500);
 
     // 6b. Extractor DOM para APIs de reproductores web (JWPlayer, Clappr, Flowplayer) estilo WVC
     function sniffPlayerApis() {
@@ -426,7 +288,7 @@
     setInterval(function() {
         var allV = document.getElementsByTagName('video');
         for (var j = 0; j < allV.length; j++) { monitorVideo(allV[j]); }
-        sniffMsePlayerDom();
+        sniffOkRuDom();
         sniffPlayerApis();
     }, 3000);
 
@@ -473,7 +335,7 @@
             if (typeof window.ibFindAllVideos === 'function') {
                 window.ibFindAllVideos();
             }
-            sniffMsePlayerDom();
+            sniffOkRuDom();
         } catch(e) {}
     };
 

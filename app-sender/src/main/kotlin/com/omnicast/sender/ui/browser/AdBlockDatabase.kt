@@ -76,55 +76,23 @@ class AdBlockDatabase private constructor(private val appContext: Context) :
     }
 
     override fun onCreate(db: SQLiteDatabase) {
-        db.execSQL(
-            """
-            CREATE TABLE IF NOT EXISTS $TABLE_DOMAINS (
-                $COL_ID INTEGER PRIMARY KEY AUTOINCREMENT,
-                $COL_VALUE TEXT UNIQUE NOT NULL,
-                $COL_CATEGORY TEXT DEFAULT 'ad',
-                $COL_ENABLED INTEGER DEFAULT 1,
-                $COL_UPDATED_AT INTEGER
-            )
-            """.trimIndent()
-        )
-        db.execSQL(
-            """
-            CREATE TABLE IF NOT EXISTS $TABLE_KEYWORDS (
-                $COL_ID INTEGER PRIMARY KEY AUTOINCREMENT,
-                $COL_VALUE TEXT UNIQUE NOT NULL,
-                $COL_CATEGORY TEXT DEFAULT 'ad',
-                $COL_ENABLED INTEGER DEFAULT 1,
-                $COL_UPDATED_AT INTEGER
-            )
-            """.trimIndent()
-        )
+        db.execSQL("CREATE TABLE IF NOT EXISTS $TABLE_DOMAINS ($COL_ID INTEGER PRIMARY KEY AUTOINCREMENT, $COL_VALUE TEXT UNIQUE NOT NULL, $COL_CATEGORY TEXT DEFAULT 'ad', $COL_ENABLED INTEGER DEFAULT 1, $COL_UPDATED_AT INTEGER)")
+        db.execSQL("CREATE TABLE IF NOT EXISTS $TABLE_KEYWORDS ($COL_ID INTEGER PRIMARY KEY AUTOINCREMENT, $COL_VALUE TEXT UNIQUE NOT NULL, $COL_CATEGORY TEXT DEFAULT 'ad', $COL_ENABLED INTEGER DEFAULT 1, $COL_UPDATED_AT INTEGER)")
         seedInitialData(db)
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
         if (oldVersion < 2) {
-            db.execSQL("DROP TABLE IF EXISTS $TABLE_DOMAINS")
-            db.execSQL("DROP TABLE IF EXISTS $TABLE_KEYWORDS")
-            onCreate(db)
-            Log.i(TAG, "Base de datos AdBlock restablecida a v2 limpia.")
+            db.execSQL("DROP TABLE IF EXISTS $TABLE_DOMAINS"); db.execSQL("DROP TABLE IF EXISTS $TABLE_KEYWORDS"); onCreate(db)
         }
         if (oldVersion < 3) {
-            try {
-                db.execSQL("DELETE FROM $TABLE_DOMAINS WHERE $COL_VALUE LIKE '%movie%' OR $COL_VALUE LIKE '%pelis%' OR $COL_VALUE LIKE '%cine%' OR $COL_VALUE LIKE '%series%' OR $COL_VALUE LIKE '%film%' OR $COL_VALUE LIKE '%stream%'")
-                Log.i(TAG, "Base de datos AdBlock purgada de dominios de streaming en v3.")
-            } catch (_: Throwable) {}
+            try { db.execSQL("DELETE FROM $TABLE_DOMAINS WHERE $COL_VALUE LIKE '%movie%' OR $COL_VALUE LIKE '%pelis%' OR $COL_VALUE LIKE '%cine%' OR $COL_VALUE LIKE '%series%' OR $COL_VALUE LIKE '%film%' OR $COL_VALUE LIKE '%stream%'") } catch (_: Throwable) {}
         }
         if (oldVersion < 4) {
-            try {
-                db.execSQL("DELETE FROM $TABLE_DOMAINS WHERE $COL_VALUE LIKE '%cloudflare%' OR $COL_VALUE LIKE '%turnstile%' OR $COL_VALUE LIKE '%challenges%' OR $COL_VALUE LIKE '%hcaptcha%' OR $COL_VALUE LIKE '%recaptcha%'")
-                Log.i(TAG, "Base de datos AdBlock purgada de dominios de verificación Cloudflare en v4.")
-            } catch (_: Throwable) {}
+            try { db.execSQL("DELETE FROM $TABLE_DOMAINS WHERE $COL_VALUE LIKE '%cloudflare%' OR $COL_VALUE LIKE '%turnstile%' OR $COL_VALUE LIKE '%challenges%' OR $COL_VALUE LIKE '%hcaptcha%' OR $COL_VALUE LIKE '%recaptcha%'") } catch (_: Throwable) {}
         }
         if (oldVersion < 5) {
-            try {
-                db.execSQL("DELETE FROM $TABLE_DOMAINS WHERE $COL_VALUE LIKE '%vk.ru%' OR $COL_VALUE LIKE '%vk.com%' OR $COL_VALUE LIKE '%vkvideo%' OR $COL_VALUE LIKE '%ok.ru%' OR $COL_VALUE LIKE '%odnoklassniki%' OR $COL_VALUE LIKE '%mycdn%' OR $COL_VALUE LIKE '%rumble%' OR $COL_VALUE LIKE '%dailymotion%' OR $COL_VALUE LIKE '%dmcdn%' OR $COL_VALUE LIKE '%vimeo%' OR $COL_VALUE LIKE '%mail.ru%'")
-                Log.i(TAG, "Base de datos AdBlock purgada de portales oficiales y migrada a v5.")
-            } catch (_: Throwable) {}
+            try { db.execSQL("DELETE FROM $TABLE_DOMAINS WHERE $COL_VALUE LIKE '%vk.ru%' OR $COL_VALUE LIKE '%vk.com%' OR $COL_VALUE LIKE '%vkvideo%' OR $COL_VALUE LIKE '%ok.ru%' OR $COL_VALUE LIKE '%odnoklassniki%' OR $COL_VALUE LIKE '%mycdn%' OR $COL_VALUE LIKE '%rumble%' OR $COL_VALUE LIKE '%dailymotion%' OR $COL_VALUE LIKE '%dmcdn%' OR $COL_VALUE LIKE '%vimeo%' OR $COL_VALUE LIKE '%mail.ru%'") } catch (_: Throwable) {}
         }
     }
 

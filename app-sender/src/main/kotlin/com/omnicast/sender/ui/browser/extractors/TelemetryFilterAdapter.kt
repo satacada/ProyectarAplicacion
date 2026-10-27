@@ -19,9 +19,13 @@ class TelemetryFilterAdapter : IStreamTelemetryFilterPort {
 
     private val baseTelemetryKeywords = listOf(
         "videostat", "statnew", "telemetry",
-        "analytics", "beacon", "heartbeat", "logger", "tracking",
+        "analytics", "beacon", "heartbeat", "logger", "tracking", "tracker",
         "/ping", "/event", "report", "collect", "metric", "counter",
-        "geo.dailymotion.com"
+        "geo.dailymotion.com", "/cdn-cgi/", "top-fwz", "anonymvideo", "/dk?", "showcase", "st.cmd"
+    )
+
+    private val nonMediaWebPageKeywords = listOf(
+        "/embed/", "/embed-", "/e/", "/widget/", "/iframe/"
     )
 
     private val baseAdSegmentKeywords = listOf(
@@ -43,7 +47,11 @@ class TelemetryFilterAdapter : IStreamTelemetryFilterPort {
 
         // 2. Descartar extensiones estáticas comunes
         val pathOnly = lower.substringBefore('?')
-        if (staticExtensions.any { pathOnly.endsWith(it) }) return true
+        if (staticExtensions.any { pathOnly.endsWith(it) } || lower.contains(".html?") || lower.contains(".htm?")) return true
+
+        // 2.1 Descartar páginas web de iframe/embed (sin extensión de archivo) salvo YouTube oficial
+        val isYouTube = lower.contains("youtube.com") || lower.contains("youtu.be")
+        if (!isYouTube && nonMediaWebPageKeywords.any { lower.contains(it) }) return true
 
         // 3. Descartar segmentos y placeholders de publicidad de video (base + dinámicas)
         val dynamicAds = AdBlockRuleSyncManager.getAdKeywords()

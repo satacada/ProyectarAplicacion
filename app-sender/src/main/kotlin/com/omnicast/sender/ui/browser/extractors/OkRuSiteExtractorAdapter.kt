@@ -15,10 +15,12 @@ class OkRuSiteExtractorAdapter : IMediaStreamExtractorPort {
     override fun canHandle(candidate: StreamCandidate): Boolean {
         val lower = candidate.url.lowercase()
 
-        // Rechazar explícitamente estadísticas, beacons y miniaturas de preview del catálogo
+        // Rechazar explícitamente estadísticas, beacons, trackers y páginas web de catálogo
         if (lower.contains("videostat") || lower.contains("statnew") || lower.contains("tracking") ||
+            lower.contains("tracker") || lower.contains("top-fwz") || lower.contains("anonymvideo") ||
+            lower.contains("showcase") || lower.contains("st.cmd") || lower.contains("/dk?") ||
             lower.contains("videopreview") || lower.contains("preview") || lower.contains("bytes=") ||
-            lower.contains("ct=11") || lower.contains("ct=12")) {
+            lower.contains("ct=11") || lower.contains("ct=12") || lower.contains("/cdn-cgi/")) {
             return false
         }
 
@@ -30,11 +32,12 @@ class OkRuSiteExtractorAdapter : IMediaStreamExtractorPort {
                       !lower.contains("i.mycdn.me") && !lower.contains("st.mycdn.me") && !lower.contains("static.mycdn.me") &&
                       !lower.contains("i.okcdn.ru") && !lower.contains("st.okcdn.ru")
 
-        val isPlatformVideo = (lower.contains("ok.ru/") || lower.contains("odnoklassniki.ru/") ||
-                               lower.contains("vk.com/") || lower.contains("vkvideo.ru/") || lower.contains("mail.ru/")) &&
-                              (lower.contains("video") || lower.contains("cmd=video") || lower.contains("hlsmanifest"))
+        // Manifiesto directo HLS servido por la propia plataforma (sin páginas HTML)
+        val isPlatformMedia = (lower.contains("ok.ru/") || lower.contains("vk.com/")) &&
+                              (lower.contains("hlsmanifest") || lower.contains("cmd=video")) &&
+                              !lower.contains("showcase") && !lower.contains("anonym")
 
-        return isMyCdn || isPlatformVideo
+        return isMyCdn || isPlatformMedia
     }
 
     override fun extract(candidate: StreamCandidate): MediaStream {

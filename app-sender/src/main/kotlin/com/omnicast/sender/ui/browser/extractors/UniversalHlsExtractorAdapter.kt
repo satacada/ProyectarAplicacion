@@ -19,13 +19,17 @@ class UniversalHlsExtractorAdapter : IMediaStreamExtractorPort {
             cleanPath.endsWith(".js") || cleanPath.endsWith(".json")) return false
 
         val lower = candidate.url.lowercase()
+        val isSpecialHost = (lower.contains("swdyu.com") || lower.contains("cloudemb.com") || lower.contains("morencius.com")) &&
+                            (lower.contains(".m3u8") || lower.contains("/hls") || lower.contains("master") || lower.contains("chunklist") || lower.contains(".mp4")) &&
+                            !lower.contains("/embed") && !lower.contains("/e/") && !lower.contains("/cdn-cgi/")
+
         return lower.contains(".m3u8") ||
                lower.contains("chunklist") ||
                (lower.contains("/hls") && !cleanPath.endsWith(".ts")) ||
                ((cleanPath.endsWith(".txt") || lower.contains(".txt?")) && (lower.contains("master") || lower.contains("index") || lower.contains("/hls"))) ||
                lower.contains("/stream/") || lower.contains("/manifest") ||
                lower.contains("/live") || lower.contains("live.m3u8") ||
-               lower.contains("swdyu.com") || lower.contains("cloudemb.com") || lower.contains("morencius.com") ||
+               isSpecialHost ||
                lower.contains("p.php?url=") || (lower.contains("/p.php") && lower.contains("sig=")) ||
                lower.contains("pelisserieshoy.com/p.php") || lower.contains("embed69.org/p.php")
     }

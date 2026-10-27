@@ -125,7 +125,7 @@ object AdBlocker {
                 function cleanDoc(doc) {
                     if (!doc) return;
                     try {
-                        var css = 'div[class*="popunder"], div[id*="popunder"], .ad-overlay, #ad-overlay, .click-shield, div[class*="click-shield"] { display: none !important; pointer-events: none !important; }';
+                        var css = 'div[class*="popunder"], div[id*="popunder"], .ad-overlay, #ad-overlay, .click-shield, div[class*="click-shield"], div[class*="player-banner"], div[id*="ad_wrapper"], div[class*="vast-"], div[class*="banner-ads"] { display: none !important; pointer-events: none !important; }';
                         var st = doc.createElement('style');
                         st.textContent = css;
                         (doc.head || doc.documentElement).appendChild(st);
@@ -135,6 +135,8 @@ object AdBlocker {
                         'div[class*="ad-banner"]', 'a[href*="bet365"]', 'a[href*="1xbet"]',
                         'div[class*="popunder"]', 'div[id*="popunder"]', '.ad-overlay', '#ad-overlay',
                         'div[class*="click-shield"]', 'div[class*="video-click-shield"]',
+                        'div[class*="player-banner"]', 'div[id*="ad_wrapper"]', 'div[class*="vast-"]',
+                        'div[class*="banner-ads"]', 'div[id*="banner-ads"]',
                         '.vp_layer_fake', 'div[class*="fake-player"]'
                     ];
                     for (var s = 0; s < selectors.length; s++) {

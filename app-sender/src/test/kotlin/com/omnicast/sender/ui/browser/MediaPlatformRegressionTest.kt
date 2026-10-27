@@ -119,10 +119,38 @@ class MediaPlatformRegressionTest {
         val adapter = com.omnicast.sender.ui.browser.extractors.OkRuSiteExtractorAdapter()
         val previewCandidate = com.omnicast.core.domain.models.StreamCandidate("https://mycdn.me/videopreview?id=123")
         val byteRangeCandidate = com.omnicast.core.domain.models.StreamCandidate("https://mycdn.me/video.mp4?bytes=0-1000")
-        val realVideoCandidate = com.omnicast.core.domain.models.StreamCandidate("https://mycdn.me/video.mp4?sig=abc&expires=999")
+        val trackerCandidate = com.omnicast.core.domain.models.StreamCandidate("https://top-fwz1.mail.ru/tracker?_=0.919;u=https://ok.ru/video/5771009198676")
+        val showcaseCandidate = com.omnicast.core.domain.models.StreamCandidate("https://ok.ru/dk?st.cmd=anonymVideo&st.m=SHOWCASE")
+        val realVideoCandidate = com.omnicast.core.domain.models.StreamCandidate("https://vd45.mycdn.me/?sig=abc&expires=999&type=4")
 
         assertFalse("Debe rechazar videopreview", adapter.canHandle(previewCandidate))
         assertFalse("Debe rechazar byte range preview", adapter.canHandle(byteRangeCandidate))
-        assertTrue("Debe aceptar video real", adapter.canHandle(realVideoCandidate))
+        assertFalse("Debe rechazar tracker de Mail.ru", adapter.canHandle(trackerCandidate))
+        assertFalse("Debe rechazar showcase de OK.ru", adapter.canHandle(showcaseCandidate))
+        assertTrue("Debe aceptar video real firmado de CDN", adapter.canHandle(realVideoCandidate))
+    }
+
+    @Test
+    fun testUniversalHlsExtractorStrictness() {
+        val adapter = com.omnicast.sender.ui.browser.extractors.UniversalHlsExtractorAdapter()
+        val embedCandidate = com.omnicast.core.domain.models.StreamCandidate("https://morencius.com/embed/0qres6vduysj")
+        val rumCandidate = com.omnicast.core.domain.models.StreamCandidate("https://morencius.com/cdn-cgi/rum?")
+        val realHlsCandidate = com.omnicast.core.domain.models.StreamCandidate("https://morencius.com/stream/0qres6vduysj/master.m3u8")
+
+        assertFalse("Debe rechazar iframe embed de Morencius", adapter.canHandle(embedCandidate))
+        assertFalse("Debe rechazar telemetría RUM de Morencius", adapter.canHandle(rumCandidate))
+        assertTrue("Debe aceptar master.m3u8 de Morencius", adapter.canHandle(realHlsCandidate))
+    }
+
+    @Test
+    fun testTelemetryFilterAdapterCentralGatekeeper() {
+        val filter = com.omnicast.sender.ui.browser.extractors.TelemetryFilterAdapter()
+
+        assertTrue("Debe descartar /cdn-cgi/", filter.isTelemetryOrGarbage("https://site.com/cdn-cgi/rum?"))
+        assertTrue("Debe descartar /embed/ sin extensión", filter.isTelemetryOrGarbage("https://morencius.com/embed/0qres6vduysj"))
+        assertTrue("Debe descartar tracker", filter.isTelemetryOrGarbage("https://top-fwz1.mail.ru/tracker?_=123"))
+        assertTrue("Debe descartar anonymVideo", filter.isTelemetryOrGarbage("https://ok.ru/dk?st.cmd=anonymVideo&st.m=SHOWCASE"))
+        assertFalse("No debe descartar master.m3u8", filter.isTelemetryOrGarbage("https://morencius.com/stream/master.m3u8"))
+        assertFalse("No debe descartar CDN firmada", filter.isTelemetryOrGarbage("https://vd45.mycdn.me/?sig=abc&type=4"))
     }
 }

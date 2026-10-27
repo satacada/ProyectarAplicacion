@@ -111,9 +111,9 @@ fun RemoteControlBar(
                 ) {
                     IconButton(
                         onClick = { isExpanded = true },
-                        modifier = Modifier.size(30.dp)
+                        modifier = Modifier.size(26.dp)
                     ) {
-                        Icon(Icons.Rounded.KeyboardArrowUp, contentDescription = "Expandir", tint = Color(0xFF94A3B8), modifier = Modifier.size(18.dp))
+                        Icon(Icons.Rounded.KeyboardArrowUp, contentDescription = "Expandir", tint = Color(0xFF94A3B8), modifier = Modifier.size(16.dp))
                     }
 
                     Column(
@@ -135,21 +135,21 @@ fun RemoteControlBar(
                     IconButton(
                         onClick = onPlayPause,
                         modifier = Modifier
-                            .size(30.dp)
+                            .size(28.dp)
                             .background(Color(0xFFFF7A00), CircleShape)
                     ) {
                         Icon(
                             if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
                             contentDescription = if (isPlaying) "Pausar" else "Reproducir",
                             tint = Color.White,
-                            modifier = Modifier.size(17.dp)
+                            modifier = Modifier.size(16.dp)
                         )
                     }
 
                     IconButton(
                         onClick = onStop,
                         modifier = Modifier
-                            .size(30.dp)
+                            .size(26.dp)
                             .background(Color(0xFF2D1515), CircleShape)
                     ) {
                         Icon(Icons.Rounded.Stop, contentDescription = "Detener", tint = Color(0xFFEF4444), modifier = Modifier.size(15.dp))
@@ -158,9 +158,9 @@ fun RemoteControlBar(
                     if (onDismiss != null) {
                         IconButton(
                             onClick = onDismiss,
-                            modifier = Modifier.size(30.dp)
+                            modifier = Modifier.size(26.dp)
                         ) {
-                            Icon(Icons.Rounded.KeyboardArrowDown, contentDescription = "Ocultar", tint = Color(0xFF94A3B8), modifier = Modifier.size(18.dp))
+                            Icon(Icons.Rounded.KeyboardArrowDown, contentDescription = "Ocultar", tint = Color(0xFF94A3B8), modifier = Modifier.size(16.dp))
                         }
                     }
                 }

@@ -165,7 +165,8 @@ object MediaPlatformResolver {
                 }
             }
         }
-        val safeHeaders = BrowserUrlHelper.buildSafeHeaders(finalUrl, pageUrl, UA_MOBILE, hdrs)
+        val ua = if (isDrop || isFastream) UA_FASTREAM else UA_MOBILE
+        val safeHeaders = BrowserUrlHelper.buildSafeHeaders(finalUrl, pageUrl, ua, hdrs)
         return Pair(finalUrl, safeHeaders)
     }
 

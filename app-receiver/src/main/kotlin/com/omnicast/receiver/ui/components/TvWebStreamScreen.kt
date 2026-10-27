@@ -80,23 +80,12 @@ fun TvWebStreamScreen(
     var customView by remember(streamUrl, timestamp) { mutableStateOf<View?>(null) }
     var webViewRef by remember(streamUrl, timestamp) { mutableStateOf<WebView?>(null) }
 
-    LaunchedEffect(streamUrl, timestamp) {
-        delay(4000)
-        showBanner = false
-    }
-
+    LaunchedEffect(streamUrl, timestamp) { delay(4000); showBanner = false }
     LaunchedEffect(displayMode, webViewRef) {
-        val dm = displayMode ?: return@LaunchedEffect
-        val wv = webViewRef ?: return@LaunchedEffect
+        val dm = displayMode ?: return@LaunchedEffect; val wv = webViewRef ?: return@LaunchedEffect
         wv.evaluateJavascript("if (typeof setDisplayMode === 'function') setDisplayMode('${dm.mode}', ${dm.zoom}, ${dm.panY});", null)
     }
-
-    LaunchedEffect(webViewRef) {
-        while (true) {
-            delay(300_000L)
-            try { webViewRef?.freeMemory() } catch (_: Throwable) {}
-        }
-    }
+    LaunchedEffect(webViewRef) { while (true) { delay(300_000L); try { webViewRef?.freeMemory() } catch (_: Throwable) {} } }
 
     LaunchedEffect(commandFlow, webViewRef) {
         commandFlow?.collect { msg ->
@@ -152,8 +141,10 @@ fun TvWebStreamScreen(
                             settings.userAgentString = headers["User-Agent"] ?: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
                             CookieManager.getInstance().setAcceptCookie(true)
                             CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
-                            addJavascriptInterface(WebStreamBridge(onPlaybackStatus, onPlaybackFailed), "AndroidBridge")
-                            webViewClient = WebViewClient()
+                            webViewClient = object : WebViewClient() {
+                                override fun shouldInterceptRequest(v: WebView?, r: WebResourceRequest?): WebResourceResponse? =
+                                    TvWebResourceInterceptor.shouldIntercept(r, headers) ?: super.shouldInterceptRequest(v, r)
+                            }
                             webChromeClient = object : WebChromeClient() {
                                 override fun onShowCustomView(v: View?, c: CustomViewCallback?) { customView = v }
                                 override fun onHideCustomView() { customView = null }

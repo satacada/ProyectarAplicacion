@@ -89,12 +89,12 @@ fun RemoteExpandedControls(
                         IconButton(
                             onClick = onSaveToPlaylist,
                             modifier = Modifier
-                                .size(34.dp)
-                                .background(if (isSaved) Color(0xFF064E3B) else Color(0xFF1A2335), RoundedCornerShape(8.dp))
-                                .border(1.dp, if (isSaved) Color(0xFF10B981) else Color(0xFF2C3B59), RoundedCornerShape(8.dp))
+                                .size(28.dp)
+                                .background(if (isSaved) Color(0xFF064E3B) else Color(0xFF1A2335), RoundedCornerShape(6.dp))
+                                .border(1.dp, if (isSaved) Color(0xFF10B981) else Color(0xFF2C3B59), RoundedCornerShape(6.dp))
                         ) {
                             BookmarkOutlineIcon(
-                                modifier = Modifier.size(17.dp),
+                                modifier = Modifier.size(16.dp),
                                 color = if (isSaved) Color(0xFF10B981) else Color(0xFF38BDF8),
                                 isFilled = isSaved
                             )
@@ -104,11 +104,11 @@ fun RemoteExpandedControls(
                         IconButton(
                             onClick = onDeleteFromSaved,
                             modifier = Modifier
-                                .size(34.dp)
-                                .background(Color(0xFF261922), RoundedCornerShape(8.dp))
-                                .border(1.dp, Color(0xFF4C1D24), RoundedCornerShape(8.dp))
+                                .size(28.dp)
+                                .background(Color(0xFF261922), RoundedCornerShape(6.dp))
+                                .border(1.dp, Color(0xFF4C1D24), RoundedCornerShape(6.dp))
                         ) {
-                            BookmarkRemoveIcon(modifier = Modifier.size(17.dp))
+                            BookmarkRemoveIcon(modifier = Modifier.size(16.dp))
                         }
                     }
                     IconButton(
@@ -118,11 +118,11 @@ fun RemoteExpandedControls(
                             Toast.makeText(context, preset.label, Toast.LENGTH_SHORT).show()
                         },
                         modifier = Modifier
-                            .size(34.dp)
-                            .background(Color(0xFF1E2B4A), RoundedCornerShape(8.dp))
-                            .border(1.dp, Color(0xFF3B82F6), RoundedCornerShape(8.dp))
+                            .size(28.dp)
+                            .background(Color(0xFF1E2B4A), RoundedCornerShape(6.dp))
+                            .border(1.dp, Color(0xFF3B82F6), RoundedCornerShape(6.dp))
                     ) {
-                        Icon(Icons.Rounded.AspectRatio, contentDescription = "Zoom TV", tint = Color(0xFF60A5FA), modifier = Modifier.size(17.dp))
+                        Icon(Icons.Rounded.AspectRatio, contentDescription = "Zoom TV", tint = Color(0xFF60A5FA), modifier = Modifier.size(16.dp))
                     }
                     IconButton(
                         onClick = {
@@ -130,18 +130,18 @@ fun RemoteExpandedControls(
                             Toast.makeText(context, "💬 Alternando Subtítulos", Toast.LENGTH_SHORT).show()
                         },
                         modifier = Modifier
-                            .size(34.dp)
-                            .background(Color(0xFF1E2B4A), RoundedCornerShape(8.dp))
-                            .border(1.dp, Color(0xFF3B82F6), RoundedCornerShape(8.dp))
+                            .size(28.dp)
+                            .background(Color(0xFF1E2B4A), RoundedCornerShape(6.dp))
+                            .border(1.dp, Color(0xFF3B82F6), RoundedCornerShape(6.dp))
                     ) {
-                        Icon(Icons.Rounded.Subtitles, contentDescription = "Subtítulos", tint = Color(0xFF60A5FA), modifier = Modifier.size(17.dp))
+                        Icon(Icons.Rounded.Subtitles, contentDescription = "Subtítulos", tint = Color(0xFF60A5FA), modifier = Modifier.size(16.dp))
                     }
                     Box(
                         modifier = Modifier
-                            .height(34.dp)
-                            .clip(RoundedCornerShape(8.dp))
+                            .height(28.dp)
+                            .clip(RoundedCornerShape(6.dp))
                             .background(Color(0xFF1E2B4A))
-                            .border(1.dp, Color(0xFF3B82F6), RoundedCornerShape(8.dp))
+                            .border(1.dp, Color(0xFF3B82F6), RoundedCornerShape(6.dp))
                             .clickable {
                                 qualityIdx = (qualityIdx + 1) % qualityLabels.size
                                 SignalingClientHolder.get().sendMessage(SignalingMessage.PlayControl("CYCLE_QUALITY"))
@@ -154,7 +154,7 @@ fun RemoteExpandedControls(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(2.dp)
                         ) {
-                            Icon(Icons.Rounded.Hd, contentDescription = "Calidad", tint = Color(0xFF60A5FA), modifier = Modifier.size(16.dp))
+                            Icon(Icons.Rounded.Hd, contentDescription = "Calidad", tint = Color(0xFF60A5FA), modifier = Modifier.size(15.dp))
                             Text(qualityLabels[qualityIdx], color = Color(0xFF38BDF8), fontSize = 10.sp, fontWeight = FontWeight.Bold)
                         }
                     }
@@ -212,29 +212,29 @@ fun RemoteExpandedControls(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.Center
                     ) {
-                        Text(text = "-10s", color = Color(0xFF94A3B8), fontSize = 11.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(end = 6.dp))
+                        Text(text = "-10s", color = Color(0xFF94A3B8), fontSize = 10.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(end = 4.dp))
                         Box(
-                            modifier = Modifier.size(38.dp).background(Color(0xFF161F2E), CircleShape).border(1.dp, Color(0xFF26354D), CircleShape).clickable { onSkip(-10000L) },
+                            modifier = Modifier.size(28.dp).background(Color(0xFF161F2E), CircleShape).border(1.dp, Color(0xFF26354D), CircleShape).clickable { onSkip(-10000L) },
                             contentAlignment = Alignment.Center
-                        ) { Icon(Icons.Rounded.Replay10, contentDescription = "-10s", tint = Color(0xFFCBD5E1), modifier = Modifier.size(20.dp)) }
+                        ) { Icon(Icons.Rounded.Replay10, contentDescription = "-10s", tint = Color(0xFFCBD5E1), modifier = Modifier.size(16.dp)) }
 
-                        Spacer(modifier = Modifier.width(16.dp))
+                        Spacer(modifier = Modifier.width(12.dp))
 
                         Box(
-                            modifier = Modifier.size(48.dp).background(Color(0xFFFF7A00), CircleShape).clickable { onPlayPause() },
+                            modifier = Modifier.size(32.dp).background(Color(0xFFFF7A00), CircleShape).clickable { onPlayPause() },
                             contentAlignment = Alignment.Center
                         ) {
-                            Icon(if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow, contentDescription = if (isPlaying) "Pausa" else "Reproducir", tint = Color.White, modifier = Modifier.size(24.dp))
+                            Icon(if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow, contentDescription = if (isPlaying) "Pausa" else "Reproducir", tint = Color.White, modifier = Modifier.size(18.dp))
                         }
 
-                        Spacer(modifier = Modifier.width(16.dp))
+                        Spacer(modifier = Modifier.width(12.dp))
 
                         Box(
-                            modifier = Modifier.size(38.dp).background(Color(0xFF161F2E), CircleShape).border(1.dp, Color(0xFF26354D), CircleShape).clickable { onSkip(10000L) },
+                            modifier = Modifier.size(28.dp).background(Color(0xFF161F2E), CircleShape).border(1.dp, Color(0xFF26354D), CircleShape).clickable { onSkip(10000L) },
                             contentAlignment = Alignment.Center
-                        ) { Icon(Icons.Rounded.Forward10, contentDescription = "+10s", tint = Color(0xFFCBD5E1), modifier = Modifier.size(20.dp)) }
+                        ) { Icon(Icons.Rounded.Forward10, contentDescription = "+10s", tint = Color(0xFFCBD5E1), modifier = Modifier.size(16.dp)) }
 
-                        Text(text = "+10s", color = Color(0xFF94A3B8), fontSize = 11.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(start = 6.dp))
+                        Text(text = "+10s", color = Color(0xFF94A3B8), fontSize = 10.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(start = 4.dp))
                     }
 
                     if (onStop != null) {
@@ -242,11 +242,11 @@ fun RemoteExpandedControls(
                             onClick = onStop,
                             modifier = Modifier
                                 .align(Alignment.CenterEnd)
-                                .size(34.dp)
-                                .background(Color(0xFF2D1515), RoundedCornerShape(8.dp))
-                                .border(1.dp, Color(0xFFEF4444).copy(alpha = 0.5f), RoundedCornerShape(8.dp))
+                                .size(28.dp)
+                                .background(Color(0xFF2D1515), RoundedCornerShape(6.dp))
+                                .border(1.dp, Color(0xFFEF4444).copy(alpha = 0.5f), RoundedCornerShape(6.dp))
                         ) {
-                            Icon(Icons.Rounded.Stop, contentDescription = "Detener flujo", tint = Color(0xFFEF4444), modifier = Modifier.size(18.dp))
+                            Icon(Icons.Rounded.Stop, contentDescription = "Detener flujo", tint = Color(0xFFEF4444), modifier = Modifier.size(16.dp))
                         }
                     }
                 }

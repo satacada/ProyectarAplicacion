@@ -34,12 +34,14 @@ object StreamQualityDetector {
         val prefix = if (!title.isNullOrBlank() && title != "Transmisión") "[${title.take(20)}] " else ""
 
         var currentMediaUrl = BrowserUrlHelper.sanitizeMediaUrl(mediaUrl)
-        var safeHeaders = BrowserUrlHelper.buildSafeHeaders(currentMediaUrl, headers["Referer"] ?: pageUrl ?: "", UA_MOBILE, headers)
+        val isFastreamCdn = currentMediaUrl.contains("fastream.to", true) || currentMediaUrl.contains("dropcdn.io", true) || currentMediaUrl.contains("dr0pstream.com", true)
+        val defaultUa = if (isFastreamCdn) MediaPlatformResolver.UA_FASTREAM else UA_MOBILE
+        var safeHeaders = BrowserUrlHelper.buildSafeHeaders(currentMediaUrl, headers["Referer"] ?: pageUrl ?: "", defaultUa, headers)
         if (currentMediaUrl.contains("fastream.to", ignoreCase = true) && !currentMediaUrl.contains(".m3u8", ignoreCase = true)) {
             val resolved = MediaPlatformResolver.resolveFastreamSync(currentMediaUrl, headers["Referer"] ?: pageUrl)
             if (resolved != null) {
                 currentMediaUrl = resolved.first
-                safeHeaders = BrowserUrlHelper.buildSafeHeaders(currentMediaUrl, resolved.third["Referer"] ?: "", UA_MOBILE, resolved.third)
+                safeHeaders = BrowserUrlHelper.buildSafeHeaders(currentMediaUrl, resolved.third["Referer"] ?: "", MediaPlatformResolver.UA_FASTREAM, resolved.third)
             }
         }
 
@@ -66,7 +68,8 @@ object StreamQualityDetector {
 
         val isSigned = StreamManifestProbe.hasSignedSecurityToken(currentMediaUrl)
         if (isSigned) {
-            if (currentMediaUrl.contains("master.m3u8", ignoreCase = true)) {
+            val isUrlset = currentMediaUrl.contains(".urlset/", ignoreCase = true)
+            if (currentMediaUrl.contains("master.m3u8", ignoreCase = true) && !isUrlset) {
                 val uIframe = currentMediaUrl.replace("master.m3u8", "iframes-v1-a1.m3u8", ignoreCase = true)
                 val uIndex = currentMediaUrl.replace("master.m3u8", "index-v1-a1.m3u8", ignoreCase = true)
                 return@withContext listOf(
@@ -77,8 +80,8 @@ object StreamQualityDetector {
             }
             val defName = extractFileName(currentMediaUrl, "master")
             val defFmt = if (currentMediaUrl.contains(".mp4", true)) "mp4 (Directo)" else "m3u8 (adaptive)"
-            val label = if (currentMediaUrl.contains(".mp4", ignoreCase = true)) "${prefix}Video MP4 Directo" else "${prefix}Película Directa"
-            return@withContext listOf(StreamQualityOption(label, "Adaptive", "Original", currentMediaUrl, isMovie = true, isSuggested = true, healedHeaders = safeHeaders, fileName = defName, formatDetail = defFmt, groupKey = mediaUrl))
+            val label = if (currentMediaUrl.contains(".mp4", ignoreCase = true)) "${prefix}Video MP4 Directo" else "${prefix}Película Adaptativa"
+            return@withContext listOf(StreamQualityOption(label, "Adaptive", "Adaptativa", currentMediaUrl, isMaster = true, isMovie = true, isSuggested = true, healedHeaders = safeHeaders, fileName = defName, formatDetail = defFmt, groupKey = mediaUrl))
         }
 
         // Sonda Pre-Cast + Auto-Reparador de Cabeceras (4 permutaciones deterministas)

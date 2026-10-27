@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 260,
-  "versionCodeReceiver": 243,
-  "versionName": "3.5.9",
-  "releaseTag": "v3.5.9",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.9/omnicast-sender-v3.5.9.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.9/omnicast-receiver-v3.5.9.apk",
-  "changelog": "v3.5.9: Ajustes ergonómicos en la barra superior (el icono de 3 líneas horizontales para Historial y Guardados ahora se ubica en la Fila 1 en la posición original de la X; el botón de Cerrar X se traslada al extremo derecho de la barra de herramientas en la Fila 2; el botón de captura de flujos adopta el diseño limpio sin contorno redondo idéntico al de Home con vector naranja; y el botón X dentro de la caja de búsqueda se amplía y destaca en color claro para borrar texto de forma instantánea y accesible)."
+  "versionCodeSender": 261,
+  "versionCodeReceiver": 244,
+  "versionName": "3.5.10",
+  "releaseTag": "v3.5.10",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.10/omnicast-sender-v3.5.10.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.10/omnicast-receiver-v3.5.10.apk",
+  "changelog": "v3.5.10: Implementación del interceptor nativo TvWebResourceInterceptor en TvWebStreamScreen (elimina bloqueo CORS e inyecta Referer/User-Agent en fragmentos HLS/MP4); resolución síncrona Fastream/DropCDN con Desktop User-Agent; prevención de 404 en variantes .urlset/master.m3u8; y estandarización ergonómica compacta de todos los botones e iconos de la barra y panel de control multimedia remoto a escala homogénea de 16dp."
 }

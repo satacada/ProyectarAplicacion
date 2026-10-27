@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 245,
-  "versionCodeReceiver": 228,
-  "versionName": "3.4.95",
-  "releaseTag": "v3.4.95",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.95/omnicast-sender-v3.4.95.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.95/omnicast-receiver-v3.4.95.apk",
-  "changelog": "v3.4.95: Corrección de SQLite en AdBlockDatabase (DATABASE_VERSION=5 con onDowngrade tolerante a fallos para aprendizaje y bloqueo en PelisGO) y restauración de captura aislada de OK.ru en universal_sniffer.js y OkRuSiteExtractorAdapter según arquitectura hexagonal."
+  "versionCodeSender": 246,
+  "versionCodeReceiver": 229,
+  "versionName": "3.4.96",
+  "releaseTag": "v3.4.96",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.96/omnicast-sender-v3.4.96.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.4.96/omnicast-receiver-v3.4.96.apk",
+  "changelog": "v3.4.96: Detección universal de flujos por patrón de comportamiento puro (hasActiveDirectStream / hasBlobOrMseVideo) en universal_sniffer.js, capturando payloads de OK.ru, VK, Vimeo y reproductores MSE sin nombres en duro y con exclusión mutua estricta de portales directos ya resueltos."
 }

@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 256,
-  "versionCodeReceiver": 239,
-  "versionName": "3.5.5",
-  "releaseTag": "v3.5.5",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.5/omnicast-sender-v3.5.5.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.5/omnicast-receiver-v3.5.5.apk",
-  "changelog": "v3.5.5: Barra superior ergonómica (+2px tamaño a 28dp, +2px espaciado a 4dp), botón de casteo oficial Google Cast con fondo naranja (#FF9800) e insignia de flujos, botón multimedia reactivo visible solo al proyectar a TV, botones de Inicio, Cerrar y Atrás, estrella de Favoritos integrada en la URL y recarga suave por deslizamiento superior (SwipeRefreshLayout)."
+  "versionCodeSender": 257,
+  "versionCodeReceiver": 240,
+  "versionName": "3.5.6",
+  "releaseTag": "v3.5.6",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.6/omnicast-sender-v3.5.6.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.6/omnicast-receiver-v3.5.6.apk",
+  "changelog": "v3.5.6: Principio del Token Fresco (limpieza total de flujos al refrescar, reemplazo síncrono del token más nuevo sobre el antiguo), absorción de sub-variantes de Fastream (master.m3u8 sobre index-v1-a1), botón de casteo circular (#FF9800 CircleShape) con icono Google Cast blanco e insignia roja, botón de controles multimedia Play (Icons.Rounded.PlayArrow) visible únicamente al proyectar a TV, y arquitectura modular de blindaje Web Video Caster (WvcShieldSecurityEngine: anulación preventiva de window.open, neutralización de pushState abusivo, corte de WebSockets de anuncios y supresión de redirecciones retardadas sin gestos)."
 }

@@ -102,18 +102,30 @@ fun InAppBrowserScreen(
         }
     }
 
+    fun resetStreamDetections() {
+        detectedStreams.clear(); streamHeaders.clear(); streamLabels.clear(); streamDurations.clear(); qualityOptions = emptyList()
+        userDismissedSheetForUrl = ""; autoOpenJob?.cancel(); ActiveStreamHolder.clearDetectedStream()
+    }
+
     fun registerStream(url: String, hdrs: Map<String, String>, isPrimary: Boolean = false, label: String? = null) {
         val cleanUrl = BrowserUrlHelper.sanitizeMediaUrl(url)
         if (cleanUrl.isBlank() || AdBlocker.isAd(cleanUrl) || AdBlocker.isVideoAd(cleanUrl) || !isRealMedia(cleanUrl) || BrowserUrlHelper.extractYouTubeId(cleanUrl) != null) return
-        if (detectedStreams.contains(cleanUrl)) detectedStreams.remove(cleanUrl)
         val isM = isPrimary || cleanUrl.contains("master", true) || cleanUrl.contains("playlist", true)
+        val key = BrowserUrlHelper.extractMediaIdentityKey(cleanUrl)
+        val existingIndex = detectedStreams.indexOfFirst { it == cleanUrl || (key.isNotBlank() && BrowserUrlHelper.extractMediaIdentityKey(it) == key) }
+        if (existingIndex >= 0) {
+            val existingUrl = detectedStreams[existingIndex]
+            val existingIsM = existingUrl.contains("master", true) || existingUrl.contains("playlist", true)
+            if (existingIsM && !isM) return
+            detectedStreams.removeAt(existingIndex); streamHeaders.remove(existingUrl); streamLabels.remove(existingUrl)
+        }
         val nonM = detectedStreams.indexOfFirst { !it.contains("master", true) && !it.contains("playlist", true) }
         if (isM) detectedStreams.add(0, cleanUrl) else if (nonM >= 0) detectedStreams.add(nonM, cleanUrl) else detectedStreams.add(cleanUrl)
         if (hdrs.isNotEmpty()) streamHeaders[cleanUrl] = hdrs; if (!label.isNullOrBlank()) streamLabels[cleanUrl] = label
         val primaryUrl = detectedStreams.firstOrNull { it.contains("master", true) } ?: detectedStreams.firstOrNull { isRealMedia(it) } ?: cleanUrl
         val cleanT = if (pageTitle.isNotBlank() && pageTitle != "Cargando..." && pageTitle != "Transmisión") pageTitle else "Video Web"
         ActiveStreamHolder.update(primaryUrl, cleanT, streamHeaders[primaryUrl] ?: hdrs)
-        android.util.Log.i("StreamDetection", "🎬 Flujo registrado [isMaster=$isM]: $cleanUrl")
+        android.util.Log.i("StreamDetection", "🎬 Flujo registrado [isMaster=$isM, freshToken=true]: $cleanUrl")
         if (!showOptionsSheet && !isCasting && userDismissedSheetForUrl != currentUrl) {
             autoOpenJob?.cancel()
             autoOpenJob = scope.launch {
@@ -131,8 +143,7 @@ fun InAppBrowserScreen(
     }
 
     fun navigateTo(url: String) {
-        detectedStreams.clear(); streamHeaders.clear(); streamLabels.clear(); streamDurations.clear(); qualityOptions = emptyList()
-        userDismissedSheetForUrl = ""; autoOpenJob?.cancel(); ActiveStreamHolder.clearDetectedStream(); showBottomControls = false; pageTitle = "Cargando..."; val target = BrowserUrlHelper.normalizeUrl(url)
+        resetStreamDetections(); showBottomControls = false; pageTitle = "Cargando..."; val target = BrowserUrlHelper.normalizeUrl(url)
         inputUrl = target; currentUrl = target; isHome = false; prefs.edit().putString("saved_browser_last_url", target).apply()
         checkPlatformUrls(target); webViewInstance?.loadUrl(target)
     }
@@ -168,8 +179,7 @@ fun InAppBrowserScreen(
             webViewInstance?.goBack()
         } else if (com.omnicast.sender.history.NavigationTrackManager.canGoBackPersistent(context)) {
             val prev = com.omnicast.sender.history.NavigationTrackManager.popPreviousBrowserUrl(context)
-            if (!prev.isNullOrBlank()) { inputUrl = prev; currentUrl = prev; isHome = false; webViewInstance?.loadUrl(prev) }
-            else if (!isHome) isHome = true else onCloseBrowser()
+            if (!prev.isNullOrBlank()) { inputUrl = prev; currentUrl = prev; isHome = false; webViewInstance?.loadUrl(prev) } else if (!isHome) isHome = true else onCloseBrowser()
         } else if (!isHome) isHome = true else onCloseBrowser()
     }
 
@@ -178,17 +188,13 @@ fun InAppBrowserScreen(
     }
 
     DisposableEffect(webViewInstance) {
-        com.omnicast.sender.overlay.FloatingIndicatorService.setBrowserActive(true)
-        SenderMainActivity.onBrowserRescanRequested = { webViewInstance?.evaluateJavascript(WvcSnifferScripts.buildAggressiveRescanScript(WvcDomSniffer.CONSOLE_PREFIX), null) }
+        com.omnicast.sender.overlay.FloatingIndicatorService.setBrowserActive(true); SenderMainActivity.onBrowserRescanRequested = { webViewInstance?.evaluateJavascript(WvcSnifferScripts.buildAggressiveRescanScript(WvcDomSniffer.CONSOLE_PREFIX), null) }
         onDispose { SenderMainActivity.onBrowserRescanRequested = null; com.omnicast.sender.overlay.FloatingIndicatorService.setBrowserActive(false) }
     }
 
     SideMediaDrawer(
         isOpen = showSideDrawer, onClose = { showSideDrawer = false },
-        onPlayOnTv = { url, title, hdrs, _ ->
-            val savedPage = playlistManager.getPlaylists().flatMap { it.items }.firstOrNull { it.url == url }?.pageUrl ?: historyManager.getHistory().firstOrNull { it.url == url }?.pageUrl ?: hdrs["Referer"]
-            transmitWithHistory(url, title, hdrs, savedPage)
-        },
+        onPlayOnTv = { url, title, hdrs, _ -> val savedPage = playlistManager.getPlaylists().flatMap { it.items }.firstOrNull { it.url == url }?.pageUrl ?: historyManager.getHistory().firstOrNull { it.url == url }?.pageUrl ?: hdrs["Referer"]; transmitWithHistory(url, title, hdrs, savedPage) },
         onOpenInBrowser = { navigateTo(it) }
     ) {
         Column(modifier = Modifier.fillMaxSize().background(Color(0xFF0F172A))) {
@@ -196,7 +202,7 @@ fun InAppBrowserScreen(
                 inputUrl = inputUrl, onInputUrlChange = { inputUrl = it }, onNavigate = { navigateTo(it) }, onClose = onCloseBrowser,
                 onHome = { isHome = true; inputUrl = "" }, onBack = { handleBrowserBack() },
                 onForward = { if (webViewInstance?.canGoForward() == true) webViewInstance?.goForward() }, canGoForward = webViewInstance?.canGoForward() == true,
-                onReload = { webViewInstance?.reload() }, isDesktopMode = isDesktopMode,
+                onReload = { resetStreamDetections(); pageTitle = "Cargando..."; webViewInstance?.reload() }, isDesktopMode = isDesktopMode,
                 onToggleDesktopMode = { isDesktopMode = !isDesktopMode; webViewInstance?.settings?.userAgentString = if (isDesktopMode) UA_DESKTOP else UA_MOBILE; webViewInstance?.reload() },
                 isAdBlockEnabled = isAdBlockEnabled, onToggleAdBlock = { isAdBlockEnabled = !isAdBlockEnabled },
                 onForceRescan = { webViewInstance?.evaluateJavascript(WvcSnifferScripts.buildAggressiveRescanScript(WvcDomSniffer.CONSOLE_PREFIX), null) },
@@ -220,9 +226,7 @@ fun InAppBrowserScreen(
                     hasStreams = detectedStreams.any { isRealMedia(it) },
                     onProgress = { progress = it },
                     onPageStarted = { newUrl ->
-                        if (currentUrl.isNotBlank() && currentUrl != newUrl && !newUrl.startsWith("about:")) {
-                            detectedStreams.clear(); streamHeaders.clear(); streamLabels.clear(); qualityOptions = emptyList(); ActiveStreamHolder.clearDetectedStream(); pageTitle = "Cargando..."; userDismissedSheetForUrl = ""; autoOpenJob?.cancel()
-                        }
+                        if (!newUrl.startsWith("about:")) { resetStreamDetections(); pageTitle = "Cargando..." }
                         inputUrl = newUrl; currentUrl = newUrl; com.omnicast.sender.history.NavigationTrackManager.recordStep(newUrl, pageTitle)
                         if (!newUrl.startsWith("about:")) { prefs.edit().putString("saved_browser_last_url", newUrl).apply(); com.omnicast.sender.history.NavigationTrackManager.pushBrowserHistory(context, newUrl, pageTitle) }
                         checkPlatformUrls(newUrl)
@@ -232,9 +236,7 @@ fun InAppBrowserScreen(
                         u?.let { checkPlatformUrls(it, pageTitle); com.omnicast.sender.history.NavigationTrackManager.recordStep(it, pageTitle) }
                     },
                     onHistoryUpdated = { u, t ->
-                        if (currentUrl.isNotBlank() && currentUrl != u && !u.startsWith("about:") && !u.contains("favicon")) {
-                            detectedStreams.clear(); streamHeaders.clear(); streamLabels.clear(); qualityOptions = emptyList(); ActiveStreamHolder.clearDetectedStream(); userDismissedSheetForUrl = ""
-                        }
+                        if (currentUrl.isNotBlank() && currentUrl != u && !u.startsWith("about:") && !u.contains("favicon")) resetStreamDetections()
                         currentUrl = u; if (!t.isNullOrBlank() && t != "Transmisión" && !t.contains("about:blank")) pageTitle = t
                         com.omnicast.sender.history.NavigationTrackManager.recordStep(u, pageTitle)
                         if (!u.startsWith("about:")) { prefs.edit().putString("saved_browser_last_url", u).apply(); com.omnicast.sender.history.NavigationTrackManager.pushBrowserHistory(context, u, pageTitle) }
@@ -286,11 +288,9 @@ fun InAppBrowserScreen(
     BrowserModalSheets(
         showOptionsSheet = showOptionsSheet, showHistorySheet = false, showSavedPlaylistsSheet = false, videoToSave = videoToSave,
         playlistManager = playlistManager, pageTitle = pageTitle, qualityOptions = qualityOptions, historyList = emptyList(),
-        onTransmitOption = { opt ->
-            showOptionsSheet = false; val bT = webViewInstance?.title?.takeIf { it.isNotBlank() && !it.contains("about:blank") && it != "Transmisión" } ?: pageTitle; transmitWithHistory(opt.streamUrl, bT, (streamHeaders[opt.streamUrl] ?: emptyMap()) + opt.healedHeaders)
-        },
+        onTransmitOption = { opt -> showOptionsSheet = false; val bT = webViewInstance?.title?.takeIf { it.isNotBlank() && !it.contains("about:blank") && it != "Transmisión" } ?: pageTitle; transmitWithHistory(opt.streamUrl, bT, (streamHeaders[opt.streamUrl] ?: emptyMap()) + opt.healedHeaders) },
         onTransmitHistory = { transmitWithHistory(it.url, it.title, it.headers, it.pageUrl) }, onDismissOptions = { showOptionsSheet = false; userDismissedSheetForUrl = currentUrl },
-        onClearOptions = { detectedStreams.clear(); qualityOptions = emptyList(); showOptionsSheet = false },
+        onClearOptions = { resetStreamDetections(); showOptionsSheet = false },
         onRescanOptions = { webViewInstance?.evaluateJavascript(WvcSnifferScripts.buildAggressiveRescanScript(WvcDomSniffer.CONSOLE_PREFIX), null); Toast.makeText(context, "🔍 Buscando videos...", Toast.LENGTH_SHORT).show() },
         onDeleteHistory = { historyManager.remove(it) }, onClearHistory = { historyManager.clear() }, onToggleFavorite = { historyManager.toggleFavorite(it) },
         onDismissHistory = {}, onDismissPlaylists = {}, onDismissSaveDialog = { videoToSave = null }, onSavedToPlaylist = { playlistsVersion++; Toast.makeText(context, "💾 Guardado en $it", Toast.LENGTH_SHORT).show() },

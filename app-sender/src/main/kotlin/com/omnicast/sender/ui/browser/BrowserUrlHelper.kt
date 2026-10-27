@@ -148,4 +148,21 @@ object BrowserUrlHelper {
     }
 
     fun hasSignedSecurityToken(url: String): Boolean = com.omnicast.core.domain.usecases.StreamManifestProbe.hasSignedSecurityToken(url)
+
+    fun extractMediaIdentityKey(url: String): String {
+        if (url.isBlank()) return ""
+        val lower = url.lowercase()
+        extractYouTubeId(url)?.let { return "yt_$it" }
+        if (lower.contains("okcdn.ru") || lower.contains("mycdn.me") || lower.contains("ok.ru")) {
+            val idMatch = Regex("[?&]id=([0-9]+)").find(url)
+            if (idMatch != null) return "okru_${idMatch.groupValues[1]}"
+        }
+        MediaPlatformResolver.extractFastreamId(url)?.let { return "fastream_$it" }
+        val clean = url.substringBefore('?')
+        val parent = clean.substringBeforeLast('/')
+        val parentFolder = if (parent.contains('_')) parent.substringBefore('_') else parent
+        val lastSegment = clean.substringAfterLast('/')
+        val filePrefix = lastSegment.substringBefore('_').substringBefore('.').take(12)
+        return if (filePrefix.contains("master", true) || filePrefix.contains("index", true)) parentFolder else "$parentFolder/$filePrefix"
+    }
 }

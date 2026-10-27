@@ -16,6 +16,7 @@ import androidx.compose.material.icons.rounded.HelpOutline
 import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material.icons.rounded.MoreVert
+import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material.icons.rounded.StarBorder
@@ -166,10 +167,10 @@ fun BrowserTopBar(
                 ) {
                     Box(contentAlignment = Alignment.TopEnd) {
                         Icon(
-                            Icons.Rounded.Tv,
+                            Icons.Rounded.PlayArrow,
                             contentDescription = "Controles TV",
                             tint = if (showBottomControls) Color(0xFF38BDF8) else Color(0xFF10B981),
-                            modifier = Modifier.size(18.dp)
+                            modifier = Modifier.size(20.dp)
                         )
                         Box(
                             modifier = Modifier
@@ -187,7 +188,7 @@ fun BrowserTopBar(
                         .size(28.dp)
                         .background(
                             if (detectedStreamsCount > 0) Color(0xFFFF9800) else Color(0xFF334155),
-                            RoundedCornerShape(6.dp)
+                            CircleShape
                         )
                 ) {
                     CastTvIcon(

@@ -139,7 +139,10 @@ fun BrowserWebView(
                     override fun onPageStarted(v: WebView?, u: String?, f: Bitmap?) {
                         CookieManager.getInstance().flush()
                         u?.let { if (!it.startsWith("about:") && !it.contains("favicon")) onPageStarted(it) }
-                        if (isAdBlockEnabled) v?.evaluateJavascript(AdBlocker.getAdHidingScript(), null)
+                        if (isAdBlockEnabled) {
+                            v?.evaluateJavascript(AdBlocker.getAdHidingScript(), null)
+                            if (WvcShieldSecurityEngine.isEnabled) v?.evaluateJavascript(WvcShieldSecurityEngine.getProtectionScript(), null)
+                        }
                         v?.evaluateJavascript(inputViewportScript, null)
                     }
 
@@ -149,7 +152,10 @@ fun BrowserWebView(
                         val title = v?.title ?: "Transmisión"
                         currentKnownTitle = title
                         onPageFinished(title, u)
-                        if (isAdBlockEnabled) v?.evaluateJavascript(AdBlocker.getAdHidingScript(), null)
+                        if (isAdBlockEnabled) {
+                            v?.evaluateJavascript(AdBlocker.getAdHidingScript(), null)
+                            if (WvcShieldSecurityEngine.isEnabled) v?.evaluateJavascript(WvcShieldSecurityEngine.getProtectionScript(), null)
+                        }
                         v?.evaluateJavascript(inputViewportScript, null)
                         v?.evaluateJavascript(WvcDomSniffer.getInjectionScript(ctx), null)
                     }
@@ -162,6 +168,7 @@ fun BrowserWebView(
                         val reqUrl = r?.url?.toString() ?: return false
                         if (AdBlocker.isExternalRedirect(reqUrl)) return true
                         val liveUrl = v?.url ?: currentUrl
+                        if (isAdBlockEnabled && WvcShieldSecurityEngine.isEnabled && WvcShieldSecurityEngine.shouldBlockDelayedRedirect(r.hasGesture(), reqUrl, liveUrl)) return true
                         val curHost = try { java.net.URI(liveUrl).host?.lowercase() } catch (_: Throwable) { null }
                         val targetHost = try { r.url.host?.lowercase() } catch (_: Throwable) { null }
                         val isSameSite = curHost != null && targetHost != null && (targetHost == curHost || targetHost.endsWith(".$curHost") || curHost.endsWith(".$targetHost"))

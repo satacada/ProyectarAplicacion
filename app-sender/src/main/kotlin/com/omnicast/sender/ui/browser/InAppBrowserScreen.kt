@@ -83,7 +83,8 @@ fun InAppBrowserScreen(
                 val vName = StreamQualityDetector.extractFileName(u, if (u.contains("master", true)) "master" else "video")
                 val isM = u.contains("master", true) || u.contains("playlist", true)
                 val fmt = when { isM -> "m3u8 (adaptive)"; u.contains(".mp4", true) -> "mp4 (Directo)"; u.contains(".mpd", true) -> "mpd (adaptive)"; else -> "m3u8" }
-                listOf(StreamQualityOption("▶ [${cleanTitle.take(16)}] $vName", "Adaptive", "Original", u, isMovie = true, isSuggested = isM, healedHeaders = streamHeaders[u] ?: emptyMap(), fileName = vName, formatDetail = fmt, groupKey = u))
+                val gKey = BrowserUrlHelper.extractMediaIdentityKey(u).ifBlank { u.substringBefore('?') }
+                listOf(StreamQualityOption("▶ [${cleanTitle.take(16)}] $vName", "Adaptive", "Original", u, isMovie = true, isSuggested = isM, healedHeaders = streamHeaders[u] ?: emptyMap(), fileName = vName, formatDetail = fmt, groupKey = gKey))
             }
         }
         showOptionsSheet = true
@@ -91,9 +92,10 @@ fun InAppBrowserScreen(
             val deep = currentStreams.flatMap { u ->
                 val ytId = BrowserUrlHelper.extractYouTubeId(u)
                 if (ytId != null) BrowserUrlHelper.createYouTubeQualityOptions(ytId, cleanTitle)
-                else StreamQualityDetector.detectQualities(u, streamHeaders[u] ?: emptyMap(), cleanTitle, currentUrl).onEach { o ->
-                    if (o.healedHeaders.isNotEmpty()) streamHeaders[o.streamUrl] = o.healedHeaders
-                }
+                else StreamQualityDetector.detectQualities(u, streamHeaders[u] ?: emptyMap(), cleanTitle, currentUrl).map { o ->
+                    val gKey = BrowserUrlHelper.extractMediaIdentityKey(u).ifBlank { o.groupKey.ifBlank { u.substringBefore('?') } }
+                    o.copy(groupKey = gKey)
+                }.onEach { o -> if (o.healedHeaders.isNotEmpty()) streamHeaders[o.streamUrl] = o.healedHeaders }
             }
             val finalOpts = if (deep.isNotEmpty()) deep.distinctBy { it.streamUrl } else qualityOptions
             val orderMap = currentStreams.withIndex().associate { it.value to it.index }
@@ -241,7 +243,7 @@ fun InAppBrowserScreen(
                     },
                     onStreamIntercepted = { sUrl, hdrs, isM -> registerStream(sUrl, hdrs, isPrimary = isM) },
                     onSniffedVideo = { sniffed ->
-                        if (AdBlocker.isAd(sniffed.src) || sniffed.duration in 0.1f..59.9f) return@BrowserWebView
+                        if (AdBlocker.isAd(sniffed.src) || sniffed.duration in 0.1f..59.9f || (BrowserUrlHelper.extractYouTubeId(sniffed.src) != null && !currentUrl.contains("youtube.com") && !currentUrl.contains("youtu.be"))) return@BrowserWebView
                         val sourceFrameUrl = sniffed.frameUrl.takeIf { it.startsWith("http") } ?: currentUrl
                         if (sniffed.src.contains("fastream.to") && !sniffed.src.contains(".m3u8")) {
                             scope.launch(Dispatchers.IO) {

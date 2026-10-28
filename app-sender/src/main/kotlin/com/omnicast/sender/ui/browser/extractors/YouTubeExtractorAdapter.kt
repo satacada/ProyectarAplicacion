@@ -17,6 +17,8 @@ class YouTubeExtractorAdapter : IMediaStreamExtractorPort {
         val url = candidate.url
         if (!url.contains("youtube.com") && !url.contains("youtu.be")) return false
         if (url.contains("googlevideo.com") || url.contains("videoplayback")) return false
+        val page = candidate.pageUrl.lowercase()
+        if (page.isNotBlank() && !page.contains("youtube.com") && !page.contains("youtu.be") && !page.startsWith("about:")) return false
         return ytRegex.containsMatchIn(url)
     }
 

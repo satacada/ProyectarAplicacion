@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 266,
-  "versionCodeReceiver": 249,
-  "versionName": "3.5.15",
-  "releaseTag": "v3.5.15",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.15/omnicast-sender-v3.5.15.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.15/omnicast-receiver-v3.5.15.apk",
-  "changelog": "v3.5.15: Restablecimiento de Chromium nativo para DropCDN y Fastream erradicando errores 403 y CORS en TV Box; restitución de detección multicalidad (Adaptativa, 1080p, 720p) en Pelisplus; handoff directo de YouTube a reproductor nativo; y blindaje contra banners y dominios publicitarios en Pelisplay."
+  "versionCodeSender": 267,
+  "versionCodeReceiver": 250,
+  "versionName": "3.5.16",
+  "releaseTag": "v3.5.16",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.16/omnicast-sender-v3.5.16.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.16/omnicast-receiver-v3.5.16.apk",
+  "changelog": "v3.5.16: Aislamiento estricto de YouTube para ignorar trailers incrustados en páginas de películas; consolidación de flujos de video (master, 1080p, 720p) en una sola tarjeta con selector de resolución desplegable por identidad multimedia."
 }

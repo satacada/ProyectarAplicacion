@@ -24,3 +24,7 @@ Para que la lista de opciones no se contamine con llamadas de telemetría o esta
 4. **Principio "Poner y Sacar":**
    - Si se añade un nuevo sitio o si se retira uno existente, el resto del sistema de casteo, fotos y adblocker debe permanecer 100% inalterado y funcional.
    - Los extractores especializados (`FastreamExtractorAdapter`, `UniversalHlsExtractorAdapter`) exigen firmas de media reales (`.m3u8`, `/hls`, `.mp4`) y prohíben la aceptación de URLs únicamente por coincidencia de nombre de host.
+
+5. **Inviolabilidad de la Lista Plana 1:1 y Aislamiento de Síntesis de Calidades (v3.5.21 / ADR-013):**
+   - El selector de videos (`WvcVideoListSheet.kt`) debe reflejar 1:1 cada variante de red detectada sin agruparla en tarjetas colapsadas que oculten variantes legítimas ni inventen calidades sintéticas (`720p`) en CDNs que sólo sirven resolución nativa (DropCDN / PelisPlus).
+   - La síntesis de calidades múltiples y el uso de `groupKey` se circunscribe exclusivamente al adaptador de `OK.ru` y su origen verificado, garantizando que DropCDN, Fastream y otros flujos operen de forma transparente con sus URLs legítimas sin manipulación destructiva (`.urlset`).

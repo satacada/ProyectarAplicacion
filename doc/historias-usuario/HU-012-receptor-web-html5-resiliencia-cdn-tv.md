@@ -54,3 +54,7 @@
 
 9. **Resolución Síncrona Fastream / DropCDN con User-Agent de Escritorio (v3.4.57):**
    - Para servidores de video Fastream / DropCDN (`fastream.to`, `dropcdn.io`, `dr0pstream.com`), las solicitudes de manifiesto y fragmentos se envían con identidad de Escritorio Windows (`UA_FASTREAM`) y cabecera `Referer: https://fastream.to/embed-$id.html`, resolviendo de raíz el rechazo `HTTP 403 Forbidden` que las CDNs de Fastream aplican a navegadores móviles.
+
+10. **Preservación Inmutable de `Referer` como Base URL y User-Agent en TV Receiver (v3.5.21 / ADR-013):**
+   - En `TvReceiverHelper.kt`, `resolveBaseUrl` NUNCA debe sobreescribir el origen si el mapa de cabeceras contiene un `Referer` legítimo de embed (`https://dr0pstream.com/e/<id>`).
+   - En `TvWebStreamScreen.kt`, Chromium debe recibir obligatoriamente `settings.userAgentString = headers["User-Agent"] ?: UA_MOBILE`. Esto erradica de forma definitiva el rechazo `HTTP 403 Forbidden` (`manifestLoadError code=403`) en CDNs protegidas por Cloudflare o DropCDN al reproducir en la TV Box.

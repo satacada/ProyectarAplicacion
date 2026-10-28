@@ -91,11 +91,13 @@ SINO -> ExoPlayer (Hardware Nativo 60fps)
 
 ---
 
-## 4. MATRIZ DE REPRODUCTORES Y CASOS PROBADOS EN PRODUCCIÓN (v3.4.94)
+## 4. MATRIZ DE REPRODUCTORES Y CASOS PROBADOS EN PRODUCCIÓN (v3.5.21)
 
 | Portal / Servicio | Dominio / CDN | Firma Detectada | Reproductor Asignado en TV Box | Comportamiento Técnico |
 |---|---|---|---|---|
-| **PelisPlus** | `pelisplus.hair`<br>CDN: `ds4.dropcdn.io` | `hasSignedSecurityToken = true`<br>(Token HMAC efímero) | **`TvWebStreamScreen`**<br>(Chromium Nativo + `Hls.js`) | Carga en Same-Origin (`baseUrl = streamOrigin`). Stack C++ BoringSSL con huella TLS de Google Chrome. Cero bloqueo 403 y cero CORS. |
+| **PelisPlus** | `pelisplus.hair`<br>CDN: `ds4.dropcdn.io` | `hasSignedSecurityToken = true`<br>(Token HMAC efímero) | **`TvWebStreamScreen`**<br>(Chromium Nativo + `Hls.js`) | Carga con `baseUrl = headers["Referer"]` (`https://dr0pstream.com/e/<id>`) y User-Agent móvil. Interceptor Anti-CORS activo. Cero bloqueo 403 y resolución nativa (sin reescritura `.urlset`). |
+| **OK.ru (DASH)** | `ok.ru`<br>CDN: `*.mycdn.me`, `*.okcdn.ru` | Manifiesto `.mpd`<br>(DASH dinámico) | **`ExoPlayerTvManager`**<br>(DashMediaSource HW) | Decodificación por hardware nativo para pistas VP9 y Opus. |
+| **OK.ru (Progresivo)** | `ok.ru`<br>CDN: `*.mycdn.me` | Streams MP4/HLS con `Referer: https://ok.ru/` | **`ExoPlayerTvManager`**<br>(AndroidX Media3 HW) | Selección de calidades 1080p, 720p, 480p, 360p en lista plana, transmitiendo cabecera Referer oficial. |
 | **Reypelis** | `reypelis.vip`<br>CDN: `spark.9bg.net` | Flujo HLS VOD directo<br>(Fastream resolutivo) | **`ExoPlayerTvManager`**<br>(AndroidX Media3 HW) | Decodificación por hardware a 1080p nativo, respuesta ultra-rápida al mando D-Pad y salto ±10s. |
 | **PelisGO** | `pelisgo.online`<br>CDN: `*.tnmr.org` | Flujo HLS VOD directo<br>(LuluStream resuelto) | **`ExoPlayerTvManager`**<br>(AndroidX Media3 HW) | Perfil resuelto y guardado en `StreamProfileDb`. Decodificación continua por hardware con jitter-buffer anti-tirones. |
 | **YouTube** | `youtube.com` | ID de video oficial | **`TvYouTubeScreen`** | Reproducción en visor IFrame oficial de TV sin publicidad invasiva. |

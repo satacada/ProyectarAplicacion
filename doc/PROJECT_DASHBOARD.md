@@ -18,7 +18,7 @@
 ---
 
 ## 2. Historias de Usuario Inamovibles (Contrato de Experiencia de Usuario)
-*(Carpeta modular permanente: [`doc/historias-usuario/`](file:///d:/APLICACIONES/proyectarAplicacion/doc/historias-usuario/README.md) | Manuales de Referencia: [`doc/referencias/CATALOGO_VARIANTES_STREAMING.md`](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/referencias/CATALOGO_VARIANTES_STREAMING.md))*
+*(Carpeta modular permanente: [`doc/historias-usuario/`](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/historias-usuario/) | Catálogo de Referencia: [`doc/referencias/CATALOGO_VARIANTES_STREAMING.md`](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/referencias/CATALOGO_VARIANTES_STREAMING.md) | ADR Clave: [`doc/adr/ADR-013-coexistencia-dropcdn-okru-y-estandar-lista-plana.md`](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/adr/ADR-013-coexistencia-dropcdn-okru-y-estandar-lista-plana.md))*
 
 ---
 

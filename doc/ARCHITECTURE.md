@@ -1,7 +1,7 @@
 # 🏛️ ARQUITECTURA DEL SISTEMA: OMNICAST PRO
 
-**Versión Canónica:** v3.4.94  
-**Última actualización:** 2026-10-26  
+**Versión Canónica:** v3.5.21  
+**Última actualización:** 2026-10-28  
 **Estándar de Calidad:** Clean Architecture, Arquitectura Hexagonal (Ports & Adapters), Fail-Fast, Zero-Crash  
 
 ---
@@ -9,8 +9,8 @@
 ## 1. Visión General de Alto Nivel
 
 OmniCast Pro es un ecosistema cliente-servidor nativo de Android compuesto por:
-1. **Emisor Móvil (`:app-sender`):** Transmisión de pantalla de baja latencia (<60ms), captura de audio digital interno, proyección de fotos/videos locales y navegador web con bloqueador de publicidad multi-nivel y captura universal de medios.
-2. **Receptor Android TV / TV Box (`:app-receiver`):** Pantalla de standby limpia, receptor WebRTC por hardware, reproductor híbrido dual (ExoPlayer para flujos directos / Chromium HTML5 + Hls.js para CDNs protegidas) y control ergonómico por mando a distancia D-Pad.
+1. **Emisor Móvil (`:app-sender`):** Transmisión de pantalla de baja latencia (<60ms), captura de audio digital interno, proyección de fotos/videos locales y navegador web con bloqueador de publicidad multi-nivel y captura universal de medios con lista plana estándar Web Video Caster.
+2. **Receptor Android TV / TV Box (`:app-receiver`):** Pantalla de standby limpia, receptor WebRTC por hardware, reproductor híbrido dual (ExoPlayer para flujos directos / Chromium HTML5 + Hls.js con interceptor anti-CORS para CDNs protegidas) y control ergonómico por mando a distancia D-Pad.
 3. **Núcleo Compartido (`:core:domain`, `:core:protocol`, `:core:telemetry`):** Modelos puros de dominio, máquina de estados de señalización WebRTC, protocolos de control y telemetría en tiempo real.
 
 El contrato funcional completo se encuentra en:
@@ -42,9 +42,9 @@ graph TD
         LocalSigServer --> ReceiverApp
         ReceiverApp --> HWDecoder["MediaCodec Hardware Decoder"]
         ReceiverApp --> DualPlayer{"Enrutador Híbrido"}
-        DualPlayer -->|Flujos VOD / Live / MP4| ExoPlayerTV["ExoPlayer Hardware"]
+        DualPlayer -->|Flujos VOD / Live / MP4 / DASH| ExoPlayerTV["ExoPlayer Hardware"]
         DualPlayer -->|CDNs Protegidas / Tokens HMAC / PelisPlus| TvWebStream["TvWebStreamScreen (HTML5/Hls.js)"]
-        TvWebStream --> SameOrigin["Same-Origin Nativo (baseUrl = streamOrigin)"]
+        TvWebStream --> AntiCors["TvWebResourceInterceptor (Anti-CORS + Referer Base)"]
         ReceiverApp --> TVPlaylists["TvPlaylistsManager (Guardados / Historial)"]
     end
 ```
@@ -190,24 +190,24 @@ sequenceDiagram
     participant WebTV as TvWebStreamScreen (HTML5)
     participant CDN as CDN Servidor Video (Remoto)
 
-    U->>Browser: Toca Play en sitio web (PelisGO / OK.ru)
+    U->>Browser: Toca Play en sitio web (PelisPlus / OK.ru / PelisGO)
     Browser->>Browser: DetectMediaStreamUseCase + TelemetryFilter
-    Browser->>U: Muestra Video Card único con Selector de Calidad
-    U->>Browser: Selecciona Calidad y pulsa Proyectar
+    Browser->>U: Muestra Lista Plana WVC 1:1 de Variantes Detectadas
+    U->>Browser: Selecciona Variante de video y pulsa Proyectar
     Browser->>Sender: handoffDirectStream(url, headers, branch)
     Sender->>TV: WebSocket SignalingMessage.DirectStreamHandoff(url, headers)
     
     alt Reproducción Directa Estándar (ExoPlayer)
         TV->>Exo: playStream(url, headers)
         Exo->>CDN: GET url (con User-Agent & Referer del móvil)
-        CDN-->>Exo: HTTP 200 OK (Stream MP4/HLS)
+        CDN-->>Exo: HTTP 200 OK (Stream MP4/HLS/DASH)
         Exo-->>TV: Decodificación por Hardware activa
-    else Fallback Reactivo ante HTTP 403 / CDN Protegida
+    else Fallback Reactivo ante HTTP 403 / CDN Protegida (DropCDN/Fastream)
         Exo->>CDN: GET url
         CDN-->>Exo: HTTP 403 Forbidden (Firma estricta / Token)
         Exo->>TV: Notifica Error 403 a TvReceiverActivity
-        TV->>WebTV: Activa Fallback con headers originales
-        WebTV->>CDN: GET url vía Chromium nativo (Same-Origin)
+        TV->>WebTV: Activa Fallback con headers originales (baseUrl = Referer, UA Móvil)
+        WebTV->>CDN: GET url vía TvWebResourceInterceptor (Anti-CORS)
         CDN-->>WebTV: HTTP 200 OK (Hls.js / Video HTML5)
     end
 ```
@@ -252,4 +252,5 @@ El subsistema de Screen Mirroring conecta la pantalla del móvil con la TV Box v
 - [ADR-010: Supresión Nativa de Popups Anti-OOM, Blindaje de Gestos y Control Dual D-Pad en TV](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/adr/ADR-010-supresion-nativa-popups-anti-oom-control-dual-dpad.md)
 - [ADR-011: Arquitectura Fiel de Captura v3.32.94 y Despacho Dual de Reproductores en TV Box](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/adr/ADR-011-arquitectura-captura-v3.32-y-despacho-dual-tv.md)
 - [ADR-012: Filtro Centralizado de Higiene de Red y Purificación de Extractores Hexagonales](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/adr/ADR-012-filtro-centralizado-higiene-streams-y-adaptadores-limpios.md)
+- [ADR-013: Coexistencia DropCDN/OK.ru, Estándar WVC de Lista Plana y Blindaje de Cabeceras en TV](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/adr/ADR-013-coexistencia-dropcdn-okru-y-estandar-lista-plana.md)
 

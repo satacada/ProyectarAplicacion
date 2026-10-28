@@ -144,9 +144,18 @@ fun WvcVideoListSheet(
                 }
             } else {
                 val groupedVideos = remember(options) {
-                    options.groupBy { it.groupKey.ifBlank { it.streamUrl.substringBefore('?') } }
-                        .values
-                        .toList()
+                    val rawGroups = options.groupBy { it.groupKey.ifBlank { it.streamUrl.substringBefore('?') } }
+                    val result = mutableListOf<List<StreamQualityOption>>()
+                    for (group in rawGroups.values) {
+                        val resolutions = group.map { it.resolution.lowercase() }
+                        val hasDuplicates = resolutions.size != resolutions.distinct().size
+                        if (hasDuplicates || (group.size > 1 && group.all { it.resolution.equals("Adaptive", ignoreCase = true) })) {
+                            group.forEach { singleOpt -> result.add(listOf(singleOpt)) }
+                        } else {
+                            result.add(group)
+                        }
+                    }
+                    result
                 }
                 LazyColumn(
                     modifier = Modifier

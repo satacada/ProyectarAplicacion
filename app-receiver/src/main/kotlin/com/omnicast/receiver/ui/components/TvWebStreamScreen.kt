@@ -142,9 +142,16 @@ fun TvWebStreamScreen(
                             settings.mediaPlaybackRequiresUserGesture = false
                             settings.useWideViewPort = true
                             settings.loadWithOverviewMode = true
-                            settings.userAgentString = headers["User-Agent"] ?: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
-                            CookieManager.getInstance().setAcceptCookie(true)
-                            CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
+                            val cm = CookieManager.getInstance(); cm.setAcceptCookie(true); cm.setAcceptThirdPartyCookies(this, true)
+                            headers["Cookie"]?.let { ck ->
+                                runCatching {
+                                    val sOrigin = try { Uri.parse(streamUrl).let { "${it.scheme}://${it.host}/" } } catch (_: Throwable) { null }
+                                    val rOrigin = try { headers["Referer"]?.let { Uri.parse(it) }?.let { "${it.scheme}://${it.host}/" } } catch (_: Throwable) { null }
+                                    val targets = listOfNotNull(streamUrl, sOrigin, headers["Referer"], rOrigin).distinct()
+                                    ck.split("; ").map { it.trim() }.filter { it.isNotBlank() }.forEach { p -> targets.forEach { cm.setCookie(it, p) } }
+                                    cm.flush()
+                                }
+                            }
                             addJavascriptInterface(object {
                                 @android.webkit.JavascriptInterface
                                 fun onPlaybackStatus(c: Double, d: Double, p: Boolean) { onPlaybackStatus?.invoke((c * 1000).toLong(), (d * 1000).toLong(), p) }

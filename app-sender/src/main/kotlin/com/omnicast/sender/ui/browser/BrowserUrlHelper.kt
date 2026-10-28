@@ -89,13 +89,18 @@ object BrowserUrlHelper {
         try {
             val refererUrl = headers["Referer"] ?: currentUrl
             val cm = CookieManager.getInstance()
-            val c1 = cm?.getCookie(streamUrl)
-            val c2 = if (refererUrl.isNotBlank()) cm?.getCookie(refererUrl) else null
-            val c3 = if (currentUrl.isNotBlank()) cm?.getCookie(currentUrl) else null
-            val c4 = cm?.getCookie("https://dr0pstream.com")
-            val c5 = cm?.getCookie("https://dropcdn.io")
-            val c6 = cm?.getCookie("https://fastream.to")
-            val mergedCookies = listOfNotNull(c1, c2, c3, c4, c5, c6, rawHeaders?.get("Cookie"), rawHeaders?.get("cookie"))
+            val cookieTargetUrls = mutableListOf<String>()
+            listOfNotNull(streamUrl, refererUrl, currentUrl).filter { it.isNotBlank() }.forEach { u ->
+                cookieTargetUrls.add(u)
+                try {
+                    val uri = android.net.Uri.parse(u)
+                    if (uri.scheme != null && uri.host != null) {
+                        cookieTargetUrls.add("${uri.scheme}://${uri.host}")
+                    }
+                } catch (_: Throwable) {}
+            }
+            val dynamicCookies = cookieTargetUrls.distinct().mapNotNull { cm?.getCookie(it) }
+            val mergedCookies = (dynamicCookies + listOfNotNull(rawHeaders?.get("Cookie"), rawHeaders?.get("cookie")))
                 .flatMap { it.split("; ") }
                 .map { it.trim() }
                 .filter { it.isNotBlank() }

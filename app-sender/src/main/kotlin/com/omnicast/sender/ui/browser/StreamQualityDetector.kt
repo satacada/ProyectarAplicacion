@@ -34,7 +34,7 @@ object StreamQualityDetector {
         val prefix = if (!title.isNullOrBlank() && title != "Transmisión") "[${title.take(20)}] " else ""
 
         var currentMediaUrl = BrowserUrlHelper.sanitizeMediaUrl(mediaUrl)
-        val isFastreamCdn = currentMediaUrl.contains("fastream.to", true) || currentMediaUrl.contains("dropcdn.io", true) || currentMediaUrl.contains("dr0pstream.com", true)
+        val isFastreamCdn = currentMediaUrl.contains("fastream.to", true)
         val defaultUa = if (isFastreamCdn) MediaPlatformResolver.UA_FASTREAM else UA_MOBILE
         var safeHeaders = BrowserUrlHelper.buildSafeHeaders(currentMediaUrl, headers["Referer"] ?: pageUrl ?: "", defaultUa, headers)
         if (currentMediaUrl.contains("fastream.to", ignoreCase = true) && !currentMediaUrl.contains(".m3u8", ignoreCase = true)) {
@@ -74,21 +74,30 @@ object StreamQualityDetector {
 
         val isSigned = StreamManifestProbe.hasSignedSecurityToken(currentMediaUrl)
         if (isSigned) {
+            val isFastream = currentMediaUrl.contains("fastream.to", ignoreCase = true)
             if (currentMediaUrl.contains("master.m3u8", ignoreCase = true)) {
-                val u1080 = if (currentMediaUrl.contains(".urlset/")) currentMediaUrl.replace(".urlset/master.m3u8", "n/index-v1-a1.m3u8") else currentMediaUrl.replace("master.m3u8", "index-v1-a1.m3u8")
-                val u720 = if (currentMediaUrl.contains(".urlset/")) currentMediaUrl.replace(".urlset/master.m3u8", "l/index-v1-a1.m3u8") else currentMediaUrl.replace("master.m3u8", "iframes-v1-a1.m3u8")
-                val label720 = if (currentMediaUrl.contains(".urlset/")) "${prefix}720p HD" else "${prefix}I-Frames (1920x816)"
-                val fmt720 = if (currentMediaUrl.contains(".urlset/")) "m3u8 (720p)" else "m3u8 (1920x816)"
-                return@withContext listOf(
-                    StreamQualityOption("${prefix}Película Adaptativa", "Adaptive", "Adaptativa", currentMediaUrl, isMaster = true, isMovie = true, isSuggested = true, healedHeaders = safeHeaders, fileName = "master", formatDetail = "m3u8 (adaptive)", groupKey = mediaUrl),
-                    StreamQualityOption("${prefix}1080p Full HD", "1080p", "Full HD", u1080, isMaster = false, isMovie = true, isSuggested = false, healedHeaders = safeHeaders, fileName = "video-1080p", formatDetail = "m3u8 (1080p)", groupKey = mediaUrl),
-                    StreamQualityOption(label720, "720p", "HD", u720, isMaster = false, isMovie = true, isSuggested = false, healedHeaders = safeHeaders, fileName = "video-720p", formatDetail = fmt720, groupKey = mediaUrl)
-                )
+                if (isFastream && currentMediaUrl.contains(".urlset/")) {
+                    val u1080 = currentMediaUrl.replace(".urlset/master.m3u8", "n/index-v1-a1.m3u8")
+                    val u720 = currentMediaUrl.replace(".urlset/master.m3u8", "l/index-v1-a1.m3u8")
+                    return@withContext listOf(
+                        StreamQualityOption("${prefix}Película Adaptativa", "Adaptive", "Adaptativa", currentMediaUrl, isMaster = true, isMovie = true, isSuggested = true, healedHeaders = safeHeaders, fileName = "master", formatDetail = "m3u8 (adaptive)"),
+                        StreamQualityOption("${prefix}1080p Full HD", "1080p", "Full HD", u1080, isMaster = false, isMovie = true, isSuggested = false, healedHeaders = safeHeaders, fileName = "index-v1-a1", formatDetail = "m3u8 (1080p)"),
+                        StreamQualityOption("${prefix}720p HD", "720p", "HD", u720, isMaster = false, isMovie = true, isSuggested = false, healedHeaders = safeHeaders, fileName = "video-720p", formatDetail = "m3u8 (720p)")
+                    )
+                } else {
+                    val uIframe = currentMediaUrl.replace("master.m3u8", "iframes-v1-a1.m3u8", ignoreCase = true)
+                    val uIndex = currentMediaUrl.replace("master.m3u8", "index-v1-a1.m3u8", ignoreCase = true)
+                    return@withContext listOf(
+                        StreamQualityOption("${prefix}Película Adaptativa", "Adaptive", "Adaptativa", currentMediaUrl, isMaster = true, isMovie = true, isSuggested = true, healedHeaders = safeHeaders, fileName = "master", formatDetail = "m3u8 (adaptive)"),
+                        StreamQualityOption("${prefix}I-Frames (1920x800)", "1920x800", "I-Frame", uIframe, isMaster = false, isMovie = true, isSuggested = false, healedHeaders = safeHeaders, fileName = "iframes-v1-a1", formatDetail = "m3u8 (1920x800)"),
+                        StreamQualityOption("${prefix}1080p Full HD", "1080p", "Full HD", uIndex, isMaster = false, isMovie = true, isSuggested = false, healedHeaders = safeHeaders, fileName = "index-v1-a1", formatDetail = "m3u8 (1920x800)")
+                    )
+                }
             }
             val defName = extractFileName(currentMediaUrl, "master")
             val defFmt = if (currentMediaUrl.contains(".mp4", true)) "mp4 (Directo)" else "m3u8 (adaptive)"
             val label = if (currentMediaUrl.contains(".mp4", ignoreCase = true)) "${prefix}Video MP4 Directo" else "${prefix}Película Adaptativa"
-            return@withContext listOf(StreamQualityOption(label, "Adaptive", "Adaptativa", currentMediaUrl, isMaster = true, isMovie = true, isSuggested = true, healedHeaders = safeHeaders, fileName = defName, formatDetail = defFmt, groupKey = mediaUrl))
+            return@withContext listOf(StreamQualityOption(label, "Adaptive", "Adaptativa", currentMediaUrl, isMaster = true, isMovie = true, isSuggested = true, healedHeaders = safeHeaders, fileName = defName, formatDetail = defFmt))
         }
 
         // Sonda Pre-Cast + Auto-Reparador de Cabeceras (4 permutaciones deterministas)

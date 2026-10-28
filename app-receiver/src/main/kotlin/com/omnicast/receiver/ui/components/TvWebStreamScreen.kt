@@ -98,18 +98,9 @@ fun TvWebStreamScreen(
                 "PLAY" -> wv.evaluateJavascript("playStream();", null)
                 "PAUSE" -> wv.evaluateJavascript("pauseStream();", null)
                 "TOGGLE_PLAY" -> wv.evaluateJavascript("togglePlay();", null)
-                "SEEK" -> {
-                    val sec = msg.positionMs / 1000.0
-                    wv.evaluateJavascript("seekTo($sec);", null)
-                }
-                "SEEK_REL" -> {
-                    val secDelta = msg.positionMs / 1000.0
-                    wv.evaluateJavascript("seekRel($secDelta);", null)
-                }
-                "VOLUME" -> {
-                    val vol = msg.volume.coerceIn(0f, 1f)
-                    wv.evaluateJavascript("setVolume($vol);", null)
-                }
+                "SEEK" -> wv.evaluateJavascript("seekTo(${msg.positionMs / 1000.0});", null)
+                "SEEK_REL" -> wv.evaluateJavascript("seekRel(${msg.positionMs / 1000.0});", null)
+                "VOLUME" -> wv.evaluateJavascript("setVolume(${msg.volume.coerceIn(0f, 1f)});", null)
                 "STOP" -> wv.evaluateJavascript("stopStream();", null)
             }
         }
@@ -218,8 +209,9 @@ fun TvWebStreamScreen(
                                         var hls = new Hls({ enableWorker: true, lowLatencyMode: false, backBufferLength: 10, maxBufferLength: 20, maxMaxBufferLength: 30, maxBufferSize: 30 * 1024 * 1024 });
                                         hls.loadSource(streamUrl);
                                         hls.attachMedia(vid);
-                                        hls.on(Hls.Events.MANIFEST_PARSED, function() { vid.play().catch(function(){}); });
+                                        hls.on(Hls.Events.MANIFEST_PARSED, function() { console.log('TvWebStreamJS [MANIFEST_PARSED]', streamUrl); vid.play().catch(function(){}); });
                                         hls.on(Hls.Events.ERROR, function(ev, data) {
+                                          console.error('TvWebStreamJS [HLS_ERROR] ' + data.type + ' ' + data.details + ' code=' + (data.response ? data.response.code : 'none'));
                                           if (data.fatal) {
                                             if (data.type === Hls.ErrorTypes.NETWORK_ERROR) hls.startLoad();
                                             else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) hls.recoverMediaError();

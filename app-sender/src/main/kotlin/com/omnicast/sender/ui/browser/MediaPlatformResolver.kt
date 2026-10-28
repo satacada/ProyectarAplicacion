@@ -152,20 +152,24 @@ object MediaPlatformResolver {
         val lower = finalUrl.lowercase()
         val isDrop = lower.contains("dropcdn.io") || lower.contains("dr0pstream.com")
         val isFastream = lower.contains("fastream.to")
-        if (isDrop || isFastream) {
+        if (isDrop) {
             val id = extractFastreamId(finalUrl)
             if (id != null) {
-                val embed = if (isDrop) "https://dr0pstream.com/e/$id" else "https://fastream.to/embed-$id.html"
-                val origin = if (isDrop) "https://dr0pstream.com" else "https://fastream.to"
+                hdrs["Referer"] = "https://dr0pstream.com/e/$id"
+            }
+            hdrs.remove("Origin")
+        } else if (isFastream) {
+            val id = extractFastreamId(finalUrl)
+            if (id != null) {
+                val embed = "https://fastream.to/embed-$id.html"
                 val curRef = hdrs["Referer"] ?: ""
-                val targetHost = if (isDrop) "dr0pstream.com" else "fastream.to"
-                if (curRef.isBlank() || !curRef.contains(targetHost)) {
+                if (curRef.isBlank() || !curRef.contains("fastream.to")) {
                     hdrs["Referer"] = embed
-                    hdrs["Origin"] = origin
+                    hdrs["Origin"] = "https://fastream.to"
                 }
             }
         }
-        val ua = if (isDrop || isFastream) UA_FASTREAM else UA_MOBILE
+        val ua = if (isFastream) UA_FASTREAM else UA_MOBILE
         val safeHeaders = BrowserUrlHelper.buildSafeHeaders(finalUrl, pageUrl, ua, hdrs)
         return Pair(finalUrl, safeHeaders)
     }

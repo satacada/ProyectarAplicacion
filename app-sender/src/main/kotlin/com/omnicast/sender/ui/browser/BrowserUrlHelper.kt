@@ -174,7 +174,7 @@ object BrowserUrlHelper {
     }
 
     fun deriveMasterPlaylistUrl(url: String): String? {
-        if (!url.contains("fastream.to", true) && !url.contains("dropcdn.io", true) && !url.contains("dr0pstream.com", true)) return null
+        if (!url.contains("fastream.to", true)) return null
         if (url.contains("master.m3u8", true)) return url
         val id = MediaPlatformResolver.extractFastreamId(url) ?: return null
         return if (url.contains("/${id}_")) {

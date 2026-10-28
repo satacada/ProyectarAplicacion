@@ -74,14 +74,15 @@ object StreamQualityDetector {
 
         val isSigned = StreamManifestProbe.hasSignedSecurityToken(currentMediaUrl)
         if (isSigned) {
-            val isUrlset = currentMediaUrl.contains(".urlset/", ignoreCase = true)
-            if (currentMediaUrl.contains("master.m3u8", ignoreCase = true) && !isUrlset) {
-                val uIframe = currentMediaUrl.replace("master.m3u8", "iframes-v1-a1.m3u8", ignoreCase = true)
-                val uIndex = currentMediaUrl.replace("master.m3u8", "index-v1-a1.m3u8", ignoreCase = true)
+            if (currentMediaUrl.contains("master.m3u8", ignoreCase = true)) {
+                val u1080 = if (currentMediaUrl.contains(".urlset/")) currentMediaUrl.replace(".urlset/master.m3u8", "n/index-v1-a1.m3u8") else currentMediaUrl.replace("master.m3u8", "index-v1-a1.m3u8")
+                val u720 = if (currentMediaUrl.contains(".urlset/")) currentMediaUrl.replace(".urlset/master.m3u8", "l/index-v1-a1.m3u8") else currentMediaUrl.replace("master.m3u8", "iframes-v1-a1.m3u8")
+                val label720 = if (currentMediaUrl.contains(".urlset/")) "${prefix}720p HD" else "${prefix}I-Frames (1920x816)"
+                val fmt720 = if (currentMediaUrl.contains(".urlset/")) "m3u8 (720p)" else "m3u8 (1920x816)"
                 return@withContext listOf(
                     StreamQualityOption("${prefix}Película Adaptativa", "Adaptive", "Adaptativa", currentMediaUrl, isMaster = true, isMovie = true, isSuggested = true, healedHeaders = safeHeaders, fileName = "master", formatDetail = "m3u8 (adaptive)", groupKey = mediaUrl),
-                    StreamQualityOption("${prefix}I-Frames (1920x816)", "1920x816", "I-Frame", uIframe, isMaster = false, isMovie = true, isSuggested = false, healedHeaders = safeHeaders, fileName = "iframes-v1-a1", formatDetail = "m3u8 (1920x816)", groupKey = mediaUrl),
-                    StreamQualityOption("${prefix}1080p Full HD", "1080p", "Full HD", uIndex, isMaster = false, isMovie = true, isSuggested = false, healedHeaders = safeHeaders, fileName = "index-v1-a1", formatDetail = "m3u8 (1920x816)", groupKey = mediaUrl)
+                    StreamQualityOption("${prefix}1080p Full HD", "1080p", "Full HD", u1080, isMaster = false, isMovie = true, isSuggested = false, healedHeaders = safeHeaders, fileName = "video-1080p", formatDetail = "m3u8 (1080p)", groupKey = mediaUrl),
+                    StreamQualityOption(label720, "720p", "HD", u720, isMaster = false, isMovie = true, isSuggested = false, healedHeaders = safeHeaders, fileName = "video-720p", formatDetail = fmt720, groupKey = mediaUrl)
                 )
             }
             val defName = extractFileName(currentMediaUrl, "master")

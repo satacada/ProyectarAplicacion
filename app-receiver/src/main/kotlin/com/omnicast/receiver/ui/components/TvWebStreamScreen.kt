@@ -149,10 +149,7 @@ fun TvWebStreamScreen(
                                 @android.webkit.JavascriptInterface
                                 fun onPlaybackStatus(c: Double, d: Double, p: Boolean) { onPlaybackStatus?.invoke((c * 1000).toLong(), (d * 1000).toLong(), p) }
                             }, "AndroidBridge")
-                            webViewClient = object : WebViewClient() {
-                                override fun shouldInterceptRequest(v: WebView?, r: WebResourceRequest?): WebResourceResponse? =
-                                    TvWebResourceInterceptor.shouldIntercept(r, headers) ?: super.shouldInterceptRequest(v, r)
-                            }
+                            webViewClient = com.omnicast.receiver.ui.TvReceiverHelper.createWebClient(streamUrl, headers)
                             webChromeClient = object : WebChromeClient() {
                                 override fun onShowCustomView(v: View?, c: CustomViewCallback?) { customView = v }
                                 override fun onHideCustomView() { customView = null }
@@ -165,10 +162,7 @@ fun TvWebStreamScreen(
                             val hlsCode = WebPlayerAssetHelper.getHlsJs(ctx)
                             val safeUrl = streamUrl.replace("\\", "\\\\").replace("\"", "\\\"")
                             val startSec = (startPositionMs / 1000.0).coerceAtLeast(0.0)
-                            val baseUrl = headers["Referer"]?.takeIf { it.isNotBlank() } ?: try {
-                                val uri = Uri.parse(streamUrl)
-                                "${uri.scheme}://${uri.host}/"
-                            } catch (_: Throwable) { "https://omnicast.tv" }
+                            val baseUrl = com.omnicast.receiver.ui.TvReceiverHelper.resolveBaseUrl(streamUrl, headers)
 
                             val html = """
                                 <!DOCTYPE html>

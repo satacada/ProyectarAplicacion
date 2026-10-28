@@ -74,21 +74,26 @@ fun InAppBrowserScreen(
         val cleanTitle = pageTitle.replace(" - YouTube", "").replace(" | OK", "").trim().take(22)
         if (currentStreams.isEmpty()) {
             qualityOptions = emptyList(); showOptionsSheet = true
-            webViewInstance?.evaluateJavascript(WvcSnifferScripts.buildAggressiveRescanScript(WvcDomSniffer.CONSOLE_PREFIX), null)
-            return
+            webViewInstance?.evaluateJavascript(WvcSnifferScripts.buildAggressiveRescanScript(WvcDomSniffer.CONSOLE_PREFIX), null); return
         }
-        qualityOptions = currentStreams.map { u ->
-            val vName = StreamQualityDetector.extractFileName(u, if (u.contains("master", true)) "master" else "video")
-            val isM = u.contains("master", true) || u.contains("playlist", true)
-            val fmt = when { isM -> "m3u8 (adaptive)"; u.contains(".mp4", true) -> "mp4 (Directo)"; u.contains(".mpd", true) -> "mpd (adaptive)"; else -> "m3u8" }
-            StreamQualityOption("▶ [${cleanTitle.take(16)}] $vName", "Adaptive", "Original", u, isMovie = true, isSuggested = isM, healedHeaders = streamHeaders[u] ?: emptyMap(), fileName = vName, formatDetail = fmt, groupKey = u)
+        qualityOptions = currentStreams.flatMap { u ->
+            val ytId = BrowserUrlHelper.extractYouTubeId(u)
+            if (ytId != null) BrowserUrlHelper.createYouTubeQualityOptions(ytId, cleanTitle)
+            else {
+                val vName = StreamQualityDetector.extractFileName(u, if (u.contains("master", true)) "master" else "video")
+                val isM = u.contains("master", true) || u.contains("playlist", true)
+                val fmt = when { isM -> "m3u8 (adaptive)"; u.contains(".mp4", true) -> "mp4 (Directo)"; u.contains(".mpd", true) -> "mpd (adaptive)"; else -> "m3u8" }
+                listOf(StreamQualityOption("▶ [${cleanTitle.take(16)}] $vName", "Adaptive", "Original", u, isMovie = true, isSuggested = isM, healedHeaders = streamHeaders[u] ?: emptyMap(), fileName = vName, formatDetail = fmt, groupKey = u))
+            }
         }
         showOptionsSheet = true
         scope.launch {
             val deep = currentStreams.flatMap { u ->
-                val opts = StreamQualityDetector.detectQualities(u, streamHeaders[u] ?: emptyMap(), cleanTitle, currentUrl)
-                opts.forEach { o -> if (o.healedHeaders.isNotEmpty()) streamHeaders[o.streamUrl] = o.healedHeaders }
-                opts
+                val ytId = BrowserUrlHelper.extractYouTubeId(u)
+                if (ytId != null) BrowserUrlHelper.createYouTubeQualityOptions(ytId, cleanTitle)
+                else StreamQualityDetector.detectQualities(u, streamHeaders[u] ?: emptyMap(), cleanTitle, currentUrl).onEach { o ->
+                    if (o.healedHeaders.isNotEmpty()) streamHeaders[o.streamUrl] = o.healedHeaders
+                }
             }
             val finalOpts = if (deep.isNotEmpty()) deep.distinctBy { it.streamUrl } else qualityOptions
             val orderMap = currentStreams.withIndex().associate { it.value to it.index }
@@ -106,12 +111,12 @@ fun InAppBrowserScreen(
 
     fun registerStream(url: String, hdrs: Map<String, String>, isPrimary: Boolean = false, label: String? = null) {
         val cleanUrl = BrowserUrlHelper.sanitizeMediaUrl(url)
-        if (cleanUrl.isBlank() || AdBlocker.isAd(cleanUrl) || AdBlocker.isVideoAd(cleanUrl) || !isRealMedia(cleanUrl) || BrowserUrlHelper.extractYouTubeId(cleanUrl) != null) return
+        if (cleanUrl.isBlank() || AdBlocker.isAd(cleanUrl) || AdBlocker.isVideoAd(cleanUrl) || !isRealMedia(cleanUrl)) return
         val derivedMaster = BrowserUrlHelper.deriveMasterPlaylistUrl(cleanUrl)
         val targetUrl = if (derivedMaster != null && !cleanUrl.contains("master", true)) derivedMaster else cleanUrl
         val isM = targetUrl.contains("master", true) || targetUrl.contains("playlist", true) || targetUrl.contains(".mpd", true)
         val key = BrowserUrlHelper.extractMediaIdentityKey(targetUrl)
-        val existingIndex = detectedStreams.indexOfFirst { it == targetUrl || (key.isNotBlank() && BrowserUrlHelper.extractMediaIdentityKey(it) == key) }
+        val existingIndex = detectedStreams.indexOfFirst { it == targetUrl || (key.isNotBlank() && BrowserUrlHelper.extractMediaIdentityKey(it) == key && (it.contains(".urlset") == targetUrl.contains(".urlset"))) }
         if (existingIndex >= 0) {
             val existingUrl = detectedStreams[existingIndex]
             val existingIsM = existingUrl.contains("master", true) || existingUrl.contains("playlist", true) || existingUrl.contains(".mpd", true)
@@ -125,17 +130,20 @@ fun InAppBrowserScreen(
         val cleanT = if (pageTitle.isNotBlank() && pageTitle != "Cargando..." && pageTitle != "Transmisión") pageTitle else "Video Web"
         ActiveStreamHolder.update(primaryUrl, cleanT, streamHeaders[primaryUrl] ?: hdrs)
         android.util.Log.i("StreamDetection", "🎬 Flujo registrado [isMaster=$isM, freshToken=true]: $targetUrl")
-        if (!showOptionsSheet && !isCasting && userDismissedSheetForUrl != currentUrl) {
+        if (!showOptionsSheet && userDismissedSheetForUrl != currentUrl) {
             autoOpenJob?.cancel()
             autoOpenJob = scope.launch {
                 kotlinx.coroutines.delay(450)
-                if (!showOptionsSheet && !isCasting && userDismissedSheetForUrl != currentUrl && detectedStreams.any { isRealMedia(it) }) openOptionsSheet()
+                if (!showOptionsSheet && userDismissedSheetForUrl != currentUrl && detectedStreams.any { isRealMedia(it) }) openOptionsSheet()
             }
         }
     }
 
     fun checkPlatformUrls(url: String?, title: String? = null) {
-        MediaPlatformResolver.checkPlatform(url = url, title = title ?: webViewInstance?.title, onYouTube = { _, _, _ -> }, onDailymotion = { sUrl, dTitle, dHdrs ->
+        MediaPlatformResolver.checkPlatform(url = url, title = title ?: webViewInstance?.title, onYouTube = { ytUrl, yTitle, yHdrs ->
+            val actual = yTitle ?: webViewInstance?.title?.replace(" - YouTube", "")?.takeIf { it.isNotBlank() && it != "YouTube" } ?: "Video YouTube"
+            pageTitle = actual; registerStream(ytUrl, yHdrs, isPrimary = true, label = actual)
+        }, onDailymotion = { sUrl, dTitle, dHdrs ->
             val actual = dTitle ?: webViewInstance?.title?.replace(" - Dailymotion", "")?.takeIf { it.isNotBlank() && it != "Dailymotion" } ?: "Video Dailymotion"
             pageTitle = actual; registerStream(sUrl, dHdrs, isPrimary = true, label = actual)
         })
@@ -205,10 +213,7 @@ fun InAppBrowserScreen(
                 onToggleDesktopMode = { isDesktopMode = !isDesktopMode; webViewInstance?.settings?.userAgentString = if (isDesktopMode) UA_DESKTOP else UA_MOBILE; webViewInstance?.reload() },
                 isAdBlockEnabled = isAdBlockEnabled, onToggleAdBlock = { isAdBlockEnabled = !isAdBlockEnabled },
                 onForceRescan = { webViewInstance?.evaluateJavascript(WvcSnifferScripts.buildAggressiveRescanScript(WvcDomSniffer.CONSOLE_PREFIX), null) },
-                onClearData = {
-                    webViewInstance?.clearCache(true); webViewInstance?.clearHistory(); detectedStreams.clear(); qualityOptions = emptyList()
-                    isHome = true; inputUrl = ""; currentUrl = ""; ActiveStreamHolder.clear(); prefs.edit().remove("saved_browser_last_url").apply()
-                },
+                onClearData = { webViewInstance?.clearCache(true); webViewInstance?.clearHistory(); detectedStreams.clear(); qualityOptions = emptyList(); isHome = true; inputUrl = ""; currentUrl = ""; ActiveStreamHolder.clear(); prefs.edit().remove("saved_browser_last_url").apply() },
                 detectedStreamsCount = detectedStreams.count { isRealMedia(it) }, onToggleBottomControls = { showBottomControls = !showBottomControls },
                 onOpenDetectedVideos = { openOptionsSheet() }, isCasting = isCasting, isPlaying = isPlaying, showBottomControls = showBottomControls,
                 isBookmarked = isMovieSaved, onToggleBookmark = { toggleBookmark() }, onOpenHistory = { showSideDrawer = true }, onOpenPlaylists = { showSideDrawer = true },
@@ -222,24 +227,17 @@ fun InAppBrowserScreen(
 
                 BrowserWebView(
                     isHome = isHome, isAdBlockEnabled = isAdBlockEnabled, currentUrl = currentUrl,
-                    hasStreams = detectedStreams.any { isRealMedia(it) },
-                    onProgress = { progress = it },
+                    hasStreams = detectedStreams.any { isRealMedia(it) }, onProgress = { progress = it },
                     onPageStarted = { newUrl ->
                         if (!newUrl.startsWith("about:")) { resetStreamDetections(); pageTitle = "Cargando..." }
                         inputUrl = newUrl; currentUrl = newUrl; com.omnicast.sender.history.NavigationTrackManager.recordStep(newUrl, pageTitle)
-                        if (!newUrl.startsWith("about:")) { prefs.edit().putString("saved_browser_last_url", newUrl).apply(); com.omnicast.sender.history.NavigationTrackManager.pushBrowserHistory(context, newUrl, pageTitle) }
-                        checkPlatformUrls(newUrl)
+                        if (!newUrl.startsWith("about:")) { prefs.edit().putString("saved_browser_last_url", newUrl).apply(); com.omnicast.sender.history.NavigationTrackManager.pushBrowserHistory(context, newUrl, pageTitle) }; checkPlatformUrls(newUrl)
                     },
-                    onPageFinished = { t, u ->
-                        if (!t.isNullOrBlank() && t != "Transmisión" && !t.contains("about:blank")) pageTitle = t
-                        u?.let { checkPlatformUrls(it, pageTitle); com.omnicast.sender.history.NavigationTrackManager.recordStep(it, pageTitle) }
-                    },
+                    onPageFinished = { t, u -> if (!t.isNullOrBlank() && t != "Transmisión" && !t.contains("about:blank")) pageTitle = t; u?.let { checkPlatformUrls(it, pageTitle); com.omnicast.sender.history.NavigationTrackManager.recordStep(it, pageTitle) } },
                     onHistoryUpdated = { u, t ->
                         if (currentUrl.isNotBlank() && currentUrl != u && !u.startsWith("about:") && !u.contains("favicon")) resetStreamDetections()
                         currentUrl = u; if (!t.isNullOrBlank() && t != "Transmisión" && !t.contains("about:blank")) pageTitle = t
-                        com.omnicast.sender.history.NavigationTrackManager.recordStep(u, pageTitle)
-                        if (!u.startsWith("about:")) { prefs.edit().putString("saved_browser_last_url", u).apply(); com.omnicast.sender.history.NavigationTrackManager.pushBrowserHistory(context, u, pageTitle) }
-                        checkPlatformUrls(u, t)
+                        com.omnicast.sender.history.NavigationTrackManager.recordStep(u, pageTitle); if (!u.startsWith("about:")) { prefs.edit().putString("saved_browser_last_url", u).apply(); com.omnicast.sender.history.NavigationTrackManager.pushBrowserHistory(context, u, pageTitle) }; checkPlatformUrls(u, t)
                     },
                     onStreamIntercepted = { sUrl, hdrs, isM -> registerStream(sUrl, hdrs, isPrimary = isM) },
                     onSniffedVideo = { sniffed ->

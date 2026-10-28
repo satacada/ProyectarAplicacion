@@ -66,4 +66,24 @@ object TvReceiverHelper {
         if (isDropOrFast) return false
         return true
     }
+
+    fun createWebClient(streamUrl: String, headers: Map<String, String>): android.webkit.WebViewClient {
+        if (!shouldUseAntiCorsInterceptor(streamUrl, headers)) {
+            return android.webkit.WebViewClient()
+        }
+        return object : android.webkit.WebViewClient() {
+            override fun shouldInterceptRequest(v: android.webkit.WebView?, r: android.webkit.WebResourceRequest?): android.webkit.WebResourceResponse? =
+                com.omnicast.receiver.ui.components.TvWebResourceInterceptor.shouldIntercept(r, headers) ?: super.shouldInterceptRequest(v, r)
+        }
+    }
+
+    fun resolveBaseUrl(streamUrl: String, headers: Map<String, String>): String {
+        val streamHostOrigin = try {
+            val uri = android.net.Uri.parse(streamUrl)
+            "${uri.scheme}://${uri.host}/"
+        } catch (_: Throwable) { null }
+        val isDropOrFast = streamUrl.contains("dropcdn.io", true) || streamUrl.contains("fastream.to", true) || streamUrl.contains("dr0pstream.com", true)
+        if (isDropOrFast && streamHostOrigin != null) return streamHostOrigin
+        return headers["Referer"]?.takeIf { it.isNotBlank() } ?: streamHostOrigin ?: "https://omnicast.tv"
+    }
 }

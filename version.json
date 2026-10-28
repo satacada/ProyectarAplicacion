@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 265,
-  "versionCodeReceiver": 248,
-  "versionName": "3.5.14",
-  "releaseTag": "v3.5.14",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.14/omnicast-sender-v3.5.14.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.14/omnicast-receiver-v3.5.14.apk",
-  "changelog": "v3.5.14: Controles de reproducción centrales en pantalla (Play/Pausa, -10s, +10s) con resaltado D-Pad de alto contraste para TV; botones de Subtítulos, Calidad, Escala y Salir al pie de la pantalla; y botón de Ajustes como tuerca ⚙️ en la esquina inferior derecha sin tuerca flotante arriba."
+  "versionCodeSender": 266,
+  "versionCodeReceiver": 249,
+  "versionName": "3.5.15",
+  "releaseTag": "v3.5.15",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.15/omnicast-sender-v3.5.15.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.15/omnicast-receiver-v3.5.15.apk",
+  "changelog": "v3.5.15: Restablecimiento de Chromium nativo para DropCDN y Fastream erradicando errores 403 y CORS en TV Box; restitución de detección multicalidad (Adaptativa, 1080p, 720p) en Pelisplus; handoff directo de YouTube a reproductor nativo; y blindaje contra banners y dominios publicitarios en Pelisplay."
 }

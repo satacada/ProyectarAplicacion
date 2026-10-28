@@ -15,7 +15,7 @@ object AdBlocker {
         "vidhide.com", "vidhidepro.com", "vidhidepre.com", "embed69.org",
         "pelismart.mov", "pelismart.com", "pelismart.online", "pelismart.vip", "pelismart.net", "pelismart.lat", "pelismart.app", "pelismart.org",
         "vidurl.to", "fembed.com", "fplayer.info", "swdyu.com",
-        "doo.la", "ds2play.com", "ds2video.com"
+        "doo.la", "ds2play.com", "ds2video.com", "fastream.to", "dropcdn.io", "dr0pstream.com"
     )
 
     fun init(context: android.content.Context) {
@@ -49,7 +49,8 @@ object AdBlocker {
                lower.contains("adsterra") || lower.contains("propeller") ||
                lower.contains("exoclick") || lower.contains("trafficjunky") ||
                lower.contains("clickadu") || lower.contains("hilltopads") ||
-               lower.contains("banner-ads") || lower.contains("player-banner")
+               lower.contains("banner-ads") || lower.contains("player-banner") ||
+               lower.contains("luugy.com") || lower.contains("frs2c.com")
     }
 
     private val l1HostCache = android.util.LruCache<String, Boolean>(1024)
@@ -90,7 +91,7 @@ object AdBlocker {
         for (m in KNOWN_MEDIA_HOSTS) {
             if (lower == m || lower.endsWith(".$m") || lower.contains(m.substringBefore("."))) return true
         }
-        return lower.contains("embed") || lower.contains("player") || lower.contains("video") || lower.contains("stream") || lower.contains("cdn")
+        return false
     }
 
     fun learnAndBlockAdHost(urlOrHost: String?, currentMovieHost: String? = null): Boolean {
@@ -157,7 +158,7 @@ object AdBlocker {
                             var found = doc.querySelectorAll(selectors[s]);
                             for (var f = 0; f < found.length; f++) {
                                 var item = found[f];
-                                if (!item.querySelector('video, iframe, input, form, textarea, select, button, a')) item.remove();
+                                if (!item.querySelector('video, iframe, input, form, textarea, select, button')) item.remove();
                             }
                         } catch(e) {}
                     }

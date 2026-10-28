@@ -23,11 +23,12 @@ object BrowserUrlHelper {
     fun createYouTubeQualityOptions(videoId: String, title: String? = null): List<StreamQualityOption> {
         val ytUrl = "https://www.youtube.com/watch?v=$videoId"
         val prefix = if (!title.isNullOrBlank() && title != "Transmisión") "[${title.take(20)}] " else ""
+        val ytHeaders = mapOf("X-YouTube-Id" to videoId, "User-Agent" to UA_MOBILE)
         return listOf(
-            StreamQualityOption("${prefix}1080p Full HD", "1080p", "Original", ytUrl, isMaster = true),
-            StreamQualityOption("${prefix}720p HD", "720p", "Estándar HD", ytUrl),
-            StreamQualityOption("${prefix}480p SD", "480p", "SD", ytUrl),
-            StreamQualityOption("${prefix}360p", "360p", "Bajo Consumo", ytUrl)
+            StreamQualityOption("${prefix}1080p Full HD", "1080p", "Original", ytUrl, isMaster = true, isMovie = true, isSuggested = true, healedHeaders = ytHeaders, groupKey = ytUrl),
+            StreamQualityOption("${prefix}720p HD", "720p", "Estándar HD", ytUrl, isMovie = true, healedHeaders = ytHeaders, groupKey = ytUrl),
+            StreamQualityOption("${prefix}480p SD", "480p", "SD", ytUrl, isMovie = true, healedHeaders = ytHeaders, groupKey = ytUrl),
+            StreamQualityOption("${prefix}360p", "360p", "Bajo Consumo", ytUrl, isMovie = true, healedHeaders = ytHeaders, groupKey = ytUrl)
         )
     }
 

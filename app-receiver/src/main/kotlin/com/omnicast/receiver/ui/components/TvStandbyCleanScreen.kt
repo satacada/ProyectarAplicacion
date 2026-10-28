@@ -32,6 +32,7 @@ import com.omnicast.receiver.directstream.TvPlaylistItem
 @Composable
 fun TvStandbyCleanScreen(
     ipAddress: String,
+    connectedClientIp: String? = null,
     history: List<TvHistoryItem> = emptyList(),
     playlists: List<TvPlaylist> = emptyList(),
     onPlayHistory: (TvHistoryItem) -> Unit = {},
@@ -230,7 +231,7 @@ fun TvStandbyCleanScreen(
             }
         }
 
-        TvBottomConnectionDock(ipAddress = ipAddress, modifier = Modifier.align(Alignment.BottomCenter))
+        TvBottomConnectionDock(ipAddress = ipAddress, connectedClientIp = connectedClientIp, modifier = Modifier.align(Alignment.BottomCenter))
 
         menuItem?.let { item ->
             TvVideoActionDialog(

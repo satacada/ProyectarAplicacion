@@ -220,14 +220,16 @@ fun TvRecentItemRow(
 @Composable
 fun TvBottomConnectionDock(
     ipAddress: String,
+    connectedClientIp: String? = null,
     modifier: Modifier = Modifier
 ) {
+    val isConnected = !connectedClientIp.isNullOrBlank()
     Surface(
         color = Color(0xEE0D0B14),
         shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
         modifier = modifier
             .fillMaxWidth()
-            .border(1.dp, Color(0xFF2D223F), RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
+            .border(1.dp, if (isConnected) Color(0xFF059669) else Color(0xFF2D223F), RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
     ) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 28.dp, vertical = 12.dp),
@@ -235,16 +237,23 @@ fun TvBottomConnectionDock(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                Box(modifier = Modifier.size(12.dp).background(Color(0xFF10B981), CircleShape))
-                Text("Listo para conectar", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Color(0xFFA7F3D0))
+                Box(modifier = Modifier.size(12.dp).background(if (isConnected) Color(0xFF10B981) else Color(0xFFF59E0B), CircleShape))
+                Text(
+                    if (isConnected) "🟢 Celular Conectado ($connectedClientIp)" else "Listo para vincular",
+                    fontSize = 15.sp, fontWeight = FontWeight.Bold,
+                    color = if (isConnected) Color(0xFFA7F3D0) else Color(0xFFCBD5E1)
+                )
             }
 
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Dirección Local:", color = Color(0xFF94A3B8), fontSize = 13.sp)
-                Text("$ipAddress:8088", color = Color(0xFF38BDF8), fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                Text(if (isConnected) "Enlace activo:" else "Dirección Local:", color = Color(0xFF94A3B8), fontSize = 13.sp)
+                Text(if (isConnected) "Listo para proyectar" else "$ipAddress:8088", color = if (isConnected) Color(0xFF34D399) else Color(0xFF38BDF8), fontSize = 17.sp, fontWeight = FontWeight.Bold)
             }
 
-            Text("Abre OmniCast en tu celular para transmitir pantalla, fotos o videos", color = Color(0xFF64748B), fontSize = 12.sp)
+            Text(
+                if (isConnected) "Envía desde tu celular o elige una película arriba" else "Abre OmniCast en tu celular para conectar",
+                color = if (isConnected) Color(0xFFBAE6FD) else Color(0xFF64748B), fontSize = 12.sp
+            )
         }
     }
 }

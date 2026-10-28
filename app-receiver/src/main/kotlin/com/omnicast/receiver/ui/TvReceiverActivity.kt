@@ -27,7 +27,7 @@ import kotlinx.coroutines.launch
 
 class TvReceiverActivity : ComponentActivity() {
 
-    private val receiverState = mutableStateOf<ReceiverUiState>(ReceiverUiState.Standby); private val localIpAddress = mutableStateOf("127.0.0.1")
+    private val receiverState = mutableStateOf<ReceiverUiState>(ReceiverUiState.Standby); private val localIpAddress = mutableStateOf("127.0.0.1"); private val connectedClientAddress = mutableStateOf<String?>(null)
     private val currentDisplayMode = mutableStateOf<SignalingMessage.SetDisplayMode?>(null); private val expiredItemForRenew = mutableStateOf<com.omnicast.receiver.directstream.TvPlaylistItem?>(null)
     private val youTubeControlFlow = MutableSharedFlow<SignalingMessage.PlayControl>(extraBufferCapacity = 16)
     private lateinit var webRtcReceiver: WebRtcReceiverManager; private lateinit var exoPlayerManager: ExoPlayerTvManager; private lateinit var signalingServer: LocalSignalingServer
@@ -79,13 +79,14 @@ class TvReceiverActivity : ComponentActivity() {
             signalingServer.clientStatus.collect { st ->
                 when (st) {
                     is ClientStatus.Connected -> {
-                        if (receiverState.value is ReceiverUiState.Standby) receiverState.value = ReceiverUiState.ClientConnectedStandby(st.clientAddress)
+                        connectedClientAddress.value = st.clientAddress
                         (receiverState.value as? ReceiverUiState.DirectStreamPlaying)?.let { cur ->
                             val pState = if (exoPlayerManager.isPlaying) "PLAYING" else "PAUSED"
                             signalingServer.sendMessage(SignalingMessage.PlaybackStatus(pState, exoPlayerManager.currentPositionMs, exoPlayerManager.durationMs, cur.streamUrl, cur.title))
                         }
                     }
                     is ClientStatus.Disconnected -> {
+                        connectedClientAddress.value = null
                         digitalAudioReceiver?.stop(); webRtcReceiver.resetConnection()
                         if (receiverState.value !is ReceiverUiState.Standby && receiverState.value !is ReceiverUiState.DirectStreamPlaying && receiverState.value !is ReceiverUiState.WebStreamPlaying) {
                             receiverState.value = ReceiverUiState.Standby
@@ -102,8 +103,8 @@ class TvReceiverActivity : ComponentActivity() {
             val otaState by updateManager.updateState.collectAsState()
             MaterialTheme(colorScheme = darkColorScheme(primary = androidx.compose.ui.graphics.Color(0xFF38BDF8), background = androidx.compose.ui.graphics.Color(0xFF0F172A))) {
                 when (val state = receiverState.value) {
-                    is ReceiverUiState.Standby -> TvStandbyCleanScreen(
-                        ipAddress = localIpAddress.value, history = historyList, playlists = playlistsList,
+                    is ReceiverUiState.Standby, is ReceiverUiState.ClientConnectedStandby -> TvStandbyCleanScreen(
+                        ipAddress = localIpAddress.value, connectedClientIp = connectedClientAddress.value, history = historyList, playlists = playlistsList,
                         onPlayHistory = { playHistoryItem(it) }, onPlayPlaylist = { playPlaylistItem(it) }, onDeletePlaylist = { playlistManager.removeItem(it.url) }, onDeleteMultiple = { playlistManager.removeItems(it) },
                         updateState = otaState, onCheckUpdate = { lifecycleScope.launch { updateManager.checkForUpdates() } },
                         onDownloadAndInstall = { url ->
@@ -115,7 +116,6 @@ class TvReceiverActivity : ComponentActivity() {
                         },
                         expiredItemForRenew = expiredItemForRenew.value, onClearExpiredRenew = { expiredItemForRenew.value = null }
                     )
-                    is ReceiverUiState.ClientConnectedStandby -> TvConnectedStandbyScreen(state.clientAddress) { receiverState.value = ReceiverUiState.Standby }
                     is ReceiverUiState.ScreenMirroring -> TvMirroringActiveScreen(
                         webRtcReceiver, state.resolution, state.fps,
                         onCloseClick = { digitalAudioReceiver?.stop(); webRtcReceiver.resetConnection(); receiverState.value = ReceiverUiState.Standby }

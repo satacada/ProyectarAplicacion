@@ -112,8 +112,9 @@ fun InAppBrowserScreen(
     }
 
     fun registerStream(url: String, hdrs: Map<String, String>, isPrimary: Boolean = false, label: String? = null) {
-        val cleanUrl = BrowserUrlHelper.sanitizeMediaUrl(url)
-        if (cleanUrl.isBlank() || AdBlocker.isAd(cleanUrl) || AdBlocker.isVideoAd(cleanUrl) || !isRealMedia(cleanUrl)) return
+        val curHost = try { android.net.Uri.parse(currentUrl).host } catch (_: Throwable) { null }
+        if (AdBlocker.isSearchEngine(curHost)) return
+        val cleanUrl = BrowserUrlHelper.sanitizeMediaUrl(url); if (cleanUrl.isBlank() || AdBlocker.isAd(cleanUrl) || AdBlocker.isVideoAd(cleanUrl) || !isRealMedia(cleanUrl)) return
         val derivedMaster = BrowserUrlHelper.deriveMasterPlaylistUrl(cleanUrl)
         val targetUrl = if (derivedMaster != null && !cleanUrl.contains("master", true)) derivedMaster else cleanUrl
         val isM = targetUrl.contains("master", true) || targetUrl.contains("playlist", true) || targetUrl.contains(".mpd", true)

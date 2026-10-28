@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 277,
-  "versionCodeReceiver": 260,
-  "versionName": "3.5.26",
-  "releaseTag": "v3.5.26",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.26/omnicast-sender-v3.5.26.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.26/omnicast-receiver-v3.5.26.apk",
-  "changelog": "v3.5.26: Renombrado del encabezado/botón 'Principal' a 'Proyectar' en el menú del asistente flotante."
+  "versionCodeSender": 278,
+  "versionCodeReceiver": 261,
+  "versionName": "3.5.27",
+  "releaseTag": "v3.5.27",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.27/omnicast-sender-v3.5.27.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.27/omnicast-receiver-v3.5.27.apk",
+  "changelog": "v3.5.27: Unificación de interfaz en TV Box sin pantalla verde invasiva con dock reactivo conectado/en espera, e inmunidad completa a buscadores para evitar previews y publicidad en búsquedas."
 }

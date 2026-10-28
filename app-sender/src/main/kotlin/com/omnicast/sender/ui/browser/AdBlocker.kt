@@ -25,8 +25,11 @@ object AdBlocker {
     fun isSearchEngine(host: String?): Boolean {
         if (host == null) return false
         val h = host.lowercase()
-        return h.contains("yandex.") || h.contains("ya.ru") || h.contains("dzen.ru") ||
-               h.contains("google.") || h.contains("bing.") || h.contains("duckduckgo.")
+        return h.contains("google.") || h.contains("yandex.") || h.contains("ya.ru") || h.contains("dzen.ru") ||
+               h.contains("bing.") || h.contains("msn.") || h.contains("duckduckgo.") || h.contains("duck.com") ||
+               h.contains("yahoo.") || h.contains("brave.com") || h.contains("ecosia.") || h.contains("startpage.") ||
+               h.contains("qwant.") || h.contains("baidu.") || h.contains("naver.") || h.contains("ask.com") ||
+               h.startsWith("search.")
     }
 
     fun isVerificationOrCaptcha(urlOrHost: String?): Boolean {

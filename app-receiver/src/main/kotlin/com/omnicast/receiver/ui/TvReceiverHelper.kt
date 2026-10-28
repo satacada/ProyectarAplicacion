@@ -82,8 +82,6 @@ object TvReceiverHelper {
             val uri = android.net.Uri.parse(streamUrl)
             "${uri.scheme}://${uri.host}/"
         } catch (_: Throwable) { null }
-        val isDropOrFast = streamUrl.contains("dropcdn.io", true) || streamUrl.contains("fastream.to", true) || streamUrl.contains("dr0pstream.com", true)
-        if (isDropOrFast && streamHostOrigin != null) return streamHostOrigin
         return headers["Referer"]?.takeIf { it.isNotBlank() } ?: streamHostOrigin ?: "https://omnicast.tv"
     }
 }

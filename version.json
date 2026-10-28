@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 271,
-  "versionCodeReceiver": 254,
-  "versionName": "3.5.20",
-  "releaseTag": "v3.5.20",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.20/omnicast-sender-v3.5.20.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.20/omnicast-receiver-v3.5.20.apk",
-  "changelog": "v3.5.20: Restitución de la lista de flujos original 1:1 estilo WVC erradicando calidades sintéticas falsas (720p) y corrupción por .urlset en DropCDN; preservación de variantes legítimas (master, index-v1-a1, iframes-v1-a1) con emisión directa y telemetría Hls.js en TV."
+  "versionCodeSender": 272,
+  "versionCodeReceiver": 255,
+  "versionName": "3.5.21",
+  "releaseTag": "v3.5.21",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.21/omnicast-sender-v3.5.21.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.21/omnicast-receiver-v3.5.21.apk",
+  "changelog": "v3.5.21: Restauración en TV Box de baseUrl legítimo basado en headers['Referer'] e inyección de User-Agent móvil en WebView erradicando el error HTTP 403 de DropCDN en PelisPlus."
 }

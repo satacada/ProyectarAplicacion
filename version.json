@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 273,
-  "versionCodeReceiver": 256,
-  "versionName": "3.5.22",
-  "releaseTag": "v3.5.22",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.22/omnicast-sender-v3.5.22.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.22/omnicast-receiver-v3.5.22.apk",
-  "changelog": "v3.5.22: Corrección de visibilidad nativa View.INVISIBLE en WebView y reordenamiento de capas en Box garantizando respuesta táctil inmediata en marcadores de inicio sin afectar bloqueadores ni sniffers."
+  "versionCodeSender": 274,
+  "versionCodeReceiver": 257,
+  "versionName": "3.5.23",
+  "releaseTag": "v3.5.23",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.23/omnicast-sender-v3.5.23.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.23/omnicast-receiver-v3.5.23.apk",
+  "changelog": "v3.5.23: Ajuste de WvcShieldSecurityEngine y BrowserWebView para permitir redirecciones legítimas (Telefe, Instagram, TV Libre, buscadores) bloqueando únicamente anuncios confirmados por motor C++ o SQLite."
 }

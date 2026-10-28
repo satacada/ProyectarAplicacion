@@ -105,20 +105,30 @@ object WvcShieldSecurityEngine {
         if (!isEnabled || hasGesture) return false
         if (targetUrl.isBlank() || targetUrl.startsWith("about:")) return false
         if (AdBlocker.isVerificationOrCaptcha(targetUrl)) return false
-        if (AdBlockWhitelistManager.isWhitelisted(targetUrl) || AdBlocker.isSearchEngine(targetUrl)) return false
+        if (AdBlockWhitelistManager.isWhitelisted(targetUrl)) return false
 
         val curHost = try { Uri.parse(currentUrl).host?.lowercase() } catch (_: Throwable) { null }
         val targetHost = try { Uri.parse(targetUrl).host?.lowercase() } catch (_: Throwable) { null }
 
-        // Si es el mismo dominio (por ejemplo navegación interna del portal), no bloquear
+        if (curHost != null && AdBlocker.isSearchEngine(curHost)) return false
+        if (targetHost != null && (AdBlocker.isSearchEngine(targetHost) || AdBlocker.isKnownMediaHost(targetHost) || AdBlockWhitelistManager.isWhitelistedHost(targetHost))) {
+            return false
+        }
+
         if (curHost != null && targetHost != null) {
             if (targetHost == curHost || targetHost.endsWith(".$curHost") || curHost.endsWith(".$targetHost")) {
                 return false
             }
         }
-        if (targetHost != null && AdBlocker.isKnownMediaHost(targetHost)) return false
 
-        android.util.Log.w("WvcShieldSecurity", "🛡️ [WVC Shield] Redirección sin gesto táctil bloqueada: $targetHost")
-        return true
+        val isAd = AdBlocker.isAd(targetUrl) ||
+            (targetHost != null && AdBlockDatabase.isAdDomain(targetHost)) ||
+            NativeAdBlockEngine.shouldBlock(targetUrl, currentUrl)
+
+        if (isAd) {
+            android.util.Log.w("WvcShieldSecurity", "🛡️ [WVC Shield] Redirección publicitaria sin gesto táctil bloqueada: $targetHost")
+            return true
+        }
+        return false
     }
 }

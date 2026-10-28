@@ -182,12 +182,12 @@ fun BrowserWebView(
                                 showBlockedToast(ctx)
                                 return true
                             }
-                            if (!isSameSite && !isSourceSearchEngine && targetHost != null) {
+                            if (!r.hasGesture() && !isSameSite && !isSourceSearchEngine && targetHost != null) {
                                 val isAllowedExternal = AdBlocker.isSearchEngine(targetHost) ||
                                     AdBlocker.isKnownMediaHost(targetHost) ||
                                     AdBlocker.isVerificationOrCaptcha(targetHost) ||
                                     AdBlockWhitelistManager.isWhitelistedHost(targetHost)
-                                if (!isAllowedExternal) {
+                                if (!isAllowedExternal && (AdBlocker.isAd(reqUrl) || AdBlockDatabase.isAdDomain(targetHost))) {
                                     android.util.Log.w("BrowserWebView", "🛑 Secuestro publicitario bloqueado hacia: $targetHost (aprendiendo dominio)")
                                     AdBlocker.learnAndBlockAdHost(targetHost, curHost)
                                     showBlockedToast(ctx)

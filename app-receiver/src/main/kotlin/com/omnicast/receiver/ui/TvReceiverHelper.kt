@@ -57,13 +57,6 @@ object TvReceiverHelper {
     fun shouldUseAntiCorsInterceptor(url: String, headers: Map<String, String>): Boolean {
         val target = headers["X-Target-Player"]?.uppercase()
         if (target == "CHROMIUM_PURE") return false
-        if (target == "CHROMIUM_ANTI_CORS") return true
-
-        val lower = url.lowercase()
-        val ref = headers["Referer"]?.lowercase() ?: ""
-        val isDropOrFast = lower.contains("dropcdn.io") || lower.contains("dr0pstream.com") || lower.contains("fastream.to") ||
-                           ref.contains("dr0pstream.com") || ref.contains("dropcdn.io") || ref.contains("fastream.to")
-        if (isDropOrFast) return false
         return true
     }
 

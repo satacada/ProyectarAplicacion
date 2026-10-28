@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 268,
-  "versionCodeReceiver": 251,
-  "versionName": "3.5.17",
-  "releaseTag": "v3.5.17",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.17/omnicast-sender-v3.5.17.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.17/omnicast-receiver-v3.5.17.apk",
-  "changelog": "v3.5.17: Inyección dinámica de cookies en Chromium TV para reproductor y CDN estilo v3.32.94; agrupación condicional en lista móvil que preserva líneas independientes cuando los flujos no tienen resoluciones distintas clasificables."
+  "versionCodeSender": 269,
+  "versionCodeReceiver": 252,
+  "versionName": "3.5.18",
+  "releaseTag": "v3.5.18",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.18/omnicast-sender-v3.5.18.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.18/omnicast-receiver-v3.5.18.apk",
+  "changelog": "v3.5.18: Habilitación incondicional del interceptor nativo anti-CORS en TV Box para erradicar errores de origen cruzado en DropCDN/Fastream; filtrado de listas iframes-/keyframes y agrupación unificada por video sin duplicación de chips."
 }

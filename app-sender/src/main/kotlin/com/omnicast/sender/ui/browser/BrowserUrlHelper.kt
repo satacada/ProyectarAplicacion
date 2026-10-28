@@ -54,6 +54,7 @@ object BrowserUrlHelper {
         if (s.isBlank() || s.contains("dmxleo.dailymotion.com") || AdBlocker.isAd(s)) return false
         if (dur in 0.1f..59.9f) return false
         val clean = s.substringBefore('?').lowercase()
+        if (clean.contains("iframes-") || clean.contains("keyframes")) return false
         if (clean.endsWith(".vtt") || clean.endsWith(".srt") || clean.endsWith(".key") ||
             clean.endsWith(".ts") || clean.endsWith(".m4s") || clean.endsWith(".html") ||
             clean.endsWith(".htm") || clean.endsWith(".jsp") || clean.endsWith(".js") ||

@@ -37,8 +37,12 @@ Este repositorio sigue el estándar abierto AGENTS.md para el desarrollo de la a
 - Mantener 'doc/PROJECT_DASHBOARD.md' actualizado al finalizar cada sesión.
 - Si se modifica la estructura del protocolo de red o streaming, registrar el cambio en 'doc/adr/ADR-xxx.md'.
 - Toda funcionalidad aprobada por el usuario debe registrarse como contrato inamovible en 'doc/historias-usuario/HU-xxx.md'.
-- **Mapa Maestro y Call Graph Obligatorio:** Toda IA o desarrollador que intervenga el código DEBE consultar [doc/MAPA_DEL_SISTEMA_Y_FLUJO_DE_CODIGO.md](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/MAPA_DEL_SISTEMA_Y_FLUJO_DE_CODIGO.md) para verificar la traza exacta de llamadas archivo por archivo (call graph) antes de modificar componentes de streaming, navegación, reproductores o WebRTC.
-- **Versionado y Despliegue Obligatorio:** Toda nueva versión debe actualizar 'versionCode' y 'versionName' en los archivos 'build.gradle.kts', compilarse, copiarse a la carpeta 'releases/' (conservando siempre las versiones generadas de sender y receiver) e instalarse de inmediato en el dispositivo móvil vía ADB. En GitHub Releases únicamente debe publicarse y residir la versión final actual, eliminando automáticamente de GitHub las versiones previas para no saturar espacio remoto.
+- **Versionado, Despliegue y Publicación OTA Obligatoria (LEY INVIOLABLE):**
+  Toda nueva versión generada en cualquier sesión o chat DEBE cumplir sin excepción el siguiente protocolo completo:
+  1. Actualizar `versionCode` y `versionName` en `app-sender/build.gradle.kts`, `app-receiver/build.gradle.kts` y sincronizar `version.json`.
+  2. Compilar en release (`./gradlew assembleRelease`) y copiar los APKs generados a la carpeta `releases/` (preservando siempre el histórico local de versiones de sender y receiver).
+  3. Instalar de inmediato el APK del Sender en el dispositivo móvil conectado vía ADB.
+  4. **Subida Obligatoria a GitHub Releases para Actualización OTA del Receiver:** Publicar incondicionalmente la versión en GitHub Releases ejecutando `python3 scratch/publish_release.py`. Dicho script elimina las versiones previas remotas para no saturar espacio y sube obligatoriamente como assets: `version.json` (imprescindible para que `TvUpdateManager` detecte la actualización en la TV Box), `omnicast-sender-vX.X.X.apk` y `omnicast-receiver-vX.X.X.apk`. Queda TERMINANTEMENTE PROHIBIDO cerrar una tarea con cambio de versión sin haber completado la subida a GitHub Releases para que el Receiver pueda descargarlo.
 
 ---
 

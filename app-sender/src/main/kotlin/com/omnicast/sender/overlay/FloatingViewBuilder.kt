@@ -94,7 +94,7 @@ class FloatingViewBuilder(private val context: Context) {
         val btnZoomTv = createBtn("🔍 Zoom TV", "#6D28D9", onToggleTvScale)
         val btnCalibrate = createBtn("🤏 Calibrar Pantalla (Zoom/Arrastre)", "#0284C7", onCalibrateTv)
         val btnDetectVideo = createBtn("🔍 Detectar Flujo de Video", "#00B4D8", onDetectVideo)
-        val btnOpenOmni = createBtn("🏠 Principal", "#1E2738", onOpenOmniCast)
+        val btnOpenOmni = createBtn("🏠 Proyectar", "#1E2738", onOpenOmniCast)
 
         val rowMirror = LinearLayout(context).apply {
             orientation = LinearLayout.HORIZONTAL

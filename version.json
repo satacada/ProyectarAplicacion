@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 276,
-  "versionCodeReceiver": 259,
-  "versionName": "3.5.25",
-  "releaseTag": "v3.5.25",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.25/omnicast-sender-v3.5.25.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.25/omnicast-receiver-v3.5.25.apk",
-  "changelog": "v3.5.25: Fila compacta de proyección dual en asistente flotante (Pantalla Completa vs Por Aplicación), blindaje de selección con MediaProjectionConfig y guía preventiva en diálogo de Google."
+  "versionCodeSender": 277,
+  "versionCodeReceiver": 260,
+  "versionName": "3.5.26",
+  "releaseTag": "v3.5.26",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.26/omnicast-sender-v3.5.26.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.26/omnicast-receiver-v3.5.26.apk",
+  "changelog": "v3.5.26: Renombrado del encabezado/botón 'Principal' a 'Proyectar' en el menú del asistente flotante."
 }

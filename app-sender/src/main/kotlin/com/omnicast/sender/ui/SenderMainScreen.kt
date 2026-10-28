@@ -234,7 +234,11 @@ fun SenderMainScreen(
                         tooltipsEnabled = tooltipsEnabled,
                         onOpenBrowser = { showInAppBrowser = true },
                         onStartFullScreen = { pendingProjectionMode = "FULL_SCREEN"; projectionLauncher.launch(getCaptureIntent(true)) },
-                        onStartAppProjection = { pendingProjectionMode = "APP"; projectionLauncher.launch(getCaptureIntent(false)) },
+                        onStartAppProjection = {
+                            pendingProjectionMode = "APP"
+                            Toast.makeText(context, "🔒 Modo Por Aplicación: mantén seleccionada 'Una sola app'", Toast.LENGTH_LONG).show()
+                            projectionLauncher.launch(getCaptureIntent(false))
+                        },
                         onStopProjection = { onStopProjection() },
                         onOpenProjectionConfig = { showConfigDialog = true },
                         onOpenGallery = { context.startActivity(Intent(context, com.omnicast.sender.overlay.GalleryPickerActivity::class.java).apply { putExtra(com.omnicast.sender.overlay.GalleryPickerActivity.EXTRA_MIME_FILTER, "image/*"); addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }) },

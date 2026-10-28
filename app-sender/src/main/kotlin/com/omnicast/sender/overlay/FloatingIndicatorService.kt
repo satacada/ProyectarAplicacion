@@ -157,15 +157,17 @@ class FloatingIndicatorService : Service() {
                     }, 800)
                 }
             },
-            onStartScreenMirror = {
+            onStartFullScreen = {
                 menuLayoutRef?.visibility = View.GONE; isExpanded = false
-                SenderMainActivity.sendPlayControlStatic(this, "STOP")
-                com.omnicast.sender.stream.ActiveStreamHolder.clear()
-                if (ProjectionForegroundService.isProjecting) {
-                    statusFeedbackText.text = "🟢 Ya estás proyectando."; statusFeedbackText.setTextColor(Color.parseColor("#10B981"))
-                } else {
-                    launchIntentSafely(Intent(this, TransparentCaptureActivity::class.java).apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }, 103)
-                }
+                SenderMainActivity.sendPlayControlStatic(this, "STOP"); com.omnicast.sender.stream.ActiveStreamHolder.clear()
+                if (ProjectionForegroundService.isProjecting) { statusFeedbackText.text = "🟢 Ya estás proyectando."; statusFeedbackText.setTextColor(Color.parseColor("#10B981")) }
+                else launchIntentSafely(Intent(this, TransparentCaptureActivity::class.java).apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); putExtra(TransparentCaptureActivity.EXTRA_PROJECTION_MODE, "FULL_SCREEN") }, 103)
+            },
+            onStartAppProjection = {
+                menuLayoutRef?.visibility = View.GONE; isExpanded = false
+                SenderMainActivity.sendPlayControlStatic(this, "STOP"); com.omnicast.sender.stream.ActiveStreamHolder.clear()
+                if (ProjectionForegroundService.isProjecting) { statusFeedbackText.text = "🟢 Ya estás proyectando."; statusFeedbackText.setTextColor(Color.parseColor("#10B981")) }
+                else launchIntentSafely(Intent(this, TransparentCaptureActivity::class.java).apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); putExtra(TransparentCaptureActivity.EXTRA_PROJECTION_MODE, "APP") }, 104)
             },
             onCastGallery = {
                 menuLayoutRef?.visibility = View.GONE; isExpanded = false

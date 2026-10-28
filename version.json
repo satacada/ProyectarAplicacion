@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 275,
-  "versionCodeReceiver": 258,
-  "versionName": "3.5.24",
-  "releaseTag": "v3.5.24",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.24/omnicast-sender-v3.5.24.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.24/omnicast-receiver-v3.5.24.apk",
-  "changelog": "v3.5.24: Protección estructural isForMainFrame en BrowserWebView evitando pantallas en negro, purga SQLite v6 de dominios legítimos y auto-aprendizaje blindado por patrones de publicidad (hasAdPattern)."
+  "versionCodeSender": 276,
+  "versionCodeReceiver": 259,
+  "versionName": "3.5.25",
+  "releaseTag": "v3.5.25",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.25/omnicast-sender-v3.5.25.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.25/omnicast-receiver-v3.5.25.apk",
+  "changelog": "v3.5.25: Fila compacta de proyección dual en asistente flotante (Pantalla Completa vs Por Aplicación), blindaje de selección con MediaProjectionConfig y guía preventiva en diálogo de Google."
 }

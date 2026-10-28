@@ -68,7 +68,8 @@ class FloatingViewBuilder(private val context: Context) {
     fun buildMenu(
         statusFeedbackText: TextView,
         onDetectVideo: () -> Unit,
-        onStartScreenMirror: () -> Unit,
+        onStartFullScreen: () -> Unit,
+        onStartAppProjection: () -> Unit,
         onCastGallery: () -> Unit,
         onOpenBrowser: () -> Unit,
         onToggleTvScale: () -> Unit,
@@ -94,7 +95,25 @@ class FloatingViewBuilder(private val context: Context) {
         val btnCalibrate = createBtn("🤏 Calibrar Pantalla (Zoom/Arrastre)", "#0284C7", onCalibrateTv)
         val btnDetectVideo = createBtn("🔍 Detectar Flujo de Video", "#00B4D8", onDetectVideo)
         val btnOpenOmni = createBtn("🏠 Principal", "#1E2738", onOpenOmniCast)
-        val btnStartMirror = createBtn("📱 Proyectar Pantalla", "#7C3AED", onStartScreenMirror)
+
+        val rowMirror = LinearLayout(context).apply {
+            orientation = LinearLayout.HORIZONTAL
+            layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
+                topMargin = dpToPx(2f); bottomMargin = dpToPx(2f)
+            }
+        }
+        val btnMirrorFull = Button(context).apply {
+            text = "📱 Pantalla"; setTextColor(Color.WHITE); setTextSize(TypedValue.COMPLEX_UNIT_SP, 10.5f); setBackgroundColor(Color.parseColor("#7C3AED"))
+            layoutParams = LinearLayout.LayoutParams(0, dpToPx(38f), 1f).apply { marginEnd = dpToPx(3f) }
+            setOnClickListener { onStartFullScreen() }
+        }
+        val btnMirrorApp = Button(context).apply {
+            text = "📱 Por App"; setTextColor(Color.parseColor("#C7D2FE")); setTextSize(TypedValue.COMPLEX_UNIT_SP, 10.5f); setBackgroundColor(Color.parseColor("#4F46E5"))
+            layoutParams = LinearLayout.LayoutParams(0, dpToPx(38f), 1f).apply { marginStart = dpToPx(3f) }
+            setOnClickListener { onStartAppProjection() }
+        }
+        rowMirror.addView(btnMirrorFull); rowMirror.addView(btnMirrorApp)
+
         val btnGallery = createBtn("🖼️ Galería (Fotos)", "#E11D48", onCastGallery)
         val btnOpenBrowser = createBtn("🌐 Captura Web", "#D97706", onOpenBrowser)
         val btnDisableOverlay = createBtn("❌ Desactivar Asistente", "#334155", onDisableOverlay)
@@ -104,7 +123,7 @@ class FloatingViewBuilder(private val context: Context) {
         innerMenu.addView(btnCalibrate)
         innerMenu.addView(btnDetectVideo)
         innerMenu.addView(btnOpenOmni)
-        innerMenu.addView(btnStartMirror)
+        innerMenu.addView(rowMirror)
         innerMenu.addView(btnGallery)
         innerMenu.addView(btnOpenBrowser)
         innerMenu.addView(btnDisableOverlay)
@@ -135,7 +154,7 @@ class FloatingViewBuilder(private val context: Context) {
                     btnOpenOmni.visibility = View.VISIBLE
                     btnDisableOverlay.visibility = View.VISIBLE
                     btnDetectVideo.visibility = View.GONE
-                    btnStartMirror.visibility = View.GONE
+                    rowMirror.visibility = View.GONE
                     btnGallery.visibility = View.GONE
                     btnOpenBrowser.visibility = View.GONE
                 }
@@ -144,7 +163,7 @@ class FloatingViewBuilder(private val context: Context) {
                     btnOpenOmni.visibility = View.VISIBLE
                     btnDisableOverlay.visibility = View.VISIBLE
                     btnDetectVideo.visibility = View.GONE
-                    btnStartMirror.visibility = View.GONE
+                    rowMirror.visibility = View.GONE
                     btnGallery.visibility = View.GONE
                     btnOpenBrowser.visibility = View.GONE
                 }
@@ -154,7 +173,7 @@ class FloatingViewBuilder(private val context: Context) {
                     btnDetectVideo.visibility = View.VISIBLE
                     btnOpenOmni.visibility = View.VISIBLE
                     btnDisableOverlay.visibility = View.VISIBLE
-                    btnStartMirror.visibility = View.GONE
+                    rowMirror.visibility = View.GONE
                     btnGallery.visibility = View.GONE
                     btnOpenBrowser.visibility = View.GONE
                 }
@@ -164,7 +183,7 @@ class FloatingViewBuilder(private val context: Context) {
                     btnStopCast.visibility = if (casting) View.VISIBLE else View.GONE
                     btnDetectVideo.visibility = View.VISIBLE
                     btnOpenOmni.visibility = View.VISIBLE
-                    btnStartMirror.visibility = View.VISIBLE
+                    rowMirror.visibility = View.VISIBLE
                     btnOpenBrowser.visibility = View.VISIBLE
                     btnGallery.visibility = View.VISIBLE
                     btnDisableOverlay.visibility = View.VISIBLE

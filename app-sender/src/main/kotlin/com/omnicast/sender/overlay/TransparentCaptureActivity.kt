@@ -18,10 +18,15 @@ import com.omnicast.sender.service.ProjectionForegroundService
  */
 class TransparentCaptureActivity : ComponentActivity() {
 
+    companion object {
+        const val EXTRA_PROJECTION_MODE = "EXTRA_PROJECTION_MODE"
+    }
+
     private val captureLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
         if (result.resultCode == Activity.RESULT_OK && result.data != null) {
+            val mode = intent.getStringExtra(EXTRA_PROJECTION_MODE) ?: "FULL_SCREEN"
             val prefs = getSharedPreferences("omnicast_prefs", Context.MODE_PRIVATE)
             val ip = prefs.getString("saved_tv_ip", "")?.takeIf { it.isNotBlank() && it != "192.168.1.100" }
             if (ip == null) {
@@ -33,8 +38,7 @@ class TransparentCaptureActivity : ComponentActivity() {
 
             val savedProfileName = prefs.getString("saved_stream_profile", StreamProfile.BALANCED_30FPS.mode.name)
             val profile = StreamProfile.ALL_PROFILES.firstOrNull { it.mode.name == savedProfileName } ?: StreamProfile.BALANCED_30FPS
-            val scaleMode = "FIT"
-            prefs.edit().putString("saved_tv_scale_mode", "FIT").apply()
+            prefs.edit().putString("saved_tv_scale_mode", mode).apply()
             com.omnicast.sender.service.TvZoomManager.resetToFit()
             val smoothBuffer = prefs.getBoolean("saved_smooth_buffer", true)
 
@@ -44,10 +48,11 @@ class TransparentCaptureActivity : ComponentActivity() {
                 target.port,
                 profile,
                 result.data!!,
-                scaleMode,
+                mode,
                 smoothBuffer
             )
-            Toast.makeText(this, "🟢 Transmitiendo pantalla a la TV", Toast.LENGTH_SHORT).show()
+            val msg = if (mode == "APP") "🟢 Transmitiendo aplicación a la TV" else "🟢 Transmitiendo pantalla a la TV"
+            Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
         } else {
             Toast.makeText(this, "Transmisión cancelada", Toast.LENGTH_SHORT).show()
         }
@@ -58,11 +63,25 @@ class TransparentCaptureActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val mode = intent.getStringExtra(EXTRA_PROJECTION_MODE) ?: "FULL_SCREEN"
+        val isFull = mode != "APP"
         val mpm = getSystemService(Context.MEDIA_PROJECTION_SERVICE) as? MediaProjectionManager
-        val captureIntent = mpm?.createScreenCaptureIntent()
+        val captureIntent = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            val cfg = if (isFull) {
+                android.media.projection.MediaProjectionConfig.createConfigForDefaultDisplay()
+            } else {
+                android.media.projection.MediaProjectionConfig.createConfigForUserChoice()
+            }
+            mpm?.createScreenCaptureIntent(cfg)
+        } else {
+            mpm?.createScreenCaptureIntent()
+        }
         if (captureIntent == null) {
             finish()
             return
+        }
+        if (!isFull) {
+            Toast.makeText(this, "🔒 Modo Por Aplicación: mantén seleccionada 'Una sola app'", Toast.LENGTH_LONG).show()
         }
         captureLauncher.launch(captureIntent)
     }

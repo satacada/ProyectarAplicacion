@@ -208,6 +208,7 @@ fun BrowserWebView(
 
                     override fun shouldInterceptRequest(v: WebView?, r: WebResourceRequest?): WebResourceResponse? {
                         return try {
+                            if (r?.isForMainFrame == true) return super.shouldInterceptRequest(v, r)
                             val reqUrl = r?.url?.toString() ?: return super.shouldInterceptRequest(v, r)
                             val docUrl = r.requestHeaders?.get("Referer") ?: currentUrl
                             if (isAdBlockEnabled && (AdBlocker.isAd(reqUrl) || AdBlocker.isVideoAd(reqUrl) || NativeAdBlockEngine.shouldBlock(reqUrl, docUrl))) {

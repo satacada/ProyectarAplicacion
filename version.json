@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 274,
-  "versionCodeReceiver": 257,
-  "versionName": "3.5.23",
-  "releaseTag": "v3.5.23",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.23/omnicast-sender-v3.5.23.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.23/omnicast-receiver-v3.5.23.apk",
-  "changelog": "v3.5.23: Ajuste de WvcShieldSecurityEngine y BrowserWebView para permitir redirecciones legítimas (Telefe, Instagram, TV Libre, buscadores) bloqueando únicamente anuncios confirmados por motor C++ o SQLite."
+  "versionCodeSender": 275,
+  "versionCodeReceiver": 258,
+  "versionName": "3.5.24",
+  "releaseTag": "v3.5.24",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.24/omnicast-sender-v3.5.24.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.24/omnicast-receiver-v3.5.24.apk",
+  "changelog": "v3.5.24: Protección estructural isForMainFrame en BrowserWebView evitando pantallas en negro, purga SQLite v6 de dominios legítimos y auto-aprendizaje blindado por patrones de publicidad (hasAdPattern)."
 }

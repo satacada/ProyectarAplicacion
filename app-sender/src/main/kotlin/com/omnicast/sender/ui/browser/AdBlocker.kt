@@ -110,6 +110,11 @@ object AdBlocker {
         if (AdBlockWhitelistManager.isWhitelistedHost(host) || isSearchEngine(host) || isKnownMediaHost(host)) return false
         if (host.contains("movie") || host.contains("pelis") || host.contains("cine") || host.contains("series") || host.contains("film") || host.contains("stream")) return false
         if (host.endsWith("reypelis.net") || host.endsWith("tioplus.app") || host.contains("sololatino") || host.contains("pelisserieshoy")) return false
+        val hasAdPattern = host.contains("ad") || host.contains("pop") || host.contains("click") ||
+            host.contains("track") || host.contains("traffic") || host.contains("banner") ||
+            host.contains("monet") || host.contains("syndic") || host.contains("bet") ||
+            host.contains("promo") || host.contains("yield") || host.contains("affil")
+        if (!hasAdPattern && !AdBlockDatabase.isAdDomain(host)) return false
         if (AdBlockDatabase.isAdDomain(host)) return false
         val added = addAdDomain(host)
         if (added) {

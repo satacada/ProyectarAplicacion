@@ -34,6 +34,13 @@ object WvcShieldSecurityEngine {
                     if (u.indexOf('challenges.cloudflare') !== -1 || u.indexOf('turnstile') !== -1) {
                         return _realOpen ? _realOpen.apply(this, arguments) : null;
                     }
+                    if (u.indexOf('dropcdn') !== -1 || u.indexOf('dr0pstream') !== -1 ||
+                        u.indexOf('fastream') !== -1 || u.indexOf('/embed') !== -1 ||
+                        u.indexOf('/e/') !== -1 || u.indexOf('stream') !== -1 || u.indexOf('player') !== -1) {
+                        console.log('🎬 [WVC Shield] Redirigiendo reproductor a ventana actual:', url);
+                        window.location.href = url;
+                        return null;
+                    }
                     console.log('🛡️ [WVC Shield] Popup window.open bloqueado:', url);
                     return null;
                 };

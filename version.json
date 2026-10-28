@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 269,
-  "versionCodeReceiver": 252,
-  "versionName": "3.5.18",
-  "releaseTag": "v3.5.18",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.18/omnicast-sender-v3.5.18.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.18/omnicast-receiver-v3.5.18.apk",
-  "changelog": "v3.5.18: Habilitación incondicional del interceptor nativo anti-CORS en TV Box para erradicar errores de origen cruzado en DropCDN/Fastream; filtrado de listas iframes-/keyframes y agrupación unificada por video sin duplicación de chips."
+  "versionCodeSender": 270,
+  "versionCodeReceiver": 253,
+  "versionName": "3.5.19",
+  "releaseTag": "v3.5.19",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.19/omnicast-sender-v3.5.19.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.19/omnicast-receiver-v3.5.19.apk",
+  "changelog": "v3.5.19: Restauración de reproducción pura en TV Box para DropCDN y Fastream erradicando errores 403 y CORS con baseUrl Same-Origin; inyección anticipada de sniffer al 60% y redirección transparente de servidores de video en móvil."
 }

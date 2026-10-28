@@ -231,7 +231,7 @@ fun InAppBrowserScreen(
                     isHome = isHome, isAdBlockEnabled = isAdBlockEnabled, currentUrl = currentUrl,
                     hasStreams = detectedStreams.any { isRealMedia(it) }, onProgress = { progress = it },
                     onPageStarted = { newUrl ->
-                        if (!newUrl.startsWith("about:")) { resetStreamDetections(); pageTitle = "Cargando..." }
+                        if (!newUrl.startsWith("about:") && currentUrl.isNotBlank() && currentUrl != newUrl) { resetStreamDetections(); pageTitle = "Cargando..." }
                         inputUrl = newUrl; currentUrl = newUrl; com.omnicast.sender.history.NavigationTrackManager.recordStep(newUrl, pageTitle)
                         if (!newUrl.startsWith("about:")) { prefs.edit().putString("saved_browser_last_url", newUrl).apply(); com.omnicast.sender.history.NavigationTrackManager.pushBrowserHistory(context, newUrl, pageTitle) }; checkPlatformUrls(newUrl)
                     },

@@ -225,8 +225,6 @@ fun InAppBrowserScreen(
             if (progress in 1..99) LinearProgressIndicator(progress = { progress / 100f }, modifier = Modifier.fillMaxWidth().height(3.dp), color = Color(0xFF38BDF8))
 
             Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
-                if (isHome) BrowserHomeScreen(onSelectUrl = { navigateTo(it) })
-
                 BrowserWebView(
                     isHome = isHome, isAdBlockEnabled = isAdBlockEnabled, currentUrl = currentUrl,
                     hasStreams = detectedStreams.any { isRealMedia(it) }, onProgress = { progress = it },
@@ -260,6 +258,8 @@ fun InAppBrowserScreen(
                     onOpenPopup = { pView -> popupWebView = pView }, onClosePopup = { popupWebView?.destroy(); popupWebView = null },
                     onWebViewCreated = { webViewInstance = it; if (!isHome && currentUrl.isNotBlank() && it.url == null) it.loadUrl(currentUrl) }
                 )
+
+                if (isHome) BrowserHomeScreen(onSelectUrl = { navigateTo(it) })
 
                 if (showBottomControls && isCasting && isPlaying) {
                     BrowserBottomBarContainer(

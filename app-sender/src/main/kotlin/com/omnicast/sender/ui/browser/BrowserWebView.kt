@@ -269,7 +269,11 @@ fun BrowserWebView(
             }
 
             swipeRefresh.addView(webView)
+            swipeRefresh.visibility = if (isHome) android.view.View.INVISIBLE else android.view.View.VISIBLE
             swipeRefresh
+        },
+        update = { v ->
+            v.visibility = if (isHome) android.view.View.INVISIBLE else android.view.View.VISIBLE
         },
         modifier = Modifier.fillMaxSize().alpha(if (isHome) 0f else 1f)
     )

@@ -115,6 +115,7 @@ fun InAppBrowserScreen(
         val curHost = try { android.net.Uri.parse(currentUrl).host } catch (_: Throwable) { null }
         if (AdBlocker.isSearchEngine(curHost)) return
         val cleanUrl = BrowserUrlHelper.sanitizeMediaUrl(url); if (cleanUrl.isBlank() || AdBlocker.isAd(cleanUrl) || AdBlocker.isVideoAd(cleanUrl) || !isRealMedia(cleanUrl)) return
+        if (BrowserUrlHelper.extractYouTubeId(cleanUrl) != null && curHost?.contains("youtube") != true) return
         val derivedMaster = BrowserUrlHelper.deriveMasterPlaylistUrl(cleanUrl)
         val targetUrl = if (derivedMaster != null && !cleanUrl.contains("master", true)) derivedMaster else cleanUrl
         val isM = targetUrl.contains("master", true) || targetUrl.contains("playlist", true) || targetUrl.contains(".mpd", true)
@@ -133,22 +134,18 @@ fun InAppBrowserScreen(
         val cleanT = if (pageTitle.isNotBlank() && pageTitle != "Cargando..." && pageTitle != "Transmisión") pageTitle else "Video Web"
         ActiveStreamHolder.update(primaryUrl, cleanT, streamHeaders[primaryUrl] ?: hdrs)
         android.util.Log.i("StreamDetection", "🎬 Flujo registrado [isMaster=$isM, freshToken=true]: $targetUrl")
-        if (!showOptionsSheet && userDismissedSheetForUrl != currentUrl) {
+        if (!showOptionsSheet && !isCasting && userDismissedSheetForUrl != currentUrl) {
             autoOpenJob?.cancel()
-            autoOpenJob = scope.launch {
-                kotlinx.coroutines.delay(450)
-                if (!showOptionsSheet && userDismissedSheetForUrl != currentUrl && detectedStreams.any { isRealMedia(it) }) openOptionsSheet()
-            }
+            autoOpenJob = scope.launch { kotlinx.coroutines.delay(450); if (!showOptionsSheet && !isCasting && userDismissedSheetForUrl != currentUrl && detectedStreams.any { isRealMedia(it) }) openOptionsSheet() }
         }
     }
 
     fun checkPlatformUrls(url: String?, title: String? = null) {
+        val isYtHost = currentUrl.lowercase().let { it.contains("youtube.com") || it.contains("youtu.be") }
         MediaPlatformResolver.checkPlatform(url = url, title = title ?: webViewInstance?.title, onYouTube = { ytUrl, yTitle, yHdrs ->
-            val actual = yTitle ?: webViewInstance?.title?.replace(" - YouTube", "")?.takeIf { it.isNotBlank() && it != "YouTube" } ?: "Video YouTube"
-            pageTitle = actual; registerStream(ytUrl, yHdrs, isPrimary = true, label = actual)
+            if (isYtHost) { val actual = yTitle ?: webViewInstance?.title?.replace(" - YouTube", "")?.takeIf { it.isNotBlank() && it != "YouTube" } ?: "Video YouTube"; pageTitle = actual; registerStream(ytUrl, yHdrs, isPrimary = true, label = actual) }
         }, onDailymotion = { sUrl, dTitle, dHdrs ->
-            val actual = dTitle ?: webViewInstance?.title?.replace(" - Dailymotion", "")?.takeIf { it.isNotBlank() && it != "Dailymotion" } ?: "Video Dailymotion"
-            pageTitle = actual; registerStream(sUrl, dHdrs, isPrimary = true, label = actual)
+            val actual = dTitle ?: webViewInstance?.title?.replace(" - Dailymotion", "")?.takeIf { it.isNotBlank() && it != "Dailymotion" } ?: "Video Dailymotion"; pageTitle = actual; registerStream(sUrl, dHdrs, isPrimary = true, label = actual)
         })
     }
 
@@ -230,7 +227,7 @@ fun InAppBrowserScreen(
                     isHome = isHome, isAdBlockEnabled = isAdBlockEnabled, currentUrl = currentUrl,
                     hasStreams = detectedStreams.any { isRealMedia(it) }, onProgress = { progress = it },
                     onPageStarted = { newUrl ->
-                        if (!newUrl.startsWith("about:") && currentUrl.isNotBlank() && currentUrl != newUrl) { resetStreamDetections(); pageTitle = "Cargando..." }
+                        if (!newUrl.startsWith("about:")) { resetStreamDetections(); pageTitle = "Cargando..." }
                         inputUrl = newUrl; currentUrl = newUrl; com.omnicast.sender.history.NavigationTrackManager.recordStep(newUrl, pageTitle)
                         if (!newUrl.startsWith("about:")) { prefs.edit().putString("saved_browser_last_url", newUrl).apply(); com.omnicast.sender.history.NavigationTrackManager.pushBrowserHistory(context, newUrl, pageTitle) }; checkPlatformUrls(newUrl)
                     },

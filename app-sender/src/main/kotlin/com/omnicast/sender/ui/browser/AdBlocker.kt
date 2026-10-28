@@ -94,7 +94,7 @@ object AdBlocker {
         for (m in KNOWN_MEDIA_HOSTS) {
             if (lower == m || lower.endsWith(".$m") || lower.contains(m.substringBefore("."))) return true
         }
-        return false
+        return lower.contains("embed") || lower.contains("player") || lower.contains("video") || lower.contains("stream") || lower.contains("cdn")
     }
 
     fun learnAndBlockAdHost(urlOrHost: String?, currentMovieHost: String? = null): Boolean {
@@ -166,7 +166,7 @@ object AdBlocker {
                             var found = doc.querySelectorAll(selectors[s]);
                             for (var f = 0; f < found.length; f++) {
                                 var item = found[f];
-                                if (!item.querySelector('video, iframe, input, form, textarea, select, button')) item.remove();
+                                if (!item.querySelector('video, iframe, input, form, textarea, select, button, a')) item.remove();
                             }
                         } catch(e) {}
                     }

@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 278,
-  "versionCodeReceiver": 261,
-  "versionName": "3.5.27",
-  "releaseTag": "v3.5.27",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.27/omnicast-sender-v3.5.27.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.27/omnicast-receiver-v3.5.27.apk",
-  "changelog": "v3.5.27: Unificación de interfaz en TV Box sin pantalla verde invasiva con dock reactivo conectado/en espera, e inmunidad completa a buscadores para evitar previews y publicidad en búsquedas."
+  "versionCodeSender": 279,
+  "versionCodeReceiver": 262,
+  "versionName": "3.5.28",
+  "releaseTag": "v3.5.28",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.28/omnicast-sender-v3.5.28.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.28/omnicast-receiver-v3.5.28.apk",
+  "changelog": "v3.5.28: Restauración de enlaces SPA y carátulas en AdBlocker, comodines de medios en CDNs, sniffer DOM exclusivo al 100%, supresión de auto-apertura en casteo y purga incondicional al navegar."
 }

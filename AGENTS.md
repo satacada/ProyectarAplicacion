@@ -37,6 +37,7 @@ Este repositorio sigue el estándar abierto AGENTS.md para el desarrollo de la a
 - Mantener 'doc/PROJECT_DASHBOARD.md' actualizado al finalizar cada sesión.
 - Si se modifica la estructura del protocolo de red o streaming, registrar el cambio en 'doc/adr/ADR-xxx.md'.
 - Toda funcionalidad aprobada por el usuario debe registrarse como contrato inamovible en 'doc/historias-usuario/HU-xxx.md'.
+- **Mapa Maestro y Call Graph Obligatorio:** Toda IA o desarrollador que intervenga el código DEBE consultar [doc/MAPA_DEL_SISTEMA_Y_FLUJO_DE_CODIGO.md](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/MAPA_DEL_SISTEMA_Y_FLUJO_DE_CODIGO.md) para verificar la traza exacta de llamadas archivo por archivo (call graph) antes de modificar componentes de streaming, navegación, reproductores o WebRTC.
 - **Versionado y Despliegue Obligatorio:** Toda nueva versión debe actualizar 'versionCode' y 'versionName' en los archivos 'build.gradle.kts', compilarse, copiarse a la carpeta 'releases/' (conservando siempre las versiones generadas de sender y receiver) e instalarse de inmediato en el dispositivo móvil vía ADB. En GitHub Releases únicamente debe publicarse y residir la versión final actual, eliminando automáticamente de GitHub las versiones previas para no saturar espacio remoto.
 
 ---

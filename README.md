@@ -35,10 +35,13 @@
 
 Para que cualquier desarrollador humano o agente de Inteligencia Artificial comprenda y mantenga el proyecto sin provocar regresiones, consulte los siguientes documentos de referencia:
 
-1. 🤖 **[Directrices Técnicas e Inviolables (`AGENTS.md`)](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/AGENTS.md):**  
+1. 🗺️ **[Mapa Maestro del Sistema y Flujo de Código (`doc/MAPA_DEL_SISTEMA_Y_FLUJO_DE_CODIGO.md`)](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/MAPA_DEL_SISTEMA_Y_FLUJO_DE_CODIGO.md):**  
+   Árbol estructural completo de carpetas, catálogo exhaustivo de pantallas, lista de funciones clave y call graph trazado paso a paso para reproducción de películas, screen mirroring y fotos.
+
+2. 🤖 **[Directrices Técnicas e Inviolables (`AGENTS.md`)](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/AGENTS.md):**  
    Leyes de hardware, reglas de no-regresión, checklist pre-vuelo obligatorio y arquitectura hexagonal.
 
-2. 🏛️ **[Arquitectura Global del Sistema (`doc/ARCHITECTURE.md`)](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/ARCHITECTURE.md):**  
+3. 🏛️ **[Arquitectura Global del Sistema (`doc/ARCHITECTURE.md`)](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/ARCHITECTURE.md):**  
    Diagramas de contenedores C4, los 4 escudos del navegador, flujo hexagonal de 6 ramas y ciclo de vida TV Box.
 
 3. 📊 **[Tablero de Control y Estado Vivo (`doc/PROJECT_DASHBOARD.md`)](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/PROJECT_DASHBOARD.md):**  

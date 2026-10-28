@@ -13,8 +13,9 @@ OmniCast Pro es un ecosistema cliente-servidor nativo de Android compuesto por:
 2. **Receptor Android TV / TV Box (`:app-receiver`):** Pantalla de standby limpia, receptor WebRTC por hardware, reproductor híbrido dual (ExoPlayer para flujos directos / Chromium HTML5 + Hls.js con interceptor anti-CORS para CDNs protegidas) y control ergonómico por mando a distancia D-Pad.
 3. **Núcleo Compartido (`:core:domain`, `:core:protocol`, `:core:telemetry`):** Modelos puros de dominio, máquina de estados de señalización WebRTC, protocolos de control y telemetría en tiempo real.
 
-El contrato funcional completo se encuentra en:
-👉 [**`doc/DESIGN.md`**](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/DESIGN.md)
+El contrato funcional y el mapa detallado de código se encuentran en:
+👉 [**`doc/DESIGN.md`**](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/DESIGN.md)  
+👉 [**`doc/MAPA_DEL_SISTEMA_Y_FLUJO_DE_CODIGO.md`**](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/MAPA_DEL_SISTEMA_Y_FLUJO_DE_CODIGO.md) *(Call graph paso a paso de archivo a archivo)*
 
 ---
 

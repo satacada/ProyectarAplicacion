@@ -117,6 +117,23 @@ class TvTrackManager(
         }
     }
 
+    fun getCurrentAudioTrackLabel(player: ExoPlayer): String {
+        val info = getTracksInfo(player)
+        if (info.audioTracks.isEmpty()) return "Original"
+        val idx = info.selectedAudioIndex.coerceIn(0, info.audioTracks.size - 1)
+        return info.audioTracks[idx]
+    }
+
+    fun cycleAudioTrack(player: ExoPlayer): String {
+        val info = getTracksInfo(player)
+        if (info.audioTracks.size <= 1) {
+            return info.audioTracks.firstOrNull() ?: "Única (Original)"
+        }
+        val nextIdx = (info.selectedAudioIndex + 1) % info.audioTracks.size
+        selectAudioTrack(player, nextIdx)
+        return info.audioTracks[nextIdx]
+    }
+
     fun getCurrentVideoQuality(): String {
         val currentMax = trackSelector.parameters.maxVideoHeight
         return if (currentMax == Int.MAX_VALUE || currentMax <= 0) "Auto" else "${currentMax}p"

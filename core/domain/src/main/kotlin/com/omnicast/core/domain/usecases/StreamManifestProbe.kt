@@ -20,21 +20,15 @@ object StreamManifestProbe {
     private val learnedHostStrategy = ConcurrentHashMap<String, String>()
 
     data class ProbeResult(
-        val isPlayable: Boolean,
-        val resolvedUrl: String,
-        val healedHeaders: Map<String, String>,
-        val isLiveStream: Boolean = false,
-        val isMasterPlaylist: Boolean = false,
-        val durationSeconds: Float = 0f,
-        val manifestContent: String = "",
-        val httpCode: Int = -1
+        val isPlayable: Boolean, val resolvedUrl: String, val healedHeaders: Map<String, String>,
+        val isLiveStream: Boolean = false, val isMasterPlaylist: Boolean = false,
+        val durationSeconds: Float = 0f, val manifestContent: String = "", val httpCode: Int = -1
     )
 
     fun sanitizeMediaUrl(url: String): String {
         if (url.isBlank()) return url
         if (url.contains(".dropcdn.io", true) && url.contains("srv=")) {
-            val srvMatch = Regex("[?&]srv=([^&]+)").find(url)
-            val srv = srvMatch?.groupValues?.get(1)
+            val srv = Regex("[?&]srv=([^&]+)").find(url)?.groupValues?.get(1)
             if (!srv.isNullOrBlank()) {
                 return url.replace(Regex("https?://r\\d+\\.dropcdn\\.io"), "https://$srv.dropcdn.io")
                           .replace(Regex("https?://[^/]+\\.dropcdn\\.io(?=/hls)"), "https://$srv.dropcdn.io")
@@ -43,18 +37,28 @@ object StreamManifestProbe {
         return url
     }
 
+    val DEFAULT_HOST_PROFILES: Map<String, Pair<String, Boolean>> = mapOf(
+        "dropcdn.io" to ("WEBVIEW" to true), "dr0pstream.com" to ("WEBVIEW" to true), "pelisplus.hair" to ("WEBVIEW" to true),
+        "fastream.to" to ("WEBVIEW" to true), "luluvdo.com" to ("WEBVIEW" to true), "lulustream.com" to ("WEBVIEW" to true),
+        "pelisgo.online" to ("WEBVIEW" to true), "pelisgo" to ("WEBVIEW" to true), "tnmr.org" to ("EXOPLAYER" to true),
+        "boltdns.net" to ("EXOPLAYER" to false), "canela.tv" to ("EXOPLAYER" to false), "okcdn.ru" to ("EXOPLAYER" to false),
+        "mycdn.me" to ("EXOPLAYER" to false), "ok.ru" to ("EXOPLAYER" to false), "spark.9bg.net" to ("EXOPLAYER" to false),
+        "dailymotion.com" to ("EXOPLAYER" to false), "dmcdn.net" to ("EXOPLAYER" to false), "akamaized.net" to ("EXOPLAYER" to false),
+        "cloudfront.net" to ("EXOPLAYER" to false)
+    )
+
+    fun lookupSeedProfile(urlOrReferer: String): Pair<String, Boolean>? {
+        if (urlOrReferer.isBlank()) return null
+        val lower = urlOrReferer.lowercase()
+        return DEFAULT_HOST_PROFILES.entries.firstOrNull { lower.contains(it.key) }?.value
+    }
+
     fun hasSignedSecurityToken(url: String): Boolean {
         val query = url.substringAfter('?', "")
         if (query.isBlank()) return false
-        val params = query.split('&').map { it.substringBefore('=') to it.substringAfter('=', "") }
-        val hasToken = params.any { (k, v) ->
-            k.lowercase() in setOf("t", "token", "sig", "signature", "hash", "h", "st", "sign", "hdnts", "md5", "hmac", "auth_key") &&
-            v.length >= 8
-        }
-        val hasTime = params.any { (k, v) ->
-            k.lowercase() in setOf("s", "e", "exp", "expires", "validto", "endtime", "t_expire", "sp") &&
-            v.isNotEmpty() && v.all { it.isDigit() }
-        }
+        val params = query.split('&').map { it.substringBefore('=').lowercase() to it.substringAfter('=', "") }
+        val hasToken = params.any { (k, v) -> k in setOf("t", "token", "st", "md5", "hmac", "auth_key") && v.length >= 8 }
+        val hasTime = params.any { (k, v) -> k in setOf("s", "e", "t_expire", "sp") && v.isNotEmpty() && v.all { it.isDigit() } }
         return hasToken && hasTime
     }
 
@@ -71,7 +75,9 @@ object StreamManifestProbe {
         if ((lower.contains("youtube.com/watch") || lower.contains("youtu.be/")) && !lower.contains(".m3u8") && !lower.contains("googlevideo.com")) {
             return ProbeResult(false, cleanUrl, initialHeaders, httpCode = 415)
         }
-        if (hasSignedSecurityToken(cleanUrl)) {
+        val isSingleUse = initialHeaders["X-Single-Use-Token"] == "true" ||
+            (initialHeaders["X-Single-Use-Token"] != "false" && hasSignedSecurityToken(cleanUrl))
+        if (isSingleUse) {
             val isLive = !cleanUrl.contains(".m3u8") || cleanUrl.contains("live", true)
             val isMaster = cleanUrl.contains("master", true) || cleanUrl.contains("playlist", true)
             return ProbeResult(isPlayable = true, resolvedUrl = cleanUrl, healedHeaders = initialHeaders, isLiveStream = isLive, isMasterPlaylist = isMaster, durationSeconds = 7200f)

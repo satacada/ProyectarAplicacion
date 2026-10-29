@@ -51,7 +51,8 @@ fun RemoteExpandedControls(
     isSaved: Boolean = false
 ) {
     val context = LocalContext.current
-    val qualityLabels = remember { listOf("Auto", "1080p", "720p", "480p", "360p") }
+    val tracksInfo by com.omnicast.sender.stream.ActiveStreamHolder.tracksInfo.collectAsState()
+    val qualityLabels = remember { listOf("Auto", "1080p", "720p", "540p", "360p", "270p") }
     var qualityIdx by remember { mutableIntStateOf(0) }
     Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 2.dp)) {
 
@@ -86,22 +87,12 @@ fun RemoteExpandedControls(
                     horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     if (onSaveToPlaylist != null) {
-                        IconButton(
-                            onClick = onSaveToPlaylist,
-                            modifier = Modifier.size(26.dp)
-                        ) {
-                            BookmarkOutlineIcon(
-                                modifier = Modifier.size(18.dp),
-                                color = if (isSaved) Color(0xFF10B981) else Color(0xFF38BDF8),
-                                isFilled = isSaved
-                            )
+                        IconButton(onClick = onSaveToPlaylist, modifier = Modifier.size(26.dp)) {
+                            BookmarkOutlineIcon(modifier = Modifier.size(18.dp), color = if (isSaved) Color(0xFF10B981) else Color(0xFF38BDF8), isFilled = isSaved)
                         }
                     }
                     if (onDeleteFromSaved != null) {
-                        IconButton(
-                            onClick = onDeleteFromSaved,
-                            modifier = Modifier.size(26.dp)
-                        ) {
+                        IconButton(onClick = onDeleteFromSaved, modifier = Modifier.size(26.dp)) {
                             BookmarkRemoveIcon(modifier = Modifier.size(18.dp))
                         }
                     }
@@ -114,6 +105,20 @@ fun RemoteExpandedControls(
                         modifier = Modifier.size(26.dp)
                     ) {
                         Icon(Icons.Rounded.AspectRatio, contentDescription = "Zoom TV", tint = Color(0xFF60A5FA), modifier = Modifier.size(18.dp))
+                    }
+                    IconButton(
+                        onClick = {
+                            SignalingClientHolder.get().sendMessage(SignalingMessage.PlayControl("CYCLE_AUDIO"))
+                            val list = tracksInfo?.audioTracks.orEmpty()
+                            val nextMsg = if (list.size > 1) {
+                                val nextI = ((tracksInfo?.selectedAudioIndex ?: 0) + 1) % list.size
+                                "🔊 Audio: ${list[nextI]}"
+                            } else "🔊 Pista de Audio: ${list.firstOrNull() ?: "Original"}"
+                            Toast.makeText(context, nextMsg, Toast.LENGTH_SHORT).show()
+                        },
+                        modifier = Modifier.size(26.dp)
+                    ) {
+                        Icon(Icons.Rounded.VolumeUp, contentDescription = "Pista de Audio", tint = Color(0xFF38BDF8), modifier = Modifier.size(18.dp))
                     }
                     IconButton(
                         onClick = {

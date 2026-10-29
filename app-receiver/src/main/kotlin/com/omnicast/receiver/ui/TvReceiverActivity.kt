@@ -224,16 +224,13 @@ class TvReceiverActivity : ComponentActivity() {
                     "SUBTITLE_TOGGLE", "TOGGLE_SUBTITLES" -> exoPlayerManager.toggleSubtitles()
                     "SET_SUBTITLE_TRACK" -> message.param?.toIntOrNull()?.let { exoPlayerManager.selectTextTrack(it) }
                     "SET_AUDIO_TRACK" -> message.param?.toIntOrNull()?.let { exoPlayerManager.selectAudioTrack(it) }
+                    "CYCLE_AUDIO" -> { val a = exoPlayerManager.cycleAudioTrack(); Toast.makeText(this@TvReceiverActivity, "🔊 Audio: $a", Toast.LENGTH_SHORT).show() }
                     "CYCLE_QUALITY" -> { val q = exoPlayerManager.cycleVideoQuality(); Toast.makeText(this@TvReceiverActivity, "📺 Calidad: $q", Toast.LENGTH_SHORT).show() }
                     "ROTATE" -> (receiverState.value as? ReceiverUiState.ImageDisplaying)?.let { receiverState.value = it.copy(rotation = (it.rotation + 90f) % 360f) }
                 }
             }
             is SignalingMessage.ImageTransform -> (receiverState.value as? ReceiverUiState.ImageDisplaying)?.let { receiverState.value = it.copy(scale = message.scale, panX = message.panX, panY = message.panY, rotation = message.rotation) }
-            is SignalingMessage.SetDisplayMode -> {
-                currentDisplayMode.value = message
-                webRtcReceiver.setDisplayMode(message.mode, message.zoom, message.panY, message.panX, message.isLandscape)
-                exoPlayerManager.setDisplayMode(message.mode, message.zoom)
-            }
+            is SignalingMessage.SetDisplayMode -> { currentDisplayMode.value = message; webRtcReceiver.setDisplayMode(message.mode, message.zoom, message.panY, message.panX, message.isLandscape); exoPlayerManager.setDisplayMode(message.mode, message.zoom) }
             is SignalingMessage.ShowImage -> { digitalAudioReceiver?.stop(); exoPlayerManager.stop("Casteo Foto"); webRtcReceiver.resetConnection(); receiverState.value = ReceiverUiState.ImageDisplaying(message.imageUrl, message.title ?: "Foto de Galería") }
             is SignalingMessage.SyncPlaylists -> lifecycleScope.launch { playlistManager.syncPlaylistsJson(message.playlistsJson) }
             is SignalingMessage.Disconnect -> { digitalAudioReceiver?.stop(); exoPlayerManager.stop("Desconexión"); webRtcReceiver.resetConnection(); receiverState.value = ReceiverUiState.Standby }

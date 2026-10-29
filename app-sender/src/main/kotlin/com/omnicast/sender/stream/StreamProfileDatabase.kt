@@ -71,13 +71,30 @@ class StreamProfileDatabase private constructor(context: Context) :
 
         fun getProfileForHost(host: String): StreamProfileEntry? {
             if (host.isBlank()) return null
-            val direct = cache[host.lowercase()]
-            if (direct != null) return direct
             val cleanHost = host.lowercase()
+            cache[cleanHost]?.let { return it }
             for ((key, profile) in cache) {
                 if (cleanHost == key || cleanHost.endsWith(".$key")) return profile
             }
             return null
+        }
+
+        fun resolveTargetPlayer(url: String, headers: Map<String, String> = emptyMap()): String {
+            headers["X-Target-Player"]?.takeIf { it.isNotBlank() }?.let { return it }
+            val streamProfile = getProfileForHost(extractHost(url))
+                ?: getProfileForHost(extractHost(headers["Referer"] ?: ""))
+            streamProfile?.headers?.get("X-Target-Player")?.takeIf { it.isNotBlank() }?.let { return it }
+            return if (com.omnicast.core.domain.usecases.StreamManifestProbe.hasSignedSecurityToken(url)) "WEBVIEW" else "EXOPLAYER"
+        }
+
+        fun isSingleUseTokenHost(url: String, headers: Map<String, String> = emptyMap()): Boolean {
+            if (headers["X-Single-Use-Token"] == "true") return true
+            val streamProfile = getProfileForHost(extractHost(url))
+                ?: getProfileForHost(extractHost(headers["Referer"] ?: ""))
+            if (streamProfile?.headers?.get("X-Single-Use-Token") != null) {
+                return streamProfile.headers["X-Single-Use-Token"] == "true"
+            }
+            return com.omnicast.core.domain.usecases.StreamManifestProbe.hasSignedSecurityToken(url)
         }
     }
 
@@ -119,9 +136,23 @@ class StreamProfileDatabase private constructor(context: Context) :
                     cache[host] = StreamProfileEntry(host, headersMap, bypass, branch, count, ts)
                 }
             }
+            seedInitialProfiles()
             Log.i(TAG, "Caché de perfiles de servidores cargada (${cache.size} hosts)")
         } catch (e: Throwable) {
             Log.e(TAG, "Error al cargar caché de perfiles: ${e.message}", e)
+        }
+    }
+
+    private fun seedInitialProfiles() {
+        for ((host, cfg) in com.omnicast.core.domain.usecases.StreamManifestProbe.DEFAULT_HOST_PROFILES) {
+            if (!host.contains('.')) continue
+            val (targetPlayer, singleUse) = cfg
+            val existing = cache[host]
+            if (existing == null || existing.headers["X-Target-Player"].isNullOrBlank()) {
+                val seedHeaders = mapOf("X-Target-Player" to targetPlayer, "X-Single-Use-Token" to singleUse.toString())
+                val merged = (existing?.headers ?: emptyMap()) + seedHeaders
+                recordSuccess(host, merged, true, MediaBranch.VOD_HLS_MP4)
+            }
         }
     }
 
@@ -132,9 +163,12 @@ class StreamProfileDatabase private constructor(context: Context) :
         val newCount = (existing?.successCount ?: 0) + 1
         val now = System.currentTimeMillis()
 
-        val safeHeaders = headers.filterKeys {
-            it.equals("Referer", true) || it.equals("Origin", true) || it.equals("User-Agent", true) || it.equals("Authorization", true)
+        val incomingSafe = headers.filterKeys {
+            it.equals("Referer", true) || it.equals("Origin", true) ||
+            it.equals("User-Agent", true) || it.equals("Authorization", true) ||
+            it.equals("X-Target-Player", true) || it.equals("X-Single-Use-Token", true)
         }
+        val safeHeaders = (existing?.headers ?: emptyMap()) + incomingSafe
 
         val entry = StreamProfileEntry(cleanHost, safeHeaders, bypassProxy, branch, newCount, now)
         cache[cleanHost] = entry
@@ -150,7 +184,7 @@ class StreamProfileDatabase private constructor(context: Context) :
                 put(COL_LAST_SUCCESS, now)
             }
             db.insertWithOnConflict(TABLE, null, values, SQLiteDatabase.CONFLICT_REPLACE)
-            Log.i(TAG, "✅ Perfil exitoso guardado en SQLite para host: $cleanHost (branch=${branch.name}, count=$newCount)")
+            Log.i(TAG, "✅ Perfil exitoso guardado en SQLite para host: $cleanHost (player=${safeHeaders["X-Target-Player"]}, branch=${branch.name})")
         } catch (e: Throwable) {
             Log.e(TAG, "Error al persistir perfil de streaming: ${e.message}", e)
         }

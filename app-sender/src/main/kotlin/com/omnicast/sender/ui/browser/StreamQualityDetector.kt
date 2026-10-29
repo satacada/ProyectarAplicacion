@@ -72,7 +72,7 @@ object StreamQualityDetector {
             )
         }
 
-        val isSigned = StreamManifestProbe.hasSignedSecurityToken(currentMediaUrl)
+        val isSigned = com.omnicast.sender.stream.StreamProfileDatabase.isSingleUseTokenHost(currentMediaUrl, safeHeaders)
         if (isSigned) {
             val isFastream = currentMediaUrl.contains("fastream.to", ignoreCase = true)
             if (currentMediaUrl.contains("master.m3u8", ignoreCase = true)) {
@@ -85,11 +85,9 @@ object StreamQualityDetector {
                         StreamQualityOption("${prefix}720p HD", "720p", "HD", u720, isMaster = false, isMovie = true, isSuggested = false, healedHeaders = safeHeaders, fileName = "video-720p", formatDetail = "m3u8 (720p)")
                     )
                 } else {
-                    val uIframe = currentMediaUrl.replace("master.m3u8", "iframes-v1-a1.m3u8", ignoreCase = true)
                     val uIndex = currentMediaUrl.replace("master.m3u8", "index-v1-a1.m3u8", ignoreCase = true)
                     return@withContext listOf(
                         StreamQualityOption("${prefix}Película Adaptativa", "Adaptive", "Adaptativa", currentMediaUrl, isMaster = true, isMovie = true, isSuggested = true, healedHeaders = safeHeaders, fileName = "master", formatDetail = "m3u8 (adaptive)"),
-                        StreamQualityOption("${prefix}I-Frames (1920x800)", "1920x800", "I-Frame", uIframe, isMaster = false, isMovie = true, isSuggested = false, healedHeaders = safeHeaders, fileName = "iframes-v1-a1", formatDetail = "m3u8 (1920x800)"),
                         StreamQualityOption("${prefix}1080p Full HD", "1080p", "Full HD", uIndex, isMaster = false, isMovie = true, isSuggested = false, healedHeaders = safeHeaders, fileName = "index-v1-a1", formatDetail = "m3u8 (1920x800)")
                     )
                 }
@@ -115,7 +113,17 @@ object StreamQualityDetector {
             return@withContext emptyList()
         }
 
-        val healed = if (probe.healedHeaders.isNotEmpty()) probe.healedHeaders else safeHeaders
+        val healed = (if (probe.healedHeaders.isNotEmpty()) probe.healedHeaders else safeHeaders).toMutableMap()
+        val hasDemuxedAudio = rawManifest.lineSequence().any {
+            val t = it.trim()
+            t.startsWith("#EXT-X-MEDIA:TYPE=AUDIO") && t.contains("URI=")
+        }
+        if (hasDemuxedAudio) {
+            healed["X-Target-Player"] = "EXOPLAYER"
+        } else if (!healed.containsKey("X-Target-Player")) {
+            healed["X-Target-Player"] = com.omnicast.sender.stream.StreamProfileDatabase.resolveTargetPlayer(currentMediaUrl, healed)
+        }
+
         val isMasterPl = probe.isMasterPlaylist || rawManifest.contains("#EXT-X-STREAM-INF:")
         val defaultMasterName = extractFileName(currentMediaUrl, if (probe.isLiveStream) "stream" else "master")
         val masterFormat = when {
@@ -144,14 +152,9 @@ object StreamQualityDetector {
 
         val options = mutableListOf<StreamQualityOption>()
         val isMovie = isMasterPl || probe.durationSeconds >= 300f || probe.isLiveStream
-        val mainBadge = when {
-            probe.isLiveStream -> "${prefix}Stream en Vivo"
-            probe.durationSeconds in 1f..180f -> "${prefix}Tráiler / Clip (${probe.durationSeconds.toInt()}s)"
-            else -> "${prefix}Película Adaptativa"
-        }
-
         val audioList = mutableListOf<String>()
         val subList = mutableListOf<String>()
+        val detectedHeights = mutableListOf<Int>()
 
         try {
             val baseUri = URI(if (probe.resolvedUrl.isNotBlank()) probe.resolvedUrl else currentMediaUrl)
@@ -166,44 +169,22 @@ object StreamQualityDetector {
                     val bw = extractAttr(pendingInf, "BANDWIDTH")?.toLongOrNull()
                     val bwStr = if (bw != null) "${String.format(java.util.Locale.US, "%.1f", bw / 1_000_000.0)} Mbps" else "Variable"
                     val height = res.substringAfter("x").toIntOrNull() ?: 0
-                    val resBadge = if (height > 0) "${height}p" else res
-                    val vName = extractFileName(resolvedUrl, "index-v1-a1")
-                    val name = when {
-                        height >= 1080 -> "${prefix}1080p Full HD ($bwStr)"
-                        height >= 720 -> "${prefix}720p HD ($bwStr)"
-                        height >= 480 -> "${prefix}480p SD ($bwStr)"
-                        height >= 360 -> "${prefix}360p ($bwStr)"
-                        else -> "${prefix}$res ($bwStr)"
-                    }
-                    options.add(
-                        StreamQualityOption(
-                            label = name,
-                            resolution = resBadge,
-                            bitrate = bwStr,
-                            streamUrl = resolvedUrl,
-                            isMaster = false,
-                            durationSeconds = probe.durationSeconds,
-                            isMovie = isMovie,
-                            isSuggested = false,
-                            healedHeaders = healed,
-                            isLive = probe.isLiveStream,
-                            fileName = vName,
-                            formatDetail = "m3u8 ($res)",
-                            groupKey = mediaUrl
-                        )
-                    )
-                    pendingInf = null
-                } else if (trimmed.startsWith("#EXT-X-I-FRAME-STREAM-INF:")) {
-                    val uri = extractAttr(trimmed, "URI")
-                    if (!uri.isNullOrBlank()) {
-                        val resolvedUrl = try { baseUri.resolve(uri).toString() } catch (_: Exception) { uri }
-                        val res = extractAttr(trimmed, "RESOLUTION") ?: "1920x816"
-                        val vName = extractFileName(resolvedUrl, "iframes-v1-a1")
+                    if (height > 0 && !detectedHeights.contains(height)) detectedHeights.add(height)
+                    if (!hasDemuxedAudio) {
+                        val resBadge = if (height > 0) "${height}p" else res
+                        val vName = extractFileName(resolvedUrl, "index-v1-a1")
+                        val name = when {
+                            height >= 1080 -> "${prefix}1080p Full HD ($bwStr)"
+                            height >= 720 -> "${prefix}720p HD ($bwStr)"
+                            height >= 480 -> "${prefix}480p SD ($bwStr)"
+                            height >= 360 -> "${prefix}360p ($bwStr)"
+                            else -> "${prefix}$res ($bwStr)"
+                        }
                         options.add(
                             StreamQualityOption(
-                                label = "${prefix}I-Frames ($res)",
-                                resolution = res,
-                                bitrate = "I-Frame",
+                                label = name,
+                                resolution = resBadge,
+                                bitrate = bwStr,
                                 streamUrl = resolvedUrl,
                                 isMaster = false,
                                 durationSeconds = probe.durationSeconds,
@@ -217,6 +198,7 @@ object StreamQualityDetector {
                             )
                         )
                     }
+                    pendingInf = null
                 } else if (trimmed.startsWith("#EXT-X-MEDIA:TYPE=AUDIO")) {
                     val aName = extractAttr(trimmed, "NAME") ?: extractAttr(trimmed, "LANGUAGE")
                     if (!aName.isNullOrBlank() && !audioList.contains(aName)) audioList.add(aName)
@@ -227,12 +209,20 @@ object StreamQualityDetector {
             }
         } catch (_: Throwable) {}
 
+        detectedHeights.sortDescending()
+        val maxResHint = if (detectedHeights.isNotEmpty()) " (${detectedHeights.first()}p)" else ""
+        val mainBadge = when {
+            probe.isLiveStream -> "${prefix}Stream en Vivo"
+            probe.durationSeconds in 1f..180f -> "${prefix}Tráiler / Clip (${probe.durationSeconds.toInt()}s)"
+            else -> "${prefix}Película Adaptativa$maxResHint"
+        }
+
         options.add(
             0,
             StreamQualityOption(
                 label = mainBadge,
                 resolution = if (probe.isLiveStream) "LIVE" else "Adaptive",
-                bitrate = "Adaptativa",
+                bitrate = if (detectedHeights.isNotEmpty()) detectedHeights.joinToString("/") { "${it}p" } else "Adaptativa",
                 streamUrl = currentMediaUrl,
                 isMaster = true,
                 durationSeconds = probe.durationSeconds,

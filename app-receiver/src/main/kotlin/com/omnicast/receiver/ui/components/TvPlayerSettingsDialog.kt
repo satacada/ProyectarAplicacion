@@ -28,6 +28,8 @@ fun TvPlayerSettingsDialog(
     isSaved: Boolean,
     currentQuality: String = "Auto",
     onCycleQuality: () -> String = { "Auto" },
+    currentAudioTrack: String = "Original",
+    onCycleAudio: () -> String = { "Original" },
     subtitlesEnabled: Boolean = true,
     onToggleSubtitles: () -> Boolean = { true },
     onSaveToWatchLater: () -> Unit,
@@ -35,6 +37,7 @@ fun TvPlayerSettingsDialog(
     onDismiss: () -> Unit
 ) {
     var quality by remember { mutableStateOf(currentQuality) }
+    var audioTrack by remember { mutableStateOf(currentAudioTrack) }
     var subsEnabled by remember { mutableStateOf(subtitlesEnabled) }
 
     Dialog(onDismissRequest = onDismiss) {
@@ -77,6 +80,14 @@ fun TvPlayerSettingsDialog(
                     isPrimary = true,
                     onClick = {
                         quality = onCycleQuality()
+                    }
+                )
+
+                TvSettingsButton(
+                    text = "🔊 Pista de Audio: $audioTrack",
+                    isPrimary = false,
+                    onClick = {
+                        audioTrack = onCycleAudio()
                     }
                 )
 

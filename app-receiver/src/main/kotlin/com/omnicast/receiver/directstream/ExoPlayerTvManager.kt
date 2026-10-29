@@ -275,6 +275,8 @@ class ExoPlayerTvManager(private val context: Context) {
     fun toggleSubtitles(enable: Boolean? = null): Boolean = player?.let { p -> val st = trackManager?.toggleSubtitles(enable) ?: false; trackManager?.getTracksInfo(p)?.let { onTracksChanged?.invoke(it) }; st } ?: false
     fun selectTextTrack(idx: Int) { player?.let { trackManager?.selectTextTrack(it, idx); trackManager?.getTracksInfo(it)?.let { info -> onTracksChanged?.invoke(info) } } }
     fun selectAudioTrack(idx: Int) { player?.let { trackManager?.selectAudioTrack(it, idx); trackManager?.getTracksInfo(it)?.let { info -> onTracksChanged?.invoke(info) } } }
+    fun cycleAudioTrack(): String = player?.let { p -> val label = trackManager?.cycleAudioTrack(p) ?: "Original"; trackManager?.getTracksInfo(p)?.let { onTracksChanged?.invoke(it) }; label } ?: "Original"
+    fun getCurrentAudioTrackLabel(): String = player?.let { trackManager?.getCurrentAudioTrackLabel(it) } ?: "Original"
     fun cycleVideoQuality(): String = player?.let { trackManager?.cycleVideoQuality(it) } ?: "Auto"
     fun getCurrentVideoQuality(): String = trackManager?.getCurrentVideoQuality() ?: "Auto"
     val areSubtitlesEnabled: Boolean get() = trackManager?.subtitlesEnabled ?: false

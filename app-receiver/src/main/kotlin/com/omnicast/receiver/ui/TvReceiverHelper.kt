@@ -41,17 +41,14 @@ object TvReceiverHelper {
                      ((lowerUrl.contains("okcdn.ru") || lowerUrl.contains("mycdn.me")) && (lowerUrl.contains("ct=6") || !lowerUrl.contains(".m3u8")))
         if (isDash) return false
 
-        val ref = headers["Referer"]?.lowercase() ?: ""
-        val isProtectedEmbed = ref.contains("dr0pstream.com") || ref.contains("dropcdn.io") ||
-                               ref.contains("fastream.to") || ref.contains("luluvdo.com") ||
-                               ref.contains("lulustream.com") || ref.contains("pelisgo") ||
-                               ref.contains("vk.com") ||
-                               lowerUrl.contains("dropcdn.io") || lowerUrl.contains("dr0pstream.com") ||
-                               lowerUrl.contains("fastream.to")
-        val hasSessionCookies = !headers["Cookie"].isNullOrBlank()
+        val seed = com.omnicast.core.domain.usecases.StreamManifestProbe.lookupSeedProfile(url)
+            ?: com.omnicast.core.domain.usecases.StreamManifestProbe.lookupSeedProfile(headers["Referer"] ?: "")
+        if (seed != null && seed.first == "WEBVIEW") return true
+
+        val hasCfClearance = headers["Cookie"]?.contains("cf_clearance", ignoreCase = true) == true
         val hasSignedToken = com.omnicast.core.domain.usecases.StreamManifestProbe.hasSignedSecurityToken(url)
 
-        return isProtectedEmbed || hasSessionCookies || hasSignedToken
+        return hasSignedToken || hasCfClearance
     }
 
     fun shouldUseAntiCorsInterceptor(url: String, headers: Map<String, String>): Boolean {

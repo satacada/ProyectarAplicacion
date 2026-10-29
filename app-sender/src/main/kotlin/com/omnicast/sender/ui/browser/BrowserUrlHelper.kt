@@ -35,6 +35,7 @@ object BrowserUrlHelper {
     fun isPlayableStream(url: String): Boolean {
         if (url.isBlank()) return false
         val lower = url.lowercase().substringBefore('?')
+        if (lower.endsWith("/iframe.m3u8") || lower.contains("iframes-") || lower.contains("/default_audio") || lower.contains("/default_video")) return false
         if (lower.endsWith(".vtt") || lower.endsWith(".srt") || lower.endsWith(".key") ||
             lower.endsWith(".ts") || lower.endsWith(".m4s") || lower.endsWith(".html") ||
             lower.endsWith(".htm") || lower.endsWith(".jsp") || lower.endsWith(".js") ||
@@ -54,7 +55,8 @@ object BrowserUrlHelper {
         if (s.isBlank() || s.contains("dmxleo.dailymotion.com") || AdBlocker.isAd(s)) return false
         if (dur in 0.1f..59.9f) return false
         val clean = s.substringBefore('?').lowercase()
-        if (clean.contains("iframes-") || clean.contains("keyframes")) return false
+        if (clean.endsWith("/iframe.m3u8") || clean.contains("iframes-") || clean.contains("keyframes") ||
+            clean.contains("/default_audio") || clean.contains("/default_video")) return false
         if (clean.endsWith(".vtt") || clean.endsWith(".srt") || clean.endsWith(".key") ||
             clean.endsWith(".ts") || clean.endsWith(".m4s") || clean.endsWith(".html") ||
             clean.endsWith(".htm") || clean.endsWith(".jsp") || clean.endsWith(".js") ||
@@ -124,6 +126,12 @@ object BrowserUrlHelper {
                 headers["Referer"] = currentUrl
             }
             if (!headers.containsKey("User-Agent")) headers["User-Agent"] = userAgent
+            if (!headers.containsKey("X-Target-Player")) {
+                headers["X-Target-Player"] = com.omnicast.sender.stream.StreamProfileDatabase.resolveTargetPlayer(streamUrl, headers)
+            }
+            if (!headers.containsKey("X-Single-Use-Token")) {
+                headers["X-Single-Use-Token"] = com.omnicast.sender.stream.StreamProfileDatabase.isSingleUseTokenHost(streamUrl, headers).toString()
+            }
         } catch (_: Throwable) {}
         return headers
     }

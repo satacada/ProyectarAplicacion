@@ -43,9 +43,11 @@ class TvReceiverHelperTest {
 
     @Test
     fun testShouldUseWebPlayerSessionCookies() {
-        val hdrs = mapOf("Cookie" to "session=abc123xyz")
-        val dummyUrl = "https://example.com/stream.m3u8"
-        assertTrue(TvReceiverHelper.shouldUseWebPlayer(dummyUrl, hdrs))
+        val cfHeaders = mapOf("Cookie" to "cf_clearance=abc123xyz")
+        val normalSiteCookies = mapOf("Cookie" to "session=abc123xyz; _ga=GA1.1.123")
+        val dummyUrl = "https://ssaimanifest.prod.boltdns.net/us-east-1/main/content.m3u8"
+        assertTrue(TvReceiverHelper.shouldUseWebPlayer(dummyUrl, cfHeaders))
+        assertFalse("Cookies genéricas (Canela.tv) no deben forzar WebPlayer, deben ir a ExoPlayer", TvReceiverHelper.shouldUseWebPlayer(dummyUrl, normalSiteCookies))
     }
 
     @Test

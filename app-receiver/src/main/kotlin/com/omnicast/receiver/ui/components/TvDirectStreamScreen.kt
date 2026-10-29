@@ -250,6 +250,10 @@ fun TvDirectStreamScreen(
                     currentQuality = q
                     q
                 },
+                currentAudioTrack = exoPlayerManager.getCurrentAudioTrackLabel(),
+                onCycleAudio = {
+                    exoPlayerManager.cycleAudioTrack()
+                },
                 subtitlesEnabled = subsEnabled,
                 onToggleSubtitles = {
                     val st = exoPlayerManager.toggleSubtitles()

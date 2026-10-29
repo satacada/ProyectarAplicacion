@@ -40,12 +40,10 @@ class GalleryPickerActivity : ComponentActivity() {
 
     private val viewerLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == PhotoCastViewerActivity.RESULT_EXIT_TO_MAIN) exitGalleryCompletely()
-        else if (openedFromSystemCollections) launchSystemExplorer(showToast = false)
     }
 
     private val videoLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == PhotoCastViewerActivity.RESULT_EXIT_TO_MAIN) exitGalleryCompletely()
-        else if (openedFromSystemCollections) launchSystemExplorer(showToast = false)
     }
 
     private val systemMultiPicker = registerForActivityResult(ActivityResultContracts.GetMultipleContents()) { uris: List<Uri> ->
@@ -218,9 +216,7 @@ class GalleryPickerActivity : ComponentActivity() {
                 val v = m.startsWith("video/")
                 GalleryPhotoItem((idx + 1).toLong(), u, if (v) "Video ${idx + 1}" else "Foto ${idx + 1}", collectionName, System.currentTimeMillis() - idx, v, m, "__collection__")
             }
-            if (!openedFromSystemCollections) {
-                GallerySessionHolder.navigateToFolder("__collection_${System.currentTimeMillis()}", collectionName, customItems = customList)
-            }
+            GallerySessionHolder.navigateToFolder("__collection_${System.currentTimeMillis()}", collectionName, customItems = customList)
             if (isVideo) openVideoInContext(customList.filter { it.isVideo }.ifEmpty { customList }, 0, collectionName)
             else openPhotoInContext(customList.filter { !it.isVideo }.ifEmpty { customList }, 0, collectionName)
             return
@@ -228,11 +224,15 @@ class GalleryPickerActivity : ComponentActivity() {
 
         lifecycleScope.launch {
             val (folderPath, contextItems) = GalleryMediaHelper.loadFolderContextForUri(this@GalleryPickerActivity, firstUri, isVideo)
-            val folderName = folderPath.substringAfterLast('/').ifBlank { "Colección" }
-            if (folderPath.isNotBlank() && !openedFromSystemCollections) {
-                GallerySessionHolder.navigateToFolder(folderPath, folderName)
+            if (allItemsState.isEmpty() && GallerySessionHolder.cachedAllItems.isNotEmpty()) {
+                allItemsState.addAll(GallerySessionHolder.cachedAllItems)
             }
-            val targetId = firstUri.lastPathSegment?.substringAfterLast(':')?.filter { it.isDigit() } ?: ""
+            val folderName = folderPath.substringAfterLast('/').ifBlank { "Colección" }
+            val decodedUri = Uri.decode(firstUri.toString()).replace('\\', '/')
+            val embeddedId = Regex("(?:media/external/(?:images|video|file)/media/|media/picker/\\d+/[^/]+/media/|image:|video:)(\\d+)")
+                .find(decodedUri)?.groupValues?.getOrNull(1)
+            val fallbackId = firstUri.lastPathSegment?.substringAfterLast(':')?.filter { it.isDigit() } ?: ""
+            val targetId = embeddedId ?: fallbackId
             val matchIdx = contextItems.indexOfFirst {
                 it.uri == firstUri || (targetId.isNotBlank() && it.id.toString() == targetId)
             }
@@ -240,6 +240,7 @@ class GalleryPickerActivity : ComponentActivity() {
                 GalleryPhotoItem(0L, firstUri, if (isVideo) "Video" else "Foto", folderName, System.currentTimeMillis(), isVideo, firstMime, folderPath)
             ) + contextItems
             val finalIdx = if (matchIdx >= 0) matchIdx else 0
+            GallerySessionHolder.navigateToFolder(folderPath.ifBlank { "__collection__" }, folderName, customItems = finalItems)
             if (isVideo) openVideoInContext(finalItems, finalIdx, folderName) else openPhotoInContext(finalItems, finalIdx, folderName)
         }
     }

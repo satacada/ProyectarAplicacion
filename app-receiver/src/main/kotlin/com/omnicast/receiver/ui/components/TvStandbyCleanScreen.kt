@@ -36,7 +36,7 @@ fun TvStandbyCleanScreen(
     history: List<TvHistoryItem> = emptyList(),
     playlists: List<TvPlaylist> = emptyList(),
     onPlayHistory: (TvHistoryItem) -> Unit = {},
-    onSaveHistoryToWatchLater: (TvHistoryItem) -> Unit = {},
+    onSaveMovieToFolder: (String, String, Long, Long, String?, Map<String, String>, String) -> Unit = { _, _, _, _, _, _, _ -> },
     isMovieSaved: (String, String) -> Boolean = { _, _ -> false },
     onPlayPlaylist: (TvPlaylistItem) -> Unit = {},
     onDeletePlaylist: (TvPlaylistItem) -> Unit = {},
@@ -47,12 +47,13 @@ fun TvStandbyCleanScreen(
     expiredItemForRenew: TvPlaylistItem? = null,
     onClearExpiredRenew: () -> Unit = {}
 ) {
-    var selectedTab by remember { mutableIntStateOf(1) } // 0: Recientes, 1: Todo (Principal), 2: Favoritos
+    var selectedTab by remember { mutableIntStateOf(1) } // 0: Recientes (Historial), 1: Todo (Principal), 2: Favoritos
     var enteredPlaylistId by remember { mutableStateOf<String?>(null) }
     var menuItem by remember { mutableStateOf<TvPlaylistItem?>(null) }
     var sharingItem by remember { mutableStateOf<TvPlaylistItem?>(null) }
     var renewItem by remember { mutableStateOf<TvPlaylistItem?>(null) }
     var downloadingItem by remember { mutableStateOf<TvPlaylistItem?>(null) }
+    var savingDialogItem by remember { mutableStateOf<TvPlaylistItem?>(null) }
     var searchQuery by remember { mutableStateOf("") }
     var selectedSort by remember { mutableStateOf(TvVideoSortOrder.NEWEST) }
     val listState = androidx.compose.foundation.lazy.rememberLazyListState()
@@ -60,6 +61,7 @@ fun TvStandbyCleanScreen(
     val backButtonFocusRequester = remember { FocusRequester() }
     val selectedUrls = remember { mutableStateListOf<String>() }
     val scope = rememberCoroutineScope()
+    val isPhoneConnected = !connectedClientIp.isNullOrBlank()
 
     LaunchedEffect(enteredPlaylistId) {
         if (enteredPlaylistId != null) {
@@ -158,7 +160,11 @@ fun TvStandbyCleanScreen(
                                 itemsIndexed(playlistFilteredItems, key = { _, it -> it.url }) { index, item ->
                                     val isSel = selectedUrls.contains(item.url)
                                     TvPlaylistItemRow(
-                                        item = item, onPlay = { onPlayPlaylist(item) }, onMenu = { menuItem = item }, onDownload = { downloadingItem = item },
+                                        item = item, isPhoneConnected = isPhoneConnected,
+                                        onPlay = { onPlayPlaylist(item) }, onMenu = { menuItem = item },
+                                        onSaveToFolder = { savingDialogItem = item },
+                                        onRemoveSaved = { onDeletePlaylist(item) },
+                                        onDownload = { downloadingItem = item },
                                         isSelected = isSel, onToggleSelect = { if (isSel) selectedUrls.remove(item.url) else selectedUrls.add(item.url) },
                                         modifier = if (index == 0) Modifier.focusRequester(firstItemFocusRequester) else Modifier
                                     )
@@ -169,18 +175,22 @@ fun TvStandbyCleanScreen(
                         when (selectedTab) {
                             0 -> {
                                 if (filteredHistory.isEmpty()) {
-                                    TvEmptyState("No hay videos reproducidos recientemente.")
+                                    TvEmptyState("No hay videos reproducidos recientemente en el historial.")
                                 } else {
                                     LazyColumn(state = listState, verticalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxSize()) {
                                         items(filteredHistory, key = { it.id }) { item ->
                                             val saved = isMovieSaved(item.mediaUrl, item.title)
+                                            val asPlItem = TvPlaylistItem(
+                                                url = item.mediaUrl, title = item.title,
+                                                pageUrl = item.pageUrl ?: item.headers["X-Source-Page-Url"] ?: item.headers["Referer"],
+                                                headers = item.headers, lastPositionMs = item.lastPositionMs, durationMs = item.durationMs
+                                            )
                                             TvRecentItemRow(
-                                                item = item, isSaved = saved, onClick = { onPlayHistory(item) },
-                                                onSave = { onSaveHistoryToWatchLater(item) },
-                                                onShowSourceUrl = {
-                                                    val pUrl = item.pageUrl ?: item.headers["X-Source-Page-Url"] ?: item.headers["Referer"]
-                                                    sharingItem = TvPlaylistItem(url = item.mediaUrl, title = item.title, pageUrl = pUrl, headers = item.headers, lastPositionMs = item.lastPositionMs, durationMs = item.durationMs)
-                                                }
+                                                item = item, isSaved = saved, isPhoneConnected = isPhoneConnected,
+                                                onClick = { onPlayHistory(item) },
+                                                onSave = { savingDialogItem = asPlItem },
+                                                onUnsave = { onDeletePlaylist(asPlItem) },
+                                                onDownload = { downloadingItem = asPlItem }
                                             )
                                         }
                                     }
@@ -191,26 +201,6 @@ fun TvStandbyCleanScreen(
                                 LazyColumn(state = listState, verticalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxSize()) {
                                     items(folders, key = { it.id }) { pl ->
                                         TvFolderRow(name = pl.name, date = formatFolderDate(pl.createdAt), itemCount = pl.items.size, onClick = { enteredPlaylistId = pl.id; searchQuery = ""; selectedUrls.clear() })
-                                    }
-                                    if (selectedTab == 1 && filteredHistory.isNotEmpty()) {
-                                        item(key = "recent_header") {
-                                            Text(
-                                                "🕘 Historial Reciente de Películas Proyectadas (Guarda el enlace o mira la URL de origen)",
-                                                color = Color(0xFF38BDF8), fontSize = 13.sp, fontWeight = FontWeight.Bold,
-                                                modifier = Modifier.padding(top = 8.dp, bottom = 2.dp)
-                                            )
-                                        }
-                                        items(filteredHistory.take(8), key = { "main_hist_${it.id}" }) { item ->
-                                            val saved = isMovieSaved(item.mediaUrl, item.title)
-                                            TvRecentItemRow(
-                                                item = item, isSaved = saved, onClick = { onPlayHistory(item) },
-                                                onSave = { onSaveHistoryToWatchLater(item) },
-                                                onShowSourceUrl = {
-                                                    val pUrl = item.pageUrl ?: item.headers["X-Source-Page-Url"] ?: item.headers["Referer"]
-                                                    sharingItem = TvPlaylistItem(url = item.mediaUrl, title = item.title, pageUrl = pUrl, headers = item.headers, lastPositionMs = item.lastPositionMs, durationMs = item.durationMs)
-                                                }
-                                            )
-                                        }
                                     }
                                 }
                             }
@@ -223,7 +213,7 @@ fun TvStandbyCleanScreen(
             Box(modifier = Modifier.fillMaxWidth().padding(top = 10.dp), contentAlignment = Alignment.Center) {
                 Surface(color = Color(0xFF251C35), shape = RoundedCornerShape(20.dp), modifier = Modifier.padding(vertical = 4.dp)) {
                     Text(
-                        if (enteredPlaylistId != null) "Pulsa [Atrás] en el control para volver a las carpetas" else "¿No encuentras tus archivos? Actualiza o envía desde tu celular",
+                        if (enteredPlaylistId != null) "Pulsa [Atrás] en el control para volver a las carpetas" else "¿No encuentras tus archivos? Revisa Recientes (Historial) o proyecta desde tu celular",
                         color = Color(0xFF38BDF8), fontSize = 12.sp, modifier = Modifier.padding(horizontal = 18.dp, vertical = 6.dp)
                     )
                 }
@@ -249,6 +239,14 @@ fun TvStandbyCleanScreen(
             )
         }
 
+        savingDialogItem?.let { item ->
+            TvSaveToFolderDialog(
+                movieTitle = item.title,
+                onSaveToFavorites = { onSaveMovieToFolder(item.title, item.url, item.lastPositionMs, item.durationMs, item.pageUrl, item.headers, "favoritos") },
+                onSaveToWatchLater = { onSaveMovieToFolder(item.title, item.url, item.lastPositionMs, item.durationMs, item.pageUrl, item.headers, "from_website") },
+                onDismiss = { savingDialogItem = null }
+            )
+        }
         sharingItem?.let { item -> TvShareDialog(item = item, onDismiss = { sharingItem = null }) }
         renewItem?.let { item -> TvRenewQrDialog(item = item, onDismiss = { renewItem = null; onClearExpiredRenew() }) }
         downloadingItem?.let { item -> TvDownloadMovieDialog(item = item, onDismiss = { downloadingItem = null }) }

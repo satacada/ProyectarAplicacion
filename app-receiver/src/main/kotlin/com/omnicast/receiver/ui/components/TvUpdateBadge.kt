@@ -27,28 +27,7 @@ fun TvUpdateStatusBadge(
     onCheckUpdate: () -> Unit,
     onDownloadAndInstall: (String) -> Unit
 ) {
-    val focusRequester = remember { FocusRequester() }
     var isFocused by remember { mutableStateOf(false) }
-    var updateFlowActive by remember { mutableStateOf(false) }
-
-    LaunchedEffect(Unit) {
-        kotlinx.coroutines.delay(80)
-        runCatching { focusRequester.requestFocus() }
-    }
-
-    LaunchedEffect(updateState) {
-        if (updateState is TvUpdateState.Checking ||
-            updateState is TvUpdateState.UpdateAvailable ||
-            updateState is TvUpdateState.Downloading ||
-            updateState is TvUpdateState.ReadyToInstall
-        ) {
-            updateFlowActive = true
-        }
-        if (isFocused || updateFlowActive) {
-            kotlinx.coroutines.delay(40)
-            runCatching { focusRequester.requestFocus() }
-        }
-    }
 
     val isActionable = when (updateState) {
         is TvUpdateState.Checking, is TvUpdateState.Downloading -> false
@@ -83,29 +62,14 @@ fun TvUpdateStatusBadge(
         color = surfaceColor,
         shape = RoundedCornerShape(8.dp),
         modifier = Modifier
-            .focusRequester(focusRequester)
-            .onFocusChanged {
-                isFocused = it.isFocused
-                if (!it.isFocused && updateFlowActive && (
-                    updateState is TvUpdateState.Checking ||
-                    updateState is TvUpdateState.UpdateAvailable ||
-                    updateState is TvUpdateState.Downloading ||
-                    updateState is TvUpdateState.ReadyToInstall
-                )) {
-                    runCatching { focusRequester.requestFocus() }
-                }
-            }
+            .onFocusChanged { isFocused = it.isFocused }
             .focusable()
-            .clickable {
-                updateFlowActive = true
-                runCatching { focusRequester.requestFocus() }
-                if (isActionable) {
-                    when (updateState) {
-                        is TvUpdateState.Idle, is TvUpdateState.UpToDate, is TvUpdateState.Error -> onCheckUpdate()
-                        is TvUpdateState.UpdateAvailable -> onDownloadAndInstall(updateState.downloadUrl)
-                        is TvUpdateState.ReadyToInstall -> onDownloadAndInstall("")
-                        else -> {}
-                    }
+            .clickable(enabled = isActionable) {
+                when (updateState) {
+                    is TvUpdateState.Idle, is TvUpdateState.UpToDate, is TvUpdateState.Error -> onCheckUpdate()
+                    is TvUpdateState.UpdateAvailable -> onDownloadAndInstall(updateState.downloadUrl)
+                    is TvUpdateState.ReadyToInstall -> onDownloadAndInstall("")
+                    else -> {}
                 }
             }
             .border(borderWidth, borderColor, RoundedCornerShape(8.dp))

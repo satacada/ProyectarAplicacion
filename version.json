@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 287,
-  "versionCodeReceiver": 270,
-  "versionName": "3.5.36",
-  "releaseTag": "v3.5.36",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.36/omnicast-sender-v3.5.36.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.36/omnicast-receiver-v3.5.36.apk",
-  "changelog": "v3.5.36: 1) Agente flotante desactivado en Galería y dedicado exclusivamente a Casteo a TV. 2) Visor de Fotos con botones morados en extremos medio-laterales, 1:1 y 90° arriba sin contorno y botón rojo solo con icono (■). 3) Explorador exclusivo por tipo (solo Fotos o solo Videos), navegación completa 1/N en videos y Colecciones/Personas con retorno al entorno Android de Colecciones. 4) Receiver: icono superior más grande sin contorno, foco persistente en Actualizar durante todos los pasos y guardado de película + URL de origen desde el historial en pantalla principal."
+  "versionCodeSender": 288,
+  "versionCodeReceiver": 271,
+  "versionName": "3.5.37",
+  "releaseTag": "v3.5.37",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.37/omnicast-sender-v3.5.37.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.37/omnicast-receiver-v3.5.37.apk",
+  "changelog": "v3.5.37: 1) Receiver: se elimina la retención forzada de foco en el botón Actualizar para navegación libre con el control remoto. 2) Receiver: Recientes unificado como Historial, proyección automática desde celular vinculado al pulsar un elemento (AUTO_RECAST), iconos vectoriales Guardar/Desvincular del control multimedia (guardar en Favoritos o Ver más tarde), descarga a TV Box (Modo Puente) y visualización limpia (nombre de la película, minuto donde quedó, nombre limpio de la web y opción Continuar viendo en enlaces sin tokens efímeros). 3) Galería Sender: acceso completo a las fotos/videos del teléfono en Android 14/HyperOS (targetSdk 33 + resolución de IDs embebidos de Google Photos/PhotoPicker) y exposición completa 1/N de todas las fotos de la carpeta al entrar desde Colecciones."
 }

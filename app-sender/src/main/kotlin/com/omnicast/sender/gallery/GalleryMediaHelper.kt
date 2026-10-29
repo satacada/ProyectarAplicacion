@@ -75,14 +75,14 @@ object GalleryMediaHelper {
 
     suspend fun loadAllMedia(context: Context, mimeFilter: String = "*/*"): List<GalleryPhotoItem> = withContext(Dispatchers.IO) {
         val result = mutableListOf<GalleryPhotoItem>()
-        if (!mimeFilter.startsWith("video/") && hasGalleryPermission(context, "image/*")) {
+        if (!mimeFilter.startsWith("video/")) {
             queryCollection(context, MediaStore.Images.Media.EXTERNAL_CONTENT_URI, false, result)
         }
-        if (!mimeFilter.startsWith("image/") && hasGalleryPermission(context, "video/*")) {
+        if (!mimeFilter.startsWith("image/")) {
             queryCollection(context, MediaStore.Video.Media.EXTERNAL_CONTENT_URI, true, result)
         }
         result.sortByDescending { it.dateAdded }
-        if (mimeFilter == "*/*") {
+        if (mimeFilter == "*/*" && result.isNotEmpty()) {
             GallerySessionHolder.cachedAllItems = result
         }
         result
@@ -179,8 +179,11 @@ object GalleryMediaHelper {
     suspend fun loadFolderContextForUri(context: Context, targetUri: Uri, isVideo: Boolean): Pair<String, List<GalleryPhotoItem>> = withContext(Dispatchers.IO) {
         val all = loadAllMedia(context, if (isVideo) "video/*" else "image/*")
         val decodedUri = Uri.decode(targetUri.toString()).replace('\\', '/')
+        val embeddedMediaId = Regex("(?:media/external/(?:images|video|file)/media/|media/picker/\\d+/[^/]+/media/|image:|video:)(\\d+)")
+            .find(decodedUri)?.groupValues?.getOrNull(1)
         val rawSeg = targetUri.lastPathSegment ?: ""
-        val targetId = rawSeg.substringAfterLast(':').substringAfterLast('/').filter { it.isDigit() }
+        val fallbackId = rawSeg.substringAfterLast(':').substringAfterLast('/').filter { it.isDigit() }
+        val targetId = embeddedMediaId ?: fallbackId
         val queriedName = queryDisplayNameFromUri(context, targetUri)?.trim() ?: ""
 
         val matchedItem = all.firstOrNull { item ->
@@ -189,28 +192,11 @@ object GalleryMediaHelper {
                 (queriedName.isNotBlank() && item.name.equals(queriedName, ignoreCase = true)) ||
                 (item.folderPath.isNotBlank() && decodedUri.endsWith("${item.folderPath}/${item.name}", ignoreCase = true))
         }
-        val folderPath = resolveFolderPathFromUri(context, targetUri) ?: matchedItem?.folderPath ?: ""
-        val rawFolderItems = if (folderPath.isNotBlank()) {
+        val folderPath = matchedItem?.folderPath ?: resolveFolderPathFromUri(context, targetUri) ?: ""
+        val contextItems = if (folderPath.isNotBlank()) {
             all.filter { it.folderPath.equals(folderPath, ignoreCase = true) && it.isVideo == isVideo }
         } else {
             listOfNotNull(matchedItem)
-        }
-
-        // Si proviene de una colección de Google Fotos (ej: Personas y mascotas) y apunta a DCIM/Camera (>20 fotos),
-        // acotar al grupo de fotos de esa misma sesión/fecha para no mezclar las 100 fotos de la cámara.
-        val contextItems = if (matchedItem != null && isGooglePhotosCloudUri(targetUri) && rawFolderItems.size > 20) {
-            val sameDayWindowSec = 36L * 3600L
-            val sessionGroup = rawFolderItems.filter { kotlin.math.abs(it.dateAdded - matchedItem.dateAdded) <= sameDayWindowSec }
-            if (sessionGroup.size in 2..25) {
-                sessionGroup
-            } else {
-                val idx = rawFolderItems.indexOfFirst { it.id == matchedItem.id }.coerceAtLeast(0)
-                val from = (idx - 4).coerceAtLeast(0)
-                val to = (from + 10).coerceAtMost(rawFolderItems.size)
-                rawFolderItems.subList(from, to)
-            }
-        } else {
-            rawFolderItems
         }
         folderPath to contextItems
     }

@@ -34,57 +34,15 @@ import java.util.Date
 import java.util.Locale
 
 @Composable
-fun TvCastToTvVectorIcon(
-    modifier: Modifier = Modifier,
-    tvColor: Color = Color(0xFFA78BFA),
-    castWaveColor: Color = Color(0xFF38BDF8)
-) {
+fun TvCastToTvVectorIcon(modifier: Modifier = Modifier, tvColor: Color = Color(0xFFA78BFA), castWaveColor: Color = Color(0xFF38BDF8)) {
     Canvas(modifier = modifier) {
-        val w = size.width
-        val h = size.height
-        val stroke = 1.7.dp.toPx()
-
-        drawRoundRect(
-            color = tvColor,
-            topLeft = Offset(w * 0.10f, h * 0.14f),
-            size = Size(w * 0.80f, h * 0.60f),
-            cornerRadius = CornerRadius(w * 0.09f, w * 0.09f),
-            style = Stroke(width = stroke, cap = StrokeCap.Round, join = StrokeJoin.Round)
-        )
-        drawLine(
-            color = tvColor,
-            start = Offset(w * 0.36f, h * 0.86f),
-            end = Offset(w * 0.64f, h * 0.86f),
-            strokeWidth = stroke,
-            cap = StrokeCap.Round
-        )
-        drawLine(
-            color = tvColor,
-            start = Offset(w * 0.50f, h * 0.74f),
-            end = Offset(w * 0.50f, h * 0.86f),
-            strokeWidth = stroke,
-            cap = StrokeCap.Round
-        )
-        // Ondas de Casteo en esquina inferior izquierda de la pantalla moderna
+        val w = size.width; val h = size.height; val stroke = 1.7.dp.toPx()
+        drawRoundRect(color = tvColor, topLeft = Offset(w * 0.10f, h * 0.14f), size = Size(w * 0.80f, h * 0.60f), cornerRadius = CornerRadius(w * 0.09f, w * 0.09f), style = Stroke(width = stroke, cap = StrokeCap.Round, join = StrokeJoin.Round))
+        drawLine(color = tvColor, start = Offset(w * 0.36f, h * 0.86f), end = Offset(w * 0.64f, h * 0.86f), strokeWidth = stroke, cap = StrokeCap.Round)
+        drawLine(color = tvColor, start = Offset(w * 0.50f, h * 0.74f), end = Offset(w * 0.50f, h * 0.86f), strokeWidth = stroke, cap = StrokeCap.Round)
         drawCircle(color = castWaveColor, radius = w * 0.045f, center = Offset(w * 0.24f, h * 0.58f))
-        drawArc(
-            color = castWaveColor,
-            startAngle = -90f,
-            sweepAngle = 90f,
-            useCenter = false,
-            topLeft = Offset(w * 0.10f, h * 0.44f),
-            size = Size(w * 0.28f, h * 0.28f),
-            style = Stroke(width = stroke * 0.85f, cap = StrokeCap.Round)
-        )
-        drawArc(
-            color = castWaveColor,
-            startAngle = -90f,
-            sweepAngle = 90f,
-            useCenter = false,
-            topLeft = Offset(w * 0.01f, h * 0.35f),
-            size = Size(w * 0.46f, h * 0.46f),
-            style = Stroke(width = stroke * 0.85f, cap = StrokeCap.Round)
-        )
+        drawArc(color = castWaveColor, startAngle = -90f, sweepAngle = 90f, useCenter = false, topLeft = Offset(w * 0.10f, h * 0.44f), size = Size(w * 0.28f, h * 0.28f), style = Stroke(width = stroke * 0.85f, cap = StrokeCap.Round))
+        drawArc(color = castWaveColor, startAngle = -90f, sweepAngle = 90f, useCenter = false, topLeft = Offset(w * 0.01f, h * 0.35f), size = Size(w * 0.46f, h * 0.46f), style = Stroke(width = stroke * 0.85f, cap = StrokeCap.Round))
     }
 }
 
@@ -106,7 +64,7 @@ fun TvCleanTopBar(
         }
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             val context = androidx.compose.ui.platform.LocalContext.current
-            val currentVersion = remember { try { "v" + context.packageManager.getPackageInfo(context.packageName, 0).versionName } catch (_: Throwable) { "v3.5.36" } }
+            val currentVersion = remember { try { "v" + context.packageManager.getPackageInfo(context.packageName, 0).versionName } catch (_: Throwable) { "v3.5.37" } }
             TvUpdateStatusBadge(updateState = updateState, currentVersion = currentVersion, onCheckUpdate = onCheckUpdate, onDownloadAndInstall = onDownloadAndInstall)
         }
     }
@@ -142,10 +100,7 @@ fun TvFolderRow(name: String, date: String, itemCount: Int, onClick: () -> Unit)
                 }
                 Column {
                     Text(text = name, color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
-                    Text(
-                        text = if (itemCount > 0) "$itemCount película${if (itemCount != 1) "s" else ""} guardada${if (itemCount != 1) "s" else ""}" else "Sin películas",
-                        color = Color(0xFF94A3B8), fontSize = 12.sp
-                    )
+                    Text(if (itemCount > 0) "$itemCount película${if (itemCount != 1) "s" else ""} guardada${if (itemCount != 1) "s" else ""}" else "Sin películas", color = Color(0xFF94A3B8), fontSize = 12.sp)
                 }
             }
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -157,64 +112,113 @@ fun TvFolderRow(name: String, date: String, itemCount: Int, onClick: () -> Unit)
 }
 
 @Composable
+fun TvBookmarkOutlineIcon(modifier: Modifier = Modifier, color: Color = Color(0xFF38BDF8), filled: Boolean = false) {
+    Canvas(modifier = modifier) {
+        val w = size.width; val h = size.height
+        val path = androidx.compose.ui.graphics.Path().apply {
+            moveTo(w * 0.22f, h * 0.12f); lineTo(w * 0.78f, h * 0.12f); lineTo(w * 0.78f, h * 0.88f); lineTo(w * 0.50f, h * 0.68f); lineTo(w * 0.22f, h * 0.88f); close()
+        }
+        if (filled) drawPath(path = path, color = color)
+        else drawPath(path = path, color = color, style = Stroke(width = 1.9.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round))
+    }
+}
+
+@Composable
+fun TvBookmarkRemoveIcon(modifier: Modifier = Modifier, color: Color = Color(0xFFF87171)) {
+    Canvas(modifier = modifier) {
+        val w = size.width; val h = size.height; val stroke = 1.7.dp.toPx()
+        val path = androidx.compose.ui.graphics.Path().apply {
+            moveTo(w * 0.20f, h * 0.12f); lineTo(w * 0.68f, h * 0.12f); lineTo(w * 0.68f, h * 0.86f); lineTo(w * 0.44f, h * 0.68f); lineTo(w * 0.20f, h * 0.86f); close()
+        }
+        drawPath(path = path, color = color, style = Stroke(width = stroke, cap = StrokeCap.Round, join = StrokeJoin.Round))
+        drawLine(color = color, start = Offset(w * 0.64f, h * 0.26f), end = Offset(w * 0.90f, h * 0.52f), strokeWidth = stroke, cap = StrokeCap.Round)
+        drawLine(color = color, start = Offset(w * 0.90f, h * 0.26f), end = Offset(w * 0.64f, h * 0.52f), strokeWidth = stroke, cap = StrokeCap.Round)
+    }
+}
+
+@Composable
 fun TvRecentItemRow(
     item: TvHistoryItem,
     isSaved: Boolean = false,
+    isPhoneConnected: Boolean = false,
     onClick: () -> Unit,
     onSave: () -> Unit = {},
-    onShowSourceUrl: () -> Unit = {}
+    onUnsave: () -> Unit = {},
+    onDownload: () -> Unit = {}
 ) {
     var isPlayFocused by remember { mutableStateOf(false) }
     var isSaveFocused by remember { mutableStateOf(false) }
-    var isUrlFocused by remember { mutableStateOf(false) }
-    val originUrl = (item.pageUrl ?: item.headers["X-Source-Page-Url"] ?: item.headers["Referer"] ?: item.mediaUrl)
-    val rowHighlighted = isPlayFocused || isSaveFocused || isUrlFocused
+    var isUnsaveFocused by remember { mutableStateOf(false) }
+    var isDlFocused by remember { mutableStateOf(false) }
+    val webName = remember(item) { com.omnicast.receiver.directstream.TvPlaylistManager.extractCleanWebName(item.pageUrl, item.headers, item.mediaUrl) }
+    val hasEphemeralToken = remember(item.mediaUrl) { com.omnicast.core.domain.usecases.StreamManifestProbe.hasSignedSecurityToken(item.mediaUrl) }
+    val rowHighlighted = isPlayFocused || isSaveFocused || isUnsaveFocused || isDlFocused
 
     Card(
         colors = CardDefaults.cardColors(containerColor = if (rowHighlighted) Color(0xFF281F3B) else Color(0xFF1E182A)),
         shape = RoundedCornerShape(12.dp),
         modifier = Modifier.fillMaxWidth().border(if (rowHighlighted) 2.dp else 1.dp, if (rowHighlighted) Color(0xFF38BDF8) else Color(0xFF2D223F), RoundedCornerShape(12.dp))
     ) {
-        Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 modifier = Modifier.weight(1f).onFocusChanged { isPlayFocused = it.isFocused }.focusable().clickable(onClick = onClick).padding(vertical = 2.dp)
             ) {
                 Text("▶", color = if (isPlayFocused) Color(0xFF38BDF8) else Color(0xFF10B981), fontSize = 16.sp)
-                Column(modifier = Modifier.weight(1f)) {
+                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     Text(text = item.title, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    val pos = if (item.lastPositionMs > 0L) "Continuar: ${formatDuration(item.lastPositionMs)} / ${formatDuration(item.durationMs)}" else "Reproducir ahora"
-                    Text("$pos • 🌐 $originUrl", color = Color(0xFF94A3B8), fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    val minLeft = if (item.lastPositionMs > 0L) "⏱ Quedó en ${formatDuration(item.lastPositionMs)}" else "⏱ Desde el inicio (0:00)"
+                    val actionLabel = when {
+                        !hasEphemeralToken -> "▶ Continuar viendo"
+                        isPhoneConnected -> "📱 Proyectar directo desde celular"
+                        else -> "🔒 Enlace temporal (Conecta celular)"
+                    }
+                    Text(
+                        text = "$minLeft • 🌐 $webName • $actionLabel",
+                        color = if (!hasEphemeralToken) Color(0xFF34D399) else if (isPhoneConnected) Color(0xFF38BDF8) else Color(0xFF94A3B8),
+                        fontSize = 11.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
                 }
             }
 
-            Surface(
-                color = if (isSaveFocused) Color(0xFF10B981) else if (isSaved) Color(0xFF064E3B) else Color(0xFF2E2246),
-                shape = RoundedCornerShape(8.dp),
-                border = androidx.compose.foundation.BorderStroke(1.dp, if (isSaveFocused) Color.White else if (isSaved) Color(0xFF34D399) else Color(0xFF8B5CF6)),
-                modifier = Modifier.onFocusChanged { isSaveFocused = it.isFocused }.focusable().clickable { onSave() }
+            Box(
+                modifier = Modifier.size(38.dp).onFocusChanged { isSaveFocused = it.isFocused }
+                    .background(if (isSaveFocused) Color(0xFF10B981) else if (isSaved) Color(0xFF064E3B) else Color(0xFF251C38), RoundedCornerShape(8.dp))
+                    .border(if (isSaveFocused) 2.dp else 1.dp, if (isSaveFocused) Color.White else if (isSaved) Color(0xFF10B981) else Color(0xFF38BDF8), RoundedCornerShape(8.dp))
+                    .focusable().clickable { onSave() },
+                contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = if (isSaved) "✓ Guardada" else "💾 Guardar",
-                    color = if (isSaveFocused) Color.Black else Color.White,
-                    fontSize = 11.sp, fontWeight = FontWeight.ExtraBold,
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                TvBookmarkOutlineIcon(
+                    modifier = Modifier.size(18.dp),
+                    color = if (isSaveFocused) Color.Black else if (isSaved) Color(0xFF10B981) else Color(0xFF38BDF8),
+                    filled = isSaved
                 )
             }
 
-            Surface(
-                color = if (isUrlFocused) Color(0xFF38BDF8) else Color(0xFF1E293B),
-                shape = RoundedCornerShape(8.dp),
-                border = androidx.compose.foundation.BorderStroke(1.dp, if (isUrlFocused) Color.White else Color(0xFF38BDF8)),
-                modifier = Modifier.onFocusChanged { isUrlFocused = it.isFocused }.focusable().clickable { onShowSourceUrl() }
+            Box(
+                modifier = Modifier.size(38.dp).onFocusChanged { isUnsaveFocused = it.isFocused }
+                    .background(if (isUnsaveFocused) Color(0xFFEF4444) else Color(0xFF2B1924), RoundedCornerShape(8.dp))
+                    .border(if (isUnsaveFocused) 2.dp else 1.dp, if (isUnsaveFocused) Color.White else Color(0xFFF87171), RoundedCornerShape(8.dp))
+                    .focusable().clickable { onUnsave() },
+                contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = "🔗 URL / QR",
-                    color = if (isUrlFocused) Color.Black else Color(0xFF38BDF8),
-                    fontSize = 11.sp, fontWeight = FontWeight.ExtraBold,
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                TvBookmarkRemoveIcon(
+                    modifier = Modifier.size(18.dp),
+                    color = if (isUnsaveFocused) Color.White else Color(0xFFF87171)
                 )
+            }
+
+            Box(
+                modifier = Modifier.size(38.dp).onFocusChanged { isDlFocused = it.isFocused }
+                    .background(if (isDlFocused) Color(0xFFF59E0B) else Color(0xFF332510), RoundedCornerShape(8.dp))
+                    .border(if (isDlFocused) 2.dp else 1.dp, if (isDlFocused) Color.White else Color(0xFFF59E0B), RoundedCornerShape(8.dp))
+                    .focusable().clickable { onDownload() },
+                contentAlignment = Alignment.Center
+            ) {
+                Text("⬇️", fontSize = 14.sp)
             }
         }
     }

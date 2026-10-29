@@ -217,6 +217,17 @@ class SenderMainActivity : ComponentActivity() {
                 } else if (msg is SignalingMessage.SyncPlaylists) {
                     val synced = playlistManager.syncFromTv(msg.playlistsJson)
                     if (synced) runOnUiThread { Toast.makeText(this@SenderMainActivity, "🎬 Lista sincronizada desde la TV", Toast.LENGTH_SHORT).show() }
+                } else if (msg is SignalingMessage.PlayControl && msg.action == "AUTO_RECAST") {
+                    val parts = msg.param?.split("|||").orEmpty()
+                    val pageUrl = parts.getOrNull(0).orEmpty()
+                    val mediaUrl = parts.getOrNull(1).orEmpty()
+                    val title = parts.getOrNull(2).orEmpty().ifBlank { "Película en TV" }
+                    if (mediaUrl.isNotBlank()) {
+                        val storedHist = historyManager.getHistory().firstOrNull { it.url == mediaUrl || it.url.substringBefore('?') == mediaUrl.substringBefore('?') || it.title.equals(title, true) }
+                        val baseHeaders = storedHist?.headers?.toMutableMap() ?: mutableMapOf<String, String>()
+                        if (pageUrl.isNotBlank() && !baseHeaders.containsKey("Referer")) baseHeaders["Referer"] = pageUrl
+                        runOnUiThread { sendDirectStreamToTv(mediaUrl, title, baseHeaders, resumePositionMs = msg.positionMs.takeIf { it > 0L }) }
+                    }
                 }
             }
         }

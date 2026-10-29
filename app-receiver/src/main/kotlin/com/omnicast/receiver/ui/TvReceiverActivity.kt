@@ -106,10 +106,11 @@ class TvReceiverActivity : ComponentActivity() {
                     is ReceiverUiState.Standby, is ReceiverUiState.ClientConnectedStandby -> TvStandbyCleanScreen(
                         ipAddress = localIpAddress.value, connectedClientIp = connectedClientAddress.value, history = historyList, playlists = playlistsList,
                         onPlayHistory = { playHistoryItem(it) },
-                        onSaveHistoryToWatchLater = { item ->
-                            val srcPage = item.pageUrl ?: item.headers["X-Source-Page-Url"] ?: item.headers["Referer"]
-                            playlistManager.saveMovie(item.title, item.mediaUrl, item.lastPositionMs, srcPage, item.headers)
-                            Toast.makeText(this@TvReceiverActivity, "✅ Película y enlace de origen guardados en Ver más tarde", Toast.LENGTH_SHORT).show()
+                        onSaveMovieToFolder = { title, url, posMs, durMs, pageUrl, headers, folderId ->
+                            val srcPage = pageUrl ?: headers["X-Source-Page-Url"] ?: headers["Referer"]
+                            playlistManager.saveMovie(title, url, posMs, srcPage, headers, folderId, durMs)
+                            val fLabel = if (folderId == "favoritos") "⭐ Favoritos" else "Ver más tarde"
+                            Toast.makeText(this@TvReceiverActivity, "✅ Guardada en $fLabel", Toast.LENGTH_SHORT).show()
                         },
                         isMovieSaved = { url, title -> playlistManager.isMovieSaved(url, title) },
                         onPlayPlaylist = { playPlaylistItem(it) }, onDeletePlaylist = { playlistManager.removeItem(it.url) }, onDeleteMultiple = { playlistManager.removeItems(it) },
@@ -272,26 +273,28 @@ class TvReceiverActivity : ComponentActivity() {
         return super.dispatchKeyEvent(event)
     }
 
-    private fun playHistoryItem(item: com.omnicast.receiver.directstream.TvHistoryItem) {
-        digitalAudioReceiver?.stop(); webRtcReceiver.resetConnection(); TvRemoteKeyHandler.notifyPlaybackStarted()
-        if (TvReceiverHelper.shouldUseWebPlayer(item.mediaUrl, item.headers)) {
-            exoPlayerManager.stop(); receiverState.value = ReceiverUiState.WebStreamPlaying(item.mediaUrl, item.title, item.headers, item.lastPositionMs)
+    private fun startOrAutoRecastMedia(url: String, title: String, posMs: Long, pageUrl: String?, headers: Map<String, String>) {
+        val isSigned = com.omnicast.core.domain.usecases.StreamManifestProbe.hasSignedSecurityToken(url)
+        if (isSigned && !connectedClientAddress.value.isNullOrBlank()) {
+            val pUrl = pageUrl ?: headers["X-Source-Page-Url"] ?: headers["Referer"] ?: ""
+            Toast.makeText(this, "📱 Solicitando proyección automática desde celular...", Toast.LENGTH_SHORT).show()
+            lifecycleScope.launch { signalingServer.sendMessage(SignalingMessage.PlayControl("AUTO_RECAST", posMs, param = "$pUrl|||$url|||$title")) }
+            return
+        }
+        digitalAudioReceiver?.stop(); webRtcReceiver.resetConnection(); TvRemoteKeyHandler.notifyPlaybackStarted(); lastDirectHeaders = headers
+        if (TvReceiverHelper.shouldUseWebPlayer(url, headers)) {
+            exoPlayerManager.stop(); receiverState.value = ReceiverUiState.WebStreamPlaying(url, title, headers, posMs)
         } else {
-            receiverState.value = ReceiverUiState.DirectStreamPlaying(item.mediaUrl, item.title)
-            exoPlayerManager.playStream(item.mediaUrl, item.headers, item.title, item.lastPositionMs); startPlaybackStatusReporting()
+            receiverState.value = ReceiverUiState.DirectStreamPlaying(url, title)
+            exoPlayerManager.playStream(url, headers, title, posMs); startPlaybackStatusReporting()
         }
     }
 
-    private fun playPlaylistItem(item: com.omnicast.receiver.directstream.TvPlaylistItem) {
-        digitalAudioReceiver?.stop(); webRtcReceiver.resetConnection(); TvRemoteKeyHandler.notifyPlaybackStarted()
-        val pos = playlistManager.getResumePosition(item)
-        if (TvReceiverHelper.shouldUseWebPlayer(item.url, item.headers)) {
-            exoPlayerManager.stop(); receiverState.value = ReceiverUiState.WebStreamPlaying(item.url, item.title, item.headers, pos)
-        } else {
-            receiverState.value = ReceiverUiState.DirectStreamPlaying(item.url, item.title)
-            exoPlayerManager.playStream(item.url, item.headers, item.title, pos); startPlaybackStatusReporting()
-        }
-    }
+    private fun playHistoryItem(item: com.omnicast.receiver.directstream.TvHistoryItem) =
+        startOrAutoRecastMedia(item.mediaUrl, item.title, item.lastPositionMs, item.pageUrl, item.headers)
+
+    private fun playPlaylistItem(item: com.omnicast.receiver.directstream.TvPlaylistItem) =
+        startOrAutoRecastMedia(item.url, item.title, playlistManager.getResumePosition(item), item.pageUrl, item.headers)
 
     override fun onDestroy() {
         super.onDestroy(); com.omnicast.receiver.log.ReceiverLogger.stop(); digitalAudioReceiver?.stop()

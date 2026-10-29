@@ -150,42 +150,21 @@ class FloatingViewBuilder(private val context: Context) {
             btnStopCast.text = "🛑 Detener"
             btnOpenOmni.text = if (mode == com.omnicast.sender.service.ActiveCastMode.SCREEN_MIRROR) "⚙️ Configuración Proyectar" else "🏠 Proyectar"
             btnCalibrate.visibility = if (mode == com.omnicast.sender.service.ActiveCastMode.SCREEN_MIRROR) View.VISIBLE else View.GONE
+            btnGallery.visibility = View.GONE
+            btnDetectVideo.visibility = View.GONE
+            btnOpenBrowser.visibility = View.GONE
             when (mode) {
                 com.omnicast.sender.service.ActiveCastMode.SCREEN_MIRROR -> {
                     btnStopCast.visibility = View.VISIBLE
                     btnOpenOmni.visibility = View.VISIBLE
                     btnDisableOverlay.visibility = View.VISIBLE
-                    btnDetectVideo.visibility = View.GONE
                     rowMirror.visibility = View.GONE
-                    btnGallery.visibility = View.GONE
-                    btnOpenBrowser.visibility = View.GONE
                 }
-                com.omnicast.sender.service.ActiveCastMode.GALLERY -> {
-                    btnStopCast.visibility = View.VISIBLE
-                    btnOpenOmni.visibility = View.VISIBLE
-                    btnDisableOverlay.visibility = View.VISIBLE
-                    btnDetectVideo.visibility = View.GONE
-                    rowMirror.visibility = View.GONE
-                    btnGallery.visibility = View.GONE
-                    btnOpenBrowser.visibility = View.GONE
-                }
-                com.omnicast.sender.service.ActiveCastMode.WEB_STREAM -> {
-                    btnStopCast.visibility = View.VISIBLE
-                    btnDetectVideo.visibility = View.VISIBLE
-                    btnOpenOmni.visibility = View.VISIBLE
-                    btnDisableOverlay.visibility = View.VISIBLE
-                    rowMirror.visibility = View.GONE
-                    btnGallery.visibility = View.GONE
-                    btnOpenBrowser.visibility = View.GONE
-                }
-                com.omnicast.sender.service.ActiveCastMode.IDLE -> {
+                else -> {
                     val casting = com.omnicast.sender.stream.ActiveStreamHolder.isCasting.value || !com.omnicast.sender.stream.ActiveStreamHolder.streamUrl.isNullOrBlank()
                     btnStopCast.visibility = if (casting) View.VISIBLE else View.GONE
-                    btnDetectVideo.visibility = View.VISIBLE
                     btnOpenOmni.visibility = View.VISIBLE
                     rowMirror.visibility = View.VISIBLE
-                    btnOpenBrowser.visibility = View.VISIBLE
-                    btnGallery.visibility = View.VISIBLE
                     btnDisableOverlay.visibility = View.VISIBLE
                 }
             }

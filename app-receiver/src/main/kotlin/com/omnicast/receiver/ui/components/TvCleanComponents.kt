@@ -96,15 +96,7 @@ fun TvCleanTopBar(
 ) {
     Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            Box(
-                modifier = Modifier
-                    .size(38.dp)
-                    .background(Color(0xFF2B1F47), RoundedCornerShape(10.dp))
-                    .border(1.2.dp, Color(0xFF8B5CF6), RoundedCornerShape(10.dp)),
-                contentAlignment = Alignment.Center
-            ) {
-                TvCastToTvVectorIcon(modifier = Modifier.size(22.dp))
-            }
+            TvCastToTvVectorIcon(modifier = Modifier.size(32.dp))
             Text("OmniCast TV", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Color.White)
         }
         Row(horizontalArrangement = Arrangement.spacedBy(20.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -114,7 +106,7 @@ fun TvCleanTopBar(
         }
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             val context = androidx.compose.ui.platform.LocalContext.current
-            val currentVersion = remember { try { "v" + context.packageManager.getPackageInfo(context.packageName, 0).versionName } catch (_: Throwable) { "v3.32.31" } }
+            val currentVersion = remember { try { "v" + context.packageManager.getPackageInfo(context.packageName, 0).versionName } catch (_: Throwable) { "v3.5.36" } }
             TvUpdateStatusBadge(updateState = updateState, currentVersion = currentVersion, onCheckUpdate = onCheckUpdate, onDownloadAndInstall = onDownloadAndInstall)
         }
     }
@@ -140,47 +132,23 @@ fun TvFolderRow(name: String, date: String, itemCount: Int, onClick: () -> Unit)
     Card(
         colors = CardDefaults.cardColors(containerColor = if (isFocused) Color(0xFF2E2442) else Color(0xFF1E182A)),
         shape = RoundedCornerShape(12.dp),
-        modifier = Modifier
-            .fillMaxWidth()
-            .onFocusChanged { isFocused = it.isFocused }
-            .focusable()
-            .clickable(onClick = onClick)
-            .border(
-                width = if (isFocused) 2.dp else 1.dp,
-                color = if (isFocused) Color(0xFF38BDF8) else Color(0xFF2D223F),
-                shape = RoundedCornerShape(12.dp)
-            )
+        modifier = Modifier.fillMaxWidth().onFocusChanged { isFocused = it.isFocused }.focusable().clickable(onClick = onClick)
+            .border(if (isFocused) 2.dp else 1.dp, if (isFocused) Color(0xFF38BDF8) else Color(0xFF2D223F), RoundedCornerShape(12.dp))
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 14.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(14.dp)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(38.dp)
-                        .background(if (isFocused) Color(0xFFD97706) else Color(0xFFF59E0B), RoundedCornerShape(8.dp)),
-                    contentAlignment = Alignment.Center
-                ) {
+        Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                Box(modifier = Modifier.size(38.dp).background(if (isFocused) Color(0xFFD97706) else Color(0xFFF59E0B), RoundedCornerShape(8.dp)), contentAlignment = Alignment.Center) {
                     Text("📁", fontSize = 20.sp)
                 }
                 Column {
                     Text(text = name, color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
                     Text(
                         text = if (itemCount > 0) "$itemCount película${if (itemCount != 1) "s" else ""} guardada${if (itemCount != 1) "s" else ""}" else "Sin películas",
-                        color = Color(0xFF94A3B8),
-                        fontSize = 12.sp
+                        color = Color(0xFF94A3B8), fontSize = 12.sp
                     )
                 }
             }
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(text = date, color = Color(0xFF64748B), fontSize = 11.sp)
                 Text("▶", color = if (isFocused) Color(0xFF38BDF8) else Color(0xFF64748B), fontSize = 13.sp)
             }
@@ -191,43 +159,63 @@ fun TvFolderRow(name: String, date: String, itemCount: Int, onClick: () -> Unit)
 @Composable
 fun TvRecentItemRow(
     item: TvHistoryItem,
-    onClick: () -> Unit
+    isSaved: Boolean = false,
+    onClick: () -> Unit,
+    onSave: () -> Unit = {},
+    onShowSourceUrl: () -> Unit = {}
 ) {
-    var isFocused by remember { mutableStateOf(false) }
+    var isPlayFocused by remember { mutableStateOf(false) }
+    var isSaveFocused by remember { mutableStateOf(false) }
+    var isUrlFocused by remember { mutableStateOf(false) }
+    val originUrl = (item.pageUrl ?: item.headers["X-Source-Page-Url"] ?: item.headers["Referer"] ?: item.mediaUrl)
+    val rowHighlighted = isPlayFocused || isSaveFocused || isUrlFocused
+
     Card(
-        colors = CardDefaults.cardColors(containerColor = if (isFocused) Color(0xFF2E2442) else Color(0xFF1E182A)),
+        colors = CardDefaults.cardColors(containerColor = if (rowHighlighted) Color(0xFF281F3B) else Color(0xFF1E182A)),
         shape = RoundedCornerShape(12.dp),
-        modifier = Modifier
-            .fillMaxWidth()
-            .onFocusChanged { isFocused = it.isFocused }
-            .focusable()
-            .clickable(onClick = onClick)
-            .border(
-                width = if (isFocused) 2.dp else 1.dp,
-                color = if (isFocused) Color(0xFF38BDF8) else Color(0xFF2D223F),
-                shape = RoundedCornerShape(12.dp)
-            )
+        modifier = Modifier.fillMaxWidth().border(if (rowHighlighted) 2.dp else 1.dp, if (rowHighlighted) Color(0xFF38BDF8) else Color(0xFF2D223F), RoundedCornerShape(12.dp))
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
+        Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f).onFocusChanged { isPlayFocused = it.isFocused }.focusable().clickable(onClick = onClick).padding(vertical = 2.dp)
             ) {
-                Text("▶", color = Color(0xFF10B981), fontSize = 16.sp)
+                Text("▶", color = if (isPlayFocused) Color(0xFF38BDF8) else Color(0xFF10B981), fontSize = 16.sp)
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(text = item.title, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    val pos = if (item.lastPositionMs > 0L) {
-                        "Continuar: " + formatDuration(item.lastPositionMs) + " / " + formatDuration(item.durationMs)
-                    } else "Listo para reproducir"
-                    Text(pos, color = Color(0xFF94A3B8), fontSize = 11.sp)
+                    Text(text = item.title, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    val pos = if (item.lastPositionMs > 0L) "Continuar: ${formatDuration(item.lastPositionMs)} / ${formatDuration(item.durationMs)}" else "Reproducir ahora"
+                    Text("$pos • 🌐 $originUrl", color = Color(0xFF94A3B8), fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
             }
-            Text(text = formatFolderDate(item.updatedAt), color = Color(0xFF64748B), fontSize = 11.sp, modifier = Modifier.padding(start = 8.dp))
+
+            Surface(
+                color = if (isSaveFocused) Color(0xFF10B981) else if (isSaved) Color(0xFF064E3B) else Color(0xFF2E2246),
+                shape = RoundedCornerShape(8.dp),
+                border = androidx.compose.foundation.BorderStroke(1.dp, if (isSaveFocused) Color.White else if (isSaved) Color(0xFF34D399) else Color(0xFF8B5CF6)),
+                modifier = Modifier.onFocusChanged { isSaveFocused = it.isFocused }.focusable().clickable { onSave() }
+            ) {
+                Text(
+                    text = if (isSaved) "✓ Guardada" else "💾 Guardar",
+                    color = if (isSaveFocused) Color.Black else Color.White,
+                    fontSize = 11.sp, fontWeight = FontWeight.ExtraBold,
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                )
+            }
+
+            Surface(
+                color = if (isUrlFocused) Color(0xFF38BDF8) else Color(0xFF1E293B),
+                shape = RoundedCornerShape(8.dp),
+                border = androidx.compose.foundation.BorderStroke(1.dp, if (isUrlFocused) Color.White else Color(0xFF38BDF8)),
+                modifier = Modifier.onFocusChanged { isUrlFocused = it.isFocused }.focusable().clickable { onShowSourceUrl() }
+            ) {
+                Text(
+                    text = "🔗 URL / QR",
+                    color = if (isUrlFocused) Color.Black else Color(0xFF38BDF8),
+                    fontSize = 11.sp, fontWeight = FontWeight.ExtraBold,
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                )
+            }
         }
     }
 }

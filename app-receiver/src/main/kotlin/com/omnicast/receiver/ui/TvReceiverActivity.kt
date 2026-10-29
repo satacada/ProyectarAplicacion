@@ -105,26 +105,28 @@ class TvReceiverActivity : ComponentActivity() {
                 when (val state = receiverState.value) {
                     is ReceiverUiState.Standby, is ReceiverUiState.ClientConnectedStandby -> TvStandbyCleanScreen(
                         ipAddress = localIpAddress.value, connectedClientIp = connectedClientAddress.value, history = historyList, playlists = playlistsList,
-                        onPlayHistory = { playHistoryItem(it) }, onPlayPlaylist = { playPlaylistItem(it) }, onDeletePlaylist = { playlistManager.removeItem(it.url) }, onDeleteMultiple = { playlistManager.removeItems(it) },
+                        onPlayHistory = { playHistoryItem(it) },
+                        onSaveHistoryToWatchLater = { item ->
+                            val srcPage = item.pageUrl ?: item.headers["X-Source-Page-Url"] ?: item.headers["Referer"]
+                            playlistManager.saveMovie(item.title, item.mediaUrl, item.lastPositionMs, srcPage, item.headers)
+                            Toast.makeText(this@TvReceiverActivity, "✅ Película y enlace de origen guardados en Ver más tarde", Toast.LENGTH_SHORT).show()
+                        },
+                        isMovieSaved = { url, title -> playlistManager.isMovieSaved(url, title) },
+                        onPlayPlaylist = { playPlaylistItem(it) }, onDeletePlaylist = { playlistManager.removeItem(it.url) }, onDeleteMultiple = { playlistManager.removeItems(it) },
                         updateState = otaState, onCheckUpdate = { lifecycleScope.launch { updateManager.checkForUpdates() } },
                         onDownloadAndInstall = { url ->
                             lifecycleScope.launch {
-                                if (otaState is com.omnicast.receiver.update.TvUpdateState.ReadyToInstall) {
-                                    (otaState as com.omnicast.receiver.update.TvUpdateState.ReadyToInstall).apkFile.let { updateManager.triggerApkInstall(it) }
-                                } else updateManager.downloadAndInstall(url)
+                                if (otaState is com.omnicast.receiver.update.TvUpdateState.ReadyToInstall) (otaState as com.omnicast.receiver.update.TvUpdateState.ReadyToInstall).apkFile.let { updateManager.triggerApkInstall(it) }
+                                else updateManager.downloadAndInstall(url)
                             }
                         },
                         expiredItemForRenew = expiredItemForRenew.value, onClearExpiredRenew = { expiredItemForRenew.value = null }
                     )
-                    is ReceiverUiState.ScreenMirroring -> TvMirroringActiveScreen(
-                        webRtcReceiver, state.resolution, state.fps,
-                        onCloseClick = { digitalAudioReceiver?.stop(); webRtcReceiver.resetConnection(); receiverState.value = ReceiverUiState.Standby }
-                    )
+                    is ReceiverUiState.ScreenMirroring -> TvMirroringActiveScreen(webRtcReceiver, state.resolution, state.fps, onCloseClick = { digitalAudioReceiver?.stop(); webRtcReceiver.resetConnection(); receiverState.value = ReceiverUiState.Standby })
                     is ReceiverUiState.DirectStreamPlaying -> TvDirectStreamScreen(
-                        exoPlayerManager, state.title, state.streamUrl,
-                        isSaved = playlistManager.isMovieSaved(state.streamUrl, state.title),
+                        exoPlayerManager, state.title, state.streamUrl, isSaved = playlistManager.isMovieSaved(state.streamUrl, state.title),
                         onSaveToWatchLater = {
-                            playlistManager.saveMovie(state.title, state.streamUrl, exoPlayerManager.currentPositionMs)
+                            playlistManager.saveMovie(state.title, state.streamUrl, exoPlayerManager.currentPositionMs, lastDirectHeaders["X-Source-Page-Url"] ?: lastDirectHeaders["Referer"], lastDirectHeaders)
                             Toast.makeText(this@TvReceiverActivity, "✅ Guardada en Ver más tarde", Toast.LENGTH_SHORT).show()
                         },
                         onCloseClick = { exoPlayerManager.stop("Botón Cerrar TV"); receiverState.value = ReceiverUiState.Standby }
@@ -192,6 +194,9 @@ class TvReceiverActivity : ComponentActivity() {
                     val exp = expiredItemForRenew.value
                     if (exp != null) { playlistManager.replaceExpiredUrl(exp.url, message.mediaUrl, message.headers); expiredItemForRenew.value = null }
                     else playlistManager.replaceExpiredUrl(message.mediaUrl, message.mediaUrl, message.headers)
+                    if (!message.mediaUrl.contains(":8089")) {
+                        lifecycleScope.launch { historyManager.addOrUpdate(message.mediaUrl, title, message.headers, message.startPositionMs) }
+                    }
                     val ytId = message.headers["X-YouTube-Id"] ?: TvReceiverHelper.extractYouTubeId(message.mediaUrl)
                     if (!ytId.isNullOrBlank()) {
                         exoPlayerManager.stop(); receiverState.value = ReceiverUiState.YouTubePlaying(ytId, title, System.currentTimeMillis())
@@ -203,7 +208,6 @@ class TvReceiverActivity : ComponentActivity() {
                         val br = com.omnicast.core.domain.models.MediaBranch.entries.firstOrNull { it.name.equals(message.branch, true) } ?: defBr
                         receiverState.value = ReceiverUiState.DirectStreamPlaying(message.mediaUrl, title)
                         exoPlayerManager.playStream(message.mediaUrl, message.headers, title, message.startPositionMs, br, message.subtitles)
-                        lifecycleScope.launch { historyManager.addOrUpdate(message.mediaUrl, title, message.headers, message.startPositionMs) }
                         startPlaybackStatusReporting()
                     }
                 }.onFailure { err ->

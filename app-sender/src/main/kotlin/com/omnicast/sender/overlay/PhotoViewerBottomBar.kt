@@ -24,72 +24,39 @@ fun PhotoViewerBottomBar(
     currentIndex: Int,
     totalCount: Int,
     folderName: String = "",
-    onPrev: () -> Unit,
-    onNext: () -> Unit,
+    onPrev: () -> Unit = {},
+    onNext: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Surface(
-        color = Color(0xE61D1730),
-        shape = RoundedCornerShape(28.dp),
-        border = androidx.compose.foundation.BorderStroke(1.2.dp, Color(0xFFBE185D)),
-        modifier = modifier.padding(bottom = 36.dp)
+        color = Color(0xD91D1730),
+        shape = RoundedCornerShape(24.dp),
+        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF8B5CF6).copy(alpha = 0.7f)),
+        modifier = modifier.padding(bottom = 34.dp)
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 7.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            Box(
-                modifier = Modifier
-                    .size(34.dp)
-                    .background(Color(0xFF2B1F47), CircleShape)
-                    .border(1.dp, Color(0xFF8B5CF6), CircleShape)
-                    .clickable(enabled = totalCount > 0) { onPrev() },
-                contentAlignment = Alignment.Center
-            ) {
+            if (folderName.isNotBlank()) {
                 Text(
-                    text = "◀",
-                    fontSize = 13.sp,
+                    text = "📁 $folderName",
+                    color = Color(0xFFF43F5E),
+                    fontSize = 12.sp,
                     fontWeight = FontWeight.ExtraBold,
-                    color = Color(0xFFA78BFA)
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.widthIn(max = 180.dp)
                 )
+                Text("•", color = Color(0xFF94A3B8), fontSize = 12.sp)
             }
-
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                if (folderName.isNotBlank()) {
-                    Text(
-                        text = "📁 $folderName",
-                        color = Color(0xFFF43F5E),
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.widthIn(max = 170.dp)
-                    )
-                }
-                Text(
-                    text = if (totalCount > 0) "${currentIndex + 1} / $totalCount  ↻" else "1 / 1",
-                    color = Color.White,
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.ExtraBold
-                )
-            }
-
-            Box(
-                modifier = Modifier
-                    .size(34.dp)
-                    .background(Color(0xFF2B1F47), CircleShape)
-                    .border(1.dp, Color(0xFF8B5CF6), CircleShape)
-                    .clickable(enabled = totalCount > 0) { onNext() },
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "▶",
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = Color(0xFFA78BFA)
-                )
-            }
+            Text(
+                text = if (totalCount > 0) "${currentIndex + 1} / $totalCount" else "1 / 1",
+                color = Color.White,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.ExtraBold
+            )
         }
     }
 }

@@ -36,6 +36,8 @@ fun TvStandbyCleanScreen(
     history: List<TvHistoryItem> = emptyList(),
     playlists: List<TvPlaylist> = emptyList(),
     onPlayHistory: (TvHistoryItem) -> Unit = {},
+    onSaveHistoryToWatchLater: (TvHistoryItem) -> Unit = {},
+    isMovieSaved: (String, String) -> Boolean = { _, _ -> false },
     onPlayPlaylist: (TvPlaylistItem) -> Unit = {},
     onDeletePlaylist: (TvPlaylistItem) -> Unit = {},
     onDeleteMultiple: (Set<String>) -> Unit = {},
@@ -45,7 +47,7 @@ fun TvStandbyCleanScreen(
     expiredItemForRenew: TvPlaylistItem? = null,
     onClearExpiredRenew: () -> Unit = {}
 ) {
-    var selectedTab by remember { mutableIntStateOf(1) } // 0: Recientes, 1: Guardados, 2: Favoritos
+    var selectedTab by remember { mutableIntStateOf(1) } // 0: Recientes, 1: Todo (Principal), 2: Favoritos
     var enteredPlaylistId by remember { mutableStateOf<String?>(null) }
     var menuItem by remember { mutableStateOf<TvPlaylistItem?>(null) }
     var sharingItem by remember { mutableStateOf<TvPlaylistItem?>(null) }
@@ -103,7 +105,6 @@ fun TvStandbyCleanScreen(
                 )
                 Spacer(modifier = Modifier.height(14.dp))
             } else {
-                // Cabecera interna de la carpeta con botón de retorno y buscador superior exclusivo
                 TvFolderDetailHeader(
                     folderName = currentPlaylist?.name ?: "Carpeta",
                     itemCount = currentPlaylist?.items?.size ?: 0,
@@ -150,43 +151,37 @@ fun TvStandbyCleanScreen(
             Row(modifier = Modifier.weight(1f).fillMaxWidth()) {
                 Box(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
                     if (enteredPlaylistId != null) {
-                        // Vista detallada de películas dentro de la carpeta
                         if (playlistFilteredItems.isEmpty()) {
                             TvEmptyState(if (searchQuery.isNotBlank()) "No se encontraron videos para \"$searchQuery\"" else "Esta carpeta no contiene películas.")
                         } else {
-                            LazyColumn(
-                                state = listState,
-                                verticalArrangement = Arrangement.spacedBy(10.dp),
-                                modifier = Modifier.fillMaxSize()
-                            ) {
+                            LazyColumn(state = listState, verticalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxSize()) {
                                 itemsIndexed(playlistFilteredItems, key = { _, it -> it.url }) { index, item ->
                                     val isSel = selectedUrls.contains(item.url)
                                     TvPlaylistItemRow(
-                                        item = item,
-                                        onPlay = { onPlayPlaylist(item) },
-                                        onMenu = { menuItem = item },
-                                        onDownload = { downloadingItem = item },
-                                        isSelected = isSel,
-                                        onToggleSelect = { if (isSel) selectedUrls.remove(item.url) else selectedUrls.add(item.url) },
+                                        item = item, onPlay = { onPlayPlaylist(item) }, onMenu = { menuItem = item }, onDownload = { downloadingItem = item },
+                                        isSelected = isSel, onToggleSelect = { if (isSel) selectedUrls.remove(item.url) else selectedUrls.add(item.url) },
                                         modifier = if (index == 0) Modifier.focusRequester(firstItemFocusRequester) else Modifier
                                     )
                                 }
                             }
                         }
                     } else {
-                        // Vista raíz: Solo las 2 carpetas principales o historial
                         when (selectedTab) {
                             0 -> {
                                 if (filteredHistory.isEmpty()) {
                                     TvEmptyState("No hay videos reproducidos recientemente.")
                                 } else {
-                                    LazyColumn(
-                                        state = listState,
-                                        verticalArrangement = Arrangement.spacedBy(10.dp),
-                                        modifier = Modifier.fillMaxSize()
-                                    ) {
+                                    LazyColumn(state = listState, verticalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxSize()) {
                                         items(filteredHistory, key = { it.id }) { item ->
-                                            TvRecentItemRow(item = item, onClick = { onPlayHistory(item) })
+                                            val saved = isMovieSaved(item.mediaUrl, item.title)
+                                            TvRecentItemRow(
+                                                item = item, isSaved = saved, onClick = { onPlayHistory(item) },
+                                                onSave = { onSaveHistoryToWatchLater(item) },
+                                                onShowSourceUrl = {
+                                                    val pUrl = item.pageUrl ?: item.headers["X-Source-Page-Url"] ?: item.headers["Referer"]
+                                                    sharingItem = TvPlaylistItem(url = item.mediaUrl, title = item.title, pageUrl = pUrl, headers = item.headers, lastPositionMs = item.lastPositionMs, durationMs = item.durationMs)
+                                                }
+                                            )
                                         }
                                     }
                                 }
@@ -196,6 +191,26 @@ fun TvStandbyCleanScreen(
                                 LazyColumn(state = listState, verticalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxSize()) {
                                     items(folders, key = { it.id }) { pl ->
                                         TvFolderRow(name = pl.name, date = formatFolderDate(pl.createdAt), itemCount = pl.items.size, onClick = { enteredPlaylistId = pl.id; searchQuery = ""; selectedUrls.clear() })
+                                    }
+                                    if (selectedTab == 1 && filteredHistory.isNotEmpty()) {
+                                        item(key = "recent_header") {
+                                            Text(
+                                                "🕘 Historial Reciente de Películas Proyectadas (Guarda el enlace o mira la URL de origen)",
+                                                color = Color(0xFF38BDF8), fontSize = 13.sp, fontWeight = FontWeight.Bold,
+                                                modifier = Modifier.padding(top = 8.dp, bottom = 2.dp)
+                                            )
+                                        }
+                                        items(filteredHistory.take(8), key = { "main_hist_${it.id}" }) { item ->
+                                            val saved = isMovieSaved(item.mediaUrl, item.title)
+                                            TvRecentItemRow(
+                                                item = item, isSaved = saved, onClick = { onPlayHistory(item) },
+                                                onSave = { onSaveHistoryToWatchLater(item) },
+                                                onShowSourceUrl = {
+                                                    val pUrl = item.pageUrl ?: item.headers["X-Source-Page-Url"] ?: item.headers["Referer"]
+                                                    sharingItem = TvPlaylistItem(url = item.mediaUrl, title = item.title, pageUrl = pUrl, headers = item.headers, lastPositionMs = item.lastPositionMs, durationMs = item.durationMs)
+                                                }
+                                            )
+                                        }
                                     }
                                 }
                             }

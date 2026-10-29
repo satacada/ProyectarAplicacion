@@ -175,68 +175,44 @@ fun PhotoViewerContent(
             }
         }
 
-        // Cápsula Superior Cyber-Dark: ◀ Carpeta, 1:1, -90°, +90° y Detener
-        Surface(
-            color = Color(0xE61D1730),
-            shape = RoundedCornerShape(24.dp),
-            border = androidx.compose.foundation.BorderStroke(1.2.dp, Color(0xFF6D28D9)),
-            modifier = Modifier.align(Alignment.TopCenter).padding(top = 42.dp)
+        // Controles Superiores sin contorno envolvente: ◀, 1:1, -90°, +90° e icono rojo Detener (■)
+        Row(
+            modifier = Modifier.align(Alignment.TopCenter).padding(top = 42.dp, start = 12.dp, end = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Row(
-                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Surface(
-                    color = Color(0xFF2B1F47),
-                    shape = RoundedCornerShape(12.dp),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF8B5CF6)),
-                    modifier = Modifier.clickable { onBack() }
-                ) {
-                    Text("◀ Carpeta", color = Color(0xFFA78BFA), fontSize = 12.sp, fontWeight = FontWeight.ExtraBold, modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp))
-                }
-
-                Surface(
-                    color = Color(0xFF38142C),
-                    shape = RoundedCornerShape(12.dp),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFBE185D)),
-                    modifier = Modifier.clickable { resetZoom() }
-                ) {
-                    Text("1:1", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.ExtraBold, modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp))
-                }
-
-                Surface(
-                    color = Color(0xFF281C44),
-                    shape = RoundedCornerShape(12.dp),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF6D28D9)),
-                    modifier = Modifier.clickable { rotateBy(-90f) }
-                ) {
-                    Text("⟲ -90°", color = Color(0xFFDDD6FE), fontSize = 12.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp))
-                }
-
-                Surface(
-                    color = Color(0xFF281C44),
-                    shape = RoundedCornerShape(12.dp),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF6D28D9)),
-                    modifier = Modifier.clickable { rotateBy(90f) }
-                ) {
-                    Text("⟳ +90°", color = Color(0xFFDDD6FE), fontSize = 12.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp))
-                }
-
-                Surface(
-                    color = Color(0xFFDC2626),
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.clickable { onClose() }
-                ) {
-                    Text(
-                        text = "■ Detener",
-                        color = Color.White,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
-                    )
-                }
+            Surface(color = Color(0xD92B1F47), shape = RoundedCornerShape(10.dp), border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF8B5CF6)), modifier = Modifier.clickable { onBack() }) {
+                Text("◀", color = Color(0xFFA78BFA), fontSize = 14.sp, fontWeight = FontWeight.ExtraBold, modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp))
             }
+            Surface(color = Color(0xD938142C), shape = RoundedCornerShape(10.dp), border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFBE185D)), modifier = Modifier.clickable { resetZoom() }) {
+                Text("1:1", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.ExtraBold, modifier = Modifier.padding(horizontal = 11.dp, vertical = 6.dp))
+            }
+            Surface(color = Color(0xD9281C44), shape = RoundedCornerShape(10.dp), border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF6D28D9)), modifier = Modifier.clickable { rotateBy(-90f) }) {
+                Text("⟲ 90°", color = Color(0xFFDDD6FE), fontSize = 12.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 9.dp, vertical = 6.dp))
+            }
+            Surface(color = Color(0xD9281C44), shape = RoundedCornerShape(10.dp), border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF6D28D9)), modifier = Modifier.clickable { rotateBy(90f) }) {
+                Text("⟳ 90°", color = Color(0xFFDDD6FE), fontSize = 12.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 9.dp, vertical = 6.dp))
+            }
+            Surface(color = Color(0xFFDC2626), shape = RoundedCornerShape(10.dp), modifier = Modifier.clickable { onClose() }) {
+                Text("■", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.ExtraBold, modifier = Modifier.padding(horizontal = 11.dp, vertical = 5.dp))
+            }
+        }
+
+        // Botones Morados en la parte media y extrema (izquierda y derecha) de la foto
+        Surface(
+            color = Color(0xD94C1D95), shape = androidx.compose.foundation.shape.CircleShape,
+            border = androidx.compose.foundation.BorderStroke(1.5.dp, Color(0xFFA78BFA)),
+            modifier = Modifier.align(Alignment.CenterStart).padding(start = 10.dp).size(48.dp).clickable(enabled = uris.isNotEmpty()) { onPrev() }
+        ) {
+            Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) { Text("◀", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.ExtraBold) }
+        }
+
+        Surface(
+            color = Color(0xD94C1D95), shape = androidx.compose.foundation.shape.CircleShape,
+            border = androidx.compose.foundation.BorderStroke(1.5.dp, Color(0xFFA78BFA)),
+            modifier = Modifier.align(Alignment.CenterEnd).padding(end = 10.dp).size(48.dp).clickable(enabled = uris.isNotEmpty()) { onNext() }
+        ) {
+            Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) { Text("▶", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.ExtraBold) }
         }
 
         // Indicador emergente de gestos táctiles
@@ -267,7 +243,7 @@ fun PhotoViewerContent(
             }
         }
 
-        // Cápsula Inferior: < 📁 Carpeta • 1/10 >
+        // Cápsula Inferior: 📁 Carpeta • 1/10
         PhotoViewerBottomBar(
             currentIndex = currentIndex,
             totalCount = uris.size,

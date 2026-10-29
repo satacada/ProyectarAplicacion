@@ -79,14 +79,15 @@ fun VideoPlayerTopBar(
             }
         }
 
-        Button(
-            onClick = onStop,
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDC2626)),
-            shape = RoundedCornerShape(10.dp),
-            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 5.dp),
-            modifier = Modifier.align(Alignment.CenterEnd).height(34.dp)
+        Surface(
+            color = Color(0xFFDC2626),
+            shape = CircleShape,
+            border = androidx.compose.foundation.BorderStroke(1.2.dp, Color(0xFFFCA5A5)),
+            modifier = Modifier.align(Alignment.CenterEnd).size(36.dp).clickable { onStop() }
         ) {
-            Text("■ Detener", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+            Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                Text("■", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.ExtraBold)
+            }
         }
     }
 }

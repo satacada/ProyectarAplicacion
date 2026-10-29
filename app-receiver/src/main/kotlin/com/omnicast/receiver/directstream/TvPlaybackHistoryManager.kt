@@ -18,6 +18,7 @@ data class TvHistoryItem(
     val id: String = UUID.randomUUID().toString(),
     val mediaUrl: String,
     val title: String,
+    val pageUrl: String? = null,
     val headers: Map<String, String> = emptyMap(),
     val lastPositionMs: Long = 0L,
     val durationMs: Long = 0L,
@@ -65,11 +66,13 @@ class TvPlaybackHistoryManager(private val context: Context) {
         title: String,
         headers: Map<String, String> = emptyMap(),
         positionMs: Long = 0L,
-        durationMs: Long = 0L
+        durationMs: Long = 0L,
+        pageUrl: String? = null
     ) = withContext(Dispatchers.IO) {
         try {
             val current = _history.value.toMutableList()
             val cleanTitle = title.ifBlank { "Película / Video Web" }
+            val resolvedPageUrl = (pageUrl ?: headers["X-Source-Page-Url"] ?: headers["Referer"])?.takeIf { it.isNotBlank() }
             val existingIdx = current.indexOfFirst {
                 it.mediaUrl == url || (cleanTitle != "Película / Video Web" && cleanTitle != "Dailymotion" && it.title == cleanTitle)
             }
@@ -78,6 +81,7 @@ class TvPlaybackHistoryManager(private val context: Context) {
                 old.copy(
                     mediaUrl = url,
                     title = if (cleanTitle.isNotBlank() && cleanTitle != "Transmisión Web" && cleanTitle != "Dailymotion") cleanTitle else old.title,
+                    pageUrl = resolvedPageUrl ?: old.pageUrl,
                     headers = if (headers.isNotEmpty()) headers else old.headers,
                     lastPositionMs = if (positionMs > 0L) positionMs else old.lastPositionMs,
                     durationMs = if (durationMs > 0L) durationMs else old.durationMs,
@@ -87,6 +91,7 @@ class TvPlaybackHistoryManager(private val context: Context) {
                 TvHistoryItem(
                     mediaUrl = url,
                     title = cleanTitle,
+                    pageUrl = resolvedPageUrl,
                     headers = headers,
                     lastPositionMs = positionMs,
                     durationMs = durationMs
@@ -98,7 +103,7 @@ class TvPlaybackHistoryManager(private val context: Context) {
             }.take(MAX_ITEMS)
             _history.value = trimmed
             historyFile.writeText(json.encodeToString(trimmed))
-            Log.i(TAG, "Guardado en historial TV: ${item.title} ($url)")
+            Log.i(TAG, "Guardado en historial TV: ${item.title} ($url) origen=${item.pageUrl}")
         } catch (e: Throwable) {
             Log.e(TAG, "Error guardando historial TV: ${e.message}", e)
         }

@@ -24,7 +24,6 @@ fun GalleryExplorerScreen(
     isLoading: Boolean,
     hasPermission: Boolean,
     mimeFilter: String,
-    onFilterChange: (String) -> Unit,
     onRequestPermission: () -> Unit,
     onOpenSystemPicker: () -> Unit,
     onSelectPhoto: (List<GalleryPhotoItem>, Int, String) -> Unit,
@@ -37,12 +36,9 @@ fun GalleryExplorerScreen(
     val currentNode = routeStack.lastOrNull() ?: GalleryNavNode("", GallerySessionHolder.ROOT_NAME)
     val prevNode = if (routeStack.size > 1) routeStack[routeStack.size - 2] else null
 
+    val isVideoTab = mimeFilter.startsWith("video/")
     val filteredItems = remember(allItems, mimeFilter) {
-        when {
-            mimeFilter.startsWith("image/") -> allItems.filter { !it.isVideo }
-            mimeFilter.startsWith("video/") -> allItems.filter { it.isVideo }
-            else -> allItems
-        }
+        if (isVideoTab) allItems.filter { it.isVideo } else allItems.filter { !it.isVideo }
     }
 
     val viewData = remember(filteredItems, currentNode.path, currentNode.customItems) {
@@ -73,11 +69,11 @@ fun GalleryExplorerScreen(
         )
     }
 
-    val isVideoTab = mimeFilter.startsWith("video/")
+    val unitWord = if (isVideoTab) "videos" else "fotos"
     val subtitle = when {
-        currentNode.customItems != null -> "${currentNode.customItems.size} archivos en esta selección • Solo bucle local"
-        currentNode.path.isEmpty() -> "${viewData.allFolders.size} agrupaciones • ${filteredItems.size} ${if (isVideoTab) "videos" else "archivos"}"
-        else -> "${viewData.directItems.size} en este nivel • ${viewData.subfolders.size} subcarpetas"
+        currentNode.customItems != null -> "${currentNode.customItems.size} $unitWord en selección"
+        currentNode.path.isEmpty() -> "${viewData.allFolders.size} carpetas • ${filteredItems.size} $unitWord"
+        else -> "${viewData.directItems.size} $unitWord en esta carpeta"
     }
 
     Column(
@@ -93,22 +89,11 @@ fun GalleryExplorerScreen(
             prevNode = prevNode,
             subtitle = subtitle,
             mimeFilter = mimeFilter,
-            allFolders = viewData.allFolders,
             onStepBack = onStepBack,
             onOpenSystemPicker = onOpenSystemPicker,
             onExitToMain = onExitToMain,
-            onFilterChange = onFilterChange,
             onJumpToBreadcrumbIndex = { targetIdx ->
                 GallerySessionHolder.jumpToRouteIndex(targetIdx)
-            },
-            onNavigateToFolder = { targetPath, targetName ->
-                GallerySessionHolder.navigateToFolder(
-                    targetPath = targetPath,
-                    targetName = targetName,
-                    currentScrollIndex = gridState.firstVisibleItemIndex,
-                    currentScrollOffset = gridState.firstVisibleItemScrollOffset,
-                    expandAncestorsIfFromRoot = false
-                )
             }
         )
 
@@ -124,9 +109,13 @@ fun GalleryExplorerScreen(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        Text("📷 Permiso de Galería y Videos", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.ExtraBold)
                         Text(
-                            "Concede acceso a Fotos y Videos para mostrar tus carpetas y agrupaciones manteniendo la ruta exacta al retroceder.",
+                            if (isVideoTab) "🎬 Permiso de Videos" else "📷 Permiso de Fotos",
+                            color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.ExtraBold
+                        )
+                        Text(
+                            if (isVideoTab) "Concede acceso a tus videos para organizar tus carpetas."
+                            else "Concede acceso a tus fotos para organizar tus carpetas.",
                             color = Color(0xFFCBD5E1), fontSize = 13.sp
                         )
                         Button(
@@ -134,7 +123,7 @@ fun GalleryExplorerScreen(
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE11D48)),
                             shape = RoundedCornerShape(10.dp)
                         ) {
-                            Text("Conceder Permiso", color = Color.White, fontWeight = FontWeight.ExtraBold)
+                            Text("Autorizar Ahora", color = Color.White, fontWeight = FontWeight.ExtraBold)
                         }
                     }
                 }
@@ -156,11 +145,11 @@ fun GalleryExplorerScreen(
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         Text(
-                            text = if (isVideoTab) "🎬 No se detectaron videos aún" else "🖼️ No se encontraron archivos en esta vista",
+                            text = if (isVideoTab) "🎬 No se detectaron videos aún" else "🖼️ No se encontraron fotos aún",
                             color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.ExtraBold
                         )
                         Text(
-                            text = "Si tienes videos o colecciones en tu teléfono, pulsa 'Autorizar Videos' o abre 'Colecciones / Sistema'.",
+                            text = "Pulsa 'Actualizar / Permisos' o abre 'Colecciones'.",
                             color = Color(0xFF94A3B8), fontSize = 12.sp
                         )
                         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -169,14 +158,14 @@ fun GalleryExplorerScreen(
                                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7C3AED)),
                                 shape = RoundedCornerShape(10.dp)
                             ) {
-                                Text("Autorizar Videos/Fotos", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                Text("Actualizar / Permisos", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                             }
                             Button(
                                 onClick = onOpenSystemPicker,
                                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE11D48)),
                                 shape = RoundedCornerShape(10.dp)
                             ) {
-                                Text("Abrir Sistema", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                Text("Abrir Colecciones", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                             }
                         }
                     }
@@ -194,9 +183,8 @@ fun GalleryExplorerScreen(
                 if (currentNode.path.isEmpty() && currentNode.customItems == null && viewData.allFolders.isNotEmpty()) {
                     item(span = { GridItemSpan(3) }) {
                         Text(
-                            text = if (isVideoTab) "🎬 Agrupaciones de Videos por Carpeta (${viewData.allFolders.size})"
-                            else if (mimeFilter.startsWith("image/")) "📷 Agrupaciones de Fotos por Carpeta (${viewData.allFolders.size})"
-                            else "📂 Todas las Carpetas Multimedia (${viewData.allFolders.size})",
+                            text = if (isVideoTab) "🎬 Carpetas de Videos (${viewData.allFolders.size})"
+                            else "📷 Carpetas de Fotos (${viewData.allFolders.size})",
                             color = Color(0xFFF43F5E),
                             fontSize = 13.sp,
                             fontWeight = FontWeight.ExtraBold,
@@ -220,10 +208,10 @@ fun GalleryExplorerScreen(
                     }
                 }
 
-                if (viewData.subfolders.isNotEmpty()) {
+                if (viewData.subfolders.isNotEmpty() && currentNode.path.isNotEmpty()) {
                     item(span = { GridItemSpan(3) }) {
                         Text(
-                            text = if (currentNode.path.isEmpty()) "📁 Directorios Raíz del Dispositivo" else "📁 Subcarpetas en ${currentNode.name}",
+                            text = "📁 Subcarpetas en ${currentNode.name}",
                             color = Color(0xFFA78BFA),
                             fontSize = 12.sp,
                             fontWeight = FontWeight.ExtraBold,
@@ -249,7 +237,7 @@ fun GalleryExplorerScreen(
                 if (viewData.directItems.isNotEmpty()) {
                     item(span = { GridItemSpan(3) }) {
                         Text(
-                            text = "Archivos en ${currentNode.name} (${viewData.directItems.size} en bucle circular)",
+                            text = "${currentNode.name} (${viewData.directItems.size} $unitWord)",
                             color = Color(0xFFE2E8F0),
                             fontSize = 12.sp,
                             fontWeight = FontWeight.ExtraBold,
@@ -261,13 +249,17 @@ fun GalleryExplorerScreen(
                             item = item,
                             onClick = {
                                 if (item.isVideo) {
-                                    val folderVideos = viewData.directItems.filter { it.isVideo }
-                                    val vIdx = folderVideos.indexOfFirst { it.uri == item.uri }.coerceAtLeast(0)
-                                    onSelectVideo(folderVideos, vIdx, currentNode.name)
+                                    val folderVideos = viewData.directItems.filter { it.isVideo }.ifEmpty {
+                                        filteredItems.filter { it.isVideo && it.folderPath.equals(item.folderPath, ignoreCase = true) }
+                                    }.ifEmpty { listOf(item) }
+                                    val vIdx = folderVideos.indexOfFirst { it.uri == item.uri || it.id == item.id }.coerceAtLeast(0)
+                                    onSelectVideo(folderVideos, vIdx, currentNode.name.ifBlank { item.albumName })
                                 } else {
-                                    val folderPhotos = viewData.directItems.filter { !it.isVideo }
-                                    val pIdx = folderPhotos.indexOfFirst { it.uri == item.uri }.coerceAtLeast(0)
-                                    onSelectPhoto(folderPhotos, pIdx, currentNode.name)
+                                    val folderPhotos = viewData.directItems.filter { !it.isVideo }.ifEmpty {
+                                        filteredItems.filter { !it.isVideo && it.folderPath.equals(item.folderPath, ignoreCase = true) }
+                                    }.ifEmpty { listOf(item) }
+                                    val pIdx = folderPhotos.indexOfFirst { it.uri == item.uri || it.id == item.id }.coerceAtLeast(0)
+                                    onSelectPhoto(folderPhotos, pIdx, currentNode.name.ifBlank { item.albumName })
                                 }
                             }
                         )

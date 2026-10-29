@@ -45,8 +45,17 @@ class FloatingIndicatorService : Service() {
         fun stop(context: Context) {
             try { context.stopService(Intent(context, FloatingIndicatorService::class.java)) } catch (e: Throwable) { Log.e(TAG, "Error stop", e) }
         }
+        private var isBrowserHidden = false
+        private var isGalleryHidden = false
+
         fun setBrowserActive(active: Boolean) {
-            instance?.let { it.handler.post { it.rootLayout?.visibility = if (active) View.GONE else View.VISIBLE } }
+            isBrowserHidden = active
+            instance?.let { it.handler.post { it.updateVisibility() } }
+        }
+
+        fun setGalleryActive(active: Boolean) {
+            isGalleryHidden = active
+            instance?.let { it.handler.post { it.updateVisibility() } }
         }
     }
 
@@ -61,7 +70,20 @@ class FloatingIndicatorService : Service() {
     private val handler = Handler(Looper.getMainLooper())
     private var pollRunnable: Runnable? = null
 
+    private fun updateVisibility() {
+        val shouldHide = isBrowserHidden || isGalleryHidden || com.omnicast.sender.service.CastSessionState.isGalleryCasting
+        rootLayout?.visibility = if (shouldHide) View.GONE else View.VISIBLE
+        if (shouldHide) isExpanded = false
+    }
+
     fun refreshDisplayMode() {
+        val shouldHide = isBrowserHidden || isGalleryHidden || com.omnicast.sender.service.CastSessionState.isGalleryCasting
+        if (shouldHide) {
+            if (rootLayout?.visibility != View.GONE) rootLayout?.visibility = View.GONE
+            return
+        } else if (rootLayout?.visibility != View.VISIBLE) {
+            rootLayout?.visibility = View.VISIBLE
+        }
         val pill = pillLayoutRef ?: return; val dot = dotViewRef ?: return; var changed = false
         if (pill.visibility != View.VISIBLE) { pill.visibility = View.VISIBLE; changed = true }
         if (dot.visibility != View.GONE) { dot.visibility = View.GONE; changed = true }
@@ -106,56 +128,14 @@ class FloatingIndicatorService : Service() {
         var exitConfirmRef: LinearLayout? = null
         val exitConfirmLayout = builder.buildExitConfirmation(
             onConfirmHideOverlay = { stopSelf() },
-            onExitCompletely = {
-                SenderMainActivity.exitCompletely(this)
-                stopSelf()
-            },
+            onExitCompletely = { SenderMainActivity.exitCompletely(this); stopSelf() },
             onCancel = { exitConfirmRef?.visibility = View.GONE }
         )
         exitConfirmRef = exitConfirmLayout
 
         val menuController = builder.buildMenu(
             statusFeedbackText = statusFeedbackText,
-            onDetectVideo = {
-                val actUrl = com.omnicast.sender.stream.ActiveStreamHolder.streamUrl
-                val actTitle = com.omnicast.sender.stream.ActiveStreamHolder.title ?: "Video Detectado"
-                val actHdrs = com.omnicast.sender.stream.ActiveStreamHolder.headers
-                if (!actUrl.isNullOrBlank()) {
-                    if (ProjectionForegroundService.isProjecting) ProjectionForegroundService.stopService(this)
-                    statusFeedbackText.text = "✅ Transmitiendo: ${actTitle.take(20)}"; statusFeedbackText.setTextColor(Color.parseColor("#10B981"))
-                    SenderMainActivity.sendDirectStreamStatic(this, actUrl, actTitle, actHdrs)
-                    Toast.makeText(this, "▶ Transmitiendo: ${actTitle.take(22)}", Toast.LENGTH_SHORT).show()
-                } else {
-                    statusFeedbackText.text = "🔍 Escaneando reproductor..."
-                    statusFeedbackText.setTextColor(Color.parseColor("#38BDF8"))
-                    SenderMainActivity.requestBrowserRescan(this)
-                    handler.postDelayed({
-                        val retryUrl = com.omnicast.sender.stream.ActiveStreamHolder.streamUrl
-                        val retryTitle = com.omnicast.sender.stream.ActiveStreamHolder.title ?: "Video Detectado"
-                        val retryHdrs = com.omnicast.sender.stream.ActiveStreamHolder.headers
-                        if (!retryUrl.isNullOrBlank()) {
-                            if (ProjectionForegroundService.isProjecting) ProjectionForegroundService.stopService(this)
-                            statusFeedbackText.text = "✅ Transmitiendo: ${retryTitle.take(20)}"
-                            statusFeedbackText.setTextColor(Color.parseColor("#10B981"))
-                            SenderMainActivity.sendDirectStreamStatic(this, retryUrl, retryTitle, retryHdrs)
-                            Toast.makeText(this, "▶ Transmitiendo: ${retryTitle.take(22)}", Toast.LENGTH_SHORT).show()
-                        } else {
-                            val res = clipboardExtractor.extractFromClipboard()
-                            val clipUrl = res.mediaUrl
-                            if (res.isSuccess && clipUrl != null) {
-                                if (ProjectionForegroundService.isProjecting) ProjectionForegroundService.stopService(this)
-                                statusFeedbackText.text = "✅ ¡Flujo Detectado! Transmitiendo..."
-                                statusFeedbackText.setTextColor(Color.parseColor("#10B981"))
-                                SenderMainActivity.sendDirectStreamStatic(this, clipUrl, "Video Capturado")
-                            } else {
-                                statusFeedbackText.text = "⚠️ Reproduce el video o pulsa 'Transmitir'."
-                                statusFeedbackText.setTextColor(Color.parseColor("#F59E0B"))
-                                Toast.makeText(this, "⚠️ Dale Play al video en la página para capturar el flujo", Toast.LENGTH_SHORT).show()
-                            }
-                        }
-                    }, 800)
-                }
-            },
+            onDetectVideo = {},
             onStartFullScreen = {
                 menuLayoutRef?.visibility = View.GONE; isExpanded = false
                 SenderMainActivity.sendPlayControlStatic(this, "STOP"); com.omnicast.sender.stream.ActiveStreamHolder.clear()
@@ -168,40 +148,18 @@ class FloatingIndicatorService : Service() {
                 if (ProjectionForegroundService.isProjecting) { statusFeedbackText.text = "🟢 Ya estás proyectando."; statusFeedbackText.setTextColor(Color.parseColor("#10B981")) }
                 else launchIntentSafely(Intent(this, TransparentCaptureActivity::class.java).apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); putExtra(TransparentCaptureActivity.EXTRA_PROJECTION_MODE, "APP") }, 104)
             },
-            onCastGallery = {
-                menuLayoutRef?.visibility = View.GONE; isExpanded = false
-                if (ProjectionForegroundService.isProjecting) ProjectionForegroundService.stopService(this)
-                SenderMainActivity.sendPlayControlStatic(this, "STOP")
-                com.omnicast.sender.stream.ActiveStreamHolder.clear()
-                launchIntentSafely(Intent(this, GalleryPickerActivity::class.java).apply {
-                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                }, 104)
-            },
-            onOpenBrowser = {
-                menuLayoutRef?.visibility = View.GONE; isExpanded = false
-                launchIntentSafely(Intent(this, SenderMainActivity::class.java).apply {
-                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
-                    putExtra("EXTRA_OPEN_BROWSER", true)
-                }, 105)
-            },
+            onCastGallery = {},
+            onOpenBrowser = {},
             onToggleTvScale = {
                 val preset = com.omnicast.sender.service.TvZoomManager.cycleNext()
                 val msg = com.omnicast.sender.service.TvZoomManager.toSignalingMessage(preset)
                 prefs.edit().putString("saved_tv_scale_mode", preset.id).apply()
-                if (ProjectionForegroundService.isProjecting) {
-                    ProjectionForegroundService.setDisplayMode(preset.mode, preset.zoom, preset.panY)
-                } else {
-                    com.omnicast.sender.network.QuickSignalingHelper.sendQuickMessage(this, msg)
-                }
-                statusFeedbackText.text = preset.label
-                statusFeedbackText.setTextColor(Color.parseColor("#38BDF8"))
-                menuControllerRef?.updateZoomLabel(preset.label)
-                Toast.makeText(this, preset.label, Toast.LENGTH_SHORT).show()
+                if (ProjectionForegroundService.isProjecting) ProjectionForegroundService.setDisplayMode(preset.mode, preset.zoom, preset.panY)
+                else com.omnicast.sender.network.QuickSignalingHelper.sendQuickMessage(this, msg)
+                statusFeedbackText.text = preset.label; statusFeedbackText.setTextColor(Color.parseColor("#38BDF8"))
+                menuControllerRef?.updateZoomLabel(preset.label); Toast.makeText(this, preset.label, Toast.LENGTH_SHORT).show()
             },
-            onCalibrateTv = {
-                menuLayoutRef?.visibility = View.GONE; isExpanded = false
-                FloatingCalibrationOverlay.show(this)
-            },
+            onCalibrateTv = { menuLayoutRef?.visibility = View.GONE; isExpanded = false; FloatingCalibrationOverlay.show(this) },
             onOpenOmniCast = {
                 menuLayoutRef?.visibility = View.GONE; isExpanded = false
                 launchIntentSafely(Intent(this, SenderMainActivity::class.java).apply {
@@ -212,20 +170,12 @@ class FloatingIndicatorService : Service() {
             },
             onStopCast = {
                 menuLayoutRef?.visibility = View.GONE; isExpanded = false
-                ProjectionForegroundService.stopService(this)
-                SenderMainActivity.sendPlayControlStatic(this, "STOP")
-                SenderMainActivity.sendDisconnectStatic(this)
-                com.omnicast.sender.service.CastMediaNotificationService.stop(this)
-                com.omnicast.sender.stream.ActiveStreamHolder.stopCasting()
-                com.omnicast.sender.stream.ActiveStreamHolder.clear()
-                pillText.text = "Cast"; statusFeedbackText.text = "🛑 Transmisión detenida."
-                statusFeedbackText.setTextColor(Color.parseColor("#EF4444"))
+                ProjectionForegroundService.stopService(this); SenderMainActivity.sendPlayControlStatic(this, "STOP"); SenderMainActivity.sendDisconnectStatic(this)
+                com.omnicast.sender.service.CastMediaNotificationService.stop(this); com.omnicast.sender.stream.ActiveStreamHolder.stopCasting(); com.omnicast.sender.stream.ActiveStreamHolder.clear()
+                pillText.text = "Cast"; statusFeedbackText.text = "🛑 Transmisión detenida."; statusFeedbackText.setTextColor(Color.parseColor("#EF4444"))
                 Toast.makeText(this, "🛑 Transmisión detenida", Toast.LENGTH_SHORT).show()
             },
-            onDisableOverlay = {
-                menuLayoutRef?.visibility = View.GONE; isExpanded = false
-                exitConfirmRef?.visibility = View.VISIBLE
-            }
+            onDisableOverlay = { menuLayoutRef?.visibility = View.GONE; isExpanded = false; exitConfirmRef?.visibility = View.VISIBLE }
         )
         menuControllerRef = menuController
         val menuLayout = menuController.rootView

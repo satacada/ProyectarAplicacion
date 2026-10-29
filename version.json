@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 286,
-  "versionCodeReceiver": 269,
-  "versionName": "3.5.35",
-  "releaseTag": "v3.5.35",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.35/omnicast-sender-v3.5.35.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.35/omnicast-receiver-v3.5.35.apk",
-  "changelog": "v3.5.35: 1) Soporte aislado para Colecciones/Personas y mascotas (sin mezclar las 100 fotos de Cámara). 2) Agrupaciones de Videos y permiso READ_MEDIA_VIDEO activo con retroceso exacto LIFO (5->4->2->3->1) y botones Cyber-Dark modernos. 3) Icono vectorial moderno de Casteo a TV en Receiver (reemplaza TV vintage). 4) Descarga en Modo Puente en 'Ver más tarde' con cálculo real de espacio libre vs peso de película y advertencia de disco."
+  "versionCodeSender": 287,
+  "versionCodeReceiver": 270,
+  "versionName": "3.5.36",
+  "releaseTag": "v3.5.36",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.36/omnicast-sender-v3.5.36.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.36/omnicast-receiver-v3.5.36.apk",
+  "changelog": "v3.5.36: 1) Agente flotante desactivado en Galería y dedicado exclusivamente a Casteo a TV. 2) Visor de Fotos con botones morados en extremos medio-laterales, 1:1 y 90° arriba sin contorno y botón rojo solo con icono (■). 3) Explorador exclusivo por tipo (solo Fotos o solo Videos), navegación completa 1/N en videos y Colecciones/Personas con retorno al entorno Android de Colecciones. 4) Receiver: icono superior más grande sin contorno, foco persistente en Actualizar durante todos los pasos y guardado de película + URL de origen desde el historial en pantalla principal."
 }

@@ -37,14 +37,15 @@ fun GalleryExplorerHeaderBar(
     prevNode: GalleryNavNode?,
     subtitle: String,
     mimeFilter: String,
-    allFolders: List<GalleryFolderInfo>,
     onStepBack: () -> Unit,
     onOpenSystemPicker: () -> Unit,
     onExitToMain: () -> Unit,
-    onFilterChange: (String) -> Unit,
-    onJumpToBreadcrumbIndex: (Int) -> Unit = {},
-    onNavigateToFolder: (String, String) -> Unit
+    onJumpToBreadcrumbIndex: (Int) -> Unit = {}
 ) {
+    val isVideoMode = mimeFilter.startsWith("video/")
+    val rootTitle = if (isVideoMode) "Videos" else "Fotos"
+    val displayTitle = if (currentNode.path.isEmpty() && currentNode.customItems == null) rootTitle else currentNode.name
+
     Surface(
         color = Color(0xFF1A1121),
         border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF9D174D).copy(alpha = 0.65f)),
@@ -60,9 +61,14 @@ fun GalleryExplorerHeaderBar(
                         border = androidx.compose.foundation.BorderStroke(1.2.dp, Color(0xFF8B5CF6)),
                         modifier = Modifier.clickable { onStepBack() }
                     ) {
+                        val backLabel = when {
+                            prevNode == null -> "Inicio"
+                            prevNode.path.isEmpty() -> rootTitle
+                            else -> prevNode.name
+                        }
                         Row(modifier = Modifier.padding(horizontal = 10.dp, vertical = 7.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
                             Text("◀", color = Color(0xFFA78BFA), fontSize = 11.sp, fontWeight = FontWeight.ExtraBold)
-                            Text(prevNode?.name ?: "OmniCast", color = Color(0xFFF1F5F9), fontSize = 12.sp, fontWeight = FontWeight.ExtraBold, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = 92.dp))
+                            Text(backLabel, color = Color(0xFFF1F5F9), fontSize = 12.sp, fontWeight = FontWeight.ExtraBold, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = 92.dp))
                         }
                     }
 
@@ -77,7 +83,7 @@ fun GalleryExplorerHeaderBar(
                     }
 
                     Column(modifier = Modifier.weight(1f)) {
-                        Text(currentNode.name, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.ExtraBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        Text(displayTitle, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.ExtraBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         Text(subtitle, color = Color(0xFFFBCFE8), fontSize = 10.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
                 }
@@ -104,65 +110,29 @@ fun GalleryExplorerHeaderBar(
                 }
             }
 
-            val breadcrumbScroll = rememberScrollState()
-            LaunchedEffect(routeStack.size) { breadcrumbScroll.animateScrollTo(breadcrumbScroll.maxValue) }
-            Row(
-                modifier = Modifier.fillMaxWidth().background(Color(0xFF120C18), RoundedCornerShape(10.dp)).border(1.dp, Color(0xFF3B1D38), RoundedCornerShape(10.dp)).horizontalScroll(breadcrumbScroll).padding(horizontal = 10.dp, vertical = 5.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(5.dp)
-            ) {
-                Text("Ruta activa:", color = Color(0xFF94A3B8), fontSize = 10.sp, fontWeight = FontWeight.Bold)
-                routeStack.forEachIndexed { idx, node ->
-                    val isLast = idx == routeStack.lastIndex
-                    Surface(
-                        color = if (isLast) Color(0xFFE11D48) else Color(0xFF281834),
-                        shape = RoundedCornerShape(6.dp),
-                        modifier = Modifier.clickable { if (!isLast) onJumpToBreadcrumbIndex(idx) }
-                    ) {
-                        Text(node.name, color = if (isLast) Color.White else Color(0xFFDDD6FE), fontSize = 10.sp, fontWeight = if (isLast) FontWeight.ExtraBold else FontWeight.SemiBold, modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp))
-                    }
-                    if (!isLast) Text("▸", color = Color(0xFFF43F5E), fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                }
-            }
-
-            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                FilterChipButton("📷 Fotos", mimeFilter.startsWith("image/"), true, Modifier.weight(1f)) { onFilterChange("image/*") }
-                FilterChipButton("🎬 Videos", mimeFilter.startsWith("video/"), false, Modifier.weight(1f)) { onFilterChange("video/*") }
-                FilterChipButton("✨ Todo", mimeFilter == "*/*", false, Modifier.weight(0.8f)) { onFilterChange("*/*") }
-            }
-
-            if (currentNode.path.isNotEmpty() && allFolders.size > 1) {
-                Row(modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text("Saltar a:", color = Color(0xFFA78BFA), fontSize = 10.sp, fontWeight = FontWeight.ExtraBold)
-                    allFolders.forEach { folder ->
-                        val isCurrent = folder.path.equals(currentNode.path, ignoreCase = true)
+            if (routeStack.size > 1) {
+                val breadcrumbScroll = rememberScrollState()
+                LaunchedEffect(routeStack.size) { breadcrumbScroll.animateScrollTo(breadcrumbScroll.maxValue) }
+                Row(
+                    modifier = Modifier.fillMaxWidth().background(Color(0xFF120C18), RoundedCornerShape(10.dp)).border(1.dp, Color(0xFF3B1D38), RoundedCornerShape(10.dp)).horizontalScroll(breadcrumbScroll).padding(horizontal = 10.dp, vertical = 5.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(5.dp)
+                ) {
+                    Text("Ruta:", color = Color(0xFF94A3B8), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                    routeStack.forEachIndexed { idx, node ->
+                        val isLast = idx == routeStack.lastIndex
+                        val nodeLabel = if (node.path.isEmpty() && node.customItems == null) rootTitle else node.name
                         Surface(
-                            color = if (isCurrent) Color(0xFFE11D48) else Color(0xFF241634),
-                            shape = RoundedCornerShape(14.dp),
-                            border = androidx.compose.foundation.BorderStroke(1.dp, if (isCurrent) Color(0xFFFDA4AF) else Color(0xFF6D28D9)),
-                            modifier = Modifier.clickable { if (!isCurrent) onNavigateToFolder(folder.path, folder.name) }
+                            color = if (isLast) Color(0xFFE11D48) else Color(0xFF281834),
+                            shape = RoundedCornerShape(6.dp),
+                            modifier = Modifier.clickable { if (!isLast) onJumpToBreadcrumbIndex(idx) }
                         ) {
-                            Text("📁 ${folder.name} (${folder.totalCount})", color = Color.White, fontSize = 11.sp, fontWeight = if (isCurrent) FontWeight.ExtraBold else FontWeight.Medium, modifier = Modifier.padding(horizontal = 9.dp, vertical = 4.dp))
+                            Text(nodeLabel, color = if (isLast) Color.White else Color(0xFFDDD6FE), fontSize = 10.sp, fontWeight = if (isLast) FontWeight.ExtraBold else FontWeight.SemiBold, modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp))
                         }
+                        if (!isLast) Text("▸", color = Color(0xFFF43F5E), fontSize = 11.sp, fontWeight = FontWeight.Bold)
                     }
                 }
             }
-        }
-    }
-}
-
-@Composable
-fun FilterChipButton(label: String, selected: Boolean, isPrimaryRose: Boolean, modifier: Modifier = Modifier, onClick: () -> Unit) {
-    val bg = if (selected && isPrimaryRose) Color(0xFFE11D48) else if (selected) Color(0xFF7C3AED) else Color(0xFF2B1829)
-    val borderCol = if (selected && isPrimaryRose) Color(0xFFFDA4AF) else if (selected) Color(0xFFC4B5FD) else Color(0xFF831843)
-    Surface(
-        color = bg,
-        shape = RoundedCornerShape(10.dp),
-        border = androidx.compose.foundation.BorderStroke(1.2.dp, borderCol),
-        modifier = modifier.height(34.dp).clickable { onClick() }
-    ) {
-        Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-            Text(label, color = Color.White, fontSize = 12.sp, fontWeight = if (selected) FontWeight.ExtraBold else FontWeight.SemiBold)
         }
     }
 }

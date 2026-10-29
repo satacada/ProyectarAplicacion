@@ -24,46 +24,30 @@ object GalleryMediaHelper {
 
     private val thumbnailCache = object : LruCache<String, Bitmap>(80) {}
 
-    fun hasGalleryPermission(context: Context, mimeFilter: String = "*/*"): Boolean {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+    fun hasGalleryPermission(context: Context, mimeFilter: String = "*/*"): Boolean =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             val hasImg = ContextCompat.checkSelfPermission(context, Manifest.permission.READ_MEDIA_IMAGES) == PackageManager.PERMISSION_GRANTED
             val hasVid = ContextCompat.checkSelfPermission(context, Manifest.permission.READ_MEDIA_VIDEO) == PackageManager.PERMISSION_GRANTED
+            when { mimeFilter.startsWith("image") -> hasImg; mimeFilter.startsWith("video") -> hasVid; else -> hasImg || hasVid }
+        } else ContextCompat.checkSelfPermission(context, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
+
+    fun hasAllMediaPermissions(context: Context): Boolean =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            ContextCompat.checkSelfPermission(context, Manifest.permission.READ_MEDIA_IMAGES) == PackageManager.PERMISSION_GRANTED &&
+                ContextCompat.checkSelfPermission(context, Manifest.permission.READ_MEDIA_VIDEO) == PackageManager.PERMISSION_GRANTED
+        } else ContextCompat.checkSelfPermission(context, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
+
+    fun getRequiredPermissions(mimeFilter: String = "*/*"): Array<String> =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             when {
-                mimeFilter.startsWith("image") -> hasImg
-                mimeFilter.startsWith("video") -> hasVid
-                else -> hasImg || hasVid
+                mimeFilter.startsWith("image") -> arrayOf(Manifest.permission.READ_MEDIA_IMAGES)
+                mimeFilter.startsWith("video") -> arrayOf(Manifest.permission.READ_MEDIA_VIDEO)
+                else -> arrayOf(Manifest.permission.READ_MEDIA_IMAGES, Manifest.permission.READ_MEDIA_VIDEO)
             }
-        } else {
-            ContextCompat.checkSelfPermission(context, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
-        }
-    }
+        } else arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE)
 
-    fun hasAllMediaPermissions(context: Context): Boolean {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            val hasImg = ContextCompat.checkSelfPermission(context, Manifest.permission.READ_MEDIA_IMAGES) == PackageManager.PERMISSION_GRANTED
-            val hasVid = ContextCompat.checkSelfPermission(context, Manifest.permission.READ_MEDIA_VIDEO) == PackageManager.PERMISSION_GRANTED
-            hasImg && hasVid
-        } else {
-            ContextCompat.checkSelfPermission(context, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
-        }
-    }
-
-    fun getRequiredPermission(): String =
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) Manifest.permission.READ_MEDIA_IMAGES else Manifest.permission.READ_EXTERNAL_STORAGE
-
-    fun getRequiredPermissions(): Array<String> =
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) arrayOf(Manifest.permission.READ_MEDIA_IMAGES, Manifest.permission.READ_MEDIA_VIDEO)
-        else arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE)
-
-    fun isVirtualCollectionUri(uri: Uri): Boolean {
-        val auth = (uri.authority ?: "").lowercase()
-        val full = uri.toString().lowercase()
-        return auth.contains("photopicker") ||
-            auth.contains("com.google.android.apps.photos") ||
-            auth.contains("com.android.providers.media.documents") ||
-            full.contains("/picker/") ||
-            full.contains("content://media/picker")
-    }
+    private fun isGooglePhotosCloudUri(uri: Uri): Boolean =
+        uri.toString().lowercase().let { it.contains("com.google.android.apps.photos") || it.contains("cloudpicker") }
 
     fun extractNormalizedFolderPath(relativePath: String?, dataPath: String?, bucketName: String): String {
         if (!relativePath.isNullOrBlank()) {
@@ -150,7 +134,6 @@ object GalleryMediaHelper {
     @Suppress("DEPRECATION")
     fun resolveFolderPathFromUri(context: Context, uri: Uri): String? {
         try {
-            if (isVirtualCollectionUri(uri)) return null
             if (DocumentsContract.isDocumentUri(context, uri)) {
                 val docId = DocumentsContract.getDocumentId(uri)
                 val auth = uri.authority ?: ""
@@ -182,33 +165,52 @@ object GalleryMediaHelper {
         return null
     }
 
+    private fun queryDisplayNameFromUri(context: Context, uri: Uri): String? {
+        return try {
+            context.contentResolver.query(uri, arrayOf(MediaStore.MediaColumns.DISPLAY_NAME), null, null, null)?.use { c ->
+                if (c.moveToFirst()) {
+                    val idx = c.getColumnIndex(MediaStore.MediaColumns.DISPLAY_NAME)
+                    if (idx >= 0) c.getString(idx) else null
+                } else null
+            }
+        } catch (_: Throwable) { null }
+    }
+
     suspend fun loadFolderContextForUri(context: Context, targetUri: Uri, isVideo: Boolean): Pair<String, List<GalleryPhotoItem>> = withContext(Dispatchers.IO) {
-        if (isVirtualCollectionUri(targetUri)) {
-            val single = GalleryPhotoItem(
-                id = 0L,
-                uri = targetUri,
-                name = if (isVideo) "Video" else "Foto",
-                albumName = "Colección",
-                dateAdded = System.currentTimeMillis(),
-                isVideo = isVideo,
-                mimeType = if (isVideo) "video/mp4" else "image/jpeg",
-                folderPath = ""
-            )
-            return@withContext "" to listOf(single)
-        }
         val all = loadAllMedia(context, if (isVideo) "video/*" else "image/*")
         val decodedUri = Uri.decode(targetUri.toString()).replace('\\', '/')
-        val targetId = targetUri.lastPathSegment?.substringAfterLast(':') ?: ""
+        val rawSeg = targetUri.lastPathSegment ?: ""
+        val targetId = rawSeg.substringAfterLast(':').substringAfterLast('/').filter { it.isDigit() }
+        val queriedName = queryDisplayNameFromUri(context, targetUri)?.trim() ?: ""
+
         val matchedItem = all.firstOrNull { item ->
             item.uri == targetUri ||
                 (targetId.isNotBlank() && item.id.toString() == targetId) ||
+                (queriedName.isNotBlank() && item.name.equals(queriedName, ignoreCase = true)) ||
                 (item.folderPath.isNotBlank() && decodedUri.endsWith("${item.folderPath}/${item.name}", ignoreCase = true))
         }
         val folderPath = resolveFolderPathFromUri(context, targetUri) ?: matchedItem?.folderPath ?: ""
-        val contextItems = if (folderPath.isNotBlank()) {
+        val rawFolderItems = if (folderPath.isNotBlank()) {
             all.filter { it.folderPath.equals(folderPath, ignoreCase = true) && it.isVideo == isVideo }
         } else {
             listOfNotNull(matchedItem)
+        }
+
+        // Si proviene de una colección de Google Fotos (ej: Personas y mascotas) y apunta a DCIM/Camera (>20 fotos),
+        // acotar al grupo de fotos de esa misma sesión/fecha para no mezclar las 100 fotos de la cámara.
+        val contextItems = if (matchedItem != null && isGooglePhotosCloudUri(targetUri) && rawFolderItems.size > 20) {
+            val sameDayWindowSec = 36L * 3600L
+            val sessionGroup = rawFolderItems.filter { kotlin.math.abs(it.dateAdded - matchedItem.dateAdded) <= sameDayWindowSec }
+            if (sessionGroup.size in 2..25) {
+                sessionGroup
+            } else {
+                val idx = rawFolderItems.indexOfFirst { it.id == matchedItem.id }.coerceAtLeast(0)
+                val from = (idx - 4).coerceAtLeast(0)
+                val to = (from + 10).coerceAtMost(rawFolderItems.size)
+                rawFolderItems.subList(from, to)
+            }
+        } else {
+            rawFolderItems
         }
         folderPath to contextItems
     }

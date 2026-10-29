@@ -22,12 +22,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.lifecycle.lifecycleScope
 import com.omnicast.core.protocol.SignalingMessage
+import com.omnicast.sender.gallery.GalleryMediaHelper
+import com.omnicast.sender.gallery.GalleryPhotoItem
 import com.omnicast.sender.gallery.GallerySessionHolder
 import com.omnicast.sender.media.LocalImageServer
 import com.omnicast.sender.network.QuickSignalingHelper
 import com.omnicast.sender.ui.SenderMainActivity
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class VideoCastPlayerActivity : ComponentActivity() {
 
@@ -39,12 +45,15 @@ class VideoCastPlayerActivity : ComponentActivity() {
 
     private var videoView: VideoView? = null
     private var mediaPlayer: MediaPlayer? = null
+    private val videoList = mutableStateListOf<GalleryPhotoItem>()
+    private val folderNameState = mutableStateOf("")
     private val currentUriState = mutableStateOf<Uri?>(null)
     private val currentTitleState = mutableStateOf("Video de Galería")
     private val currentIndexState = mutableIntStateOf(0)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        FloatingIndicatorService.setGalleryActive(true)
         com.omnicast.sender.service.CastSessionState.isGalleryCasting = true
 
         val uriString = intent.getStringExtra(EXTRA_VIDEO_URI)
@@ -58,13 +67,36 @@ class VideoCastPlayerActivity : ComponentActivity() {
 
         val sessionVideos = GallerySessionHolder.activeVideos
         if (sessionVideos.isNotEmpty()) {
+            videoList.clear()
+            videoList.addAll(sessionVideos)
             val idx = GallerySessionHolder.activeVideoIndex.coerceIn(0, sessionVideos.lastIndex)
             currentIndexState.intValue = idx
             currentUriState.value = initialUri ?: sessionVideos[idx].uri
             currentTitleState.value = sessionVideos[idx].name.ifBlank { title }
-        } else {
+            folderNameState.value = GallerySessionHolder.activeVideoFolderName
+        } else if (initialUri != null) {
             currentUriState.value = initialUri
             currentTitleState.value = title
+            videoList.add(GalleryPhotoItem(0L, initialUri, title, "Videos", System.currentTimeMillis(), isVideo = true, mimeType = "video/mp4"))
+        }
+
+        val targetVideoUri = currentUriState.value
+        if (targetVideoUri != null && videoList.size <= 1 && GalleryMediaHelper.hasGalleryPermission(this, "video/*")) {
+            lifecycleScope.launch(Dispatchers.IO) {
+                val (fPath, ctxVideos) = GalleryMediaHelper.loadFolderContextForUri(this@VideoCastPlayerActivity, targetVideoUri, isVideo = true)
+                if (ctxVideos.size > 1) {
+                    withContext(Dispatchers.Main) {
+                        val targetId = targetVideoUri.lastPathSegment?.substringAfterLast(':')?.filter { it.isDigit() } ?: ""
+                        val mIdx = ctxVideos.indexOfFirst { it.uri == targetVideoUri || (targetId.isNotBlank() && it.id.toString() == targetId) }.coerceAtLeast(0)
+                        val fLabel = fPath.substringAfterLast('/').ifBlank { folderNameState.value.ifBlank { "Videos" } }
+                        GallerySessionHolder.setVideos(ctxVideos, mIdx, fLabel)
+                        videoList.clear()
+                        videoList.addAll(ctxVideos)
+                        currentIndexState.intValue = mIdx
+                        folderNameState.value = fLabel
+                    }
+                }
+            }
         }
 
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
@@ -76,15 +108,9 @@ class VideoCastPlayerActivity : ComponentActivity() {
         setContent {
             val activeUri = currentUriState.value
             if (activeUri != null) {
-                val totalVideos = GallerySessionHolder.activeVideos.size
-                val folderName = GallerySessionHolder.activeVideoFolderName
-                val sub = if (totalVideos > 0 && folderName.isNotBlank()) {
-                    "📁 $folderName (${currentIndexState.intValue + 1}/$totalVideos)"
-                } else if (folderName.isNotBlank()) {
-                    "📁 $folderName"
-                } else {
-                    "TV Box Conectada"
-                }
+                val totalVideos = videoList.size.coerceAtLeast(1)
+                val folderName = folderNameState.value.ifBlank { "Videos" }
+                val sub = "📁 $folderName • ${currentIndexState.intValue + 1} / $totalVideos"
 
                 VideoPlayerScreen(
                     title = currentTitleState.value,
@@ -104,14 +130,13 @@ class VideoCastPlayerActivity : ComponentActivity() {
     }
 
     private fun changeVideo(delta: Int) {
-        val list = GallerySessionHolder.activeVideos
-        if (list.isEmpty()) return
+        if (videoList.isEmpty()) return
         val nextIdx = (currentIndexState.intValue + delta).let {
-            if (it < 0) list.lastIndex else if (it >= list.size) 0 else it
+            if (it < 0) videoList.lastIndex else if (it >= videoList.size) 0 else it
         }
         currentIndexState.intValue = nextIdx
         GallerySessionHolder.activeVideoIndex = nextIdx
-        val nextItem = list[nextIdx]
+        val nextItem = videoList[nextIdx]
         currentUriState.value = nextItem.uri
         currentTitleState.value = nextItem.name
         val mediaUrl = LocalImageServer.serveMedia(nextItem.uri, nextItem.mimeType, this)
@@ -133,15 +158,9 @@ class VideoCastPlayerActivity : ComponentActivity() {
 
     @Composable
     private fun VideoPlayerScreen(
-        title: String,
-        subtitle: String,
-        uri: Uri,
-        hasMultipleVideos: Boolean,
-        onPrevVideo: () -> Unit,
-        onNextVideo: () -> Unit,
-        onBack: () -> Unit,
-        onStop: () -> Unit,
-        onSendControl: (String, Long) -> Unit
+        title: String, subtitle: String, uri: Uri, hasMultipleVideos: Boolean,
+        onPrevVideo: () -> Unit, onNextVideo: () -> Unit, onBack: () -> Unit,
+        onStop: () -> Unit, onSendControl: (String, Long) -> Unit
     ) {
         var isPlaying by remember(uri) { mutableStateOf(true) }
         var currentMs by remember(uri) { mutableLongStateOf(0L) }
@@ -163,21 +182,13 @@ class VideoCastPlayerActivity : ComponentActivity() {
         }
 
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color(0xFF0B0F17))
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null
-                ) { showControls = !showControls }
+            modifier = Modifier.fillMaxSize().background(Color(0xFF0B0F17))
+                .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) { showControls = !showControls }
         ) {
             AndroidView(
                 factory = { ctx ->
                     VideoView(ctx).apply {
-                        layoutParams = FrameLayout.LayoutParams(
-                            ViewGroup.LayoutParams.MATCH_PARENT,
-                            ViewGroup.LayoutParams.MATCH_PARENT
-                        )
+                        layoutParams = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
                         videoView = this
                     }
                 },
@@ -193,87 +204,47 @@ class VideoCastPlayerActivity : ComponentActivity() {
                             isPlaying = true
                         }
                         view.setOnCompletionListener {
-                            if (GallerySessionHolder.activeVideos.isNotEmpty()) {
-                                onNextVideo()
-                            } else {
-                                isPlaying = false
-                                currentMs = durationMs
-                            }
+                            if (videoList.isNotEmpty()) onNextVideo() else { isPlaying = false; currentMs = durationMs }
                         }
                     }
                 },
                 modifier = Modifier.fillMaxSize()
             )
 
-            AnimatedVisibility(
-                visible = showControls,
-                enter = fadeIn(),
-                exit = fadeOut(),
-                modifier = Modifier.fillMaxSize()
-            ) {
+            AnimatedVisibility(visible = showControls, enter = fadeIn(), exit = fadeOut(), modifier = Modifier.fillMaxSize()) {
                 Box(modifier = Modifier.fillMaxSize().background(Color(0x88000000))) {
-                    VideoPlayerTopBar(
-                        title = title,
-                        subtitle = subtitle,
-                        onBack = onBack,
-                        onStop = onStop,
-                        modifier = Modifier.align(Alignment.TopCenter)
-                    )
+                    VideoPlayerTopBar(title = title, subtitle = subtitle, onBack = onBack, onStop = onStop, modifier = Modifier.align(Alignment.TopCenter))
 
                     val isNearEnd = durationMs > 2000L && currentMs >= (durationMs - 1500L)
                     VideoPlayerCenterControls(
-                        isPlaying = isPlaying,
-                        isNearEnd = isNearEnd,
-                        hasMultipleVideos = hasMultipleVideos,
+                        isPlaying = isPlaying, isNearEnd = isNearEnd, hasMultipleVideos = hasMultipleVideos,
                         onPrevVideo = onPrevVideo,
                         onRewind = {
                             val target = (currentMs - 10000L).coerceAtLeast(0L)
-                            videoView?.seekTo(target.toInt())
-                            currentMs = target
-                            onSendControl("SEEK", target)
+                            videoView?.seekTo(target.toInt()); currentMs = target; onSendControl("SEEK", target)
                         },
                         onPlayPause = {
                             videoView?.let { v ->
                                 if (v.isPlaying) {
-                                    v.pause()
-                                    isPlaying = false
-                                    onSendControl("PAUSE", currentMs)
+                                    v.pause(); isPlaying = false; onSendControl("PAUSE", currentMs)
                                 } else {
-                                    if (isNearEnd) {
-                                        v.seekTo(0)
-                                        currentMs = 0L
-                                        onSendControl("SEEK", 0L)
-                                    }
-                                    v.start()
-                                    isPlaying = true
-                                    onSendControl("PLAY", if (isNearEnd) 0L else currentMs)
+                                    if (isNearEnd) { v.seekTo(0); currentMs = 0L; onSendControl("SEEK", 0L) }
+                                    v.start(); isPlaying = true; onSendControl("PLAY", if (isNearEnd) 0L else currentMs)
                                 }
                             }
                         },
                         onForward = {
                             val target = (currentMs + 10000L).coerceAtMost(durationMs)
-                            videoView?.seekTo(target.toInt())
-                            currentMs = target
-                            onSendControl("SEEK", target)
+                            videoView?.seekTo(target.toInt()); currentMs = target; onSendControl("SEEK", target)
                         },
                         onNextVideo = onNextVideo,
                         modifier = Modifier.align(Alignment.Center)
                     )
 
                     VideoPlayerBottomBar(
-                        currentMs = currentMs,
-                        durationMs = durationMs,
-                        phoneMuted = phoneMuted,
-                        onSeek = { newMs ->
-                            currentMs = newMs
-                            videoView?.seekTo(newMs.toInt())
-                            onSendControl("SEEK", newMs)
-                        },
-                        onToggleMute = {
-                            phoneMuted = !phoneMuted
-                            val vol = if (phoneMuted) 0f else 1f
-                            mediaPlayer?.setVolume(vol, vol)
-                        },
+                        currentMs = currentMs, durationMs = durationMs, phoneMuted = phoneMuted,
+                        onSeek = { newMs -> currentMs = newMs; videoView?.seekTo(newMs.toInt()); onSendControl("SEEK", newMs) },
+                        onToggleMute = { phoneMuted = !phoneMuted; val vol = if (phoneMuted) 0f else 1f; mediaPlayer?.setVolume(vol, vol) },
                         modifier = Modifier.align(Alignment.BottomCenter)
                     )
                 }

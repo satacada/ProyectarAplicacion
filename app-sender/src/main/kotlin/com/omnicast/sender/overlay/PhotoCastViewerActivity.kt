@@ -79,6 +79,7 @@ class PhotoCastViewerActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        FloatingIndicatorService.setGalleryActive(true)
         com.omnicast.sender.service.CastSessionState.isGalleryCasting = true
 
         val holderPhotos = GallerySessionHolder.activePhotos
@@ -102,11 +103,11 @@ class PhotoCastViewerActivity : ComponentActivity() {
             val auth = it.authority ?: ""
             auth.contains("google.android.apps.docs") || auth.contains("drive")
         }
-        if (!isRemoteCloud && !GallerySessionHolder.hasExplicitContext) {
+        if (!isRemoteCloud && (!GallerySessionHolder.hasExplicitContext || photoUris.size <= 1)) {
             if (GalleryMediaHelper.hasGalleryPermission(this, "image/*")) {
                 loadFolderContextForPhoto()
             } else {
-                permLauncher.launch(GalleryMediaHelper.getRequiredPermissions())
+                permLauncher.launch(GalleryMediaHelper.getRequiredPermissions("image/*"))
             }
         }
 

@@ -1,6 +1,7 @@
 package com.omnicast.receiver.ui.components
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -15,7 +16,13 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -27,6 +34,61 @@ import java.util.Date
 import java.util.Locale
 
 @Composable
+fun TvCastToTvVectorIcon(
+    modifier: Modifier = Modifier,
+    tvColor: Color = Color(0xFFA78BFA),
+    castWaveColor: Color = Color(0xFF38BDF8)
+) {
+    Canvas(modifier = modifier) {
+        val w = size.width
+        val h = size.height
+        val stroke = 1.7.dp.toPx()
+
+        drawRoundRect(
+            color = tvColor,
+            topLeft = Offset(w * 0.10f, h * 0.14f),
+            size = Size(w * 0.80f, h * 0.60f),
+            cornerRadius = CornerRadius(w * 0.09f, w * 0.09f),
+            style = Stroke(width = stroke, cap = StrokeCap.Round, join = StrokeJoin.Round)
+        )
+        drawLine(
+            color = tvColor,
+            start = Offset(w * 0.36f, h * 0.86f),
+            end = Offset(w * 0.64f, h * 0.86f),
+            strokeWidth = stroke,
+            cap = StrokeCap.Round
+        )
+        drawLine(
+            color = tvColor,
+            start = Offset(w * 0.50f, h * 0.74f),
+            end = Offset(w * 0.50f, h * 0.86f),
+            strokeWidth = stroke,
+            cap = StrokeCap.Round
+        )
+        // Ondas de Casteo en esquina inferior izquierda de la pantalla moderna
+        drawCircle(color = castWaveColor, radius = w * 0.045f, center = Offset(w * 0.24f, h * 0.58f))
+        drawArc(
+            color = castWaveColor,
+            startAngle = -90f,
+            sweepAngle = 90f,
+            useCenter = false,
+            topLeft = Offset(w * 0.10f, h * 0.44f),
+            size = Size(w * 0.28f, h * 0.28f),
+            style = Stroke(width = stroke * 0.85f, cap = StrokeCap.Round)
+        )
+        drawArc(
+            color = castWaveColor,
+            startAngle = -90f,
+            sweepAngle = 90f,
+            useCenter = false,
+            topLeft = Offset(w * 0.01f, h * 0.35f),
+            size = Size(w * 0.46f, h * 0.46f),
+            style = Stroke(width = stroke * 0.85f, cap = StrokeCap.Round)
+        )
+    }
+}
+
+@Composable
 fun TvCleanTopBar(
     selectedTab: Int, onSelectTab: (Int) -> Unit,
     updateState: com.omnicast.receiver.update.TvUpdateState = com.omnicast.receiver.update.TvUpdateState.Idle,
@@ -35,9 +97,14 @@ fun TvCleanTopBar(
     Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             Box(
-                modifier = Modifier.size(34.dp).background(Color(0xFF0284C7), RoundedCornerShape(10.dp)),
+                modifier = Modifier
+                    .size(38.dp)
+                    .background(Color(0xFF2B1F47), RoundedCornerShape(10.dp))
+                    .border(1.2.dp, Color(0xFF8B5CF6), RoundedCornerShape(10.dp)),
                 contentAlignment = Alignment.Center
-            ) { Text("📺", fontSize = 18.sp) }
+            ) {
+                TvCastToTvVectorIcon(modifier = Modifier.size(22.dp))
+            }
             Text("OmniCast TV", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Color.White)
         }
         Row(horizontalArrangement = Arrangement.spacedBy(20.dp), verticalAlignment = Alignment.CenterVertically) {

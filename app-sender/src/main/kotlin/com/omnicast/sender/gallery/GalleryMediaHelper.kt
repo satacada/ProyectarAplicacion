@@ -38,12 +38,32 @@ object GalleryMediaHelper {
         }
     }
 
+    fun hasAllMediaPermissions(context: Context): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            val hasImg = ContextCompat.checkSelfPermission(context, Manifest.permission.READ_MEDIA_IMAGES) == PackageManager.PERMISSION_GRANTED
+            val hasVid = ContextCompat.checkSelfPermission(context, Manifest.permission.READ_MEDIA_VIDEO) == PackageManager.PERMISSION_GRANTED
+            hasImg && hasVid
+        } else {
+            ContextCompat.checkSelfPermission(context, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
+        }
+    }
+
     fun getRequiredPermission(): String =
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) Manifest.permission.READ_MEDIA_IMAGES else Manifest.permission.READ_EXTERNAL_STORAGE
 
     fun getRequiredPermissions(): Array<String> =
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) arrayOf(Manifest.permission.READ_MEDIA_IMAGES, Manifest.permission.READ_MEDIA_VIDEO)
         else arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE)
+
+    fun isVirtualCollectionUri(uri: Uri): Boolean {
+        val auth = (uri.authority ?: "").lowercase()
+        val full = uri.toString().lowercase()
+        return auth.contains("photopicker") ||
+            auth.contains("com.google.android.apps.photos") ||
+            auth.contains("com.android.providers.media.documents") ||
+            full.contains("/picker/") ||
+            full.contains("content://media/picker")
+    }
 
     fun extractNormalizedFolderPath(relativePath: String?, dataPath: String?, bucketName: String): String {
         if (!relativePath.isNullOrBlank()) {
@@ -71,11 +91,16 @@ object GalleryMediaHelper {
 
     suspend fun loadAllMedia(context: Context, mimeFilter: String = "*/*"): List<GalleryPhotoItem> = withContext(Dispatchers.IO) {
         val result = mutableListOf<GalleryPhotoItem>()
-        if (!hasGalleryPermission(context, mimeFilter)) return@withContext result
-        if (!mimeFilter.startsWith("video/")) queryCollection(context, MediaStore.Images.Media.EXTERNAL_CONTENT_URI, false, result)
-        if (!mimeFilter.startsWith("image/")) queryCollection(context, MediaStore.Video.Media.EXTERNAL_CONTENT_URI, true, result)
+        if (!mimeFilter.startsWith("video/") && hasGalleryPermission(context, "image/*")) {
+            queryCollection(context, MediaStore.Images.Media.EXTERNAL_CONTENT_URI, false, result)
+        }
+        if (!mimeFilter.startsWith("image/") && hasGalleryPermission(context, "video/*")) {
+            queryCollection(context, MediaStore.Video.Media.EXTERNAL_CONTENT_URI, true, result)
+        }
         result.sortByDescending { it.dateAdded }
-        GallerySessionHolder.cachedAllItems = result
+        if (mimeFilter == "*/*") {
+            GallerySessionHolder.cachedAllItems = result
+        }
         result
     }
 
@@ -125,19 +150,13 @@ object GalleryMediaHelper {
     @Suppress("DEPRECATION")
     fun resolveFolderPathFromUri(context: Context, uri: Uri): String? {
         try {
+            if (isVirtualCollectionUri(uri)) return null
             if (DocumentsContract.isDocumentUri(context, uri)) {
                 val docId = DocumentsContract.getDocumentId(uri)
                 val auth = uri.authority ?: ""
                 if (auth == "com.android.externalstorage.documents" && docId.contains(':')) {
                     val folder = docId.substringAfter(':').trim('/').substringBeforeLast('/', "").trim('/')
                     if (folder.isNotBlank()) return folder
-                } else if (auth == "com.android.providers.media.documents" && docId.contains(':')) {
-                    val type = docId.substringBefore(':')
-                    val mediaId = docId.substringAfter(':').toLongOrNull()
-                    if (mediaId != null) {
-                        val base = if (type == "video") MediaStore.Video.Media.EXTERNAL_CONTENT_URI else MediaStore.Images.Media.EXTERNAL_CONTENT_URI
-                        return queryFolderPathFromContentUri(context, ContentUris.withAppendedId(base, mediaId))
-                    }
                 }
             }
             queryFolderPathFromContentUri(context, uri)?.let { return it }
@@ -164,6 +183,19 @@ object GalleryMediaHelper {
     }
 
     suspend fun loadFolderContextForUri(context: Context, targetUri: Uri, isVideo: Boolean): Pair<String, List<GalleryPhotoItem>> = withContext(Dispatchers.IO) {
+        if (isVirtualCollectionUri(targetUri)) {
+            val single = GalleryPhotoItem(
+                id = 0L,
+                uri = targetUri,
+                name = if (isVideo) "Video" else "Foto",
+                albumName = "Colección",
+                dateAdded = System.currentTimeMillis(),
+                isVideo = isVideo,
+                mimeType = if (isVideo) "video/mp4" else "image/jpeg",
+                folderPath = ""
+            )
+            return@withContext "" to listOf(single)
+        }
         val all = loadAllMedia(context, if (isVideo) "video/*" else "image/*")
         val decodedUri = Uri.decode(targetUri.toString()).replace('\\', '/')
         val targetId = targetUri.lastPathSegment?.substringAfterLast(':') ?: ""
@@ -172,7 +204,7 @@ object GalleryMediaHelper {
                 (targetId.isNotBlank() && item.id.toString() == targetId) ||
                 (item.folderPath.isNotBlank() && decodedUri.endsWith("${item.folderPath}/${item.name}", ignoreCase = true))
         }
-        val folderPath = matchedItem?.folderPath ?: resolveFolderPathFromUri(context, targetUri) ?: ""
+        val folderPath = resolveFolderPathFromUri(context, targetUri) ?: matchedItem?.folderPath ?: ""
         val contextItems = if (folderPath.isNotBlank()) {
             all.filter { it.folderPath.equals(folderPath, ignoreCase = true) && it.isVideo == isVideo }
         } else {

@@ -237,6 +237,8 @@ fun TvDirectStreamScreen(
             }
         }
 
+        var showDownloadDialog by remember { mutableStateOf(false) }
+
         if (showSettingsDialog) {
             TvPlayerSettingsDialog(
                 title = title,
@@ -258,8 +260,20 @@ fun TvDirectStreamScreen(
                     st
                 },
                 onSaveToWatchLater = onSaveToWatchLater,
+                onDownloadBridge = { showDownloadDialog = true },
                 onExitPlayback = onCloseClick,
                 onDismiss = { showSettingsDialog = false; userInteractionCount++ }
+            )
+        }
+
+        if (showDownloadDialog && streamUrl.isNotBlank()) {
+            TvDownloadMovieDialog(
+                item = com.omnicast.receiver.directstream.TvPlaylistItem(
+                    url = streamUrl,
+                    title = title.ifBlank { "Película en reproducción" },
+                    durationMs = durationMs
+                ),
+                onDismiss = { showDownloadDialog = false; userInteractionCount++ }
             )
         }
     }

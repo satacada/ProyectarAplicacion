@@ -50,6 +50,7 @@ fun TvStandbyCleanScreen(
     var menuItem by remember { mutableStateOf<TvPlaylistItem?>(null) }
     var sharingItem by remember { mutableStateOf<TvPlaylistItem?>(null) }
     var renewItem by remember { mutableStateOf<TvPlaylistItem?>(null) }
+    var downloadingItem by remember { mutableStateOf<TvPlaylistItem?>(null) }
     var searchQuery by remember { mutableStateOf("") }
     var selectedSort by remember { mutableStateOf(TvVideoSortOrder.NEWEST) }
     val listState = androidx.compose.foundation.lazy.rememberLazyListState()
@@ -164,6 +165,7 @@ fun TvStandbyCleanScreen(
                                         item = item,
                                         onPlay = { onPlayPlaylist(item) },
                                         onMenu = { menuItem = item },
+                                        onDownload = { downloadingItem = item },
                                         isSelected = isSel,
                                         onToggleSelect = { if (isSel) selectedUrls.remove(item.url) else selectedUrls.add(item.url) },
                                         modifier = if (index == 0) Modifier.focusRequester(firstItemFocusRequester) else Modifier
@@ -218,6 +220,7 @@ fun TvStandbyCleanScreen(
         menuItem?.let { item ->
             TvVideoActionDialog(
                 item = item, onPlay = { onPlayPlaylist(item) }, onShare = { sharingItem = item }, onRenew = { renewItem = item },
+                onDownload = { downloadingItem = item },
                 onDelete = {
                     onDeletePlaylist(item); menuItem = null
                     scope.launch {
@@ -233,6 +236,7 @@ fun TvStandbyCleanScreen(
 
         sharingItem?.let { item -> TvShareDialog(item = item, onDismiss = { sharingItem = null }) }
         renewItem?.let { item -> TvRenewQrDialog(item = item, onDismiss = { renewItem = null; onClearExpiredRenew() }) }
+        downloadingItem?.let { item -> TvDownloadMovieDialog(item = item, onDismiss = { downloadingItem = null }) }
     }
 }
 

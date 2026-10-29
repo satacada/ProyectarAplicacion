@@ -31,6 +31,7 @@ fun TvVideoActionDialog(
     onPlay: () -> Unit,
     onShare: () -> Unit,
     onRenew: () -> Unit = {},
+    onDownload: () -> Unit = {},
     onDelete: () -> Unit,
     onDismiss: () -> Unit
 ) {
@@ -48,7 +49,7 @@ fun TvVideoActionDialog(
                     .fillMaxWidth()
                     .padding(20.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(10.dp)
+                verticalArrangement = Arrangement.spacedBy(9.dp)
             ) {
                 Text(
                     text = "🎬 Opciones de la Película",
@@ -67,12 +68,18 @@ fun TvVideoActionDialog(
                     overflow = TextOverflow.Ellipsis
                 )
 
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(2.dp))
 
                 TvDialogButton(
                     text = "▶️ Reproducir película",
                     isPrimary = true,
                     onClick = { onPlay(); onDismiss() }
+                )
+
+                TvDialogButton(
+                    text = "⬇️ Descargar película (Modo Puente / Aviso Disco)",
+                    isPrimary = false,
+                    onClick = { onDownload(); onDismiss() }
                 )
 
                 TvDialogButton(
@@ -154,6 +161,7 @@ fun TvPlaylistItemRow(
     item: TvPlaylistItem,
     onPlay: () -> Unit,
     onMenu: () -> Unit,
+    onDownload: (() -> Unit)? = null,
     isSelected: Boolean = false,
     onToggleSelect: (() -> Unit)? = null,
     modifier: Modifier = Modifier
@@ -209,13 +217,33 @@ fun TvPlaylistItemRow(
                         "%02d:%02d".format(m, s)
                     } else null
                     Text(
-                        text = if (isFocused) (if (posLabel != null) "▶ Reanudar en $posLabel • [→] Casilla / Menú" else "▶ Presiona OK para reproducir • [→] Casilla / Menú")
+                        text = if (isFocused) (if (posLabel != null) "▶ Reanudar en $posLabel • [→] Descargar Puente / Menú" else "▶ Presiona OK para reproducir • [→] Descargar Puente / Menú")
                                else (if (posLabel != null) "▶ En $posLabel" else "Guardada"),
                         color = if (isFocused) Color(0xFF7DD3FC) else (if (posLabel != null) Color(0xFF10B981) else Color(0xFF94A3B8)),
                         fontSize = 11.sp,
                         fontWeight = if (isFocused || posLabel != null) FontWeight.Medium else FontWeight.Normal
                     )
                 }
+            }
+        }
+
+        if (onDownload != null) {
+            var isDlFocused by remember { mutableStateOf(false) }
+            Box(
+                modifier = Modifier
+                    .size(38.dp)
+                    .onFocusChanged { isDlFocused = it.isFocused }
+                    .border(
+                        width = if (isDlFocused) 2.dp else 1.dp,
+                        color = if (isDlFocused) Color.White else Color(0xFFF59E0B),
+                        shape = RoundedCornerShape(8.dp)
+                    )
+                    .background(if (isDlFocused) Color(0xFFF59E0B) else Color(0xFF332510), RoundedCornerShape(8.dp))
+                    .focusable()
+                    .clickable(onClick = onDownload),
+                contentAlignment = Alignment.Center
+            ) {
+                Text("⬇️", fontSize = 14.sp)
             }
         }
 

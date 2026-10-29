@@ -33,6 +33,7 @@ fun TvPlayerSettingsDialog(
     subtitlesEnabled: Boolean = true,
     onToggleSubtitles: () -> Boolean = { true },
     onSaveToWatchLater: () -> Unit,
+    onDownloadBridge: () -> Unit = {},
     onExitPlayback: () -> Unit,
     onDismiss: () -> Unit
 ) {
@@ -52,9 +53,9 @@ fun TvPlayerSettingsDialog(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(22.dp),
+                    .padding(20.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(10.dp)
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Text(
                     text = "⚙️ Opciones de Reproducción",
@@ -105,6 +106,16 @@ fun TvPlayerSettingsDialog(
                     onClick = {
                         onSaveToWatchLater()
                         onDismiss()
+                    }
+                )
+
+                TvSettingsButton(
+                    text = "⬇️ Descargar en Ver más tarde (Modo Puente)",
+                    isPrimary = false,
+                    onClick = {
+                        if (!isSaved) onSaveToWatchLater()
+                        onDismiss()
+                        onDownloadBridge()
                     }
                 )
 

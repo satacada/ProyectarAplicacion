@@ -76,25 +76,28 @@ object GallerySessionHolder {
     }
 
     /**
-     * Registra el avance hacia una carpeta.
-     * - Si el usuario navega carpeta por carpeta (ej: 1 -> 3 -> 2 -> 4 -> 5), apila cada paso en orden exacto.
-     * - Si desde la raíz salta directamente a una ruta anidada (ej: "1/3/2/4/5"), expande y apila todos los
-     *   niveles intermedios para que el botón Atrás recorra 5 -> 4 -> 2 -> 3 -> 1 -> Raíz sin saltar ninguno.
+     * Registra el avance hacia una carpeta exactamente en el orden en que el usuario la visitó.
+     * - Si el usuario navega carpeta por carpeta (ej: 1 -> 3 -> 2 -> 4 -> 5), apila cada paso 1 a 1.
+     * - Si [expandAncestorsIfFromRoot] es true (solo cuando viene de una ruta física externa),
+     *   descompone los directorios intermedios.
      */
     fun navigateToFolder(
         targetPath: String,
         targetName: String,
         currentScrollIndex: Int = 0,
         currentScrollOffset: Int = 0,
-        expandAncestorsIfFromRoot: Boolean = true
+        expandAncestorsIfFromRoot: Boolean = false,
+        customItems: List<GalleryPhotoItem>? = null
     ) {
         ensureRouteInitialized()
         updateCurrentScroll(currentScrollIndex, currentScrollOffset)
         val cleanTarget = targetPath.trim('/')
         val currentTop = routeStack.last()
-        if (currentTop.path.equals(cleanTarget, ignoreCase = true)) return
+        if (customItems == null && currentTop.path.equals(cleanTarget, ignoreCase = true) && currentTop.customItems == null) {
+            return
+        }
 
-        if (expandAncestorsIfFromRoot && currentTop.path.isEmpty() && cleanTarget.contains('/')) {
+        if (expandAncestorsIfFromRoot && currentTop.path.isEmpty() && cleanTarget.contains('/') && customItems == null) {
             val segments = cleanTarget.split('/').filter { it.isNotBlank() }
             var acc = ""
             for (seg in segments) {
@@ -106,27 +109,23 @@ object GallerySessionHolder {
             return
         }
 
-        if (cleanTarget.startsWith("${currentTop.path}/", ignoreCase = true) && currentTop.path.isNotEmpty()) {
-            val remainder = cleanTarget.substring(currentTop.path.length + 1)
-            val segments = remainder.split('/').filter { it.isNotBlank() }
-            var acc = currentTop.path
-            for (seg in segments) {
-                acc = "$acc/$seg"
-                if (!routeStack.last().path.equals(acc, ignoreCase = true)) {
-                    routeStack.add(GalleryNavNode(path = acc, name = seg))
-                }
-            }
-            return
-        }
-
         val displayName = targetName.ifBlank { cleanTarget.substringAfterLast('/').ifBlank { ROOT_NAME } }
-        routeStack.add(GalleryNavNode(path = cleanTarget, name = displayName))
+        routeStack.add(
+            GalleryNavNode(
+                path = cleanTarget,
+                name = displayName,
+                customItems = customItems
+            )
+        )
     }
 
-    /**
-     * Reconstruye la ruta completa de carpetas desde la raíz hasta [folderPath] cuando un archivo
-     * proviene del selector del sistema y la pila aún estaba en la raíz.
-     */
+    fun jumpToRouteIndex(targetIndex: Int) {
+        if (targetIndex < 0 || targetIndex >= routeStack.lastIndex) return
+        while (routeStack.lastIndex > targetIndex) {
+            routeStack.removeAt(routeStack.lastIndex)
+        }
+    }
+
     fun reconstructRouteIfNeeded(folderPath: String) {
         val clean = folderPath.trim('/')
         if (clean.isEmpty()) {

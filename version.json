@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 285,
-  "versionCodeReceiver": 268,
-  "versionName": "3.5.34",
-  "releaseTag": "v3.5.34",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.34/omnicast-sender-v3.5.34.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.34/omnicast-receiver-v3.5.34.apk",
-  "changelog": "v3.5.34: Aislamiento estricto por nivel de carpeta en Fotos y Videos (solo navega entre las N fotos/videos de esa carpeta exacta con bucle circular N->1 y 1->N) y retroceso paso a paso con botón Atrás (Foto/Video -> Carpeta actual -> Ruta inversa exacta sin saltos)."
+  "versionCodeSender": 286,
+  "versionCodeReceiver": 269,
+  "versionName": "3.5.35",
+  "releaseTag": "v3.5.35",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.35/omnicast-sender-v3.5.35.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.35/omnicast-receiver-v3.5.35.apk",
+  "changelog": "v3.5.35: 1) Soporte aislado para Colecciones/Personas y mascotas (sin mezclar las 100 fotos de Cámara). 2) Agrupaciones de Videos y permiso READ_MEDIA_VIDEO activo con retroceso exacto LIFO (5->4->2->3->1) y botones Cyber-Dark modernos. 3) Icono vectorial moderno de Casteo a TV en Receiver (reemplaza TV vintage). 4) Descarga en Modo Puente en 'Ver más tarde' con cálculo real de espacio libre vs peso de película y advertencia de disco."
 }

@@ -29,7 +29,8 @@ data class GalleryNavNode(
     val path: String,
     val name: String,
     val firstVisibleIndex: Int = 0,
-    val firstVisibleOffset: Int = 0
+    val firstVisibleOffset: Int = 0,
+    val customItems: List<GalleryPhotoItem>? = null
 )
 
 data class FolderViewData(

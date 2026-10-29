@@ -20,6 +20,7 @@ data class TvPlaylistItem(
     val headers: Map<String, String> = emptyMap(),
     val timestamp: Long = 0L,
     val lastPositionMs: Long = 0L,
+    val durationMs: Long = 0L,
     val isFavorite: Boolean = false
 )
 

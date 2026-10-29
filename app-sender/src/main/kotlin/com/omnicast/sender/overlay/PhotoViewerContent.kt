@@ -175,49 +175,52 @@ fun PhotoViewerContent(
             }
         }
 
-        // Cápsula Superior: ← Carpeta, 1:1, -90°, +90° y Detener
+        // Cápsula Superior Cyber-Dark: ◀ Carpeta, 1:1, -90°, +90° y Detener
         Surface(
-            color = Color(0xD91E2433),
+            color = Color(0xE61D1730),
             shape = RoundedCornerShape(24.dp),
-            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF334155)),
+            border = androidx.compose.foundation.BorderStroke(1.2.dp, Color(0xFF6D28D9)),
             modifier = Modifier.align(Alignment.TopCenter).padding(top = 42.dp)
         ) {
             Row(
-                modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Surface(
-                    color = Color(0xFF1E293B),
+                    color = Color(0xFF2B1F47),
                     shape = RoundedCornerShape(12.dp),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF38BDF8)),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF8B5CF6)),
                     modifier = Modifier.clickable { onBack() }
                 ) {
-                    Text("←", color = Color(0xFF38BDF8), fontSize = 13.sp, fontWeight = FontWeight.ExtraBold, modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp))
+                    Text("◀ Carpeta", color = Color(0xFFA78BFA), fontSize = 12.sp, fontWeight = FontWeight.ExtraBold, modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp))
                 }
 
                 Surface(
-                    color = Color(0xFF283347),
+                    color = Color(0xFF38142C),
                     shape = RoundedCornerShape(12.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFBE185D)),
                     modifier = Modifier.clickable { resetZoom() }
                 ) {
-                    Text("1:1", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp))
+                    Text("1:1", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.ExtraBold, modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp))
                 }
 
                 Surface(
-                    color = Color(0xFF283347),
+                    color = Color(0xFF281C44),
                     shape = RoundedCornerShape(12.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF6D28D9)),
                     modifier = Modifier.clickable { rotateBy(-90f) }
                 ) {
-                    Text("⟲ -90°", color = Color(0xFF94A3B8), fontSize = 12.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp))
+                    Text("⟲ -90°", color = Color(0xFFDDD6FE), fontSize = 12.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp))
                 }
 
                 Surface(
-                    color = Color(0xFF283347),
+                    color = Color(0xFF281C44),
                     shape = RoundedCornerShape(12.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF6D28D9)),
                     modifier = Modifier.clickable { rotateBy(90f) }
                 ) {
-                    Text("⟳ +90°", color = Color(0xFF94A3B8), fontSize = 12.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp))
+                    Text("⟳ +90°", color = Color(0xFFDDD6FE), fontSize = 12.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp))
                 }
 
                 Surface(
@@ -229,8 +232,8 @@ fun PhotoViewerContent(
                         text = "■ Detener",
                         color = Color.White,
                         fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                        fontWeight = FontWeight.ExtraBold,
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
                     )
                 }
             }

@@ -89,8 +89,7 @@ class FloatingIndicatorService : Service() {
         ).apply { gravity = Gravity.TOP or Gravity.END; x = builder.dpToPx(16f); y = builder.dpToPx(120f) }
 
         rootLayout = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; gravity = Gravity.END }
-        val ver = try { packageManager.getPackageInfo(packageName, 0).versionName } catch (_: Throwable) { "3.32" }
-        val pillText = TextView(this).apply { text = "OmniCast v$ver"; setTextColor(Color.WHITE); setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f); typeface = Typeface.DEFAULT_BOLD }
+        val pillText = TextView(this).apply { text = "Cast"; setTextColor(Color.WHITE); setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f); typeface = Typeface.DEFAULT_BOLD }
         val prefs = getSharedPreferences("omnicast_prefs", Context.MODE_PRIVATE)
         val tvIp = prefs.getString("saved_tv_ip", "Desconectado")?.takeIf { it.isNotBlank() } ?: "Desconectado"
         val statusFeedbackText = TextView(this).apply {
@@ -218,7 +217,7 @@ class FloatingIndicatorService : Service() {
                 com.omnicast.sender.service.CastMediaNotificationService.stop(this)
                 com.omnicast.sender.stream.ActiveStreamHolder.stopCasting()
                 com.omnicast.sender.stream.ActiveStreamHolder.clear()
-                pillText.text = "OmniCast"; statusFeedbackText.text = "🛑 Transmisión detenida."
+                pillText.text = "Cast"; statusFeedbackText.text = "🛑 Transmisión detenida."
                 statusFeedbackText.setTextColor(Color.parseColor("#EF4444"))
                 Toast.makeText(this, "🛑 Transmisión detenida", Toast.LENGTH_SHORT).show()
             },

@@ -76,48 +76,19 @@ fun TvStandbyCleanScreen(
     }
 
     val activePlaylists = remember(playlists) {
-        if (playlists.isEmpty()) {
-            listOf(
-                TvPlaylist("from_website", "Ver más tarde", emptyList(), false, System.currentTimeMillis()),
-                TvPlaylist("favoritos", "⭐ Favoritos", emptyList(), true, System.currentTimeMillis())
-            )
-        } else {
-            playlists.map {
-                if (it.name == "FromWebSite") it.copy(name = "Ver más tarde") else it
-            }
-        }
+        if (playlists.isEmpty()) listOf(TvPlaylist("from_website", "Ver más tarde", emptyList(), false, System.currentTimeMillis()), TvPlaylist("favoritos", "⭐ Favoritos", emptyList(), true, System.currentTimeMillis()))
+        else playlists.map { if (it.name == "FromWebSite") it.copy(name = "Ver más tarde") else it }
     }
+    val currentPlaylist = remember(activePlaylists, enteredPlaylistId) { activePlaylists.find { it.id == enteredPlaylistId } }
+    val playlistFilteredItems = remember(currentPlaylist, searchQuery, selectedSort) { currentPlaylist?.let { filterAndSortTvPlaylistItems(it.items, searchQuery, selectedSort) } ?: emptyList() }
+    val filteredHistory = remember(history, searchQuery, selectedSort) { filterAndSortTvHistory(history, searchQuery, selectedSort) }
+    val isConnected = !connectedClientIp.isNullOrBlank()
+    val mainBgBrush = androidx.compose.ui.graphics.Brush.verticalGradient(if (isConnected) listOf(Color(0xFF065F46), Color(0xFF047857), Color(0xFF064E3B)) else listOf(Color(0xFF13101E), Color(0xFF13101E)))
 
-    val currentPlaylist = remember(activePlaylists, enteredPlaylistId) {
-        activePlaylists.find { it.id == enteredPlaylistId }
-    }
-
-    val playlistFilteredItems = remember(currentPlaylist, searchQuery, selectedSort) {
-        currentPlaylist?.let { filterAndSortTvPlaylistItems(it.items, searchQuery, selectedSort) } ?: emptyList()
-    }
-
-    val filteredHistory = remember(history, searchQuery, selectedSort) {
-        filterAndSortTvHistory(history, searchQuery, selectedSort)
-    }
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFF13101E))
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(top = 20.dp, start = 36.dp, end = 36.dp, bottom = 80.dp)
-        ) {
+    Box(modifier = Modifier.fillMaxSize().background(mainBgBrush).then(if (isConnected) Modifier.border(3.dp, Color(0xFF34D399)) else Modifier)) {
+        Column(modifier = Modifier.fillMaxSize().padding(top = 20.dp, start = 36.dp, end = 36.dp, bottom = 80.dp)) {
             if (enteredPlaylistId == null) {
-                TvCleanTopBar(
-                    selectedTab = selectedTab,
-                    onSelectTab = { selectedTab = it; searchQuery = "" },
-                    updateState = updateState,
-                    onCheckUpdate = onCheckUpdate,
-                    onDownloadAndInstall = onDownloadAndInstall
-                )
+                TvCleanTopBar(selectedTab = selectedTab, onSelectTab = { selectedTab = it; searchQuery = "" }, isConnected = isConnected, updateState = updateState, onCheckUpdate = onCheckUpdate, onDownloadAndInstall = onDownloadAndInstall)
                 Spacer(modifier = Modifier.height(14.dp))
             } else {
                 // Cabecera interna de la carpeta con botón de retorno y buscador superior exclusivo
@@ -137,7 +108,7 @@ fun TvStandbyCleanScreen(
                     var isTrashFocused by remember { mutableStateOf(false) }
                     val hasSel = selectedUrls.isNotEmpty()
                     Card(
-                        colors = CardDefaults.cardColors(containerColor = if (isTrashFocused) (if (hasSel) Color(0xFFEF4444) else Color(0xFF38BDF8)) else (if (hasSel) Color(0xFF7F1D1D) else Color(0xFF251C35))),
+                        colors = CardDefaults.cardColors(containerColor = if (isTrashFocused) (if (hasSel) Color(0xFFEF4444) else Color(0xFF38BDF8)) else (if (hasSel) Color(0xFF7F1D1D) else (if (isConnected) Color(0xFF022C22) else Color(0xFF251C35)))),
                         shape = RoundedCornerShape(8.dp),
                         modifier = Modifier.onFocusChanged { isTrashFocused = it.isFocused }.focusable()
                             .clickable {
@@ -153,7 +124,7 @@ fun TvStandbyCleanScreen(
                                     }
                                 }
                             }
-                            .border(1.dp, if (isTrashFocused) Color.White else (if (hasSel) Color(0xFFEF4444) else Color(0xFF3E3255)), RoundedCornerShape(8.dp))
+                            .border(1.dp, if (isTrashFocused) Color.White else (if (hasSel) Color(0xFFEF4444) else (if (isConnected) Color(0xFF34D399) else Color(0xFF3E3255))), RoundedCornerShape(8.dp))
                     ) {
                         Row(modifier = Modifier.padding(horizontal = 14.dp, vertical = 9.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                             Text("🗑", fontSize = 15.sp)
@@ -169,7 +140,7 @@ fun TvStandbyCleanScreen(
                     if (enteredPlaylistId != null) {
                         // Vista detallada de películas dentro de la carpeta
                         if (playlistFilteredItems.isEmpty()) {
-                            TvEmptyState(if (searchQuery.isNotBlank()) "No se encontraron videos para \"$searchQuery\"" else "Esta carpeta no contiene películas.")
+                            TvEmptyState(if (searchQuery.isNotBlank()) "No se encontraron videos para \"$searchQuery\"" else "Esta carpeta no contiene películas.", isConnected = isConnected)
                         } else {
                             LazyColumn(
                                 state = listState,
@@ -194,7 +165,7 @@ fun TvStandbyCleanScreen(
                         when (selectedTab) {
                             0 -> {
                                 if (filteredHistory.isEmpty()) {
-                                    TvEmptyState("No hay videos reproducidos recientemente.")
+                                    TvEmptyState("No hay videos reproducidos recientemente.", isConnected = isConnected)
                                 } else {
                                     LazyColumn(
                                         state = listState,
@@ -202,7 +173,7 @@ fun TvStandbyCleanScreen(
                                         modifier = Modifier.fillMaxSize()
                                     ) {
                                         items(filteredHistory, key = { it.id }) { item ->
-                                            TvRecentItemRow(item = item, onClick = { onPlayHistory(item) })
+                                            TvRecentItemRow(item = item, isConnected = isConnected, onClick = { onPlayHistory(item) })
                                         }
                                     }
                                 }
@@ -211,7 +182,7 @@ fun TvStandbyCleanScreen(
                                 val folders = if (selectedTab == 2) activePlaylists.filter { it.isDefault || it.name.contains("Favorito", ignoreCase = true) } else activePlaylists
                                 LazyColumn(state = listState, verticalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxSize()) {
                                     items(folders, key = { it.id }) { pl ->
-                                        TvFolderRow(name = pl.name, date = formatFolderDate(pl.createdAt), itemCount = pl.items.size, onClick = { enteredPlaylistId = pl.id; searchQuery = ""; selectedUrls.clear() })
+                                        TvFolderRow(name = pl.name, date = formatFolderDate(pl.createdAt), itemCount = pl.items.size, isConnected = isConnected, onClick = { enteredPlaylistId = pl.id; searchQuery = ""; selectedUrls.clear() })
                                     }
                                 }
                             }
@@ -222,10 +193,19 @@ fun TvStandbyCleanScreen(
             }
 
             Box(modifier = Modifier.fillMaxWidth().padding(top = 10.dp), contentAlignment = Alignment.Center) {
-                Surface(color = Color(0xFF251C35), shape = RoundedCornerShape(20.dp), modifier = Modifier.padding(vertical = 4.dp)) {
+                Surface(
+                    color = if (isConnected) Color(0xE6022C22) else Color(0xFF251C35),
+                    shape = RoundedCornerShape(20.dp),
+                    modifier = Modifier
+                        .padding(vertical = 4.dp)
+                        .border(1.dp, if (isConnected) Color(0xFF6EE7B7) else Color.Transparent, RoundedCornerShape(20.dp))
+                ) {
                     Text(
                         if (enteredPlaylistId != null) "Pulsa [Atrás] en el control para volver a las carpetas" else "¿No encuentras tus archivos? Actualiza o envía desde tu celular",
-                        color = Color(0xFF38BDF8), fontSize = 12.sp, modifier = Modifier.padding(horizontal = 18.dp, vertical = 6.dp)
+                        color = if (isConnected) Color(0xFFECFDF5) else Color(0xFF38BDF8),
+                        fontSize = 12.sp,
+                        fontWeight = if (isConnected) FontWeight.SemiBold else FontWeight.Normal,
+                        modifier = Modifier.padding(horizontal = 18.dp, vertical = 6.dp)
                     )
                 }
             }
@@ -259,20 +239,25 @@ private fun TvFolderDetailHeader(folderName: String, itemCount: Int, onBack: () 
     var isBackFocused by remember { mutableStateOf(false) }
     Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
         Card(
-            colors = CardDefaults.cardColors(containerColor = if (isBackFocused) Color(0xFF38BDF8) else Color(0xFF251C35)),
+            colors = CardDefaults.cardColors(containerColor = if (isBackFocused) Color(0xFF38BDF8) else Color(0xFF022C22)),
             shape = RoundedCornerShape(8.dp),
             modifier = modifier.onFocusChanged { isBackFocused = it.isFocused }.focusable().clickable(onClick = onBack)
-                .border(1.dp, if (isBackFocused) Color.White else Color(0xFF38BDF8), RoundedCornerShape(8.dp))
+                .border(1.5.dp, if (isBackFocused) Color.White else Color(0xFF38BDF8), RoundedCornerShape(8.dp))
         ) {
             Text("◀ Volver a carpetas", color = if (isBackFocused) Color.Black else Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp))
         }
-        Text("📂 $folderName ($itemCount película${if (itemCount != 1) "s" else ""})", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+        Text("📂 $folderName ($itemCount película${if (itemCount != 1) "s" else ""})", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
     }
 }
 
 @Composable
-private fun TvEmptyState(msg: String) {
+private fun TvEmptyState(msg: String, isConnected: Boolean = false) {
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text(msg, color = Color(0xFF64748B), fontSize = 14.sp)
+        Text(
+            text = msg,
+            color = if (isConnected) Color(0xFFECFDF5) else Color(0xFF94A3B8),
+            fontSize = 15.sp,
+            fontWeight = if (isConnected) FontWeight.SemiBold else FontWeight.Normal
+        )
     }
 }

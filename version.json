@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 281,
-  "versionCodeReceiver": 264,
-  "versionName": "3.5.30",
-  "releaseTag": "v3.5.30",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.30/omnicast-sender-v3.5.30.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.30/omnicast-receiver-v3.5.30.apk",
-  "changelog": "v3.5.30: Línea de tiempo interactiva seleccionable con el control remoto de la TV e iconos vectoriales circulares estándar (-10s, Pausa/Play, +10s) en ExoPlayer; reanudación automática de proyección de pantalla al encender/desbloquear el celular."
+  "versionCodeSender": 282,
+  "versionCodeReceiver": 265,
+  "versionName": "3.5.31",
+  "releaseTag": "v3.5.31",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.31/omnicast-sender-v3.5.31.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.31/omnicast-receiver-v3.5.31.apk",
+  "changelog": "v3.5.31: Botón flotante verde simplificado a 'Cast' en el celular; pantalla principal del Receiver con fondo Verde Esmeralda de alto impacto visual y máximo contraste de texto al vincularse con el celular."
 }

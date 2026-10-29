@@ -1,8 +1,11 @@
 package com.omnicast.sender.overlay
 
+import android.app.Activity
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.provider.MediaStore
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
@@ -31,6 +34,7 @@ class GalleryPickerActivity : ComponentActivity() {
     private val hasPermissionState = mutableStateOf(false)
     private val mimeFilterState = mutableStateOf("image/*")
     private var openedFromSystemCollections = false
+    private var hasAutoOpenedSettings = false
 
     private val permissionLauncher = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
         val granted = GalleryMediaHelper.hasGalleryPermission(this, mimeFilterState.value)
@@ -39,15 +43,40 @@ class GalleryPickerActivity : ComponentActivity() {
     }
 
     private val viewerLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        if (result.resultCode == PhotoCastViewerActivity.RESULT_EXIT_TO_MAIN) exitGalleryCompletely()
+        if (result.resultCode == PhotoCastViewerActivity.RESULT_EXIT_TO_MAIN) {
+            exitGalleryCompletely()
+        } else if (openedFromSystemCollections) {
+            launchSystemExplorer(showToast = false)
+        }
     }
 
     private val videoLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        if (result.resultCode == PhotoCastViewerActivity.RESULT_EXIT_TO_MAIN) exitGalleryCompletely()
+        if (result.resultCode == PhotoCastViewerActivity.RESULT_EXIT_TO_MAIN) {
+            exitGalleryCompletely()
+        } else if (openedFromSystemCollections) {
+            launchSystemExplorer(showToast = false)
+        }
     }
 
-    private val systemMultiPicker = registerForActivityResult(ActivityResultContracts.GetMultipleContents()) { uris: List<Uri> ->
-        if (uris.isNotEmpty()) handleExternalUrisSelected(uris) else openedFromSystemCollections = false
+    private val systemPickerLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        val uris = mutableListOf<Uri>()
+        if (result.resultCode == Activity.RESULT_OK && result.data != null) {
+            val data = result.data!!
+            val clip = data.clipData
+            if (clip != null) {
+                for (i in 0 until clip.itemCount) {
+                    clip.getItemAt(i)?.uri?.let { uris.add(it) }
+                }
+            }
+            if (uris.isEmpty()) {
+                data.data?.let { uris.add(it) }
+            }
+        }
+        if (uris.isNotEmpty()) {
+            handleExternalUrisSelected(uris)
+        } else {
+            openedFromSystemCollections = false
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -93,18 +122,27 @@ class GalleryPickerActivity : ComponentActivity() {
         super.onNewIntent(intent); setIntent(intent)
         intent.getStringExtra(EXTRA_MIME_FILTER)?.let {
             mimeFilterState.value = it; hasPermissionState.value = GalleryMediaHelper.hasGalleryPermission(this, it)
-            if (hasPermissionState.value) refreshMediaItems()
+            if (hasPermissionState.value) refreshMediaItems() else permissionLauncher.launch(GalleryMediaHelper.getRequiredPermissions(it))
         }
     }
 
     private fun requestOrOpenPermissions() {
-        if (GalleryMediaHelper.hasGalleryPermission(this, mimeFilterState.value)) {
-            hasPermissionState.value = true; Toast.makeText(this, "🔄 Actualizando archivos...", Toast.LENGTH_SHORT).show(); refreshMediaItems()
-        } else permissionLauncher.launch(GalleryMediaHelper.getRequiredPermissions(mimeFilterState.value))
+        if (!GalleryMediaHelper.hasGalleryPermission(this, mimeFilterState.value)) {
+            permissionLauncher.launch(GalleryMediaHelper.getRequiredPermissions(mimeFilterState.value))
+        } else {
+            val isVid = mimeFilterState.value.startsWith("video/")
+            val count = if (isVid) allItemsState.count { it.isVideo } else allItemsState.count { !it.isVideo }
+            if (count == 0) {
+                openAppPermissionSettings()
+            } else {
+                Toast.makeText(this, "🔄 Actualizando archivos...", Toast.LENGTH_SHORT).show()
+                refreshMediaItems()
+            }
+        }
     }
 
     private fun openAppPermissionSettings() {
-        Toast.makeText(this, "Activa el permiso de Fotos y Videos en Ajustes", Toast.LENGTH_LONG).show()
+        Toast.makeText(this, "Activa el permiso de Fotos y Videos en Ajustes de la App", Toast.LENGTH_LONG).show()
         try {
             val settingsIntent = Intent(
                 android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
@@ -121,6 +159,12 @@ class GalleryPickerActivity : ComponentActivity() {
             allItemsState.clear()
             allItemsState.addAll(loaded)
             isLoadingState.value = false
+            val isVid = mimeFilterState.value.startsWith("video/")
+            val relevantCount = if (isVid) loaded.count { it.isVideo } else loaded.count { !it.isVideo }
+            if (relevantCount == 0 && !hasAutoOpenedSettings) {
+                hasAutoOpenedSettings = true
+                openAppPermissionSettings()
+            }
         }
     }
 
@@ -137,7 +181,12 @@ class GalleryPickerActivity : ComponentActivity() {
         overridePendingTransition(0, 0)
     }
 
-    private fun openPhotoInContext(folderPhotos: List<GalleryPhotoItem>, startIndex: Int, folderName: String) {
+    private fun openPhotoInContext(
+        folderPhotos: List<GalleryPhotoItem>,
+        startIndex: Int,
+        folderName: String,
+        fromCollectionsSingle: Boolean = false
+    ) {
         if (folderPhotos.isEmpty()) return
         val safeIdx = startIndex.coerceIn(0, folderPhotos.lastIndex)
         val targetItem = folderPhotos[safeIdx]
@@ -147,6 +196,7 @@ class GalleryPickerActivity : ComponentActivity() {
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             putExtra("EXTRA_START_INDEX", safeIdx)
             putExtra("IMAGE_URI", targetItem.uri.toString())
+            putExtra("EXTRA_FROM_COLLECTIONS_SINGLE", fromCollectionsSingle)
         }
         viewerLauncher.launch(viewerIntent)
         @Suppress("DEPRECATION")
@@ -174,12 +224,28 @@ class GalleryPickerActivity : ComponentActivity() {
     private fun launchSystemExplorer(showToast: Boolean = true) {
         val filter = if (mimeFilterState.value.startsWith("video/")) "video/*" else "image/*"
         if (showToast) {
-            Toast.makeText(this, "💡 En Colecciones puedes tocar 1 foto/video o mantener pulsado para elegir varios", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "💡 En Colecciones puedes elegir varias fotos o tocar un rostro para agruparlo", Toast.LENGTH_SHORT).show()
         }
         try {
-            systemMultiPicker.launch(filter)
+            val maxItems = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                runCatching { MediaStore.getPickImagesMaxLimit() }.getOrDefault(100).coerceAtLeast(2)
+            } else 100
+            val pickIntent = Intent("android.provider.action.PICK_IMAGES").apply {
+                type = filter
+                putExtra("android.provider.extra.PICK_IMAGES_MAX", maxItems)
+                putExtra("android.provider.extra.PICK_IMAGES_IN_ORDER", true)
+                putExtra("android.provider.extra.PICK_IMAGES_LAUNCH_TAB", 0)
+            }
+            systemPickerLauncher.launch(pickIntent)
         } catch (_: Throwable) {
-            try { systemMultiPicker.launch("*/*") } catch (_: Throwable) {
+            try {
+                val fallback = Intent(Intent.ACTION_GET_CONTENT).apply {
+                    type = filter
+                    putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
+                    addCategory(Intent.CATEGORY_OPENABLE)
+                }
+                systemPickerLauncher.launch(fallback)
+            } catch (_: Throwable) {
                 Toast.makeText(this, "No se encontró explorador de archivos", Toast.LENGTH_SHORT).show()
             }
         }
@@ -216,40 +282,37 @@ class GalleryPickerActivity : ComponentActivity() {
                 val v = m.startsWith("video/")
                 GalleryPhotoItem((idx + 1).toLong(), u, if (v) "Video ${idx + 1}" else "Foto ${idx + 1}", collectionName, System.currentTimeMillis() - idx, v, m, "__collection__")
             }
-            GallerySessionHolder.navigateToFolder("__collection_${System.currentTimeMillis()}", collectionName, customItems = customList)
+            if (!openedFromSystemCollections) {
+                GallerySessionHolder.navigateToFolder("__collection_${System.currentTimeMillis()}", collectionName, customItems = customList)
+            }
             if (isVideo) openVideoInContext(customList.filter { it.isVideo }.ifEmpty { customList }, 0, collectionName)
             else openPhotoInContext(customList.filter { !it.isVideo }.ifEmpty { customList }, 0, collectionName)
             return
         }
 
+        if (openedFromSystemCollections && !isVideo) {
+            val initialItem = GalleryPhotoItem(0L, firstUri, "Foto", "Personas y mascotas", System.currentTimeMillis(), false, firstMime, "__collections_person__")
+            openPhotoInContext(listOf(initialItem), 0, "Personas y mascotas", fromCollectionsSingle = true)
+            return
+        }
+
         lifecycleScope.launch {
             val (folderPath, contextItems) = GalleryMediaHelper.loadFolderContextForUri(this@GalleryPickerActivity, firstUri, isVideo)
-            if (allItemsState.isEmpty() && GallerySessionHolder.cachedAllItems.isNotEmpty()) {
-                allItemsState.addAll(GallerySessionHolder.cachedAllItems)
-            }
             val folderName = folderPath.substringAfterLast('/').ifBlank { "Colección" }
-            val decodedUri = Uri.decode(firstUri.toString()).replace('\\', '/')
-            val embeddedId = Regex("(?:media/external/(?:images|video|file)/media/|media/picker/\\d+/[^/]+/media/|image:|video:)(\\d+)")
-                .find(decodedUri)?.groupValues?.getOrNull(1)
             val fallbackId = firstUri.lastPathSegment?.substringAfterLast(':')?.filter { it.isDigit() } ?: ""
-            val targetId = embeddedId ?: fallbackId
-            val matchIdx = contextItems.indexOfFirst {
-                it.uri == firstUri || (targetId.isNotBlank() && it.id.toString() == targetId)
-            }
+            val matchIdx = contextItems.indexOfFirst { it.uri == firstUri || (fallbackId.isNotBlank() && it.id.toString() == fallbackId) }
             val finalItems = if (matchIdx >= 0) contextItems else listOf(
                 GalleryPhotoItem(0L, firstUri, if (isVideo) "Video" else "Foto", folderName, System.currentTimeMillis(), isVideo, firstMime, folderPath)
             ) + contextItems
             val finalIdx = if (matchIdx >= 0) matchIdx else 0
-            GallerySessionHolder.navigateToFolder(folderPath.ifBlank { "__collection__" }, folderName, customItems = finalItems)
+            if (!openedFromSystemCollections) {
+                GallerySessionHolder.navigateToFolder(folderPath.ifBlank { "__collection__" }, folderName, customItems = finalItems)
+            }
             if (isVideo) openVideoInContext(finalItems, finalIdx, folderName) else openPhotoInContext(finalItems, finalIdx, folderName)
         }
     }
 
-    override fun finish() {
-        super.finish()
-        @Suppress("DEPRECATION")
-        overridePendingTransition(0, 0)
-    }
+    override fun finish() { super.finish(); @Suppress("DEPRECATION") overridePendingTransition(0, 0) }
 
     override fun onDestroy() {
         super.onDestroy()

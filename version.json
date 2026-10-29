@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 288,
-  "versionCodeReceiver": 271,
-  "versionName": "3.5.37",
-  "releaseTag": "v3.5.37",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.37/omnicast-sender-v3.5.37.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.37/omnicast-receiver-v3.5.37.apk",
-  "changelog": "v3.5.37: 1) Receiver: se elimina la retención forzada de foco en el botón Actualizar para navegación libre con el control remoto. 2) Receiver: Recientes unificado como Historial, proyección automática desde celular vinculado al pulsar un elemento (AUTO_RECAST), iconos vectoriales Guardar/Desvincular del control multimedia (guardar en Favoritos o Ver más tarde), descarga a TV Box (Modo Puente) y visualización limpia (nombre de la película, minuto donde quedó, nombre limpio de la web y opción Continuar viendo en enlaces sin tokens efímeros). 3) Galería Sender: acceso completo a las fotos/videos del teléfono en Android 14/HyperOS (targetSdk 33 + resolución de IDs embebidos de Google Photos/PhotoPicker) y exposición completa 1/N de todas las fotos de la carpeta al entrar desde Colecciones."
+  "versionCodeSender": 289,
+  "versionCodeReceiver": 272,
+  "versionName": "3.5.38",
+  "releaseTag": "v3.5.38",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.38/omnicast-sender-v3.5.38.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.38/omnicast-receiver-v3.5.38.apk",
+  "changelog": "v3.5.38: 1) Permisos Automáticos al Instalar/Abrir APK y Apertura Directa de Configuración de Permisos al Entrar a Enviar Foto/Video: solicitud automática de permisos de Fotos, Videos y Audio al abrir la app y apertura directa de la pantalla de Ajustes de Permisos de la App si falta autorización. 2) Flujo Colecciones -> Personas y mascotas (1/N y Retorno Directo a Colecciones): apertura directa de la pestaña Colecciones (ACTION_PICK_IMAGES), indexador inteligente de rostros (GalleryFaceClusterHelper con FaceDetector y caché persistente) que agrupa únicamente las fotos de la persona seleccionada (1/N en vez de 1/357) y retorno directo al entorno de Colecciones al pulsar Atrás. 3) Pellizcar y Mover con el Dedo para Enfocar Videos y Pantalla en la TV: soporte nativo de pellizcar con 2 dedos y arrastrar con 1 dedo directamente en el reproductor de videos del celular (VideoCastPlayerActivity) y en el lienzo interactivo de calibración hacia ExoPlayer y TvWebStreamScreen."
 }

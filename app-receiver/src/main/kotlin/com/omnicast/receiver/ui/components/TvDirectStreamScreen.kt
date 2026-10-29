@@ -79,13 +79,19 @@ fun TvDirectStreamScreen(
         val player = exoPlayerManager.player
         val currentResizeMode = remember { mutableIntStateOf(exoPlayerManager.resizeMode) }
         val currentZoom = remember { mutableFloatStateOf(exoPlayerManager.currentZoom) }
+        val currentPanX = remember { mutableFloatStateOf(exoPlayerManager.currentPanX) }
+        val currentPanY = remember { mutableFloatStateOf(exoPlayerManager.currentPanY) }
 
         DisposableEffect(exoPlayerManager) {
             exoPlayerManager.onResizeModeChanged = { mode -> currentResizeMode.intValue = mode }
             exoPlayerManager.onZoomChanged = { z -> currentZoom.floatValue = z }
+            exoPlayerManager.onTransformChanged = { z, px, py ->
+                currentZoom.floatValue = z; currentPanX.floatValue = px; currentPanY.floatValue = py
+            }
             onDispose {
                 exoPlayerManager.onResizeModeChanged = null
                 exoPlayerManager.onZoomChanged = null
+                exoPlayerManager.onTransformChanged = null
             }
         }
 
@@ -108,9 +114,15 @@ fun TvDirectStreamScreen(
                 update = { pv ->
                     if (pv.player != player) pv.player = player
                     pv.resizeMode = currentResizeMode.intValue
-                    val z = currentZoom.floatValue
-                    pv.scaleX = if (z > 0f) z else 1.0f
-                    pv.scaleY = if (z > 0f) z else 1.0f
+                    val z = if (currentZoom.floatValue > 0f) currentZoom.floatValue else 1.0f
+                    pv.scaleX = z
+                    pv.scaleY = z
+                    val w = pv.width.takeIf { it > 0 }?.toFloat() ?: 1920f
+                    val h = pv.height.takeIf { it > 0 }?.toFloat() ?: 1080f
+                    val px = currentPanX.floatValue
+                    val py = currentPanY.floatValue
+                    pv.translationX = if (kotlin.math.abs(px) <= 2.5f) px * w else px * (w / 1080f)
+                    pv.translationY = if (kotlin.math.abs(py) <= 2.5f) py * h else py * (h / 1920f)
                 },
                 modifier = Modifier.fillMaxSize()
             )

@@ -92,7 +92,7 @@ class FloatingViewBuilder(private val context: Context) {
 
         val btnStopCast = createBtn("🛑 Detener", "#DC2626", onStopCast)
         val btnZoomTv = createBtn("🔍 Zoom TV", "#6D28D9", onToggleTvScale)
-        val btnCalibrate = createBtn("🤏 Calibrar Pantalla (Zoom/Arrastre)", "#0284C7", onCalibrateTv)
+        val btnCalibrate = createBtn("🤏 Pellizcar y Mover en TV", "#0284C7", onCalibrateTv)
         val btnDetectVideo = createBtn("🔍 Detectar Flujo de Video", "#00B4D8", onDetectVideo)
         val btnOpenOmni = createBtn("🏠 Proyectar", "#1E2738", onOpenOmniCast)
 
@@ -145,11 +145,12 @@ class FloatingViewBuilder(private val context: Context) {
         }
 
         fun applyMode(mode: com.omnicast.sender.service.ActiveCastMode, zoomLabel: String) {
+            val casting = com.omnicast.sender.stream.ActiveStreamHolder.isCasting.value || !com.omnicast.sender.stream.ActiveStreamHolder.streamUrl.isNullOrBlank()
             btnZoomTv.text = "🔍 Zoom TV: $zoomLabel"
             btnZoomTv.visibility = View.VISIBLE
             btnStopCast.text = "🛑 Detener"
             btnOpenOmni.text = if (mode == com.omnicast.sender.service.ActiveCastMode.SCREEN_MIRROR) "⚙️ Configuración Proyectar" else "🏠 Proyectar"
-            btnCalibrate.visibility = if (mode == com.omnicast.sender.service.ActiveCastMode.SCREEN_MIRROR) View.VISIBLE else View.GONE
+            btnCalibrate.visibility = if (mode == com.omnicast.sender.service.ActiveCastMode.SCREEN_MIRROR || casting) View.VISIBLE else View.GONE
             btnGallery.visibility = View.GONE
             btnDetectVideo.visibility = View.GONE
             btnOpenBrowser.visibility = View.GONE
@@ -161,7 +162,6 @@ class FloatingViewBuilder(private val context: Context) {
                     rowMirror.visibility = View.GONE
                 }
                 else -> {
-                    val casting = com.omnicast.sender.stream.ActiveStreamHolder.isCasting.value || !com.omnicast.sender.stream.ActiveStreamHolder.streamUrl.isNullOrBlank()
                     btnStopCast.visibility = if (casting) View.VISIBLE else View.GONE
                     btnOpenOmni.visibility = View.VISIBLE
                     rowMirror.visibility = View.VISIBLE

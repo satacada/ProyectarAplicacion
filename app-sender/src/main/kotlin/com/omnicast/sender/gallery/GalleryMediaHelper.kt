@@ -39,11 +39,13 @@ object GalleryMediaHelper {
 
     fun getRequiredPermissions(mimeFilter: String = "*/*"): Array<String> =
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            when {
-                mimeFilter.startsWith("image") -> arrayOf(Manifest.permission.READ_MEDIA_IMAGES)
-                mimeFilter.startsWith("video") -> arrayOf(Manifest.permission.READ_MEDIA_VIDEO)
-                else -> arrayOf(Manifest.permission.READ_MEDIA_IMAGES, Manifest.permission.READ_MEDIA_VIDEO)
+            val base = when {
+                mimeFilter.startsWith("image") -> mutableListOf(Manifest.permission.READ_MEDIA_IMAGES)
+                mimeFilter.startsWith("video") -> mutableListOf(Manifest.permission.READ_MEDIA_VIDEO)
+                else -> mutableListOf(Manifest.permission.READ_MEDIA_IMAGES, Manifest.permission.READ_MEDIA_VIDEO)
             }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) base.add("android.permission.READ_MEDIA_VISUAL_USER_SELECTED")
+            base.toTypedArray()
         } else arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE)
 
     private fun isGooglePhotosCloudUri(uri: Uri): Boolean =

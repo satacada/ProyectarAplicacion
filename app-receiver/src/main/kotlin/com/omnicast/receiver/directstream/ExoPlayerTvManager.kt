@@ -262,13 +262,24 @@ class ExoPlayerTvManager(private val context: Context) {
     var resizeMode: Int = androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_FIT; private set
     var onResizeModeChanged: ((Int) -> Unit)? = null
     var currentZoom: Float = 1.0f; private set
+    var currentPanX: Float = 0.0f; private set
+    var currentPanY: Float = 0.0f; private set
     var onZoomChanged: ((Float) -> Unit)? = null
+    var onTransformChanged: ((Float, Float, Float) -> Unit)? = null
     var isControlsShowing: Boolean = false
     var onWakeControls: (() -> Unit)? = null
 
     fun toggleResizeMode(): Int { resizeMode = aspectRatioHelper.cycleNextMode().resizeMode; onResizeModeChanged?.invoke(resizeMode); return resizeMode }
     fun setResizeMode(isZoom169: Boolean) { resizeMode = if (isZoom169) androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_ZOOM else androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_FIT; onResizeModeChanged?.invoke(resizeMode) }
-    fun setDisplayMode(mode: String, zoom: Float = 1.0f) { currentZoom = zoom; val isZoom169 = mode == "FILL" || mode == "EXTEND_16_9"; resizeMode = if (isZoom169) androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_ZOOM else androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_FIT; onResizeModeChanged?.invoke(resizeMode); onZoomChanged?.invoke(zoom) }
+    fun setDisplayMode(mode: String, zoom: Float = 1.0f, panY: Float = 0f, panX: Float = 0f) {
+        currentZoom = zoom
+        val resetPan = mode == "FIT" || mode == "FILL" || mode == "EXTEND_16_9" || zoom <= 1.01f
+        currentPanX = if (resetPan && panX == 0f) 0f else panX
+        currentPanY = if (resetPan && panY == 0f) 0f else panY
+        val isZoom169 = mode == "FILL" || mode == "EXTEND_16_9"
+        resizeMode = if (isZoom169) androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_ZOOM else androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_FIT
+        onResizeModeChanged?.invoke(resizeMode); onZoomChanged?.invoke(zoom); onTransformChanged?.invoke(currentZoom, currentPanX, currentPanY)
+    }
     fun isNearEnd(): Boolean = player?.let { it.playbackState == androidx.media3.common.Player.STATE_ENDED || (it.duration > 0L && it.currentPosition >= it.duration - 1500L) } ?: false
     fun seekTo(pos: Long) { player?.seekTo(pos) }; fun pause() { player?.pause() }; fun resume() { val p = player ?: return; if (isNearEnd()) p.seekTo(0L); p.play() }
     fun setVolume(vol: Float) { player?.volume = vol.coerceIn(0f, 1f) }

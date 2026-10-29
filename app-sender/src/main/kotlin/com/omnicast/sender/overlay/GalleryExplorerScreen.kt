@@ -145,11 +145,11 @@ fun GalleryExplorerScreen(
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         Text(
-                            text = if (isVideoTab) "🎬 No se detectaron videos aún" else "🖼️ No se encontraron fotos aún",
+                            text = if (isVideoTab) "🎬 Permiso requerido para ver tus Videos" else "📷 Permiso requerido para ver tus Fotos",
                             color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.ExtraBold
                         )
                         Text(
-                            text = "Pulsa 'Actualizar / Permisos' o abre 'Colecciones'.",
+                            text = "En la pantalla de Ajustes de la App → Permisos → Fotos y videos, selecciona 'Permitir todo'.",
                             color = Color(0xFF94A3B8), fontSize = 12.sp
                         )
                         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -158,7 +158,7 @@ fun GalleryExplorerScreen(
                                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7C3AED)),
                                 shape = RoundedCornerShape(10.dp)
                             ) {
-                                Text("Actualizar / Permisos", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                Text("⚙️ Abrir Permisos", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                             }
                             Button(
                                 onClick = onOpenSystemPicker,

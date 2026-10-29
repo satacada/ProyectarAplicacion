@@ -42,6 +42,42 @@ class PhotoCastViewerActivity : ComponentActivity() {
         }
     }
 
+    private fun loadPersonClusterForPhoto(targetUri: Uri) {
+        lifecycleScope.launch(Dispatchers.IO) {
+            val allPhotos = GallerySessionHolder.cachedAllItems.ifEmpty {
+                GalleryMediaHelper.loadAllMedia(this@PhotoCastViewerActivity, "image/*")
+            }
+            val (clusterLabel, clusterList) = com.omnicast.sender.gallery.GalleryFaceClusterHelper.findPersonClusterForUri(
+                context = this@PhotoCastViewerActivity,
+                targetUri = targetUri,
+                allPhotos = allPhotos,
+                onProgressUpdate = { partialList, partialIdx ->
+                    runOnUiThread {
+                        if (currentIndexState.intValue == 0 && photoUris.size < partialList.size) {
+                            photoUris.clear(); photoUris.addAll(partialList.map { it.uri })
+                            currentIndexState.intValue = partialIdx.coerceIn(0, (photoUris.size - 1).coerceAtLeast(0))
+                            folderNameState.value = "Personas y mascotas"
+                        }
+                    }
+                }
+            )
+            if (clusterList.isNotEmpty()) {
+                withContext(Dispatchers.Main) {
+                    val activeUriNow = photoUris.getOrNull(currentIndexState.intValue) ?: targetUri
+                    val targetId = activeUriNow.lastPathSegment?.substringAfterLast(':')?.filter { it.isDigit() } ?: ""
+                    val finalIdx = clusterList.indexOfFirst {
+                        it.uri == activeUriNow || (targetId.isNotBlank() && it.id.toString() == targetId)
+                    }.coerceAtLeast(0)
+                    GallerySessionHolder.setPhotos(clusterList, finalIdx, folderName = clusterLabel, explicitContext = true)
+                    folderNameState.value = clusterLabel
+                    photoUris.clear()
+                    photoUris.addAll(clusterList.map { it.uri })
+                    currentIndexState.intValue = finalIdx
+                }
+            }
+        }
+    }
+
     private fun loadFolderContextForPhoto() {
         val currentTargetUri = photoUris.getOrNull(currentIndexState.intValue) ?: return
         lifecycleScope.launch(Dispatchers.IO) {
@@ -103,7 +139,10 @@ class PhotoCastViewerActivity : ComponentActivity() {
             val auth = it.authority ?: ""
             auth.contains("google.android.apps.docs") || auth.contains("drive")
         }
-        if (!isRemoteCloud && (!GallerySessionHolder.hasExplicitContext || photoUris.size <= 1)) {
+        val fromCollectionsSingle = intent.getBooleanExtra("EXTRA_FROM_COLLECTIONS_SINGLE", false)
+        if (fromCollectionsSingle && photoUris.isNotEmpty()) {
+            loadPersonClusterForPhoto(photoUris.first())
+        } else if (!isRemoteCloud && !GallerySessionHolder.hasExplicitContext) {
             if (GalleryMediaHelper.hasGalleryPermission(this, "image/*")) {
                 loadFolderContextForPhoto()
             } else {

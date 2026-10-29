@@ -8,6 +8,7 @@ import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.os.Build
 import android.util.TypedValue
+import android.view.GestureDetector
 import android.view.Gravity
 import android.view.MotionEvent
 import android.view.ScaleGestureDetector
@@ -20,8 +21,8 @@ import android.widget.TextView
 import com.omnicast.sender.service.ProjectionForegroundService
 
 /**
- * Lienzo táctil transparente flotante para calibrar la proyección en la TV.
- * Permite usar 2 dedos (pellizcar/expandir) para Zoom y 1 dedo (arrastre) para Pan/Mover en tiempo real.
+ * Lienzo táctil transparente flotante para enfocar y mover cualquier parte en la TV desde el celular.
+ * Permite pellizcar con 2 dedos para Zoom, arrastrar con 1 dedo para ubicar en la TV y doble toque para 1:1.
  */
 object FloatingCalibrationOverlay {
 
@@ -50,12 +51,38 @@ object FloatingCalibrationOverlay {
         )
 
         val root = FrameLayout(context).apply {
-            setBackgroundColor(Color.argb(80, 15, 23, 42)) // 30% slate transparente para ver debajo
+            setBackgroundColor(Color.argb(75, 11, 15, 23))
         }
 
-        // Tarjeta flotante superior con instrucciones y controles
+        // Recuadro guía central interactivo que se mueve y escala junto con el dedo
+        val guideFrameDrawable = GradientDrawable().apply {
+            setColor(Color.argb(30, 56, 189, 248))
+            cornerRadius = dpToPx(context, 14f).toFloat()
+            setStroke(dpToPx(context, 1.8f), Color.parseColor("#38BDF8"))
+        }
+        val previewBox = FrameLayout(context).apply {
+            background = guideFrameDrawable
+            layoutParams = FrameLayout.LayoutParams(dpToPx(context, 220f), dpToPx(context, 130f)).apply {
+                gravity = Gravity.CENTER
+            }
+            val centerLabel = TextView(context).apply {
+                text = "📺 Vista TV\nPellizca y mueve aquí"
+                gravity = Gravity.CENTER
+                setTextColor(Color.parseColor("#BAE6FD"))
+                setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
+                typeface = Typeface.DEFAULT_BOLD
+                layoutParams = FrameLayout.LayoutParams(
+                    FrameLayout.LayoutParams.WRAP_CONTENT,
+                    FrameLayout.LayoutParams.WRAP_CONTENT,
+                    Gravity.CENTER
+                )
+            }
+            addView(centerLabel)
+        }
+        root.addView(previewBox)
+
         val cardDrawable = GradientDrawable().apply {
-            setColor(Color.parseColor("#F00F172A"))
+            setColor(Color.parseColor("#F20F172A"))
             cornerRadius = dpToPx(context, 16f).toFloat()
             setStroke(dpToPx(context, 1.2f), Color.parseColor("#38BDF8"))
         }
@@ -64,27 +91,27 @@ object FloatingCalibrationOverlay {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER_HORIZONTAL
             background = cardDrawable
-            setPadding(dpToPx(context, 16f), dpToPx(context, 14f), dpToPx(context, 16f), dpToPx(context, 14f))
+            setPadding(dpToPx(context, 16f), dpToPx(context, 12f), dpToPx(context, 16f), dpToPx(context, 12f))
             layoutParams = FrameLayout.LayoutParams(
                 dpToPx(context, 320f),
                 FrameLayout.LayoutParams.WRAP_CONTENT
             ).apply {
                 gravity = Gravity.TOP or Gravity.CENTER_HORIZONTAL
-                topMargin = dpToPx(context, 48f)
+                topMargin = dpToPx(context, 44f)
             }
         }
 
         val title = TextView(context).apply {
-            text = "🎛️ Calibrar Pantalla en TV"
+            text = "🤏 Enfocar y Mover en TV"
             setTextColor(Color.parseColor("#38BDF8"))
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 15f)
             typeface = Typeface.DEFAULT_BOLD
         }
         val instructions = TextView(context).apply {
-            text = "• Pellizca con 2 dedos para Zoom\n• Arrastra con 1 dedo para Mover"
+            text = "• Pellizca con 2 dedos para Zoom\n• Arrastra con 1 dedo para ubicar en la TV\n• Doble toque para restablecer 1:1"
             setTextColor(Color.WHITE)
-            setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
-            setPadding(0, dpToPx(context, 6f), 0, dpToPx(context, 6f))
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 11.5f)
+            setPadding(0, dpToPx(context, 5f), 0, dpToPx(context, 5f))
         }
         val statusText = TextView(context).apply {
             text = "Zoom: 100% | X: 0 | Y: 0"
@@ -93,10 +120,25 @@ object FloatingCalibrationOverlay {
             typeface = Typeface.MONOSPACE
         }
 
+        fun updateVisualAndSend(mode: String = "ZOOM") {
+            previewBox.scaleX = currentZoom.coerceIn(0.6f, 2.6f)
+            previewBox.scaleY = currentZoom.coerceIn(0.6f, 2.6f)
+            previewBox.translationX = currentPanX * 0.45f
+            previewBox.translationY = currentPanY * 0.45f
+            statusText.text = String.format(
+                java.util.Locale.US,
+                "Zoom: %.0f%% | X: %.0f | Y: %.0f",
+                currentZoom * 100f,
+                currentPanX,
+                currentPanY
+            )
+            sendTransform(mode, currentZoom, currentPanY, currentPanX, context)
+        }
+
         val btnRow = LinearLayout(context).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER
-            setPadding(0, dpToPx(context, 10f), 0, 0)
+            setPadding(0, dpToPx(context, 8f), 0, 0)
         }
 
         fun createBtn(label: String, colorHex: String, onClick: () -> Unit): Button {
@@ -113,65 +155,64 @@ object FloatingCalibrationOverlay {
                 isAllCaps = false
                 layoutParams = LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
-                    dpToPx(context, 38f)
+                    dpToPx(context, 36f)
                 ).apply { marginEnd = dpToPx(context, 8f) }
                 setOnClickListener { onClick() }
             }
         }
 
-        val btnReset = createBtn("🔄 Restablecer", "#475569") {
-            currentZoom = 1.0f
-            currentPanX = 0.0f
-            currentPanY = 0.0f
-            statusText.text = "Zoom: 100% | X: 0 | Y: 0"
-            sendTransform("FIT", 1.0f, 0f, 0f, context)
+        val btnReset = createBtn("1:1 Restablecer", "#475569") {
+            currentZoom = 1.0f; currentPanX = 0.0f; currentPanY = 0.0f
+            updateVisualAndSend("FIT")
         }
 
-        val btnDone = createBtn("✅ Listo", "#10B981") {
-            dismiss()
-        }
+        val btnDone = createBtn("✅ Listo", "#10B981") { dismiss() }
 
         btnRow.addView(btnReset)
         btnRow.addView(btnDone)
-
-        card.addView(title)
-        card.addView(instructions)
-        card.addView(statusText)
-        card.addView(btnRow)
+        card.addView(title); card.addView(instructions); card.addView(statusText); card.addView(btnRow)
         root.addView(card)
 
-        // Detección de gestos táctiles (Scale + Pan)
         var lastTouchX = 0f
         var lastTouchY = 0f
         var isDragging = false
 
         val scaleDetector = ScaleGestureDetector(context, object : ScaleGestureDetector.SimpleOnScaleGestureListener() {
             override fun onScale(detector: ScaleGestureDetector): Boolean {
-                currentZoom = (currentZoom * detector.scaleFactor).coerceIn(0.6f, 3.0f)
-                statusText.text = String.format(java.util.Locale.US, "Zoom: %.0f%% | X: %.0f | Y: %.0f", currentZoom * 100f, currentPanX, currentPanY)
-                sendTransform("ZOOM", currentZoom, currentPanY, currentPanX, context)
+                currentZoom = (currentZoom * detector.scaleFactor).coerceIn(0.6f, 4.0f)
+                updateVisualAndSend("ZOOM")
+                return true
+            }
+        })
+
+        val tapDetector = GestureDetector(context, object : GestureDetector.SimpleOnGestureListener() {
+            override fun onDoubleTap(e: MotionEvent): Boolean {
+                if (currentZoom > 1.05f || kotlin.math.abs(currentPanX) > 5f || kotlin.math.abs(currentPanY) > 5f) {
+                    currentZoom = 1.0f; currentPanX = 0f; currentPanY = 0f
+                    updateVisualAndSend("FIT")
+                } else {
+                    currentZoom = 1.8f; currentPanX = 0f; currentPanY = 0f
+                    updateVisualAndSend("ZOOM")
+                }
                 return true
             }
         })
 
         root.setOnTouchListener { _, event ->
+            tapDetector.onTouchEvent(event)
             scaleDetector.onTouchEvent(event)
             when (event.actionMasked) {
                 MotionEvent.ACTION_DOWN -> {
-                    lastTouchX = event.x
-                    lastTouchY = event.y
-                    isDragging = true
+                    lastTouchX = event.x; lastTouchY = event.y; isDragging = true
                 }
                 MotionEvent.ACTION_MOVE -> {
                     if (isDragging && !scaleDetector.isInProgress && event.pointerCount == 1) {
                         val dx = event.x - lastTouchX
                         val dy = event.y - lastTouchY
-                        lastTouchX = event.x
-                        lastTouchY = event.y
-                        currentPanX += dx * 0.8f
-                        currentPanY += dy * 0.8f
-                        statusText.text = String.format(java.util.Locale.US, "Zoom: %.0f%% | X: %.0f | Y: %.0f", currentZoom * 100f, currentPanX, currentPanY)
-                        sendTransform("ZOOM", currentZoom, currentPanY, currentPanX, context)
+                        lastTouchX = event.x; lastTouchY = event.y
+                        currentPanX += dx * 0.9f
+                        currentPanY += dy * 0.9f
+                        updateVisualAndSend("ZOOM")
                     }
                 }
                 MotionEvent.ACTION_POINTER_DOWN -> isDragging = false

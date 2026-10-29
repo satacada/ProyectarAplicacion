@@ -87,7 +87,7 @@ fun TvWebStreamScreen(
     }
     LaunchedEffect(displayMode, webViewRef) {
         val dm = displayMode ?: return@LaunchedEffect; val wv = webViewRef ?: return@LaunchedEffect
-        wv.evaluateJavascript("if (typeof setDisplayMode === 'function') setDisplayMode('${dm.mode}', ${dm.zoom}, ${dm.panY});", null)
+        wv.evaluateJavascript("if (typeof setDisplayMode === 'function') setDisplayMode('${dm.mode}', ${dm.zoom}, ${dm.panY}, ${dm.panX});", null)
     }
     LaunchedEffect(webViewRef) { while (true) { delay(300_000L); try { webViewRef?.freeMemory() } catch (_: Throwable) {} } }
 
@@ -240,11 +240,16 @@ fun TvWebStreamScreen(
                                     function setVolume(v) { if (vid) vid.volume = Math.max(0, Math.min(1, v)); }
                                     function stopStream() { if (vid) { vid.pause(); vid.removeAttribute('src'); vid.load(); } }
 
-                                    function setDisplayMode(mode, zoom, panY) {
+                                    function setDisplayMode(mode, zoom, panY, panX) {
                                       if (!vid) return;
                                       if (mode === 'FILL' || mode === 'EXTEND_16_9') { vid.style.objectFit = 'fill'; vid.style.transform = 'scale(1.0)'; }
                                       else if (mode === 'FIT') { vid.style.objectFit = 'contain'; vid.style.transform = 'scale(1.0)'; }
-                                      else { vid.style.objectFit = 'contain'; vid.style.transform = 'scale(' + (zoom || 1.0) + ') translateY(' + (panY || 0) + 'px)'; }
+                                      else {
+                                        var z = zoom || 1.0; var px = panX || 0; var py = panY || 0;
+                                        var tx = (Math.abs(px) <= 2.5 && px !== 0) ? (px * window.innerWidth) : px;
+                                        var ty = (Math.abs(py) <= 2.5 && py !== 0) ? (py * window.innerHeight) : py;
+                                        vid.style.objectFit = 'contain'; vid.style.transform = 'translate(' + tx + 'px, ' + ty + 'px) scale(' + z + ')';
+                                      }
                                     }
 
                                     setInterval(reportStatus, 5000);

@@ -84,6 +84,7 @@ fun TvScaleZoomSection(
                 )
             )
 
+            val context = androidx.compose.ui.platform.LocalContext.current
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -100,6 +101,32 @@ fun TvScaleZoomSection(
                             onSliderChange(idx.toFloat())
                             onSelectStepId(step.id)
                         }
+                    )
+                }
+            }
+
+            Surface(
+                color = Color(0xFF0C2438),
+                shape = RoundedCornerShape(10.dp),
+                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF0284C7)),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 4.dp)
+                    .clickable {
+                        com.omnicast.sender.overlay.FloatingCalibrationOverlay.show(context)
+                    }
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 9.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("🤏 ", fontSize = 14.sp)
+                    Text(
+                        text = "Pellizcar y Mover con el Dedo en TV",
+                        color = Color(0xFF38BDF8),
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.ExtraBold
                     )
                 }
             }

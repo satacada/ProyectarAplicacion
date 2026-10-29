@@ -66,8 +66,13 @@ class SenderMainActivity : ComponentActivity() {
     private val autoPromptCapture = androidx.compose.runtime.mutableStateOf(false); private val isTvConnected = androidx.compose.runtime.mutableStateOf(false); private val openBrowserDirectly = androidx.compose.runtime.mutableStateOf(false); private val openGalleryDirectly = androidx.compose.runtime.mutableStateOf(false)
     private lateinit var historyManager: PlayHistoryManager; private lateinit var playlistManager: com.omnicast.sender.playlist.PlaylistManager
     private var lastProfileRecordTs = 0L
-    private val audioPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-        if (!granted) Toast.makeText(this, "Audio interno desactivado. Transmitirá solo video.", Toast.LENGTH_SHORT).show()
+    private val startupPermissionsLauncher = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { results ->
+        if (results[android.Manifest.permission.RECORD_AUDIO] == false) {
+            Toast.makeText(this, "Audio interno desactivado. Transmitirá solo video.", Toast.LENGTH_SHORT).show()
+        }
+        if (com.omnicast.sender.gallery.GalleryMediaHelper.hasGalleryPermission(this, "*/*")) {
+            lifecycleScope.launch { com.omnicast.sender.gallery.GalleryMediaHelper.loadAllMedia(this@SenderMainActivity, "*/*") }
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -82,8 +87,15 @@ class SenderMainActivity : ComponentActivity() {
         }
         try { nsdScanner = NsdScannerManager(this).apply { startDiscovery() } } catch (e: Throwable) { Log.e("Sender", "NSD", e) }
         clipboardExtractor = ClipboardStreamExtractor(this)
-        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
-            runCatching { audioPermissionLauncher.launch(android.Manifest.permission.RECORD_AUDIO) }
+        val neededPerms = buildList {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                add(android.Manifest.permission.READ_MEDIA_IMAGES); add(android.Manifest.permission.READ_MEDIA_VIDEO); add(android.Manifest.permission.POST_NOTIFICATIONS)
+            } else add(android.Manifest.permission.READ_EXTERNAL_STORAGE)
+            add(android.Manifest.permission.RECORD_AUDIO)
+        }.filter { ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED }
+        if (neededPerms.isNotEmpty()) runCatching { startupPermissionsLauncher.launch(neededPerms.toTypedArray()) }
+        else if (com.omnicast.sender.gallery.GalleryMediaHelper.hasGalleryPermission(this, "*/*")) {
+            lifecycleScope.launch { com.omnicast.sender.gallery.GalleryMediaHelper.loadAllMedia(this@SenderMainActivity, "*/*") }
         }
         checkAutoMirroring(intent)
 

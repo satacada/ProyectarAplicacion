@@ -20,6 +20,8 @@ import androidx.compose.ui.unit.sp
 fun VideoPlayerTopBar(
     title: String,
     subtitle: String = "",
+    currentZoom: Float = 1.0f,
+    onResetZoom: () -> Unit = {},
     onBack: () -> Unit,
     onStop: () -> Unit = onBack,
     modifier: Modifier = Modifier
@@ -45,7 +47,7 @@ fun VideoPlayerTopBar(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
                 .align(Alignment.Center)
-                .padding(horizontal = 48.dp)
+                .padding(horizontal = 88.dp)
         ) {
             Text(
                 text = title,
@@ -79,14 +81,35 @@ fun VideoPlayerTopBar(
             }
         }
 
-        Surface(
-            color = Color(0xFFDC2626),
-            shape = CircleShape,
-            border = androidx.compose.foundation.BorderStroke(1.2.dp, Color(0xFFFCA5A5)),
-            modifier = Modifier.align(Alignment.CenterEnd).size(36.dp).clickable { onStop() }
+        Row(
+            modifier = Modifier.align(Alignment.CenterEnd),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                Text("■", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.ExtraBold)
+            Surface(
+                color = if (kotlin.math.abs(currentZoom - 1f) > 0.05f) Color(0xD94C1D95) else Color(0xD938142C),
+                shape = RoundedCornerShape(10.dp),
+                border = androidx.compose.foundation.BorderStroke(1.dp, if (kotlin.math.abs(currentZoom - 1f) > 0.05f) Color(0xFFA78BFA) else Color(0xFFBE185D)),
+                modifier = Modifier.clickable { onResetZoom() }
+            ) {
+                Text(
+                    text = if (kotlin.math.abs(currentZoom - 1f) > 0.05f) "1:1 (${(currentZoom * 100).toInt()}%)" else "1:1",
+                    color = Color.White,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    modifier = Modifier.padding(horizontal = 9.dp, vertical = 7.dp)
+                )
+            }
+
+            Surface(
+                color = Color(0xFFDC2626),
+                shape = CircleShape,
+                border = androidx.compose.foundation.BorderStroke(1.2.dp, Color(0xFFFCA5A5)),
+                modifier = Modifier.size(36.dp).clickable { onStop() }
+            ) {
+                Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                    Text("■", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.ExtraBold)
+                }
             }
         }
     }

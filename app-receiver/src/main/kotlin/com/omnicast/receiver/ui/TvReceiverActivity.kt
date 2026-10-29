@@ -235,7 +235,7 @@ class TvReceiverActivity : ComponentActivity() {
                 }
             }
             is SignalingMessage.ImageTransform -> (receiverState.value as? ReceiverUiState.ImageDisplaying)?.let { receiverState.value = it.copy(scale = message.scale, panX = message.panX, panY = message.panY, rotation = message.rotation) }
-            is SignalingMessage.SetDisplayMode -> { currentDisplayMode.value = message; webRtcReceiver.setDisplayMode(message.mode, message.zoom, message.panY, message.panX, message.isLandscape); exoPlayerManager.setDisplayMode(message.mode, message.zoom) }
+            is SignalingMessage.SetDisplayMode -> { currentDisplayMode.value = message; webRtcReceiver.setDisplayMode(message.mode, message.zoom, message.panY, message.panX, message.isLandscape); exoPlayerManager.setDisplayMode(message.mode, message.zoom, message.panY, message.panX) }
             is SignalingMessage.ShowImage -> { digitalAudioReceiver?.stop(); exoPlayerManager.stop("Casteo Foto"); webRtcReceiver.resetConnection(); receiverState.value = ReceiverUiState.ImageDisplaying(message.imageUrl, message.title ?: "Foto de Galería") }
             is SignalingMessage.SyncPlaylists -> lifecycleScope.launch { playlistManager.syncPlaylistsJson(message.playlistsJson) }
             is SignalingMessage.Disconnect -> { digitalAudioReceiver?.stop(); exoPlayerManager.stop("Desconexión"); webRtcReceiver.resetConnection(); receiverState.value = ReceiverUiState.Standby }

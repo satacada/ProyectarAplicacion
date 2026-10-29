@@ -1,7 +1,5 @@
 package com.omnicast.sender.overlay
 
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.net.Uri
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -9,7 +7,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
@@ -17,7 +14,6 @@ import androidx.compose.foundation.gestures.calculatePan
 import androidx.compose.foundation.gestures.calculateZoom
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -35,18 +31,18 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.withContext
 import kotlin.math.abs
 
 @Composable
 fun PhotoViewerContent(
     uris: List<Uri>,
     currentIndex: Int,
+    folderName: String = "",
     currentBitmap: ImageBitmap? = null,
     onIndexChange: (Int) -> Unit,
     onTransform: (Float, Float, Float, Float) -> Unit,
+    onBack: () -> Unit = {},
     onClose: () -> Unit
 ) {
     var scale by remember(currentIndex) { mutableFloatStateOf(1f) }
@@ -179,7 +175,7 @@ fun PhotoViewerContent(
             }
         }
 
-        // Cápsula Superior: 1:1, -90°, +90° y Salir
+        // Cápsula Superior: ← Carpeta, 1:1, -90°, +90° y Detener
         Surface(
             color = Color(0xD91E2433),
             shape = RoundedCornerShape(24.dp),
@@ -191,6 +187,15 @@ fun PhotoViewerContent(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
+                Surface(
+                    color = Color(0xFF1E293B),
+                    shape = RoundedCornerShape(12.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF38BDF8)),
+                    modifier = Modifier.clickable { onBack() }
+                ) {
+                    Text("←", color = Color(0xFF38BDF8), fontSize = 13.sp, fontWeight = FontWeight.ExtraBold, modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp))
+                }
+
                 Surface(
                     color = Color(0xFF283347),
                     shape = RoundedCornerShape(12.dp),
@@ -231,12 +236,12 @@ fun PhotoViewerContent(
             }
         }
 
-        // Indicador emergente de gestos táctiles (solicitado por usuario)
+        // Indicador emergente de gestos táctiles
         AnimatedVisibility(
             visible = showGestureHint,
             enter = fadeIn(),
             exit = fadeOut(),
-            modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 90.dp)
+            modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 96.dp)
         ) {
             Surface(
                 color = Color(0xE60D1322),
@@ -259,10 +264,11 @@ fun PhotoViewerContent(
             }
         }
 
-        // Cápsula Inferior: < 1/1 >
+        // Cápsula Inferior: < 📁 Carpeta • 1/10 >
         PhotoViewerBottomBar(
             currentIndex = currentIndex,
             totalCount = uris.size,
+            folderName = folderName,
             onPrev = onPrev,
             onNext = onNext,
             modifier = Modifier.align(Alignment.BottomCenter)

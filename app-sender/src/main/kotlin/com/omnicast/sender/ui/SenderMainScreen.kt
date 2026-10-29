@@ -249,8 +249,8 @@ fun SenderMainScreen(
                             SenderMainActivity.sendPlayControlStatic(context, "STOP")
                         },
                         onOpenProjectionConfig = { showConfigDialog = true },
-                        onOpenGallery = { context.startActivity(Intent(context, com.omnicast.sender.overlay.GalleryPickerActivity::class.java).apply { putExtra(com.omnicast.sender.overlay.GalleryPickerActivity.EXTRA_MIME_FILTER, "image/*"); addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }) },
-                        onPickExternalFile = { context.startActivity(Intent(context, com.omnicast.sender.overlay.GalleryPickerActivity::class.java).apply { putExtra(com.omnicast.sender.overlay.GalleryPickerActivity.EXTRA_MIME_FILTER, "video/*"); addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }) }
+                        onOpenGallery = { context.startActivity(Intent(context, com.omnicast.sender.overlay.GalleryPickerActivity::class.java).apply { putExtra(com.omnicast.sender.overlay.GalleryPickerActivity.EXTRA_MIME_FILTER, "image/*") }) },
+                        onPickExternalFile = { context.startActivity(Intent(context, com.omnicast.sender.overlay.GalleryPickerActivity::class.java).apply { putExtra(com.omnicast.sender.overlay.GalleryPickerActivity.EXTRA_MIME_FILTER, "video/*") }) }
                     )
                 }
             }

@@ -1,7 +1,5 @@
 package com.omnicast.sender.overlay
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -11,16 +9,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 /**
- * Cápsula inferior flotante para navegación de fotos: < 1/1 >
+ * Cápsula inferior flotante para navegación de fotos dentro del contexto de su carpeta: < Carpeta • 1/10 >
  */
 @Composable
 fun PhotoViewerBottomBar(
     currentIndex: Int,
     totalCount: Int,
+    folderName: String = "",
     onPrev: () -> Unit,
     onNext: () -> Unit,
     modifier: Modifier = Modifier
@@ -49,12 +49,25 @@ fun PhotoViewerBottomBar(
                 )
             }
 
-            Text(
-                text = if (totalCount > 0) "${currentIndex + 1}/$totalCount" else "1/1",
-                color = Color.White,
-                fontSize = 13.sp,
-                fontWeight = FontWeight.Bold
-            )
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                if (folderName.isNotBlank()) {
+                    Text(
+                        text = "📁 $folderName",
+                        color = Color(0xFF38BDF8),
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.widthIn(max = 160.dp)
+                    )
+                }
+                Text(
+                    text = if (totalCount > 0) "${currentIndex + 1}/$totalCount" else "1/1",
+                    color = Color.White,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
 
             Box(
                 modifier = Modifier

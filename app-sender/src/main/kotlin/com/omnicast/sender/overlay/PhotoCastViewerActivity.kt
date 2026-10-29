@@ -2,15 +2,10 @@ package com.omnicast.sender.overlay
 
 import android.content.Context
 import android.content.Intent
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
-import android.util.Base64
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
-import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.*
@@ -27,7 +22,6 @@ import com.omnicast.sender.network.SignalingClientHolder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.io.ByteArrayOutputStream
 
 class PhotoCastViewerActivity : ComponentActivity() {
 
@@ -40,28 +34,40 @@ class PhotoCastViewerActivity : ComponentActivity() {
     private val photoUris = mutableStateListOf<Uri>()
     private var currentIndexState = mutableIntStateOf(0)
     private val currentBitmapState = mutableStateOf<ImageBitmap?>(null)
+    private val folderNameState = mutableStateOf("")
 
-    private val permLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-        if (granted) loadFullGallery()
+    private val permLauncher = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
+        if (GalleryMediaHelper.hasGalleryPermission(this, "image/*")) {
+            loadFolderContextForPhoto()
+        }
     }
 
-    private fun loadFullGallery() {
+    private fun loadFolderContextForPhoto() {
+        val currentTargetUri = photoUris.getOrNull(currentIndexState.intValue) ?: return
         lifecycleScope.launch(Dispatchers.IO) {
-            val fullList = GalleryMediaHelper.loadGalleryPhotos(this@PhotoCastViewerActivity)
-            if (fullList.isNotEmpty()) {
+            val (folderPath, contextList) = GalleryMediaHelper.loadFolderContextForUri(
+                this@PhotoCastViewerActivity,
+                currentTargetUri,
+                isVideo = false
+            )
+            if (contextList.isNotEmpty()) {
                 withContext(Dispatchers.Main) {
-                    val currentTargetUri = photoUris.getOrNull(currentIndexState.intValue)
-                    val targetId = currentTargetUri?.lastPathSegment?.substringAfterLast(":") ?: ""
-                    val matchIdx = fullList.indexOfFirst {
+                    val targetId = currentTargetUri.lastPathSegment?.substringAfterLast(":") ?: ""
+                    val matchIdx = contextList.indexOfFirst {
                         it.uri == currentTargetUri || (targetId.isNotBlank() && (it.uri.toString().endsWith("/$targetId") || it.id.toString() == targetId))
                     }
+                    val folderLabel = folderPath.substringAfterLast('/').ifBlank { "Carpeta" }
                     val finalList = if (matchIdx >= 0) {
-                        fullList
-                    } else if (currentTargetUri != null) {
-                        listOf(GalleryPhotoItem(0L, currentTargetUri, "Foto", "Selección", System.currentTimeMillis())) + fullList
-                    } else fullList
+                        contextList
+                    } else {
+                        listOf(GalleryPhotoItem(0L, currentTargetUri, "Foto", folderLabel, System.currentTimeMillis(), folderPath = folderPath)) + contextList
+                    }
                     val finalIndex = if (matchIdx >= 0) matchIdx else 0
-                    GallerySessionHolder.setPhotos(finalList, finalIndex)
+                    if (folderPath.isNotBlank()) {
+                        GallerySessionHolder.reconstructRouteIfNeeded(folderPath)
+                    }
+                    GallerySessionHolder.setPhotos(finalList, finalIndex, folderName = folderLabel, explicitContext = true)
+                    folderNameState.value = folderLabel
                     photoUris.clear()
                     photoUris.addAll(finalList.map { it.uri })
                     currentIndexState.intValue = finalIndex
@@ -80,7 +86,10 @@ class PhotoCastViewerActivity : ComponentActivity() {
 
         if (holderPhotos.isNotEmpty()) {
             photoUris.addAll(holderPhotos.map { it.uri })
-            currentIndexState.intValue = startIdxExtra.coerceIn(0, (photoUris.size - 1).coerceAtLeast(0))
+            val safeIdx = startIdxExtra.coerceIn(0, (photoUris.size - 1).coerceAtLeast(0))
+            currentIndexState.intValue = safeIdx
+            GallerySessionHolder.activeIndex = safeIdx
+            folderNameState.value = GallerySessionHolder.activeFolderName
         } else {
             val urisExtra = intent.getStringArrayListExtra("EXTRA_IMAGE_URIS")
             val singleUriExtra = intent.getStringExtra("IMAGE_URI")
@@ -89,15 +98,15 @@ class PhotoCastViewerActivity : ComponentActivity() {
             currentIndexState.intValue = startIdxExtra.coerceIn(0, (photoUris.size - 1).coerceAtLeast(0))
         }
 
-        val isCloudOrDoc = photoUris.any {
+        val isRemoteCloud = photoUris.any {
             val auth = it.authority ?: ""
-            auth.contains("docs") || auth.contains("drive") || auth.contains("documents")
+            auth.contains("google.android.apps.docs") || auth.contains("drive")
         }
-        if (!isCloudOrDoc && holderPhotos.size <= 1) {
-            if (GalleryMediaHelper.hasGalleryPermission(this)) {
-                loadFullGallery()
+        if (!isRemoteCloud && !GallerySessionHolder.hasExplicitContext) {
+            if (GalleryMediaHelper.hasGalleryPermission(this, "image/*")) {
+                loadFolderContextForPhoto()
             } else {
-                permLauncher.launch(GalleryMediaHelper.getRequiredPermission())
+                permLauncher.launch(GalleryMediaHelper.getRequiredPermissions())
             }
         }
 
@@ -127,11 +136,7 @@ class PhotoCastViewerActivity : ComponentActivity() {
         setResult(RESULT_BACK_TO_GALLERY)
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                sendSignaling(SignalingMessage.PlayControl("STOP"))
-                val currentUri = photoUris.getOrNull(currentIndexState.intValue)
-                val resultData = Intent().apply { data = currentUri }
-                setResult(RESULT_BACK_TO_GALLERY, resultData)
-                finish()
+                returnToFolder()
             }
         })
 
@@ -139,23 +144,30 @@ class PhotoCastViewerActivity : ComponentActivity() {
             PhotoViewerContent(
                 uris = photoUris,
                 currentIndex = currentIndexState.intValue,
+                folderName = folderNameState.value,
                 currentBitmap = currentBitmapState.value,
                 onIndexChange = { newIdx ->
                     if (newIdx in photoUris.indices) {
                         currentIndexState.intValue = newIdx
+                        GallerySessionHolder.activeIndex = newIdx
                         transmitCurrentPhoto()
                     }
                 },
                 onTransform = { scale, px, py, rot ->
                     sendSignaling(SignalingMessage.ImageTransform(scale, px, py, rot))
                 },
-                onClose = {
-                    sendSignaling(SignalingMessage.PlayControl("STOP"))
-                    setResult(RESULT_EXIT_TO_MAIN)
-                    finish()
-                }
+                onBack = { returnToFolder() },
+                onClose = { returnToFolder() }
             )
         }
+    }
+
+    private fun returnToFolder() {
+        sendSignaling(SignalingMessage.PlayControl("STOP"))
+        val currentUri = photoUris.getOrNull(currentIndexState.intValue)
+        val resultData = Intent().apply { data = currentUri }
+        setResult(RESULT_BACK_TO_GALLERY, resultData)
+        finish()
     }
 
     private fun sendSignaling(msg: SignalingMessage) {
@@ -178,6 +190,7 @@ class PhotoCastViewerActivity : ComponentActivity() {
             if (it < 0) count - 1 else if (it >= count) 0 else it
         }
         currentIndexState.intValue = nextIdx
+        GallerySessionHolder.activeIndex = nextIdx
         transmitCurrentPhoto()
     }
 
@@ -185,6 +198,8 @@ class PhotoCastViewerActivity : ComponentActivity() {
         val idx = currentIndexState.intValue
         val uri = photoUris.getOrNull(idx) ?: return
         val count = photoUris.size
+        val fName = folderNameState.value
+        val label = if (fName.isNotBlank()) "$fName (${idx + 1}/$count)" else "Foto (${idx + 1}/$count)"
 
         lifecycleScope.launch(Dispatchers.IO) {
             val bmp = com.omnicast.sender.gallery.GalleryBitmapDecoder.decodeBitmap(this@PhotoCastViewerActivity, uri)
@@ -194,14 +209,14 @@ class PhotoCastViewerActivity : ComponentActivity() {
                     currentBitmapState.value = bmp.asImageBitmap()
                 }
                 val photoUrl = com.omnicast.sender.gallery.GalleryBitmapDecoder.toBase64Jpeg(bmp)
-                sendSignaling(SignalingMessage.ShowImage(photoUrl, "Foto (${idx + 1}/$count)"))
+                sendSignaling(SignalingMessage.ShowImage(photoUrl, label))
                 sendSignaling(SignalingMessage.ImageTransform(1f, 0f, 0f, 0f))
             } else {
                 val fallbackUrl = try {
                     LocalImageServer.serveMedia(uri, "image/jpeg", this@PhotoCastViewerActivity)
                 } catch (_: Throwable) { null }
                 if (fallbackUrl != null) {
-                    sendSignaling(SignalingMessage.ShowImage(fallbackUrl, "Foto (${idx + 1}/$count)"))
+                    sendSignaling(SignalingMessage.ShowImage(fallbackUrl, label))
                     sendSignaling(SignalingMessage.ImageTransform(1f, 0f, 0f, 0f))
                 }
             }

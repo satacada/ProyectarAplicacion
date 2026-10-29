@@ -12,12 +12,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
 fun VideoPlayerTopBar(
     title: String,
+    subtitle: String = "",
     onBack: () -> Unit,
     onStop: () -> Unit = onBack,
     modifier: Modifier = Modifier
@@ -36,14 +38,23 @@ fun VideoPlayerTopBar(
                 .clickable { onBack() },
             contentAlignment = Alignment.Center
         ) {
-            Text("<", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+            Text("←", color = Color(0xFF38BDF8), fontSize = 18.sp, fontWeight = FontWeight.Bold)
         }
 
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.align(Alignment.Center)
+            modifier = Modifier
+                .align(Alignment.Center)
+                .padding(horizontal = 48.dp)
         ) {
-            Text(title, color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold, maxLines = 1)
+            Text(
+                text = title,
+                color = Color.White,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
             Spacer(Modifier.height(4.dp))
             Surface(
                 color = Color(0xFF0C2438),
@@ -56,7 +67,14 @@ fun VideoPlayerTopBar(
                     horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     Box(modifier = Modifier.size(6.dp).background(Color(0xFF38BDF8), CircleShape))
-                    Text("TV Box Conectada", color = Color(0xFF38BDF8), fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                    Text(
+                        text = subtitle.ifBlank { "TV Box Conectada" },
+                        color = Color(0xFF38BDF8),
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
                 }
             }
         }
@@ -77,16 +95,32 @@ fun VideoPlayerTopBar(
 fun VideoPlayerCenterControls(
     isPlaying: Boolean,
     isNearEnd: Boolean,
+    hasMultipleVideos: Boolean = false,
+    onPrevVideo: () -> Unit = {},
     onRewind: () -> Unit,
     onPlayPause: () -> Unit,
     onForward: () -> Unit,
+    onNextVideo: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Row(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(28.dp)
+        horizontalArrangement = Arrangement.spacedBy(18.dp)
     ) {
+        if (hasMultipleVideos) {
+            Box(
+                modifier = Modifier
+                    .size(44.dp)
+                    .background(Color(0x801E293B), CircleShape)
+                    .border(1.dp, Color(0xFF334155), CircleShape)
+                    .clickable { onPrevVideo() },
+                contentAlignment = Alignment.Center
+            ) {
+                Text("⏮", fontSize = 16.sp, color = Color.White)
+            }
+        }
+
         Box(
             modifier = Modifier
                 .size(54.dp)
@@ -121,6 +155,19 @@ fun VideoPlayerCenterControls(
             contentAlignment = Alignment.Center
         ) {
             Text("⏩", fontSize = 20.sp)
+        }
+
+        if (hasMultipleVideos) {
+            Box(
+                modifier = Modifier
+                    .size(44.dp)
+                    .background(Color(0x801E293B), CircleShape)
+                    .border(1.dp, Color(0xFF334155), CircleShape)
+                    .clickable { onNextVideo() },
+                contentAlignment = Alignment.Center
+            ) {
+                Text("⏭", fontSize = 16.sp, color = Color.White)
+            }
         }
     }
 }

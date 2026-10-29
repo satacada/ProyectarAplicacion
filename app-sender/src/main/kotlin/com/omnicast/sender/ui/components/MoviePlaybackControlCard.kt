@@ -169,11 +169,16 @@ fun MoviePlaybackControlCard(
                     }
                 }
 
-                IconButton(
+                Button(
                     onClick = onStop,
-                    modifier = Modifier.size(36.dp)
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDC2626)),
+                    shape = RoundedCornerShape(10.dp),
+                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp)
                 ) {
-                    Icon(Icons.Rounded.Stop, contentDescription = "Detener", tint = Color(0xFFEF4444), modifier = Modifier.size(20.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Icon(Icons.Rounded.Stop, contentDescription = "Detener", tint = Color.White, modifier = Modifier.size(16.dp))
+                        Text("Detener", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    }
                 }
             }
         }

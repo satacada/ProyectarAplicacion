@@ -207,6 +207,7 @@ class FloatingIndicatorService : Service() {
                 launchIntentSafely(Intent(this, SenderMainActivity::class.java).apply {
                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
                     putExtra("EXTRA_GO_TO_MAIN", true)
+                    if (ProjectionForegroundService.isProjecting) putExtra("EXTRA_OPEN_PROJECTION_CONFIG", true)
                 }, 102)
             },
             onStopCast = {

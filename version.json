@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 282,
-  "versionCodeReceiver": 265,
-  "versionName": "3.5.31",
-  "releaseTag": "v3.5.31",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.31/omnicast-sender-v3.5.31.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.31/omnicast-receiver-v3.5.31.apk",
-  "changelog": "v3.5.31: Botón flotante verde simplificado a 'Cast' en el celular; pantalla principal del Receiver con fondo Verde Esmeralda de alto impacto visual y máximo contraste de texto al vincularse con el celular."
+  "versionCodeSender": 283,
+  "versionCodeReceiver": 266,
+  "versionName": "3.5.32",
+  "releaseTag": "v3.5.32",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.32/omnicast-sender-v3.5.32.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.32/omnicast-receiver-v3.5.32.apk",
+  "changelog": "v3.5.32: Barra inferior del Receiver en Verde Esmeralda al vincularse; acceso 'Configuración Proyectar' en el menú flotante durante la proyección hacia el diálogo de la tuerca; botón rojo 'Detener' siempre visible al proyectar, capturar flujo web o proyectar galería."
 }

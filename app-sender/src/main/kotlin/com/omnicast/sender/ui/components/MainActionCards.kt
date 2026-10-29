@@ -26,6 +26,8 @@ import com.omnicast.sender.ui.theme.OmniThemeColors
 @Composable
 fun MainActionCards(
     isStreaming: Boolean,
+    isCasting: Boolean = false,
+    isGalleryCasting: Boolean = false,
     selectedProfile: StreamProfile,
     smoothBufferEnabled: Boolean,
     tvScaleMode: String,
@@ -48,6 +50,7 @@ fun MainActionCards(
         else -> tvScaleMode
     }
     val rfShort = selectedProfile.label.replace(" @ ", "@")
+    val isAnyActive = isStreaming || isCasting || isGalleryCasting
 
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
 
@@ -114,7 +117,9 @@ fun MainActionCards(
                             }
                         }
                     }
-                } else {
+                }
+
+                if (isAnyActive) {
                     Button(
                         onClick = onStopProjection,
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDC2626)),
@@ -124,7 +129,7 @@ fun MainActionCards(
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                             Icon(Icons.Rounded.Stop, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
-                            Text("Detener Transmisión", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                            Text("Detener", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = Color.White)
                         }
                     }
                 }
@@ -182,20 +187,8 @@ fun MainActionCards(
                         VectorTvIcon(modifier = Modifier.size(16.dp), color = Color(0xFFFBBF24))
                     }
 
-                    Text(
-                        text = "Captura Web",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = Color.White
-                    )
-                    Text(
-                        text = "Navegador embebido para streaming",
-                        fontSize = 10.sp,
-                        color = Color(0xFF94A3B8),
-                        lineHeight = 13.sp,
-                        maxLines = 2
-                    )
-
+                    Text(text = "Captura Web", fontSize = 14.sp, fontWeight = FontWeight.ExtraBold, color = Color.White)
+                    Text(text = "Navegador embebido para streaming", fontSize = 10.sp, color = Color(0xFF94A3B8), lineHeight = 13.sp, maxLines = 2)
                     Spacer(modifier = Modifier.height(2.dp))
 
                     Button(
@@ -208,6 +201,21 @@ fun MainActionCards(
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                             VectorGlobeIcon(modifier = Modifier.size(15.dp), color = Color.Black)
                             Text("Abrir Web", fontSize = 12.sp, fontWeight = FontWeight.ExtraBold, color = Color.Black)
+                        }
+                    }
+
+                    if (isCasting) {
+                        Button(
+                            onClick = onStopProjection,
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDC2626)),
+                            shape = RoundedCornerShape(10.dp),
+                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp),
+                            modifier = Modifier.fillMaxWidth().height(36.dp)
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                Icon(Icons.Rounded.Stop, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
+                                Text("Detener", fontSize = 12.sp, fontWeight = FontWeight.ExtraBold, color = Color.White)
+                            }
                         }
                     }
                 }
@@ -236,26 +244,11 @@ fun MainActionCards(
                         VectorTvIcon(modifier = Modifier.size(16.dp), color = Color(0xFFF43F5E))
                     }
 
-                    Text(
-                        text = "Galería",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = Color.White
-                    )
-                    Text(
-                        text = "Fotos locales y archivos multimedia",
-                        fontSize = 10.sp,
-                        color = Color(0xFF94A3B8),
-                        lineHeight = 13.sp,
-                        maxLines = 2
-                    )
-
+                    Text(text = "Galería", fontSize = 14.sp, fontWeight = FontWeight.ExtraBold, color = Color.White)
+                    Text(text = "Fotos locales y archivos multimedia", fontSize = 10.sp, color = Color(0xFF94A3B8), lineHeight = 13.sp, maxLines = 2)
                     Spacer(modifier = Modifier.height(2.dp))
 
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         Button(
                             onClick = onOpenGallery,
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE11D48)),
@@ -278,6 +271,21 @@ fun MainActionCards(
                             modifier = Modifier.weight(1f).height(36.dp)
                         ) {
                             Text("• Videos", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFBCFE8))
+                        }
+                    }
+
+                    if (isGalleryCasting) {
+                        Button(
+                            onClick = onStopProjection,
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDC2626)),
+                            shape = RoundedCornerShape(10.dp),
+                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp),
+                            modifier = Modifier.fillMaxWidth().height(36.dp)
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                Icon(Icons.Rounded.Stop, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
+                                Text("Detener", fontSize = 12.sp, fontWeight = FontWeight.ExtraBold, color = Color.White)
+                            }
                         }
                     }
                 }

@@ -28,28 +28,22 @@ import java.util.Locale
 
 @Composable
 fun TvCleanTopBar(
-    selectedTab: Int, onSelectTab: (Int) -> Unit, isConnected: Boolean = false,
+    selectedTab: Int, onSelectTab: (Int) -> Unit,
     updateState: com.omnicast.receiver.update.TvUpdateState = com.omnicast.receiver.update.TvUpdateState.Idle,
     onCheckUpdate: () -> Unit = {}, onDownloadAndInstall: (String) -> Unit = {}
 ) {
     Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             Box(
-                modifier = Modifier.size(34.dp).background(if (isConnected) Color(0xFF022C22) else Color(0xFF0284C7), RoundedCornerShape(10.dp))
-                    .border(if (isConnected) 1.5.dp else 0.dp, if (isConnected) Color(0xFF34D399) else Color.Transparent, RoundedCornerShape(10.dp)),
+                modifier = Modifier.size(34.dp).background(Color(0xFF0284C7), RoundedCornerShape(10.dp)),
                 contentAlignment = Alignment.Center
             ) { Text("📺", fontSize = 18.sp) }
-            Text("OmniCast TV", fontSize = 22.sp, fontWeight = FontWeight.ExtraBold, color = Color.White)
-            if (isConnected) {
-                Surface(color = Color(0xFF022C22), shape = RoundedCornerShape(12.dp), modifier = Modifier.border(1.5.dp, Color(0xFF6EE7B7), RoundedCornerShape(12.dp))) {
-                    Text("🟢 VINCULADO", color = Color(0xFFECFDF5), fontSize = 12.sp, fontWeight = FontWeight.ExtraBold, modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp))
-                }
-            }
+            Text("OmniCast TV", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Color.White)
         }
         Row(horizontalArrangement = Arrangement.spacedBy(20.dp), verticalAlignment = Alignment.CenterVertically) {
-            TvTopTab(label = "Recientes", isSelected = selectedTab == 0, isConnected = isConnected, onClick = { onSelectTab(0) })
-            TvTopTab(label = "Todo", isSelected = selectedTab == 1, isConnected = isConnected, onClick = { onSelectTab(1) })
-            TvTopTab(label = "Favoritos", isSelected = selectedTab == 2, isConnected = isConnected, onClick = { onSelectTab(2) })
+            TvTopTab(label = "Recientes", isSelected = selectedTab == 0, onClick = { onSelectTab(0) })
+            TvTopTab(label = "Todo", isSelected = selectedTab == 1, onClick = { onSelectTab(1) })
+            TvTopTab(label = "Favoritos", isSelected = selectedTab == 2, onClick = { onSelectTab(2) })
         }
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             val context = androidx.compose.ui.platform.LocalContext.current
@@ -60,27 +54,24 @@ fun TvCleanTopBar(
 }
 
 @Composable
-fun TvTopTab(label: String, isSelected: Boolean, isConnected: Boolean = false, onClick: () -> Unit) {
+fun TvTopTab(label: String, isSelected: Boolean, onClick: () -> Unit) {
     var isFocused by remember { mutableStateOf(false) }
     Box(modifier = Modifier.onFocusChanged { isFocused = it.isFocused }.focusable().clickable(onClick = onClick).padding(horizontal = 8.dp, vertical = 4.dp)) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(text = label, color = if (isSelected || isFocused) Color.White else (if (isConnected) Color(0xFFD1FAE5) else Color(0xFF94A3B8)), fontSize = 16.sp, fontWeight = if (isSelected || isConnected) FontWeight.Bold else FontWeight.Normal)
+            Text(text = label, color = if (isSelected || isFocused) Color.White else Color(0xFF94A3B8), fontSize = 16.sp, fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal)
             if (isSelected) {
                 Spacer(modifier = Modifier.height(3.dp))
-                Box(modifier = Modifier.width(28.dp).height(3.dp).background(if (isConnected) Color.White else Color(0xFF38BDF8), RoundedCornerShape(1.5.dp)))
+                Box(modifier = Modifier.width(24.dp).height(2.dp).background(Color(0xFF38BDF8), RoundedCornerShape(1.dp)))
             }
         }
     }
 }
 
 @Composable
-fun TvFolderRow(name: String, date: String, itemCount: Int, isConnected: Boolean = false, onClick: () -> Unit) {
+fun TvFolderRow(name: String, date: String, itemCount: Int, onClick: () -> Unit) {
     var isFocused by remember { mutableStateOf(false) }
-    val cardBg = if (isFocused) (if (isConnected) Color(0xFF064E3B) else Color(0xFF2E2442)) else (if (isConnected) Color(0xE6022C22) else Color(0xFF1E182A))
-    val borderCol = if (isFocused) Color.White else (if (isConnected) Color(0xFF34D399) else Color(0xFF2D223F))
-
     Card(
-        colors = CardDefaults.cardColors(containerColor = cardBg),
+        colors = CardDefaults.cardColors(containerColor = if (isFocused) Color(0xFF2E2442) else Color(0xFF1E182A)),
         shape = RoundedCornerShape(12.dp),
         modifier = Modifier
             .fillMaxWidth()
@@ -88,8 +79,8 @@ fun TvFolderRow(name: String, date: String, itemCount: Int, isConnected: Boolean
             .focusable()
             .clickable(onClick = onClick)
             .border(
-                width = if (isFocused) 2.5.dp else 1.5.dp,
-                color = borderCol,
+                width = if (isFocused) 2.dp else 1.dp,
+                color = if (isFocused) Color(0xFF38BDF8) else Color(0xFF2D223F),
                 shape = RoundedCornerShape(12.dp)
             )
     ) {
@@ -111,12 +102,11 @@ fun TvFolderRow(name: String, date: String, itemCount: Int, isConnected: Boolean
                     Text("📁", fontSize = 20.sp)
                 }
                 Column {
-                    Text(text = name, color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                    Text(text = name, color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
                     Text(
                         text = if (itemCount > 0) "$itemCount película${if (itemCount != 1) "s" else ""} guardada${if (itemCount != 1) "s" else ""}" else "Sin películas",
-                        color = if (isConnected) Color(0xFFD1FAE5) else Color(0xFF94A3B8),
-                        fontSize = 12.sp,
-                        fontWeight = if (isConnected) FontWeight.Medium else FontWeight.Normal
+                        color = Color(0xFF94A3B8),
+                        fontSize = 12.sp
                     )
                 }
             }
@@ -124,8 +114,8 @@ fun TvFolderRow(name: String, date: String, itemCount: Int, isConnected: Boolean
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Text(text = date, color = if (isConnected) Color(0xFFA7F3D0) else Color(0xFF64748B), fontSize = 11.sp)
-                Text("▶", color = if (isFocused || isConnected) Color.White else Color(0xFF64748B), fontSize = 13.sp)
+                Text(text = date, color = Color(0xFF64748B), fontSize = 11.sp)
+                Text("▶", color = if (isFocused) Color(0xFF38BDF8) else Color(0xFF64748B), fontSize = 13.sp)
             }
         }
     }
@@ -134,23 +124,11 @@ fun TvFolderRow(name: String, date: String, itemCount: Int, isConnected: Boolean
 @Composable
 fun TvRecentItemRow(
     item: TvHistoryItem,
-    isConnected: Boolean = false,
     onClick: () -> Unit
 ) {
     var isFocused by remember { mutableStateOf(false) }
-    val cardBg = when {
-        isFocused -> if (isConnected) Color(0xFF064E3B) else Color(0xFF2E2442)
-        isConnected -> Color(0xE6022C22)
-        else -> Color(0xFF1E182A)
-    }
-    val borderCol = when {
-        isFocused -> Color.White
-        isConnected -> Color(0xFF34D399)
-        else -> Color(0xFF2D223F)
-    }
-
     Card(
-        colors = CardDefaults.cardColors(containerColor = cardBg),
+        colors = CardDefaults.cardColors(containerColor = if (isFocused) Color(0xFF2E2442) else Color(0xFF1E182A)),
         shape = RoundedCornerShape(12.dp),
         modifier = Modifier
             .fillMaxWidth()
@@ -158,8 +136,8 @@ fun TvRecentItemRow(
             .focusable()
             .clickable(onClick = onClick)
             .border(
-                width = if (isFocused) 2.5.dp else 1.5.dp,
-                color = borderCol,
+                width = if (isFocused) 2.dp else 1.dp,
+                color = if (isFocused) Color(0xFF38BDF8) else Color(0xFF2D223F),
                 shape = RoundedCornerShape(12.dp)
             )
     ) {
@@ -173,16 +151,16 @@ fun TvRecentItemRow(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 modifier = Modifier.weight(1f)
             ) {
-                Text("▶", color = if (isConnected) Color(0xFF6EE7B7) else Color(0xFF10B981), fontSize = 16.sp)
+                Text("▶", color = Color(0xFF10B981), fontSize = 16.sp)
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(text = item.title, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(text = item.title, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     val pos = if (item.lastPositionMs > 0L) {
                         "Continuar: " + formatDuration(item.lastPositionMs) + " / " + formatDuration(item.durationMs)
                     } else "Listo para reproducir"
-                    Text(pos, color = if (isConnected) Color(0xFFD1FAE5) else Color(0xFF94A3B8), fontSize = 11.sp)
+                    Text(pos, color = Color(0xFF94A3B8), fontSize = 11.sp)
                 }
             }
-            Text(text = formatFolderDate(item.updatedAt), color = if (isConnected) Color(0xFFA7F3D0) else Color(0xFF64748B), fontSize = 11.sp, modifier = Modifier.padding(start = 8.dp))
+            Text(text = formatFolderDate(item.updatedAt), color = Color(0xFF64748B), fontSize = 11.sp, modifier = Modifier.padding(start = 8.dp))
         }
     }
 }
@@ -195,19 +173,19 @@ fun TvBottomConnectionDock(
 ) {
     val isConnected = !connectedClientIp.isNullOrBlank()
     Surface(
-        color = if (isConnected) Color(0xF2022C22) else Color(0xEE0D0B14),
+        color = if (isConnected) Color(0xFF047857) else Color(0xEE0D0B14),
         shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
         modifier = modifier
             .fillMaxWidth()
             .border(if (isConnected) 2.dp else 1.dp, if (isConnected) Color(0xFF6EE7B7) else Color(0xFF2D223F), RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 28.dp, vertical = 12.dp),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 28.dp, vertical = 14.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                Box(modifier = Modifier.size(12.dp).background(if (isConnected) Color(0xFF34D399) else Color(0xFFF59E0B), CircleShape))
+                Box(modifier = Modifier.size(12.dp).background(if (isConnected) Color.White else Color(0xFFF59E0B), CircleShape))
                 Text(
                     if (isConnected) "🟢 Celular Conectado ($connectedClientIp)" else "Listo para vincular",
                     fontSize = 15.sp, fontWeight = FontWeight.ExtraBold,
@@ -216,13 +194,13 @@ fun TvBottomConnectionDock(
             }
 
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(if (isConnected) "Enlace activo:" else "Dirección Local:", color = if (isConnected) Color(0xFFD1FAE5) else Color(0xFF94A3B8), fontSize = 13.sp)
-                Text(if (isConnected) "Listo para proyectar" else "$ipAddress:8088", color = if (isConnected) Color(0xFF6EE7B7) else Color(0xFF38BDF8), fontSize = 17.sp, fontWeight = FontWeight.ExtraBold)
+                Text(if (isConnected) "Enlace activo:" else "Dirección Local:", color = if (isConnected) Color(0xFFECFDF5) else Color(0xFF94A3B8), fontSize = 13.sp, fontWeight = if (isConnected) FontWeight.SemiBold else FontWeight.Normal)
+                Text(if (isConnected) "Listo para proyectar" else "$ipAddress:8088", color = if (isConnected) Color.White else Color(0xFF38BDF8), fontSize = 17.sp, fontWeight = FontWeight.ExtraBold)
             }
 
             Text(
                 if (isConnected) "Envía desde tu celular o elige una película arriba" else "Abre OmniCast en tu celular para conectar",
-                color = if (isConnected) Color(0xFFECFDF5) else Color(0xFF64748B), fontSize = 12.sp, fontWeight = if (isConnected) FontWeight.SemiBold else FontWeight.Normal
+                color = if (isConnected) Color.White else Color(0xFF64748B), fontSize = 12.sp, fontWeight = if (isConnected) FontWeight.Bold else FontWeight.Normal
             )
         }
     }

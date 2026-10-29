@@ -215,14 +215,18 @@ fun PhotoViewerContent(
                     Text("⟳ +90°", color = Color(0xFF94A3B8), fontSize = 12.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp))
                 }
 
-                Box(
-                    modifier = Modifier
-                        .size(26.dp)
-                        .background(Color(0xFF382329), CircleShape)
-                        .clickable { onClose() },
-                    contentAlignment = Alignment.Center
+                Surface(
+                    color = Color(0xFFDC2626),
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.clickable { onClose() }
                 ) {
-                    Text("✕", color = Color(0xFFF43F5E), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    Text(
+                        text = "■ Detener",
+                        color = Color.White,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                    )
                 }
             }
         }

@@ -34,6 +34,8 @@ class SenderMainActivity : ComponentActivity() {
         private var lastHandoffTime = 0L
         private var lastHandoffUrl: String? = null
         var onRequestReturnToMain: (() -> Unit)? = null
+        var onRequestOpenProjectionConfig: (() -> Unit)? = null
+        val pendingOpenProjectionConfig = androidx.compose.runtime.mutableStateOf(false)
 
         fun sendDirectStreamStatic(context: Context, url: String, title: String? = null, headers: Map<String, String> = emptyMap(), subtitles: List<SignalingMessage.SubtitleTrack> = emptyList()) {
             val pos = com.omnicast.sender.stream.StreamResumeManager.getPosition(context, url); val br = com.omnicast.sender.nativeclassifier.NativeStreamClassifier.classify(url).name
@@ -151,6 +153,7 @@ class SenderMainActivity : ComponentActivity() {
         if (intent?.getBooleanExtra("EXTRA_OPEN_BROWSER", false) == true) { intent.removeExtra("EXTRA_OPEN_BROWSER"); openBrowserDirectly.value = true }
         if (intent?.getBooleanExtra("EXTRA_OPEN_GALLERY", false) == true) { intent.removeExtra("EXTRA_OPEN_GALLERY"); openGalleryDirectly.value = true }
         if (intent?.getBooleanExtra("EXTRA_GO_TO_MAIN", false) == true) { intent.removeExtra("EXTRA_GO_TO_MAIN"); onRequestReturnToMain?.invoke() }
+        if (intent?.getBooleanExtra("EXTRA_OPEN_PROJECTION_CONFIG", false) == true) { intent.removeExtra("EXTRA_OPEN_PROJECTION_CONFIG"); pendingOpenProjectionConfig.value = true; onRequestReturnToMain?.invoke(); onRequestOpenProjectionConfig?.invoke() }
     }
 
     fun connectToTv(ipAddress: String, port: Int) {

@@ -47,8 +47,15 @@ class GalleryPickerActivity : ComponentActivity() {
         }
     }
 
-    private val videoLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
-        launchExplorer()
+    private val videoLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == PhotoCastViewerActivity.RESULT_EXIT_TO_MAIN) {
+            QuickSignalingHelper.sendQuickMessage(this, SignalingMessage.PlayControl("STOP"))
+            finish()
+            @Suppress("DEPRECATION")
+            overridePendingTransition(0, 0)
+        } else {
+            launchExplorer()
+        }
     }
 
     private val picker = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->

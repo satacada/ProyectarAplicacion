@@ -61,6 +61,7 @@ fun SenderMainScreen(
     var showSideDrawer by remember { mutableStateOf(false) }
     var tooltipsEnabled by remember { mutableStateOf(prefs.getBoolean("saved_tooltips_enabled", false)) }
     val isCasting by com.omnicast.sender.stream.ActiveStreamHolder.isCasting.collectAsState()
+    val isGalleryCasting by com.omnicast.sender.service.CastSessionState.isGalleryCastingFlow.collectAsState()
     val isPlaying by com.omnicast.sender.stream.ActiveStreamHolder.isPlaying.collectAsState()
     val posMs by com.omnicast.sender.stream.ActiveStreamHolder.positionMs.collectAsState()
     val durMs by com.omnicast.sender.stream.ActiveStreamHolder.durationMs.collectAsState()
@@ -68,7 +69,12 @@ fun SenderMainScreen(
     val secondaryIps by com.omnicast.sender.discovery.MultiReceiverManager.secondaryIps.collectAsState()
     DisposableEffect(Unit) {
         SenderMainActivity.onRequestReturnToMain = { showInAppBrowser = false }
-        onDispose { SenderMainActivity.onRequestReturnToMain = null }
+        SenderMainActivity.onRequestOpenProjectionConfig = { showInAppBrowser = false; showConfigDialog = true }
+        if (SenderMainActivity.pendingOpenProjectionConfig.value) {
+            SenderMainActivity.pendingOpenProjectionConfig.value = false
+            showInAppBrowser = false; showConfigDialog = true
+        }
+        onDispose { SenderMainActivity.onRequestReturnToMain = null; SenderMainActivity.onRequestOpenProjectionConfig = null }
     }
     var lastBackPressTime by remember { mutableLongStateOf(0L) }
     androidx.activity.compose.BackHandler(enabled = !showInAppBrowser) {
@@ -227,11 +233,8 @@ fun SenderMainScreen(
                 // 4. Las TRES opciones para poder elegirlas: Captura Web, Casteo-TV y Galería
                 item {
                     MainActionCards(
-                        isStreaming = isStreaming,
-                        selectedProfile = selectedProfile,
-                        smoothBufferEnabled = smoothBufferEnabled,
-                        tvScaleMode = tvScaleMode,
-                        tooltipsEnabled = tooltipsEnabled,
+                        isStreaming = isStreaming, isCasting = isCasting, isGalleryCasting = isGalleryCasting,
+                        selectedProfile = selectedProfile, smoothBufferEnabled = smoothBufferEnabled, tvScaleMode = tvScaleMode, tooltipsEnabled = tooltipsEnabled,
                         onOpenBrowser = { showInAppBrowser = true },
                         onStartFullScreen = { pendingProjectionMode = "FULL_SCREEN"; projectionLauncher.launch(getCaptureIntent(true)) },
                         onStartAppProjection = {
@@ -239,7 +242,12 @@ fun SenderMainScreen(
                             Toast.makeText(context, "🔒 Modo Por Aplicación: mantén seleccionada 'Una sola app'", Toast.LENGTH_LONG).show()
                             projectionLauncher.launch(getCaptureIntent(false))
                         },
-                        onStopProjection = { onStopProjection() },
+                        onStopProjection = {
+                            if (isStreaming) onStopProjection()
+                            if (isCasting) { com.omnicast.sender.stream.ActiveStreamHolder.stopCasting(); com.omnicast.sender.service.CastMediaNotificationService.stop(context) }
+                            if (isGalleryCasting) com.omnicast.sender.service.CastSessionState.isGalleryCasting = false
+                            SenderMainActivity.sendPlayControlStatic(context, "STOP")
+                        },
                         onOpenProjectionConfig = { showConfigDialog = true },
                         onOpenGallery = { context.startActivity(Intent(context, com.omnicast.sender.overlay.GalleryPickerActivity::class.java).apply { putExtra(com.omnicast.sender.overlay.GalleryPickerActivity.EXTRA_MIME_FILTER, "image/*"); addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }) },
                         onPickExternalFile = { context.startActivity(Intent(context, com.omnicast.sender.overlay.GalleryPickerActivity::class.java).apply { putExtra(com.omnicast.sender.overlay.GalleryPickerActivity.EXTRA_MIME_FILTER, "video/*"); addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }) }
@@ -252,43 +260,27 @@ fun SenderMainScreen(
     if (showConfigDialog) {
         ProjectionConfigDialog(
             selectedProfile = selectedProfile,
-            onSelectProfile = {
-                selectedProfile = it
-                prefs.edit().putString("saved_stream_profile", it.mode.name).apply()
-            },
+            onSelectProfile = { selectedProfile = it; prefs.edit().putString("saved_stream_profile", it.mode.name).apply() },
             smoothBufferEnabled = smoothBufferEnabled,
-            onToggleSmoothBuffer = {
-                smoothBufferEnabled = it
-                prefs.edit().putBoolean("saved_smooth_buffer", it).apply()
-            },
+            onToggleSmoothBuffer = { smoothBufferEnabled = it; prefs.edit().putBoolean("saved_smooth_buffer", it).apply() },
             tvScaleMode = tvScaleMode,
             onSelectTvScaleMode = {
-                tvScaleMode = it
-                prefs.edit().putString("saved_tv_scale_mode", it).apply()
+                tvScaleMode = it; prefs.edit().putString("saved_tv_scale_mode", it).apply()
                 val preset = TvZoomManager.PRESETS.firstOrNull { p -> p.id == it || p.mode == it }
-                if (isStreaming) {
-                    ProjectionForegroundService.setTvScaleMode(it)
-                } else if (preset != null) {
-                    com.omnicast.sender.network.QuickSignalingHelper.sendQuickMessage(context, TvZoomManager.toSignalingMessage(preset))
-                }
+                if (isStreaming) ProjectionForegroundService.setTvScaleMode(it)
+                else if (preset != null) com.omnicast.sender.network.QuickSignalingHelper.sendQuickMessage(context, TvZoomManager.toSignalingMessage(preset))
             },
-            tooltipsEnabled = tooltipsEnabled,
-            onDismiss = { showConfigDialog = false }
+            tooltipsEnabled = tooltipsEnabled, onDismiss = { showConfigDialog = false }
         )
     }
 
     detectionResult?.let { res ->
         StreamResultDialog(
-            result = res,
-            onSendDirectStream = { url -> onSendDirectStream(url, null, emptyMap()) },
+            result = res, onSendDirectStream = { url -> onSendDirectStream(url, null, emptyMap()) },
             onStartScreenMirroring = { pendingProjectionMode = "FULL_SCREEN"; projectionLauncher.launch(getCaptureIntent(true)) },
             onDismiss = { detectionResult = null }
         )
     }
 
-
-
-    if (showHelpDialog) {
-        SenderHelpDialog(onDismiss = { showHelpDialog = false })
-    }
+    if (showHelpDialog) SenderHelpDialog(onDismiss = { showHelpDialog = false })
 }

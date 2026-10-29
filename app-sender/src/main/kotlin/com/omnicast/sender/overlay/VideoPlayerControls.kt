@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.sp
 fun VideoPlayerTopBar(
     title: String,
     onBack: () -> Unit,
+    onStop: () -> Unit = onBack,
     modifier: Modifier = Modifier
 ) {
     Box(
@@ -58,6 +59,16 @@ fun VideoPlayerTopBar(
                     Text("TV Box Conectada", color = Color(0xFF38BDF8), fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
                 }
             }
+        }
+
+        Button(
+            onClick = onStop,
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDC2626)),
+            shape = RoundedCornerShape(10.dp),
+            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 5.dp),
+            modifier = Modifier.align(Alignment.CenterEnd).height(34.dp)
+        ) {
+            Text("■ Detener", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
         }
     }
 }

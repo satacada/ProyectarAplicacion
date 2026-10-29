@@ -90,7 +90,7 @@ class FloatingViewBuilder(private val context: Context) {
         }
         innerMenu.addView(menuTitle)
 
-        val btnStopCast = createBtn("🛑 Detener Transmisión", "#DC2626", onStopCast)
+        val btnStopCast = createBtn("🛑 Detener", "#DC2626", onStopCast)
         val btnZoomTv = createBtn("🔍 Zoom TV", "#6D28D9", onToggleTvScale)
         val btnCalibrate = createBtn("🤏 Calibrar Pantalla (Zoom/Arrastre)", "#0284C7", onCalibrateTv)
         val btnDetectVideo = createBtn("🔍 Detectar Flujo de Video", "#00B4D8", onDetectVideo)
@@ -147,6 +147,8 @@ class FloatingViewBuilder(private val context: Context) {
         fun applyMode(mode: com.omnicast.sender.service.ActiveCastMode, zoomLabel: String) {
             btnZoomTv.text = "🔍 Zoom TV: $zoomLabel"
             btnZoomTv.visibility = View.VISIBLE
+            btnStopCast.text = "🛑 Detener"
+            btnOpenOmni.text = if (mode == com.omnicast.sender.service.ActiveCastMode.SCREEN_MIRROR) "⚙️ Configuración Proyectar" else "🏠 Proyectar"
             btnCalibrate.visibility = if (mode == com.omnicast.sender.service.ActiveCastMode.SCREEN_MIRROR) View.VISIBLE else View.GONE
             when (mode) {
                 com.omnicast.sender.service.ActiveCastMode.SCREEN_MIRROR -> {
@@ -168,7 +170,6 @@ class FloatingViewBuilder(private val context: Context) {
                     btnOpenBrowser.visibility = View.GONE
                 }
                 com.omnicast.sender.service.ActiveCastMode.WEB_STREAM -> {
-                    btnStopCast.text = "🛑 Detener Flujo"
                     btnStopCast.visibility = View.VISIBLE
                     btnDetectVideo.visibility = View.VISIBLE
                     btnOpenOmni.visibility = View.VISIBLE
@@ -179,7 +180,6 @@ class FloatingViewBuilder(private val context: Context) {
                 }
                 com.omnicast.sender.service.ActiveCastMode.IDLE -> {
                     val casting = com.omnicast.sender.stream.ActiveStreamHolder.isCasting.value || !com.omnicast.sender.stream.ActiveStreamHolder.streamUrl.isNullOrBlank()
-                    btnStopCast.text = "🛑 Detener Flujo"
                     btnStopCast.visibility = if (casting) View.VISIBLE else View.GONE
                     btnDetectVideo.visibility = View.VISIBLE
                     btnOpenOmni.visibility = View.VISIBLE

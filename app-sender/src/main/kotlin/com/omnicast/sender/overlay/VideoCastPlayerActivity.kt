@@ -42,6 +42,7 @@ class VideoCastPlayerActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        com.omnicast.sender.service.CastSessionState.isGalleryCasting = true
 
         val uriString = intent.getStringExtra(EXTRA_VIDEO_URI)
         val title = intent.getStringExtra(EXTRA_VIDEO_TITLE) ?: "Video de Galería"
@@ -63,6 +64,7 @@ class VideoCastPlayerActivity : ComponentActivity() {
                 title = title,
                 uri = videoUri!!,
                 onBack = { exitToGallery() },
+                onStop = { stopAndExitToMain() },
                 onSendControl = { act, pos ->
                     QuickSignalingHelper.sendQuickMessage(this, SignalingMessage.PlayControl(act, pos))
                 }
@@ -79,11 +81,24 @@ class VideoCastPlayerActivity : ComponentActivity() {
         overridePendingTransition(0, 0)
     }
 
+    private fun stopAndExitToMain() {
+        videoView?.stopPlayback()
+        com.omnicast.sender.service.CastSessionState.isGalleryCasting = false
+        com.omnicast.sender.stream.ActiveStreamHolder.stopCasting()
+        com.omnicast.sender.service.CastMediaNotificationService.stop(this)
+        QuickSignalingHelper.sendQuickMessage(this, SignalingMessage.PlayControl("STOP"))
+        setResult(PhotoCastViewerActivity.RESULT_EXIT_TO_MAIN)
+        finish()
+        @Suppress("DEPRECATION")
+        overridePendingTransition(0, 0)
+    }
+
     @Composable
     private fun VideoPlayerScreen(
         title: String,
         uri: Uri,
         onBack: () -> Unit,
+        onStop: () -> Unit,
         onSendControl: (String, Long) -> Unit
     ) {
         var isPlaying by remember { mutableStateOf(true) }
@@ -146,6 +161,7 @@ class VideoCastPlayerActivity : ComponentActivity() {
                     VideoPlayerTopBar(
                         title = title,
                         onBack = onBack,
+                        onStop = onStop,
                         modifier = Modifier.align(Alignment.TopCenter)
                     )
 
@@ -209,6 +225,7 @@ class VideoCastPlayerActivity : ComponentActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        com.omnicast.sender.service.CastSessionState.isGalleryCasting = false
         videoView?.stopPlayback()
         videoView = null
         mediaPlayer = null

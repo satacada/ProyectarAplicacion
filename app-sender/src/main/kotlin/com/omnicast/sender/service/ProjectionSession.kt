@@ -177,12 +177,42 @@ class ProjectionSession(
         }
         context.registerComponentCallbacks(configCallback)
         this.componentCallbacks = configCallback
+
+        val wakeReceiver = object : android.content.BroadcastReceiver() {
+            override fun onReceive(ctx: Context?, intent: Intent?) {
+                val act = intent?.action ?: return
+                if (act == Intent.ACTION_SCREEN_ON || act == Intent.ACTION_USER_PRESENT) {
+                    Log.i("ProjectionSession", "🔓 Pantalla encendida/desbloqueada ($act): reactivando flujo de video VirtualDisplay")
+                    webRtcManager?.refreshCaptureOnScreenWake()
+                    scope.launch {
+                        delay(450)
+                        webRtcManager?.refreshCaptureOnScreenWake()
+                        isDeviceLandscape = checkDeviceLandscape()
+                        val isLand = if (tvScaleMode == "APP") null else isDeviceLandscape
+                        signalingClient?.sendMessage(SignalingMessage.SetDisplayMode(tvScaleMode, currentZoom, currentPanY, currentPanX, isLandscape = isLand))
+                    }
+                }
+            }
+        }
+        val filter = android.content.IntentFilter().apply {
+            addAction(Intent.ACTION_SCREEN_ON)
+            addAction(Intent.ACTION_USER_PRESENT)
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            context.registerReceiver(wakeReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
+        } else {
+            context.registerReceiver(wakeReceiver, filter)
+        }
+        this.screenWakeReceiver = wakeReceiver
     }
 
     private var componentCallbacks: android.content.ComponentCallbacks? = null
+    private var screenWakeReceiver: android.content.BroadcastReceiver? = null
 
     fun stop() {
         try {
+            screenWakeReceiver?.let { try { context.unregisterReceiver(it) } catch (_: Throwable) {} }
+            screenWakeReceiver = null
             componentCallbacks?.let { context.unregisterComponentCallbacks(it) }
             componentCallbacks = null
             audioCaptureManager?.stopAudioCapture()

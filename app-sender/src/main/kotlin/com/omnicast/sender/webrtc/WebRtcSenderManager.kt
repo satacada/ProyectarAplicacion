@@ -140,6 +140,27 @@ class WebRtcSenderManager(
         f.get(screenCapturer) as? MediaProjection
     } catch (_: Throwable) { null }
 
+    /**
+     * Re-vincula la Surface del VirtualDisplay existente al despertar/desbloquear la pantalla
+     * sin liberar el VirtualDisplay ni invocar changeCaptureFormat (compatible con Android 14+).
+     */
+    fun refreshCaptureOnScreenWake() {
+        val capturer = screenCapturer ?: return
+        val helper = surfaceTextureHelper ?: return
+        helper.handler.post {
+            try {
+                val vdField = ScreenCapturerAndroid::class.java.getDeclaredField("virtualDisplay").apply { isAccessible = true }
+                val vd = vdField.get(capturer) as? android.hardware.display.VirtualDisplay
+                if (vd != null) {
+                    vd.surface = android.view.Surface(helper.surfaceTexture)
+                    Log.i(TAG, "🔄 VirtualDisplay Surface re-vinculada tras encender/desbloquear pantalla")
+                }
+            } catch (e: Throwable) {
+                Log.w(TAG, "No se pudo refrescar VirtualDisplay Surface: ${e.message}")
+            }
+        }
+    }
+
     override fun createOffer(onSdpCreated: (String) -> Unit) {
         val constraints = MediaConstraints().apply {
             listOf("OfferToReceiveVideo", "OfferToReceiveAudio").forEach { mandatory.add(MediaConstraints.KeyValuePair(it, "false")) }

@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 280,
-  "versionCodeReceiver": 263,
-  "versionName": "3.5.29",
-  "releaseTag": "v3.5.29",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.29/omnicast-sender-v3.5.29.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.29/omnicast-receiver-v3.5.29.apk",
-  "changelog": "v3.5.29: Discriminante de reproductores unificada en SQLite (StreamProfileDatabase con carga inicial + nube), opción Maestra Adaptativa limpia con audio integrado para HLS v4 (Canela.tv/Brightcove) y selector de Resoluciones + Pistas de Audio en ExoPlayer y Control Multimedia móvil."
+  "versionCodeSender": 281,
+  "versionCodeReceiver": 264,
+  "versionName": "3.5.30",
+  "releaseTag": "v3.5.30",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.30/omnicast-sender-v3.5.30.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.30/omnicast-receiver-v3.5.30.apk",
+  "changelog": "v3.5.30: Línea de tiempo interactiva seleccionable con el control remoto de la TV e iconos vectoriales circulares estándar (-10s, Pausa/Play, +10s) en ExoPlayer; reanudación automática de proyección de pantalla al encender/desbloquear el celular."
 }

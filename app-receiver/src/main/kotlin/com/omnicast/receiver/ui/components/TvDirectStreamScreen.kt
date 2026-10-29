@@ -3,26 +3,21 @@ package com.omnicast.receiver.ui.components
 import android.widget.Toast
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Forward10
+import androidx.compose.material.icons.rounded.Pause
+import androidx.compose.material.icons.rounded.PlayArrow
+import androidx.compose.material.icons.rounded.Replay10
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.scale
-import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -121,7 +116,7 @@ fun TvDirectStreamScreen(
             )
         }
 
-        // 1. Controles Centrales Clásicos de ExoPlayer (-10s, Play/Pausa, +10s)
+        // 1. Controles Centrales Clásicos de ExoPlayer (-10s flecha circular, Play/Pausa, +10s flecha circular)
         AnimatedVisibility(
             visible = isControlsVisible,
             enter = fadeIn() + scaleIn(initialScale = 0.85f),
@@ -133,37 +128,43 @@ fun TvDirectStreamScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 TvCircleButton(
-                    text = "⏪ -10s",
+                    text = "Retroceder 10s",
+                    icon = Icons.Rounded.Replay10,
                     size = 56.dp,
-                    fontSize = 12.sp,
                     onClick = {
-                        exoPlayerManager.seekTo((currentPosMs - 10_000L).coerceAtLeast(0L))
+                        val next = (currentPosMs - 10_000L).coerceAtLeast(0L)
+                        exoPlayerManager.seekTo(next)
+                        currentPosMs = next
                         userInteractionCount++
                     }
                 )
                 TvCircleButton(
-                    text = if (isPlaying) "⏸" else "▶",
+                    text = if (isPlaying) "Pausar" else "Reproducir",
+                    icon = if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
                     size = 76.dp,
-                    fontSize = 34.sp,
                     isPrimary = true,
                     onClick = {
                         if (isPlaying) exoPlayerManager.pause() else exoPlayerManager.resume()
+                        isPlaying = !isPlaying
                         userInteractionCount++
                     }
                 )
                 TvCircleButton(
-                    text = "⏩ +10s",
+                    text = "Adelantar 10s",
+                    icon = Icons.Rounded.Forward10,
                     size = 56.dp,
-                    fontSize = 12.sp,
                     onClick = {
-                        exoPlayerManager.seekTo((currentPosMs + 10_000L).coerceAtMost(durationMs))
+                        val maxDur = if (durationMs > 0L) durationMs else Long.MAX_VALUE
+                        val next = (currentPosMs + 10_000L).coerceAtMost(maxDur)
+                        exoPlayerManager.seekTo(next)
+                        currentPosMs = next
                         userInteractionCount++
                     }
                 )
             }
         }
 
-        // 2. Barra Inferior Interactiva para TV (Línea de tiempo, Opciones y Tuerca en la derecha)
+        // 2. Barra Inferior Interactiva para TV (Línea de tiempo seleccionable con D-Pad, Opciones y Tuerca)
         AnimatedVisibility(
             visible = isControlsVisible,
             enter = fadeIn() + slideInVertically { it / 2 },
@@ -184,20 +185,16 @@ fun TvDirectStreamScreen(
                     maxLines = 1, overflow = TextOverflow.Ellipsis
                 )
 
-                // Línea de tiempo
-                Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                    val progress = if (durationMs > 0L) (currentPosMs.toFloat() / durationMs.toFloat()).coerceIn(0f, 1f) else 0f
-                    LinearProgressIndicator(
-                        progress = { progress },
-                        modifier = Modifier.fillMaxWidth().height(5.dp),
-                        color = Color(0xFFFF7A00),
-                        trackColor = Color(0xFF334155)
-                    )
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text(formatTvTime(currentPosMs), color = Color(0xFF94A3B8), fontSize = 11.sp, fontWeight = FontWeight.Medium)
-                        Text(formatTvTime(durationMs), color = Color(0xFF94A3B8), fontSize = 11.sp, fontWeight = FontWeight.Medium)
-                    }
-                }
+                // Línea de tiempo interactiva (seleccionable con el control remoto de la TV)
+                TvInteractiveTimeline(
+                    currentPosMs = currentPosMs,
+                    durationMs = durationMs,
+                    onSeekTo = { targetMs ->
+                        exoPlayerManager.seekTo(targetMs)
+                        currentPosMs = targetMs
+                    },
+                    onUserInteraction = { userInteractionCount++ }
+                )
 
                 // Fila de Opciones: Subtítulos, Calidad, Escala, Salir y Tuerca Ajustes a la derecha
                 Row(

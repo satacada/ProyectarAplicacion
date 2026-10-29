@@ -165,12 +165,19 @@ object GalleryMediaHelper {
 
     suspend fun loadFolderContextForUri(context: Context, targetUri: Uri, isVideo: Boolean): Pair<String, List<GalleryPhotoItem>> = withContext(Dispatchers.IO) {
         val all = loadAllMedia(context, if (isVideo) "video/*" else "image/*")
+        val decodedUri = Uri.decode(targetUri.toString()).replace('\\', '/')
         val targetId = targetUri.lastPathSegment?.substringAfterLast(':') ?: ""
-        val matchedItem = all.firstOrNull { it.uri == targetUri || (targetId.isNotBlank() && it.id.toString() == targetId) }
+        val matchedItem = all.firstOrNull { item ->
+            item.uri == targetUri ||
+                (targetId.isNotBlank() && item.id.toString() == targetId) ||
+                (item.folderPath.isNotBlank() && decodedUri.endsWith("${item.folderPath}/${item.name}", ignoreCase = true))
+        }
         val folderPath = matchedItem?.folderPath ?: resolveFolderPathFromUri(context, targetUri) ?: ""
         val contextItems = if (folderPath.isNotBlank()) {
             all.filter { it.folderPath.equals(folderPath, ignoreCase = true) && it.isVideo == isVideo }
-        } else all.filter { it.isVideo == isVideo }
+        } else {
+            listOfNotNull(matchedItem)
+        }
         folderPath to contextItems
     }
 

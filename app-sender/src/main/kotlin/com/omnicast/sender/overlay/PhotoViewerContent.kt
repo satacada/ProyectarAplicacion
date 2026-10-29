@@ -85,7 +85,7 @@ fun PhotoViewerContent(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFF0B0F17))
-            .pointerInput(currentIndex) {
+            .pointerInput(currentIndex, uris.size) {
                 detectTapGestures(
                     onDoubleTap = {
                         showGestureHint = false
@@ -96,7 +96,7 @@ fun PhotoViewerContent(
                     }
                 )
             }
-            .pointerInput(currentIndex) {
+            .pointerInput(currentIndex, uris.size) {
                 awaitEachGesture {
                     awaitFirstDown(requireUnconsumed = false)
                     showGestureHint = false

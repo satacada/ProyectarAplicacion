@@ -90,7 +90,7 @@ class VideoCastPlayerActivity : ComponentActivity() {
                     title = currentTitleState.value,
                     subtitle = sub,
                     uri = activeUri,
-                    hasMultipleVideos = totalVideos > 1,
+                    hasMultipleVideos = totalVideos >= 1,
                     onPrevVideo = { changeVideo(-1) },
                     onNextVideo = { changeVideo(1) },
                     onBack = { returnToFolder() },
@@ -105,7 +105,7 @@ class VideoCastPlayerActivity : ComponentActivity() {
 
     private fun changeVideo(delta: Int) {
         val list = GallerySessionHolder.activeVideos
-        if (list.size <= 1) return
+        if (list.isEmpty()) return
         val nextIdx = (currentIndexState.intValue + delta).let {
             if (it < 0) list.lastIndex else if (it >= list.size) 0 else it
         }
@@ -192,7 +192,14 @@ class VideoCastPlayerActivity : ComponentActivity() {
                             mp.start()
                             isPlaying = true
                         }
-                        view.setOnCompletionListener { isPlaying = false; currentMs = durationMs }
+                        view.setOnCompletionListener {
+                            if (GallerySessionHolder.activeVideos.isNotEmpty()) {
+                                onNextVideo()
+                            } else {
+                                isPlaying = false
+                                currentMs = durationMs
+                            }
+                        }
                     }
                 },
                 modifier = Modifier.fillMaxSize()

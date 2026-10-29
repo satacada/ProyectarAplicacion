@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 284,
-  "versionCodeReceiver": 267,
-  "versionName": "3.5.33",
-  "releaseTag": "v3.5.33",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.33/omnicast-sender-v3.5.33.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.33/omnicast-receiver-v3.5.33.apk",
-  "changelog": "v3.5.33: Explorador nativo de carpetas para Fotos y Videos con pila de rutas LIFO estricta (ej. 1->3->2->4->5 retrocede exactamente 5->4->2->3->1 sin saltar niveles), reconstrucción de rutas anidadas y aislamiento de cada foto/video dentro del contexto exacto de su carpeta."
+  "versionCodeSender": 285,
+  "versionCodeReceiver": 268,
+  "versionName": "3.5.34",
+  "releaseTag": "v3.5.34",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.34/omnicast-sender-v3.5.34.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.34/omnicast-receiver-v3.5.34.apk",
+  "changelog": "v3.5.34: Aislamiento estricto por nivel de carpeta en Fotos y Videos (solo navega entre las N fotos/videos de esa carpeta exacta con bucle circular N->1 y 1->N) y retroceso paso a paso con botón Atrás (Foto/Video -> Carpeta actual -> Ruta inversa exacta sin saltos)."
 }

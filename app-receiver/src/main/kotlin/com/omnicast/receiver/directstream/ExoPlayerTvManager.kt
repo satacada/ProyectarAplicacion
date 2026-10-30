@@ -221,16 +221,15 @@ class ExoPlayerTvManager(private val context: Context) {
         if (branch == com.omnicast.core.domain.models.MediaBranch.LIVE_HLS) {
             builder.setLiveConfiguration(MediaItem.LiveConfiguration.Builder().setMaxPlaybackSpeed(1.02f).setMinPlaybackSpeed(0.98f).build())
         }
-        val lower = url.lowercase()
-        val isOk = lower.contains("mycdn.me") || lower.contains("okcdn.ru")
-        val isOkDash = isOk && (lower.contains("ct=6") || lower.contains("format=dash"))
-        val isOkHls = isOk && (lower.contains("/hls") || lower.contains("m3u8") || lower.contains("format=hls"))
-        val isTxtHls = (lower.contains(".txt") || lower.contains(".txt?")) && (lower.contains("/hls") || lower.contains("master") || lower.contains("index"))
+        val uri = android.net.Uri.parse(url); val p = (uri.path ?: "").lowercase(); val q = (uri.query ?: "").lowercase()
+        val isOk = (uri.host ?: "").lowercase().let { it.contains("mycdn.me") || it.contains("okcdn.ru") }
+        val isHls = p.contains(".m3u8") || p.contains("/hls") || (isOk && (p.contains("m3u8") || q.contains("format=hls"))) || (p.contains(".txt") && (p.contains("master") || p.contains("index"))) || q.contains("format=hls")
+        val isDash = p.contains(".mpd") || (isOk && (q.contains("ct=6") || q.contains("format=dash"))) || q.contains("format=dash")
         val inferred = when {
-            branch == com.omnicast.core.domain.models.MediaBranch.AUDIO_ONLY || lower.contains(".mp3") || lower.contains(".aac") -> androidx.media3.common.MimeTypes.AUDIO_MPEG
-            branch == com.omnicast.core.domain.models.MediaBranch.DASH_MPD || lower.contains(".mpd") || lower.contains("dash") || isOkDash -> androidx.media3.common.MimeTypes.APPLICATION_MPD
-            lower.contains(".m3u8") || lower.contains("m3u8") || lower.contains("/hls") || isOkHls || isTxtHls -> androidx.media3.common.MimeTypes.APPLICATION_M3U8
-            lower.contains(".webm") -> androidx.media3.common.MimeTypes.VIDEO_WEBM
+            branch == com.omnicast.core.domain.models.MediaBranch.AUDIO_ONLY || p.endsWith(".mp3") || p.endsWith(".aac") -> androidx.media3.common.MimeTypes.AUDIO_MPEG
+            isHls -> androidx.media3.common.MimeTypes.APPLICATION_M3U8
+            branch == com.omnicast.core.domain.models.MediaBranch.DASH_MPD || isDash -> androidx.media3.common.MimeTypes.APPLICATION_MPD
+            p.endsWith(".webm") || q.contains("format=webm") -> androidx.media3.common.MimeTypes.VIDEO_WEBM
             else -> androidx.media3.common.MimeTypes.APPLICATION_MP4
         }
         val targetMime = fallbackMime ?: inferred

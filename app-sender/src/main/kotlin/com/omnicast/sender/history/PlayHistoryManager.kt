@@ -38,24 +38,21 @@ class PlayHistoryManager(private val context: Context) {
         val defaultsByUrl = defaults.associateBy { it.url }
         val mergedSaved = saved.map { s ->
             val d = defaultsByUrl[s.url] ?: (if (s.pageUrl != null) defaults.firstOrNull { it.pageUrl == s.pageUrl } else null)
-            if (d != null && d.isFavorite) s.copy(isFavorite = true, timestamp = maxOf(s.timestamp, d.timestamp)) else s
+            if (d != null && d.isFavorite) s.copy(isFavorite = true) else s
         }
         val combined = (mergedSaved + defaults.filterNot { d -> saved.any { s -> (s.pageUrl != null && s.pageUrl == d.pageUrl) || s.url == d.url } })
-        return combined.sortedWith(
-            compareByDescending<HistoryItem> { it.isFavorite }
-                .thenByDescending { it.timestamp }
-        )
+        return combined.sortedByDescending { it.timestamp }
     }
 
     private fun getPreloadedCatalog(): List<HistoryItem> {
-        val now = System.currentTimeMillis()
+        val pastBase = 1700000000000L
         return listOf(
             HistoryItem(
                 url = "https://pelisplus.hair/peliculas/8551-mad-max-salvajes-de-la-autopista-ver-online-hd.html",
                 title = "Mad Max: Salvajes de la autopista (1979 - PelisPlus)",
                 pageUrl = "https://pelisplus.hair/peliculas/8551-mad-max-salvajes-de-la-autopista-ver-online-hd.html",
                 headers = mapOf("Referer" to "https://pelisplus.hair/"),
-                timestamp = now + 120_000_000L,
+                timestamp = pastBase + 18000L,
                 isFavorite = true
             ),
             HistoryItem(
@@ -63,7 +60,7 @@ class PlayHistoryManager(private val context: Context) {
                 title = "Mad Max 2: El guerrero de la carretera (PelisPlus)",
                 pageUrl = "https://pelisplus.hair/peliculas/8536-mad-max-2-el-guerrero-de-la-carretera-ver-online-hd.html",
                 headers = mapOf("Referer" to "https://pelisplus.hair/"),
-                timestamp = now + 100_000_000L,
+                timestamp = pastBase + 17000L,
                 isFavorite = true
             ),
             HistoryItem(
@@ -71,7 +68,7 @@ class PlayHistoryManager(private val context: Context) {
                 title = "Spider-Man: Un nuevo día (PelisGO)",
                 pageUrl = "https://pelisgo.online/pelicula/spider-man-un-nuevo-dia",
                 headers = mapOf("Referer" to "https://pelisgo.online/"),
-                timestamp = now + 80_000_000L,
+                timestamp = pastBase + 16000L,
                 isFavorite = true
             ),
             HistoryItem(
@@ -79,105 +76,105 @@ class PlayHistoryManager(private val context: Context) {
                 title = "Bichos: Una Aventura en Miniatura (Reypelis)",
                 pageUrl = "https://reypelis.net/pelicula/bichos-una-aventura-en-miniatura/",
                 headers = mapOf("Referer" to "https://reypelis.net/"),
-                timestamp = now + 70_000_000L
+                timestamp = pastBase + 15000L
             ),
             HistoryItem(
                 url = "https://reypelis.net/pelicula/mad-max-furia-en-la-carretera/",
                 title = "Mad Max: Furia en la carretera (Reypelis)",
                 pageUrl = "https://reypelis.net/pelicula/mad-max-furia-en-la-carretera/",
                 headers = mapOf("Referer" to "https://reypelis.net/"),
-                timestamp = now + 60_000_000L
+                timestamp = pastBase + 14000L
             ),
             HistoryItem(
                 url = "https://reypelis.net/pelicula/ms1-maxima-seguridad/",
                 title = "MS1: Máxima Seguridad (Reypelis)",
                 pageUrl = "https://reypelis.net/pelicula/ms1-maxima-seguridad/",
                 headers = mapOf("Referer" to "https://reypelis.net/"),
-                timestamp = now + 50_000_000L
+                timestamp = pastBase + 13000L
             ),
             HistoryItem(
                 url = "https://pelis182.net/sisu-camino-a-la-venganza/",
                 title = "Sisu: Camino a la venganza (Pelis182)",
                 pageUrl = "https://pelis182.net/sisu-camino-a-la-venganza/",
                 headers = mapOf("Referer" to "https://pelis182.net/"),
-                timestamp = now + 40_000_000L
+                timestamp = pastBase + 12000L
             ),
             HistoryItem(
                 url = "https://pelismart.mov/pelicula/the-senior-class",
                 title = "The Senior Class (Pelismart)",
                 pageUrl = "https://pelismart.mov/pelicula/the-senior-class",
                 headers = mapOf("Referer" to "https://pelismart.mov/"),
-                timestamp = now + 30_000_000L
+                timestamp = pastBase + 11000L
             ),
             HistoryItem(
                 url = "https://pelismart.mov/pelicula/extraterrestrial-Q4d13b",
                 title = "Extraterrestrial (Pelismart)",
                 pageUrl = "https://pelismart.mov/pelicula/extraterrestrial-Q4d13b",
                 headers = mapOf("Referer" to "https://pelismart.mov/"),
-                timestamp = now + 28_000_000L
+                timestamp = pastBase + 10000L
             ),
             HistoryItem(
                 url = "https://pelismart.mov/anime/chainsmoker-cat-3JywjI/temporada/1/capitulo/9",
                 title = "Chainsmoker Cat (Pelismart Anime)",
                 pageUrl = "https://pelismart.mov/anime/chainsmoker-cat-3JywjI/temporada/1/capitulo/9",
                 headers = mapOf("Referer" to "https://pelismart.mov/"),
-                timestamp = now + 26_000_000L
+                timestamp = pastBase + 9000L
             ),
             HistoryItem(
                 url = "https://wcm.cuevana3.nu/ver-el-episodio/118048/episodio-3-de-amia-el-fin-de-la-verdad-temporada-1/",
                 title = "AMIA: El fin de la verdad (Cuevana3)",
                 pageUrl = "https://wcm.cuevana3.nu/ver-el-episodio/118048/episodio-3-de-amia-el-fin-de-la-verdad-temporada-1/",
                 headers = mapOf("Referer" to "https://wcm.cuevana3.nu/"),
-                timestamp = now + 25_000_000L
+                timestamp = pastBase + 8000L
             ),
             HistoryItem(
                 url = "https://repelisplus.casa/vod-movie/v1/el-senor-de-los-anillos-las-dos-torres.mp4",
                 title = "El Señor de los Anillos: Las Dos Torres (MP4)",
                 pageUrl = "https://repelisplus.casa/",
                 headers = mapOf("Referer" to "https://repelisplus.casa/"),
-                timestamp = now + 20_000_000L
+                timestamp = pastBase + 7000L
             ),
             HistoryItem(
                 url = "https://www.canela.tv/movies",
                 title = "Canela.tv Películas (Streaming)",
                 pageUrl = "https://www.canela.tv/movies",
                 headers = mapOf("Referer" to "https://www.canela.tv/"),
-                timestamp = now + 15_000_000L
+                timestamp = pastBase + 6000L
             ),
             HistoryItem(
                 url = "https://www.808ball15.com/football/2962655-banfield-vs-rosario-central.html",
                 title = "Banfield vs Rosario Central (808ball Fútbol)",
                 pageUrl = "https://www.808ball15.com/football/2962655-banfield-vs-rosario-central.html",
                 headers = mapOf("Referer" to "https://www.808ball15.com/"),
-                timestamp = now + 10_000_000L
+                timestamp = pastBase + 5000L
             ),
             HistoryItem(
                 url = "https://www.808ball15.com/football/3011883-depindependiente-medellin-vs-independiente-santa-fe.html",
                 title = "DIM vs Santa Fe (808ball Fútbol)",
                 pageUrl = "https://www.808ball15.com/football/3011883-depindependiente-medellin-vs-independiente-santa-fe.html",
                 headers = mapOf("Referer" to "https://www.808ball15.com/"),
-                timestamp = now + 8_000_000L
+                timestamp = pastBase + 4000L
             ),
             HistoryItem(
                 url = "https://ok.ru/video/7330074135206",
                 title = "Película en OK.ru",
                 pageUrl = "https://ok.ru/video/7330074135206",
                 headers = mapOf("Referer" to "https://ok.ru/"),
-                timestamp = now + 5_000_000L
+                timestamp = pastBase + 3000L
             ),
             HistoryItem(
                 url = "https://www.dailymotion.com/video/x5ui2hp",
                 title = "Video en Dailymotion",
                 pageUrl = "https://www.dailymotion.com/video/x5ui2hp",
                 headers = mapOf("Referer" to "https://www.dailymotion.com/"),
-                timestamp = now + 3_000_000L
+                timestamp = pastBase + 2000L
             ),
             HistoryItem(
                 url = "https://www.youtube.com/watch?v=fJ9rUzIMcZQ",
                 title = "Trailer Oficial en YouTube",
                 pageUrl = "https://www.youtube.com/watch?v=fJ9rUzIMcZQ",
                 headers = mapOf("Referer" to "https://www.youtube.com/"),
-                timestamp = now + 1_000_000L
+                timestamp = pastBase + 1000L
             )
         )
     }

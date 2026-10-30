@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 291,
-  "versionCodeReceiver": 274,
-  "versionName": "3.5.40",
-  "releaseTag": "v3.5.40",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.40/omnicast-sender-v3.5.40.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.40/omnicast-receiver-v3.5.40.apk",
-  "changelog": "v3.5.40 (Identidad Castera & Castera TV): 1) Nueva Identidad Castera: iconos y banner neón oficial en Sender y Receiver con nombres 'Castera' y 'Castera TV'. 2) Blindaje Transmisión Akamai/WAF y Universal Cookies: cosecha universal de cookies en dominios raíz (.rai.it, .khl.ru), soporte de credenciales cross-origin (withCredentials=true) en Hls.js y eliminación de perfiles rígidos en Akamai. 3) Desbloqueo de Paginación en Buscadores (Yandex/Google): pase libre a scripts de paginación y métricas en buscadores sin romper el scroll infinito. 4) Zoom Táctil (Pinch-to-zoom) en Navegador Web: gestos multitáctiles fluidos en páginas móviles y de escritorio. 5) Barra Superior Ergonómica (Propuesta A): botón Cerrar (✕) reubicado al extremo izquierdo de Fila 1 para evitar toques accidentales con el menú de 3 puntos (⋮), y botón Guardados (☰) en Fila 2. 6) Guardado a 1 Toque (☆): toggle instantáneo entre guardar en 'Ver más tarde' y eliminar con feedback visual inmediato. 7) Botón Dinámico Único en TV: unificación de botones duplicados en 'Ver más tarde' a botón único dinámico (Verde 'Guardar' / Oro 'Guardada' con confirmación de borrado). 8) Registro de Fallos Totales Caja Negra: historial persistente FIFO de 50 eventos de fallos irrecuperables en TV y móvil con aprendizaje automático en SQLite para alternar a WebView ante errores 403. 9) Selector de Idioma de la Aplicación: detección automática del sistema al instalar y selector manual persistente en Ajustes y menú de opciones."
+  "versionCodeSender": 292,
+  "versionCodeReceiver": 275,
+  "versionName": "3.5.41",
+  "releaseTag": "v3.5.41",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.41/omnicast-sender-v3.5.41.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.41/omnicast-receiver-v3.5.41.apk",
+  "changelog": "v3.5.41: 1) Clasificación Robusta de Streams por Componentes de URI (RFC): análisis exclusivo del Path y Query ignorando nombres de host (Rai Italia / dash2.antik.sk se reconoce como HLS M3U8 y ya no colapsa con error MPD). 2) Rediseño 2D Frontal Vertical del Banner de TV e Iconos: figura 100% vertical y recta (celular erguido a 90° + televisor 16:9 + ondas de casteo) con fondo oscuro limpio en proporción oficial 320x180 px para Leanback Android TV, eliminando la perspectiva 3D inclinada y deformaciones. 3) Ordenamiento Estricto de 'Vistos Recientemente' en Historial: orden descendente por fecha de visita real donde el último video visitado se posiciona en el Puesto #1 arriba del todo, desplazando los ítems de catálogo a fechas pasadas."
 }

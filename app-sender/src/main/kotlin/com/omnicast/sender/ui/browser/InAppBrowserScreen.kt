@@ -19,9 +19,7 @@ import com.omnicast.sender.playlist.PlaylistManager
 import com.omnicast.sender.stream.ActiveStreamHolder
 import com.omnicast.sender.ui.SenderMainActivity
 import com.omnicast.sender.ui.components.SideMediaDrawer
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
 
 @Composable
 fun InAppBrowserScreen(
@@ -68,8 +66,7 @@ fun InAppBrowserScreen(
             val item = HistoryItem(target, t, currentUrl, streamHeaders[primary] ?: emptyMap(), requiresProxy = ActiveStreamHolder.isProxied.value)
             playlistManager.addItemToPlaylist(com.omnicast.sender.playlist.PlaylistManager.DEFAULT_WATCH_LATER_ID, item)
             historyManager.addOrUpdate(item.url, item.title, pageUrl = item.pageUrl, headers = item.headers, requiresProxy = item.requiresProxy)
-            playlistsVersion++
-            Toast.makeText(context, "⭐ Guardado en Ver más tarde", Toast.LENGTH_SHORT).show()
+            playlistsVersion++; Toast.makeText(context, "⭐ Guardado en Ver más tarde", Toast.LENGTH_SHORT).show()
         } else Toast.makeText(context, "No hay video para guardar en esta página", Toast.LENGTH_SHORT).show()
     }
 
@@ -119,15 +116,19 @@ fun InAppBrowserScreen(
         val curHost = try { android.net.Uri.parse(currentUrl).host } catch (_: Throwable) { null }
         if (AdBlocker.isSearchEngine(curHost)) return
         val cleanUrl = BrowserUrlHelper.sanitizeMediaUrl(url); if (cleanUrl.isBlank() || AdBlocker.isAd(cleanUrl) || AdBlocker.isVideoAd(cleanUrl) || !isRealMedia(cleanUrl)) return
-        if (BrowserUrlHelper.extractYouTubeId(cleanUrl) != null && curHost?.contains("youtube") != true) return
+        val isYt = BrowserUrlHelper.extractYouTubeId(cleanUrl) != null
+        val isYtLive = isYt && (cleanUrl.contains("/live") || cleanUrl.contains("live_stream") || currentUrl.contains("canal") || currentUrl.contains("tv") || currentUrl.contains("envivo") || currentUrl.contains("directo"))
+        if (isYt && curHost?.contains("youtube") != true && !isYtLive) return
         val derivedMaster = BrowserUrlHelper.deriveMasterPlaylistUrl(cleanUrl)
         val targetUrl = if (derivedMaster != null && !cleanUrl.contains("master", true)) derivedMaster else cleanUrl
-        val isM = targetUrl.contains("master", true) || targetUrl.contains("playlist", true) || targetUrl.contains(".mpd", true)
+        val isSubVar = com.omnicast.core.domain.usecases.HlsMasterResolver.isLikelySubVariantUrl(targetUrl)
+        val isM = !isSubVar && (targetUrl.contains("master", true) || targetUrl.contains("playlist", true) || targetUrl.contains(".mpd", true))
         val key = BrowserUrlHelper.extractMediaIdentityKey(targetUrl)
         val existingIndex = detectedStreams.indexOfFirst { it == targetUrl || (key.isNotBlank() && BrowserUrlHelper.extractMediaIdentityKey(it) == key && (it.contains(".urlset") == targetUrl.contains(".urlset"))) }
         if (existingIndex >= 0) {
             val existingUrl = detectedStreams[existingIndex]
-            val existingIsM = existingUrl.contains("master", true) || existingUrl.contains("playlist", true) || existingUrl.contains(".mpd", true)
+            val existingIsSub = com.omnicast.core.domain.usecases.HlsMasterResolver.isLikelySubVariantUrl(existingUrl)
+            val existingIsM = !existingIsSub && (existingUrl.contains("master", true) || existingUrl.contains("playlist", true) || existingUrl.contains(".mpd", true))
             if (existingIsM && !isM) return
             detectedStreams.removeAt(existingIndex); streamHeaders.remove(existingUrl); streamLabels.remove(existingUrl)
         }
@@ -243,7 +244,9 @@ fun InAppBrowserScreen(
                     },
                     onStreamIntercepted = { sUrl, hdrs, isM -> registerStream(sUrl, hdrs, isPrimary = isM) },
                     onSniffedVideo = { sniffed ->
-                        if (AdBlocker.isAd(sniffed.src) || sniffed.duration in 0.1f..59.9f || (BrowserUrlHelper.extractYouTubeId(sniffed.src) != null && !currentUrl.contains("youtube.com") && !currentUrl.contains("youtu.be"))) return@BrowserWebView
+                        val isSniffedYt = BrowserUrlHelper.extractYouTubeId(sniffed.src) != null
+                        val isSniffedLive = isSniffedYt && (sniffed.duration <= 0f || sniffed.src.contains("/live") || currentUrl.contains("tv") || currentUrl.contains("canal") || currentUrl.contains("envivo") || currentUrl.contains("directo"))
+                        if (AdBlocker.isAd(sniffed.src) || (sniffed.duration in 0.1f..59.9f && !isSniffedLive) || (isSniffedYt && !currentUrl.contains("youtube.com") && !currentUrl.contains("youtu.be") && !isSniffedLive)) return@BrowserWebView
                         val sourceFrameUrl = sniffed.frameUrl.takeIf { it.startsWith("http") } ?: currentUrl
                         if (sniffed.src.contains("fastream.to") && !sniffed.src.contains(".m3u8")) {
                             scope.launch(Dispatchers.IO) {
@@ -269,8 +272,7 @@ fun InAppBrowserScreen(
                         onOpenQualities = { openOptionsSheet() },
                         onPlayControl = { act, pos, vol -> if (act == "VOLUME") ActiveStreamHolder.setVolume(vol); ActiveStreamHolder.onSendPlayControl?.invoke(act, pos, vol, null) },
                         onStopCasting = { ActiveStreamHolder.stopCasting(); com.omnicast.sender.service.CastMediaNotificationService.stop(context); Toast.makeText(context, "🛑 Transmisión detenida", Toast.LENGTH_SHORT).show() },
-                        onSaveToPlaylist = { toggleBookmark() },
-                        onDeleteFromSaved = { deleteMovieFromSaved() }, isSaved = isMovieSaved,
+                        onSaveToPlaylist = { toggleBookmark() }, onDeleteFromSaved = { deleteMovieFromSaved() }, isSaved = isMovieSaved,
                         onDismiss = { showBottomControls = false }, modifier = Modifier.align(Alignment.BottomCenter)
                     )
                 }
@@ -287,14 +289,11 @@ fun InAppBrowserScreen(
         }
     }
     BrowserModalSheets(
-        showOptionsSheet = showOptionsSheet, showHistorySheet = false, showSavedPlaylistsSheet = false, videoToSave = videoToSave,
-        playlistManager = playlistManager, pageTitle = pageTitle, qualityOptions = qualityOptions, historyList = emptyList(),
+        showOptionsSheet = showOptionsSheet, showHistorySheet = false, showSavedPlaylistsSheet = false, videoToSave = videoToSave, playlistManager = playlistManager, pageTitle = pageTitle, qualityOptions = qualityOptions, historyList = emptyList(),
         onTransmitOption = { opt -> showOptionsSheet = false; val bT = webViewInstance?.title?.takeIf { it.isNotBlank() && !it.contains("about:blank") && it != "Transmisión" } ?: pageTitle; transmitWithHistory(opt.streamUrl, bT, (streamHeaders[opt.streamUrl] ?: emptyMap()) + opt.healedHeaders) },
-        onTransmitHistory = { transmitWithHistory(it.url, it.title, it.headers, it.pageUrl) }, onDismissOptions = { showOptionsSheet = false; userDismissedSheetForUrl = currentUrl },
-        onClearOptions = { resetStreamDetections(); showOptionsSheet = false },
+        onTransmitHistory = { transmitWithHistory(it.url, it.title, it.headers, it.pageUrl) }, onDismissOptions = { showOptionsSheet = false; userDismissedSheetForUrl = currentUrl }, onClearOptions = { resetStreamDetections(); showOptionsSheet = false },
         onRescanOptions = { webViewInstance?.evaluateJavascript(WvcSnifferScripts.buildAggressiveRescanScript(WvcDomSniffer.CONSOLE_PREFIX), null); Toast.makeText(context, "🔍 Buscando videos...", Toast.LENGTH_SHORT).show() },
-        onDeleteHistory = { historyManager.remove(it) }, onClearHistory = { historyManager.clear() }, onToggleFavorite = { historyManager.toggleFavorite(it) },
-        onDismissHistory = {}, onDismissPlaylists = {}, onDismissSaveDialog = { videoToSave = null }, onSavedToPlaylist = { playlistsVersion++; Toast.makeText(context, "💾 Guardado en $it", Toast.LENGTH_SHORT).show() },
+        onDeleteHistory = { historyManager.remove(it) }, onClearHistory = { historyManager.clear() }, onToggleFavorite = { historyManager.toggleFavorite(it) }, onDismissHistory = {}, onDismissPlaylists = {}, onDismissSaveDialog = { videoToSave = null }, onSavedToPlaylist = { playlistsVersion++; Toast.makeText(context, "💾 Guardado en $it", Toast.LENGTH_SHORT).show() },
         showWhitelistDialog = showWhitelistDialog, currentUrl = currentUrl, onDismissWhitelist = { showWhitelistDialog = false }, onWhitelistUpdated = { webViewInstance?.reload() }
     )
 }

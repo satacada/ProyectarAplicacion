@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 293,
-  "versionCodeReceiver": 276,
-  "versionName": "3.5.42",
-  "releaseTag": "v3.5.42",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.42/omnicast-sender-v3.5.42.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.42/omnicast-receiver-v3.5.42.apk",
-  "changelog": "v3.5.42: 1) Internacionalización Global (i18n): Soporte multilingüe completo y dinámico en toda la aplicación (Sender y Receiver) para Español, Inglés, Alemán (Alemania/Suiza), Francés (Francia/Suiza), Italiano (Italia/Suiza), Portugués y Ruso con términos de uso cotidiano. 2) Selector de Idioma Reactivo: Botón de acceso directo 🌐 en la barra superior del Sender, en el menú del navegador web, y en la barra superior de Android TV con soporte de navegación y selección por control remoto físico (D-Pad). 3) Peticiones Web Nativas con Accept-Language: Configuración automática de idioma en el motor Chromium del WebView para solicitar y recibir páginas web en el idioma nativo seleccionado. 4) Blindaje de Clasificación DASH: Extractor DASH restringido estrictamente a extensiones .mpd y parámetros formales, excluyendo rutas HLS (.m3u8 y /hls/)."
+  "versionCodeSender": 294,
+  "versionCodeReceiver": 277,
+  "versionName": "3.5.43",
+  "releaseTag": "v3.5.43",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.43/omnicast-sender-v3.5.43.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.43/omnicast-receiver-v3.5.43.apk",
+  "changelog": "v3.5.43: 1) Resolución Universal de Master HLS (RFC 8216) y Recuperación de Audio: Nuevo caso de uso HlsMasterResolver en :core:domain que detecta listas maestras HLS mediante inspección de contenido (#EXT-X-STREAM-INF / #EXT-X-MEDIA:TYPE=AUDIO) y deriva sub-variantes huérfanas hacia su Master correspondiente. Erradica la pérdida de audio en canales en vivo con flujos desmultiplexados (Sky News, Das Erste). 2) Doble Escudo Defensivo: El Sender preserva la lista maestra y evita que sub-variantes la sobreescriban; el Receiver (ExoPlayerTvManager) recupera automáticamente la lista maestra si una sub-variante alcanza la TV Box. 3) Desbloqueo Universal de YouTube Live Embebido: Detección y casteo directo de transmisiones en vivo de YouTube incrustadas en páginas externas de noticias (Espreso TV). 4) Cero Hardcoding: Eliminación de dominios fijos en clases utilitarias globales conforme a la Regla 6 (Arquitectura Hexagonal)."
 }

@@ -36,8 +36,9 @@ class UniversalHlsExtractorAdapter : IMediaStreamExtractorPort {
 
     override fun extract(candidate: StreamCandidate): MediaStream {
         val lower = candidate.url.lowercase()
-        val isLive = lower.contains("live") || lower.contains("chunklist")
-        val isMaster = lower.contains("master") || lower.contains("manifest") || lower.contains("playlist") || isLive || lower.contains("p.php")
+        val isSubVar = com.omnicast.core.domain.usecases.HlsMasterResolver.isLikelySubVariantUrl(candidate.url)
+        val isLive = lower.contains("live")
+        val isMaster = !isSubVar && (lower.contains("master") || lower.contains("manifest") || (!lower.contains("chunklist") && lower.contains("playlist")) || lower.contains("p.php"))
         val title = candidate.pageTitle ?: if (isLive) "🔴 Transmisión En Vivo" else "Transmisión HLS"
         val quality = if (isLive) "En Vivo" else if (isMaster) "Auto Adaptativo" else "HLS Estándar"
         val hdrs = candidate.headers.toMutableMap()

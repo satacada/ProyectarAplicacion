@@ -164,15 +164,8 @@ object BrowserUrlHelper {
         return if (filePrefix.contains("master", true) || filePrefix.contains("index", true)) parentFolder else "$parentFolder/$filePrefix"
     }
 
-    fun deriveMasterPlaylistUrl(url: String): String? {
-        if (!url.contains("fastream.to", true)) return null
-        if (url.contains("master.m3u8", true)) return url
-        val id = MediaPlatformResolver.extractFastreamId(url) ?: return null
-        return if (url.contains("/${id}_")) {
-            url.replace(Regex("/" + id + "_[a-zA-Z0-9]+/index-[^?]+\\.m3u8"), "/${id}_,l,n,.urlset/master.m3u8")
-                .replace(Regex("/" + id + "_[a-zA-Z0-9]+/tracks-[^?]+\\.m3u8"), "/${id}_,l,n,.urlset/master.m3u8")
-        } else null
-    }
+    fun deriveMasterPlaylistUrl(url: String): String? =
+        com.omnicast.core.domain.usecases.HlsMasterResolver.deriveMasterPlaylistUrl(url)
 
     fun harvestUniversalCookies(
         streamUrl: String,

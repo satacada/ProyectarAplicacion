@@ -146,16 +146,14 @@ class ExoPlayerTvManager(private val context: Context) {
         }
         initialize(branch)
         val cleanUrl = com.omnicast.core.domain.usecases.StreamManifestProbe.sanitizeMediaUrl(url)
-        currentUrl = cleanUrl
-        currentTitle = title
-        currentHeaders = headers
-        isRetryingClean = false
+        val effectiveUrl = com.omnicast.core.domain.usecases.HlsMasterResolver.deriveMasterPlaylistUrl(cleanUrl) ?: cleanUrl
+        currentUrl = effectiveUrl; currentTitle = title; currentHeaders = headers; isRetryingClean = false
 
-        val safeHeaders = filterSafeHeaders(cleanUrl, headers)
-        val mediaItem = buildMediaItem(cleanUrl, title, branch, subtitles)
+        val safeHeaders = filterSafeHeaders(effectiveUrl, headers)
+        val mediaItem = buildMediaItem(effectiveUrl, title, branch, subtitles)
 
         if (safeHeaders.isEmpty()) {
-            playClean(cleanUrl, title, startPositionMs, branch, subtitles)
+            playClean(effectiveUrl, title, startPositionMs, branch, subtitles)
             return
         }
 
@@ -179,10 +177,10 @@ class ExoPlayerTvManager(private val context: Context) {
                 prepare()
                 play()
             }
-            com.omnicast.receiver.log.ReceiverLogger.log(TAG, "Reproduciendo con cabeceras (${safeHeaders.keys.joinToString()}): $url (pos=${startPositionMs}ms)")
+            com.omnicast.receiver.log.ReceiverLogger.log(TAG, "Reproduciendo con cabeceras (${safeHeaders.keys.joinToString()}): $effectiveUrl (pos=${startPositionMs}ms)")
         } catch (e: Throwable) {
             com.omnicast.receiver.log.ReceiverLogger.log(TAG, "Error con cabeceras, fallback a limpio", e)
-            playClean(url, title, startPositionMs)
+            playClean(effectiveUrl, title, startPositionMs)
         }
     }
 
@@ -190,9 +188,10 @@ class ExoPlayerTvManager(private val context: Context) {
         if (url.contains("stub.mp4", ignoreCase = true) || url.contains("dummy.mp4", ignoreCase = true)) return
         initialize(branch)
         val cleanUrl = com.omnicast.core.domain.usecases.StreamManifestProbe.sanitizeMediaUrl(url)
+        val effectiveUrl = com.omnicast.core.domain.usecases.HlsMasterResolver.deriveMasterPlaylistUrl(cleanUrl) ?: cleanUrl
         runCatching {
-            val mediaItem = buildMediaItem(cleanUrl, title, branch, subtitles)
-            val safe = filterSafeHeaders(cleanUrl, emptyMap())
+            val mediaItem = buildMediaItem(effectiveUrl, title, branch, subtitles)
+            val safe = filterSafeHeaders(effectiveUrl, emptyMap())
             val httpFactory = DefaultHttpDataSource.Factory()
                 .setUserAgent(safe["User-Agent"] ?: DEFAULT_UA).setAllowCrossProtocolRedirects(true).setConnectTimeoutMs(15000).setReadTimeoutMs(15000)
             if (safe.isNotEmpty()) httpFactory.setDefaultRequestProperties(safe)

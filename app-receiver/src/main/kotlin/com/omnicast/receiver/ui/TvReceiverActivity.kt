@@ -62,18 +62,16 @@ class TvReceiverActivity : ComponentActivity() {
                         val found = playlistManager.findItemByUrlOrTitle(cur.streamUrl, cur.title)
                         if (found != null) expiredItemForRenew.value = found else Toast.makeText(this@TvReceiverActivity, "⚠️ Servidor no disponible (HTTP 403)", Toast.LENGTH_SHORT).show()
                     }
+                    com.omnicast.receiver.log.TvFailedPlaybackManager.recordFailure(this@TvReceiverActivity, streamToReport.orEmpty(), "EXOPLAYER", "HTTP_403", titleToReport.orEmpty(), "Rechazo 403")
                     receiverState.value = ReceiverUiState.Standby
                     lifecycleScope.launch { signalingServer.sendMessage(SignalingMessage.PlaybackStatus("ERROR_FORBIDDEN_403", 0L, 0L, mediaUrl = streamToReport, title = titleToReport)) }
                 }
             } }
         }
-        digitalAudioReceiver = DigitalAudioReceiver()
-        historyManager = com.omnicast.receiver.directstream.TvPlaybackHistoryManager(this)
+        digitalAudioReceiver = DigitalAudioReceiver(); historyManager = com.omnicast.receiver.directstream.TvPlaybackHistoryManager(this)
         playlistManager = com.omnicast.receiver.directstream.TvPlaylistManager(this).apply { onPlaylistsChanged = { jsonStr -> lifecycleScope.launch { signalingServer.sendMessage(SignalingMessage.SyncPlaylists(jsonStr)) } } }
-        updateManager = com.omnicast.receiver.update.TvUpdateManager(this)
-        signalingServer = LocalSignalingServer(port = 8088).apply { start() }
-        nsdAdvertiser = NsdAdvertiserManager(this).apply { registerService(port = 8088) }
-        lifecycleScope.launch { delay(2500); updateManager.checkForUpdates() }
+        updateManager = com.omnicast.receiver.update.TvUpdateManager(this); signalingServer = LocalSignalingServer(port = 8088).apply { start() }
+        nsdAdvertiser = NsdAdvertiserManager(this).apply { registerService(port = 8088) }; lifecycleScope.launch { delay(2500); updateManager.checkForUpdates() }
 
         lifecycleScope.launch {
             signalingServer.clientStatus.collect { st ->
@@ -154,8 +152,9 @@ class TvReceiverActivity : ComponentActivity() {
                                 com.omnicast.receiver.log.ReceiverLogger.log("TvReceiverActivity", "⚠️ WebStream falló ($reason). Finalizando y retornando a Standby.")
                                 val found = playlistManager.findItemByUrlOrTitle(state.streamUrl, state.title)
                                 if (found != null) expiredItemForRenew.value = found else Toast.makeText(this@TvReceiverActivity, if (reason == "WATCHDOG_TIMEOUT") "⚠️ Tiempo de espera agotado (buffer lento)" else "⚠️ Flujo no disponible ($reason)", Toast.LENGTH_SHORT).show()
-                                receiverState.value = ReceiverUiState.Standby
                                 val errCode = if (reason == "WATCHDOG_TIMEOUT") "ERROR_TIMEOUT" else "ERROR_FORBIDDEN_403"
+                                com.omnicast.receiver.log.TvFailedPlaybackManager.recordFailure(this@TvReceiverActivity, state.streamUrl, "WEBVIEW", errCode, state.title, "Fallo total ($reason)")
+                                receiverState.value = ReceiverUiState.Standby
                                 lifecycleScope.launch { signalingServer.sendMessage(SignalingMessage.PlaybackStatus(errCode, 0L, 0L, mediaUrl = state.streamUrl, title = state.title)) }
                             } else {
                                 com.omnicast.receiver.log.ReceiverLogger.log("TvReceiverActivity", "⚠️ WebStream falló ($reason). Fallback reactivo a ExoPlayer...")
@@ -290,11 +289,8 @@ class TvReceiverActivity : ComponentActivity() {
         }
     }
 
-    private fun playHistoryItem(item: com.omnicast.receiver.directstream.TvHistoryItem) =
-        startOrAutoRecastMedia(item.mediaUrl, item.title, item.lastPositionMs, item.pageUrl, item.headers)
-
-    private fun playPlaylistItem(item: com.omnicast.receiver.directstream.TvPlaylistItem) =
-        startOrAutoRecastMedia(item.url, item.title, playlistManager.getResumePosition(item), item.pageUrl, item.headers)
+    private fun playHistoryItem(item: com.omnicast.receiver.directstream.TvHistoryItem) = startOrAutoRecastMedia(item.mediaUrl, item.title, item.lastPositionMs, item.pageUrl, item.headers)
+    private fun playPlaylistItem(item: com.omnicast.receiver.directstream.TvPlaylistItem) = startOrAutoRecastMedia(item.url, item.title, playlistManager.getResumePosition(item), item.pageUrl, item.headers)
 
     override fun onDestroy() {
         super.onDestroy(); com.omnicast.receiver.log.ReceiverLogger.stop(); digitalAudioReceiver?.stop()

@@ -121,6 +121,9 @@ fun BrowserWebView(
                 settings.allowFileAccess = true
                 settings.useWideViewPort = true
                 settings.loadWithOverviewMode = true
+                settings.setSupportZoom(true)
+                settings.builtInZoomControls = true
+                settings.displayZoomControls = false
                 settings.textZoom = 100
                 settings.layoutAlgorithm = WebSettings.LayoutAlgorithm.NORMAL
                 settings.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW

@@ -65,7 +65,11 @@ fun InAppBrowserScreen(
         val target = if (primary.isNotBlank()) primary else if (currentUrl.startsWith("http")) currentUrl else ""
         if (target.isNotBlank()) {
             val t = if (castTitle.isNotBlank()) castTitle else if (pageTitle.isNotBlank() && pageTitle != "Cargando...") pageTitle else "Película / Video"
-            videoToSave = HistoryItem(target, t, currentUrl, streamHeaders[primary] ?: emptyMap(), requiresProxy = ActiveStreamHolder.isProxied.value)
+            val item = HistoryItem(target, t, currentUrl, streamHeaders[primary] ?: emptyMap(), requiresProxy = ActiveStreamHolder.isProxied.value)
+            playlistManager.addItemToPlaylist(com.omnicast.sender.playlist.PlaylistManager.DEFAULT_WATCH_LATER_ID, item)
+            historyManager.addOrUpdate(item.url, item.title, pageUrl = item.pageUrl, headers = item.headers, requiresProxy = item.requiresProxy)
+            playlistsVersion++
+            Toast.makeText(context, "⭐ Guardado en Ver más tarde", Toast.LENGTH_SHORT).show()
         } else Toast.makeText(context, "No hay video para guardar en esta página", Toast.LENGTH_SHORT).show()
     }
 

@@ -91,24 +91,7 @@ object BrowserUrlHelper {
         val headers = StreamIntelligenceEngine.resolveDynamicHeaders(streamUrl, currentUrl, rawHeaders).toMutableMap()
         try {
             val refererUrl = headers["Referer"] ?: currentUrl
-            val cm = CookieManager.getInstance()
-            val cookieTargetUrls = mutableListOf<String>()
-            listOfNotNull(streamUrl, refererUrl, currentUrl).filter { it.isNotBlank() }.forEach { u ->
-                cookieTargetUrls.add(u)
-                try {
-                    val uri = android.net.Uri.parse(u)
-                    if (uri.scheme != null && uri.host != null) {
-                        cookieTargetUrls.add("${uri.scheme}://${uri.host}")
-                    }
-                } catch (_: Throwable) {}
-            }
-            val dynamicCookies = cookieTargetUrls.distinct().mapNotNull { cm?.getCookie(it) }
-            val mergedCookies = (dynamicCookies + listOfNotNull(rawHeaders?.get("Cookie"), rawHeaders?.get("cookie")))
-                .flatMap { it.split("; ") }
-                .map { it.trim() }
-                .filter { it.isNotBlank() }
-                .distinct()
-                .joinToString("; ")
+            val mergedCookies = harvestUniversalCookies(streamUrl, refererUrl, currentUrl, rawHeaders)
             if (mergedCookies.isNotBlank()) headers["Cookie"] = mergedCookies
 
             val id = MediaPlatformResolver.extractFastreamId(streamUrl)
@@ -190,4 +173,45 @@ object BrowserUrlHelper {
                 .replace(Regex("/" + id + "_[a-zA-Z0-9]+/tracks-[^?]+\\.m3u8"), "/${id}_,l,n,.urlset/master.m3u8")
         } else null
     }
+
+    fun harvestUniversalCookies(
+        streamUrl: String,
+        refererUrl: String,
+        currentUrl: String,
+        rawHeaders: Map<String, String>? = null
+    ): String {
+        val cm = CookieManager.getInstance() ?: return ""
+        val targetUrls = mutableSetOf<String>()
+        listOf(streamUrl, refererUrl, currentUrl).filter { it.isNotBlank() }.forEach { u ->
+            targetUrls.add(u)
+            try {
+                val uri = android.net.Uri.parse(u)
+                val host = uri.host?.lowercase()
+                val scheme = uri.scheme ?: "https"
+                if (host != null) {
+                    targetUrls.add("$scheme://$host")
+                    val parts = host.split(".")
+                    if (parts.size >= 2) {
+                        val rootDomain = parts.takeLast(2).joinToString(".")
+                        targetUrls.add("$scheme://$rootDomain")
+                        targetUrls.add("$scheme://.$rootDomain")
+                    }
+                }
+            } catch (_: Throwable) {}
+        }
+        val collectedCookies = mutableListOf<String>()
+        targetUrls.forEach { u ->
+            cm.getCookie(u)?.takeIf { it.isNotBlank() }?.let { collectedCookies.add(it) }
+        }
+        rawHeaders?.entries?.firstOrNull { it.key.equals("Cookie", ignoreCase = true) }?.value?.let {
+            if (it.isNotBlank()) collectedCookies.add(it)
+        }
+        return collectedCookies
+            .flatMap { it.split(";") }
+            .map { it.trim() }
+            .filter { it.isNotBlank() && it.contains("=") }
+            .distinctBy { it.substringBefore("=").trim() }
+            .joinToString("; ")
+    }
 }
+

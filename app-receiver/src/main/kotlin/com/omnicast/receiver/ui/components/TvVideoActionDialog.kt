@@ -195,29 +195,59 @@ fun TvPlaylistItemRow(
             }
         }
 
-        if (onSaveToFolder != null) {
-            var isSaveFocused by remember { mutableStateOf(false) }
-            Box(
-                modifier = Modifier.size(38.dp).onFocusChanged { isSaveFocused = it.isFocused }
-                    .background(if (isSaveFocused) Color(0xFF10B981) else Color(0xFF064E3B), RoundedCornerShape(8.dp))
-                    .border(if (isSaveFocused) 2.dp else 1.dp, if (isSaveFocused) Color.White else Color(0xFF10B981), RoundedCornerShape(8.dp))
-                    .focusable().clickable(onClick = onSaveToFolder),
-                contentAlignment = Alignment.Center
-            ) {
-                TvBookmarkOutlineIcon(modifier = Modifier.size(18.dp), color = if (isSaveFocused) Color.Black else Color(0xFF10B981), filled = true)
+        var showDeleteConfirm by remember { mutableStateOf(false) }
+        if (showDeleteConfirm) {
+            Dialog(onDismissRequest = { showDeleteConfirm = false }) {
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFF1E182A)),
+                    shape = RoundedCornerShape(14.dp),
+                    modifier = Modifier.width(360.dp).wrapContentHeight().border(2.dp, Color(0xFFEF4444), RoundedCornerShape(14.dp))
+                ) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth().padding(18.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Text("🗑️ ¿Eliminar de Guardados?", color = Color(0xFFEF4444), fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                        Text(item.title.ifBlank { "Película" }, color = Color.White, fontSize = 13.sp, maxLines = 2, textAlign = TextAlign.Center, overflow = TextOverflow.Ellipsis)
+                        TvDialogButton(text = "🗑️ Sí, eliminar", isDanger = true, onClick = {
+                            showDeleteConfirm = false
+                            onRemoveSaved?.invoke()
+                        })
+                        TvDialogButton(text = "✕ Cancelar", isPrimary = false, onClick = { showDeleteConfirm = false })
+                    }
+                }
             }
         }
 
-        if (onRemoveSaved != null) {
-            var isUnsaveFocused by remember { mutableStateOf(false) }
+        if (onRemoveSaved != null || onSaveToFolder != null) {
+            val isAlreadySaved = onRemoveSaved != null
+            var isBtnFocused by remember { mutableStateOf(false) }
             Box(
-                modifier = Modifier.size(38.dp).onFocusChanged { isUnsaveFocused = it.isFocused }
-                    .background(if (isUnsaveFocused) Color(0xFFEF4444) else Color(0xFF2B1924), RoundedCornerShape(8.dp))
-                    .border(if (isUnsaveFocused) 2.dp else 1.dp, if (isUnsaveFocused) Color.White else Color(0xFFF87171), RoundedCornerShape(8.dp))
-                    .focusable().clickable(onClick = onRemoveSaved),
+                modifier = Modifier.size(38.dp).onFocusChanged { isBtnFocused = it.isFocused }
+                    .background(
+                        if (isBtnFocused) {
+                            if (isAlreadySaved) Color(0xFFFFC107) else Color(0xFF10B981)
+                        } else {
+                            if (isAlreadySaved) Color(0xFF3B2E15) else Color(0xFF064E3B)
+                        },
+                        RoundedCornerShape(8.dp)
+                    )
+                    .border(
+                        if (isBtnFocused) 2.dp else 1.dp,
+                        if (isBtnFocused) Color.White else (if (isAlreadySaved) Color(0xFFFFC107) else Color(0xFF10B981)),
+                        RoundedCornerShape(8.dp)
+                    )
+                    .focusable().clickable {
+                        if (isAlreadySaved) showDeleteConfirm = true else onSaveToFolder?.invoke()
+                    },
                 contentAlignment = Alignment.Center
             ) {
-                TvBookmarkRemoveIcon(modifier = Modifier.size(18.dp), color = if (isUnsaveFocused) Color.White else Color(0xFFF87171))
+                if (isAlreadySaved) {
+                    Text("⭐", fontSize = 16.sp)
+                } else {
+                    TvBookmarkOutlineIcon(modifier = Modifier.size(18.dp), color = if (isBtnFocused) Color.Black else Color(0xFF10B981), filled = true)
+                }
             }
         }
 

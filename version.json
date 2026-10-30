@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 290,
-  "versionCodeReceiver": 273,
-  "versionName": "3.5.39",
-  "releaseTag": "v3.5.39",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.39/omnicast-sender-v3.5.39.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.39/omnicast-receiver-v3.5.39.apk",
-  "changelog": "v3.5.39: 1) Enfocar y Mover en TV limpio y transparente: erradicado el recuadro central y contornos verdes/azules en el calibrador flotante de Casteo a TV, conservando únicamente el lienzo táctil transparente y la tarjeta de control superior con zoom 2 dedos y arrastre 1 dedo. 2) Descargas en Carpeta Pelis_descargas y Gestión de Borrado: ruta destacada de descarga directa en Descargas/Pelis_descargas, botón para borrar la descarga de la película actual y botón para limpiar todo en Pelis_descargas con notificación detallada de espacio liberado, espacio libre y espacio ocupado. 3) Cuadros de Búsqueda con Activación en Dos Toques en TV: primer toque con el control remoto enfoca la caja de búsqueda (salto de foco normal sin abrir teclado de forma inesperada), segundo toque activa el modo de edición e ingresa texto con teclado virtual."
+  "versionCodeSender": 291,
+  "versionCodeReceiver": 274,
+  "versionName": "3.5.40",
+  "releaseTag": "v3.5.40",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.40/omnicast-sender-v3.5.40.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.40/omnicast-receiver-v3.5.40.apk",
+  "changelog": "v3.5.40 (Identidad Castera & Castera TV): 1) Nueva Identidad Castera: iconos y banner neón oficial en Sender y Receiver con nombres 'Castera' y 'Castera TV'. 2) Blindaje Transmisión Akamai/WAF y Universal Cookies: cosecha universal de cookies en dominios raíz (.rai.it, .khl.ru), soporte de credenciales cross-origin (withCredentials=true) en Hls.js y eliminación de perfiles rígidos en Akamai. 3) Desbloqueo de Paginación en Buscadores (Yandex/Google): pase libre a scripts de paginación y métricas en buscadores sin romper el scroll infinito. 4) Zoom Táctil (Pinch-to-zoom) en Navegador Web: gestos multitáctiles fluidos en páginas móviles y de escritorio. 5) Barra Superior Ergonómica (Propuesta A): botón Cerrar (✕) reubicado al extremo izquierdo de Fila 1 para evitar toques accidentales con el menú de 3 puntos (⋮), y botón Guardados (☰) en Fila 2. 6) Guardado a 1 Toque (☆): toggle instantáneo entre guardar en 'Ver más tarde' y eliminar con feedback visual inmediato. 7) Botón Dinámico Único en TV: unificación de botones duplicados en 'Ver más tarde' a botón único dinámico (Verde 'Guardar' / Oro 'Guardada' con confirmación de borrado). 8) Registro de Fallos Totales Caja Negra: historial persistente FIFO de 50 eventos de fallos irrecuperables en TV y móvil con aprendizaje automático en SQLite para alternar a WebView ante errores 403. 9) Selector de Idioma de la Aplicación: detección automática del sistema al instalar y selector manual persistente en Ajustes y menú de opciones."
 }

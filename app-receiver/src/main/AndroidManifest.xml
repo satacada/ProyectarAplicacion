@@ -20,9 +20,9 @@
     <application
         android:allowBackup="true"
         android:usesCleartextTraffic="true"
-        android:banner="@android:drawable/ic_menu_slideshow"
-        android:icon="@android:drawable/ic_menu_slideshow"
-        android:label="OmniCast Receiver"
+        android:banner="@drawable/tv_banner"
+        android:icon="@mipmap/ic_launcher"
+        android:label="Castera TV"
         android:supportsRtl="true"
         android:theme="@android:style/Theme.NoTitleBar.Fullscreen">
 

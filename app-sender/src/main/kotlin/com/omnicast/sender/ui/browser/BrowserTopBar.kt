@@ -78,6 +78,7 @@ fun BrowserTopBar(
     val focusManager = LocalFocusManager.current
     var showMenu by remember { mutableStateOf(false) }
     var showHelpDialog by remember { mutableStateOf(false) }
+    var showLangDialog by remember { mutableStateOf(false) }
     var isFocused by remember { mutableStateOf(false) }
     var textFieldValue by remember {
         mutableStateOf(TextFieldValue(inputUrl, TextRange(inputUrl.length)))
@@ -100,8 +101,8 @@ fun BrowserTopBar(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                IconButton(onClick = onOpenDrawer, modifier = Modifier.size(28.dp)) {
-                    Icon(Icons.Rounded.Menu, contentDescription = "Historial y Guardados", tint = Color(0xFFCBD5E1), modifier = Modifier.size(18.dp))
+                IconButton(onClick = onClose, modifier = Modifier.size(28.dp)) {
+                    Icon(Icons.Rounded.Close, contentDescription = "Cerrar", tint = Color(0xFFEF4444), modifier = Modifier.size(18.dp))
                 }
 
                 Row(
@@ -179,6 +180,10 @@ fun BrowserTopBar(
                             text = { Text("🔍 Re-escanear videos", color = Color(0xFF38BDF8)) },
                             onClick = { onForceRescan(); showMenu = false }
                         )
+                        DropdownMenuItem(
+                            text = { Text("🌐 Idioma de la aplicación", color = Color(0xFF38BDF8)) },
+                            onClick = { showLangDialog = true; showMenu = false }
+                        )
                         HorizontalDivider(color = Color(0xFF334155))
                         DropdownMenuItem(
                             text = { Text("🚪 Salir de la aplicación", color = Color(0xFFF87171), fontWeight = FontWeight.Bold) },
@@ -212,6 +217,17 @@ fun BrowserTopBar(
                 IconButton(onClick = onToggleBookmark, modifier = Modifier.size(28.dp)) {
                     Icon(if (isBookmarked) Icons.Rounded.Star else Icons.Rounded.StarBorder, contentDescription = "Favoritos", tint = if (isBookmarked) Color(0xFFFFC107) else Color(0xFF94A3B8), modifier = Modifier.size(18.dp))
                 }
+                IconButton(onClick = onOpenDrawer, modifier = Modifier.size(28.dp)) {
+                    Icon(Icons.Rounded.Menu, contentDescription = "Historial y Guardados", tint = Color(0xFFCBD5E1), modifier = Modifier.size(18.dp))
+                }
+                if (isCasting) {
+                    IconButton(onClick = onToggleBottomControls, modifier = Modifier.size(28.dp)) {
+                        Box(contentAlignment = Alignment.TopEnd) {
+                            Icon(Icons.Rounded.PlayArrow, contentDescription = "Controles TV", tint = if (showBottomControls) Color(0xFF38BDF8) else Color(0xFF10B981), modifier = Modifier.size(19.dp))
+                            Box(modifier = Modifier.size(5.dp).background(if (showBottomControls) Color(0xFF38BDF8) else Color(0xFF10B981), CircleShape))
+                        }
+                    }
+                }
                 Box(contentAlignment = Alignment.TopEnd) {
                     IconButton(onClick = onOpenDetectedVideos, modifier = Modifier.size(28.dp)) {
                         CastTvIcon(modifier = Modifier.size(18.dp), color = if (detectedStreamsCount > 0) Color(0xFFFF9800) else Color(0xFF94A3B8))
@@ -228,23 +244,18 @@ fun BrowserTopBar(
                         }
                     }
                 }
-                if (isCasting) {
-                    IconButton(onClick = onToggleBottomControls, modifier = Modifier.size(28.dp)) {
-                        Box(contentAlignment = Alignment.TopEnd) {
-                            Icon(Icons.Rounded.PlayArrow, contentDescription = "Controles TV", tint = if (showBottomControls) Color(0xFF38BDF8) else Color(0xFF10B981), modifier = Modifier.size(19.dp))
-                            Box(modifier = Modifier.size(5.dp).background(if (showBottomControls) Color(0xFF38BDF8) else Color(0xFF10B981), CircleShape))
-                        }
-                    }
-                }
-                IconButton(onClick = onClose, modifier = Modifier.size(28.dp)) {
-                    Icon(Icons.Rounded.Close, contentDescription = "Cerrar", tint = Color(0xFFEF4444), modifier = Modifier.size(18.dp))
-                }
             }
         }
     }
 
     if (showHelpDialog) {
         BrowserHelpDialog(onDismiss = { showHelpDialog = false })
+    }
+    if (showLangDialog) {
+        com.omnicast.sender.ui.components.AppLanguageDialog(
+            onDismiss = { showLangDialog = false },
+            onLanguageSelected = { showLangDialog = false }
+        )
     }
 }
 

@@ -96,6 +96,10 @@ class StreamProfileDatabase private constructor(context: Context) :
             }
             return com.omnicast.core.domain.usecases.StreamManifestProbe.hasSignedSecurityToken(url)
         }
+
+        fun recordFailure(host: String) {
+            runCatching { get().recordFailure(host) }
+        }
     }
 
     override fun onCreate(db: SQLiteDatabase) {
@@ -187,6 +191,40 @@ class StreamProfileDatabase private constructor(context: Context) :
             Log.i(TAG, "✅ Perfil exitoso guardado en SQLite para host: $cleanHost (player=${safeHeaders["X-Target-Player"]}, branch=${branch.name})")
         } catch (e: Throwable) {
             Log.e(TAG, "Error al persistir perfil de streaming: ${e.message}", e)
+        }
+    }
+
+    fun recordFailure(host: String) {
+        if (host.isBlank()) return
+        val cleanHost = host.lowercase()
+        val existing = cache[cleanHost]
+        val updatedHeaders = (existing?.headers ?: emptyMap()).toMutableMap().apply {
+            put("X-Target-Player", "WEBVIEW")
+            put("X-Single-Use-Token", "true")
+        }
+        val entry = StreamProfileEntry(
+            host = cleanHost,
+            headers = updatedHeaders,
+            bypassProxy = true,
+            branch = existing?.branch ?: MediaBranch.VOD_HLS_MP4,
+            successCount = existing?.successCount ?: 1,
+            lastSuccessTs = System.currentTimeMillis()
+        )
+        cache[cleanHost] = entry
+        try {
+            val db = writableDatabase
+            val values = ContentValues().apply {
+                put(COL_HOST, cleanHost)
+                put(COL_HEADERS, serializeHeaders(updatedHeaders))
+                put(COL_BYPASS_PROXY, 1)
+                put(COL_BRANCH, entry.branch.name)
+                put(COL_SUCCESS_COUNT, entry.successCount)
+                put(COL_LAST_SUCCESS, entry.lastSuccessTs)
+            }
+            db.insertWithOnConflict(TABLE, null, values, SQLiteDatabase.CONFLICT_REPLACE)
+            Log.w(TAG, "⚠️ Host $cleanHost reasignado dinámicamente a WEBVIEW por fallo de reproducción")
+        } catch (e: Throwable) {
+            Log.e(TAG, "Error al actualizar perfil tras fallo: ${e.message}", e)
         }
     }
 

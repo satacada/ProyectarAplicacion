@@ -121,6 +121,8 @@ fun TvYouTubeScreen(
                                 override fun onShowCustomView(v: View?, c: CustomViewCallback?) { customView = v }
                                 override fun onHideCustomView() { customView = null }
                             }
+                            val sep = if (videoId.contains("?")) "&" else "?"
+                            val embedSrc = "https://www.youtube-nocookie.com/embed/$videoId${sep}autoplay=1&controls=1&fs=1&rel=0&iv_load_policy=3&modestbranding=1&cc_load_policy=3&cc_lang_pref=none&enablejsapi=1"
                             val embedHtml = """
                                 <!DOCTYPE html>
                                 <html>
@@ -134,7 +136,7 @@ fun TvYouTubeScreen(
                                 </head>
                                 <body>
                                   <iframe id="ytplayer"
-                                    src="https://www.youtube-nocookie.com/embed/$videoId?autoplay=1&controls=1&fs=1&rel=0&iv_load_policy=3&modestbranding=1&cc_load_policy=3&cc_lang_pref=none&enablejsapi=1"
+                                    src="$embedSrc"
                                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
                                     allowfullscreen>
                                   </iframe>

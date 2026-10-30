@@ -13,6 +13,11 @@ object StreamIntelligenceEngine {
     private const val TAG = "StreamIntelligence"
 
 
+    private val HOP_BY_HOP = setOf(
+        "connection", "keep-alive", "proxy-authenticate", "proxy-authorization",
+        "te", "trailer", "transfer-encoding", "upgrade", "host"
+    )
+
     fun resolveDynamicHeaders(
         streamUrl: String,
         sourceFrameOrPageUrl: String,
@@ -20,13 +25,14 @@ object StreamIntelligenceEngine {
     ): Map<String, String> {
         val result = mutableMapOf<String, String>()
         rawHeaders?.forEach { (k, v) ->
-            if (v.isNotBlank()) {
+            if (v.isNotBlank() && !HOP_BY_HOP.contains(k.lowercase())) {
                 when (k.lowercase()) {
                     "referer" -> result["Referer"] = v
                     "origin" -> result["Origin"] = v
                     "user-agent" -> result["User-Agent"] = v
                     "cookie" -> result["Cookie"] = v
                     "authorization" -> result["Authorization"] = v
+                    else -> result[k] = v
                 }
             }
         }

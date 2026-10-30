@@ -7,11 +7,17 @@ import android.webkit.CookieManager
  */
 object BrowserUrlHelper {
 
-    private val YOUTUBE_REGEX = Regex("(?:watch\\?v=|shorts/|youtu\\.be/|embed/)([a-zA-Z0-9_-]{11})")
+    private val YOUTUBE_REGEX = Regex("(?:watch\\?v=|shorts/|youtu\\.be/|embed/|live/)([a-zA-Z0-9_-]{8,32})")
+    private val YOUTUBE_CHANNEL_REGEX = Regex("(?:channel=|channel/)([a-zA-Z0-9_-]+)")
     private val DAILYMOTION_REGEX = Regex("(?:video/|dai\\.ly/)([a-zA-Z0-9]+)")
 
     fun extractYouTubeId(url: String): String? {
+        if (url.startsWith("live_stream?channel=")) return url
         if (!url.contains("youtube.com") && !url.contains("youtu.be")) return null
+        if (url.contains("channel=") || url.contains("channel/")) {
+            val chId = YOUTUBE_CHANNEL_REGEX.find(url)?.groupValues?.get(1)
+            if (!chId.isNullOrBlank()) return "live_stream?channel=$chId"
+        }
         return YOUTUBE_REGEX.find(url)?.groupValues?.get(1)
     }
 
@@ -21,9 +27,15 @@ object BrowserUrlHelper {
     }
 
     fun createYouTubeQualityOptions(videoId: String, title: String? = null): List<StreamQualityOption> {
-        val ytUrl = "https://www.youtube.com/watch?v=$videoId"
+        val isLiveCh = videoId.startsWith("live_stream?channel=")
+        val ytUrl = if (isLiveCh) "https://www.youtube.com/embed/$videoId" else "https://www.youtube.com/watch?v=$videoId"
         val prefix = if (!title.isNullOrBlank() && title != "Transmisión") "[${title.take(20)}] " else ""
         val ytHeaders = mapOf("X-YouTube-Id" to videoId, "User-Agent" to UA_MOBILE)
+        if (isLiveCh) {
+            return listOf(
+                StreamQualityOption("${prefix}▶ Stream en Vivo (YouTube)", "LIVE", "En Directo", ytUrl, isMaster = true, isMovie = true, isSuggested = true, isLive = true, healedHeaders = ytHeaders, groupKey = ytUrl)
+            )
+        }
         return listOf(
             StreamQualityOption("${prefix}1080p Full HD", "1080p", "Original", ytUrl, isMaster = true, isMovie = true, isSuggested = true, healedHeaders = ytHeaders, groupKey = ytUrl),
             StreamQualityOption("${prefix}720p HD", "720p", "Estándar HD", ytUrl, isMovie = true, healedHeaders = ytHeaders, groupKey = ytUrl),

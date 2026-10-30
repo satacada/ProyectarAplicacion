@@ -102,6 +102,10 @@ class StreamProfileDatabase private constructor(context: Context) :
         fun recordFailure(host: String) {
             runCatching { get().recordFailure(host) }
         }
+
+        fun learnSignature(sig: String, type: String) {
+            runCatching { get().learnSignature(sig, type) }
+        }
     }
 
     override fun onCreate(db: SQLiteDatabase) {
@@ -178,7 +182,7 @@ class StreamProfileDatabase private constructor(context: Context) :
         val incomingSafe = headers.filterKeys {
             it.equals("Referer", true) || it.equals("Origin", true) ||
             it.equals("User-Agent", true) || it.equals("Authorization", true) ||
-            it.equals("X-Target-Player", true) || it.equals("X-Single-Use-Token", true)
+            it.startsWith("X-", true) || it.startsWith("Sec-", true)
         }
         val safeHeaders = (existing?.headers ?: emptyMap()) + incomingSafe
 
@@ -234,6 +238,19 @@ class StreamProfileDatabase private constructor(context: Context) :
         } catch (e: Throwable) {
             Log.e(TAG, "Error al actualizar perfil tras fallo: ${e.message}", e)
         }
+    }
+
+    fun learnSignature(sig: String, type: String) {
+        if (sig.isBlank() || type.isBlank()) return
+        try {
+            val db = writableDatabase
+            db.insertWithOnConflict(TABLE_SIGS, null, ContentValues().apply { put(COL_SIG, sig); put(COL_TYPE, type) }, SQLiteDatabase.CONFLICT_IGNORE)
+            when (type) {
+                "MASTER" -> com.omnicast.core.domain.usecases.HlsMasterResolver.masterTags = com.omnicast.core.domain.usecases.HlsMasterResolver.masterTags + sig
+                "DISQUALIFIER" -> com.omnicast.core.domain.usecases.HlsMasterResolver.subvariantDisqualifiers = com.omnicast.core.domain.usecases.HlsMasterResolver.subvariantDisqualifiers + sig
+                "RAW_EXT" -> com.omnicast.core.domain.usecases.HlsMasterResolver.rawSegmentExts = com.omnicast.core.domain.usecases.HlsMasterResolver.rawSegmentExts + sig
+            }
+        } catch (_: Throwable) {}
     }
 
     private fun serializeHeaders(headers: Map<String, String>): String {

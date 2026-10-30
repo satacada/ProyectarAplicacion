@@ -23,6 +23,41 @@ class MediaPlatformRegressionTest {
     }
 
     @Test
+    fun testYouTubeChannelLiveExtraction() {
+        val embedLive = "https://www.youtube.com/embed/live_stream?channel=UCvJJ_dzjViJCoLf5uKUTwoA&autoplay=1"
+        val channelUrl = "https://www.youtube.com/channel/UCvJJ_dzjViJCoLf5uKUTwoA"
+
+        assertEquals("live_stream?channel=UCvJJ_dzjViJCoLf5uKUTwoA", BrowserUrlHelper.extractYouTubeId(embedLive))
+        assertEquals("live_stream?channel=UCvJJ_dzjViJCoLf5uKUTwoA", BrowserUrlHelper.extractYouTubeId(channelUrl))
+
+        val options = BrowserUrlHelper.createYouTubeQualityOptions("live_stream?channel=UCvJJ_dzjViJCoLf5uKUTwoA", "CNBC En Vivo")
+        assertEquals(1, options.size)
+        assertTrue(options[0].isLive)
+        assertEquals("LIVE", options[0].resolution)
+        assertEquals("live_stream?channel=UCvJJ_dzjViJCoLf5uKUTwoA", options[0].healedHeaders["X-YouTube-Id"])
+    }
+
+    @Test
+    fun testStreamIntelligenceEnginePreservesCustomHeadersAndStripsHopByHop() {
+        val raw = mapOf(
+            "Connection" to "keep-alive",
+            "Keep-Alive" to "timeout=5",
+            "X-Target-Player" to "CHROMIUM_ANTI_CORS",
+            "X-Force-Proxy" to "true",
+            "Sec-Fetch-Dest" to "video",
+            "Referer" to "https://cxtv.com.br/cnbc"
+        )
+        val resolved = StreamIntelligenceEngine.resolveDynamicHeaders("https://cdn.example.com/master.m3u8", "https://cxtv.com.br", raw)
+
+        assertFalse(resolved.containsKey("Connection"))
+        assertFalse(resolved.containsKey("Keep-Alive"))
+        assertEquals("CHROMIUM_ANTI_CORS", resolved["X-Target-Player"])
+        assertEquals("true", resolved["X-Force-Proxy"])
+        assertEquals("video", resolved["Sec-Fetch-Dest"])
+        assertEquals("https://cxtv.com.br/cnbc", resolved["Referer"])
+    }
+
+    @Test
     fun testYouTubeQualityOptionsGeneration() {
         val options = BrowserUrlHelper.createYouTubeQualityOptions("dQw4w9WgXcQ", "Never Gonna Give You Up")
         assertFalse(options.isEmpty())

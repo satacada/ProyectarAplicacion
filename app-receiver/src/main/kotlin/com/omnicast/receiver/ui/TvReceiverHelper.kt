@@ -16,8 +16,18 @@ object TvReceiverHelper {
             ?.firstOrNull { !it.isLoopbackAddress && it is Inet4Address && it.hostAddress != "127.0.0.1" }?.hostAddress ?: "127.0.0.1"
     } catch (_: Throwable) { "127.0.0.1" }
 
-    fun extractYouTubeId(url: String): String? =
-        Regex("(?:watch\\?v=|shorts/|youtu\\.be/|embed/)([a-zA-Z0-9_-]{11})").find(url)?.groupValues?.get(1)
+    private val YOUTUBE_REGEX = Regex("(?:watch\\?v=|shorts/|youtu\\.be/|embed/|live/)([a-zA-Z0-9_-]{8,32})")
+    private val YOUTUBE_CHANNEL_REGEX = Regex("(?:channel=|channel/)([a-zA-Z0-9_-]+)")
+
+    fun extractYouTubeId(url: String): String? {
+        if (url.startsWith("live_stream?channel=")) return url
+        if (!url.contains("youtube.com") && !url.contains("youtu.be")) return null
+        if (url.contains("channel=") || url.contains("channel/")) {
+            val chId = YOUTUBE_CHANNEL_REGEX.find(url)?.groupValues?.get(1)
+            if (!chId.isNullOrBlank()) return "live_stream?channel=$chId"
+        }
+        return YOUTUBE_REGEX.find(url)?.groupValues?.get(1)
+    }
 
     fun applySystemAndPlayerVolume(context: Context, exoPlayerManager: ExoPlayerTvManager, vol: Float) {
         try {

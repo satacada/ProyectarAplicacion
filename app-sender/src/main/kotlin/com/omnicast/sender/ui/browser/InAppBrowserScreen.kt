@@ -168,7 +168,7 @@ fun InAppBrowserScreen(
         scope.launch(Dispatchers.IO) {
             val isForceProxy = hdrs["X-Force-Proxy"] == "true"; val effUrl = com.omnicast.core.domain.usecases.HlsMasterResolver.deriveMasterPlaylistUrl(url) ?: url
             val (finalUrl, finalHdrs) = MediaPlatformResolver.prepareStreamForPlayback(effUrl, refPage, hdrs); val probe = StreamQualityDetector.probeAndHealStream(finalUrl, finalHdrs, refPage)
-            val isWeb = finalHdrs["X-Target-Player"] == "WEBVIEW" || probe.healedHeaders["X-Target-Player"] == "CHROMIUM_ANTI_CORS"
+            val isWeb = finalHdrs["X-Target-Player"] == "WEBVIEW" || finalHdrs["X-Target-Player"] == "CHROMIUM_ANTI_CORS" || probe.healedHeaders["X-Target-Player"] == "CHROMIUM_ANTI_CORS"
             if (!probe.isPlayable && (probe.httpCode == 404 || probe.httpCode == 410) && !isWeb) {
                 withContext(Dispatchers.Main) {
                     detectedStreams.remove(url); detectedStreams.remove(finalUrl); qualityOptions = qualityOptions.filterNot { it.streamUrl == url || it.streamUrl == finalUrl }

@@ -269,6 +269,13 @@ object StreamQualityDetector {
     }
 
     fun probeAndHealStream(urlStr: String, safeHeaders: Map<String, String>, pageUrl: String? = null): StreamManifestProbe.ProbeResult {
-        return StreamManifestProbe.probeAndHeal(urlStr, safeHeaders, pageUrl)
+        val result = StreamManifestProbe.probeAndHeal(urlStr, safeHeaders, pageUrl)
+        if (!result.isPlayable && (result.httpCode == 404 || result.httpCode == 403) && BrowserUrlHelper.isRealMedia(urlStr)) {
+            val fallback = (if (result.healedHeaders.isNotEmpty()) result.healedHeaders else safeHeaders).toMutableMap().apply {
+                put("X-Target-Player", "CHROMIUM_ANTI_CORS")
+            }
+            return result.copy(healedHeaders = fallback)
+        }
+        return result
     }
 }

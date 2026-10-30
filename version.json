@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 296,
-  "versionCodeReceiver": 279,
-  "versionName": "3.5.45",
-  "releaseTag": "v3.5.45",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.45/omnicast-sender-v3.5.45.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.45/omnicast-receiver-v3.5.45.apk",
-  "changelog": "v3.5.45: 1) Preservación Universal de Cabeceras (RFC 7230 / RFC 9110): StreamIntelligenceEngine descarta estrictamente cabeceras hop-by-hop y preserva todas las cabeceras end-to-end y extensiones de control (X-Target-Player, X-Force-Proxy, Sec-Fetch-*), erradicando la pérdida de directivas en transmisión. 2) Extracción Semántica Universal de YouTube: Detección y reproducción fluida de emisiones en directo por ID de canal (embed/live_stream?channel=UC... como CNBC) y videos estándar en TvYouTubeScreen (IFrame Player oficial). 3) Resiliencia Dual y Tolerancia a Sonda: Conmutación reactiva a TvWebStreamScreen (Chromium HTML5 con anti-CORS) ante respuestas 404/403 de sockets Java en medios reales de CDNs protegidas (Charge!). 4) Aprendizaje en Caliente SQLite: Método learnSignature para actualización de firmas de streaming sin recompilación."
+  "versionCodeSender": 297,
+  "versionCodeReceiver": 280,
+  "versionName": "3.5.46",
+  "releaseTag": "v3.5.46",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.46/omnicast-sender-v3.5.46.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.46/omnicast-receiver-v3.5.46.apk",
+  "changelog": "v3.5.46: 1) Corrección Universal de Re-ascenso HLS RFC 8216 para AWS MediaPackage y Canales FAST (Charge!/Sinclair): HlsMasterResolver ahora reconoce index.m3u8 como manifiesto maestro y deriva legítimamente las sub-variantes index_N.m3u8 hacia index.m3u8 (en lugar de forzar /master.m3u8 inexistente que provocaba HTTP 404). 2) Reproducción directa por hardware en ExoPlayer y entrega de resoluciones multinivel sin rechazos de red."
 }

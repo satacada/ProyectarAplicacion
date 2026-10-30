@@ -65,6 +65,7 @@ class HlsMasterResolverTest {
     fun `isMasterPlaylistUrl accepts legitimate master filenames and rejects raw audio or chunks`() {
         assertTrue(HlsMasterResolver.isMasterPlaylistUrl("https://cdn.example.com/hls/master.m3u8"))
         assertTrue(HlsMasterResolver.isMasterPlaylistUrl("https://cdn.example.com/hls/playlist.m3u8?token=abc"))
+        assertTrue(HlsMasterResolver.isMasterPlaylistUrl("https://fast-channels.sinclairstoryline.com/CHARGE/index.m3u8"))
         assertFalse(HlsMasterResolver.isMasterPlaylistUrl("https://cdn.example.com/hls/masteraudio1-A-20261030_02679.aac"))
         assertFalse(HlsMasterResolver.isMasterPlaylistUrl("https://cdn.example.com/hls/masteraudio1.m3u8"))
     }
@@ -75,6 +76,11 @@ class HlsMasterResolverTest {
         val expectedMaster = "https://linear901-oo-hls0-prd-gtm.delivery.skycdp.com/v1/master/3722/prod-gb-lin-skynews-hls-25-web/master.m3u8"
         assertEquals(expectedMaster, HlsMasterResolver.deriveMasterPlaylistUrl(skySubvariant))
 
+        val sinclairSubvariant = "https://fast-channels.sinclairstoryline.com/CHARGE/index_2.m3u8?token=123"
+        val expectedSinclairMaster = "https://fast-channels.sinclairstoryline.com/CHARGE/index.m3u8?token=123"
+        assertEquals(expectedSinclairMaster, HlsMasterResolver.deriveMasterPlaylistUrl(sinclairSubvariant))
+
         assertNull(HlsMasterResolver.deriveMasterPlaylistUrl("https://example.com/hls/master.m3u8"))
+        assertNull(HlsMasterResolver.deriveMasterPlaylistUrl("https://fast-channels.sinclairstoryline.com/CHARGE/index.m3u8"))
     }
 }

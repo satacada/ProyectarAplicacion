@@ -104,11 +104,13 @@ object StreamQualityDetector {
 
         if (!probe.isPlayable && rawManifest.isBlank()) {
             android.util.Log.w("StreamQualityDetector", "Flujo advertido por sonda (HTTP ${probe.httpCode}): $currentMediaUrl")
-            if (BrowserUrlHelper.isRealMedia(currentMediaUrl) && probe.httpCode != 404 && probe.httpCode != 410) {
-                val label = if (currentMediaUrl.contains(".mp4", ignoreCase = true)) "${prefix}Video MP4 Directo" else "${prefix}Flujo Directo"
+            if (BrowserUrlHelper.isRealMedia(currentMediaUrl)) {
+                val targetPlayer = if (probe.httpCode == 404 || probe.httpCode == 403) "CHROMIUM_ANTI_CORS" else "EXOPLAYER"
+                val webHeaders = safeHeaders.toMutableMap().apply { put("X-Target-Player", targetPlayer) }
+                val label = if (currentMediaUrl.contains(".mp4", ignoreCase = true)) "${prefix}Video MP4 Directo" else "${prefix}Flujo Web (HTML5)"
                 val defName = extractFileName(currentMediaUrl, "master")
                 val defFmt = if (currentMediaUrl.contains(".mp4", true)) "mp4 (Directo)" else "m3u8 (adaptive)"
-                return@withContext listOf(StreamQualityOption(label, "Adaptive", "Original", currentMediaUrl, isMovie = false, isSuggested = false, healedHeaders = safeHeaders, fileName = defName, formatDetail = defFmt, groupKey = mediaUrl))
+                return@withContext listOf(StreamQualityOption(label, "Adaptive", "Original", currentMediaUrl, isMovie = false, isSuggested = false, healedHeaders = webHeaders, fileName = defName, formatDetail = defFmt, groupKey = mediaUrl))
             }
             return@withContext emptyList()
         }

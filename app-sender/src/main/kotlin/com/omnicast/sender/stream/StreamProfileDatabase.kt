@@ -32,9 +32,11 @@ class StreamProfileDatabase private constructor(context: Context) :
     companion object {
         private const val TAG = "StreamProfileDb"
         private const val DB_NAME = "omnicast_stream_profiles.db"
-        private const val DB_VERSION = 1
+        private const val DB_VERSION = 2
 
         private const val TABLE = "stream_profiles"
+        private const val TABLE_SIGS = "stream_format_signatures"
+        private const val COL_SIG = "signature"; private const val COL_TYPE = "rule_type"
         private const val COL_HOST = "host"
         private const val COL_HEADERS = "headers_json"
         private const val COL_BYPASS_PROXY = "bypass_proxy"
@@ -103,48 +105,54 @@ class StreamProfileDatabase private constructor(context: Context) :
     }
 
     override fun onCreate(db: SQLiteDatabase) {
-        db.execSQL(
-            """
-            CREATE TABLE IF NOT EXISTS $TABLE (
-                $COL_HOST TEXT PRIMARY KEY,
-                $COL_HEADERS TEXT NOT NULL,
-                $COL_BYPASS_PROXY INTEGER NOT NULL DEFAULT 1,
-                $COL_BRANCH TEXT NOT NULL DEFAULT 'VOD_HLS_MP4',
-                $COL_SUCCESS_COUNT INTEGER NOT NULL DEFAULT 1,
-                $COL_LAST_SUCCESS INTEGER NOT NULL
-            )
-            """.trimIndent()
-        )
+        db.execSQL("CREATE TABLE IF NOT EXISTS $TABLE ($COL_HOST TEXT PRIMARY KEY, $COL_HEADERS TEXT NOT NULL, $COL_BYPASS_PROXY INTEGER NOT NULL DEFAULT 1, $COL_BRANCH TEXT NOT NULL DEFAULT 'VOD_HLS_MP4', $COL_SUCCESS_COUNT INTEGER NOT NULL DEFAULT 1, $COL_LAST_SUCCESS INTEGER NOT NULL)")
+        db.execSQL("CREATE TABLE IF NOT EXISTS $TABLE_SIGS ($COL_SIG TEXT PRIMARY KEY, $COL_TYPE TEXT NOT NULL)")
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
-        db.execSQL("DROP TABLE IF EXISTS $TABLE")
-        onCreate(db)
+        if (oldVersion < 2) db.execSQL("CREATE TABLE IF NOT EXISTS $TABLE_SIGS ($COL_SIG TEXT PRIMARY KEY, $COL_TYPE TEXT NOT NULL)")
+        else { db.execSQL("DROP TABLE IF EXISTS $TABLE"); db.execSQL("DROP TABLE IF EXISTS $TABLE_SIGS"); onCreate(db) }
     }
 
     private fun loadCache() {
         try {
             val db = readableDatabase
-            val cursor = db.query(TABLE, null, null, null, null, null, null)
-            cursor.use { c ->
+            db.query(TABLE, null, null, null, null, null, null).use { c ->
                 while (c.moveToNext()) {
-                    val host = c.getString(c.getColumnIndexOrThrow(COL_HOST))
-                    val hdrsJson = c.getString(c.getColumnIndexOrThrow(COL_HEADERS))
-                    val bypass = c.getInt(c.getColumnIndexOrThrow(COL_BYPASS_PROXY)) == 1
-                    val brStr = c.getString(c.getColumnIndexOrThrow(COL_BRANCH))
-                    val count = c.getInt(c.getColumnIndexOrThrow(COL_SUCCESS_COUNT))
-                    val ts = c.getLong(c.getColumnIndexOrThrow(COL_LAST_SUCCESS))
-
-                    val headersMap = parseHeaders(hdrsJson)
-                    val branch = MediaBranch.entries.firstOrNull { it.name == brStr } ?: MediaBranch.VOD_HLS_MP4
-                    cache[host] = StreamProfileEntry(host, headersMap, bypass, branch, count, ts)
+                    val host = c.getString(c.getColumnIndexOrThrow(COL_HOST)); val hdrsJson = c.getString(c.getColumnIndexOrThrow(COL_HEADERS))
+                    val bypass = c.getInt(c.getColumnIndexOrThrow(COL_BYPASS_PROXY)) == 1; val brStr = c.getString(c.getColumnIndexOrThrow(COL_BRANCH))
+                    val count = c.getInt(c.getColumnIndexOrThrow(COL_SUCCESS_COUNT)); val ts = c.getLong(c.getColumnIndexOrThrow(COL_LAST_SUCCESS))
+                    cache[host] = StreamProfileEntry(host, parseHeaders(hdrsJson), bypass, MediaBranch.entries.firstOrNull { it.name == brStr } ?: MediaBranch.VOD_HLS_MP4, count, ts)
                 }
             }
-            seedInitialProfiles()
-            Log.i(TAG, "Caché de perfiles de servidores cargada (${cache.size} hosts)")
-        } catch (e: Throwable) {
-            Log.e(TAG, "Error al cargar caché de perfiles: ${e.message}", e)
+            seedInitialProfiles(); loadSignatures(db)
+            Log.i(TAG, "Caché de perfiles (${cache.size} hosts) y firmas RFC 8216 sincronizadas")
+        } catch (e: Throwable) { Log.e(TAG, "Error al cargar caché de perfiles: ${e.message}", e) }
+    }
+
+    private fun loadSignatures(db: SQLiteDatabase) {
+        val mTags = mutableSetOf<String>(); val dTags = mutableSetOf<String>(); val sExts = mutableSetOf<String>()
+        db.query(TABLE_SIGS, null, null, null, null, null, null).use { c ->
+            while (c.moveToNext()) {
+                val sig = c.getString(c.getColumnIndexOrThrow(COL_SIG)); val type = c.getString(c.getColumnIndexOrThrow(COL_TYPE))
+                when (type) { "MASTER" -> mTags.add(sig); "DISQUALIFIER" -> dTags.add(sig); "RAW_EXT" -> sExts.add(sig) }
+            }
         }
+        if (mTags.isEmpty()) {
+            val defaults = listOf(
+                Triple("#EXT-X-STREAM-INF:", "MASTER", ""), Triple("#EXT-X-MEDIA:", "MASTER", ""), Triple("#EXT-X-I-FRAME-STREAM-INF:", "MASTER", ""),
+                Triple("#EXTINF:", "DISQUALIFIER", ""), Triple("#EXT-X-TARGETDURATION:", "DISQUALIFIER", ""), Triple("#EXT-X-MEDIA-SEQUENCE:", "DISQUALIFIER", ""),
+                Triple(".aac", "RAW_EXT", ""), Triple(".ts", "RAW_EXT", ""), Triple(".m4s", "RAW_EXT", ""), Triple(".m4a", "RAW_EXT", ""), Triple(".mp3", "RAW_EXT", "")
+            )
+            val wDb = writableDatabase
+            defaults.forEach { (sig, t, _) ->
+                wDb.insertWithOnConflict(TABLE_SIGS, null, ContentValues().apply { put(COL_SIG, sig); put(COL_TYPE, t) }, SQLiteDatabase.CONFLICT_IGNORE)
+                when (t) { "MASTER" -> mTags.add(sig); "DISQUALIFIER" -> dTags.add(sig); "RAW_EXT" -> sExts.add(sig) }
+            }
+        }
+        if (mTags.isNotEmpty()) com.omnicast.core.domain.usecases.HlsMasterResolver.masterTags = mTags
+        if (dTags.isNotEmpty()) com.omnicast.core.domain.usecases.HlsMasterResolver.subvariantDisqualifiers = dTags
+        if (sExts.isNotEmpty()) com.omnicast.core.domain.usecases.HlsMasterResolver.rawSegmentExts = sExts
     }
 
     private fun seedInitialProfiles() {

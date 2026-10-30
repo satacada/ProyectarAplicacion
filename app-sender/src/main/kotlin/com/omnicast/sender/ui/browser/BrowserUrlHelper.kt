@@ -33,7 +33,7 @@ object BrowserUrlHelper {
     }
 
     fun isPlayableStream(url: String): Boolean {
-        if (url.isBlank()) return false
+        if (url.isBlank() || com.omnicast.core.domain.usecases.HlsMasterResolver.isAudioOrRawSegment(url)) return false
         val lower = url.lowercase().substringBefore('?')
         if (lower.endsWith("/iframe.m3u8") || lower.contains("iframes-") || lower.contains("/default_audio") || lower.contains("/default_video")) return false
         if (lower.endsWith(".vtt") || lower.endsWith(".srt") || lower.endsWith(".key") ||
@@ -52,7 +52,7 @@ object BrowserUrlHelper {
     }
 
     fun isRealMedia(s: String, dur: Float = 0f): Boolean {
-        if (s.isBlank() || s.contains("dmxleo.dailymotion.com") || AdBlocker.isAd(s)) return false
+        if (s.isBlank() || s.contains("dmxleo.dailymotion.com") || AdBlocker.isAd(s) || com.omnicast.core.domain.usecases.HlsMasterResolver.isAudioOrRawSegment(s)) return false
         if (dur in 0.1f..59.9f) return false
         val clean = s.substringBefore('?').lowercase()
         if (clean.endsWith("/iframe.m3u8") || clean.contains("iframes-") || clean.contains("keyframes") ||

@@ -120,22 +120,22 @@ fun InAppBrowserScreen(
         val isYtLive = isYt && (cleanUrl.contains("/live") || cleanUrl.contains("live_stream") || currentUrl.contains("canal") || currentUrl.contains("tv") || currentUrl.contains("envivo") || currentUrl.contains("directo"))
         if (isYt && curHost?.contains("youtube") != true && !isYtLive) return
         val derivedMaster = BrowserUrlHelper.deriveMasterPlaylistUrl(cleanUrl)
-        val targetUrl = if (derivedMaster != null && !cleanUrl.contains("master", true)) derivedMaster else cleanUrl
+        val targetUrl = derivedMaster ?: cleanUrl
         val isSubVar = com.omnicast.core.domain.usecases.HlsMasterResolver.isLikelySubVariantUrl(targetUrl)
-        val isM = !isSubVar && (targetUrl.contains("master", true) || targetUrl.contains("playlist", true) || targetUrl.contains(".mpd", true))
+        val isM = !isSubVar && (com.omnicast.core.domain.usecases.HlsMasterResolver.isMasterPlaylistUrl(targetUrl) || targetUrl.contains(".mpd", true))
         val key = BrowserUrlHelper.extractMediaIdentityKey(targetUrl)
         val existingIndex = detectedStreams.indexOfFirst { it == targetUrl || (key.isNotBlank() && BrowserUrlHelper.extractMediaIdentityKey(it) == key && (it.contains(".urlset") == targetUrl.contains(".urlset"))) }
         if (existingIndex >= 0) {
             val existingUrl = detectedStreams[existingIndex]
             val existingIsSub = com.omnicast.core.domain.usecases.HlsMasterResolver.isLikelySubVariantUrl(existingUrl)
-            val existingIsM = !existingIsSub && (existingUrl.contains("master", true) || existingUrl.contains("playlist", true) || existingUrl.contains(".mpd", true))
+            val existingIsM = !existingIsSub && (com.omnicast.core.domain.usecases.HlsMasterResolver.isMasterPlaylistUrl(existingUrl) || existingUrl.contains(".mpd", true))
             if (existingIsM && !isM) return
             detectedStreams.removeAt(existingIndex); streamHeaders.remove(existingUrl); streamLabels.remove(existingUrl)
         }
-        val nonM = detectedStreams.indexOfFirst { !it.contains("master", true) && !it.contains("playlist", true) && !it.contains(".mpd", true) }
+        val nonM = detectedStreams.indexOfFirst { !com.omnicast.core.domain.usecases.HlsMasterResolver.isMasterPlaylistUrl(it) && !it.contains(".mpd", true) }
         if (isM) detectedStreams.add(0, targetUrl) else if (nonM >= 0) detectedStreams.add(nonM, targetUrl) else detectedStreams.add(targetUrl)
         if (hdrs.isNotEmpty()) streamHeaders[targetUrl] = hdrs; if (!label.isNullOrBlank()) streamLabels[targetUrl] = label
-        val primaryUrl = detectedStreams.firstOrNull { it.contains("master", true) } ?: detectedStreams.firstOrNull { isRealMedia(it) } ?: targetUrl
+        val primaryUrl = detectedStreams.firstOrNull { com.omnicast.core.domain.usecases.HlsMasterResolver.isMasterPlaylistUrl(it) } ?: detectedStreams.firstOrNull { isRealMedia(it) } ?: targetUrl
         val cleanT = if (pageTitle.isNotBlank() && pageTitle != "Cargando..." && pageTitle != "Transmisión") pageTitle else "Video Web"
         ActiveStreamHolder.update(primaryUrl, cleanT, streamHeaders[primaryUrl] ?: hdrs)
         android.util.Log.i("StreamDetection", "🎬 Flujo registrado [isMaster=$isM, freshToken=true]: $targetUrl")
@@ -166,10 +166,10 @@ fun InAppBrowserScreen(
         val refPage = savedPageUrl?.takeIf { it.isNotBlank() } ?: currentUrl
         pageTitle = cleanT; com.omnicast.sender.history.NavigationTrackManager.saveTrackLocally(context, refPage, cleanT)
         scope.launch(Dispatchers.IO) {
-            val isForceProxy = hdrs["X-Force-Proxy"] == "true"
-            val (finalUrl, finalHdrs) = MediaPlatformResolver.prepareStreamForPlayback(url, refPage, hdrs)
-            val probe = StreamQualityDetector.probeAndHealStream(finalUrl, finalHdrs, refPage)
-            if (!probe.isPlayable && (probe.httpCode == 404 || probe.httpCode == 410)) {
+            val isForceProxy = hdrs["X-Force-Proxy"] == "true"; val effUrl = com.omnicast.core.domain.usecases.HlsMasterResolver.deriveMasterPlaylistUrl(url) ?: url
+            val (finalUrl, finalHdrs) = MediaPlatformResolver.prepareStreamForPlayback(effUrl, refPage, hdrs); val probe = StreamQualityDetector.probeAndHealStream(finalUrl, finalHdrs, refPage)
+            val isWeb = finalHdrs["X-Target-Player"] == "WEBVIEW" || probe.healedHeaders["X-Target-Player"] == "CHROMIUM_ANTI_CORS"
+            if (!probe.isPlayable && (probe.httpCode == 404 || probe.httpCode == 410) && !isWeb) {
                 withContext(Dispatchers.Main) {
                     detectedStreams.remove(url); detectedStreams.remove(finalUrl); qualityOptions = qualityOptions.filterNot { it.streamUrl == url || it.streamUrl == finalUrl }
                     if (!savedPageUrl.isNullOrBlank() && savedPageUrl.startsWith("http")) {

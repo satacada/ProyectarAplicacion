@@ -135,12 +135,18 @@ class StreamProfileDatabase private constructor(context: Context) :
     }
 
     private fun loadSignatures(db: SQLiteDatabase) {
-        val mTags = mutableSetOf<String>(); val dTags = mutableSetOf<String>(); val sExts = mutableSetOf<String>()
+        val mTags = mutableSetOf<String>(); val dTags = mutableSetOf<String>(); val sExts = mutableSetOf<String>(); val mNames = mutableSetOf<String>()
         db.query(TABLE_SIGS, null, null, null, null, null, null).use { c ->
             while (c.moveToNext()) {
                 val sig = c.getString(c.getColumnIndexOrThrow(COL_SIG)); val type = c.getString(c.getColumnIndexOrThrow(COL_TYPE))
-                when (type) { "MASTER" -> mTags.add(sig); "DISQUALIFIER" -> dTags.add(sig); "RAW_EXT" -> sExts.add(sig) }
+                when (type) { "MASTER" -> mTags.add(sig); "DISQUALIFIER" -> dTags.add(sig); "RAW_EXT" -> sExts.add(sig); "MASTER_NAME" -> mNames.add(sig) }
             }
+        }
+        val defaultNames = listOf("master.m3u8", "playlist.m3u8", "index.m3u8")
+        val wDb = writableDatabase
+        defaultNames.filterNot { mNames.contains(it) }.forEach { name ->
+            wDb.insertWithOnConflict(TABLE_SIGS, null, ContentValues().apply { put(COL_SIG, name); put(COL_TYPE, "MASTER_NAME") }, SQLiteDatabase.CONFLICT_IGNORE)
+            mNames.add(name)
         }
         if (mTags.isEmpty()) {
             val defaults = listOf(
@@ -148,7 +154,6 @@ class StreamProfileDatabase private constructor(context: Context) :
                 Triple("#EXTINF:", "DISQUALIFIER", ""), Triple("#EXT-X-TARGETDURATION:", "DISQUALIFIER", ""), Triple("#EXT-X-MEDIA-SEQUENCE:", "DISQUALIFIER", ""),
                 Triple(".aac", "RAW_EXT", ""), Triple(".ts", "RAW_EXT", ""), Triple(".m4s", "RAW_EXT", ""), Triple(".m4a", "RAW_EXT", ""), Triple(".mp3", "RAW_EXT", "")
             )
-            val wDb = writableDatabase
             defaults.forEach { (sig, t, _) ->
                 wDb.insertWithOnConflict(TABLE_SIGS, null, ContentValues().apply { put(COL_SIG, sig); put(COL_TYPE, t) }, SQLiteDatabase.CONFLICT_IGNORE)
                 when (t) { "MASTER" -> mTags.add(sig); "DISQUALIFIER" -> dTags.add(sig); "RAW_EXT" -> sExts.add(sig) }
@@ -157,6 +162,7 @@ class StreamProfileDatabase private constructor(context: Context) :
         if (mTags.isNotEmpty()) com.omnicast.core.domain.usecases.HlsMasterResolver.masterTags = mTags
         if (dTags.isNotEmpty()) com.omnicast.core.domain.usecases.HlsMasterResolver.subvariantDisqualifiers = dTags
         if (sExts.isNotEmpty()) com.omnicast.core.domain.usecases.HlsMasterResolver.rawSegmentExts = sExts
+        if (mNames.isNotEmpty()) com.omnicast.core.domain.usecases.HlsMasterResolver.masterFileNames = mNames
     }
 
     private fun seedInitialProfiles() {
@@ -249,6 +255,7 @@ class StreamProfileDatabase private constructor(context: Context) :
                 "MASTER" -> com.omnicast.core.domain.usecases.HlsMasterResolver.masterTags = com.omnicast.core.domain.usecases.HlsMasterResolver.masterTags + sig
                 "DISQUALIFIER" -> com.omnicast.core.domain.usecases.HlsMasterResolver.subvariantDisqualifiers = com.omnicast.core.domain.usecases.HlsMasterResolver.subvariantDisqualifiers + sig
                 "RAW_EXT" -> com.omnicast.core.domain.usecases.HlsMasterResolver.rawSegmentExts = com.omnicast.core.domain.usecases.HlsMasterResolver.rawSegmentExts + sig
+                "MASTER_NAME" -> com.omnicast.core.domain.usecases.HlsMasterResolver.masterFileNames = com.omnicast.core.domain.usecases.HlsMasterResolver.masterFileNames + sig
             }
         } catch (_: Throwable) {}
     }

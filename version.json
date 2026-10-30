@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 297,
-  "versionCodeReceiver": 280,
-  "versionName": "3.5.46",
-  "releaseTag": "v3.5.46",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.46/omnicast-sender-v3.5.46.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.46/omnicast-receiver-v3.5.46.apk",
-  "changelog": "v3.5.46: 1) Corrección Universal de Re-ascenso HLS RFC 8216 para AWS MediaPackage y Canales FAST (Charge!/Sinclair): HlsMasterResolver ahora reconoce index.m3u8 como manifiesto maestro y deriva legítimamente las sub-variantes index_N.m3u8 hacia index.m3u8 (en lugar de forzar /master.m3u8 inexistente que provocaba HTTP 404). 2) Reproducción directa por hardware en ExoPlayer y entrega de resoluciones multinivel sin rechazos de red."
+  "versionCodeSender": 298,
+  "versionCodeReceiver": 281,
+  "versionName": "3.5.47",
+  "releaseTag": "v3.5.47",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.47/omnicast-sender-v3.5.47.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.47/omnicast-receiver-v3.5.47.apk",
+  "changelog": "v3.5.47: 1) Generalización Absoluta de Nombres Maestros HLS en SQLite (MASTER_NAME): StreamProfileDatabase administra dinámicamente el conjunto masterFileNames (master.m3u8, playlist.m3u8, index.m3u8), sincronizable y aprendible en caliente. 2) Re-ascenso Simétrico Universal: Regla matemática pura ${base}_\\d+.m3u8 -> ${base}.m3u8 agnóstica a dominios y CDNs."
 }

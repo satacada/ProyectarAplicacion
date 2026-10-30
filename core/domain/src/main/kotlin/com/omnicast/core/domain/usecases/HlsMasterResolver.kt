@@ -19,6 +19,10 @@ object HlsMasterResolver {
         ".aac", ".ts", ".m4s", ".m4a", ".mp3", ".ac3", ".eac3", ".vtt", ".srt", ".key"
     )
 
+    @Volatile var masterFileNames: Set<String> = setOf(
+        "master.m3u8", "playlist.m3u8", "index.m3u8"
+    )
+
     fun isAudioOrRawSegment(url: String): Boolean {
         val clean = url.lowercase().substringBefore('?')
         return rawSegmentExts.any { clean.endsWith(it) }
@@ -57,9 +61,7 @@ object HlsMasterResolver {
         if (isLikelySubVariantUrl(url)) return false
         val clean = url.lowercase().substringBefore('?')
         if (!clean.endsWith(".m3u8") && !clean.contains(".m3u8") && !clean.endsWith(".txt")) return false
-        return clean.endsWith("/master.m3u8") || clean.endsWith("/playlist.m3u8") ||
-               clean.endsWith("/index.m3u8") || clean.endsWith("master.m3u8") ||
-               clean.endsWith("playlist.m3u8") || clean.endsWith("index.m3u8")
+        return masterFileNames.any { clean.endsWith("/$it") || clean.endsWith(it) }
     }
 
     /**
@@ -70,9 +72,7 @@ object HlsMasterResolver {
         val cleanUrl = url.substringBefore('?')
         val query = if (url.contains('?')) "?" + url.substringAfter('?') else ""
 
-        if (cleanUrl.endsWith("/master.m3u8", ignoreCase = true) ||
-            cleanUrl.endsWith("/playlist.m3u8", ignoreCase = true) ||
-            cleanUrl.endsWith("/index.m3u8", ignoreCase = true)) return null
+        if (masterFileNames.any { cleanUrl.endsWith("/$it", ignoreCase = true) || cleanUrl.endsWith(it, ignoreCase = true) }) return null
 
         val lower = cleanUrl.lowercase()
         if (lower.contains("dropcdn.io") || lower.contains("dr0pstream.com")) return null
@@ -97,10 +97,12 @@ object HlsMasterResolver {
             return cleanUrl.replace(suffixRegex, "master.m3u8") + query
         }
 
-        // 3. Patrón Índice de Sub-variante (AWS MediaPackage / Sinclair: index_2.m3u8 -> index.m3u8)
-        val indexRegex = Regex("/index_\\d+\\.m3u8", RegexOption.IGNORE_CASE)
-        if (indexRegex.containsMatchIn(cleanUrl)) {
-            return cleanUrl.replace(indexRegex, "/index.m3u8") + query
+        // 3. Patrón Simétrico de Sub-variante Indexada (${base}_\d+.m3u8 -> ${base}.m3u8)
+        val indexedVariantRegex = Regex("/([a-zA-Z0-9_-]+)_\\d+\\.m3u8", RegexOption.IGNORE_CASE)
+        val indexedMatch = indexedVariantRegex.find(cleanUrl)
+        if (indexedMatch != null) {
+            val baseName = indexedMatch.groupValues[1]
+            return cleanUrl.replace(indexedVariantRegex, "/$baseName.m3u8") + query
         }
 
         return null

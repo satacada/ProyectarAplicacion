@@ -75,6 +75,8 @@ fun BrowserTopBar(
     onOpenWhitelist: () -> Unit = {},
     onExitApp: () -> Unit = {}
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val activeLang by com.omnicast.sender.language.AppLanguageManager.currentLanguageFlow.collectAsState()
     val focusManager = LocalFocusManager.current
     var showMenu by remember { mutableStateOf(false) }
     var showHelpDialog by remember { mutableStateOf(false) }
@@ -134,7 +136,7 @@ fun BrowserTopBar(
                         decorationBox = { innerTextField ->
                             Box(contentAlignment = Alignment.CenterStart, modifier = Modifier.fillMaxSize()) {
                                 if (textFieldValue.text.isEmpty()) {
-                                    Text("Buscar o escribir URL...", color = Color(0xFF64748B), fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, softWrap = false)
+                                    Text(com.omnicast.sender.language.AppLanguageManager.t(context, "browser_search_hint"), color = Color(0xFF64748B), fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, softWrap = false)
                                 }
                                 innerTextField()
                             }
@@ -160,37 +162,37 @@ fun BrowserTopBar(
                         modifier = Modifier.background(Color(0xFF1E293B))
                     ) {
                         DropdownMenuItem(
-                            text = { Text("ℹ️ Detalle de Controles", color = Color(0xFF38BDF8), fontWeight = FontWeight.Bold) },
+                            text = { Text(com.omnicast.sender.language.AppLanguageManager.t(context, "menu_controls"), color = Color(0xFF38BDF8), fontWeight = FontWeight.Bold) },
                             onClick = { showHelpDialog = true; showMenu = false }
                         )
                         HorizontalDivider(color = Color(0xFF334155))
                         DropdownMenuItem(
-                            text = { Text(if (isAdBlockEnabled) "🛡️ Bloqueador (Activo)" else "🛡️ Bloquear Anuncios", color = Color.White) },
+                            text = { Text(com.omnicast.sender.language.AppLanguageManager.t(context, "menu_adblock"), color = Color.White) },
                             onClick = { onToggleAdBlock(); showMenu = false }
                         )
                         DropdownMenuItem(
-                            text = { Text("✅ Sitios Permitidos (Lista Blanca)", color = Color(0xFF10B981)) },
+                            text = { Text(com.omnicast.sender.language.AppLanguageManager.t(context, "menu_whitelist"), color = Color(0xFF10B981)) },
                             onClick = { onOpenWhitelist(); showMenu = false }
                         )
                         DropdownMenuItem(
-                            text = { Text(if (isDesktopMode) "📱 Modo Móvil" else "💻 Sitio Escritorio", color = Color.White) },
+                            text = { Text(if (isDesktopMode) com.omnicast.sender.language.AppLanguageManager.t(context, "menu_mobile") else com.omnicast.sender.language.AppLanguageManager.t(context, "menu_desktop"), color = Color.White) },
                             onClick = { onToggleDesktopMode(); showMenu = false }
                         )
                         DropdownMenuItem(
-                            text = { Text("🔍 Re-escanear videos", color = Color(0xFF38BDF8)) },
+                            text = { Text(com.omnicast.sender.language.AppLanguageManager.t(context, "menu_rescan"), color = Color(0xFF38BDF8)) },
                             onClick = { onForceRescan(); showMenu = false }
                         )
                         DropdownMenuItem(
-                            text = { Text("🌐 Idioma de la aplicación", color = Color(0xFF38BDF8)) },
+                            text = { Text(com.omnicast.sender.language.AppLanguageManager.t(context, "menu_language"), color = Color(0xFF38BDF8)) },
                             onClick = { showLangDialog = true; showMenu = false }
                         )
                         HorizontalDivider(color = Color(0xFF334155))
                         DropdownMenuItem(
-                            text = { Text("🚪 Salir de la aplicación", color = Color(0xFFF87171), fontWeight = FontWeight.Bold) },
+                            text = { Text(com.omnicast.sender.language.AppLanguageManager.t(context, "menu_exit"), color = Color(0xFFF87171), fontWeight = FontWeight.Bold) },
                             onClick = { onExitApp(); showMenu = false }
                         )
                         DropdownMenuItem(
-                            text = { Text("🗑 Limpiar caché y datos", color = Color(0xFFF87171)) },
+                            text = { Text(com.omnicast.sender.language.AppLanguageManager.t(context, "menu_clear_data"), color = Color(0xFFF87171)) },
                             onClick = { onClearData(); showMenu = false }
                         )
                     }

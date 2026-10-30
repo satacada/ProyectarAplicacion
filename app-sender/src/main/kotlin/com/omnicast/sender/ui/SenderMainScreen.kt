@@ -58,6 +58,7 @@ fun SenderMainScreen(
     var browserInitialUrl by remember { mutableStateOf<String?>(null) }
     var showConfigDialog by remember { mutableStateOf(false) }
     var showHelpDialog by remember { mutableStateOf(false) }
+    var showLangDialog by remember { mutableStateOf(false) }
     var showSideDrawer by remember { mutableStateOf(false) }
     var tooltipsEnabled by remember { mutableStateOf(prefs.getBoolean("saved_tooltips_enabled", false)) }
     val isCasting by com.omnicast.sender.stream.ActiveStreamHolder.isCasting.collectAsState()
@@ -182,6 +183,7 @@ fun SenderMainScreen(
                         },
                         onOpenHelp = { showHelpDialog = true },
                         onOpenDrawer = { showSideDrawer = true },
+                        onOpenLanguage = { showLangDialog = true },
                         onExitApp = { SenderMainActivity.exitCompletely(context) }
                     )
                 }
@@ -283,4 +285,5 @@ fun SenderMainScreen(
     }
 
     if (showHelpDialog) SenderHelpDialog(onDismiss = { showHelpDialog = false })
+    if (showLangDialog) AppLanguageDialog(onDismiss = { showLangDialog = false }, onLanguageSelected = { showLangDialog = false })
 }

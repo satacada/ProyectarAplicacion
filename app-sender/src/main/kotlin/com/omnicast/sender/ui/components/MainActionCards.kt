@@ -9,20 +9,19 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Stop
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.omnicast.core.domain.models.StreamProfile
+import com.omnicast.sender.language.AppLanguageManager
 import com.omnicast.sender.ui.theme.OmniThemeColors
 
-/**
- * Las tres opciones principales en Cyber-Dark:
- * 1. Casteo a Tv (tarjeta violeta con estado inferior).
- * 2. Fila de dos columnas: Captura Web (ámbar) y Galería (magenta: Fotos y Videos).
- */
 @Composable
 fun MainActionCards(
     isStreaming: Boolean,
@@ -40,6 +39,8 @@ fun MainActionCards(
     onOpenGallery: () -> Unit,
     onPickExternalFile: () -> Unit
 ) {
+    val context = LocalContext.current
+    val activeLang by AppLanguageManager.currentLanguageFlow.collectAsState()
     val zoomDisplayLabel = when (tvScaleMode) {
         "FIT_100", "ORIGINAL_FIT" -> "100%"
         "ZOOM_85" -> "85%"
@@ -79,7 +80,7 @@ fun MainActionCards(
                         ) {
                             VectorTvIcon(modifier = Modifier.size(22.dp), color = Color(0xFFA78BFA))
                         }
-                        Text("Casteo a Tv", fontSize = 16.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFFF1F5F9))
+                        Text(AppLanguageManager.t(context, "nav_mirror"), fontSize = 16.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFFF1F5F9))
                     }
 
                     Box(
@@ -129,7 +130,7 @@ fun MainActionCards(
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                             Icon(Icons.Rounded.Stop, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
-                            Text("Detener", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                            Text(AppLanguageManager.t(context, "btn_stop_cast"), fontSize = 13.sp, fontWeight = FontWeight.Bold, color = Color.White)
                         }
                     }
                 }
@@ -187,7 +188,7 @@ fun MainActionCards(
                         VectorTvIcon(modifier = Modifier.size(16.dp), color = Color(0xFFFBBF24))
                     }
 
-                    Text(text = "Captura Web", fontSize = 14.sp, fontWeight = FontWeight.ExtraBold, color = Color.White)
+                    Text(text = AppLanguageManager.t(context, "nav_browser"), fontSize = 14.sp, fontWeight = FontWeight.ExtraBold, color = Color.White)
                     Text(text = "Navegador embebido para streaming", fontSize = 10.sp, color = Color(0xFF94A3B8), lineHeight = 13.sp, maxLines = 2)
                     Spacer(modifier = Modifier.height(2.dp))
 
@@ -214,7 +215,7 @@ fun MainActionCards(
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                                 Icon(Icons.Rounded.Stop, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
-                                Text("Detener", fontSize = 12.sp, fontWeight = FontWeight.ExtraBold, color = Color.White)
+                                Text(AppLanguageManager.t(context, "btn_stop_cast"), fontSize = 12.sp, fontWeight = FontWeight.ExtraBold, color = Color.White)
                             }
                         }
                     }
@@ -244,7 +245,7 @@ fun MainActionCards(
                         VectorTvIcon(modifier = Modifier.size(16.dp), color = Color(0xFFF43F5E))
                     }
 
-                    Text(text = "Galería", fontSize = 14.sp, fontWeight = FontWeight.ExtraBold, color = Color.White)
+                    Text(text = AppLanguageManager.t(context, "nav_gallery"), fontSize = 14.sp, fontWeight = FontWeight.ExtraBold, color = Color.White)
                     Text(text = "Fotos locales y archivos multimedia", fontSize = 10.sp, color = Color(0xFF94A3B8), lineHeight = 13.sp, maxLines = 2)
                     Spacer(modifier = Modifier.height(2.dp))
 
@@ -284,7 +285,7 @@ fun MainActionCards(
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                                 Icon(Icons.Rounded.Stop, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
-                                Text("Detener", fontSize = 12.sp, fontWeight = FontWeight.ExtraBold, color = Color.White)
+                                Text(AppLanguageManager.t(context, "btn_stop_cast"), fontSize = 12.sp, fontWeight = FontWeight.ExtraBold, color = Color.White)
                             }
                         }
                     }

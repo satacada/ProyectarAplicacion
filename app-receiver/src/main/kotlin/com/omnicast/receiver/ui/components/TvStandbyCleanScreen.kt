@@ -55,6 +55,7 @@ fun TvStandbyCleanScreen(
     var downloadingItem by remember { mutableStateOf<TvPlaylistItem?>(null) }
     var savingDialogItem by remember { mutableStateOf<TvPlaylistItem?>(null) }
     var searchQuery by remember { mutableStateOf("") }
+    var showTvLangDialog by remember { mutableStateOf(false) }
     var selectedSort by remember { mutableStateOf(TvVideoSortOrder.NEWEST) }
     val listState = androidx.compose.foundation.lazy.rememberLazyListState()
     val firstItemFocusRequester = remember { FocusRequester() }
@@ -103,7 +104,8 @@ fun TvStandbyCleanScreen(
                     onSelectTab = { selectedTab = it; searchQuery = "" },
                     updateState = updateState,
                     onCheckUpdate = onCheckUpdate,
-                    onDownloadAndInstall = onDownloadAndInstall
+                    onDownloadAndInstall = onDownloadAndInstall,
+                    onOpenLanguage = { showTvLangDialog = true }
                 )
                 Spacer(modifier = Modifier.height(14.dp))
             } else {
@@ -250,6 +252,9 @@ fun TvStandbyCleanScreen(
         sharingItem?.let { item -> TvShareDialog(item = item, onDismiss = { sharingItem = null }) }
         renewItem?.let { item -> TvRenewQrDialog(item = item, onDismiss = { renewItem = null; onClearExpiredRenew() }) }
         downloadingItem?.let { item -> TvDownloadMovieDialog(item = item, onDismiss = { downloadingItem = null }) }
+        if (showTvLangDialog) {
+            TvLanguageDialog(onDismiss = { showTvLangDialog = false }, onLanguageSelected = { showTvLangDialog = false })
+        }
     }
 }
 

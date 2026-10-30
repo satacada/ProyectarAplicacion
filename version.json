@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 292,
-  "versionCodeReceiver": 275,
-  "versionName": "3.5.41",
-  "releaseTag": "v3.5.41",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.41/omnicast-sender-v3.5.41.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.41/omnicast-receiver-v3.5.41.apk",
-  "changelog": "v3.5.41: 1) Clasificación Robusta de Streams por Componentes de URI (RFC): análisis exclusivo del Path y Query ignorando nombres de host (Rai Italia / dash2.antik.sk se reconoce como HLS M3U8 y ya no colapsa con error MPD). 2) Rediseño 2D Frontal Vertical del Banner de TV e Iconos: figura 100% vertical y recta (celular erguido a 90° + televisor 16:9 + ondas de casteo) con fondo oscuro limpio en proporción oficial 320x180 px para Leanback Android TV, eliminando la perspectiva 3D inclinada y deformaciones. 3) Ordenamiento Estricto de 'Vistos Recientemente' en Historial: orden descendente por fecha de visita real donde el último video visitado se posiciona en el Puesto #1 arriba del todo, desplazando los ítems de catálogo a fechas pasadas."
+  "versionCodeSender": 293,
+  "versionCodeReceiver": 276,
+  "versionName": "3.5.42",
+  "releaseTag": "v3.5.42",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.42/omnicast-sender-v3.5.42.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.42/omnicast-receiver-v3.5.42.apk",
+  "changelog": "v3.5.42: 1) Internacionalización Global (i18n): Soporte multilingüe completo y dinámico en toda la aplicación (Sender y Receiver) para Español, Inglés, Alemán (Alemania/Suiza), Francés (Francia/Suiza), Italiano (Italia/Suiza), Portugués y Ruso con términos de uso cotidiano. 2) Selector de Idioma Reactivo: Botón de acceso directo 🌐 en la barra superior del Sender, en el menú del navegador web, y en la barra superior de Android TV con soporte de navegación y selección por control remoto físico (D-Pad). 3) Peticiones Web Nativas con Accept-Language: Configuración automática de idioma en el motor Chromium del WebView para solicitar y recibir páginas web en el idioma nativo seleccionado. 4) Blindaje de Clasificación DASH: Extractor DASH restringido estrictamente a extensiones .mpd y parámetros formales, excluyendo rutas HLS (.m3u8 y /hls/)."
 }

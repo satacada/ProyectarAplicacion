@@ -12,8 +12,10 @@ class UniversalDashExtractorAdapter : IMediaStreamExtractorPort {
     override val priority: Int = 10
 
     override fun canHandle(candidate: StreamCandidate): Boolean {
+        val cleanPath = candidate.url.substringBefore('?').lowercase()
+        if (cleanPath.contains(".m3u8") || cleanPath.contains("/hls")) return false
         val lower = candidate.url.lowercase()
-        return lower.contains(".mpd") || (lower.contains("/manifest") && lower.contains("dash"))
+        return cleanPath.endsWith(".mpd") || lower.contains("format=dash") || lower.contains("ct=6")
     }
 
     override fun extract(candidate: StreamCandidate): MediaStream {

@@ -14,25 +14,25 @@ object AppLanguageManager {
     private const val PREFS_NAME = "omnicast_language_prefs"
     private const val KEY_LANG = "app_language_preference"
 
-    val AVAILABLE_LANGUAGES = listOf(
-        "system" to "Automático (Sistema)",
-        "es" to "Español",
-        "en" to "English",
-        "pt" to "Português",
-        "ru" to "Русский",
-        "it" to "Italiano"
-    )
+    val AVAILABLE_LANGUAGES = com.omnicast.core.domain.i18n.CasteraI18n.SUPPORTED_LANGUAGES
+
+    val currentLanguageFlow = kotlinx.coroutines.flow.MutableStateFlow("system")
 
     fun getSavedLanguage(context: Context): String {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        return prefs.getString(KEY_LANG, "system") ?: "system"
+        val saved = prefs.getString(KEY_LANG, "system") ?: "system"
+        if (currentLanguageFlow.value != saved) currentLanguageFlow.value = saved
+        return saved
     }
+
+    fun t(context: Context, key: String): String = com.omnicast.core.domain.i18n.CasteraI18n.t(key, getSavedLanguage(context))
 
     fun setLanguage(context: Context, langCode: String) {
         context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             .edit()
             .putString(KEY_LANG, langCode)
             .apply()
+        currentLanguageFlow.value = langCode
         applyLanguage(context, langCode)
     }
 

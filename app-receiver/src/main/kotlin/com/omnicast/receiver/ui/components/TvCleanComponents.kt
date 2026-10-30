@@ -50,21 +50,30 @@ fun TvCastToTvVectorIcon(modifier: Modifier = Modifier, tvColor: Color = Color(0
 fun TvCleanTopBar(
     selectedTab: Int, onSelectTab: (Int) -> Unit,
     updateState: com.omnicast.receiver.update.TvUpdateState = com.omnicast.receiver.update.TvUpdateState.Idle,
-    onCheckUpdate: () -> Unit = {}, onDownloadAndInstall: (String) -> Unit = {}
+    onCheckUpdate: () -> Unit = {}, onDownloadAndInstall: (String) -> Unit = {},
+    onOpenLanguage: () -> Unit = {}
 ) {
+    val ctx = androidx.compose.ui.platform.LocalContext.current
+    val tvLang by com.omnicast.receiver.language.TvLanguageManager.currentLanguageFlow.collectAsState()
     Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             TvCastToTvVectorIcon(modifier = Modifier.size(32.dp))
-            Text("OmniCast TV", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Color.White)
+            Text("Castera TV", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Color.White)
         }
         Row(horizontalArrangement = Arrangement.spacedBy(20.dp), verticalAlignment = Alignment.CenterVertically) {
-            TvTopTab(label = "Recientes", isSelected = selectedTab == 0, onClick = { onSelectTab(0) })
-            TvTopTab(label = "Todo", isSelected = selectedTab == 1, onClick = { onSelectTab(1) })
-            TvTopTab(label = "Favoritos", isSelected = selectedTab == 2, onClick = { onSelectTab(2) })
+            TvTopTab(label = com.omnicast.receiver.language.TvLanguageManager.t(ctx, "recent_watched", tvLang), isSelected = selectedTab == 0, onClick = { onSelectTab(0) })
+            TvTopTab(label = com.omnicast.receiver.language.TvLanguageManager.t(ctx, "saved_title", tvLang), isSelected = selectedTab == 1, onClick = { onSelectTab(1) })
+            TvTopTab(label = "⭐ " + com.omnicast.receiver.language.TvLanguageManager.t(ctx, "saved_title", tvLang), isSelected = selectedTab == 2, onClick = { onSelectTab(2) })
         }
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            val context = androidx.compose.ui.platform.LocalContext.current
-            val currentVersion = remember { try { "v" + context.packageManager.getPackageInfo(context.packageName, 0).versionName } catch (_: Throwable) { "v3.5.37" } }
+            var isLangFocused by remember { mutableStateOf(false) }
+            Box(
+                modifier = Modifier.onFocusChanged { isLangFocused = it.isFocused }.focusable().clickable { onOpenLanguage() }
+                    .background(if (isLangFocused) Color(0xFF38BDF8) else Color(0xFF1E182A), RoundedCornerShape(8.dp))
+                    .border(1.dp, if (isLangFocused) Color.White else Color(0xFF2D223F), RoundedCornerShape(8.dp))
+                    .padding(horizontal = 8.dp, vertical = 4.dp), contentAlignment = Alignment.Center
+            ) { Text("🌐", fontSize = 14.sp) }
+            val currentVersion = remember { try { "v" + ctx.packageManager.getPackageInfo(ctx.packageName, 0).versionName } catch (_: Throwable) { "v3.5.42" } }
             TvUpdateStatusBadge(updateState = updateState, currentVersion = currentVersion, onCheckUpdate = onCheckUpdate, onDownloadAndInstall = onDownloadAndInstall)
         }
     }

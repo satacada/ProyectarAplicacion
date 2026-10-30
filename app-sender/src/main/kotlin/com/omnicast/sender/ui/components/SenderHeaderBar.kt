@@ -29,6 +29,7 @@ fun SenderHeaderBar(
     onToggleTooltips: (Boolean) -> Unit = {},
     onOpenHelp: () -> Unit,
     onOpenDrawer: (() -> Unit)? = null,
+    onOpenLanguage: (() -> Unit)? = null,
     onExitApp: (() -> Unit)? = null
 ) {
     Row(
@@ -47,11 +48,11 @@ fun SenderHeaderBar(
                 ) { Icon(Icons.Rounded.Menu, contentDescription = "Menú", tint = Color(0xFF94A3B8), modifier = Modifier.size(20.dp)) }
             }
 
-            Text("OmniCast Pro", fontSize = 20.sp, fontWeight = FontWeight.ExtraBold, color = OmniThemeColors.TextPrimary)
+            Text("Castera", fontSize = 20.sp, fontWeight = FontWeight.ExtraBold, color = OmniThemeColors.TextPrimary)
 
             val context = androidx.compose.ui.platform.LocalContext.current
             val ver = androidx.compose.runtime.remember {
-                try { "v" + context.packageManager.getPackageInfo(context.packageName, 0).versionName } catch (_: Throwable) { "v3.32.25" }
+                try { "v" + context.packageManager.getPackageInfo(context.packageName, 0).versionName } catch (_: Throwable) { "v3.5.42" }
             }
             Surface(color = Color(0xFF382910), border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFD97706)), shape = RoundedCornerShape(12.dp)) {
                 Text(text = ver, modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp), fontSize = 11.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFFFBBF24))
@@ -59,6 +60,15 @@ fun SenderHeaderBar(
         }
 
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            if (onOpenLanguage != null) {
+                Box(
+                    modifier = Modifier.size(38.dp).background(Color(0xFF19202E), CircleShape).border(1.2.dp, Color(0xFF38BDF8).copy(alpha = 0.6f), CircleShape).clickable { onOpenLanguage() },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(text = "🌐", fontSize = 16.sp)
+                }
+            }
+
             OmniTooltip(text = if (tooltipsEnabled) "Ayuda Activa: Descripciones y consejos." else "Ayuda Inactiva: Toca '?' para ver consejos.", enabled = true) {
                 Box(
                     modifier = Modifier.size(38.dp).background(if (tooltipsEnabled) Color(0xFF09291D) else Color(0xFF19202E), CircleShape).border(1.2.dp, if (tooltipsEnabled) Color(0xFF10B981) else Color(0xFF334155), CircleShape).clickable { onToggleTooltips(!tooltipsEnabled) },

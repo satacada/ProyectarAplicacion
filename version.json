@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 289,
-  "versionCodeReceiver": 272,
-  "versionName": "3.5.38",
-  "releaseTag": "v3.5.38",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.38/omnicast-sender-v3.5.38.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.38/omnicast-receiver-v3.5.38.apk",
-  "changelog": "v3.5.38: 1) Permisos Automáticos al Instalar/Abrir APK y Apertura Directa de Configuración de Permisos al Entrar a Enviar Foto/Video: solicitud automática de permisos de Fotos, Videos y Audio al abrir la app y apertura directa de la pantalla de Ajustes de Permisos de la App si falta autorización. 2) Flujo Colecciones -> Personas y mascotas (1/N y Retorno Directo a Colecciones): apertura directa de la pestaña Colecciones (ACTION_PICK_IMAGES), indexador inteligente de rostros (GalleryFaceClusterHelper con FaceDetector y caché persistente) que agrupa únicamente las fotos de la persona seleccionada (1/N en vez de 1/357) y retorno directo al entorno de Colecciones al pulsar Atrás. 3) Pellizcar y Mover con el Dedo para Enfocar Videos y Pantalla en la TV: soporte nativo de pellizcar con 2 dedos y arrastrar con 1 dedo directamente en el reproductor de videos del celular (VideoCastPlayerActivity) y en el lienzo interactivo de calibración hacia ExoPlayer y TvWebStreamScreen."
+  "versionCodeSender": 290,
+  "versionCodeReceiver": 273,
+  "versionName": "3.5.39",
+  "releaseTag": "v3.5.39",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.39/omnicast-sender-v3.5.39.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.39/omnicast-receiver-v3.5.39.apk",
+  "changelog": "v3.5.39: 1) Enfocar y Mover en TV limpio y transparente: erradicado el recuadro central y contornos verdes/azules en el calibrador flotante de Casteo a TV, conservando únicamente el lienzo táctil transparente y la tarjeta de control superior con zoom 2 dedos y arrastre 1 dedo. 2) Descargas en Carpeta Pelis_descargas y Gestión de Borrado: ruta destacada de descarga directa en Descargas/Pelis_descargas, botón para borrar la descarga de la película actual y botón para limpiar todo en Pelis_descargas con notificación detallada de espacio liberado, espacio libre y espacio ocupado. 3) Cuadros de Búsqueda con Activación en Dos Toques en TV: primer toque con el control remoto enfoca la caja de búsqueda (salto de foco normal sin abrir teclado de forma inesperada), segundo toque activa el modo de edición e ingresa texto con teclado virtual."
 }

@@ -121,9 +121,9 @@ fun TvScaleZoomSection(
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("🤏 ", fontSize = 14.sp)
+                    Text("🎛️ ", fontSize = 14.sp)
                     Text(
-                        text = "Pellizcar y Mover con el Dedo en TV",
+                        text = "Enfocar y Mover en TV (Zoom y Arrastre)",
                         color = Color(0xFF38BDF8),
                         fontSize = 12.sp,
                         fontWeight = FontWeight.ExtraBold

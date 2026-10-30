@@ -54,33 +54,6 @@ object FloatingCalibrationOverlay {
             setBackgroundColor(Color.argb(75, 11, 15, 23))
         }
 
-        // Recuadro guía central interactivo que se mueve y escala junto con el dedo
-        val guideFrameDrawable = GradientDrawable().apply {
-            setColor(Color.argb(30, 56, 189, 248))
-            cornerRadius = dpToPx(context, 14f).toFloat()
-            setStroke(dpToPx(context, 1.8f), Color.parseColor("#38BDF8"))
-        }
-        val previewBox = FrameLayout(context).apply {
-            background = guideFrameDrawable
-            layoutParams = FrameLayout.LayoutParams(dpToPx(context, 220f), dpToPx(context, 130f)).apply {
-                gravity = Gravity.CENTER
-            }
-            val centerLabel = TextView(context).apply {
-                text = "📺 Vista TV\nPellizca y mueve aquí"
-                gravity = Gravity.CENTER
-                setTextColor(Color.parseColor("#BAE6FD"))
-                setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
-                typeface = Typeface.DEFAULT_BOLD
-                layoutParams = FrameLayout.LayoutParams(
-                    FrameLayout.LayoutParams.WRAP_CONTENT,
-                    FrameLayout.LayoutParams.WRAP_CONTENT,
-                    Gravity.CENTER
-                )
-            }
-            addView(centerLabel)
-        }
-        root.addView(previewBox)
-
         val cardDrawable = GradientDrawable().apply {
             setColor(Color.parseColor("#F20F172A"))
             cornerRadius = dpToPx(context, 16f).toFloat()
@@ -102,7 +75,7 @@ object FloatingCalibrationOverlay {
         }
 
         val title = TextView(context).apply {
-            text = "🤏 Enfocar y Mover en TV"
+            text = "🎛️ Enfocar y Mover en TV"
             setTextColor(Color.parseColor("#38BDF8"))
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 15f)
             typeface = Typeface.DEFAULT_BOLD
@@ -121,10 +94,6 @@ object FloatingCalibrationOverlay {
         }
 
         fun updateVisualAndSend(mode: String = "ZOOM") {
-            previewBox.scaleX = currentZoom.coerceIn(0.6f, 2.6f)
-            previewBox.scaleY = currentZoom.coerceIn(0.6f, 2.6f)
-            previewBox.translationX = currentPanX * 0.45f
-            previewBox.translationY = currentPanY * 0.45f
             statusText.text = String.format(
                 java.util.Locale.US,
                 "Zoom: %.0f%% | X: %.0f | Y: %.0f",

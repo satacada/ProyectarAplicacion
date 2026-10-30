@@ -35,10 +35,19 @@ fun TvSortFilterBar(
     onSortChange: (TvVideoSortOrder) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var isSearchFocused by remember { mutableStateOf(false) }
+    var isBoxFocused by remember { mutableStateOf(false) }
+    var isEditingText by remember { mutableStateOf(false) }
     val keyboardController = androidx.compose.ui.platform.LocalSoftwareKeyboardController.current
-    LaunchedEffect(isSearchFocused) {
-        if (isSearchFocused) keyboardController?.show()
+
+    LaunchedEffect(isBoxFocused) {
+        if (!isBoxFocused) {
+            isEditingText = false
+            keyboardController?.hide()
+        }
+    }
+
+    LaunchedEffect(isEditingText) {
+        if (isEditingText) keyboardController?.show() else keyboardController?.hide()
     }
 
     Row(
@@ -46,29 +55,58 @@ fun TvSortFilterBar(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        // Campo de búsqueda D-Pad sin cortes de texto
-        BasicTextField(
-            value = searchQuery,
-            onValueChange = onSearchQueryChange,
-            singleLine = true,
-            textStyle = androidx.compose.ui.text.TextStyle(
-                color = Color.White,
-                fontSize = 13.sp,
-                fontWeight = FontWeight.Medium
-            ),
-            cursorBrush = androidx.compose.ui.graphics.SolidColor(Color(0xFF38BDF8)),
+        // Campo de búsqueda D-Pad con activación en dos toques (1: foco/salto, 2: ingresar texto)
+        Box(
             modifier = Modifier
                 .weight(1f)
                 .height(44.dp)
-                .onFocusChanged { isSearchFocused = it.isFocused }
+                .onFocusChanged { isBoxFocused = it.isFocused }
+                .focusable(!isEditingText)
+                .clickable {
+                    if (!isEditingText) {
+                        isEditingText = true
+                        keyboardController?.show()
+                    }
+                }
                 .background(Color(0xFF1E182A), RoundedCornerShape(10.dp))
                 .border(
-                    width = if (isSearchFocused) 2.dp else 1.dp,
-                    color = if (isSearchFocused) Color(0xFF38BDF8) else Color(0xFF2D223F),
+                    width = if (isEditingText || isBoxFocused) 2.dp else 1.dp,
+                    color = if (isEditingText) Color(0xFF38BDF8) else if (isBoxFocused) Color(0xFF93C5FD) else Color(0xFF2D223F),
                     shape = RoundedCornerShape(10.dp)
                 )
                 .padding(horizontal = 12.dp),
-            decorationBox = { innerTextField ->
+            contentAlignment = Alignment.CenterStart
+        ) {
+            if (isEditingText) {
+                BasicTextField(
+                    value = searchQuery,
+                    onValueChange = onSearchQueryChange,
+                    singleLine = true,
+                    textStyle = androidx.compose.ui.text.TextStyle(
+                        color = Color.White,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Medium
+                    ),
+                    cursorBrush = androidx.compose.ui.graphics.SolidColor(Color(0xFF38BDF8)),
+                    modifier = Modifier.fillMaxWidth(),
+                    decorationBox = { innerTextField ->
+                        Row(modifier = Modifier.fillMaxSize(), verticalAlignment = Alignment.CenterVertically) {
+                            Text("⌨️ ", fontSize = 13.sp)
+                            Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
+                                if (searchQuery.isEmpty()) {
+                                    Text("Escribiendo... pulsa enter o atrás al terminar", fontSize = 12.sp, color = Color(0xFF64748B))
+                                }
+                                innerTextField()
+                            }
+                            if (searchQuery.isNotBlank()) {
+                                Box(modifier = Modifier.size(24.dp).clickable { onSearchQueryChange("") }, contentAlignment = Alignment.Center) {
+                                    Text("✕", color = Color(0xFF94A3B8), fontSize = 12.sp)
+                                }
+                            }
+                        }
+                    }
+                )
+            } else {
                 Row(
                     modifier = Modifier.fillMaxSize(),
                     verticalAlignment = Alignment.CenterVertically
@@ -77,26 +115,23 @@ fun TvSortFilterBar(
                     Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
                         if (searchQuery.isEmpty()) {
                             Text(
-                                "Buscar en TV...",
+                                if (isBoxFocused) "Presiona [OK / Centro] para escribir texto" else "Buscar en TV...",
                                 fontSize = 13.sp,
-                                color = Color(0xFF64748B)
+                                color = if (isBoxFocused) Color(0xFF38BDF8) else Color(0xFF64748B),
+                                fontWeight = if (isBoxFocused) FontWeight.Bold else FontWeight.Normal
                             )
+                        } else {
+                            Text(searchQuery, fontSize = 13.sp, color = Color.White, fontWeight = FontWeight.Medium)
                         }
-                        innerTextField()
                     }
                     if (searchQuery.isNotBlank()) {
-                        Box(
-                            modifier = Modifier
-                                .size(24.dp)
-                                .clickable { onSearchQueryChange("") },
-                            contentAlignment = Alignment.Center
-                        ) {
+                        Box(modifier = Modifier.size(24.dp).clickable { onSearchQueryChange("") }, contentAlignment = Alignment.Center) {
                             Text("✕", color = Color(0xFF94A3B8), fontSize = 12.sp)
                         }
                     }
                 }
             }
-        )
+        }
 
         // Botones de orden para control remoto D-Pad
         Row(

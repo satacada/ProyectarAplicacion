@@ -81,28 +81,15 @@ fun TvDownloadMovieDialog(
                     overflow = TextOverflow.Ellipsis
                 )
 
-                // Recuadro de advertencia obligatoria de saturación de disco y uso como puente
                 Surface(
                     color = Color(0xFF2D161E),
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(10.dp),
                     border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFF43F5E)),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Column(
-                        modifier = Modifier.padding(12.dp),
-                        verticalArrangement = Arrangement.spacedBy(5.dp)
-                    ) {
-                        Text(
-                            text = "🚨 IMPORTANTE: Tu TV Box tiene almacenamiento limitado y se llenará su disco si acumulas películas.",
-                            color = Color(0xFFFDA4AF),
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.ExtraBold
-                        )
-                        Text(
-                            text = "• Usa esta descarga en la TV únicamente como PUENTE TEMPORAL.\n• Debes pasar la película a otro dispositivo (Memoria USB / Disco Externo / PC) y luego pulsar 'Limpiar Archivo Puente'.",
-                            color = Color(0xFFE2E8F0),
-                            fontSize = 11.sp
-                        )
+                    Column(modifier = Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                        Text("🚨 IMPORTANTE: Almacenamiento limitado en TV.", color = Color(0xFFFDA4AF), fontSize = 11.sp, fontWeight = FontWeight.ExtraBold)
+                        Text("• Descarga como puente temporal en 'Pelis_descargas'. Tras copiarla, usa 'Borrar Descarga'.", color = Color(0xFFE2E8F0), fontSize = 10.5.sp)
                     }
                 }
 
@@ -111,7 +98,7 @@ fun TvDownloadMovieDialog(
                 Surface(
                     color = Color(0xFF131926),
                     shape = RoundedCornerShape(12.dp),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF38BDF8)),
+                    border = androidx.compose.foundation.BorderStroke(1.5.dp, Color(0xFF38BDF8)),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     if (info == null) {
@@ -120,21 +107,54 @@ fun TvDownloadMovieDialog(
                         }
                     } else {
                         val sizePrefix = if (info.isExactMovieSize) "" else "~"
+                        val usedBytes = (info.totalBytes - info.freeBytes).coerceAtLeast(0L)
                         Column(
                             modifier = Modifier.padding(12.dp),
-                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                            verticalArrangement = Arrangement.spacedBy(5.dp)
                         ) {
+                            Surface(
+                                color = Color(0xFF1E293B),
+                                shape = RoundedCornerShape(8.dp),
+                                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF0284C7)),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    Text("📁", fontSize = 13.sp)
+                                    Column {
+                                        Text("Carpeta de descarga:", color = Color(0xFF94A3B8), fontSize = 10.sp)
+                                        Text(
+                                            text = if (info.hasUsbDrive) "USB (${info.usbLabel})/Pelis_descargas" else "Descargas / Pelis_descargas",
+                                            color = Color(0xFF38BDF8),
+                                            fontSize = 12.sp,
+                                            fontWeight = FontWeight.ExtraBold
+                                        )
+                                    }
+                                }
+                            }
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                Text("💾 Espacio libre actual en TV:", color = Color(0xFF94A3B8), fontSize = 11.sp)
+                                Text("💾 Espacio TV ocupado / total:", color = Color(0xFF94A3B8), fontSize = 11.sp)
                                 Text(
-                                    text = "${TvDownloadManager.formatBytes(info.freeBytes)} libres (de ${TvDownloadManager.formatBytes(info.totalBytes)})",
+                                    text = "${TvDownloadManager.formatBytes(usedBytes)} / ${TvDownloadManager.formatBytes(info.totalBytes)}",
+                                    color = Color(0xFFE2E8F0),
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            }
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                Text("🟢 Espacio libre actual:", color = Color(0xFF94A3B8), fontSize = 11.sp)
+                                Text(
+                                    text = "${TvDownloadManager.formatBytes(info.freeBytes)} libres",
                                     color = Color(0xFF34D399),
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.ExtraBold
                                 )
                             }
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                Text("🎬 Espacio que ocupará la película:", color = Color(0xFF94A3B8), fontSize = 11.sp)
+                                Text("🎬 Peso de esta película:", color = Color(0xFF94A3B8), fontSize = 11.sp)
                                 Text(
                                     text = "$sizePrefix${TvDownloadManager.formatBytes(info.movieBytes)}",
                                     color = Color(0xFFFBBF24),
@@ -142,23 +162,6 @@ fun TvDownloadMovieDialog(
                                     fontWeight = FontWeight.ExtraBold
                                 )
                             }
-                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                Text("📊 Espacio libre tras descargar:", color = Color(0xFF94A3B8), fontSize = 11.sp)
-                                Text(
-                                    text = "$sizePrefix${TvDownloadManager.formatBytes(info.remainingBytesAfterDownload)}",
-                                    color = if (info.willExceedSafeSpace) Color(0xFFEF4444) else Color(0xFF38BDF8),
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.ExtraBold
-                                )
-                            }
-                            Text(
-                                text = if (info.hasUsbDrive) "✅ Unidad externa USB detectada: ${info.usbLabel}"
-                                else "📂 Ruta puente en TV: ${info.bridgeDirPath}",
-                                color = if (info.hasUsbDrive) Color(0xFF6EE7B7) else Color(0xFF94A3B8),
-                                fontSize = 10.sp,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
                         }
                     }
                 }
@@ -174,14 +177,14 @@ fun TvDownloadMovieDialog(
                             when {
                                 progress.errorMsg != null -> Text("❌ ${progress.errorMsg}", color = Color(0xFFF87171), fontSize = 11.sp, fontWeight = FontWeight.Bold)
                                 progress.isCompleted -> Text(
-                                    text = "✅ Descarga puente lista (${TvDownloadManager.formatBytes(progress.downloadedBytes)}). Pásala a tu USB/Dispositivo y luego límpiala.",
+                                    text = "✅ Descargada en Pelis_descargas (${TvDownloadManager.formatBytes(progress.downloadedBytes)}).",
                                     color = Color(0xFF34D399),
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.Bold,
                                     textAlign = TextAlign.Center
                                 )
                                 else -> Text(
-                                    text = "⬇️ Descargando en puente: ${progress.percent}% (${TvDownloadManager.formatBytes(progress.downloadedBytes)})",
+                                    text = "⬇️ Descargando: ${progress.percent}% (${TvDownloadManager.formatBytes(progress.downloadedBytes)})",
                                     color = Color(0xFF38BDF8),
                                     fontSize = 12.sp,
                                     fontWeight = FontWeight.ExtraBold
@@ -194,8 +197,10 @@ fun TvDownloadMovieDialog(
                 // Botones de acción
                 if (!progress.isDownloading) {
                     val hasUsb = storageInfo?.hasUsbDrive == true
+                    val downloadedFile = remember(storageInfo, progress) { TvDownloadManager.findDownloadedMovie(context, item.title) }
+
                     TvBridgeActionBtn(
-                        text = if (hasUsb) "💾 Descargar directo a Memoria USB Externa" else "⬇️ Entendido: Descargar en TV como Puente",
+                        text = if (hasUsb) "💾 Descargar a USB/Pelis_descargas" else "⬇️ Descargar en Pelis_descargas",
                         bgBase = Color(0xFFD97706),
                         onClick = {
                             val est = storageInfo?.movieBytes ?: 800_000_000L
@@ -214,19 +219,27 @@ fun TvDownloadMovieDialog(
                         }
                     )
 
-                    if ((storageInfo?.bridgeFolderBytes ?: 0L) > 0L || progress.isCompleted) {
-                        TvBridgeActionBtn(
-                            text = "🗑️ Limpiar Archivos Puente de la TV (${TvDownloadManager.formatBytes(storageInfo?.bridgeFolderBytes ?: progress.downloadedBytes)})",
-                            bgBase = Color(0xFF7F1D1D),
-                            onClick = {
-                                val freed = TvDownloadManager.clearBridgeDownloads(context)
-                                progress = TvBridgeDownloadProgress()
-                                Toast.makeText(context, "🧹 Liberados ${TvDownloadManager.formatBytes(freed)} en la TV", Toast.LENGTH_SHORT).show()
-                                scope.launch {
-                                    storageInfo = TvDownloadManager.inspectStorageAndMovie(context, item.url, item.headers, item.durationMs)
-                                }
-                            }
-                        )
+                    fun refreshStorageAndToast(freed: Long) {
+                        progress = TvBridgeDownloadProgress()
+                        scope.launch {
+                            val up = TvDownloadManager.inspectStorageAndMovie(context, item.url, item.headers, item.durationMs)
+                            storageInfo = up
+                            val used = (up.totalBytes - up.freeBytes).coerceAtLeast(0L)
+                            Toast.makeText(context, "🧹 Liberado: ${TvDownloadManager.formatBytes(freed)} | Libre: ${TvDownloadManager.formatBytes(up.freeBytes)} | Ocupado: ${TvDownloadManager.formatBytes(used)}", Toast.LENGTH_LONG).show()
+                        }
+                    }
+
+                    if (downloadedFile != null || progress.isCompleted) {
+                        val fileLen = downloadedFile?.length() ?: progress.downloadedBytes
+                        TvBridgeActionBtn("🗑️ Borrar Descarga de Película (${TvDownloadManager.formatBytes(fileLen)})", Color(0xFFDC2626)) {
+                            refreshStorageAndToast(TvDownloadManager.deleteMovieDownload(context, item.title))
+                        }
+                    }
+
+                    if ((storageInfo?.bridgeFolderBytes ?: 0L) > 0L) {
+                        TvBridgeActionBtn("🗑️ Borrar Todo en Pelis_descargas (${TvDownloadManager.formatBytes(storageInfo?.bridgeFolderBytes ?: 0L)})", Color(0xFF7F1D1D)) {
+                            refreshStorageAndToast(TvDownloadManager.clearBridgeDownloads(context))
+                        }
                     }
 
                     TvBridgeActionBtn(

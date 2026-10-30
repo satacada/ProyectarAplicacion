@@ -53,14 +53,19 @@ object TvDownloadManager {
         }
     }
 
-    private fun getBridgeDir(context: Context, useUsb: Boolean): File {
-        val extDirs = context.getExternalFilesDirs(null).filterNotNull()
-        if (useUsb && extDirs.size > 1) {
-            val usbDir = File(extDirs[1], "OmniCast_Peliculas")
-            if (usbDir.exists() || usbDir.mkdirs()) return usbDir
+    fun getBridgeDir(context: Context, useUsb: Boolean): File {
+        if (useUsb) {
+            val extDirs = context.getExternalFilesDirs(null).filterNotNull()
+            if (extDirs.size > 1) {
+                val usbDir = File(extDirs[1], "Pelis_descargas")
+                if (usbDir.exists() || usbDir.mkdirs()) return usbDir
+            }
         }
-        val base = extDirs.firstOrNull() ?: context.filesDir
-        return File(base, "OmniCast_Puente").apply { mkdirs() }
+        val publicDownloads = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+        val pelisDir = File(publicDownloads, "Pelis_descargas")
+        if (pelisDir.exists() || pelisDir.mkdirs()) return pelisDir
+        val base = context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS) ?: context.filesDir
+        return File(base, "Pelis_descargas").apply { mkdirs() }
     }
 
     suspend fun inspectStorageAndMovie(
@@ -243,10 +248,33 @@ object TvDownloadManager {
         return try { URI(baseUrl).resolve(relative).toString() } catch (_: Throwable) { relative }
     }
 
+    fun findDownloadedMovie(context: Context, title: String): File? {
+        val safeName = title.replace(Regex("[^a-zA-Z0-9_\\- ]"), "").trim().replace(' ', '_').ifBlank { "pelicula_omnicast" }
+        listOf(false, true).forEach { useUsb ->
+            val dir = getBridgeDir(context, useUsb)
+            listOf("mp4", "ts", "mkv", "webm").forEach { ext ->
+                val f = File(dir, "$safeName.$ext")
+                if (f.exists() && f.length() > 0L) return f
+            }
+        }
+        return null
+    }
+
+    fun deleteMovieDownload(context: Context, title: String): Long {
+        val f = findDownloadedMovie(context, title) ?: return 0L
+        val size = f.length()
+        return if (f.delete()) size else 0L
+    }
+
     fun clearBridgeDownloads(context: Context): Long {
-        val dir = getBridgeDir(context, false)
-        val freed = dir.listFiles()?.sumOf { it.length() } ?: 0L
-        dir.listFiles()?.forEach { runCatching { it.delete() } }
+        var freed = 0L
+        listOf(false, true).forEach { useUsb ->
+            val dir = getBridgeDir(context, useUsb)
+            dir.listFiles()?.forEach { file ->
+                freed += file.length()
+                runCatching { file.delete() }
+            }
+        }
         return freed
     }
 }

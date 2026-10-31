@@ -141,8 +141,32 @@ object MediaPlatformResolver {
         }
     }
 
+    fun resolveRudoVideo(url: String, pageUrl: String? = null): Triple<String, String?, Map<String, String>>? {
+        val target = if (url.contains("rudo.video/live/")) url else if (url.contains("rudo.video")) "https://rudo.video/live/latina" else return null
+        return try {
+            val ref = pageUrl?.takeIf { it.startsWith("http") } ?: "https://www.latina.pe/"
+            val conn = (URL(target).openConnection() as HttpURLConnection).apply {
+                connectTimeout = 4000; readTimeout = 4000
+                setRequestProperty("User-Agent", UA_MOBILE); setRequestProperty("Referer", ref)
+            }
+            if (conn.responseCode !in 200..299) { conn.disconnect(); return null }
+            val html = conn.inputStream.bufferedReader().use { it.readText() }; conn.disconnect()
+            val streamUrl = Regex("""var\s+streamURL\s*=\s*['"]([^'"]+\.m3u8[^'"]*)['"]""").find(html)?.groupValues?.get(1)
+                ?: Regex("""['"](https?://origin\.dpsgo\.com/[^'"]+\.m3u8[^'"]*)['"]""").find(html)?.groupValues?.get(1) ?: return null
+            val hdrs = mapOf("Referer" to ref, "User-Agent" to UA_MOBILE)
+            Log.i(TAG, "🎬 Rudo/Latina resuelto: $target -> $streamUrl")
+            Triple(streamUrl, "Latina TV En Vivo", hdrs)
+        } catch (e: Throwable) {
+            Log.w(TAG, "No se pudo resolver Rudo: ${e.message}"); null
+        }
+    }
+
     fun prepareStreamForPlayback(streamUrl: String, pageUrl: String, rawHeaders: Map<String, String>): Pair<String, Map<String, String>> {
         var finalUrl = BrowserUrlHelper.sanitizeMediaUrl(streamUrl)
+        if (finalUrl.contains("rudo.video")) {
+            val rudo = resolveRudoVideo(finalUrl, pageUrl)
+            if (rudo != null) finalUrl = rudo.first
+        }
         val hdrs = rawHeaders.toMutableMap()
         val host = com.omnicast.sender.stream.StreamProfileDatabase.extractHost(finalUrl)
         val learnedProfile = com.omnicast.sender.stream.StreamProfileDatabase.getProfileForHost(host)

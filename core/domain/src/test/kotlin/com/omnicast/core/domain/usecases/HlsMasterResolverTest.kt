@@ -82,6 +82,10 @@ class HlsMasterResolverTest {
         val expectedSinclairMaster = "https://fast-channels.sinclairstoryline.com/CHARGE/index.m3u8?token=123"
         assertEquals(expectedSinclairMaster, HlsMasterResolver.deriveMasterPlaylistUrl(sinclairSubvariant))
 
+        val dasErsteSubvariant = "https://derste247liveint.akamaized.net/hls/live/662735/daserste_int/master720p3200.m3u8"
+        val expectedDasErsteMaster = "https://derste247liveint.akamaized.net/hls/live/662735/daserste_int/master.m3u8"
+        assertEquals(expectedDasErsteMaster, HlsMasterResolver.deriveMasterPlaylistUrl(dasErsteSubvariant))
+
         assertNull(HlsMasterResolver.deriveMasterPlaylistUrl("https://example.com/hls/master.m3u8"))
         assertNull(HlsMasterResolver.deriveMasterPlaylistUrl("https://fast-channels.sinclairstoryline.com/CHARGE/index.m3u8"))
     }

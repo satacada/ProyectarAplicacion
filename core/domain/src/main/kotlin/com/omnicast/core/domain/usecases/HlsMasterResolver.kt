@@ -49,7 +49,7 @@ object HlsMasterResolver {
             lower.contains("/lang/") || lower.contains("_spa/") ||
             lower.contains("/subs/") || lower.contains("chunklist")) return true
         return Regex("/stream\\d+/").containsMatchIn(lower) ||
-               Regex("master\\d+p\\d+").containsMatchIn(lower) ||
+               Regex("master\\d+p").containsMatchIn(lower) ||
                Regex("index_\\d+").containsMatchIn(lower) ||
                Regex("tracks-\\d+").containsMatchIn(lower) ||
                Regex("_\\d+p\\.").containsMatchIn(lower)
@@ -94,10 +94,11 @@ object HlsMasterResolver {
             return cleanUrl.replace(folderRegex, "/master.m3u8") + query
         }
 
-        // 2. Patrón Sufijo de Resolución (Das Erste: master270p700.m3u8 -> master.m3u8)
-        val suffixRegex = Regex("master\\d+p\\d+\\.m3u8", RegexOption.IGNORE_CASE)
-        if (suffixRegex.containsMatchIn(cleanUrl)) {
-            return cleanUrl.replace(suffixRegex, "master.m3u8") + query
+        // 2. Patrón Sufijo de Resolución Akamai (Das Erste: master720p3200.m3u8 -> master.m3u8)
+        val suffixRegex = Regex("master\\d+p[^/]*\\.m3u8", RegexOption.IGNORE_CASE)
+        if (suffixRegex.containsMatchIn(fileName)) {
+            val dir = cleanUrl.substringBeforeLast('/')
+            return "$dir/${fileName.replace(suffixRegex, "master.m3u8")}$query"
         }
 
         // 3. Patrón Simétrico de Sub-variante Indexada (${base}_\d+.m3u8 -> ${base}.m3u8)

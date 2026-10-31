@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 303,
-  "versionCodeReceiver": 286,
-  "versionName": "3.5.52",
-  "releaseTag": "v3.5.52",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.52/omnicast-sender-v3.5.52.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.52/omnicast-receiver-v3.5.52.apk",
-  "changelog": "v3.5.52: 1) Deduplicación Estricta y Filtrado de Sub-Listas de Audio HLS (RFC 8216 / PelisGO / TNMR): Exclusión de /lang/, _spa/, /audio/ y unificación canónica de ID en .urlset, colapsando sublistas a 1 única opción Master limpia. 2) Auto-Apertura Proactiva Estable: Supresión de reseteo de descarte por popups publicitarios y apertura inmediata sin debouncing bloqueante. 3) Gobernanza SQLite de Credenciales XHR: X-With-Credentials administrado por host y auto-recuperación sin credenciales ante rechazo CORS wildcard."
+  "versionCodeSender": 304,
+  "versionCodeReceiver": 287,
+  "versionName": "3.5.53",
+  "releaseTag": "v3.5.53",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.53/omnicast-sender-v3.5.53.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.53/omnicast-receiver-v3.5.53.apk",
+  "changelog": "v3.5.53: 1) Re-Ascenso y Restauración Total de Audio en Canales Akamai RFC 8216 (Das Erste): Detección y transformación de subvariantes de solo video (master720p3200.m3u8) hacia master.m3u8 validado mediante análisis interno de contenido (#EXT-X-STREAM-INF / #EXT-X-MEDIA:TYPE=AUDIO) sin quemar tokens efímeros. 2) Auto-Apertura Resiliente ante Popups y Gesto Activo de Play (PelisGO / PelisPlus): Descarte de auto-apertura condicionado exclusivamente al cierre deliberado del modal, y reseteo inmediato ante eventos de Play real del usuario. 3) Adaptador Modular Rudo Video (Latina TV En Vivo): Resolución automática de iframes rudo.video hacia flujos Akamai/Google DAI con cabeceras de origen legítimas."
 }

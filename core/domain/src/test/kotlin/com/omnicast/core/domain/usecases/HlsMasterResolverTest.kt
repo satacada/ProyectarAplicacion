@@ -66,6 +66,8 @@ class HlsMasterResolverTest {
         assertTrue(HlsMasterResolver.isMasterPlaylistUrl("https://cdn.example.com/hls/master.m3u8"))
         assertTrue(HlsMasterResolver.isMasterPlaylistUrl("https://cdn.example.com/hls/playlist.m3u8?token=abc"))
         assertTrue(HlsMasterResolver.isMasterPlaylistUrl("https://fast-channels.sinclairstoryline.com/CHARGE/index.m3u8"))
+        assertFalse(HlsMasterResolver.isMasterPlaylistUrl("https://linear901-oo-hls0-prd-gtm.delivery.skycdp.com/v1/master/stream04/streamPlaylist.m3u8"))
+        assertFalse(HlsMasterResolver.isMasterPlaylistUrl("https://fast-channels.sinclairstoryline.com/CHARGE/index_2.m3u8"))
         assertFalse(HlsMasterResolver.isMasterPlaylistUrl("https://cdn.example.com/hls/masteraudio1-A-20261030_02679.aac"))
         assertFalse(HlsMasterResolver.isMasterPlaylistUrl("https://cdn.example.com/hls/masteraudio1.m3u8"))
     }

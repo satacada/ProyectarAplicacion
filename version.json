@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 298,
-  "versionCodeReceiver": 281,
-  "versionName": "3.5.47",
-  "releaseTag": "v3.5.47",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.47/omnicast-sender-v3.5.47.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.47/omnicast-receiver-v3.5.47.apk",
-  "changelog": "v3.5.47: 1) Generalización Absoluta de Nombres Maestros HLS en SQLite (MASTER_NAME): StreamProfileDatabase administra dinámicamente el conjunto masterFileNames (master.m3u8, playlist.m3u8, index.m3u8), sincronizable y aprendible en caliente. 2) Re-ascenso Simétrico Universal: Regla matemática pura ${base}_\\d+.m3u8 -> ${base}.m3u8 agnóstica a dominios y CDNs."
+  "versionCodeSender": 299,
+  "versionCodeReceiver": 282,
+  "versionName": "3.5.48",
+  "releaseTag": "v3.5.48",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.48/omnicast-sender-v3.5.48.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.48/omnicast-receiver-v3.5.48.apk",
+  "changelog": "v3.5.48: 1) Restauración Total de Audio en Canales Demuxed RFC 8216 (Sky News): HlsMasterResolver implementa delimitación estricta de segmento exacto mediante substringAfterLast('/'), impidiendo que sub-variantes de video compuesto (streamPlaylist.m3u8) colisionen con playlist.m3u8 y garantizando su re-ascenso a master.m3u8. 2) Estatuto de Intocabilidad de lo Probado y Blindaje Operativo en AGENTS.md: Reglas inviolables de oráculo de tests previo a releases y separación estricta entre consultas del usuario y órdenes de modificación de código."
 }

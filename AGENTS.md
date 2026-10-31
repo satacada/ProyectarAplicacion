@@ -14,8 +14,7 @@ Este repositorio sigue el estándar abierto AGENTS.md para el desarrollo de la a
 ## 2. ESTRATEGIA DE PRUEBAS
 - **Unidades Nativas:** Probar codificación/decodificación y formateo de datos en ':core' con JUnit/Mockito.
 - **Pruebas de Red:** Verificar manejo de excepciones de Timeout y desconexión en ':app-sender' y ':app-receiver'.
-- **Ejecución del Oráculo:** Todo cambio debe validar la compilación y tests ejecutando:
-  .\gradlew.bat clean build
+- **Ejecución del Oráculo (BLOQUEANTE):** Queda terminantemente PROHIBIDO compilar una versión de release (`assembleRelease`) o publicar en GitHub Releases sin haber ejecutado previamente `./gradlew :core:domain:test` y verificado que el 100% de los tests pasen exitosamente con 0 fallos.
 
 ---
 
@@ -24,12 +23,14 @@ Este repositorio sigue el estándar abierto AGENTS.md para el desarrollo de la a
 - **Diseño de Código:** Aplicar 'Fail Fast' (evitar 'if-else' anidados). Sin 'Magic Numbers' o puertos de red 'hardcoded'.
 - **Comentarios:** Solo explicar el 'POR QUÉ' de un parche o limitación técnica del hardware. Prohibido narrar lo que hace el código.
 - **Catálogo de Versiones:** Declarar dependencias únicamente en 'gradle/libs.versions.toml'.
+- **Ley de Intocabilidad de lo Probado:** Toda funcionalidad, pantalla, extractor, flujo de red, cálculo de escala o reproductor validado y aprobado por el usuario queda **SELLADO E INMUTABLE**. Queda PROHIBIDO refactorizarlo, reescribirlo, simplificarlo o "generalizarlo" bajo pretexto de elegancia o modularidad. Si funciona, no se toca.
+- **Separación entre Consulta del Usuario y Orden de Modificación:** Ante una consulta teórica, pregunta conceptual ("¿qué pasó con esto?", "¿cómo funciona?", "¿por qué?") o análisis solicitado por el usuario, la IA responderá ÚNICAMENTE con diagnóstico, datos y explicación técnica. Queda TERMINANTEMENTE PROHIBIDO modificar archivos, ejecutar refactorizaciones o crear commits como reacción a una consulta. Toda modificación de código requiere una instrucción explícita del usuario o la aprobación previa de una propuesta.
 
 ---
 
 ## 4. CONTROL DE VERSIONES (GIT)
 - **Mensajes de Commit:** Usar Convención Estándar: 'feat(modulo): descripción', 'fix(modulo): descripción'.
-- **Ámbito Acotado:** Cada tarea debe modificar únicamente los archivos necesarios sin refactorizaciones ajenas no solicitadas.
+- **Ámbito Acotado y Cero Efecto Mariposa:** Cada tarea debe modificar únicamente los archivos estrictamente necesarios sin refactorizaciones ajenas no solicitadas. Prohibido alterar utilitarios globales compartidos para solucionar la anomalía de una web individual.
 
 ---
 
@@ -139,6 +140,10 @@ Queda terminantemente PROHIBIDO compilar o proponer una versión sin auditar pre
 11. **Cláusula Cerrojo de Inviolabilidad Arquitectónica y Protección de Flujos Operativos [BLOQUEANTE]:**
    - Antes de proponer o aplicar cualquier cambio para un portal de películas o videos específico, el agente DEBE verificar que no altere el funcionamiento ni degrade los sitios que ya operan con total estabilidad: PelisGO, Spider-Man, LuluStream, TNMR, Canela.tv, ok.ru, YouTube, Dailymotion y portales de fútbol/deportes en vivo (808ball).
    - Queda TERMINANTEMENTE PROHIBIDO romper o desestabilizar flujos globales por intentar parchar un sitio individual. Toda adaptación para un nuevo portal debe ser un adaptador modular aislado según el Principio "Poner y Sacar" (Sección 6).
+12. **Delimitación Estricta de Nombres de Archivo y Rutas URL (Ley Anti-Colisión de Subcadenas / RFC 8216) [BLOQUEANTE]:**
+   - Toda verificación o comparación de nombres de manifiestos HLS (`master.m3u8`, `playlist.m3u8`, `index.m3u8`, etc.) DEBE realizarse obligatoriamente mediante coincidencia exacta del segmento final de ruta (`url.substringAfterLast('/').equals(name, ignoreCase = true)`) o exigiendo delimitador de barra (`endsWith("/$name")`).
+   - Queda TERMINANTEMENTE PROHIBIDO usar `endsWith(name)` libre sin delimitador de ruta para evitar que sub-variantes de video compuesto (como `streamPlaylist.m3u8` de Sky News) colisionen con `playlist.m3u8`, lo cual desactiva el re-ascenso a master y deja la transmisión en vivo sin audio en la TV Box.
+
 
 
 

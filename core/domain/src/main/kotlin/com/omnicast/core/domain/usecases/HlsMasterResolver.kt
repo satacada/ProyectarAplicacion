@@ -61,7 +61,8 @@ object HlsMasterResolver {
         if (isLikelySubVariantUrl(url)) return false
         val clean = url.lowercase().substringBefore('?')
         if (!clean.endsWith(".m3u8") && !clean.contains(".m3u8") && !clean.endsWith(".txt")) return false
-        return masterFileNames.any { clean.endsWith("/$it") || clean.endsWith(it) }
+        val fileName = clean.substringAfterLast('/')
+        return masterFileNames.any { fileName.equals(it, ignoreCase = true) }
     }
 
     /**
@@ -72,7 +73,8 @@ object HlsMasterResolver {
         val cleanUrl = url.substringBefore('?')
         val query = if (url.contains('?')) "?" + url.substringAfter('?') else ""
 
-        if (masterFileNames.any { cleanUrl.endsWith("/$it", ignoreCase = true) || cleanUrl.endsWith(it, ignoreCase = true) }) return null
+        val fileName = cleanUrl.substringAfterLast('/')
+        if (masterFileNames.any { fileName.equals(it, ignoreCase = true) }) return null
 
         val lower = cleanUrl.lowercase()
         if (lower.contains("dropcdn.io") || lower.contains("dr0pstream.com")) return null

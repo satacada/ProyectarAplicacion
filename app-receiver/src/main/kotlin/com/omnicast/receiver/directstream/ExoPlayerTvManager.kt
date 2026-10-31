@@ -145,8 +145,7 @@ class ExoPlayerTvManager(private val context: Context) {
             return
         }
         initialize(branch)
-        val cleanUrl = com.omnicast.core.domain.usecases.StreamManifestProbe.sanitizeMediaUrl(url)
-        val effectiveUrl = com.omnicast.core.domain.usecases.HlsMasterResolver.deriveMasterPlaylistUrl(cleanUrl) ?: cleanUrl
+        val effectiveUrl = com.omnicast.core.domain.usecases.HlsMasterResolver.deriveMasterPlaylistUrl(url) ?: url
         currentUrl = effectiveUrl; currentTitle = title; currentHeaders = headers; isRetryingClean = false
 
         val safeHeaders = filterSafeHeaders(effectiveUrl, headers)
@@ -187,8 +186,7 @@ class ExoPlayerTvManager(private val context: Context) {
     fun playClean(url: String, title: String? = null, startPositionMs: Long = 0L, branch: com.omnicast.core.domain.models.MediaBranch = activeBranch, subtitles: List<com.omnicast.core.protocol.SignalingMessage.SubtitleTrack> = emptyList()) {
         if (url.contains("stub.mp4", ignoreCase = true) || url.contains("dummy.mp4", ignoreCase = true)) return
         initialize(branch)
-        val cleanUrl = com.omnicast.core.domain.usecases.StreamManifestProbe.sanitizeMediaUrl(url)
-        val effectiveUrl = com.omnicast.core.domain.usecases.HlsMasterResolver.deriveMasterPlaylistUrl(cleanUrl) ?: cleanUrl
+        val effectiveUrl = com.omnicast.core.domain.usecases.HlsMasterResolver.deriveMasterPlaylistUrl(url) ?: url
         runCatching {
             val mediaItem = buildMediaItem(effectiveUrl, title, branch, subtitles)
             val safe = filterSafeHeaders(effectiveUrl, emptyMap())

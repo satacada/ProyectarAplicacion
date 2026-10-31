@@ -41,7 +41,7 @@ object CloudStreamRuleSyncManager {
         isSyncing = true
         scope.launch {
             try {
-                var loaded = parseRulesEndpoint("$SUPABASE_RULES_URL?select=host,branch,bypass_proxy&order=last_verified_at.desc&limit=100")
+                var loaded = parseRulesEndpoint("$SUPABASE_RULES_URL?select=host,branch,bypass_proxy,headers&order=last_verified_at.desc&limit=100")
                 if (!loaded) loaded = parseLogsEndpoint("$SUPABASE_LOGS_URL?tag=eq.STREAM_PROFILE_VERIFIED&order=created_at.desc&limit=50")
                 if (loaded) {
                     context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit().putLong(KEY_LAST_SYNC, System.currentTimeMillis()).apply()
@@ -65,9 +65,15 @@ object CloudStreamRuleSyncManager {
             val host = item.optString("host", "").trim().lowercase()
             val branchStr = item.optString("branch", "VOD_HLS_MP4")
             val bypass = item.optBoolean("bypass_proxy", true)
+            val hdrsMap = mutableMapOf<String, String>()
+            val hdrsObj = item.optJSONObject("headers")
+            if (hdrsObj != null) {
+                val keys = hdrsObj.keys()
+                while (keys.hasNext()) { val k = keys.next(); hdrsMap[k] = hdrsObj.optString(k, "") }
+            }
             if (host.isNotBlank()) {
                 val branch = MediaBranch.entries.firstOrNull { it.name == branchStr } ?: MediaBranch.VOD_HLS_MP4
-                db.recordSuccess(host, emptyMap(), bypass, branch)
+                db.recordSuccess(host, hdrsMap, bypass, branch)
             }
         }
         conn.disconnect()
@@ -88,9 +94,15 @@ object CloudStreamRuleSyncManager {
             val host = meta.optString("host", "").trim().lowercase()
             val branchStr = meta.optString("branch", "VOD_HLS_MP4")
             val bypass = meta.optBoolean("bypass_proxy", true)
+            val hdrsMap = mutableMapOf<String, String>()
+            val hdrsObj = meta.optJSONObject("headers")
+            if (hdrsObj != null) {
+                val keys = hdrsObj.keys()
+                while (keys.hasNext()) { val k = keys.next(); hdrsMap[k] = hdrsObj.optString(k, "") }
+            }
             if (host.isNotBlank()) {
                 val branch = MediaBranch.entries.firstOrNull { it.name == branchStr } ?: MediaBranch.VOD_HLS_MP4
-                db.recordSuccess(host, emptyMap(), bypass, branch)
+                db.recordSuccess(host, hdrsMap, bypass, branch)
             }
         }
         conn.disconnect()

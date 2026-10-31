@@ -26,15 +26,7 @@ object StreamManifestProbe {
     )
 
     fun sanitizeMediaUrl(url: String): String {
-        if (url.isBlank()) return url
-        if (url.contains(".dropcdn.io", true) && url.contains("srv=")) {
-            val srv = Regex("[?&]srv=([^&]+)").find(url)?.groupValues?.get(1)
-            if (!srv.isNullOrBlank()) {
-                return url.replace(Regex("https?://r\\d+\\.dropcdn\\.io"), "https://$srv.dropcdn.io")
-                          .replace(Regex("https?://[^/]+\\.dropcdn\\.io(?=/hls)"), "https://$srv.dropcdn.io")
-            }
-        }
-        return url
+        return url.trim()
     }
 
     val DEFAULT_HOST_PROFILES: Map<String, Pair<String, Boolean>> = mapOf(

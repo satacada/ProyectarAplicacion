@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 308,
-  "versionCodeReceiver": 291,
-  "versionName": "3.5.57",
-  "releaseTag": "v3.5.57",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.57/omnicast-sender-v3.5.57.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.57/omnicast-receiver-v3.5.57.apk",
-  "changelog": "v3.5.57: 1) Gobernanza 100% SQLite y Erradicación de Hardcodeo de User-Agent: Reglas de identidad de escritorio (Windows UA) y reproductor CHROMIUM_ANTI_CORS gobernadas en la base de datos local SQLite para Fastream y DropCDN (Sacrifice), eliminando if-else rígidos. 2) TV Box Agnóstica: Eliminación de nombres de servidores de la TV Box; el interceptor nativo anti-CORS protege universalmente los flujos web contra bloqueos code=0. 3) Higiene de Memoria en Navegador Móvil: Pausa inmediata de decodificación local al transmitir a TV, previniendo saturación de RAM y render process crashes."
+  "versionCodeSender": 309,
+  "versionCodeReceiver": 292,
+  "versionName": "3.5.58",
+  "releaseTag": "v3.5.58",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.58/omnicast-sender-v3.5.58.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.58/omnicast-receiver-v3.5.58.apk",
+  "changelog": "v3.5.58: 1) Purgado de Reescritura Destructiva de Nodos en DropCDN: Erradicación del código histórico de v3.32.70 en BrowserUrlHelper y StreamManifestProbe que sustituía erróneamente r1.dropcdn.io por nodos internos RFC 1918 (ds1i.dropcdn.io / 192.168.10.23), restaurando la conexión pública directa a Sacrifice y servidores protegidos. 2) TV Box 100% Pasiva: Eliminación de mutaciones de URL en ExoPlayerTvManager. 3) Sincronización Completa de Cabeceras Cloud a SQLite: CloudStreamRuleSyncManager ahora descarga y persiste el JSON de headers desde Supabase omnicast_stream_rules."
 }

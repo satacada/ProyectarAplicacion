@@ -146,9 +146,10 @@ fun InAppBrowserScreen(
     }
 
     fun checkPlatformUrls(url: String?, title: String? = null) {
-        val isYtHost = currentUrl.lowercase().let { it.contains("youtube.com") || it.contains("youtu.be") }
-        MediaPlatformResolver.checkPlatform(url = url, title = title ?: webViewInstance?.title, onYouTube = { ytUrl, yTitle, yHdrs ->
-            if (isYtHost) { val actual = yTitle ?: webViewInstance?.title?.replace(" - YouTube", "")?.takeIf { it.isNotBlank() && it != "YouTube" } ?: "Video YouTube"; pageTitle = actual; registerStream(ytUrl, yHdrs, isPrimary = true, label = actual) }
+        val target = url ?: currentUrl; val isYtHost = target.lowercase().let { it.contains("youtube.com") || it.contains("youtu.be") }
+        val isMoviePage = BrowserUrlHelper.isMovieOrVideoPage(currentUrl)
+        MediaPlatformResolver.checkPlatform(url = target, title = title ?: webViewInstance?.title, onYouTube = { ytUrl, yTitle, yHdrs ->
+            if (isYtHost || !isMoviePage) { val actual = yTitle ?: webViewInstance?.title?.replace(" - YouTube", "")?.takeIf { it.isNotBlank() && it != "YouTube" } ?: "Video YouTube"; pageTitle = actual; registerStream(ytUrl, yHdrs, isPrimary = true, label = actual) }
         }, onDailymotion = { sUrl, dTitle, dHdrs ->
             val actual = dTitle ?: webViewInstance?.title?.replace(" - Dailymotion", "")?.takeIf { it.isNotBlank() && it != "Dailymotion" } ?: "Video Dailymotion"; pageTitle = actual; registerStream(sUrl, dHdrs, isPrimary = true, label = actual)
         })

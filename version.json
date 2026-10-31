@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 299,
-  "versionCodeReceiver": 282,
-  "versionName": "3.5.48",
-  "releaseTag": "v3.5.48",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.48/omnicast-sender-v3.5.48.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.48/omnicast-receiver-v3.5.48.apk",
-  "changelog": "v3.5.48: 1) Restauración Total de Audio en Canales Demuxed RFC 8216 (Sky News): HlsMasterResolver implementa delimitación estricta de segmento exacto mediante substringAfterLast('/'), impidiendo que sub-variantes de video compuesto (streamPlaylist.m3u8) colisionen con playlist.m3u8 y garantizando su re-ascenso a master.m3u8. 2) Estatuto de Intocabilidad de lo Probado y Blindaje Operativo en AGENTS.md: Reglas inviolables de oráculo de tests previo a releases y separación estricta entre consultas del usuario y órdenes de modificación de código."
+  "versionCodeSender": 300,
+  "versionCodeReceiver": 283,
+  "versionName": "3.5.49",
+  "releaseTag": "v3.5.49",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.49/omnicast-sender-v3.5.49.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.49/omnicast-receiver-v3.5.49.apk",
+  "changelog": "v3.5.49: 1) Captura Automática Temprana de Video (PelisPlus / PelisGO / iframes): WvcDomSniffer se inyecta desde progreso temprano (p == 25, 50, 100), garantizando que los listeners de Play en elementos video estén armados antes de la carga completa del DOM y capturando la película en el primer clic. 2) Purga de Dominios Hardcodeados y Filtrado Estándar RFC (UniversalHlsExtractorAdapter): Se eliminan nombres fijos (swdyu, morencius, cloudemb) y se valida universalmente por tipo de medio descartando páginas HTML de incrustación (/embed/ y /e/). 3) Detección de YouTube en Portales Externos y SPA (Espreso TV / Búsquedas): Permite transmisiones de YouTube en páginas externas que no sean de películas (!isMovieOrVideoPage), garantizando la reproducción de canales como Espreso TV, y resuelve búsquedas dinámicas de YouTube (Televisa Guadalajara / NatGeo) en la navegación SPA."
 }

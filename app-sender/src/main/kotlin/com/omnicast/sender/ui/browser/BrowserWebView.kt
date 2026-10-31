@@ -246,7 +246,7 @@ fun BrowserWebView(
                         onProgress(p)
                         if (p >= 80) swipeRefresh.isRefreshing = false
                         if (isAdBlockEnabled && (p == 30 || p == 60 || p == 100)) v?.evaluateJavascript(AdBlocker.getAdHidingScript(), null)
-                        if (p == 100) v?.evaluateJavascript(WvcDomSniffer.getInjectionScript(ctx), null)
+                        if (p == 25 || p == 50 || p == 100) v?.evaluateJavascript(WvcDomSniffer.getInjectionScript(ctx), null)
                     }
 
                     override fun onReceivedTitle(v: WebView?, title: String?) {

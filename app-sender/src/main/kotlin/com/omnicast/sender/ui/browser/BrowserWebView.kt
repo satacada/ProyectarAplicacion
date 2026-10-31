@@ -228,7 +228,10 @@ fun BrowserWebView(
                             val detectedStream = com.omnicast.sender.ui.browser.extractors.StreamExtractorRegistry.useCase.execute(candidate)
                             if (detectedStream != null) {
                                 val hdrs = BrowserUrlHelper.buildSafeHeaders(detectedStream.url, docUrl, UA_MOBILE, detectedStream.headers)
-                                post { onStreamIntercepted(detectedStream.url, hdrs, detectedStream.isMaster) }
+                                post {
+                                    v?.evaluateJavascript("try{document.querySelectorAll('video, audio').forEach(function(el){el.pause();});}catch(_){}", null)
+                                    onStreamIntercepted(detectedStream.url, hdrs, detectedStream.isMaster)
+                                }
                             }
                             super.shouldInterceptRequest(v, r)
                         } catch (_: Throwable) {

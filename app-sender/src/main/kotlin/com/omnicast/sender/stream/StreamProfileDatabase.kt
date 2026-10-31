@@ -180,8 +180,11 @@ class StreamProfileDatabase private constructor(context: Context) :
             if (!host.contains('.')) continue
             val (targetPlayer, singleUse) = cfg
             val existing = cache[host]
-            if (existing == null || existing.headers["X-Target-Player"].isNullOrBlank()) {
-                val seedHeaders = mapOf("X-Target-Player" to targetPlayer, "X-Single-Use-Token" to singleUse.toString())
+            if (existing == null || existing.headers["X-Target-Player"].isNullOrBlank() || (targetPlayer == "CHROMIUM_ANTI_CORS" && existing.headers["User-Agent"].isNullOrBlank())) {
+                val seedHeaders = mutableMapOf("X-Target-Player" to targetPlayer, "X-Single-Use-Token" to singleUse.toString())
+                if (targetPlayer == "CHROMIUM_ANTI_CORS" || host.contains("dropcdn") || host.contains("dr0pstream") || host.contains("fastream")) {
+                    seedHeaders["User-Agent"] = com.omnicast.sender.ui.browser.MediaPlatformResolver.UA_FASTREAM
+                }
                 val merged = (existing?.headers ?: emptyMap()) + seedHeaders
                 recordSuccess(host, merged, true, MediaBranch.VOD_HLS_MP4)
             }

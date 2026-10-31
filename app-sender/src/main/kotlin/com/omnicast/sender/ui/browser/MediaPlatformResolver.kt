@@ -173,27 +173,13 @@ object MediaPlatformResolver {
         if (learnedProfile != null) {
             learnedProfile.headers.forEach { (k, v) -> if (hdrs[k].isNullOrBlank()) hdrs[k] = v }
         }
-        val lower = finalUrl.lowercase()
-        val isDrop = lower.contains("dropcdn.io") || lower.contains("dr0pstream.com")
-        val isFastream = lower.contains("fastream.to")
-        if (isDrop) {
-            val id = extractFastreamId(finalUrl)
-            if (id != null) {
-                hdrs["Referer"] = "https://dr0pstream.com/e/$id"
-            }
-            hdrs.remove("Origin")
-        } else if (isFastream) {
-            val id = extractFastreamId(finalUrl)
-            if (id != null) {
-                val embed = "https://fastream.to/embed-$id.html"
-                val curRef = hdrs["Referer"] ?: ""
-                if (curRef.isBlank() || !curRef.contains("fastream.to")) {
-                    hdrs["Referer"] = embed
-                    hdrs["Origin"] = "https://fastream.to"
-                }
-            }
+        val id = extractFastreamId(finalUrl)
+        if (id != null) {
+            val isDrop = finalUrl.contains("dropcdn.io", true) || finalUrl.contains("dr0pstream.com", true)
+            hdrs["Referer"] = if (isDrop) "https://dr0pstream.com/e/$id" else "https://fastream.to/embed-$id.html"
+            if (isDrop) hdrs.remove("Origin") else hdrs["Origin"] = "https://fastream.to"
         }
-        val ua = if (isFastream) UA_FASTREAM else UA_MOBILE
+        val ua = hdrs["User-Agent"] ?: learnedProfile?.headers?.get("User-Agent") ?: UA_MOBILE
         val safeHeaders = BrowserUrlHelper.buildSafeHeaders(finalUrl, pageUrl, ua, hdrs)
         return Pair(finalUrl, safeHeaders)
     }

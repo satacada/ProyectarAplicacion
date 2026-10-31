@@ -38,8 +38,8 @@ object StreamManifestProbe {
     }
 
     val DEFAULT_HOST_PROFILES: Map<String, Pair<String, Boolean>> = mapOf(
-        "dropcdn.io" to ("WEBVIEW" to true), "dr0pstream.com" to ("WEBVIEW" to true), "pelisplus.hair" to ("WEBVIEW" to true),
-        "fastream.to" to ("WEBVIEW" to true), "luluvdo.com" to ("WEBVIEW" to true), "lulustream.com" to ("WEBVIEW" to true),
+        "dropcdn.io" to ("CHROMIUM_ANTI_CORS" to true), "dr0pstream.com" to ("CHROMIUM_ANTI_CORS" to true), "pelisplus.hair" to ("WEBVIEW" to true),
+        "fastream.to" to ("CHROMIUM_ANTI_CORS" to true), "luluvdo.com" to ("WEBVIEW" to true), "lulustream.com" to ("WEBVIEW" to true),
         "pelisgo.online" to ("WEBVIEW" to true), "pelisgo" to ("WEBVIEW" to true), "tnmr.org" to ("EXOPLAYER" to true),
         "boltdns.net" to ("EXOPLAYER" to false), "canela.tv" to ("EXOPLAYER" to false), "okcdn.ru" to ("EXOPLAYER" to false),
         "mycdn.me" to ("EXOPLAYER" to false), "ok.ru" to ("EXOPLAYER" to false), "spark.9bg.net" to ("EXOPLAYER" to false),

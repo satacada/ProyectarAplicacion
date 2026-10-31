@@ -38,7 +38,7 @@ fun InAppBrowserScreen(
     val detectedStreams = remember { mutableStateListOf<String>() }; val streamHeaders = remember { mutableStateMapOf<String, Map<String, String>>() }; val streamLabels = remember { mutableStateMapOf<String, String>() }; val streamDurations = remember { mutableStateMapOf<String, Float>() }
     var qualityOptions by remember { mutableStateOf<List<StreamQualityOption>>(emptyList()) }; var showOptionsSheet by remember { mutableStateOf(false) }; var showSideDrawer by remember { mutableStateOf(false) }; var showWhitelistDialog by remember { mutableStateOf(false) }; var showBottomControls by rememberSaveable { mutableStateOf(ActiveStreamHolder.isCasting.value && ActiveStreamHolder.isPlaying.value) }
     var videoToSave by remember { mutableStateOf<HistoryItem?>(null) }; var webViewInstance by remember { mutableStateOf<WebView?>(null) }; var popupWebView by remember { mutableStateOf<WebView?>(null) }
-    var playlistsVersion by remember { mutableIntStateOf(0) }; val scope = rememberCoroutineScope(); var userDismissedSheetForUrl by rememberSaveable { mutableStateOf("") }; var autoOpenJob by remember { mutableStateOf<kotlinx.coroutines.Job?>(null) }
+    var playlistsVersion by remember { mutableIntStateOf(0) }; val scope = rememberCoroutineScope(); var userDismissedSheetForUrl by rememberSaveable { mutableStateOf("") }; var autoOpenJob by remember { mutableStateOf<kotlinx.coroutines.Job?>(null) }; var castingPageUrl by rememberSaveable { mutableStateOf("") }
     val isCasting by ActiveStreamHolder.isCasting.collectAsState(); val isPlaying by ActiveStreamHolder.isPlaying.collectAsState()
     val posMs by ActiveStreamHolder.positionMs.collectAsState(); val durMs by ActiveStreamHolder.durationMs.collectAsState(); val volume by ActiveStreamHolder.volume.collectAsState(); val castTitle by ActiveStreamHolder.currentMediaTitle.collectAsState()
 
@@ -129,10 +129,9 @@ fun InAppBrowserScreen(
         ActiveStreamHolder.update(primaryUrl, cleanT, streamHeaders[primaryUrl] ?: hdrs)
         android.util.Log.i("StreamDetection", "🎬 Flujo registrado [isMaster=$isM, freshToken=true]: $targetUrl")
         if (isPrimary) userDismissedSheetForUrl = ""
-        if (!showOptionsSheet && !isCasting && userDismissedSheetForUrl != currentUrl) {
-            if (autoOpenJob?.isActive != true) {
-                autoOpenJob = scope.launch { kotlinx.coroutines.delay(250); if (!showOptionsSheet && !isCasting && detectedStreams.any { isRealMedia(it) }) openOptionsSheet() }
-            }
+        val isNewPage = currentUrl.isNotBlank() && currentUrl != castingPageUrl
+        if (!showOptionsSheet && (!isCasting || isPrimary || isNewPage) && userDismissedSheetForUrl != currentUrl && autoOpenJob?.isActive != true) {
+            autoOpenJob = scope.launch { kotlinx.coroutines.delay(250); if (!showOptionsSheet && (!isCasting || isPrimary || isNewPage) && detectedStreams.any { isRealMedia(it) }) openOptionsSheet() }
         }
     }
 
@@ -156,10 +155,11 @@ fun InAppBrowserScreen(
         if (url.isBlank()) return
         val cleanT = if (title.isNotBlank() && title != "Cargando..." && title != "Transmisión") title else pageTitle
         val refPage = savedPageUrl?.takeIf { it.isNotBlank() } ?: currentUrl
-        pageTitle = cleanT; com.omnicast.sender.history.NavigationTrackManager.saveTrackLocally(context, refPage, cleanT)
+        castingPageUrl = refPage; pageTitle = cleanT; com.omnicast.sender.history.NavigationTrackManager.saveTrackLocally(context, refPage, cleanT)
         scope.launch(Dispatchers.IO) {
             val isForceProxy = hdrs["X-Force-Proxy"] == "true"; val cand = com.omnicast.core.domain.usecases.HlsMasterResolver.deriveMasterPlaylistUrl(url)
-            val effUrl = if (cand == null) url else if (com.omnicast.core.domain.usecases.StreamManifestProbe.hasSignedSecurityToken(cand)) cand else {
+            val isSingleUse = cand != null && com.omnicast.sender.stream.StreamProfileDatabase.isSingleUseTokenHost(cand, hdrs)
+            val effUrl = if (cand == null) url else if (isSingleUse) cand else {
                 val p = com.omnicast.core.domain.usecases.StreamManifestProbe.probeAndHeal(cand, hdrs, refPage)
                 if (p.isPlayable && com.omnicast.core.domain.usecases.HlsMasterResolver.isMasterContent(p.manifestContent)) cand else url
             }

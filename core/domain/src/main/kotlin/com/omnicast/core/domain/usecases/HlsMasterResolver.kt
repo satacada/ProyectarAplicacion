@@ -80,10 +80,11 @@ object HlsMasterResolver {
         val lower = cleanUrl.lowercase()
         if (lower.contains("dropcdn.io") || lower.contains("dr0pstream.com")) return null
 
-        // 0. Patrón Wowza/Nimble .urlset
+        // 0. Patrón Wowza/Nimble .urlset (exclusivo para dominios Fastream)
+        val isFastream = cleanUrl.contains("fastream.to", ignoreCase = true)
         val urlsetRegex = Regex("/([a-zA-Z0-9]{8,16})_[a-zA-Z0-9]+/(?:index|tracks)-[^?]+\\.m3u8", RegexOption.IGNORE_CASE)
         val urlsetMatch = urlsetRegex.find(cleanUrl)
-        if (urlsetMatch != null) {
+        if (isFastream && urlsetMatch != null) {
             val id = urlsetMatch.groupValues[1]
             return cleanUrl.replace(urlsetRegex, "/${id}_,l,n,.urlset/master.m3u8") + query
         }

@@ -96,7 +96,8 @@ class StreamProfileDatabase private constructor(context: Context) :
             if (streamProfile?.headers?.get("X-Single-Use-Token") != null) {
                 return streamProfile.headers["X-Single-Use-Token"] == "true"
             }
-            return com.omnicast.core.domain.usecases.StreamManifestProbe.hasSignedSecurityToken(url)
+            val lower = url.lowercase()
+            return lower.contains("luluvdo.com") || lower.contains("lulustream.com")
         }
 
         fun requiresCredentials(url: String, headers: Map<String, String> = emptyMap()): Boolean {

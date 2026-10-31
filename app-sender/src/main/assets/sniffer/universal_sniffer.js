@@ -339,4 +339,42 @@
         } catch(e) {}
     };
 
+    // 9. Intercepción reactiva de navegación SPA (YouTube Polymer, pushState, popstate, yt-navigate-finish)
+    function checkSpaNavigation() {
+        try {
+            var href = window.location.href;
+            if (href.indexOf('watch?v=') !== -1 || href.indexOf('/live/') !== -1 || href.indexOf('youtu.be/') !== -1) {
+                console.log(PREFIX + JSON.stringify({
+                    type: 'videoPlaying',
+                    video: href,
+                    src: href,
+                    title: document.title || 'Video YouTube',
+                    duration: 0,
+                    frameUrl: href
+                }));
+            }
+        } catch(_) {}
+    }
+    try {
+        var origPushState = window.history.pushState;
+        if (origPushState) {
+            window.history.pushState = function() {
+                var res = origPushState.apply(this, arguments);
+                setTimeout(checkSpaNavigation, 150);
+                return res;
+            };
+        }
+        var origReplaceState = window.history.replaceState;
+        if (origReplaceState) {
+            window.history.replaceState = function() {
+                var res = origReplaceState.apply(this, arguments);
+                setTimeout(checkSpaNavigation, 150);
+                return res;
+            };
+        }
+        window.addEventListener('popstate', checkSpaNavigation);
+        document.addEventListener('yt-navigate-finish', checkSpaNavigation);
+        checkSpaNavigation();
+    } catch(_) {}
+
 })();

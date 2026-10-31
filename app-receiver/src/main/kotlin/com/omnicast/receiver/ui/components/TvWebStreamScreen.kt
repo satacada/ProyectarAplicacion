@@ -207,7 +207,10 @@ fun TvWebStreamScreen(
 
                                     function initHls() {
                                       if (window.Hls && Hls.isSupported()) {
-                                        var hls = new Hls({ enableWorker: true, lowLatencyMode: false, backBufferLength: 10, maxBufferLength: 20, maxMaxBufferLength: 30, maxBufferSize: 30 * 1024 * 1024, xhrSetup: function(xhr, url) { xhr.withCredentials = true; } });
+                                        var hasCookies = ${headers["Cookie"]?.isNotBlank() == true};
+                                        var cfg = { enableWorker: true, lowLatencyMode: false, backBufferLength: 10, maxBufferLength: 20, maxMaxBufferLength: 30, maxBufferSize: 30 * 1024 * 1024 };
+                                        if (hasCookies) cfg.xhrSetup = function(xhr) { try { xhr.withCredentials = true; } catch(_) {} };
+                                        var hls = new Hls(cfg);
                                         hls.loadSource(streamUrl);
                                         hls.attachMedia(vid);
                                         hls.on(Hls.Events.MANIFEST_PARSED, function() { console.log('TvWebStreamJS [MANIFEST_PARSED]', streamUrl); vid.play().catch(function(){}); });

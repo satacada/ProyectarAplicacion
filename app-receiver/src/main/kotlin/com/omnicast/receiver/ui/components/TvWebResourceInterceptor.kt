@@ -21,12 +21,14 @@ object TvWebResourceInterceptor {
         val urlStr = req.url?.toString() ?: return null
         val method = req.method ?: "GET"
 
+        val reqOrigin = req.requestHeaders?.get("Origin")?.takeIf { it.isNotBlank() } ?: defaultHeaders["Origin"] ?: "*"
         // 1. Responder preflight OPTIONS de inmediato con autorización total (CORS OK en 0ms)
         if (method.equals("OPTIONS", ignoreCase = true)) {
             val preflightHeaders = mapOf(
-                "Access-Control-Allow-Origin" to "*",
+                "Access-Control-Allow-Origin" to reqOrigin,
                 "Access-Control-Allow-Methods" to "GET, POST, OPTIONS, HEAD",
                 "Access-Control-Allow-Headers" to "*",
+                "Access-Control-Allow-Credentials" to "true",
                 "Access-Control-Max-Age" to "86400"
             )
             return WebResourceResponse("text/plain", "UTF-8", 200, "OK", preflightHeaders, ByteArrayInputStream(ByteArray(0)))
@@ -88,12 +90,13 @@ object TvWebResourceInterceptor {
             val encoding = if (lower.contains(".m3u8") || lower.contains(".vtt")) "UTF-8" else null
 
             val respHeaders = mutableMapOf(
-                "Access-Control-Allow-Origin" to "*",
+                "Access-Control-Allow-Origin" to reqOrigin,
                 "Access-Control-Allow-Methods" to "GET, POST, OPTIONS, HEAD",
-                "Access-Control-Allow-Headers" to "*"
+                "Access-Control-Allow-Headers" to "*",
+                "Access-Control-Allow-Credentials" to "true"
             )
             conn.headerFields.forEach { (k, list) ->
-                if (k != null && !respHeaders.containsKey(k) && !k.equals("Content-Encoding", true) && !k.equals("Access-Control-Allow-Origin", true)) {
+                if (k != null && !respHeaders.containsKey(k) && !k.equals("Content-Encoding", true) && !k.equals("Access-Control-Allow-Origin", true) && !k.equals("Access-Control-Allow-Credentials", true)) {
                     respHeaders[k] = list.joinToString(", ")
                 }
             }

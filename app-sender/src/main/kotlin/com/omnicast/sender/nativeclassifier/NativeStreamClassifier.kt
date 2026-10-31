@@ -61,7 +61,7 @@ object NativeStreamClassifier {
             lower.contains(".mpd") || lower.contains("/dash/") -> MediaBranch.DASH_MPD
             lower.contains(".mp3") || lower.contains(".aac") || lower.contains(".ogg") -> MediaBranch.AUDIO_ONLY
             lower.contains("playlist.m3u") || lower.contains("/iptv") -> MediaBranch.IPTV_STREAM
-            lower.contains("live") && lower.contains(".m3u8") -> MediaBranch.LIVE_HLS
+            (lower.contains("live") || lower.contains("stream") || lower.contains("linear") || lower.contains("lin-") || lower.contains("envivo") || lower.contains("directo")) && lower.contains(".m3u8") -> MediaBranch.LIVE_HLS
             lower.contains(".m3u8") || lower.contains(".mp4") || lower.contains(".webm") -> MediaBranch.VOD_HLS_MP4
             else -> MediaBranch.DISCARD
         }

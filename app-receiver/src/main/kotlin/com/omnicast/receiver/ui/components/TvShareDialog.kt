@@ -96,7 +96,8 @@ fun TvShareDialog(
             isLoadingQr = true
             withContext(Dispatchers.IO) {
                 try {
-                    val encoded = URLEncoder.encode(shareUrl, "UTF-8")
+                    val qrPayload = "omnicast://cast?url=${URLEncoder.encode(shareUrl, "UTF-8")}&title=${URLEncoder.encode(item.title.ifBlank { "Video Web" }, "UTF-8")}"
+                    val encoded = URLEncoder.encode(qrPayload, "UTF-8")
                     val qrApiUrl = "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=$encoded"
                     val bmp = URL(qrApiUrl).openStream().use { BitmapFactory.decodeStream(it) }
                     qrBitmap = bmp

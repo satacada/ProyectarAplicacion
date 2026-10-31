@@ -134,7 +134,9 @@ MediaBranchCode StreamClassifier::classify(std::string_view url, std::string_vie
         return MediaBranchCode::IPTV_STREAM;
     }
 
-    if (containsIgnoreCase(url, "live") || containsIgnoreCase(url, "stream") || containsIgnoreCase(url, "chunklist_live")) {
+    if (containsIgnoreCase(url, "live") || containsIgnoreCase(url, "stream") || containsIgnoreCase(url, "chunklist_live") ||
+        containsIgnoreCase(url, "linear") || containsIgnoreCase(url, "lin-") || containsIgnoreCase(url, "envivo") ||
+        containsIgnoreCase(url, "directo")) {
         if (containsIgnoreCase(url, ".m3u8") || containsIgnoreCase(url, "/hls")) {
             return MediaBranchCode::LIVE_HLS;
         }

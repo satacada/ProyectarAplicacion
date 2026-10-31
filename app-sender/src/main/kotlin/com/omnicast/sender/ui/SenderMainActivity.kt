@@ -254,13 +254,13 @@ class SenderMainActivity : ComponentActivity() {
         lastHandoffTime = now; lastHandoffUrl = url
         val safeTitle = title?.ifBlank { "Transmisión Web" } ?: "Transmisión Web"
         val (cleanUrl, preparedHeaders) = com.omnicast.sender.ui.browser.MediaPlatformResolver.prepareStreamForPlayback(url, headers["Referer"] ?: "", headers)
-        val savedPos = resumePositionMs ?: com.omnicast.sender.stream.StreamResumeManager.getPosition(this, cleanUrl).takeIf { it > 0 } ?: playlistManager.getLastPosition(cleanUrl)
+        val br = com.omnicast.sender.nativeclassifier.NativeStreamClassifier.classify(cleanUrl).name
+        val isLive = br == com.omnicast.core.domain.models.MediaBranch.LIVE_HLS.name || br == com.omnicast.core.domain.models.MediaBranch.IPTV_STREAM.name
+        val savedPos = if (isLive) 0L else (resumePositionMs ?: com.omnicast.sender.stream.StreamResumeManager.getPosition(this, cleanUrl).takeIf { it > 0 } ?: playlistManager.getLastPosition(cleanUrl))
         historyManager.addOrUpdate(cleanUrl, safeTitle, headers = preparedHeaders, requiresProxy = false)
         val effSubs = if (subtitles.isNotEmpty()) subtitles else ActiveStreamHolder.subtitles
-        ActiveStreamHolder.startCasting(cleanUrl, safeTitle, preparedHeaders, effSubs)
-        com.omnicast.sender.service.CastMediaNotificationService.start(this)
+        ActiveStreamHolder.startCasting(cleanUrl, safeTitle, preparedHeaders, effSubs); com.omnicast.sender.service.CastMediaNotificationService.start(this)
         ActiveStreamHolder.onSendPlayControl = { act, pos, vol, par -> sendPlayControl(act, pos, vol, par) }
-        val br = com.omnicast.sender.nativeclassifier.NativeStreamClassifier.classify(cleanUrl).name
         val msg = SignalingMessage.DirectStreamHandoff(mediaUrl = cleanUrl, title = safeTitle, headers = preparedHeaders, startPositionMs = savedPos, branch = br, subtitles = effSubs)
         sendSignalingMessage(msg); com.omnicast.sender.discovery.MultiReceiverManager.broadcastToSecondary(msg, nsdScanner.discoveredDevices.value)
         val toastMsg = if (savedPos > 0L) "Reanudando en ${com.omnicast.sender.stream.StreamResumeManager.formatTime(savedPos)}" else "Enviando video a receptores..."

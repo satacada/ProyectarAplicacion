@@ -57,6 +57,7 @@ class CastMediaNotificationService : Service() {
 
     private var mediaSession: MediaSessionCompat? = null
     private val serviceScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
+    private var idleJob: Job? = null
     private var lastTitle: String = ""
     private var lastIsPlaying: Boolean = true
     private var lastPos: Long = 0L
@@ -139,6 +140,7 @@ class CastMediaNotificationService : Service() {
                 ActiveStreamHolder.isPlaying.collect { playing ->
                     if (lastIsPlaying != playing) {
                         lastIsPlaying = playing
+                        handleIdleTimer(playing)
                         updateSessionPlaybackState()
                         updateNotification()
                     }
@@ -266,7 +268,19 @@ class CastMediaNotificationService : Service() {
         }
     }
 
+    private fun handleIdleTimer(isPlaying: Boolean) {
+        idleJob?.cancel()
+        if (!isPlaying) {
+            idleJob = serviceScope.launch {
+                delay(180_000L)
+                ActiveStreamHolder.stopCasting()
+                stopForegroundService()
+            }
+        }
+    }
+
     private fun stopForegroundService() {
+        idleJob?.cancel(); idleJob = null
         serviceScope.cancel()
         mediaSession?.isActive = false
         mediaSession?.release()

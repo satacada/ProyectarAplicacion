@@ -1,4 +1,4 @@
-﻿package com.omnicast.sender.ui
+package com.omnicast.sender.ui
 
 import android.content.Context
 import android.content.Intent
@@ -16,6 +16,16 @@ object SharedIntentHandler {
         onSendImage: (String, String) -> Unit,
         onMoveToBack: () -> Unit
     ) {
+        if (intent.action == Intent.ACTION_VIEW && intent.data?.scheme == "omnicast") {
+            val uri = intent.data
+            val raw = uri?.getQueryParameter("url") ?: uri?.getQueryParameter("u")
+            val title = uri?.getQueryParameter("title") ?: "Video Escaneado"
+            if (!raw.isNullOrBlank()) {
+                val target = runCatching { java.net.URLDecoder.decode(raw, "UTF-8") }.getOrDefault(raw)
+                onSendStream(target, title)
+                return
+            }
+        }
         if (intent.action != Intent.ACTION_SEND) return
         intent.getStringExtra(Intent.EXTRA_TEXT)?.let { text ->
             val res = clipboardExtractor.extractStream(text)

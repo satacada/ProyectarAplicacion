@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 305,
-  "versionCodeReceiver": 288,
-  "versionName": "3.5.54",
-  "releaseTag": "v3.5.54",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.54/omnicast-sender-v3.5.54.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.54/omnicast-receiver-v3.5.54.apk",
-  "changelog": "v3.5.54: 1) Auto-Apertura Resiliente en Navegación y Clic Play (PelisPlus / PelisGO): Detección de cambio de página mediante castingPageUrl permitiendo que la hoja de capturas se levante de inmediato al tipear en el buscador o pulsar accesos directos, incluso si la TV Box sigue transmitiendo el canal anterior. 2) Filtrado Infalible de Subtítulos VTT y Webmanifest (RFC 8216): Exclusión de listas secundarias (/lang/, /subs/, _spa/, mastersubs, .webmanifest) evitando la aparición de opciones falsas como 'index'. 3) Barrido Pre-Cast Seguro y Discriminante de Tokens (TNMR / PelisGO): Ejecución de probeAndHeal e isMasterContent en tokens efímeros reutilizables de 8 horas, descartando masters rotos hacia el flujo 1080p nativo y restringiendo la sintaxis urlset _,l,n, exclusivamente a Fastream."
+  "versionCodeSender": 306,
+  "versionCodeReceiver": 289,
+  "versionName": "3.5.55",
+  "releaseTag": "v3.5.55",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.55/omnicast-sender-v3.5.55.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.55/omnicast-receiver-v3.5.55.apk",
+  "changelog": "v3.5.55: 1) Clasificación Universal de Televisión Lineal y Transmisiones en Vivo (Sky News / Live Streams): Incorporación de palabras clave 'linear', 'lin-', 'envivo' y 'directo' al clasificador C++ y Kotlin, forzando savedPos = 0L en el Sender para sincronizar inmediatamente al borde de emisión (live edge) y erradicar el buffering infinito. 2) Limpieza Inteligente de Icono en Pantalla Bloqueada/Apagada (AOD): Implementación de temporizador de inactividad de 3 minutos en CastMediaNotificationService para destruir el servicio y la notificación en segundo plano cuando la reproducción se detiene o pausa prolongadamente. 3) Deep Link Directo por Escaneo de QR (omnicast://): Registro de esquema omnicast en AndroidManifest y formateo en TvShareDialog para abrir directamente la app Castera sin pasar por el navegador del móvil."
 }

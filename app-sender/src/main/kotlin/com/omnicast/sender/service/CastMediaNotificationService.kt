@@ -158,6 +158,7 @@ class CastMediaNotificationService : Service() {
             launch {
                 ActiveStreamHolder.positionMs.collect { pos ->
                     lastPos = pos
+                    if (lastIsPlaying) handleIdleTimer(true)
                     updateSessionPlaybackState()
                 }
             }
@@ -270,12 +271,11 @@ class CastMediaNotificationService : Service() {
 
     private fun handleIdleTimer(isPlaying: Boolean) {
         idleJob?.cancel()
-        if (!isPlaying) {
-            idleJob = serviceScope.launch {
-                delay(180_000L)
-                ActiveStreamHolder.stopCasting()
-                stopForegroundService()
-            }
+        idleJob = serviceScope.launch {
+            val timeout = if (isPlaying) 25_000L else 180_000L
+            delay(timeout)
+            ActiveStreamHolder.stopCasting()
+            stopForegroundService()
         }
     }
 

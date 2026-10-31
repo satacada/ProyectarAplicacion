@@ -36,6 +36,7 @@ fun TvDirectStreamScreen(
 ) {
     val context = LocalContext.current
     var showSettingsDialog by remember { mutableStateOf(false) }
+    var showDownloadDialog by remember { mutableStateOf(false) }
     var isControlsVisible by remember { mutableStateOf(true) }
     var userInteractionCount by remember { mutableIntStateOf(0) }
     var currentQuality by remember { mutableStateOf(exoPlayerManager.getCurrentVideoQuality()) }
@@ -237,19 +238,13 @@ fun TvDirectStreamScreen(
                     }
 
                     // Tuerca de Ajustes en la parte inferior derecha
-                    TvPlayerButton(
-                        label = "⚙ Ajustes",
-                        isSettings = true,
-                        onClick = {
-                            showSettingsDialog = true
-                            userInteractionCount++
-                        }
-                    )
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                        TvPlayerButton(label = "📥 Guardar", onClick = { showDownloadDialog = true; userInteractionCount++ })
+                        TvPlayerButton(label = "⚙ Ajustes", isSettings = true, onClick = { showSettingsDialog = true; userInteractionCount++ })
+                    }
                 }
             }
         }
-
-        var showDownloadDialog by remember { mutableStateOf(false) }
 
         if (showSettingsDialog) {
             TvPlayerSettingsDialog(

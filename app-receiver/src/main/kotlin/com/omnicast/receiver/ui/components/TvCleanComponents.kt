@@ -177,7 +177,7 @@ fun TvRecentItemRow(
                 Text("▶", color = if (isPlayFocused) Color(0xFF38BDF8) else Color(0xFF10B981), fontSize = 16.sp)
                 Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     Text(text = item.title, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    val minLeft = if (item.lastPositionMs > 0L) "⏱ Quedó en ${formatDuration(item.lastPositionMs)}" else "⏱ Desde el inicio (0:00)"
+                    val isLive = item.durationMs <= 0L || item.mediaUrl.contains("linear", true) || item.mediaUrl.contains("live", true); val minLeft = if (isLive) "🔴 EN VIVO" else if (item.lastPositionMs > 0L) "⏱ Quedó en ${formatDuration(item.lastPositionMs)}" else "⏱ Desde el inicio (0:00)"
                     val actionLabel = when {
                         !hasEphemeralToken -> "▶ Continuar viendo"
                         isPhoneConnected -> "📱 Proyectar directo desde celular"

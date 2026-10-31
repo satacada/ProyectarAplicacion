@@ -124,17 +124,23 @@ object ReceiverLogger {
                         try {
                             client.use { s ->
                                 val reader = java.io.BufferedReader(java.io.InputStreamReader(s.getInputStream()))
+                                val firstLine = reader.readLine() ?: ""
                                 var headerLine: String? = reader.readLine()
-                                while (!headerLine.isNullOrBlank()) {
-                                    headerLine = reader.readLine()
-                                }
+                                while (!headerLine.isNullOrBlank()) { headerLine = reader.readLine() }
                                 val out = s.getOutputStream()
-                                val logsText = logBuffer.joinToString("\n")
-                                val bytes = logsText.toByteArray(Charsets.UTF_8)
-                                val response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Length: ${bytes.size}\r\nAccess-Control-Allow-Origin: *\r\nConnection: close\r\n\r\n"
-                                out.write(response.toByteArray())
-                                out.write(bytes)
-                                out.flush()
+                                if (firstLine.startsWith("GET /open")) {
+                                    val q = if (firstLine.contains('?')) firstLine.substringAfter("GET /open?").substringBefore(" HTTP/") else ""
+                                    val redirectUrl = "omnicast://cast?$q"
+                                    val html = "<!DOCTYPE html><html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><meta http-equiv='refresh' content='0;url=$redirectUrl'><script>window.location.href='$redirectUrl';</script></head><body style='background:#0f172a;color:white;font-family:sans-serif;text-align:center;padding:40px'><h2>Abriendo en Castera...</h2><p><a href='$redirectUrl' style='color:#38bdf8;font-size:18px'>Pulsa aquí si no se abre automáticamente</a></p></body></html>"
+                                    val bytes = html.toByteArray(Charsets.UTF_8)
+                                    val resp = "HTTP/1.1 200 OK\r\nContent-Type: text/html; charset=utf-8\r\nContent-Length: ${bytes.size}\r\nAccess-Control-Allow-Origin: *\r\nConnection: close\r\n\r\n"
+                                    out.write(resp.toByteArray()); out.write(bytes); out.flush()
+                                } else {
+                                    val logsText = logBuffer.joinToString("\n")
+                                    val bytes = logsText.toByteArray(Charsets.UTF_8)
+                                    val response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Length: ${bytes.size}\r\nAccess-Control-Allow-Origin: *\r\nConnection: close\r\n\r\n"
+                                    out.write(response.toByteArray()); out.write(bytes); out.flush()
+                                }
                             }
                         } catch (_: Throwable) {}
                     }

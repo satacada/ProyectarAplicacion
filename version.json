@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 306,
-  "versionCodeReceiver": 289,
-  "versionName": "3.5.55",
-  "releaseTag": "v3.5.55",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.55/omnicast-sender-v3.5.55.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.55/omnicast-receiver-v3.5.55.apk",
-  "changelog": "v3.5.55: 1) Clasificación Universal de Televisión Lineal y Transmisiones en Vivo (Sky News / Live Streams): Incorporación de palabras clave 'linear', 'lin-', 'envivo' y 'directo' al clasificador C++ y Kotlin, forzando savedPos = 0L en el Sender para sincronizar inmediatamente al borde de emisión (live edge) y erradicar el buffering infinito. 2) Limpieza Inteligente de Icono en Pantalla Bloqueada/Apagada (AOD): Implementación de temporizador de inactividad de 3 minutos en CastMediaNotificationService para destruir el servicio y la notificación en segundo plano cuando la reproducción se detiene o pausa prolongadamente. 3) Deep Link Directo por Escaneo de QR (omnicast://): Registro de esquema omnicast en AndroidManifest y formateo en TvShareDialog para abrir directamente la app Castera sin pasar por el navegador del móvil."
+  "versionCodeSender": 307,
+  "versionCodeReceiver": 290,
+  "versionName": "3.5.56",
+  "releaseTag": "v3.5.56",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.56/omnicast-sender-v3.5.56.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.56/omnicast-receiver-v3.5.56.apk",
+  "changelog": "v3.5.56: 1) Puente HTTP Local para Deep Link QR (:8087/open): Servidor local en la TV Box con micro-página de redirección inmediata a omnicast://cast, permitiendo que cualquier cámara de celular (Google Lens, Xiaomi, Samsung) abra Castera al instante con 1 toque. 2) Insignia Universal 'EN VIVO': Erradicación de marcas de tiempo erróneas en canales lineales y continuos, reemplazándolas por el badge '🔴 EN VIVO'. 3) Acceso Directo de Descarga/Grabación en Reproductor TV: Botón prominente '[ 📥 Guardar ]' en la barra principal de TvDirectStreamScreen sin anidarse en la tuerca de ajustes. 4) Heartbeat Pasivo en Segundo Plano: Monitorización de telemetría de 25s que destruye la notificación y estado de casteo si la TV Box se apaga o desconecta."
 }

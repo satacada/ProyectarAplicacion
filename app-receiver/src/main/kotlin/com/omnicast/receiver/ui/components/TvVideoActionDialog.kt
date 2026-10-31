@@ -178,7 +178,7 @@ fun TvPlaylistItemRow(
                         color = if (isFocused) Color.White else Color(0xFFE2E8F0),
                         fontSize = 14.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis
                     )
-                    val minLeft = if (item.lastPositionMs > 0L) "⏱ Quedó en ${formatDuration(item.lastPositionMs)}" else "⏱ Desde el inicio (0:00)"
+                    val isLive = item.durationMs <= 0L || item.url.contains("linear", true) || item.url.contains("live", true); val minLeft = if (isLive) "🔴 EN VIVO" else if (item.lastPositionMs > 0L) "⏱ Quedó en ${formatDuration(item.lastPositionMs)}" else "⏱ Desde el inicio (0:00)"
                     val actionLabel = when {
                         !hasEphemeralToken -> "▶ Continuar viendo"
                         isPhoneConnected -> "📱 Proyectar directo desde celular"

@@ -207,7 +207,11 @@ fun TvWebStreamScreen(
 
                                     function initHls() {
                                       if (window.Hls && Hls.isSupported()) {
+                                        var requireCreds = ${headers["X-With-Credentials"] == "true"};
                                         var cfg = { enableWorker: true, lowLatencyMode: false, backBufferLength: 10, maxBufferLength: 20, maxMaxBufferLength: 30, maxBufferSize: 30 * 1024 * 1024 };
+                                        if (requireCreds) {
+                                          cfg.xhrSetup = function(xhr) { try { xhr.withCredentials = true; } catch(_) {} };
+                                        }
                                         var hls = new Hls(cfg);
                                         hls.loadSource(streamUrl);
                                         hls.attachMedia(vid);
@@ -215,7 +219,18 @@ fun TvWebStreamScreen(
                                         hls.on(Hls.Events.ERROR, function(ev, data) {
                                           console.error('TvWebStreamJS [HLS_ERROR] ' + data.type + ' ' + data.details + ' code=' + (data.response ? data.response.code : 'none'));
                                           if (data.fatal) {
-                                            if (data.type === Hls.ErrorTypes.NETWORK_ERROR) hls.startLoad();
+                                            if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
+                                              if (cfg.xhrSetup) {
+                                                console.warn('TvWebStreamJS [CORS_FALLBACK] Reintentando sin credenciales XHR...');
+                                                delete cfg.xhrSetup;
+                                                hls.destroy();
+                                                hls = new Hls(cfg);
+                                                hls.loadSource(streamUrl);
+                                                hls.attachMedia(vid);
+                                              } else {
+                                                hls.startLoad();
+                                              }
+                                            }
                                             else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) hls.recoverMediaError();
                                             else { vid.src = streamUrl; vid.play().catch(function(){}); }
                                           }

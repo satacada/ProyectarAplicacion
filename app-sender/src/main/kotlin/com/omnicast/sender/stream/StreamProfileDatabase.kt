@@ -99,6 +99,15 @@ class StreamProfileDatabase private constructor(context: Context) :
             return com.omnicast.core.domain.usecases.StreamManifestProbe.hasSignedSecurityToken(url)
         }
 
+        fun requiresCredentials(url: String, headers: Map<String, String> = emptyMap()): Boolean {
+            if (headers["X-With-Credentials"] == "true") return true
+            if (headers["X-With-Credentials"] == "false") return false
+            if (com.omnicast.core.domain.usecases.StreamManifestProbe.hasSignedSecurityToken(url)) return false
+            val streamProfile = getProfileForHost(extractHost(url))
+                ?: getProfileForHost(extractHost(headers["Referer"] ?: ""))
+            return streamProfile?.headers?.get("X-With-Credentials") == "true"
+        }
+
         fun recordFailure(host: String) {
             runCatching { get().recordFailure(host) }
         }

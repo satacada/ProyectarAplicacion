@@ -45,8 +45,9 @@ object HlsMasterResolver {
         if (isAudioOrRawSegment(url)) return true
         val lower = url.lowercase().substringBefore('?')
         if (lower.contains("masteraudio") || lower.contains("mastersubs") ||
-            lower.contains("/audio/") || lower.contains("/subs/") ||
-            lower.contains("chunklist")) return true
+            lower.contains("/audio/") || lower.contains("_audio/") ||
+            lower.contains("/lang/") || lower.contains("_spa/") ||
+            lower.contains("/subs/") || lower.contains("chunklist")) return true
         return Regex("/stream\\d+/").containsMatchIn(lower) ||
                Regex("master\\d+p\\d+").containsMatchIn(lower) ||
                Regex("index_\\d+").containsMatchIn(lower) ||

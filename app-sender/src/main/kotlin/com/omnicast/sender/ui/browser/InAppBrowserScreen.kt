@@ -141,7 +141,9 @@ fun InAppBrowserScreen(
         android.util.Log.i("StreamDetection", "🎬 Flujo registrado [isMaster=$isM, freshToken=true]: $targetUrl")
         if (isPrimary || isM || isRealMedia(targetUrl)) userDismissedSheetForUrl = ""
         if (!showOptionsSheet && !isCasting && userDismissedSheetForUrl != currentUrl) {
-            autoOpenJob?.cancel(); autoOpenJob = scope.launch { kotlinx.coroutines.delay(450); if (!showOptionsSheet && !isCasting && userDismissedSheetForUrl != currentUrl && detectedStreams.any { isRealMedia(it) }) openOptionsSheet() }
+            if (autoOpenJob?.isActive != true) {
+                autoOpenJob = scope.launch { kotlinx.coroutines.delay(350); if (!showOptionsSheet && !isCasting && detectedStreams.any { isRealMedia(it) }) openOptionsSheet() }
+            }
         }
     }
 

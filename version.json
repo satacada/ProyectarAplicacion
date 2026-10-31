@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 302,
-  "versionCodeReceiver": 285,
-  "versionName": "3.5.51",
-  "releaseTag": "v3.5.51",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.51/omnicast-sender-v3.5.51.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.51/omnicast-receiver-v3.5.51.apk",
-  "changelog": "v3.5.51: 1) Corrección Definitiva CORS en Receptor TV (DropCDN / PelisPlus): Restauración de configuración estándar en Hls.js sin forzar withCredentials=true, permitiendo la carga legal de fragmentos desde CDNs de origen comodín (*). 2) Auto-Apertura Proactiva Resiliente (PelisGO): Limpieza incondicional de descarte al detectar flujos multimedia reales y auto-apertura directa de la ventana de casteo."
+  "versionCodeSender": 303,
+  "versionCodeReceiver": 286,
+  "versionName": "3.5.52",
+  "releaseTag": "v3.5.52",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.52/omnicast-sender-v3.5.52.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.52/omnicast-receiver-v3.5.52.apk",
+  "changelog": "v3.5.52: 1) Deduplicación Estricta y Filtrado de Sub-Listas de Audio HLS (RFC 8216 / PelisGO / TNMR): Exclusión de /lang/, _spa/, /audio/ y unificación canónica de ID en .urlset, colapsando sublistas a 1 única opción Master limpia. 2) Auto-Apertura Proactiva Estable: Supresión de reseteo de descarte por popups publicitarios y apertura inmediata sin debouncing bloqueante. 3) Gobernanza SQLite de Credenciales XHR: X-With-Credentials administrado por host y auto-recuperación sin credenciales ante rechazo CORS wildcard."
 }

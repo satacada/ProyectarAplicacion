@@ -127,6 +127,9 @@ object BrowserUrlHelper {
             if (!headers.containsKey("X-Single-Use-Token")) {
                 headers["X-Single-Use-Token"] = com.omnicast.sender.stream.StreamProfileDatabase.isSingleUseTokenHost(streamUrl, headers).toString()
             }
+            if (!headers.containsKey("X-With-Credentials")) {
+                headers["X-With-Credentials"] = com.omnicast.sender.stream.StreamProfileDatabase.requiresCredentials(streamUrl, headers).toString()
+            }
         } catch (_: Throwable) {}
         return headers
     }
@@ -168,6 +171,10 @@ object BrowserUrlHelper {
             if (idMatch != null) return "okru_${idMatch.groupValues[1]}"
         }
         MediaPlatformResolver.extractFastreamId(url)?.let { return "fastream_$it" }
+        val frMatch = Regex("[?&]fr=([a-zA-Z0-9_-]+)").find(url)
+        if (frMatch != null) return "media_${frMatch.groupValues[1]}"
+        val urlsetMatch = Regex(",([a-zA-Z0-9]{8,16})_").find(url) ?: Regex("/([a-zA-Z0-9]{8,16})_").find(url)
+        if (urlsetMatch != null && url.contains(".urlset", true)) return "media_${urlsetMatch.groupValues[1]}"
         val clean = url.substringBefore('?')
         val parent = clean.substringBeforeLast('/')
         val parentFolder = if (parent.contains('_')) parent.substringBefore('_') else parent

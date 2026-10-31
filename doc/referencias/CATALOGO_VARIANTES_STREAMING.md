@@ -35,12 +35,15 @@ Este documento recopila la base de conocimiento técnico e ingeniería inversa s
 
 ---
 
-### Variante 4: Transmisiones en Vivo y Canales Continuos
-* **Ejemplos:** 808ball (fútbol en vivo), Canela.tv Live, canales IPTV abiertos.
-* **Firma en URL:** Manifiestos `.m3u8` sin tokens HMAC efímeros (`hasSignedSecurityToken == false`).
-* **Firma en Cabeceras:** `Referer` abierto o nulo, sin cookies de sesión.
-* **Comportamiento:** Requiere baja latencia, buffer corto de 2 segundos, soporte de live-edge y decodificación por hardware continuo.
-* **Reproductor Requerido:** **`ExoPlayer` nativo (Hardware a 60 fps)**.
+### Variante 4: Transmisiones en Vivo y Canales Continuos (Linear TV)
+* **Ejemplos:** Sky News (`linear901-.../prod-gb-lin-...`), Das Erste, Latina TV, 808ball (fútbol en vivo), Canela.tv Live, canales IPTV abiertos.
+* **Firma en URL:** Descriptores de transmisión continua: `linear`, `lin-`, `live`, `envivo`, `directo`, `stream`, `chunklist_live` y manifiestos `.m3u8` sin directiva `#EXT-X-ENDLIST`.
+* **Firma en Cabeceras:** `Referer` abierto o nulo, sin cookies de sesión restrictivas.
+* **Comportamiento Crítico (Ventana Deslizante / Sliding Window):**
+  * La CDN solo mantiene en caché los últimos 20 a 30 segundos de emisión.
+  * **Prohibición Estricta de Reanudación / Seek:** Queda terminantemente prohibido solicitar posiciones de tiempo del pasado (`savedPos > 0`). Si el reproductor ejecuta un seek fuera de la ventana deslizante, la CDN devuelve 404/403 en los fragmentos antiguos y el reproductor entra en buffering perpetuo.
+  * La inicialización debe forzar obligatoriamente `startPositionMs = 0L` y ejecutar `seekToDefaultPosition()` para engancharse a la cabeza en vivo (*live edge*).
+* **Reproductor Requerido:** **`ExoPlayer` nativo (Hardware a 60 fps)** con `setLiveConfiguration` activo para mantener sincronismo de baja latencia.
 
 ---
 

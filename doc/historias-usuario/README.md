@@ -25,6 +25,7 @@ Cada vez que se solicite un cambio, ajuste o nueva funcionalidad, se actualiza o
 | **HU-014** | [`HU-014-inteligencia-colectiva-reputacion-streams.md`](./HU-014-inteligencia-colectiva-reputacion-streams.md) | Inteligencia Colectiva y Reputación Ponderada de Streams | 🟢 Aprobado / En Producción | v3.4.33 |
 | **HU-015** | [`HU-015-analisis-previo-clasificacion-sitios-oficiales.md`](./HU-015-analisis-previo-clasificacion-sitios-oficiales.md) | Clasificación Dinámica Dual de Páginas y Pre-Análisis de Películas | 🟢 Aprobado / En Producción | v3.4.34 |
 | **HU-016** | [`HU-016-estabilizador-visibilidad-busqueda-caret-react.md`](./HU-016-estabilizador-visibilidad-busqueda-caret-react.md) | Estabilizador Universal de Visibilidad de Búsqueda y Caret React | 🟢 Aprobado / En Producción | v3.4.39 |
+| **HU-017** | [`HU-017-pvr-grabacion-en-vivo-y-deep-link-qr.md`](./HU-017-pvr-grabacion-en-vivo-y-deep-link-qr.md) | Grabación Multimedia Dual (PVR/VOD), Heartbeat Pasivo y Deep Link QR Universal | 🟢 Aprobado / En Producción | v3.5.55 |
 
 ---
 

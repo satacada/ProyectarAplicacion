@@ -143,6 +143,10 @@ Queda terminantemente PROHIBIDO compilar o proponer una versión sin auditar pre
 12. **Delimitación Estricta de Nombres de Archivo y Rutas URL (Ley Anti-Colisión de Subcadenas / RFC 8216) [BLOQUEANTE]:**
    - Toda verificación o comparación de nombres de manifiestos HLS (`master.m3u8`, `playlist.m3u8`, `index.m3u8`, etc.) DEBE realizarse obligatoriamente mediante coincidencia exacta del segmento final de ruta (`url.substringAfterLast('/').equals(name, ignoreCase = true)`) o exigiendo delimitador de barra (`endsWith("/$name")`).
    - Queda TERMINANTEMENTE PROHIBIDO usar `endsWith(name)` libre sin delimitador de ruta para evitar que sub-variantes de video compuesto (como `streamPlaylist.m3u8` de Sky News) colisionen con `playlist.m3u8`, lo cual desactiva el re-ascenso a master y deja la transmisión en vivo sin audio en la TV Box.
+13. **Preservación Fiel de Dominios CDN y TV Box Pasiva (Ley Anti-Private RFC 1918 Leak / v3.5.58) [BLOQUEANTE]:**
+   - Queda TERMINANTEMENTE PROHIBIDO mutar, sustituir o reescribir el nombre de host público asignado por una CDN multimedia (`r*.dropcdn.io`, `ds*.dropcdn.io`) mediante parámetros query como `srv=`.
+   - Ciertas CDNs devuelven identificadores internos de backend (ej. `srv=ds1i`) cuyos subdominios resuelven a **direcciones IP privadas RFC 1918 (`192.168.10.23:443`)**, provocando fallos inmediatos de conexión (`code=0` / Connection refused) en la TV Box.
+   - Toda solicitud de streaming DEBE dirigirse incondicionalmente al dominio público legítimo entregado por el servidor de video, y la TV Box debe actuar de forma estrictamente pasiva sin alterar ni reescribir las URLs recibidas del Emisor.
 
 
 

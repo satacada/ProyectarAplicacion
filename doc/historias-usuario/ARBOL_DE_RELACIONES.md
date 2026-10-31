@@ -74,6 +74,7 @@ graph TD
 | **HU-002 (Standby Limpio TV)** | `:app-receiver` | `TvStandbyCleanScreen`, `TvCleanComponents` | Vista de espera en TV Box | 🟢 **Bajo:** Modificar el diseño o dock no altera el reproductor ExoPlayer ni al móvil. |
 | **HU-003 (Menú Lateral Móvil)** | `:app-sender` | `SideMediaDrawer`, `PlayHistoryManager` | Emisión de `SignalingMessage.DirectStream` | 🟡 **Medio (Consumidor):** Consume el evento de telemetría de la TV para mostrar `Se quedó en: mm:ss`. |
 | **HU-004 (Anti-Duplicados Web)** | `:app-sender` y `:app-receiver` | `DynamicSnifferManager`, `TvPlaybackHistoryManager` | Normalización de títulos en ambos extremos | 🟢 **Bajo:** Normaliza URLs antes de guardarlas; no afecta el motor WebRTC ni la galería. |
+| **HU-018 (Gobernanza SQLite y TV Pasiva)** | `:app-sender`, `:core:domain`, `:app-receiver` | `StreamProfileDatabase`, `CloudStreamRuleSyncManager` | `MediaPlatformResolver`, `TvWebResourceInterceptor` | 🟢 **Bajo (Desacoplado):** Las cabeceras e identidades se leen de SQLite sin alterar reproductores universales ni mutar nombres de dominio. |
 
 ---
 

@@ -76,9 +76,14 @@ Este documento recopila la base de conocimiento técnico e ingeniería inversa s
    * El estándar W3C prohíbe el uso de `withCredentials = true` si el servidor responde con `Access-Control-Allow-Origin: *`.
    * En `TvWebStreamScreen`, `withCredentials` permanece en `false` para permitir compatibilidad total con `TvWebResourceInterceptor`.
 
-4. **Preservación Inmutable del Referer Embed Canónico:**
-   * DropCDN exige estrictamente `Referer: https://dr0pstream.com/e/<id>` con `UA_MOBILE`.
-   * Fastream exige `Referer: https://fastream.to/embed-$id.html` con `UA_FASTREAM` (Escritorio).
+4. **Preservación Inmutable del Referer Embed Canónico e Identidad:**
+   * DropCDN / Dr0pstream exige `Referer: https://dr0pstream.com/e/<id>` sin cabecera `Origin` y con User-Agent de escritorio (`UA_FASTREAM`) o móvil coherente con la sesión.
+   * Fastream exige `Referer: https://fastream.to/embed-$id.html` con `Origin: https://fastream.to` y `UA_FASTREAM` (Escritorio Windows).
+
+5. **Ley de Preservación Fiel del Host Público CDN (Anti-Private RFC 1918 Leak / v3.5.58):**
+   * Queda terminantemente PROHIBIDO reescribir el nombre de host de CDNs (`r*.dropcdn.io`, `ds*.dropcdn.io`) mediante parámetros query como `srv=`.
+   * En CDNs como DropCDN, los balanceadores públicos (`r1.dropcdn.io` con IP pública `91.218.50.202`) entregan parámetros de telemetría de backend como `srv=ds1i`. Los nodos terminados en `i` (`ds1i.dropcdn.io`) resuelven a **direcciones IP privadas RFC 1918 del datacenter (`192.168.10.23:443`)**, provocando fallo instantáneo de conexión `code=0` si se sustituye el host público.
+   * Toda petición debe dirigirse incondicionalmente al dominio público asignado originalmente por el servidor de streaming.
 
 ---
 

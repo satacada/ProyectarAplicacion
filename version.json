@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 301,
-  "versionCodeReceiver": 284,
-  "versionName": "3.5.50",
-  "releaseTag": "v3.5.50",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.50/omnicast-sender-v3.5.50.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.50/omnicast-receiver-v3.5.50.apk",
-  "changelog": "v3.5.50: 1) Corrección Definitiva CORS en Receptor TV (PelisPlus / DropCDN / PelisGO / Spider-Man): TvWebResourceInterceptor refleja el Origin dinámico de la petición e inyecta Access-Control-Allow-Credentials: true, y TvWebStreamScreen condiciona xhr.withCredentials únicamente a la presencia real de cookies en cabeceras, erradicando el error 'The value of Access-Control-Allow-Origin must not be wildcard * when credentials mode is include'. 2) Auto-Apertura Proactiva Resiliente (PelisGO): Se resetea userDismissedSheetForUrl al registrar un nuevo flujo maestro o primario, garantizando que el cierre de popups publicitarios no inhiba la apertura de la ventana de casteo. 3) Intercepción Reactiva de Navegación SPA en YouTube Móvil (Televisa Guadalajara / DD National / NASA): universal_sniffer.js intercepta window.history.pushState, replaceState y yt-navigate-finish, capturando en 0ms los videos seleccionados en búsquedas SPA hacia TvYouTubeScreen."
+  "versionCodeSender": 302,
+  "versionCodeReceiver": 285,
+  "versionName": "3.5.51",
+  "releaseTag": "v3.5.51",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.51/omnicast-sender-v3.5.51.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.51/omnicast-receiver-v3.5.51.apk",
+  "changelog": "v3.5.51: 1) Corrección Definitiva CORS en Receptor TV (DropCDN / PelisPlus): Restauración de configuración estándar en Hls.js sin forzar withCredentials=true, permitiendo la carga legal de fragmentos desde CDNs de origen comodín (*). 2) Auto-Apertura Proactiva Resiliente (PelisGO): Limpieza incondicional de descarte al detectar flujos multimedia reales y auto-apertura directa de la ventana de casteo."
 }

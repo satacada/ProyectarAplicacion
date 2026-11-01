@@ -26,6 +26,16 @@ object NativeStreamClassifier {
     external fun isDiscardCandidate(url: String, durationSec: Float): Boolean
     external fun isTelemetryOrBeacon(url: String): Boolean
     external fun unpackDeanEdwardsNative(html: String): String?
+    external fun isAdOrTrackerUrl(url: String, docUrl: String?): Boolean
+
+    fun isAd(url: String, docUrl: String? = null): Boolean {
+        if (!isLoaded || url.isBlank()) return false
+        return try {
+            isAdOrTrackerUrl(url, docUrl)
+        } catch (_: Throwable) {
+            false
+        }
+    }
 
     fun unpackDeanEdwards(html: String): String? {
         if (!isLoaded || html.isBlank()) return null

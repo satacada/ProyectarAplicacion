@@ -7,6 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 add_library(stream_classifier SHARED
     stream_classifier.cpp
     dean_edwards_unpacker.cpp
+    ad_pattern_matcher.cpp
 )
 
 find_library(log-lib log)

@@ -107,8 +107,8 @@ object WvcShieldSecurityEngine {
         if (AdBlocker.isVerificationOrCaptcha(targetUrl)) return false
         if (AdBlockWhitelistManager.isWhitelisted(targetUrl)) return false
 
-        val curHost = try { Uri.parse(currentUrl).host?.lowercase() } catch (_: Throwable) { null }
-        val targetHost = try { Uri.parse(targetUrl).host?.lowercase() } catch (_: Throwable) { null }
+        val curHost = extractHost(currentUrl)
+        val targetHost = extractHost(targetUrl)
 
         if (curHost != null && AdBlocker.isSearchEngine(curHost)) return false
         if (targetHost != null && (AdBlocker.isSearchEngine(targetHost) || AdBlocker.isKnownMediaHost(targetHost) || AdBlockWhitelistManager.isWhitelistedHost(targetHost))) {
@@ -130,5 +130,37 @@ object WvcShieldSecurityEngine {
             return true
         }
         return false
+    }
+
+    private fun extractHost(url: String): String? {
+        return try {
+            java.net.URI(url).host?.lowercase()
+        } catch (_: Throwable) {
+            try { Uri.parse(url).host?.lowercase() } catch (_: Throwable) { null }
+        }
+    }
+
+    /**
+     * Evalúa si una navegación en `shouldOverrideUrlLoading` es un secuestro de clic (click-jacking)
+     * sobre un reproductor de video (ej. Mixdrop, StreamWish, Filemoon) que intenta desviar al usuario
+     * hacia Google u otros dominios externos cuando intentaba pulsar Play.
+     */
+    fun shouldBlockClickHijack(hasGesture: Boolean, targetUrl: String, currentUrl: String): Boolean {
+        if (!isEnabled || !hasGesture) return false
+        val curHost = extractHost(currentUrl) ?: return false
+        val targetHost = extractHost(targetUrl) ?: return false
+
+        if (!AdBlocker.isKnownMediaHost(curHost) && !curHost.contains("mixdrop") && !curHost.contains("streamwish")) {
+            return false
+        }
+
+        if (targetHost == curHost || targetHost.endsWith(".$curHost") || curHost.endsWith(".$targetHost") || AdBlocker.isKnownMediaHost(targetHost)) {
+            return false
+        }
+
+        try {
+            android.util.Log.w("WvcShieldSecurity", "🛑 [WVC Shield] Secuestro de clic bloqueado en reproductor $curHost hacia: $targetHost")
+        } catch (_: Throwable) {}
+        return true
     }
 }

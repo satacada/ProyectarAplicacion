@@ -8,7 +8,7 @@ object AdBlocker {
     private val KNOWN_MEDIA_HOSTS = hashSetOf(
         "ok.ru", "mycdn.me", "vk.com", "dailymotion.com", "youtube.com", "youtu.be",
         "yandex.com", "yandex.ru", "ya.ru", "dzen.ru", "yastatic.net",
-        "streamwish.to", "filemoon.sx", "doodstream.com", "mixdrop.co", "vidmoly.me",
+        "streamwish.to", "filemoon.sx", "doodstream.com", "mixdrop.co", "mixdrop.to", "mixdrop.ag", "mixdrop.club", "mixdrop.vc", "mixdrop.bz", "mixdrop.sx", "vidmoly.me",
         "voe.sx", "vidoza.net", "streamtape.com", "mp4upload.com", "upstream.to",
         "waaw.to", "netu.tv", "vidguard.to", "uqload.com", "luluvdo.com",
         "streamlare.com", "wolfstream.tv", "streamcloud.club", "embedgram.com",
@@ -53,13 +53,15 @@ object AdBlocker {
                lower.contains("exoclick") || lower.contains("trafficjunky") ||
                lower.contains("clickadu") || lower.contains("hilltopads") ||
                lower.contains("banner-ads") || lower.contains("player-banner") ||
-               lower.contains("luugy.com") || lower.contains("frs2c.com")
+               lower.contains("luugy.com") || lower.contains("frs2c.com") ||
+               lower.contains("innodesdevering")
     }
 
     private val l1HostCache = android.util.LruCache<String, Boolean>(1024)
 
     fun isAd(url: String): Boolean {
         if (isVerificationOrCaptcha(url)) return false
+        if (com.omnicast.sender.nativeclassifier.NativeStreamClassifier.isAd(url)) return true
         if (isVideoAd(url)) return true
         val host = try { java.net.URI(url).host?.lowercase() } catch (_: Throwable) { null }
         if (host != null) {
@@ -147,7 +149,7 @@ object AdBlocker {
                 function cleanDoc(doc) {
                     if (!doc) return;
                     try {
-                        var css = 'div[class*="popunder"], div[id*="popunder"], .ad-overlay, #ad-overlay, .click-shield, div[class*="click-shield"], div[class*="player-banner"], div[id*="ad_wrapper"], div[class*="vast-"], div[class*="banner-ads"] { display: none !important; pointer-events: none !important; }';
+                        var css = 'div[class*="popunder"], div[id*="popunder"], .ad-overlay, #ad-overlay, .click-shield, div[class*="click-shield"], div[class*="player-banner"], div[id*="ad_wrapper"], div[class*="vast-"], div[class*="banner-ads"], #click-overlay, .click-overlay, #vplayer_overlay, .vplayer-overlay { display: none !important; pointer-events: none !important; }';
                         var st = doc.createElement('style');
                         st.textContent = css;
                         (doc.head || doc.documentElement).appendChild(st);
@@ -159,6 +161,7 @@ object AdBlocker {
                         'div[class*="click-shield"]', 'div[class*="video-click-shield"]',
                         'div[class*="player-banner"]', 'div[id*="ad_wrapper"]', 'div[class*="vast-"]',
                         'div[class*="banner-ads"]', 'div[id*="banner-ads"]',
+                        '#click-overlay', '.click-overlay', '#vplayer_overlay', '.vplayer-overlay',
                         '.vp_layer_fake', 'div[class*="fake-player"]'
                     ];
                     for (var s = 0; s < selectors.length; s++) {

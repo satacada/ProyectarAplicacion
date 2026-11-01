@@ -171,7 +171,7 @@ fun BrowserWebView(
                         val reqUrl = r?.url?.toString() ?: return false
                         if (AdBlocker.isExternalRedirect(reqUrl)) return true
                         val liveUrl = v?.url ?: currentUrl
-                        if (isAdBlockEnabled && WvcShieldSecurityEngine.isEnabled && WvcShieldSecurityEngine.shouldBlockDelayedRedirect(r.hasGesture(), reqUrl, liveUrl)) return true
+                        if (isAdBlockEnabled && WvcShieldSecurityEngine.isEnabled && (WvcShieldSecurityEngine.shouldBlockDelayedRedirect(r.hasGesture(), reqUrl, liveUrl) || WvcShieldSecurityEngine.shouldBlockClickHijack(r.hasGesture(), reqUrl, liveUrl))) return true
                         val curHost = try { java.net.URI(liveUrl).host?.lowercase() } catch (_: Throwable) { null }
                         val targetHost = try { r.url.host?.lowercase() } catch (_: Throwable) { null }
                         val isSameSite = curHost != null && targetHost != null && (targetHost == curHost || targetHost.endsWith(".$curHost") || curHost.endsWith(".$targetHost"))

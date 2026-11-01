@@ -1,7 +1,7 @@
 # 🗺️ MAPA MAESTRO DEL SISTEMA Y GUÍA DE FLUJO DE CÓDIGO (CALL GRAPH)
 
 > **Documento Canónico para Desarrolladores Humanos y Agentes de IA**  
-> **Versión del Sistema:** `v3.5.21` | **Estado:** Producción Activa  
+> **Versión del Sistema:** `v3.5.58` | **Estado:** Producción Activa  
 > **Propósito:** Proporcionar una visión integral de 360 grados de todo el código fuente: árbol de directorios, roles de cada módulo, pantallas/páginas, funciones clave y trazabilidad exacta de llamadas archivo por archivo (call graph) para la reproducción de películas, proyección de pantalla y fotos.
 
 ---
@@ -331,3 +331,11 @@ Para que ningún cambio futuro rompa lo que ya está funcionando, respete estric
    - El comando `STOP` debe obedecerse de inmediato volviendo a Standby en menos de 5ms.
 5. **Supresión Nativa de Popups (`BrowserWebView.kt`):**
    - `WebChromeClient.onCreateWindow` DEBE retornar `false` nativo. Prohibido crear WebViews temporales para evaluar popups, ya que agotan los 512 MB de memoria RAM del teléfono provocando cierres inesperados.
+6. **Preservación Fiel del Host Público de CDN (Anti-Private RFC 1918 Leak / v3.5.58):**
+   - Queda terminantemente PROHIBIDO mutar o sustituir el host público de CDNs (`r*.dropcdn.io`, `ds*.dropcdn.io`) mediante parámetros query (`srv=`).
+   - `BrowserUrlHelper.sanitizeMediaUrl` y `StreamManifestProbe.sanitizeMediaUrl` se limitan a `url.trim()`. Sustituir el host por `srv=ds1i` desvía la conexión a una IP privada interna del datacenter (`192.168.10.23:443`), provocando fallo de conexión `code=0` en la TV Box.
+7. **TV Box 100% Pasiva y Agnóstica (`ExoPlayerTvManager.kt`):**
+   - Prohibido llamar a `sanitizeMediaUrl` o reescribir URLs en la TV Box. La TV Box reproduce de forma pasiva lo que despacha el Emisor con aceleración por hardware o mediante `TvWebStreamScreen`.
+8. **Gobernanza Dinámica por SQLite y Resiliencia Offline (`StreamProfileDatabase.kt`, `CloudStreamRuleSyncManager.kt`):**
+   - Las reglas de identidad (`User-Agent`) y asignación de reproductor (`X-Target-Player: CHROMIUM_ANTI_CORS`) se leen de la tabla `stream_profiles` de la base de datos local SQLite.
+   - `CloudStreamRuleSyncManager` sincroniza con Supabase (`omnicast_stream_rules`) descargando el JSON íntegro de `headers`, manteniendo resiliencia total offline si no hay internet o cae la nube.

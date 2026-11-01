@@ -1,17 +1,17 @@
 # 🏛️ ARQUITECTURA DEL SISTEMA: OMNICAST PRO
 
-**Versión Canónica:** v3.5.21  
-**Última actualización:** 2026-10-28  
-**Estándar de Calidad:** Clean Architecture, Arquitectura Hexagonal (Ports & Adapters), Fail-Fast, Zero-Crash  
+**Versión Canónica:** v3.5.58  
+**Última actualización:** 2026-10-31  
+**Estándar de Calidad:** Clean Architecture, Arquitectura Hexagonal (Ports & Adapters), Offline-First, Fail-Fast, Zero-Crash  
 
 ---
 
 ## 1. Visión General de Alto Nivel
 
-OmniCast Pro es un ecosistema cliente-servidor nativo de Android compuesto por:
-1. **Emisor Móvil (`:app-sender`):** Transmisión de pantalla de baja latencia (<60ms), captura de audio digital interno, proyección de fotos/videos locales y navegador web con bloqueador de publicidad multi-nivel y captura universal de medios con lista plana estándar Web Video Caster.
-2. **Receptor Android TV / TV Box (`:app-receiver`):** Pantalla de standby limpia, receptor WebRTC por hardware, reproductor híbrido dual (ExoPlayer para flujos directos / Chromium HTML5 + Hls.js con interceptor anti-CORS para CDNs protegidas) y control ergonómico por mando a distancia D-Pad.
-3. **Núcleo Compartido (`:core:domain`, `:core:protocol`, `:core:telemetry`):** Modelos puros de dominio, máquina de estados de señalización WebRTC, protocolos de control y telemetría en tiempo real.
+OmniCast Pro es un ecosistema cliente-servidor nativo de Android diseñado para la transmisión multimedia y proyección de pantalla de baja latencia con tolerancia extrema a fallos:
+1. **Emisor Móvil (`:app-sender`):** Transmisión de pantalla de baja latencia (<60ms) por WebRTC, captura de audio digital interno, proyección de fotos/videos locales y navegador web con bloqueador de publicidad en C++20, gobernanza de identidades por SQLite local y captura universal de medios con lista plana estándar Web Video Caster.
+2. **Receptor Android TV / TV Box (`:app-receiver`):** Pantalla de standby limpia, receptor WebRTC por hardware, reproductor híbrido dual (ExoPlayer por hardware para flujos VOD/Live/MP4/DASH y Chromium HTML5 + Hls.js con interceptor anti-CORS para CDNs protegidas) y control ergonómico por mando a distancia D-Pad.
+3. **Núcleo Compartido (`:core:domain`, `:core:protocol`, `:core:telemetry`):** Modelos puros de dominio, máquina de estados de señalización WebRTC, protocolos de control P2P y telemetría en tiempo real con timestamps.
 
 El contrato funcional y el mapa detallado de código se encuentran en:
 👉 [**`doc/DESIGN.md`**](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/DESIGN.md)  
@@ -24,13 +24,19 @@ El contrato funcional y el mapa detallado de código se encuentran en:
 ```mermaid
 graph TD
     User["Usuario Móvil"] -->|Control Táctil| SenderApp[":app-sender (Emisor Móvil)"]
-    TVUser["Usuario TV Box"] -->|Control D-Pad| ReceiverApp[":app-receiver (Receptor Android TV)"]
+    TVUser["Usuario TV Box"] -->|Control D-Pad / Tecla| ReceiverApp[":app-receiver (Receptor Android TV)"]
 
     subgraph Emisor Móvil
         SenderApp --> MediaProj["MediaProjection HW (H.264)"]
         SenderApp --> WebBrowser["InAppBrowser + AdBlocker C++ & Kotlin"]
+        SenderApp --> SqliteProfiles["SQLite (omnicast_stream_profiles.db)"]
+        SenderApp --> CloudSync["CloudStreamRuleSyncManager"]
         SenderApp --> PhotoServer["LocalImageServer :8087"]
         SenderApp --> MultiCastMgr["MultiReceiverManager"]
+    end
+
+    subgraph Nube Supabase (Crowdsourced)
+        CloudSync -.->|Sincronización Periódica 3h| SupabaseRules["omnicast_stream_rules (Cloud)"]
     end
 
     subgraph Transporte LAN Local Cero-Internet
@@ -39,22 +45,46 @@ graph TD
         SenderApp -->|Señalización WebSocket :8088| LocalSigServer["LocalSignalingServer :8088"]
     end
 
-    subgraph Receptor TV Box
+    subgraph Receptor TV Box (100% Pasivo)
         LocalSigServer --> ReceiverApp
         ReceiverApp --> HWDecoder["MediaCodec Hardware Decoder"]
-        ReceiverApp --> DualPlayer{"Enrutador Híbrido"}
-        DualPlayer -->|Flujos VOD / Live / MP4 / DASH| ExoPlayerTV["ExoPlayer Hardware"]
-        DualPlayer -->|CDNs Protegidas / Tokens HMAC / PelisPlus| TvWebStream["TvWebStreamScreen (HTML5/Hls.js)"]
-        TvWebStream --> AntiCors["TvWebResourceInterceptor (Anti-CORS + Referer Base)"]
-        ReceiverApp --> TVPlaylists["TvPlaylistsManager (Guardados / Historial)"]
+        ReceiverApp --> DualPlayer{"Enrutador TvReceiverActivity"}
+        DualPlayer -->|X-Target-Player: EXOPLAYER / VOD / Live / DASH| ExoPlayerTV["ExoPlayer Hardware"]
+        DualPlayer -->|X-Target-Player: CHROMIUM_ANTI_CORS / Tokens HMAC| TvWebStream["TvWebStreamScreen (HTML5/Hls.js)"]
+        TvWebStream --> AntiCors["TvWebResourceInterceptor (Anti-CORS 0ms + Access-Control-Allow-Origin: *)"]
+        ReceiverApp --> TVPlaylists["TvPlaylistsManager (PVR / Guardados / Historial)"]
     end
 ```
 
 ---
 
-## 3. Los 4 Escudos Defensivos del Navegador y Bloqueador de Anuncios
+## 3. Gobernanza Dinámica por SQLite y Resiliencia Offline-First (ADR-016 / HU-018)
 
-Para navegar en sitios de streaming sin caídas por falta de memoria ni desvíos engañosos, el sistema opera con 4 líneas de defensa:
+Para erradicar código duro (`if-else` encadenados por nombres de servidores) y adaptarse dinámicamente a cambios en servidores de streaming sin necesidad de recompilar APKs:
+
+```mermaid
+flowchart TD
+    Cloud["Repositorios Comunitarios / Supabase\n(omnicast_stream_rules)"] -->|GET cada 3h (select=host,branch,bypass_proxy,headers)| Sync["CloudStreamRuleSyncManager"]
+    
+    subgraph Almacenamiento Local Celular (Offline-First)
+        Sync -->|Persistencia en stream_profiles| SQLite[("SQLite Local\nomnicast_stream_profiles.db")]
+        Seeds["Perfiles Semilla Iniciales\n(StreamManifestProbe.DEFAULT_HOST_PROFILES)"] -->|Carga Inicial en Frío| SQLite
+    end
+    
+    Browser["Navegador Móvil / Detección de Video\n(MediaPlatformResolver.kt)"] -->|getProfileForHost(host)| SQLite
+    SQLite -->|Retorna: User-Agent, X-Target-Player, Referer| Resolver["Preparador de Transmisión\n(buildSafeHeaders)"]
+    Resolver -->|Despacho con Cabeceras Exactas| TV["TV Box (Receptor Pasivo)"]
+```
+
+### Principios de la Gobernanza SQLite:
+1. **Offline-First:** La app nunca depende de la conexión con Supabase para funcionar. Las cabeceras e identidades se leen directamente de SQLite local.
+2. **Resiliencia ante Fallos de Red:** Si Supabase cae, la aplicación opera indefinidamente con la última versión guardada en SQLite.
+3. **Cero Hardcoding de Identidades:** Se eliminan asignaciones estáticas en código. Si una CDN exige identidad de escritorio Windows (`UA_FASTREAM`) o móvil, se gobierna por la tabla `stream_profiles`.
+4. **Ley de Preservación Fiel del Host de CDN (Anti-Private RFC 1918 Leak):** Queda prohibido alterar o reescribir el nombre de host asignado por la CDN (`r1.dropcdn.io`) mediante parámetros query (`srv=`). Se erradica la mutación hacia subdominios privados internos (`ds1i.dropcdn.io` / `192.168.10.23`).
+
+---
+
+## 4. Los 4 Escudos Defensivos del Navegador y Bloqueador de Anuncios
 
 ```mermaid
 flowchart TD
@@ -72,174 +102,140 @@ flowchart TD
     S4 -->|Flujo de Video Válido| Media["Clasificación en 6 Ramas\ny Registro de Enlace"]
 ```
 
-1. **Escudo 1 (Socket de Red en C++20):** `NativeAdBlockEngine.cpp` evalúa URLs en microsegundos contra reglas estáticas de EasyList y dominios aprendidos en SQLite local.
-2. **Escudo 2 (Enrutamiento Reutilizable Anti-OOM y Supresión de Popups):** `BrowserPopupInterceptor.kt` gestiona `onCreateWindow`. Enruta clics directos del usuario (`view.hitTestResult.extra`) y resultados de búsqueda (`target="_blank"`) hacia el WebView principal en 0ms. Utiliza un único interceptor estático con JavaScript deshabilitado para procesar `window.open` con gesto, descartando popups automáticos en 0ms con 0 MB de memoria adicional y erradicando el colapso del heap de 512 MB.
-3. **Escudo 3 (Neutralizador de Capas en el DOM):** Script reactivo que desactiva capas transparentes con alto `z-index` posicionadas sobre reproductores web de películas.
-4. **Escudo 4 (Filtro de Redes VAST / Autoaprendizaje Colectivo):** Detección de redirecciones y dominios foráneos con persistencia en `omnicast_adblock.db` y sincronización asíncrona hacia Supabase (`ADBLOCK_LEARNED_DOMAIN`).
+1. **Escudo 1 (Socket de Red en C++20):** `NativeAdBlockEngine.cpp` evalúa URLs en microsegundos contra 34,803 reglas estáticas de EasyList y dominios aprendidos en SQLite local.
+2. **Escudo 2 (Supresión Nativa de Popups Anti-OOM):** `BrowserWebView.kt` maneja `onCreateWindow` retornando `false`. Elimina instancias de WebView temporales que saturan los 512 MB del heap, neutralizando popups con 0 MB de consumo de RAM.
+3. **Escudo 3 (Neutralizador DOM de Capas Trampa):** Script reactivo que desactiva capas transparentes con alto `z-index` posicionadas sobre reproductores web de películas.
+4. **Escudo 4 (Filtro de Telemetría y Pausa de Memoria):** Al iniciar el casteo, `BrowserWebView` pausa el video local (`video.pause()`) para liberar decodificadores de hardware y RAM, evitando crashes del renderizador de Chromium (`code -1`).
 
 ---
 
-## 4. Arquitectura Hexagonal de Detección de Medios (Principio "Poner y Sacar")
-
-El motor de extracción y análisis de video sigue el patrón **Ports & Adapters**:
+## 5. Casos de Uso Principales (Use Cases)
 
 ```mermaid
 flowchart LR
-    subgraph Sensores
-        A["Sensor Red C++\n(NativeAdBlockEngine)"]
-        B["Sniffer DOM\n(wvc_sniffer.js)"]
-        C["Pre-Escáner Iframes\n(MoviePagePreScanner)"]
+    subgraph Casos de Uso
+        CU1["CU-01: Películas en CDNs Protegidas\n(DropCDN / Fastream / PelisPlus)"]
+        CU2["CU-02: TV Lineal y Deportes en Vivo\n(Sky News / Live-Edge / PVR)"]
+        CU3["CU-03: Video Progresivo / DASH\n(OK.ru / Reypelis / MP4)"]
+        CU4["CU-04: Transmisiones Oficiales\n(YouTube / Dailymotion)"]
+        CU5["CU-05: Screen Mirroring P2P\n(Pantalla Completa vs Por Aplicación)"]
+        CU6["CU-06: Proyección de Fotos y Galería Local\n(Visor Continuo / Servidor :8087)"]
+        CU7["CU-07: Sincronización Nube-a-SQLite\n(Auto-Recuperación Colectiva)"]
     end
-
-    subgraph Puerto Hexagonal
-        Port["IMediaStreamExtractorPort\n(DetectMediaStreamUseCase)"]
-    end
-
-    subgraph Adaptadores Aislados
-        Ad1["MediaPlatformResolver\n(LuluStream / Fastream)"]
-        Ad2["YouTubeQualityResolver\n(TvYouTubeScreen)"]
-        Ad3["UniversalHlsExtractor\n(Master .m3u8)"]
-    end
-
-    subgraph Las 6 Ramas de Dominio
-        R1["1. VOD_HLS_MP4 (Películas)"]
-        R2["2. LIVE_HLS (En Vivo / Deportes)"]
-        R3["3. DASH (.mpd)"]
-        R4["4. AUDIO (Radios / AAC)"]
-        R5["5. IPTV (Listas M3U)"]
-        R6["6. LOCAL_MEDIA (Galería)"]
-    end
-
-    Sensores --> Port
-    Port --> Adaptadores Aislados
-    Adaptadores Aislados --> Las 6 Ramas de Dominio
 ```
 
-### 4.1. Pipeline de Higiene Previa a Extractores (`isTelemetryOrGarbage`)
-
-Para blindar el Principio "Poner y Sacar", toda URL candidata detectada por Chromium atraviesa un filtro previo de higiene centralizado (`TelemetryFilterAdapter.kt`) antes de ser entregada a la cadena de extractores:
-
-```mermaid
-flowchart TD
-    Req["URL Candidata capturada por WebView / Sniffer"] --> PreFilter{"Filtro Centralizado de Higiene\n(TelemetryFilterAdapter.kt)"}
-    
-    PreFilter -->|"/cdn-cgi/", "tracker", "top-fwz", "/ping"| Discard1["❌ Descarte Inmediato: Telemetría / Beacon"]
-    PreFilter -->|"/embed/", "/e/", "/widget/", "anonymvideo"| Discard2["❌ Descarte Inmediato: Iframe Web / HTML"]
-    PreFilter -->|".html", ".htm", ".css", ".js", ".vtt"| Discard3["❌ Descarte Inmediato: Recursos Estáticos / VTT"]
-    
-    PreFilter -->|Supera Higiene (Limpio)| ExtractorChain{"Cadena Hexagonal de Extractores\n(StreamExtractorRegistry)"}
-    
-    ExtractorChain -->|Dominios Rusos okcdn.ru / mycdn.me| ExtOk["OkRuSiteExtractorAdapter\n(Sintetiza Calidades y Referer)"]
-    ExtractorChain -->|Hosts DropCDN / Fastream| ExtFast["FastreamExtractorAdapter\n(User-Agent Windows + Referer)"]
-    ExtractorChain -->|Manifiestos HLS / VOD| ExtHls["UniversalHlsExtractorAdapter\n(Parseo Master Playlist)"]
-    ExtractorChain -->|YouTube Oficial| ExtYt["YouTubeQualityResolver\n(Extracción de ID limpia)"]
-    
-    ExtOk --> StreamValid["🎬 Flujo Válido con Metadatos y Cabeceras"]
-    ExtFast --> StreamValid
-    ExtHls --> StreamValid
-    ExtYt --> StreamValid
-```
-
-### Las 6 Ramas de `MediaBranch`:
-1. **`VOD_HLS_MP4`:** Películas y series con soporte para saltos de tiempo (scrubbing), persistencia de posición y pistas múltiples.
-2. **`LIVE_HLS`:** Canales de televisión y partidos en vivo (sin `#EXT-X-ENDLIST`), con buffer ultracorto y enganche en el borde en vivo.
-3. **`DASH`:** Manifiestos XML `.mpd` con canales separados de audio y video.
-4. **`AUDIO`:** Emisiones de radio y pistas de sonido puro, apagando el lienzo gráfico para ahorrar batería.
-5. **`IPTV`:** Listas masivas de canales M3U con reconexión silenciosa tolerante a cortes.
-6. **`LOCAL_MEDIA`:** Fotos y videos de la memoria del teléfono servidos por el puerto `:8087` con cabeceras `206 Partial Content`.
+### Detalle de Casos de Uso:
+* **CU-01 (Películas en CDNs Protegidas):** El usuario navega en un portal de películas (ej. *Sacrifice* en PelisPlus). El sniffer detecta el flujo HLS. `MediaPlatformResolver` consulta SQLite, inyecta `UA_FASTREAM`, el Referer canónico del embed (`https://dr0pstream.com/e/<id>`) y la directiva `X-Target-Player: CHROMIUM_ANTI_CORS`. La TV Box recibe la URL pública intacta (`r1.dropcdn.io`), `TvWebResourceInterceptor` responde preflights OPTIONS e inyecta CORS, y Chromium reproduce de inmediato sin error `code=0`.
+* **CU-02 (TV Lineal y Deportes en Vivo):** Canales de emisión continua 24/7 (Sky News, partidos en vivo). El clasificador en C++ detecta descriptores `linear`, `lin-`, `envivo`. El Sender fuerza `startPositionMs = 0L`. ExoPlayer se ancla a la cabeza en vivo (*live edge*) sin buffering infinito. En la TV se muestra la insignia `🔴 EN VIVO` y se habilita la grabación continua PVR con un toque.
+* **CU-03 (Video Progresivo y DASH):** OK.ru o servidores directos MP4/MKV. Despacho directo a `ExoPlayerTvManager` con decodificación acelerada por hardware a 60 fps, soporte de saltos temporales (±10s) y preservación de cabeceras seguras.
+* **CU-04 (YouTube Oficial y Canales Embebidos):** Detección semántica de IDs oficiales (11 caracteres o canales de 24 caracteres `channel=UC...`). Despacho directo a `TvYouTubeScreen` mediante IFrame oficial de Google sin anuncios invasivos.
+* **CU-05 (Screen Mirroring P2P):** Captura de pantalla y audio interno (<60ms). Modo Pantalla Completa con relación vertical 1.075f sin barras de sistema vs Modo Por Aplicación con lienzo 16:9 libre y orientación por frame de video.
+* **CU-06 (Proyección de Fotos y Galería Local):** Servidor HTTP local en puerto `:8087`. Navegación continua de fotos con botón Atrás LIFO estricto y sin recarga de sockets.
+* **CU-07 (Sincronización Nube-a-SQLite):** En segundo plano cada 3 horas, `CloudStreamRuleSyncManager` actualiza las reglas comunitarias desde Supabase hacia la base de datos local SQLite.
 
 ---
 
-## 5. Arquitectura Híbrida Dual y Despacho de Reproductores en TV Box
-
-La TV Box dispone de 4 motores autónomos especializados según el tipo de flujo recibido vía `SignalingMessage.DirectStreamHandoff`:
+## 6. Árbol de Decisión Estricto de Reproducción en TV Box
 
 ```mermaid
 flowchart TD
-    Handoff["DirectStreamHandoff(url, headers, branch)"] --> Router{"Enrutador TvReceiverActivity"}
-    Router -->|ID de YouTube| YT["1. TvYouTubeScreen\n(Embed IFrame sin anuncios)"]
-    Router -->|Token HMAC / DropCDN / PelisPlus| WebPlayer["2. TvWebStreamScreen\n(Chromium + Hls.js Nativo)"]
-    Router -->|VOD / MP4 / HLS / Reypelis / PelisGO| Exo["3. ExoPlayerTvManager\n(MediaCodec HW 60fps)"]
-    Router -->|Screen Mirroring WebRTC| WebRtc["4. WebRtcReceiverManager\n(Hardware H.264 <60ms)"]
-    Exo -->|Fallback ante HTTP 403 / Fallo Formato| WebPlayer
+    Start["Recepción de SignalingMessage.DirectStreamHandoff(url, headers)"] --> ChkYT{"¿Contiene cabecera\nX-YouTube-Id o ID YouTube?"}
     
-    subgraph Blindaje de Red Chromium en TV
-        WebPlayer --> SameOrigin["Same-Origin Nativo (baseUrl = streamOrigin)"]
-        SameOrigin --> BlinkNet["Stack de Red Chromium (BoringSSL)\nHuella TLS Genuina sin Interceptores"]
-    end
-
-    subgraph Ergonomía D-Pad
-        Remote["Mando a Distancia"] --> KeyHandler["TvRemoteKeyHandler"]
-        KeyHandler -->|D-Pad Arriba| Subs["💬 Alternar Subtítulos (Badge 2.5s)"]
-        KeyHandler -->|D-Pad Abajo| Qual["📺 Ciclar Calidad HLS (Badge 2.5s)"]
-        KeyHandler -->|D-Pad Center| PlayPause["⏯ Play / Pausa"]
-        KeyHandler -->|D-Pad Left/Right| Seek["⏩ Salto ±10 segundos"]
-        KeyHandler -->|MENU| Zoom["🔍 Ciclar Zoom (FIT / FILL / 75-130%)"]
-    end
+    ChkYT -->|Sí| PlayYT["1. TvYouTubeScreen\n(Google IFrame API)"]
+    ChkYT -->|No| ChkDirectiva{"¿Cabecera X-Target-Player\nes CHROMIUM_ANTI_CORS?"}
+    
+    ChkDirectiva -->|Sí| PlayWeb["2. TvWebStreamScreen (HTML5/Hls.js)\n+ TvWebResourceInterceptor (Anti-CORS)"]
+    ChkDirectiva -->|No| ChkToken{"¿Tiene token firmado HMAC\n(hasSignedSecurityToken == true)?"}
+    
+    ChkToken -->|Sí| PlayWeb
+    ChkToken -->|No| ChkSingleUse{"¿Host de token único\n(isSingleUseTokenHost == true)?"}
+    
+    ChkSingleUse -->|Sí| PlayWeb
+    ChkSingleUse -->|No| PlayExo["3. ExoPlayerTvManager\n(Hardware MediaCodec 60fps)"]
+    
+    PlayExo -->|Fallo HTTP 403 / Error Formato| FallbackWeb["Fallback Reactivo Automático\n(Transfiere headers originales a TvWebStreamScreen)"]
+    FallbackWeb --> PlayWeb
 ```
 
-### 5.1. Secuencia de Proyección Autónoma hacia TV Box (Cero-Proxy)
+---
+
+## 7. Diagramas de Interacción y Secuencia
+
+### 7.1. Proyección de Película en CDN Protegida (DropCDN / Fastream / PelisPlus)
 
 ```mermaid
 sequenceDiagram
     autonumber
     actor U as Usuario Móvil
-    participant Browser as BrowserWebView / Hex Core
-    participant Sender as TvCastManager / WebSocket :8088
+    participant Browser as BrowserWebView / Sniffer
+    participant Resolver as MediaPlatformResolver
+    participant SQLite as StreamProfileDatabase (SQLite)
     participant TV as TvReceiverActivity (TV Box)
-    participant Exo as ExoPlayerTvManager (HW)
-    participant WebTV as TvWebStreamScreen (HTML5)
-    participant CDN as CDN Servidor Video (Remoto)
+    participant Interceptor as TvWebResourceInterceptor
+    participant WebTV as TvWebStreamScreen (Chromium/Hls.js)
+    participant CDN as CDN DropCDN (r1.dropcdn.io)
 
-    U->>Browser: Toca Play en sitio web (PelisPlus / OK.ru / PelisGO)
-    Browser->>Browser: DetectMediaStreamUseCase + TelemetryFilter
-    Browser->>U: Muestra Lista Plana WVC 1:1 de Variantes Detectadas
-    U->>Browser: Selecciona Variante de video y pulsa Proyectar
-    Browser->>Sender: handoffDirectStream(url, headers, branch)
-    Sender->>TV: WebSocket SignalingMessage.DirectStreamHandoff(url, headers)
+    U->>Browser: Toca Play en película (Sacrifice)
+    Browser->>Resolver: URL capturada: https://r1.dropcdn.io/...master.m3u8?srv=ds1i
+    Resolver->>SQLite: getProfileForHost("dropcdn.io")
+    SQLite-->>Resolver: headers: {User-Agent: UA_FASTREAM, X-Target-Player: CHROMIUM_ANTI_CORS}
+    Resolver->>Resolver: Construye Referer embed canónico (https://dr0pstream.com/e/<id>)
+    Resolver->>Resolver: sanitizeMediaUrl(url) -> Preserva host público r1.dropcdn.io
+    Resolver->>TV: WebSocket SignalingMessage.DirectStreamHandoff(url, headers)
     
-    alt Reproducción Directa Estándar (ExoPlayer)
-        TV->>Exo: playStream(url, headers)
-        Exo->>CDN: GET url (con User-Agent & Referer del móvil)
-        CDN-->>Exo: HTTP 200 OK (Stream MP4/HLS/DASH)
-        Exo-->>TV: Decodificación por Hardware activa
-    else Fallback Reactivo ante HTTP 403 / CDN Protegida (DropCDN/Fastream)
-        Exo->>CDN: GET url
-        CDN-->>Exo: HTTP 403 Forbidden (Firma estricta / Token)
-        Exo->>TV: Notifica Error 403 a TvReceiverActivity
-        TV->>WebTV: Activa Fallback con headers originales (baseUrl = Referer, UA Móvil)
-        WebTV->>CDN: GET url vía TvWebResourceInterceptor (Anti-CORS)
-        CDN-->>WebTV: HTTP 200 OK (Hls.js / Video HTML5)
+    TV->>TV: Evalúa X-Target-Player == "CHROMIUM_ANTI_CORS"
+    TV->>WebTV: Inicia TvWebStreamScreen con headers recibidos
+    WebTV->>Interceptor: Carga manifiesto HLS vía Chromium XHR
+    Interceptor->>CDN: GET https://r1.dropcdn.io/... (IP pública 91.218.50.202)
+    CDN-->>Interceptor: HTTP 200 OK (Manifiesto master.m3u8)
+    Interceptor-->>WebTV: Inyecta Access-Control-Allow-Origin: * (CORS superado en 0ms)
+    WebTV-->>U: Reproducción fluida y autónoma en TV Box
+```
+
+### 7.2. Sincronización Remota Nube -> SQLite con Resiliencia Offline
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant App as OmniCast Sender (Background)
+    participant Sync as CloudStreamRuleSyncManager
+    participant Supabase as Supabase (omnicast_stream_rules)
+    participant SQLite as SQLite (omnicast_stream_profiles.db)
+
+    App->>Sync: initAndSync(context) cada 3 horas
+    Sync->>Supabase: GET /rest/v1/omnicast_stream_rules?select=host,branch,bypass_proxy,headers
+    
+    alt Supabase Responde Exitosamente (Online)
+        Supabase-->>Sync: JSON con reglas y cabeceras {host, branch, headers}
+        loop Cada regla recibida
+            Sync->>SQLite: recordSuccess(host, headersMap, bypassProxy, branch)
+        end
+        Sync->>App: Actualiza timestamp de última sincronización
+    else Supabase No Responde / Sin Internet (Offline-First)
+        Supabase--xSync: Timeout / Error de Red
+        Sync->>App: Log informativo de advertencia (Fail-Safe Silencioso)
+        Note over Sync,SQLite: La aplicación continúa operando 100% normal con los datos locales en SQLite
     end
 ```
 
 ---
 
-## 6. Screen Mirroring y Leyes de Hardware
+## 8. Leyes Técnicas Inviolables de Hardware y Streaming
 
-El subsistema de Screen Mirroring conecta la pantalla del móvil con la TV Box vía WebRTC P2P con latencia inferior a 60ms:
-
-- **Leyes Técnicas Inviolables:**
-  1. **Prohibido `changeCaptureFormat()` en caliente:** El codec H.264 por hardware y el `VirtualDisplay` no admiten redimensionamiento durante la transmisión. La rotación fluye nativamente en el frame.
-  2. **Tolerancia a `IceConnectionState.DISCONNECTED`:** Al ser un estado transitorio de red, nunca expulsa la pantalla de la TV. Solo `FAILED` o `CLOSED` son causales de cierre.
-  3. **Comando STOP Inmediato:** Todo mensaje `PlayControl("STOP")` apaga la transmisión y restaura Standby en menos de 5ms.
-- **Separación Total de Opciones:**
-  - **Opción 1: Pantalla Completa:** Mantiene la proporción vertical 100% de la altura de la TV (`aspectRatio`), aplicando factor base de 1.075f en modo FIT para ocultar las barras de sistema.
-  - **Opción 2: Por Aplicación:** Ignora el sensor físico del teléfono y obedece la orientación del video (`effectiveFrameW > effectiveFrameH`) en un lienzo libre 16:9 (`MATCH_PARENT`) con zoom gradual.
-
----
-
-## 7. Catálogo de Puertos y Protocolos Locales
-
-| Componente / Servicio | Puerto Local | Protocolo | Propósito |
-|---|---|---|---|
-| Servidor de Señalización TV Box | `:8088` | WebSocket / TCP | Control P2P, estado de reproducción, comandos remotos. |
-| Servidor Multimedia Móvil | `:8087` | HTTP / TCP | Streaming de videos locales con rango `206 Partial Content`. |
-| Descubrimiento de Red (NSD/mDNS) | Dinámico | UDP (`_omnicast._tcp`) | Detección automática cero-configuración de TVs en la red WiFi. |
+1. **Ley de Intocabilidad de lo Probado:** Toda pantalla, extractor, cálculo de escala o flujo aprobado por el usuario queda sellado e inmutable. Si funciona, no se toca.
+2. **Prohibición de `changeCaptureFormat()` en caliente:** En Screen Mirroring, el codec H.264 por hardware no admite redimensionamiento durante la transmisión. La rotación fluye nativamente en el frame.
+3. **Tolerancia a `IceConnectionState.DISCONNECTED`:** Al ser un estado transitorio de red, nunca expulsa la pantalla de la TV. Solo `FAILED` o `CLOSED` son causales de cierre.
+4. **Comando STOP Inmediato:** Todo mensaje `PlayControl("STOP")` apaga la transmisión y restaura Standby en menos de 5ms.
+5. **Intocabilidad de Foco en `BrowserWebView`:** Prohibido forzar `requestFocus()` táctil en el WebView para no romper la conexión IME del teclado virtual.
+6. **Supresión Nativa de Popups Anti-OOM:** `onCreateWindow` retorna `false` directamente para evitar saturar el límite de 512 MB de la máquina virtual.
+7. **Delimitación Estricta de Rutas URL (Ley RFC 8216):** Las comparaciones de manifiestos HLS (`master.m3u8`) deben exigir delimitador de barra (`endsWith("/$name")`) o segmento final de ruta.
+8. **Preservación Fiel de Dominios CDN y TV Box Pasiva (Ley Anti-Private RFC 1918 Leak / ADR-016):**
+   - Prohibido reescribir nombres de host mediante parámetros query como `srv=`.
+   - La TV Box actúa de forma estrictamente pasiva sin alterar URLs recibidas del Emisor.
 
 ---
 
-## 8. Registro de Decisiones de Arquitectura (ADRs)
+## 9. Registro de Decisiones de Arquitectura (ADRs)
 
 - [ADR-001: Stack Tecnológico Inicial](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/adr/ADR-001-stack-inicial.md)
 - [ADR-002: Telemetría y Logs en TV Box](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/adr/ADR-002-telemetria-tv-logs.md)
@@ -254,4 +250,6 @@ El subsistema de Screen Mirroring conecta la pantalla del móvil con la TV Box v
 - [ADR-011: Arquitectura Fiel de Captura v3.32.94 y Despacho Dual de Reproductores en TV Box](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/adr/ADR-011-arquitectura-captura-v3.32-y-despacho-dual-tv.md)
 - [ADR-012: Filtro Centralizado de Higiene de Red y Purificación de Extractores Hexagonales](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/adr/ADR-012-filtro-centralizado-higiene-streams-y-adaptadores-limpios.md)
 - [ADR-013: Coexistencia DropCDN/OK.ru, Estándar WVC de Lista Plana y Blindaje de Cabeceras en TV](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/adr/ADR-013-coexistencia-dropcdn-okru-y-estandar-lista-plana.md)
-
+- [ADR-014: Resolución Universal Master HLS (RFC 8216) y Canales YouTube Live](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/adr/ADR-014-resolucion-universal-master-hls-y-canales-youtube-live.md)
+- [ADR-015: Clasificación Universal de TV Lineal, Grabación Dual (PVR/Descarga) y Puente HTTP para Deep Link QR](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/adr/ADR-015-clasificacion-universal-tv-lineal-pvr-y-puente-qr.md)
+- [ADR-016: Gobernanza Dinámica por SQLite, Preservación Fiel de Dominios CDN y TV Box Pasiva](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/adr/ADR-016-gobernanza-sqlite-resiliencia-dropcdn-y-tv-pasiva.md)

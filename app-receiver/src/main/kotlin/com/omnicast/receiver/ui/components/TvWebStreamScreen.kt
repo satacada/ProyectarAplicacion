@@ -28,27 +28,6 @@ import com.omnicast.core.protocol.SignalingMessage
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 
-/**
- * Puente JavaScript para capturar eventos de reproducción del reproductor HTML5 en TV Box.
- */
-class WebStreamBridge(
-    private val onStatus: ((posMs: Long, durMs: Long, isPlaying: Boolean) -> Unit)?,
-    private val onFailed: ((String) -> Unit)? = null
-) {
-    @JavascriptInterface
-    fun onPlaybackStatus(curSec: Float, durSec: Float, isPlaying: Boolean) {
-        val curMs = (curSec * 1000).toLong()
-        val durMs = if (durSec.isNaN() || durSec.isInfinite() || durSec < 0f) 0L else (durSec * 1000).toLong()
-        onStatus?.invoke(curMs, durMs, isPlaying)
-    }
-
-    @JavascriptInterface
-    fun onPlaybackFailed(reason: String) {
-        com.omnicast.receiver.log.ReceiverLogger.log("WebStreamBridge", "❌ Error en reproductor web: $reason")
-        onFailed?.invoke(reason)
-    }
-}
-
 private object WebPlayerAssetHelper {
     private var cachedHlsJs: String? = null
     fun getHlsJs(context: Context): String = cachedHlsJs ?: try {
@@ -92,6 +71,8 @@ fun TvWebStreamScreen(
                 "SEEK_REL" -> wv.evaluateJavascript("seekRel(${msg.positionMs / 1000.0});", null)
                 "VOLUME" -> wv.evaluateJavascript("setVolume(${msg.volume.coerceIn(0f, 1f)});", null)
                 "STOP" -> wv.evaluateJavascript("stopStream();", null)
+                "CYCLE_QUALITY" -> wv.evaluateJavascript("cycleQuality();") { r -> val q = r?.replace("\"", "")?.takeIf { it != "null" } ?: "Auto"; android.widget.Toast.makeText(wv.context, "📺 Calidad: $q", android.widget.Toast.LENGTH_SHORT).show() }
+                "TOGGLE_SUBTITLES", "SUBTITLE_TOGGLE" -> wv.evaluateJavascript("toggleSubtitles();") { r -> val s = r?.replace("\"", "")?.takeIf { it != "null" } ?: "Off"; android.widget.Toast.makeText(wv.context, "💬 Subtítulos: $s", android.widget.Toast.LENGTH_SHORT).show() }
             }
         }
     }
@@ -196,14 +177,14 @@ fun TvWebStreamScreen(
                                     vid.addEventListener('loadedmetadata', seekStart);
                                     vid.addEventListener('canplay', seekStart);
 
+                                    var hls = null;
                                     function initHls() {
                                       if (window.Hls && Hls.isSupported()) {
+                                        if (hls) { try { hls.destroy(); } catch(_) {} hls = null; }
                                         var requireCreds = ${headers["X-With-Credentials"] == "true"};
                                         var cfg = { enableWorker: true, lowLatencyMode: false, backBufferLength: 10, maxBufferLength: 20, maxMaxBufferLength: 30, maxBufferSize: 30 * 1024 * 1024 };
-                                        if (requireCreds) {
-                                          cfg.xhrSetup = function(xhr) { try { xhr.withCredentials = true; } catch(_) {} };
-                                        }
-                                        var hls = new Hls(cfg);
+                                        if (requireCreds) { cfg.xhrSetup = function(xhr) { try { xhr.withCredentials = true; } catch(_) {} }; }
+                                        hls = new Hls(cfg);
                                         hls.loadSource(streamUrl);
                                         hls.attachMedia(vid);
                                         hls.on(Hls.Events.MANIFEST_PARSED, function() { console.log('TvWebStreamJS [MANIFEST_PARSED]', streamUrl); vid.play().catch(function(){}); });
@@ -214,30 +195,20 @@ fun TvWebStreamScreen(
                                               if (cfg.xhrSetup) {
                                                 console.warn('TvWebStreamJS [CORS_FALLBACK] Reintentando sin credenciales XHR...');
                                                 delete cfg.xhrSetup;
-                                                hls.destroy();
+                                                try { hls.destroy(); } catch(_) {}
                                                 hls = new Hls(cfg);
                                                 hls.loadSource(streamUrl);
                                                 hls.attachMedia(vid);
-                                              } else {
-                                                hls.startLoad();
-                                              }
+                                              } else { hls.startLoad(); }
                                             }
                                             else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) hls.recoverMediaError();
                                             else { vid.src = streamUrl; vid.play().catch(function(){}); }
                                           }
                                         });
-                                      } else {
-                                        vid.src = streamUrl;
-                                        vid.play().catch(function(){});
-                                      }
+                                      } else { vid.src = streamUrl; vid.play().catch(function(){}); }
                                     }
 
-                                    if (streamUrl.indexOf('.m3u8') !== -1) {
-                                      initHls();
-                                    } else {
-                                      vid.src = streamUrl;
-                                      vid.play().catch(function(){});
-                                    }
+                                    if (streamUrl.indexOf('.m3u8') !== -1) initHls(); else { vid.src = streamUrl; vid.play().catch(function(){}); }
 
                                     function playStream() { if (vid) vid.play().catch(function(){}); }
                                     function pauseStream() { if (vid) vid.pause(); }
@@ -245,7 +216,39 @@ fun TvWebStreamScreen(
                                     function seekTo(s) { if (vid) vid.currentTime = Math.max(0, s); }
                                     function seekRel(d) { if (vid) vid.currentTime = Math.max(0, (vid.currentTime || 0) + d); }
                                     function setVolume(v) { if (vid) vid.volume = Math.max(0, Math.min(1, v)); }
-                                    function stopStream() { if (vid) { vid.pause(); vid.removeAttribute('src'); vid.load(); } }
+                                    function cycleQuality() {
+                                      try {
+                                        if (!hls || !hls.levels || !hls.levels.length) return 'Única';
+                                        var n = (hls.currentLevel + 2) % (hls.levels.length + 1) - 1;
+                                        hls.currentLevel = n;
+                                        if (n === -1) return 'Auto';
+                                        var l = hls.levels[n];
+                                        return l && l.height ? (l.height + 'p') : ('Nivel ' + n);
+                                      } catch(_) { return 'Auto'; }
+                                    }
+                                    function toggleSubtitles() {
+                                      try {
+                                        if (hls && hls.subtitleTracks && hls.subtitleTracks.length) {
+                                          var n = (hls.subtitleTrack + 2) % (hls.subtitleTracks.length + 1) - 1;
+                                          hls.subtitleTrack = n;
+                                          if (n === -1) return 'Desactivados';
+                                          var t = hls.subtitleTracks[n];
+                                          return t.name || t.lang || ('Pista ' + n);
+                                        }
+                                        if (vid && vid.textTracks && vid.textTracks.length) {
+                                          for (var i = 0; i < vid.textTracks.length; i++) {
+                                            if (vid.textTracks[i].mode === 'showing') { vid.textTracks[i].mode = 'disabled'; return 'Desactivados'; }
+                                          }
+                                          vid.textTracks[0].mode = 'showing';
+                                          return vid.textTracks[0].label || vid.textTracks[0].language || 'Pista 1';
+                                        }
+                                        return 'Sin subtítulos';
+                                      } catch(_) { return 'Sin subtítulos'; }
+                                    }
+                                    function stopStream() {
+                                      if (hls) { try { hls.destroy(); hls = null; } catch(_) {} }
+                                      if (vid) { vid.pause(); vid.removeAttribute('src'); vid.load(); }
+                                    }
 
                                     function setDisplayMode(mode, zoom, panY, panX) {
                                       if (!vid) return;

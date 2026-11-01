@@ -150,17 +150,21 @@ object WvcShieldSecurityEngine {
         val curHost = extractHost(currentUrl) ?: return false
         val targetHost = extractHost(targetUrl) ?: return false
 
+        if (targetHost == curHost || targetHost.endsWith(".$curHost") || curHost.endsWith(".$targetHost") || AdBlocker.isKnownMediaHost(targetHost)) return false
+        if (AdBlocker.isVerificationOrCaptcha(targetUrl) || AdBlockWhitelistManager.isWhitelistedHost(targetHost)) return false
+
+        val isTargetSearchEngine = AdBlocker.isSearchEngine(targetHost)
+        val isSourceSearchEngine = AdBlocker.isSearchEngine(curHost)
+        if (!isSourceSearchEngine && isTargetSearchEngine) {
+            try { android.util.Log.w("WvcShieldSecurity", "🛑 [WVC Shield] Secuestro de clic hacia buscador ($targetHost) bloqueado desde: $curHost") } catch (_: Throwable) {}
+            return true
+        }
+
         val isPlayerContext = isMediaPresent || AdBlocker.isKnownMediaHost(curHost)
         if (!isPlayerContext) return false
 
-        if (targetHost == curHost || targetHost.endsWith(".$curHost") || curHost.endsWith(".$targetHost") || AdBlocker.isKnownMediaHost(targetHost)) {
-            return false
-        }
-
-        if (AdBlocker.isSearchEngine(targetHost) || AdBlocker.isAd(targetUrl) || AdBlockDatabase.isAdDomain(targetHost) || NativeAdBlockEngine.shouldBlock(targetUrl, currentUrl)) {
-            try {
-                android.util.Log.w("WvcShieldSecurity", "🛑 [WVC Shield] Secuestro de clic bloqueado en reproductor ($curHost) hacia: $targetHost")
-            } catch (_: Throwable) {}
+        if (AdBlocker.isAd(targetUrl) || AdBlockDatabase.isAdDomain(targetHost) || NativeAdBlockEngine.shouldBlock(targetUrl, currentUrl)) {
+            try { android.util.Log.w("WvcShieldSecurity", "🛑 [WVC Shield] Secuestro de clic publicitario bloqueado hacia: $targetHost") } catch (_: Throwable) {}
             return true
         }
         return false

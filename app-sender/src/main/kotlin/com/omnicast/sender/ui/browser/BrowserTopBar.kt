@@ -107,47 +107,84 @@ fun BrowserTopBar(
                     Icon(Icons.Rounded.Close, contentDescription = "Cerrar", tint = Color(0xFFEF4444), modifier = Modifier.size(18.dp))
                 }
 
-                Row(
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(32.dp)
-                        .background(Color(0xFF141C2B), RoundedCornerShape(16.dp))
-                        .border(1.dp, Color(0xFF24334C), RoundedCornerShape(16.dp))
-                        .padding(horizontal = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(Icons.Rounded.Lock, contentDescription = "Seguro", tint = Color(0xFF38BDF8), modifier = Modifier.size(13.dp))
-                    Spacer(modifier = Modifier.width(4.dp))
-                    BasicTextField(
-                        value = textFieldValue,
-                        onValueChange = { newValue ->
-                            textFieldValue = newValue
-                            if (newValue.text != inputUrl) onInputUrlChange(newValue.text)
-                        },
-                        modifier = Modifier.weight(1f).fillMaxHeight().onFocusChanged { isFocused = it.isFocused },
-                        singleLine = true,
-                        cursorBrush = androidx.compose.ui.graphics.SolidColor(Color(0xFF38BDF8)),
-                        textStyle = androidx.compose.ui.text.TextStyle(
-                            color = Color.White, fontSize = 13.sp, lineHeight = 16.sp, fontWeight = FontWeight.Normal,
-                            platformStyle = androidx.compose.ui.text.PlatformTextStyle(includeFontPadding = false)
-                        ),
-                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Go),
-                        keyboardActions = KeyboardActions(onGo = { focusManager.clearFocus(); onNavigate(textFieldValue.text) }),
-                        decorationBox = { innerTextField ->
-                            Box(contentAlignment = Alignment.CenterStart, modifier = Modifier.fillMaxSize()) {
-                                if (textFieldValue.text.isEmpty()) {
-                                    Text(com.omnicast.sender.language.AppLanguageManager.t(context, "browser_search_hint"), color = Color(0xFF64748B), fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, softWrap = false)
+                Box(modifier = Modifier.weight(1f)) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(32.dp)
+                            .background(Color(0xFF141C2B), RoundedCornerShape(16.dp))
+                            .border(1.dp, Color(0xFF24334C), RoundedCornerShape(16.dp))
+                            .padding(horizontal = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(Icons.Rounded.Lock, contentDescription = "Seguro", tint = Color(0xFF38BDF8), modifier = Modifier.size(13.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        BasicTextField(
+                            value = textFieldValue,
+                            onValueChange = { newValue ->
+                                textFieldValue = newValue
+                                if (newValue.text != inputUrl) onInputUrlChange(newValue.text)
+                            },
+                            modifier = Modifier.weight(1f).fillMaxHeight().onFocusChanged { isFocused = it.isFocused },
+                            singleLine = true,
+                            cursorBrush = androidx.compose.ui.graphics.SolidColor(Color(0xFF38BDF8)),
+                            textStyle = androidx.compose.ui.text.TextStyle(
+                                color = Color.White, fontSize = 13.sp, lineHeight = 16.sp, fontWeight = FontWeight.Normal,
+                                platformStyle = androidx.compose.ui.text.PlatformTextStyle(includeFontPadding = false)
+                            ),
+                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Go),
+                            keyboardActions = KeyboardActions(onGo = { focusManager.clearFocus(); onNavigate(textFieldValue.text) }),
+                            decorationBox = { innerTextField ->
+                                Box(contentAlignment = Alignment.CenterStart, modifier = Modifier.fillMaxSize()) {
+                                    if (textFieldValue.text.isEmpty()) {
+                                        Text(com.omnicast.sender.language.AppLanguageManager.t(context, "browser_search_hint"), color = Color(0xFF64748B), fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, softWrap = false)
+                                    }
+                                    innerTextField()
                                 }
-                                innerTextField()
+                            }
+                        )
+                        if (textFieldValue.text.isNotEmpty()) {
+                            IconButton(
+                                onClick = { textFieldValue = TextFieldValue(""); onInputUrlChange("") },
+                                modifier = Modifier.size(24.dp)
+                            ) {
+                                Icon(Icons.Rounded.Close, contentDescription = "Borrar texto", tint = Color(0xFFCBD5E1), modifier = Modifier.size(17.dp))
                             }
                         }
-                    )
-                    if (textFieldValue.text.isNotEmpty()) {
-                        IconButton(
-                            onClick = { textFieldValue = TextFieldValue(""); onInputUrlChange("") },
-                            modifier = Modifier.size(24.dp)
+                    }
+
+                    val query = textFieldValue.text.trim()
+                    val suggestions = remember(query, isFocused) {
+                        if (isFocused && query.length >= 2) {
+                            com.omnicast.sender.history.PlayHistoryManager(context).getHistory()
+                                .filter { it.title.contains(query, ignoreCase = true) || it.url.contains(query, ignoreCase = true) }
+                                .distinctBy { it.title.ifBlank { it.url } }
+                                .take(4)
+                        } else emptyList()
+                    }
+                    if (suggestions.isNotEmpty()) {
+                        DropdownMenu(
+                            expanded = true,
+                            onDismissRequest = {},
+                            properties = androidx.compose.ui.window.PopupProperties(focusable = false),
+                            modifier = Modifier.fillMaxWidth().background(Color(0xFF0F172A))
                         ) {
-                            Icon(Icons.Rounded.Close, contentDescription = "Borrar texto", tint = Color(0xFFCBD5E1), modifier = Modifier.size(17.dp))
+                            suggestions.forEach { item ->
+                                DropdownMenuItem(
+                                    text = {
+                                        Column {
+                                            Text(item.title.ifBlank { item.url }, color = Color.White, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                            Text(item.pageUrl ?: item.url, color = Color(0xFF38BDF8), fontSize = 10.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                        }
+                                    },
+                                    onClick = {
+                                        focusManager.clearFocus()
+                                        val target = item.pageUrl ?: item.url
+                                        textFieldValue = TextFieldValue(target, TextRange(target.length))
+                                        onNavigate(target)
+                                    }
+                                )
+                            }
                         }
                     }
                 }

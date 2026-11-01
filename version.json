@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 312,
-  "versionCodeReceiver": 295,
-  "versionName": "3.5.61",
-  "releaseTag": "v3.5.61",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.61/omnicast-sender-v3.5.61.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.61/omnicast-receiver-v3.5.61.apk",
-  "changelog": "v3.5.61: 1) Sincronización Bidireccional TV/Móvil: Notificación instantánea PlaybackStatus(STOPPED) en onStop() de la TV Box al cambiar de app o ir a Home. 2) Reporte Continuo YouTube: Enlace fiel de mediaUrl canónica y título en latidos de YouTubePlaying. 3) Desacoplamiento de Pantalla de Bloqueo: Diferenciación de ACTION_DISMISS y timeout pasivo (notifyTv=false) para que el celular nunca apague la TV de forma no intencionada."
+  "versionCodeSender": 313,
+  "versionCodeReceiver": 296,
+  "versionName": "3.5.62",
+  "releaseTag": "v3.5.62",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.62/omnicast-sender-v3.5.62.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.62/omnicast-receiver-v3.5.62.apk",
+  "changelog": "v3.5.62: 1) Inmunidad Total para YouTube en TV Box: Incorporación de YouTubePlaying a la cláusula de inmunidad en ClientStatus.Disconnected de TvReceiverActivity para que la TV Box nunca cierre YouTube al apagar la pantalla del celular. 2) Latido Continuo de YouTube: Persistencia de totalDur y reporte incondicional de posición en cada segundo en TvYouTubeScreen. 3) Paridad Absoluta con HTML5: Igualdad de robustez y autonomía que en Mad Max."
 }

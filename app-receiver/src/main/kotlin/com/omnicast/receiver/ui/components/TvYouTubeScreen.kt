@@ -144,6 +144,7 @@ fun TvYouTubeScreen(
                                     var captionsOn = false;
                                     var lastState = 1;
                                     var curTime = 0;
+                                    var totalDur = 0;
 
                                     function toggleYtPlay() {
                                       if (lastState === 1) sendYtCommand('pauseVideo'); else sendYtCommand('playVideo');
@@ -203,13 +204,14 @@ fun TvYouTubeScreen(
                                         var data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
                                         if (data && data.event === 'infoDelivery' && data.info) {
                                           if (data.info.currentTime !== undefined) curTime = data.info.currentTime;
-                                          var dur = data.info.duration;
+                                          if (data.info.duration !== undefined) totalDur = data.info.duration;
                                           if (data.info.playerState !== undefined) lastState = data.info.playerState;
-                                          if (window.AndroidBridge && curTime !== undefined && dur !== undefined) {
-                                            window.AndroidBridge.onPlaybackStatus(curTime, dur, lastState !== undefined ? lastState : 1);
+                                          if (window.AndroidBridge && curTime !== undefined && totalDur > 0) {
+                                            window.AndroidBridge.onPlaybackStatus(curTime, totalDur, lastState !== undefined ? lastState : 1);
                                           }
                                         }
                                         if (data && (data.event === 'initialDelivery' || data.event === 'onReady')) {
+                                          if (data.info && data.info.duration !== undefined) totalDur = data.info.duration;
                                           disableCaptions();
                                         }
                                       } catch(e) {}
@@ -238,6 +240,9 @@ fun TvYouTubeScreen(
                                           event: 'listening',
                                           id: 1
                                         }), '*');
+                                      }
+                                      if (window.AndroidBridge && curTime !== undefined && totalDur > 0) {
+                                        window.AndroidBridge.onPlaybackStatus(curTime, totalDur, lastState !== undefined ? lastState : 1);
                                       }
                                     }, 1000);
                                   </script>

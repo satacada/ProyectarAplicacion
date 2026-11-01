@@ -81,7 +81,7 @@ class TvReceiverActivity : ComponentActivity() {
                     is ClientStatus.Disconnected -> {
                         connectedClientAddress.value = null
                         digitalAudioReceiver?.stop(); webRtcReceiver.resetConnection()
-                        if (receiverState.value !is ReceiverUiState.Standby && receiverState.value !is ReceiverUiState.DirectStreamPlaying && receiverState.value !is ReceiverUiState.WebStreamPlaying) {
+                        if (receiverState.value !is ReceiverUiState.Standby && receiverState.value !is ReceiverUiState.DirectStreamPlaying && receiverState.value !is ReceiverUiState.WebStreamPlaying && receiverState.value !is ReceiverUiState.YouTubePlaying) {
                             receiverState.value = ReceiverUiState.Standby
                         }
                     }

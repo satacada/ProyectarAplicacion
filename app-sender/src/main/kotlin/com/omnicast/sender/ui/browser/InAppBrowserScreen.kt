@@ -226,13 +226,15 @@ fun InAppBrowserScreen(
                     isHome = isHome, isAdBlockEnabled = isAdBlockEnabled, currentUrl = currentUrl,
                     hasStreams = detectedStreams.any { isRealMedia(it) }, onProgress = { progress = it },
                     onPageStarted = { newUrl ->
-                        if (!newUrl.startsWith("about:")) { resetStreamDetections(); pageTitle = "Cargando..." }
+                        val isSame = currentUrl.isNotBlank() && (BrowserUrlHelper.extractYouTubeId(newUrl)?.let { it == BrowserUrlHelper.extractYouTubeId(currentUrl) } ?: (newUrl.substringBefore('?').substringBefore('#').trimEnd('/') == currentUrl.substringBefore('?').substringBefore('#').trimEnd('/')))
+                        if (!newUrl.startsWith("about:") && !isSame) { resetStreamDetections(); pageTitle = "Cargando..." }
                         inputUrl = newUrl; currentUrl = newUrl; com.omnicast.sender.history.NavigationTrackManager.recordStep(newUrl, pageTitle)
                         if (!newUrl.startsWith("about:")) { prefs.edit().putString("saved_browser_last_url", newUrl).apply(); com.omnicast.sender.history.NavigationTrackManager.pushBrowserHistory(context, newUrl, pageTitle) }; checkPlatformUrls(newUrl)
                     },
                     onPageFinished = { t, u -> if (!t.isNullOrBlank() && t != "Transmisión" && !t.contains("about:blank")) pageTitle = t; u?.let { checkPlatformUrls(it, pageTitle); com.omnicast.sender.history.NavigationTrackManager.recordStep(it, pageTitle) } },
                     onHistoryUpdated = { u, t ->
-                        if (currentUrl.isNotBlank() && currentUrl != u && !u.startsWith("about:") && !u.contains("favicon")) resetStreamDetections()
+                        val isSame = currentUrl.isNotBlank() && (BrowserUrlHelper.extractYouTubeId(u)?.let { it == BrowserUrlHelper.extractYouTubeId(currentUrl) } ?: (u.substringBefore('?').substringBefore('#').trimEnd('/') == currentUrl.substringBefore('?').substringBefore('#').trimEnd('/')))
+                        if (currentUrl.isNotBlank() && !isSame && !u.startsWith("about:") && !u.contains("favicon")) resetStreamDetections()
                         currentUrl = u; if (!t.isNullOrBlank() && t != "Transmisión" && !t.contains("about:blank")) pageTitle = t
                         com.omnicast.sender.history.NavigationTrackManager.recordStep(u, pageTitle); if (!u.startsWith("about:")) { prefs.edit().putString("saved_browser_last_url", u).apply(); com.omnicast.sender.history.NavigationTrackManager.pushBrowserHistory(context, u, pageTitle) }; checkPlatformUrls(u, t)
                     },
@@ -279,9 +281,7 @@ fun InAppBrowserScreen(
                 }
                 popupWebView?.let { pView ->
                     BrowserPopupOverlay(popupView = pView, onDismiss = {
-                        val isMovie = detectedStreams.isNotEmpty() || ActiveStreamHolder.isCasting.value
-                        val curHost = try { java.net.URI(currentUrl).host?.lowercase() } catch (_: Throwable) { null }
-                        val pHost = try { java.net.URI(pView.url).host?.lowercase() } catch (_: Throwable) { null }
+                        val isMovie = detectedStreams.isNotEmpty() || ActiveStreamHolder.isCasting.value; val curHost = try { java.net.URI(currentUrl).host?.lowercase() } catch (_: Throwable) { null }; val pHost = try { java.net.URI(pView.url).host?.lowercase() } catch (_: Throwable) { null }
                         if (isMovie && pHost != null && curHost != null && pHost != curHost && AdBlocker.learnAndBlockAdHost(pHost, curHost)) Toast.makeText(context, "🚫 Publicidad emergente bloqueada: $pHost", Toast.LENGTH_SHORT).show()
                         popupWebView?.destroy(); popupWebView = null
                     })

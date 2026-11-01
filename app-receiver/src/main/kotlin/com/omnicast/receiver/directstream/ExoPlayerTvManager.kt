@@ -121,6 +121,7 @@ class ExoPlayerTvManager(private val context: Context) {
 
                         override fun onPlaybackStateChanged(playbackState: Int) {
                             if (playbackState == Player.STATE_READY) {
+                                hasPlaybackStarted = true
                                 recoveryManager.onPlaybackReady()
                                 fallbackMime = null
                             }
@@ -146,7 +147,7 @@ class ExoPlayerTvManager(private val context: Context) {
         }
         initialize(branch)
         val effectiveUrl = com.omnicast.core.domain.usecases.HlsMasterResolver.deriveMasterPlaylistUrl(url) ?: url
-        currentUrl = effectiveUrl; currentTitle = title; currentHeaders = headers; isRetryingClean = false
+        currentUrl = effectiveUrl; currentTitle = title; currentHeaders = headers; isRetryingClean = false; hasPlaybackStarted = false
 
         val safeHeaders = filterSafeHeaders(effectiveUrl, headers)
         val mediaItem = buildMediaItem(effectiveUrl, title, branch, subtitles)
@@ -264,6 +265,7 @@ class ExoPlayerTvManager(private val context: Context) {
     var onTransformChanged: ((Float, Float, Float) -> Unit)? = null
     var isControlsShowing: Boolean = false
     var onWakeControls: (() -> Unit)? = null
+    var hasPlaybackStarted: Boolean = false; private set
 
     fun toggleResizeMode(): Int { resizeMode = aspectRatioHelper.cycleNextMode().resizeMode; onResizeModeChanged?.invoke(resizeMode); return resizeMode }
     fun setResizeMode(isZoom169: Boolean) { resizeMode = if (isZoom169) androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_ZOOM else androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_FIT; onResizeModeChanged?.invoke(resizeMode) }

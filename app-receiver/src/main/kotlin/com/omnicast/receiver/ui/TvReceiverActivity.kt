@@ -46,20 +46,22 @@ class TvReceiverActivity : ComponentActivity() {
         exoPlayerManager = ExoPlayerTvManager(this).apply {
             onTracksChanged = { info -> lifecycleScope.launch { signalingServer.sendMessage(info) } }
             onPlaybackFailed = { failedUrl, failedTitle -> runOnUiThread {
-                statusJob?.cancel(); exoPlayerManager.stop("Fallback 403")
-                val streamToReport = failedUrl ?: (receiverState.value as? ReceiverUiState.DirectStreamPlaying)?.streamUrl
-                val titleToReport = failedTitle ?: (receiverState.value as? ReceiverUiState.DirectStreamPlaying)?.title
-                if (!streamToReport.isNullOrBlank() && (streamToReport.startsWith("http://") || streamToReport.startsWith("https://")) && !streamToReport.contains(":8089")) {
-                    com.omnicast.receiver.log.ReceiverLogger.log("TV_RECEIVER", "ExoPlayer 403 detectado, fallback a WebView HTML5: $streamToReport")
+                statusJob?.cancel()
+                val wasPlaying = exoPlayerManager.hasPlaybackStarted; val lastPos = exoPlayerManager.currentPositionMs
+                exoPlayerManager.stop("Fallo reproducción (wasPlaying=$wasPlaying)")
+                val streamToReport = failedUrl ?: (receiverState.value as? ReceiverUiState.DirectStreamPlaying)?.streamUrl; val titleToReport = failedTitle ?: (receiverState.value as? ReceiverUiState.DirectStreamPlaying)?.title
+                if (!wasPlaying && !streamToReport.isNullOrBlank() && (streamToReport.startsWith("http://") || streamToReport.startsWith("https://")) && !streamToReport.contains(":8089")) {
+                    com.omnicast.receiver.log.ReceiverLogger.log("TV_RECEIVER", "ExoPlayer 403 en arranque (no iniciado), fallback a WebView HTML5")
                     receiverState.value = ReceiverUiState.WebStreamPlaying(streamToReport, titleToReport ?: "Transmisión Web", headers = lastDirectHeaders, isFallbackFromExoPlayer = true)
                 } else {
+                    com.omnicast.receiver.log.ReceiverLogger.log("TV_RECEIVER", "ExoPlayer 403 tras haber estado reproduciendo. Token expirado. Standby directo.")
                     (receiverState.value as? ReceiverUiState.DirectStreamPlaying)?.let { cur ->
                         val found = playlistManager.findItemByUrlOrTitle(cur.streamUrl, cur.title)
-                        if (found != null) expiredItemForRenew.value = found else Toast.makeText(this@TvReceiverActivity, "⚠️ Servidor no disponible (HTTP 403)", Toast.LENGTH_SHORT).show()
+                        if (found != null) expiredItemForRenew.value = found else Toast.makeText(this@TvReceiverActivity, "⚠️ Token de video expirado en servidor", Toast.LENGTH_SHORT).show()
                     }
                     com.omnicast.receiver.log.TvFailedPlaybackManager.recordFailure(this@TvReceiverActivity, streamToReport.orEmpty(), "EXOPLAYER", "HTTP_403", titleToReport.orEmpty(), "Rechazo 403")
                     receiverState.value = ReceiverUiState.Standby
-                    lifecycleScope.launch { signalingServer.sendMessage(SignalingMessage.PlaybackStatus("ERROR_FORBIDDEN_403", 0L, 0L, mediaUrl = streamToReport, title = titleToReport)) }
+                    lifecycleScope.launch { signalingServer.sendMessage(SignalingMessage.PlaybackStatus("ERROR_FORBIDDEN_403", lastPos, 0L, mediaUrl = streamToReport, title = titleToReport)) }
                 }
             } }
         }
@@ -222,9 +224,7 @@ class TvReceiverActivity : ComponentActivity() {
                     "STOP" -> { digitalAudioReceiver?.stop(); exoPlayerManager.stop("Comando STOP celular"); webRtcReceiver.resetConnection(); receiverState.value = ReceiverUiState.Standby }
                     "SEEK" -> exoPlayerManager.seekTo(message.positionMs)
                     "VOLUME" -> TvReceiverHelper.applySystemAndPlayerVolume(this, exoPlayerManager, message.volume)
-                    "SUBTITLE_TOGGLE", "TOGGLE_SUBTITLES" -> exoPlayerManager.toggleSubtitles()
-                    "SET_SUBTITLE_TRACK" -> message.param?.toIntOrNull()?.let { exoPlayerManager.selectTextTrack(it) }
-                    "SET_AUDIO_TRACK" -> message.param?.toIntOrNull()?.let { exoPlayerManager.selectAudioTrack(it) }
+                    "SUBTITLE_TOGGLE", "TOGGLE_SUBTITLES" -> exoPlayerManager.toggleSubtitles(); "SET_SUBTITLE_TRACK" -> message.param?.toIntOrNull()?.let { exoPlayerManager.selectTextTrack(it) }; "SET_AUDIO_TRACK" -> message.param?.toIntOrNull()?.let { exoPlayerManager.selectAudioTrack(it) }
                     "CYCLE_AUDIO" -> { val a = exoPlayerManager.cycleAudioTrack(); Toast.makeText(this@TvReceiverActivity, "🔊 Audio: $a", Toast.LENGTH_SHORT).show() }
                     "CYCLE_QUALITY" -> { val q = exoPlayerManager.cycleVideoQuality(); Toast.makeText(this@TvReceiverActivity, "📺 Calidad: $q", Toast.LENGTH_SHORT).show() }
                     "RECORD" -> TvReceiverHelper.handleRemoteRecord(this@TvReceiverActivity, lifecycleScope, receiverState, exoPlayerManager)

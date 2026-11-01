@@ -41,20 +41,18 @@ object TvRemoteKeyHandler {
                         keyCode == KeyEvent.KEYCODE_BUTTON_B ||
                         keyCode == KeyEvent.KEYCODE_MEDIA_STOP
         if (isExitKey && currentState !is ReceiverUiState.Standby) {
+            val isActivelyPlaying = exoPlayerManager.isPlaying || currentState is ReceiverUiState.ScreenMirroring || currentState is ReceiverUiState.WebStreamPlaying
             val elapsed = System.currentTimeMillis() - lastPlaybackStartTime
-            if (elapsed < 1500L) {
+            if (elapsed < 1500L && isActivelyPlaying) {
                 com.omnicast.receiver.log.ReceiverLogger.log("TvRemoteKeyHandler", "⏳ Tecla de salida ($keyCode) ignorada por cooldown inicial ($elapsed ms)")
                 return true
             }
             com.omnicast.receiver.log.ReceiverLogger.log("TvRemoteKeyHandler", "🚪 Salida solicitada por tecla $keyCode tras $elapsed ms")
-            if (currentState is ReceiverUiState.DirectStreamPlaying && exoPlayerManager.isControlsShowing) {
-                exoPlayerManager.isControlsShowing = false
-                exoPlayerManager.onWakeControls?.invoke()
-                return true
-            }
             val pv = exoPlayerManager.playerView
-            if (currentState is ReceiverUiState.DirectStreamPlaying && pv != null && pv.isControllerFullyVisible) {
-                pv.hideController()
+            if (currentState is ReceiverUiState.DirectStreamPlaying && isActivelyPlaying && (exoPlayerManager.isControlsShowing || pv?.isControllerFullyVisible == true)) {
+                exoPlayerManager.isControlsShowing = false
+                pv?.hideController()
+                exoPlayerManager.onWakeControls?.invoke()
                 return true
             }
             digitalAudioReceiver?.stop(); exoPlayerManager.stop("Mando TV (Atrás/Stop)"); webRtcReceiver.resetConnection()

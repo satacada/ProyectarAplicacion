@@ -145,22 +145,24 @@ object WvcShieldSecurityEngine {
      * sobre un reproductor de video (ej. Mixdrop, StreamWish, Filemoon) que intenta desviar al usuario
      * hacia Google u otros dominios externos cuando intentaba pulsar Play.
      */
-    fun shouldBlockClickHijack(hasGesture: Boolean, targetUrl: String, currentUrl: String): Boolean {
+    fun shouldBlockClickHijack(hasGesture: Boolean, targetUrl: String, currentUrl: String, isMediaPresent: Boolean = false): Boolean {
         if (!isEnabled || !hasGesture) return false
         val curHost = extractHost(currentUrl) ?: return false
         val targetHost = extractHost(targetUrl) ?: return false
 
-        if (!AdBlocker.isKnownMediaHost(curHost) && !curHost.contains("mixdrop") && !curHost.contains("streamwish")) {
-            return false
-        }
+        val isPlayerContext = isMediaPresent || AdBlocker.isKnownMediaHost(curHost)
+        if (!isPlayerContext) return false
 
         if (targetHost == curHost || targetHost.endsWith(".$curHost") || curHost.endsWith(".$targetHost") || AdBlocker.isKnownMediaHost(targetHost)) {
             return false
         }
 
-        try {
-            android.util.Log.w("WvcShieldSecurity", "🛑 [WVC Shield] Secuestro de clic bloqueado en reproductor $curHost hacia: $targetHost")
-        } catch (_: Throwable) {}
-        return true
+        if (AdBlocker.isSearchEngine(targetHost) || AdBlocker.isAd(targetUrl) || AdBlockDatabase.isAdDomain(targetHost) || NativeAdBlockEngine.shouldBlock(targetUrl, currentUrl)) {
+            try {
+                android.util.Log.w("WvcShieldSecurity", "🛑 [WVC Shield] Secuestro de clic bloqueado en reproductor ($curHost) hacia: $targetHost")
+            } catch (_: Throwable) {}
+            return true
+        }
+        return false
     }
 }

@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 315,
-  "versionCodeReceiver": 298,
-  "versionName": "3.5.64",
-  "releaseTag": "v3.5.64",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.64/omnicast-sender-v3.5.64.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.64/omnicast-receiver-v3.5.64.apk",
-  "changelog": "v3.5.64 (FASE 2): 1) Motor de Filtrado de Anuncios C++20 Aho-Corasick (ad_pattern_matcher.cpp): Búsqueda multi-patrón en un solo barrido O(N) con < 4 microsegundos por URL, cero asignaciones de memoria y 0 falsos positivos en dominios oficiales (Leyes 4 y 6). 2) Blindaje Anti-Secuestro de Clic sobre Reproductores (WvcShieldSecurityEngine.kt): Erradicación de la trampa del primer clic en Mixdrop, StreamWish y Filemoon que desviaba a Google o popunders. 3) Supresión de Overlays Fantasma: Supresión preventiva de capas invisibles sobre el botón Play."
+  "versionCodeSender": 316,
+  "versionCodeReceiver": 299,
+  "versionName": "3.5.65",
+  "releaseTag": "v3.5.65",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.65/omnicast-sender-v3.5.65.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.65/omnicast-receiver-v3.5.65.apk",
+  "changelog": "v3.5.65 (Estabilización Integral Pre-Fase 3): 1) Erradicación de Parpadeo de Flujos en Sender (InAppBrowserScreen.kt): Preservación de flujos detectados ante redirecciones internas de la misma película. 2) Cero Código Hardcodeado y Anti-Secuestro iframes (WvcShieldSecurityEngine.kt): Validación de reproductores mediante SQLite (isKnownMediaHost) y bloqueo de desvíos a Google/ads al tocar Play. 3) Discriminación Inteligente 403 en TV Box (TvReceiverActivity.kt): Solo fallback a WebView en arranque (<15s no iniciado); si falla a mitad de película (token CDN expirado) transiciona limpiamente a Standby. 4) Inmunidad de Foco D-Pad en Android TV (TvWebStreamScreen.kt): WebView no focusable para evitar secuestro del control remoto por Chromium. 5) Salida limpia e inmediata a Standby con botón Atrás (TvRemoteKeyHandler.kt)."
 }

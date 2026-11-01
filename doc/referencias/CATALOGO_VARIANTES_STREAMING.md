@@ -99,7 +99,7 @@ SINO -> ExoPlayer (Hardware Nativo 60fps)
 
 ---
 
-## 4. MATRIZ DE REPRODUCTORES Y CASOS PROBADOS EN PRODUCCIÓN (v3.5.21)
+## 4. MATRIZ DE REPRODUCTORES Y CASOS PROBADOS EN PRODUCCIÓN (v3.5.62)
 
 | Portal / Servicio | Dominio / CDN | Firma Detectada | Reproductor Asignado en TV Box | Comportamiento Técnico |
 |---|---|---|---|---|
@@ -108,22 +108,25 @@ SINO -> ExoPlayer (Hardware Nativo 60fps)
 | **OK.ru (Progresivo)** | `ok.ru`<br>CDN: `*.mycdn.me` | Streams MP4/HLS con `Referer: https://ok.ru/` | **`ExoPlayerTvManager`**<br>(AndroidX Media3 HW) | Selección de calidades 1080p, 720p, 480p, 360p en lista plana, transmitiendo cabecera Referer oficial. |
 | **Reypelis** | `reypelis.vip`<br>CDN: `spark.9bg.net` | Flujo HLS VOD directo<br>(Fastream resolutivo) | **`ExoPlayerTvManager`**<br>(AndroidX Media3 HW) | Decodificación por hardware a 1080p nativo, respuesta ultra-rápida al mando D-Pad y salto ±10s. |
 | **PelisGO** | `pelisgo.online`<br>CDN: `*.tnmr.org` | Flujo HLS VOD directo<br>(LuluStream resuelto) | **`ExoPlayerTvManager`**<br>(AndroidX Media3 HW) | Perfil resuelto y guardado en `StreamProfileDb`. Decodificación continua por hardware con jitter-buffer anti-tirones. |
-| **YouTube** | `youtube.com` | ID de video oficial | **`TvYouTubeScreen`** | Reproducción en visor IFrame oficial de TV con IFrame API nativa. Inmunidad ante BotGuard/PO Token (cero 403 Forbidden), telemetría continua de segundos y reporte sincronizado. |
+| **YouTube** | `youtube.com` | ID de video oficial | **`TvYouTubeScreen`** | Reproducción en visor IFrame oficial de TV con IFrame API nativa. Inmunidad total de desconexión ante apagado/bloqueo de pantalla del móvil tras 60s (v3.5.62), latido continuo de telemetría (1000ms) y sincronización de estado. Cero bloqueo HTTP 403 Forbidden por delegación de BotGuard/PO Token al reproductor oficial de Google. |
 | **Screen Mirroring** | Celular en vivo | Socket WebRTC LAN | **`WebRtcReceiverManager`** | Pipeline H.264 acelerado por hardware (<60ms) con modos Pantalla Completa y Por Aplicación (HU-013). |
 
 ---
 
-## 5. ACELERACIÓN NATIVA C++20 (ZERO-COPY / HIGH-PERFORMANCE)
+## 5. HOJA DE RUTA Y PLAN TÉCNICO C++20 (PLANIFICADO / PENDIENTE DE IMPLEMENTACIÓN)
 
-Para garantizar latencias sub-milisegundo y eliminar pausas por Garbage Collector en el móvil y la TV Box:
+El motor nativo C++20 (`libstream_classifier.so`) cuenta con clasificación de streams activa (`stream_classifier.cpp`). Las siguientes fases han sido diseñadas y planificadas bajo el Estándar C++20 Moderno de `AGENTS.md` para su posterior implementación y validación por fases:
 
-1. **Clasificación y Enrutamiento (`stream_classifier.cpp`):**
+1. **Clasificación y Enrutamiento Activo (`stream_classifier.cpp` - En Producción):**
    * Evaluación de 6 ramas multimedia en < 0.1 ms mediante `std::string_view` y búsqueda de patrones `constexpr`.
-2. **Desempaquetado de Reproductores Ofuscados (`MediaPlatformResolver`):**
-   * Desofuscación de algoritmos Dean Edwards / packed scripts (PelisPlus, Fastream, LuluStream) en memoria contigua (< 1 ms vs 60 ms en Kotlin).
-3. **Filtrado Masivo de Publicidad (`NativeAdBlockEngine`):**
-   * Búsqueda multi-patrón Aho-Corasick para evaluar más de 100 peticiones web por segundo en < 5 microsegundos.
-4. **Grabación PVR Asíncrona en TV Box (`PvrStreamRecorder`):**
-   * Búfer circular en RAM (*Ring Buffer*) con volcado en bloques alineados de 128 KB hacia almacenamiento flash/USB, erradicando micro-congelamientos de fotogramas en ExoPlayer.
+2. **Fase 1 (Pendiente): Desempaquetado de Reproductores Ofuscados (`MediaPlatformResolver`):**
+   * Desofuscación de algoritmos Dean Edwards / packed scripts (PelisPlus, Fastream, LuluStream) en C++20 con memoria contigua (objetivo < 0.8 ms vs 60 ms en Kotlin).
+3. **Fase 2 (Pendiente): Filtrado Masivo de Publicidad (`NativeAdBlockEngine`):**
+   * Búsqueda multi-patrón Aho-Corasick en C++20 para evaluar más de 100 peticiones web por segundo en < 5 microsegundos.
+4. **Fase 3 (Pendiente): Purga de VRAM y Búfer Dinámico en TV Box (`TvWebStreamScreen`):**
+   * Búfer dinámico adaptativo en Chromium y purga proactiva de VRAM al pausar o cambiar de video.
+5. **Fase 4 (Pendiente): Grabación PVR Asíncrona en TV Box (`PvrStreamRecorder`):**
+   * Búfer circular en RAM (*Ring Buffer*) en C++20 con volcado en bloques alineados de 128 KB hacia almacenamiento flash/USB, erradicando micro-congelamientos de fotogramas en ExoPlayer.
+
 
 

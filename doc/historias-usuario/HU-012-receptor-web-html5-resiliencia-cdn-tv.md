@@ -58,3 +58,9 @@
 10. **Preservación Inmutable de `Referer` como Base URL y User-Agent en TV Receiver (v3.5.21 / ADR-013):**
    - En `TvReceiverHelper.kt`, `resolveBaseUrl` NUNCA debe sobreescribir el origen si el mapa de cabeceras contiene un `Referer` legítimo de embed (`https://dr0pstream.com/e/<id>`).
    - En `TvWebStreamScreen.kt`, Chromium debe recibir obligatoriamente `settings.userAgentString = headers["User-Agent"] ?: UA_MOBILE`. Esto erradica de forma definitiva el rechazo `HTTP 403 Forbidden` (`manifestLoadError code=403`) en CDNs protegidas por Cloudflare o DropCDN al reproducir en la TV Box.
+
+11. **Inmunidad Total de Desconexión y Latido Continuo para YouTube (v3.5.62):**
+   - En `TvReceiverActivity.kt`, incorporación de `ReceiverUiState.YouTubePlaying` a la lista de estados inmunes en `ClientStatus.Disconnected`.
+   - Cuando el teléfono móvil apaga su pantalla, se bloquea o entra en reposo profundo tras 60 segundos de inactividad, la TV Box no expulsa el reproductor ni regresa a Standby a los 70 segundos; la reproducción continúa de forma 100% autónoma.
+   - En `TvYouTubeScreen.kt`, almacenamiento persistente de `totalDur` y despacho incondicional de telemetría a Java en cada tick de Google IFrame y en el `setInterval(1000)`, garantizando reporte sincronizado segundo a segundo sin posiciones `undefined`.
+

@@ -45,3 +45,8 @@ Durante las pruebas de campo en sitios cinematográficos (Pelisplus, DropCDN), l
 ### CA-05: Botón Discreto y Explícito de Salida en Pantalla Principal
 - En `SenderHeaderBar`, junto al botón de ayuda, se ubica un botón circular discreto con el icono estándar de encendido/apagado (`PowerSettingsNew`) en tono rojizo tenue, sin texto.
 - Al pulsarlo, detiene todos los servicios en segundo plano (`ProjectionForegroundService`, `CastMediaNotificationService`, `FloatingIndicatorService`, `LocalStreamProxyServer`), cierra conexiones WebSocket y ejecuta `finishAffinity()` liberando el 100% de recursos del sistema.
+
+### CA-06: Sincronización Bidireccional TV/Móvil y Desacople de Pantalla de Bloqueo (v3.5.61)
+- **Sincronización Inmediata en Salida de TV:** En `TvReceiverActivity.kt` (`onStop()`), al cerrar o enviar la app de TV a segundo plano, se emite inmediatamente `SignalingMessage.PlaybackStatus("STOPPED", 0L, 0L)` a la red LAN. El emisor móvil procesa el mensaje y sincroniza su interfaz en menos de 5ms sin estados residuales de reproducción.
+- **Desacople de Pantalla de Bloqueo en Emisor:** En `CastMediaNotificationService.kt`, incorporación de la acción `ACTION_DISMISS` y desvinculación del timeout de inactividad (60s) con `notifyTv = false`. Bloquear o apagar la pantalla del móvil ya no envía comandos de detención destructivos a la TV Box, permitiendo reproducción autónoma ininterrumpida.
+

@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 311,
-  "versionCodeReceiver": 294,
-  "versionName": "3.5.60",
-  "releaseTag": "v3.5.60",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.60/omnicast-sender-v3.5.60.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.60/omnicast-receiver-v3.5.60.apk",
-  "changelog": "v3.5.60: 1) Purificación Integral de Captura Hexagonal: Extirpación de parámetro particular ct=6 de UniversalDashExtractorAdapter y alineación estricta con RFC 23009-1 (DASH). 2) Arquitectura Autocurable de Telemetría: Filtrado semántico de métricas web (/api/stats/, /watchtime, ptracking) y conexión prioritaria con SQLite/Supabase. 3) TV Box 100% Pasiva: Eliminación del inspector LaunchedEffect con DASH_FLOW en TvWebStreamScreen y despacho fiel a X-Target-Player. 4) No Intrusión en Navegador: Protección de reproducción web en celular sin pausar videos por balizas de red. 5) Grabación PVR Universal: Soporte de guardado en WebStream y notificación informativa para reproductor protegido de YouTube."
+  "versionCodeSender": 312,
+  "versionCodeReceiver": 295,
+  "versionName": "3.5.61",
+  "releaseTag": "v3.5.61",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.61/omnicast-sender-v3.5.61.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.61/omnicast-receiver-v3.5.61.apk",
+  "changelog": "v3.5.61: 1) Sincronización Bidireccional TV/Móvil: Notificación instantánea PlaybackStatus(STOPPED) en onStop() de la TV Box al cambiar de app o ir a Home. 2) Reporte Continuo YouTube: Enlace fiel de mediaUrl canónica y título en latidos de YouTubePlaying. 3) Desacoplamiento de Pantalla de Bloqueo: Diferenciación de ACTION_DISMISS y timeout pasivo (notifyTv=false) para que el celular nunca apague la TV de forma no intencionada."
 }

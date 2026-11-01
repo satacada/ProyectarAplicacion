@@ -30,26 +30,19 @@ class CastMediaNotificationService : Service() {
 
         const val ACTION_START = "com.omnicast.sender.ACTION_START_CAST_SESSION"
         const val ACTION_STOP = "com.omnicast.sender.ACTION_STOP_CAST_SESSION"
+        const val ACTION_DISMISS = "com.omnicast.sender.ACTION_DISMISS_NOTIFICATION"
         const val ACTION_PLAY_PAUSE = "com.omnicast.sender.ACTION_PLAY_PAUSE"
         const val ACTION_REWIND = "com.omnicast.sender.ACTION_REWIND_10"
         const val ACTION_FAST_FORWARD = "com.omnicast.sender.ACTION_FORWARD_10"
 
         fun start(context: Context) {
-            val intent = Intent(context, CastMediaNotificationService::class.java).apply {
-                action = ACTION_START
-            }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                context.startForegroundService(intent)
-            } else {
-                context.startService(intent)
-            }
+            val intent = Intent(context, CastMediaNotificationService::class.java).apply { action = ACTION_START }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) context.startForegroundService(intent) else context.startService(intent)
         }
 
         fun stop(context: Context) {
             runCatching {
-                val intent = Intent(context, CastMediaNotificationService::class.java).apply {
-                    action = ACTION_STOP
-                }
+                val intent = Intent(context, CastMediaNotificationService::class.java).apply { action = ACTION_DISMISS }
                 context.startService(intent)
             }
         }
@@ -72,8 +65,13 @@ class CastMediaNotificationService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
+            ACTION_DISMISS -> {
+                ActiveStreamHolder.stopCasting(notifyTv = false)
+                stopForegroundService()
+                return START_NOT_STICKY
+            }
             ACTION_STOP -> {
-                ActiveStreamHolder.stopCasting()
+                ActiveStreamHolder.stopCasting(notifyTv = true)
                 stopForegroundService()
                 return START_NOT_STICKY
             }
@@ -272,9 +270,9 @@ class CastMediaNotificationService : Service() {
     private fun handleIdleTimer(isPlaying: Boolean) {
         idleJob?.cancel()
         idleJob = serviceScope.launch {
-            val timeout = if (isPlaying) 25_000L else 180_000L
+            val timeout = if (isPlaying) 60_000L else 180_000L
             delay(timeout)
-            ActiveStreamHolder.stopCasting()
+            ActiveStreamHolder.stopCasting(notifyTv = false)
             stopForegroundService()
         }
     }

@@ -6,11 +6,8 @@ import android.view.WindowManager
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.darkColorScheme
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.lifecycle.lifecycleScope
 import com.omnicast.core.protocol.SignalingMessage
 import com.omnicast.receiver.audio.DigitalAudioReceiver
@@ -31,10 +28,8 @@ class TvReceiverActivity : ComponentActivity() {
     private val currentDisplayMode = mutableStateOf<SignalingMessage.SetDisplayMode?>(null); private val expiredItemForRenew = mutableStateOf<com.omnicast.receiver.directstream.TvPlaylistItem?>(null)
     private val youTubeControlFlow = MutableSharedFlow<SignalingMessage.PlayControl>(extraBufferCapacity = 16)
     private lateinit var webRtcReceiver: WebRtcReceiverManager; private lateinit var exoPlayerManager: ExoPlayerTvManager; private lateinit var signalingServer: LocalSignalingServer
-    private lateinit var nsdAdvertiser: NsdAdvertiserManager; private lateinit var historyManager: com.omnicast.receiver.directstream.TvPlaybackHistoryManager
-    private lateinit var playlistManager: com.omnicast.receiver.directstream.TvPlaylistManager; private lateinit var updateManager: com.omnicast.receiver.update.TvUpdateManager
-    private var digitalAudioReceiver: DigitalAudioReceiver? = null; private var statusJob: Job? = null
-    private var lastDirectHeaders: Map<String, String> = emptyMap()
+    private lateinit var nsdAdvertiser: NsdAdvertiserManager; private lateinit var historyManager: com.omnicast.receiver.directstream.TvPlaybackHistoryManager; private lateinit var playlistManager: com.omnicast.receiver.directstream.TvPlaylistManager
+    private lateinit var updateManager: com.omnicast.receiver.update.TvUpdateManager; private var digitalAudioReceiver: DigitalAudioReceiver? = null; private var statusJob: Job? = null; private var lastDirectHeaders: Map<String, String> = emptyMap()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -133,9 +128,11 @@ class TvReceiverActivity : ComponentActivity() {
                     is ReceiverUiState.YouTubePlaying -> TvYouTubeScreen(
                         videoId = state.videoId, title = state.title, timestamp = state.timestamp, commandFlow = youTubeControlFlow,
                         onPlaybackStatus = { pos, dur, playing ->
-                            lifecycleScope.launch { signalingServer.sendMessage(SignalingMessage.PlaybackStatus(if (playing) "PLAYING" else "PAUSED", pos, dur)) }
+                            lifecycleScope.launch {
+                                signalingServer.sendMessage(SignalingMessage.PlaybackStatus(if (playing) "PLAYING" else "PAUSED", pos, dur, "https://www.youtube.com/watch?v=${state.videoId}", state.title))
+                            }
                         },
-                        onCloseClick = { receiverState.value = ReceiverUiState.Standby }
+                        onCloseClick = { lifecycleScope.launch { signalingServer.sendMessage(SignalingMessage.PlaybackStatus("STOPPED", 0L, 0L)) }; receiverState.value = ReceiverUiState.Standby }
                     )
                     is ReceiverUiState.WebStreamPlaying -> TvWebStreamScreen(
                         streamUrl = state.streamUrl, title = state.title, headers = state.headers, startPositionMs = state.startPositionMs,
@@ -290,8 +287,11 @@ class TvReceiverActivity : ComponentActivity() {
             exoPlayerManager.playStream(url, headers, title, posMs); startPlaybackStatusReporting()
         }
     }
-    private fun playHistoryItem(item: com.omnicast.receiver.directstream.TvHistoryItem) = startOrAutoRecastMedia(item.mediaUrl, item.title, item.lastPositionMs, item.pageUrl, item.headers)
-    private fun playPlaylistItem(item: com.omnicast.receiver.directstream.TvPlaylistItem) = startOrAutoRecastMedia(item.url, item.title, playlistManager.getResumePosition(item), item.pageUrl, item.headers)
+    private fun playHistoryItem(item: com.omnicast.receiver.directstream.TvHistoryItem) = startOrAutoRecastMedia(item.mediaUrl, item.title, item.lastPositionMs, item.pageUrl, item.headers); private fun playPlaylistItem(item: com.omnicast.receiver.directstream.TvPlaylistItem) = startOrAutoRecastMedia(item.url, item.title, playlistManager.getResumePosition(item), item.pageUrl, item.headers)
+
+    override fun onStop() {
+        super.onStop(); lifecycleScope.launch { signalingServer.sendMessage(SignalingMessage.PlaybackStatus("STOPPED", 0L, 0L)) }
+    }
 
     override fun onDestroy() {
         super.onDestroy(); com.omnicast.receiver.log.ReceiverLogger.stop(); digitalAudioReceiver?.stop()

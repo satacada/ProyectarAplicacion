@@ -229,7 +229,9 @@ fun BrowserWebView(
                             if (detectedStream != null) {
                                 val hdrs = BrowserUrlHelper.buildSafeHeaders(detectedStream.url, docUrl, UA_MOBILE, detectedStream.headers)
                                 post {
-                                    v?.evaluateJavascript("try{document.querySelectorAll('video, audio').forEach(function(el){el.pause();});}catch(_){}", null)
+                                    if (!docUrl.contains("youtube.com") && !docUrl.contains("youtu.be")) {
+                                        v?.evaluateJavascript("try{document.querySelectorAll('video, audio').forEach(function(el){el.pause();});}catch(_){}", null)
+                                    }
                                     onStreamIntercepted(detectedStream.url, hdrs, detectedStream.isMaster)
                                 }
                             }

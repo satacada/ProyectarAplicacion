@@ -21,7 +21,8 @@ class TelemetryFilterAdapter : IStreamTelemetryFilterPort {
         "videostat", "statnew", "telemetry",
         "analytics", "beacon", "heartbeat", "logger", "tracking", "tracker",
         "/ping", "/event", "report", "collect", "metric", "counter",
-        "geo.dailymotion.com", "/cdn-cgi/", "top-fwz", "anonymvideo", "/dk?", "showcase", "st.cmd"
+        "geo.dailymotion.com", "/cdn-cgi/", "top-fwz", "anonymvideo", "/dk?", "showcase", "st.cmd",
+        "/api/stats/", "/stats/watchtime", "/stats/playback", "ptracking", "/youtubei/v1/log_"
     )
 
     private val nonMediaWebPageKeywords = listOf(

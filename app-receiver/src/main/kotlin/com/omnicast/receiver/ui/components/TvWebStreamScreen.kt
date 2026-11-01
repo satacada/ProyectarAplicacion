@@ -64,27 +64,17 @@ private object WebPlayerAssetHelper {
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
 fun TvWebStreamScreen(
-    streamUrl: String,
-    title: String,
-    headers: Map<String, String> = emptyMap(),
-    startPositionMs: Long = 0L,
-    subtitles: List<SignalingMessage.SubtitleTrack> = emptyList(),
-    timestamp: Long = 0L,
-    commandFlow: Flow<SignalingMessage.PlayControl>? = null,
-    displayMode: SignalingMessage.SetDisplayMode? = null,
+    streamUrl: String, title: String, headers: Map<String, String> = emptyMap(),
+    startPositionMs: Long = 0L, subtitles: List<SignalingMessage.SubtitleTrack> = emptyList(), timestamp: Long = 0L,
+    commandFlow: Flow<SignalingMessage.PlayControl>? = null, displayMode: SignalingMessage.SetDisplayMode? = null,
     onPlaybackStatus: ((posMs: Long, durMs: Long, isPlaying: Boolean) -> Unit)? = null,
-    onPlaybackFailed: ((String) -> Unit)? = null,
-    onCloseClick: () -> Unit = {}
+    onPlaybackFailed: ((String) -> Unit)? = null, onCloseClick: () -> Unit = {}
 ) {
     var showBanner by remember(streamUrl, timestamp) { mutableStateOf(true) }
     var customView by remember(streamUrl, timestamp) { mutableStateOf<View?>(null) }
     var webViewRef by remember(streamUrl, timestamp) { mutableStateOf<WebView?>(null) }
 
     LaunchedEffect(streamUrl, timestamp) { delay(4000); showBanner = false }
-    LaunchedEffect(streamUrl) {
-        val l = streamUrl.lowercase()
-        if (l.contains("ct=6") || l.contains("format=dash") || l.contains(".mpd")) onPlaybackFailed?.invoke("DASH_FLOW")
-    }
     LaunchedEffect(displayMode, webViewRef) {
         val dm = displayMode ?: return@LaunchedEffect; val wv = webViewRef ?: return@LaunchedEffect
         wv.evaluateJavascript("if (typeof setDisplayMode === 'function') setDisplayMode('${dm.mode}', ${dm.zoom}, ${dm.panY}, ${dm.panX});", null)
@@ -293,15 +283,8 @@ fun TvWebStreamScreen(
             }
         }
 
-        AnimatedVisibility(
-            visible = showBanner,
-            exit = fadeOut(),
-            modifier = Modifier.align(Alignment.TopCenter).padding(top = 28.dp)
-        ) {
-            Card(
-                colors = CardDefaults.cardColors(containerColor = Color(0xDD0F172A)),
-                shape = RoundedCornerShape(12.dp)
-            ) {
+        AnimatedVisibility(visible = showBanner, exit = fadeOut(), modifier = Modifier.align(Alignment.TopCenter).padding(top = 28.dp)) {
+            Card(colors = CardDefaults.cardColors(containerColor = Color(0xDD0F172A)), shape = RoundedCornerShape(12.dp)) {
                 Column(modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(text = "OmniCast Web Player", color = Color(0xFF38BDF8), fontSize = 12.sp, fontWeight = FontWeight.Bold)
                     Text(text = title, color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)

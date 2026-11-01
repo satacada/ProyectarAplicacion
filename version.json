@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 310,
-  "versionCodeReceiver": 293,
-  "versionName": "3.5.59",
-  "releaseTag": "v3.5.59",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.59/omnicast-sender-v3.5.59.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.59/omnicast-receiver-v3.5.59.apk",
-  "changelog": "v3.5.59: 1) Sistema Inteligente de Grabación PVR (TV en Vivo 1x) y Descarga Segura VOD con Blindaje Sagrado de 2.0 GB en Memoria Interna y 500 MB en USB. 2) Estimador Preventivo de Tasa de Bits y Minutos Máximos antes de iniciar. 3) Temporizador Desatendido con Auto-Tope (Modo Me voy de casa) y apagado a Standby. 4) Supervisor Activo en Caliente (Watchdog cada 5s) con corte limpio de archivo sin corromper el video. 5) Acceso Directo en el Reproductor: Botón directo [📥 Guardar / 🔴 REC] en la barra de controles de TV y del celular."
+  "versionCodeSender": 311,
+  "versionCodeReceiver": 294,
+  "versionName": "3.5.60",
+  "releaseTag": "v3.5.60",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.60/omnicast-sender-v3.5.60.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.60/omnicast-receiver-v3.5.60.apk",
+  "changelog": "v3.5.60: 1) Purificación Integral de Captura Hexagonal: Extirpación de parámetro particular ct=6 de UniversalDashExtractorAdapter y alineación estricta con RFC 23009-1 (DASH). 2) Arquitectura Autocurable de Telemetría: Filtrado semántico de métricas web (/api/stats/, /watchtime, ptracking) y conexión prioritaria con SQLite/Supabase. 3) TV Box 100% Pasiva: Eliminación del inspector LaunchedEffect con DASH_FLOW en TvWebStreamScreen y despacho fiel a X-Target-Player. 4) No Intrusión en Navegador: Protección de reproducción web en celular sin pausar videos por balizas de red. 5) Grabación PVR Universal: Soporte de guardado en WebStream y notificación informativa para reproductor protegido de YouTube."
 }

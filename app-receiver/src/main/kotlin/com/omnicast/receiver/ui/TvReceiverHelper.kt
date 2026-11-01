@@ -96,18 +96,19 @@ object TvReceiverHelper {
             com.omnicast.receiver.directstream.PvrStreamRecorder.stopRecording("⏹ Grabación detenida desde control remoto")
             android.widget.Toast.makeText(context, "⏹ Grabación finalizada y guardada", android.widget.Toast.LENGTH_SHORT).show()
         } else {
-            val direct = receiverState.value as? ReceiverUiState.DirectStreamPlaying ?: return
-            val title = direct.title ?: "Canal en Vivo"
-            val url = direct.streamUrl
+            val currentState = receiverState.value
+            val (url, title, hdrs) = when (currentState) {
+                is ReceiverUiState.DirectStreamPlaying -> Triple(currentState.streamUrl, currentState.title ?: "Canal en Vivo", exoPlayerManager.currentHeaders)
+                is ReceiverUiState.WebStreamPlaying -> Triple(currentState.streamUrl, currentState.title, currentState.headers)
+                is ReceiverUiState.YouTubePlaying -> {
+                    android.widget.Toast.makeText(context, "⚠️ YouTube no admite grabación PVR directa (reproductor protegido por Google)", android.widget.Toast.LENGTH_LONG).show()
+                    return
+                }
+                else -> return
+            }
             scope.launch {
                 com.omnicast.receiver.directstream.PvrStreamRecorder.startRecording(
-                    context = context,
-                    title = title,
-                    url = url,
-                    headers = exoPlayerManager.currentHeaders,
-                    useUsb = false,
-                    scope = scope,
-                    timerMinutes = 60,
+                    context = context, title = title, url = url, headers = hdrs, useUsb = false, scope = scope, timerMinutes = 60,
                     onStopped = { reason ->
                         android.widget.Toast.makeText(context, reason, android.widget.Toast.LENGTH_LONG).show()
                         if (reason == "TIMER_FINISHED") {

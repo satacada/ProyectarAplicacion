@@ -3,6 +3,7 @@ package com.omnicast.receiver.ui
 import android.content.Context
 import android.media.AudioManager
 import com.omnicast.receiver.directstream.ExoPlayerTvManager
+import kotlinx.coroutines.launch
 import java.net.Inet4Address
 import java.net.NetworkInterface
 
@@ -83,5 +84,40 @@ object TvReceiverHelper {
             "${uri.scheme}://${uri.host}/"
         } catch (_: Throwable) { null }
         return headers["Referer"]?.takeIf { it.isNotBlank() } ?: streamHostOrigin ?: "https://omnicast.tv"
+    }
+
+    fun handleRemoteRecord(
+        context: Context,
+        scope: kotlinx.coroutines.CoroutineScope,
+        receiverState: androidx.compose.runtime.MutableState<ReceiverUiState>,
+        exoPlayerManager: ExoPlayerTvManager
+    ) {
+        if (com.omnicast.receiver.directstream.PvrStreamRecorder.isRecordingActive()) {
+            com.omnicast.receiver.directstream.PvrStreamRecorder.stopRecording("⏹ Grabación detenida desde control remoto")
+            android.widget.Toast.makeText(context, "⏹ Grabación finalizada y guardada", android.widget.Toast.LENGTH_SHORT).show()
+        } else {
+            val direct = receiverState.value as? ReceiverUiState.DirectStreamPlaying ?: return
+            val title = direct.title ?: "Canal en Vivo"
+            val url = direct.streamUrl
+            scope.launch {
+                com.omnicast.receiver.directstream.PvrStreamRecorder.startRecording(
+                    context = context,
+                    title = title,
+                    url = url,
+                    headers = exoPlayerManager.currentHeaders,
+                    useUsb = false,
+                    scope = scope,
+                    timerMinutes = 60,
+                    onStopped = { reason ->
+                        android.widget.Toast.makeText(context, reason, android.widget.Toast.LENGTH_LONG).show()
+                        if (reason == "TIMER_FINISHED") {
+                            exoPlayerManager.stop("Timer PVR Finalizado")
+                            receiverState.value = ReceiverUiState.Standby
+                        }
+                    }
+                )
+            }
+            android.widget.Toast.makeText(context, "🔴 Grabación PVR Iniciada (60 min)", android.widget.Toast.LENGTH_SHORT).show()
+        }
     }
 }

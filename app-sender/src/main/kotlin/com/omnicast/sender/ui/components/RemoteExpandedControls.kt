@@ -227,6 +227,20 @@ fun RemoteExpandedControls(
                         Text(text = "+10s", color = Color(0xFF94A3B8), fontSize = 10.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(start = 4.dp))
                     }
 
+                    IconButton(
+                        onClick = {
+                            SignalingClientHolder.get().sendMessage(SignalingMessage.PlayControl("RECORD"))
+                            Toast.makeText(context, "🔴 Grabación PVR solicitada en TV", Toast.LENGTH_SHORT).show()
+                        },
+                        modifier = Modifier
+                            .align(Alignment.CenterStart)
+                            .size(28.dp)
+                            .background(Color(0xFF2D1515), RoundedCornerShape(6.dp))
+                            .border(1.dp, Color(0xFFEF4444).copy(alpha = 0.5f), RoundedCornerShape(6.dp))
+                    ) {
+                        Box(modifier = Modifier.size(10.dp).background(Color(0xFFEF4444), CircleShape))
+                    }
+
                     if (onStop != null) {
                         IconButton(
                             onClick = onStop,

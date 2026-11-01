@@ -35,8 +35,9 @@ fun TvDirectStreamScreen(
     onCloseClick: () -> Unit = {}
 ) {
     val context = LocalContext.current
+    val pvrProgress by com.omnicast.receiver.directstream.PvrStreamRecorder.progress.collectAsState()
     var showSettingsDialog by remember { mutableStateOf(false) }
-    var showDownloadDialog by remember { mutableStateOf(false) }
+    var showRecordDialog by remember { mutableStateOf(false) }
     var isControlsVisible by remember { mutableStateOf(true) }
     var userInteractionCount by remember { mutableIntStateOf(0) }
     var currentQuality by remember { mutableStateOf(exoPlayerManager.getCurrentVideoQuality()) }
@@ -237,9 +238,28 @@ fun TvDirectStreamScreen(
                         })
                     }
 
-                    // Tuerca de Ajustes en la parte inferior derecha
+                    // Boton Directo [📥 Guardar / 🔴 REC] y Tuerca de Ajustes
+                    val isLive = durationMs <= 0L
+                    val recBtnLabel = when {
+                        pvrProgress.isRecording -> "🔴 REC ${formatTvTime(pvrProgress.durationSeconds * 1000L)} ⏹"
+                        isLive -> "🔴 REC"
+                        else -> "📥 Guardar"
+                    }
+
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                        TvPlayerButton(label = "📥 Guardar", onClick = { showDownloadDialog = true; userInteractionCount++ })
+                        TvPlayerButton(
+                            label = recBtnLabel,
+                            isDanger = pvrProgress.isRecording,
+                            onClick = {
+                                if (pvrProgress.isRecording) {
+                                    com.omnicast.receiver.directstream.PvrStreamRecorder.stopRecording("⏹ Grabación detenida")
+                                    Toast.makeText(context, "⏹ Grabación guardada exitosamente", Toast.LENGTH_SHORT).show()
+                                } else {
+                                    showRecordDialog = true
+                                }
+                                userInteractionCount++
+                            }
+                        )
                         TvPlayerButton(label = "⚙ Ajustes", isSettings = true, onClick = { showSettingsDialog = true; userInteractionCount++ })
                     }
                 }
@@ -248,42 +268,26 @@ fun TvDirectStreamScreen(
 
         if (showSettingsDialog) {
             TvPlayerSettingsDialog(
-                title = title,
-                isSaved = isSaved,
-                currentQuality = currentQuality,
-                onCycleQuality = {
-                    val q = exoPlayerManager.cycleVideoQuality()
-                    currentQuality = q
-                    q
-                },
+                title = title, isSaved = isSaved, currentQuality = currentQuality,
+                onCycleQuality = { val q = exoPlayerManager.cycleVideoQuality(); currentQuality = q; q },
                 currentAudioTrack = exoPlayerManager.getCurrentAudioTrackLabel(),
-                onCycleAudio = {
-                    exoPlayerManager.cycleAudioTrack()
-                },
+                onCycleAudio = { exoPlayerManager.cycleAudioTrack() },
                 subtitlesEnabled = subsEnabled,
-                onToggleSubtitles = {
-                    val st = exoPlayerManager.toggleSubtitles()
-                    subsEnabled = st
-                    st
-                },
-                onSaveToWatchLater = onSaveToWatchLater,
-                onDownloadBridge = { showDownloadDialog = true },
-                onExitPlayback = onCloseClick,
+                onToggleSubtitles = { val st = exoPlayerManager.toggleSubtitles(); subsEnabled = st; st },
+                onSaveToWatchLater = onSaveToWatchLater, onExitPlayback = onCloseClick,
                 onDismiss = { showSettingsDialog = false; userInteractionCount++ }
             )
         }
 
-        if (showDownloadDialog && streamUrl.isNotBlank()) {
-            TvDownloadMovieDialog(
-                item = com.omnicast.receiver.directstream.TvPlaylistItem(
-                    url = streamUrl,
-                    title = title.ifBlank { "Película en reproducción" },
-                    durationMs = durationMs
-                ),
-                onDismiss = { showDownloadDialog = false; userInteractionCount++ }
+        if (showRecordDialog && streamUrl.isNotBlank()) {
+            val isLive = durationMs <= 0L
+            TvRecordDialog(
+                title = title.ifBlank { if (isLive) "Canal en Vivo" else "Película en reproducción" },
+                streamUrl = streamUrl, headers = exoPlayerManager.currentHeaders,
+                durationMs = durationMs, isLive = isLive,
+                onDismiss = { showRecordDialog = false; userInteractionCount++ },
+                onRecordingStarted = { userInteractionCount++ }
             )
         }
     }
 }
-
-

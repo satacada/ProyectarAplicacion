@@ -35,7 +35,7 @@ class ExoPlayerTvManager(private val context: Context) {
     var activeBranch: com.omnicast.core.domain.models.MediaBranch = com.omnicast.core.domain.models.MediaBranch.VOD_HLS_MP4; private set
     private var currentUrl: String? = null
     private var currentTitle: String? = null
-    private var currentHeaders: Map<String, String> = emptyMap()
+    var currentHeaders: Map<String, String> = emptyMap(); private set
     private var isRetryingClean = false
     private var fallbackMime: String? = null
     private var activeMimeType: String? = null

@@ -33,7 +33,6 @@ fun TvPlayerSettingsDialog(
     subtitlesEnabled: Boolean = true,
     onToggleSubtitles: () -> Boolean = { true },
     onSaveToWatchLater: () -> Unit,
-    onDownloadBridge: () -> Unit = {},
     onExitPlayback: () -> Unit,
     onDismiss: () -> Unit
 ) {
@@ -106,16 +105,6 @@ fun TvPlayerSettingsDialog(
                     onClick = {
                         onSaveToWatchLater()
                         onDismiss()
-                    }
-                )
-
-                TvSettingsButton(
-                    text = "⬇️ Descargar en Ver más tarde (Modo Puente)",
-                    isPrimary = false,
-                    onClick = {
-                        if (!isSaved) onSaveToWatchLater()
-                        onDismiss()
-                        onDownloadBridge()
                     }
                 )
 

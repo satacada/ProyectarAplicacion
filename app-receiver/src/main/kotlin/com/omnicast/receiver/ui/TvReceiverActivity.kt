@@ -230,6 +230,8 @@ class TvReceiverActivity : ComponentActivity() {
                     "SET_AUDIO_TRACK" -> message.param?.toIntOrNull()?.let { exoPlayerManager.selectAudioTrack(it) }
                     "CYCLE_AUDIO" -> { val a = exoPlayerManager.cycleAudioTrack(); Toast.makeText(this@TvReceiverActivity, "🔊 Audio: $a", Toast.LENGTH_SHORT).show() }
                     "CYCLE_QUALITY" -> { val q = exoPlayerManager.cycleVideoQuality(); Toast.makeText(this@TvReceiverActivity, "📺 Calidad: $q", Toast.LENGTH_SHORT).show() }
+                    "RECORD" -> TvReceiverHelper.handleRemoteRecord(this@TvReceiverActivity, lifecycleScope, receiverState, exoPlayerManager)
+                    "STOP_RECORD" -> com.omnicast.receiver.directstream.PvrStreamRecorder.stopRecording("⏹ Grabación detenida")
                     "ROTATE" -> (receiverState.value as? ReceiverUiState.ImageDisplaying)?.let { receiverState.value = it.copy(rotation = (it.rotation + 90f) % 360f) }
                 }
             }
@@ -288,7 +290,6 @@ class TvReceiverActivity : ComponentActivity() {
             exoPlayerManager.playStream(url, headers, title, posMs); startPlaybackStatusReporting()
         }
     }
-
     private fun playHistoryItem(item: com.omnicast.receiver.directstream.TvHistoryItem) = startOrAutoRecastMedia(item.mediaUrl, item.title, item.lastPositionMs, item.pageUrl, item.headers)
     private fun playPlaylistItem(item: com.omnicast.receiver.directstream.TvPlaylistItem) = startOrAutoRecastMedia(item.url, item.title, playlistManager.getResumePosition(item), item.pageUrl, item.headers)
 

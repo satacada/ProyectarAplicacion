@@ -25,6 +25,17 @@ object NativeStreamClassifier {
     external fun classifyUrl(url: String, docUrl: String?): Int
     external fun isDiscardCandidate(url: String, durationSec: Float): Boolean
     external fun isTelemetryOrBeacon(url: String): Boolean
+    external fun unpackDeanEdwardsNative(html: String): String?
+
+    fun unpackDeanEdwards(html: String): String? {
+        if (!isLoaded || html.isBlank()) return null
+        return try {
+            val res = unpackDeanEdwardsNative(html)
+            if (res.isNullOrEmpty()) null else res
+        } catch (_: Throwable) {
+            null
+        }
+    }
 
     fun classify(url: String, docUrl: String? = null): MediaBranch {
         if (!isLoaded || url.isBlank()) return fallbackClassify(url)

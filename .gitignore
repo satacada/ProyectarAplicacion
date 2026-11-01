@@ -28,6 +28,7 @@ references/decompiled/
 !app-receiver/src/main/AndroidManifest.xml
 !app-sender/src/main/res/**
 !app-receiver/src/main/res/**
+!app-sender/src/main/cpp/CMakeLists.txt
 !scripts/**
 !supabase/**
 

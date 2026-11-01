@@ -8,6 +8,7 @@ import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
+import com.omnicast.sender.nativeclassifier.NativeStreamClassifier
 
 /**
  * Resuelve metadatos y flujos directos para plataformas de video web como Dailymotion.
@@ -185,11 +186,14 @@ object MediaPlatformResolver {
     }
 
     fun unpackDeanEdwards(html: String): String? {
+        val nativeRes = NativeStreamClassifier.unpackDeanEdwards(html)
+        if (!nativeRes.isNullOrEmpty()) return nativeRes
+
         val pos = html.indexOf(".split('|')")
         if (pos == -1) return null
         val start = html.lastIndexOf("eval(function(", pos)
         if (start == -1) return null
-        val chunk = html.substring(start, pos + 20)
+        val chunk = html.substring(start, minOf(html.length, pos + 20))
         val callPart = chunk.substringAfter("}(")
         val kEnd = callPart.lastIndexOf("'.split")
         if (kEnd == -1) return null
@@ -200,7 +204,7 @@ object MediaPlatformResolver {
         val matchNums = Regex(",\\s*(\\d+)\\s*,\\s*(\\d+)\\s*$").find(numbersAndP) ?: return null
         val a = matchNums.groupValues[1].toIntOrNull() ?: 36
         val c = matchNums.groupValues[2].toIntOrNull() ?: return null
-        var p = numbersAndP.substring(0, matchNums.range.first).trim().trim('\'', '"', ' ')
+        var p = numbersAndP.substring(0, matchNums.range.first).trim().trim('\'', '"', ' ').replace("\\'", "'")
         val kList = kStr.split('|')
         for (idx in c - 1 downTo 0) {
             if (idx < kList.size && kList[idx].isNotEmpty()) {

@@ -25,6 +25,11 @@ Este repositorio sigue el estándar abierto AGENTS.md para el desarrollo de la a
 - **Catálogo de Versiones:** Declarar dependencias únicamente en 'gradle/libs.versions.toml'.
 - **Ley de Intocabilidad de lo Probado:** Toda funcionalidad, pantalla, extractor, flujo de red, cálculo de escala o reproductor validado y aprobado por el usuario queda **SELLADO E INMUTABLE**. Queda PROHIBIDO refactorizarlo, reescribirlo, simplificarlo o "generalizarlo" bajo pretexto de elegancia o modularidad. Si funciona, no se toca.
 - **Separación entre Consulta del Usuario y Orden de Modificación:** Ante una consulta teórica, pregunta conceptual ("¿qué pasó con esto?", "¿cómo funciona?", "¿por qué?") o análisis solicitado por el usuario, la IA responderá ÚNICAMENTE con diagnóstico, datos y explicación técnica. Queda TERMINANTEMENTE PROHIBIDO modificar archivos, ejecutar refactorizaciones o crear commits como reacción a una consulta. Toda modificación de código requiere una instrucción explícita del usuario o la aprobación previa de una propuesta.
+- **Estándar C++20 Moderno Obligatorio (Zero-Leak & Zero-Copy):**
+  Toda implementación en C++ DEBE programarse bajo el estándar C++20 moderno (`CMAKE_CXX_STANDARD 20`):
+  1. **Zero-Allocation:** Uso obligatorio de `std::string_view` y `std::span` para operaciones de lectura y parseo, prohibiendo copias innecesarias de cadenas (`std::string`).
+  2. **Gestión de Memoria Segura:** Prohibido el uso de `malloc`, `free`, `new` o `delete` manual. La memoria debe residir en la pila (*stack*), en colecciones automáticas RAII (`std::vector`, `std::array`) o mediante punteros inteligentes (`std::unique_ptr`).
+  3. **Puntualidad JNI:** Prohibido invocar métodos JNI dentro de bucles cerrados de renderizado o red; la frontera entre Kotlin y C++20 debe transferir bloques completos de datos con retornos directos.
 
 ---
 
@@ -147,6 +152,10 @@ Queda terminantemente PROHIBIDO compilar o proponer una versión sin auditar pre
    - Queda TERMINANTEMENTE PROHIBIDO mutar, sustituir o reescribir el nombre de host público asignado por una CDN multimedia (`r*.dropcdn.io`, `ds*.dropcdn.io`) mediante parámetros query como `srv=`.
    - Ciertas CDNs devuelven identificadores internos de backend (ej. `srv=ds1i`) cuyos subdominios resuelven a **direcciones IP privadas RFC 1918 (`192.168.10.23:443`)**, provocando fallos inmediatos de conexión (`code=0` / Connection refused) en la TV Box.
    - Toda solicitud de streaming DEBE dirigirse incondicionalmente al dominio público legítimo entregado por el servidor de video, y la TV Box debe actuar de forma estrictamente pasiva sin alterar ni reescribir las URLs recibidas del Emisor.
+14. **Blindaje de Reproducción YouTube y Autonomía TV Box (Ley Anti-403 Botguard / v3.5.62) [BLOQUEANTE]:**
+   - `TvYouTubeScreen` opera con el IFrame oficial de Google en la TV Box con inmunidad total de desconexión (`ClientStatus.Disconnected`). Los streams de YouTube NO deben ser forzados a peticiones directas de red que carezcan de PO Token / firma de Botguard, evitando el bloqueo `HTTP 403 Forbidden` de `googlevideo.com`.
+   - Toda optimización en el flujo de streaming debe canalizarse a través del motor C++20 (`libstream_classifier.so`) respetando el estándar Zero-Allocation.
+
 
 
 

@@ -123,10 +123,12 @@ object WvcShieldSecurityEngine {
 
         val isAd = AdBlocker.isAd(targetUrl) ||
             (targetHost != null && AdBlockDatabase.isAdDomain(targetHost)) ||
-            NativeAdBlockEngine.shouldBlock(targetUrl, currentUrl)
+            NativeAdBlockEngine.shouldBlock(targetUrl, currentUrl) ||
+            (curHost != null && targetHost != null)
 
         if (isAd) {
             android.util.Log.w("WvcShieldSecurity", "🛡️ [WVC Shield] Redirección publicitaria sin gesto táctil bloqueada: $targetHost")
+            targetHost?.let { AdBlocker.learnAndBlockAdHost(it, curHost) }
             return true
         }
         return false
@@ -142,9 +144,10 @@ object WvcShieldSecurityEngine {
 
     /**
      * Evalúa si una navegación en `shouldOverrideUrlLoading` es un secuestro de clic (click-jacking)
-     * sobre un reproductor de video (ej. Mixdrop, StreamWish, Filemoon) que intenta desviar al usuario
-     * hacia Google u otros dominios externos cuando intentaba pulsar Play.
+     * que intenta desviar al usuario hacia páginas publicitarias, buscadores o dominios externos
+     * no autorizados desde un sitio web de streaming o películas.
      */
+    @Suppress("UNUSED_PARAMETER")
     fun shouldBlockClickHijack(hasGesture: Boolean, targetUrl: String, currentUrl: String, isMediaPresent: Boolean = false): Boolean {
         if (!isEnabled || !hasGesture) return false
         val curHost = extractHost(currentUrl) ?: return false
@@ -155,18 +158,19 @@ object WvcShieldSecurityEngine {
 
         val isTargetSearchEngine = AdBlocker.isSearchEngine(targetHost)
         val isSourceSearchEngine = AdBlocker.isSearchEngine(curHost)
-        if (!isSourceSearchEngine && isTargetSearchEngine) {
+        if (isSourceSearchEngine) return false
+
+        if (isTargetSearchEngine) {
             try { android.util.Log.w("WvcShieldSecurity", "🛑 [WVC Shield] Secuestro de clic hacia buscador ($targetHost) bloqueado desde: $curHost") } catch (_: Throwable) {}
             return true
         }
 
-        val isPlayerContext = isMediaPresent || AdBlocker.isKnownMediaHost(curHost)
-        if (!isPlayerContext) return false
+        if (AdBlockWhitelistManager.isWhitelistedHost(curHost)) return false
 
-        if (AdBlocker.isAd(targetUrl) || AdBlockDatabase.isAdDomain(targetHost) || NativeAdBlockEngine.shouldBlock(targetUrl, currentUrl)) {
-            try { android.util.Log.w("WvcShieldSecurity", "🛑 [WVC Shield] Secuestro de clic publicitario bloqueado hacia: $targetHost") } catch (_: Throwable) {}
-            return true
-        }
-        return false
+        try {
+            android.util.Log.w("WvcShieldSecurity", "🛑 [WVC Shield] Secuestro de clic publicitario bloqueado hacia: $targetHost desde: $curHost")
+            AdBlocker.learnAndBlockAdHost(targetHost, curHost)
+        } catch (_: Throwable) {}
+        return true
     }
 }

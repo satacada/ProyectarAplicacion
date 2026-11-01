@@ -88,6 +88,34 @@ class AhoCorasickAdMatcherTest {
             currentUrl = mixdropPage
         )
         assertFalse("Navegación hacia host multimedia conocido debe permitirse", allowedMedia)
+
+        // 5. Portal de películas con clic hacia dominio externo desconocido (zero-day ad) -> DEBE BLOQUEARSE
+        val moviePortalPage = "https://pelisgo.net/pelicula/spider-man"
+        val zeroDayAd = "https://letsgo.topclickpick.com/track/123"
+        val blockedZeroDay = WvcShieldSecurityEngine.shouldBlockClickHijack(
+            hasGesture = true,
+            targetUrl = zeroDayAd,
+            currentUrl = moviePortalPage
+        )
+        assertTrue("Secuestro hacia dominio publicitario desconocido en portal de películas debe bloquearse", blockedZeroDay)
+
+        // 6. Navegación legítima desde buscador (Google) hacia una web externa -> NO DEBE BLOQUEARSE
+        val googleSearch = "https://www.google.com/search?q=peliculas"
+        val allowedFromGoogle = WvcShieldSecurityEngine.shouldBlockClickHijack(
+            hasGesture = true,
+            targetUrl = moviePortalPage,
+            currentUrl = googleSearch
+        )
+        assertFalse("Navegación intencional desde buscador hacia web externa debe permitirse", allowedFromGoogle)
+
+        // 7. Navegación interna dentro del portal de películas -> NO DEBE BLOQUEARSE
+        val internalMoviePage = "https://pelisgo.net/pelicula/batman"
+        val allowedInternalMovie = WvcShieldSecurityEngine.shouldBlockClickHijack(
+            hasGesture = true,
+            targetUrl = internalMoviePage,
+            currentUrl = moviePortalPage
+        )
+        assertFalse("Navegación interna dentro del portal de películas debe permitirse", allowedInternalMovie)
     }
 
     @Test

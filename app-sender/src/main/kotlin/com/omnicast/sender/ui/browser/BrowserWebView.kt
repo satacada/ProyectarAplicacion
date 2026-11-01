@@ -171,12 +171,15 @@ fun BrowserWebView(
                         val reqUrl = r?.url?.toString() ?: return false
                         if (AdBlocker.isExternalRedirect(reqUrl)) return true
                         val liveUrl = v?.url ?: currentUrl
-                        if (isAdBlockEnabled && WvcShieldSecurityEngine.isEnabled && (WvcShieldSecurityEngine.shouldBlockDelayedRedirect(r.hasGesture(), reqUrl, liveUrl) || WvcShieldSecurityEngine.shouldBlockClickHijack(r.hasGesture(), reqUrl, liveUrl, hasStreams))) return true
+                        if (isAdBlockEnabled && WvcShieldSecurityEngine.isEnabled &&
+                            (WvcShieldSecurityEngine.shouldBlockDelayedRedirect(r.hasGesture(), reqUrl, liveUrl) ||
+                             WvcShieldSecurityEngine.shouldBlockClickHijack(r.hasGesture(), reqUrl, liveUrl, hasStreams))) {
+                            showBlockedToast(ctx)
+                            return true
+                        }
                         val curHost = try { java.net.URI(liveUrl).host?.lowercase() } catch (_: Throwable) { null }
                         val targetHost = try { r.url.host?.lowercase() } catch (_: Throwable) { null }
-                        val isSameSite = curHost != null && targetHost != null && (targetHost == curHost || targetHost.endsWith(".$curHost") || curHost.endsWith(".$targetHost"))
                         val isSourceWhitelisted = curHost?.let { AdBlockWhitelistManager.isWhitelistedHost(it) } ?: false
-                        val isSourceSearchEngine = curHost?.let { AdBlocker.isSearchEngine(it) } ?: false
 
                         if (isAdBlockEnabled && !isSourceWhitelisted) {
                             if (AdBlocker.isAd(reqUrl) || NativeAdBlockEngine.shouldBlock(reqUrl, liveUrl)) {
@@ -184,18 +187,6 @@ fun BrowserWebView(
                                 targetHost?.let { AdBlocker.learnAndBlockAdHost(it, curHost) }
                                 showBlockedToast(ctx)
                                 return true
-                            }
-                            if (!r.hasGesture() && !isSameSite && !isSourceSearchEngine && targetHost != null) {
-                                val isAllowedExternal = AdBlocker.isSearchEngine(targetHost) ||
-                                    AdBlocker.isKnownMediaHost(targetHost) ||
-                                    AdBlocker.isVerificationOrCaptcha(targetHost) ||
-                                    AdBlockWhitelistManager.isWhitelistedHost(targetHost)
-                                if (!isAllowedExternal && (AdBlocker.isAd(reqUrl) || AdBlockDatabase.isAdDomain(targetHost))) {
-                                    android.util.Log.w("BrowserWebView", "🛑 Secuestro publicitario bloqueado hacia: $targetHost (aprendiendo dominio)")
-                                    AdBlocker.learnAndBlockAdHost(targetHost, curHost)
-                                    showBlockedToast(ctx)
-                                    return true
-                                }
                             }
                         }
                         return false

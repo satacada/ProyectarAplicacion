@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 317,
-  "versionCodeReceiver": 300,
-  "versionName": "3.5.66",
-  "releaseTag": "v3.5.66",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.66/omnicast-sender-v3.5.66.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.66/omnicast-receiver-v3.5.66.apk",
-  "changelog": "v3.5.66 (Blindaje Universal Anti-Secuestro, Controles OSD en HTML5 y Sugerencias de Historial): 1) Blindaje Universal Anti-Secuestro (WvcShieldSecurityEngine.kt): Bloqueo universal de desvíos hacia buscadores (google, bing, etc.) desde sitios web externos sin importar si el video ha iniciado o no, erradicando el secuestro de clic al pulsar Play en portales de películas. 2) Controles Arriba/Abajo con 4 Defensas en TV HTML5 (TvWebStreamScreen.kt): Gestión de calidades HLS (hls.levels) y subtítulos (hls.subtitleTracks y vid.textTracks nativo) con ciclo circular, try-catch, prevención de fugas de RAM/VRAM en stopStream() y avisos OSD en pantalla. 3) Sugerencias de Historial en Barra de Direcciones (BrowserTopBar.kt): Menú desplegable reactivo con auto-completado de sitios visitados recientemente al escribir 2 o más letras en la barra de URL."
+  "versionCodeSender": 318,
+  "versionCodeReceiver": 301,
+  "versionName": "3.5.67",
+  "releaseTag": "v3.5.67",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.67/omnicast-sender-v3.5.67.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.67/omnicast-receiver-v3.5.67.apk",
+  "changelog": "v3.5.67 (Blindaje Universal de Clics y Neutralización Estricta de Dominios Rotativos): 1) Blindaje Universal Anti-Secuestro Estricto (WvcShieldSecurityEngine.kt): Eliminación de restricciones condicionales en shouldBlockClickHijack y shouldBlockDelayedRedirect. En portales de películas/streaming, todo salto con o sin gesto táctil hacia un dominio externo que no sea same-site, reproductor conocido, captcha o whitelist se bloquea de forma incondicional e inmediata, aprendiendo el dominio en SQLite e informando al usuario vía toast, sin depender de que el dominio rotativo esté previamente indexado en EasyList."
 }

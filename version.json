@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 324,
-  "versionCodeReceiver": 307,
-  "versionName": "3.5.73",
-  "releaseTag": "v3.5.73",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.73/omnicast-sender-v3.5.73.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.73/omnicast-receiver-v3.5.73.apk",
-  "changelog": "v3.5.73 (Reversión selectiva de selectores de cookies en AdBlocker para validar navegación y fichas en PelisGO): 1) Sender (AdBlocker): Se remueven los selectores genéricos de Didomi/OneTrust y sobreescrituras forzadas de overflow que afectaban la interactividad de tarjetas y navegación en PelisGO."
+  "versionCodeSender": 325,
+  "versionCodeReceiver": 308,
+  "versionName": "3.5.74",
+  "releaseTag": "v3.5.74",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.74/omnicast-sender-v3.5.74.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.74/omnicast-receiver-v3.5.74.apk",
+  "changelog": "v3.5.74 (Erradicación de palabras en duro en JavaScript y Navegación Universal de Mismo Origen en WvcShield): 1) Sender (WvcShieldSecurityEngine.kt): Extirpación definitiva de cadenas en duro (dropcdn, fastream, player, embed) en SHIELD_SCRIPT; implementación del principio universal de Mismo Origen (rutas relativas '/' y coincidencia de hostname), permitiendo que iconos, selectores y botones de capítulos en Tio Plus y portales similares naveguen inmediatamente en 0 ms sin ser bloqueados como falsos popups."
 }

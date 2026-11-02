@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 325,
-  "versionCodeReceiver": 308,
-  "versionName": "3.5.74",
-  "releaseTag": "v3.5.74",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.74/omnicast-sender-v3.5.74.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.74/omnicast-receiver-v3.5.74.apk",
-  "changelog": "v3.5.74 (Erradicación de palabras en duro en JavaScript y Navegación Universal de Mismo Origen en WvcShield): 1) Sender (WvcShieldSecurityEngine.kt): Extirpación definitiva de cadenas en duro (dropcdn, fastream, player, embed) en SHIELD_SCRIPT; implementación del principio universal de Mismo Origen (rutas relativas '/' y coincidencia de hostname), permitiendo que iconos, selectores y botones de capítulos en Tio Plus y portales similares naveguen inmediatamente en 0 ms sin ser bloqueados como falsos popups."
+  "versionCodeSender": 326,
+  "versionCodeReceiver": 309,
+  "versionName": "3.5.75",
+  "releaseTag": "v3.5.75",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.75/omnicast-sender-v3.5.75.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.75/omnicast-receiver-v3.5.75.apk",
+  "changelog": "v3.5.75 (Motor Dinámico Auto-Actualizable de Reproductores con Auditoría de Fallos y Desbloqueo de Servidores): 1) Sender (MediaPlayerSyncManager.kt): Nuevo gestor de sincronización de reproductores multimedia con descarga remota, auto-aprendizaje heurístico y registro formal de fallos (PLAYER_SYNC_ERROR) con código y timestamp. 2) Sender (WvcShieldSecurityEngine.kt): Limpieza total de JavaScript sin palabras mágicas en duro, delegando la validación de servidores a Kotlin/SQLite. 3) Sender (BrowserWebView.kt): Auto-aprendizaje de dominios de reproductores al detectar streams válidos."
 }

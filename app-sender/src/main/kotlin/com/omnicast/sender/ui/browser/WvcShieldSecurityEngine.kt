@@ -35,18 +35,9 @@ object WvcShieldSecurityEngine {
                         return _realOpen ? _realOpen.apply(this, arguments) : null;
                     }
                     try {
-                        if (url.charAt(0) === '/' || url.indexOf('://') === -1) {
-                            window.location.href = url;
-                            return null;
-                        }
-                        var curHost = (window.location.hostname || '').toLowerCase();
-                        var targetHost = new URL(url, window.location.href).hostname.toLowerCase();
-                        if (targetHost === curHost || targetHost.endsWith('.' + curHost) || curHost.endsWith('.' + targetHost)) {
-                            window.location.href = url;
-                            return null;
-                        }
+                        window.location.href = url;
+                        return null;
                     } catch(_) {}
-                    console.log('🛡️ [WVC Shield] Popup window.open bloqueado:', url);
                     return null;
                 };
             } catch(_) {}

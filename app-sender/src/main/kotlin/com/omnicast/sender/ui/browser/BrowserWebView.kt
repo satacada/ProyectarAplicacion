@@ -219,6 +219,7 @@ fun BrowserWebView(
                             val detectedStream = com.omnicast.sender.ui.browser.extractors.StreamExtractorRegistry.useCase.execute(candidate)
                             if (detectedStream != null) {
                                 val hdrs = BrowserUrlHelper.buildSafeHeaders(detectedStream.url, docUrl, UA_MOBILE, detectedStream.headers)
+                                try { java.net.URI(docUrl).host?.let { MediaPlayerSyncManager.learnAndSavePlayer(it, ctx) } } catch (_: Throwable) {}
                                 post {
                                     if (!docUrl.contains("youtube.com") && !docUrl.contains("youtu.be")) {
                                         v?.evaluateJavascript("try{document.querySelectorAll('video, audio').forEach(function(el){el.pause();});}catch(_){}", null)

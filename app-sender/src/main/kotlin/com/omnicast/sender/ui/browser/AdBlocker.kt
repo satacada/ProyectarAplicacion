@@ -20,6 +20,7 @@ object AdBlocker {
 
     fun init(context: android.content.Context) {
         AdBlockDatabase.init(context)
+        MediaPlayerSyncManager.init(context)
     }
 
     fun isSearchEngine(host: String?): Boolean {
@@ -92,6 +93,7 @@ object AdBlocker {
     fun removeAdDomain(domain: String): Boolean { l1HostCache.evictAll(); return AdBlockDatabase.get().removeDomain(domain) }
 
     fun isKnownMediaHost(host: String): Boolean {
+        if (MediaPlayerSyncManager.isKnownPlayerHost(host)) return true
         val lower = host.lowercase()
         for (m in KNOWN_MEDIA_HOSTS) {
             if (lower == m || lower.endsWith(".$m") || lower.contains(m.substringBefore("."))) return true

@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 323,
-  "versionCodeReceiver": 306,
-  "versionName": "3.5.72",
-  "releaseTag": "v3.5.72",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.72/omnicast-sender-v3.5.72.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.72/omnicast-receiver-v3.5.72.apk",
-  "changelog": "v3.5.72 (Fase 4 PVR Ring Buffer Asíncrono 128KB, Selector Resolución 1080p/720p/480p/360p, Muxing A/V Demuxed Sky News, Punto Exacto de Inicio, Neutralización Universal de Cookies y Botón REC Unificado): 1) Receiver (PvrStreamRecorder, PvrRingBuffer y PvrHlsMasterParser - Fase 4): Búfer circular asíncrono de 16 MB con volcado en bloques alineados de 128 KB hacia USB/Flash con 0 dropped frames; parser de audio desmultiplexado (#EXT-X-MEDIA:TYPE=AUDIO) empaquetando video y audio sincronizados; descarte automático de 30s históricos para grabar desde el segundo exacto presente. 2) Receiver (TvRecordDialog y TvDirectControlsOverlay): Selector interactivo D-Pad de resoluciones (1080p, 720p, 480p, 360p) y unificación absoluta de etiqueta [🔴 REC]. 3) Sender (AdBlocker): Neutralización universal de capas de consentimiento de cookies (Didomi, OneTrust, CMP) y desbloqueo de scroll sin hardcodear dominios."
+  "versionCodeSender": 324,
+  "versionCodeReceiver": 307,
+  "versionName": "3.5.73",
+  "releaseTag": "v3.5.73",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.73/omnicast-sender-v3.5.73.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.73/omnicast-receiver-v3.5.73.apk",
+  "changelog": "v3.5.73 (Reversión selectiva de selectores de cookies en AdBlocker para validar navegación y fichas en PelisGO): 1) Sender (AdBlocker): Se remueven los selectores genéricos de Didomi/OneTrust y sobreescrituras forzadas de overflow que afectaban la interactividad de tarjetas y navegación en PelisGO."
 }

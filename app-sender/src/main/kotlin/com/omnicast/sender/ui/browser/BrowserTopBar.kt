@@ -76,7 +76,6 @@ fun BrowserTopBar(
     onExitApp: () -> Unit = {}
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
-    val activeLang by com.omnicast.sender.language.AppLanguageManager.currentLanguageFlow.collectAsState()
     val focusManager = LocalFocusManager.current
     var showMenu by remember { mutableStateOf(false) }
     var showHelpDialog by remember { mutableStateOf(false) }
@@ -138,8 +137,11 @@ fun BrowserTopBar(
                                 Box(contentAlignment = Alignment.CenterStart, modifier = Modifier.fillMaxSize()) {
                                     if (textFieldValue.text.isEmpty()) {
                                         Text(com.omnicast.sender.language.AppLanguageManager.t(context, "browser_search_hint"), color = Color(0xFF64748B), fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, softWrap = false)
+                                    } else if (!isFocused) {
+                                        Text(text = textFieldValue.text, color = Color.White, fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, softWrap = false)
+                                    } else {
+                                        innerTextField()
                                     }
-                                    innerTextField()
                                 }
                             }
                         )
@@ -287,14 +289,7 @@ fun BrowserTopBar(
         }
     }
 
-    if (showHelpDialog) {
-        BrowserHelpDialog(onDismiss = { showHelpDialog = false })
-    }
-    if (showLangDialog) {
-        com.omnicast.sender.ui.components.AppLanguageDialog(
-            onDismiss = { showLangDialog = false },
-            onLanguageSelected = { showLangDialog = false }
-        )
-    }
+    if (showHelpDialog) BrowserHelpDialog(onDismiss = { showHelpDialog = false })
+    if (showLangDialog) com.omnicast.sender.ui.components.AppLanguageDialog(onDismiss = { showLangDialog = false }, onLanguageSelected = { showLangDialog = false })
 }
 

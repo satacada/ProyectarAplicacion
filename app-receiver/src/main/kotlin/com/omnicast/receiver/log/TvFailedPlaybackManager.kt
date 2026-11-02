@@ -18,7 +18,8 @@ data class FailedPlaybackRecord(
     val player: String,
     val errorCode: String,
     val title: String = "",
-    val details: String = ""
+    val details: String = "",
+    val appVersion: String = ""
 ) {
     fun toJson(): JSONObject = JSONObject().apply {
         put("timestamp", timestamp)
@@ -28,6 +29,7 @@ data class FailedPlaybackRecord(
         put("errorCode", errorCode)
         put("title", title)
         put("details", details)
+        put("appVersion", appVersion)
     }
 
     companion object {
@@ -38,7 +40,8 @@ data class FailedPlaybackRecord(
             player = json.optString("player", "UNKNOWN"),
             errorCode = json.optString("errorCode", "UNKNOWN"),
             title = json.optString("title", ""),
-            details = json.optString("details", "")
+            details = json.optString("details", ""),
+            appVersion = json.optString("appVersion", "")
         )
     }
 }
@@ -59,6 +62,9 @@ object TvFailedPlaybackManager {
     ) {
         if (streamUrl.isBlank()) return
         try {
+            val appVer = try {
+                context.packageManager.getPackageInfo(context.packageName, 0).let { "v${it.versionName} (${it.versionCode})" }
+            } catch (_: Throwable) { "Unknown" }
             val host = extractHost(streamUrl)
             val record = FailedPlaybackRecord(
                 streamUrl = streamUrl,
@@ -66,7 +72,8 @@ object TvFailedPlaybackManager {
                 player = player,
                 errorCode = errorCode,
                 title = title,
-                details = details
+                details = details,
+                appVersion = appVer
             )
             val currentList = getRecentFailures(context).toMutableList()
             currentList.add(0, record)
@@ -74,7 +81,7 @@ object TvFailedPlaybackManager {
                 currentList.subList(MAX_ENTRIES, currentList.size).clear()
             }
             saveList(context, currentList)
-            ReceiverLogger.log(TAG, "❌ [CAJA NEGRA TV] Fallo persistido: $host ($player -> $errorCode: $details)")
+            ReceiverLogger.log(TAG, "❌ [CAJA NEGRA TV - $appVer] Fallo persistido: $host ($player -> $errorCode: $details)")
         } catch (e: Throwable) {
             Log.e(TAG, "Error persistiendo fallo de reproducción: ${e.message}", e)
         }

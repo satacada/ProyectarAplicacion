@@ -221,5 +221,26 @@ object BrowserUrlHelper {
             .distinctBy { it.substringBefore("=").trim() }
             .joinToString("; ")
     }
+
+    fun resolveServerBadge(url: String): String {
+        val lower = url.lowercase()
+        return when {
+            lower.contains("mxdcontent.net") || lower.contains("mixdrop") -> "Mixdrop"
+            lower.contains("dropcdn.io") || lower.contains("dr0pstream") -> "DropCDN"
+            lower.contains("fastream.to") -> "Fastream"
+            lower.contains("streamwish") || lower.contains("swdyu") -> "StreamWish"
+            lower.contains("doodstream") || lower.contains("doo.la") || lower.contains("ds2play") -> "DoodStream"
+            lower.contains("filemoon") -> "Filemoon"
+            lower.contains("luluvdo") || lower.contains("lulustream") -> "LuluStream"
+            lower.contains("ok.ru") || lower.contains("mycdn.me") || lower.contains("okcdn.ru") -> "OK.ru"
+            lower.contains("dailymotion") || lower.contains("dmcdn") -> "Dailymotion"
+            lower.contains("googlevideo") || lower.contains("youtube") -> "YouTube"
+            lower.contains("vidmoly") -> "Vidmoly"
+            lower.contains("streamtape") -> "Streamtape"
+            lower.contains("voe.sx") -> "VOE"
+            lower.contains("vidoza") -> "Vidoza"
+            else -> try { java.net.URI(url).host?.removePrefix("www.")?.take(16) } catch (_: Throwable) { null } ?: "Servidor Web"
+        }
+    }
 }
 

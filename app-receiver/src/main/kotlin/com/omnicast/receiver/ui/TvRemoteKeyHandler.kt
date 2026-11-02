@@ -116,56 +116,57 @@ object TvRemoteKeyHandler {
             }
             is ReceiverUiState.YouTubePlaying -> {
                 when (keyCode) {
-                    KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER,
                     KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE, KeyEvent.KEYCODE_MEDIA_PLAY, KeyEvent.KEYCODE_MEDIA_PAUSE -> {
                         youTubeControlFlow.tryEmit(SignalingMessage.PlayControl("TOGGLE_PLAY"))
                         return true
                     }
-                    KeyEvent.KEYCODE_DPAD_RIGHT, KeyEvent.KEYCODE_MEDIA_FAST_FORWARD -> {
+                    KeyEvent.KEYCODE_MEDIA_FAST_FORWARD -> {
                         youTubeControlFlow.tryEmit(SignalingMessage.PlayControl("SEEK_REL", 10_000L))
                         Toast.makeText(context, "⏩ +10s", Toast.LENGTH_SHORT).show()
                         return true
                     }
-                    KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.KEYCODE_MEDIA_REWIND -> {
+                    KeyEvent.KEYCODE_MEDIA_REWIND -> {
                         youTubeControlFlow.tryEmit(SignalingMessage.PlayControl("SEEK_REL", -10_000L))
                         Toast.makeText(context, "⏪ -10s", Toast.LENGTH_SHORT).show()
                         return true
                     }
-                    KeyEvent.KEYCODE_DPAD_UP, KeyEvent.KEYCODE_MENU -> {
-                        youTubeControlFlow.tryEmit(SignalingMessage.PlayControl("TOGGLE_SUBTITLES"))
-                        Toast.makeText(context, "💬 Alternando Subtítulos", Toast.LENGTH_SHORT).show()
+                    KeyEvent.KEYCODE_MENU -> {
+                        youTubeControlFlow.tryEmit(SignalingMessage.PlayControl("TOGGLE_MENU"))
                         return true
+                    }
+                    KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER,
+                    KeyEvent.KEYCODE_DPAD_DOWN, KeyEvent.KEYCODE_DPAD_UP,
+                    KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.KEYCODE_DPAD_RIGHT -> {
+                        youTubeControlFlow.tryEmit(SignalingMessage.PlayControl("SHOW_CONTROLS"))
+                        return false
                     }
                 }
             }
             is ReceiverUiState.WebStreamPlaying -> {
                 when (keyCode) {
-                    KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER,
                     KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE, KeyEvent.KEYCODE_MEDIA_PLAY, KeyEvent.KEYCODE_MEDIA_PAUSE -> {
                         youTubeControlFlow.tryEmit(SignalingMessage.PlayControl("TOGGLE_PLAY"))
                         return true
                     }
-                    KeyEvent.KEYCODE_DPAD_RIGHT, KeyEvent.KEYCODE_MEDIA_FAST_FORWARD -> {
+                    KeyEvent.KEYCODE_MEDIA_FAST_FORWARD -> {
                         youTubeControlFlow.tryEmit(SignalingMessage.PlayControl("SEEK_REL", 10_000L))
                         Toast.makeText(context, "⏩ +10s", Toast.LENGTH_SHORT).show()
                         return true
                     }
-                    KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.KEYCODE_MEDIA_REWIND -> {
+                    KeyEvent.KEYCODE_MEDIA_REWIND -> {
                         youTubeControlFlow.tryEmit(SignalingMessage.PlayControl("SEEK_REL", -10_000L))
                         Toast.makeText(context, "⏪ -10s", Toast.LENGTH_SHORT).show()
                         return true
                     }
-                    KeyEvent.KEYCODE_DPAD_UP -> {
-                        youTubeControlFlow.tryEmit(SignalingMessage.PlayControl("TOGGLE_SUBTITLES"))
-                        return true
-                    }
-                    KeyEvent.KEYCODE_DPAD_DOWN -> {
-                        youTubeControlFlow.tryEmit(SignalingMessage.PlayControl("CYCLE_QUALITY"))
-                        return true
-                    }
                     KeyEvent.KEYCODE_MENU -> {
-                        youTubeControlFlow.tryEmit(SignalingMessage.PlayControl("CYCLE_ZOOM"))
+                        youTubeControlFlow.tryEmit(SignalingMessage.PlayControl("TOGGLE_MENU"))
                         return true
+                    }
+                    KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER,
+                    KeyEvent.KEYCODE_DPAD_DOWN, KeyEvent.KEYCODE_DPAD_UP,
+                    KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.KEYCODE_DPAD_RIGHT -> {
+                        youTubeControlFlow.tryEmit(SignalingMessage.PlayControl("SHOW_CONTROLS"))
+                        return false
                     }
                 }
             }

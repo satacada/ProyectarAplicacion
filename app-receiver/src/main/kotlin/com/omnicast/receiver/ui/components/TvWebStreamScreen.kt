@@ -1,44 +1,28 @@
 package com.omnicast.receiver.ui.components
 
 import android.annotation.SuppressLint
-import android.content.Context
 import android.net.Uri
 import android.view.View
 import android.view.ViewGroup
 import android.webkit.*
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.omnicast.core.protocol.SignalingMessage
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 
-private object WebPlayerAssetHelper {
-    private var cachedHlsJs: String? = null
-    fun getHlsJs(context: Context): String = cachedHlsJs ?: try {
-        context.assets.open("hls.light.min.js").bufferedReader().use { it.readText() }.also { cachedHlsJs = it }
-    } catch (_: Throwable) { "" }
-}
-
 /**
  * Reproductor Web HTML5 / Chromium para TV Box.
- * Ejecuta flujos web protegidos con tokens de seguridad (DropCDN, Fastream, HLS)
- * dentro del stack de red nativo de Chromium sin riesgo de HTTP 403.
+ * Soporta flujos web protegidos con tokens de seguridad (DropCDN, Fastream, HLS)
+ * con controles OSD D-Pad 100% nativos (TvWebUnifiedOverlay y TvWebSettingsModal).
  */
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
@@ -49,16 +33,16 @@ fun TvWebStreamScreen(
     onPlaybackStatus: ((posMs: Long, durMs: Long, isPlaying: Boolean) -> Unit)? = null,
     onPlaybackFailed: ((String) -> Unit)? = null, onCloseClick: () -> Unit = {}
 ) {
-    var showBanner by remember(streamUrl, timestamp) { mutableStateOf(true) }
+    var playerState by remember(streamUrl, timestamp) {
+        mutableStateOf(TvWebPlayerState(isControlsVisible = true))
+    }
     var customView by remember(streamUrl, timestamp) { mutableStateOf<View?>(null) }
     var webViewRef by remember(streamUrl, timestamp) { mutableStateOf<WebView?>(null) }
 
-    LaunchedEffect(streamUrl, timestamp) { delay(4000); showBanner = false }
     LaunchedEffect(displayMode, webViewRef) {
         val dm = displayMode ?: return@LaunchedEffect; val wv = webViewRef ?: return@LaunchedEffect
         wv.evaluateJavascript("if (typeof setDisplayMode === 'function') setDisplayMode('${dm.mode}', ${dm.zoom}, ${dm.panY}, ${dm.panX});", null)
     }
-    LaunchedEffect(webViewRef) { while (true) { delay(300_000L); try { webViewRef?.freeMemory() } catch (_: Throwable) {} } }
 
     LaunchedEffect(commandFlow, webViewRef) {
         commandFlow?.collect { msg ->
@@ -71,24 +55,25 @@ fun TvWebStreamScreen(
                 "SEEK_REL" -> wv.evaluateJavascript("seekRel(${msg.positionMs / 1000.0});", null)
                 "VOLUME" -> wv.evaluateJavascript("setVolume(${msg.volume.coerceIn(0f, 1f)});", null)
                 "STOP" -> wv.evaluateJavascript("stopStream();", null)
-                "CYCLE_QUALITY" -> wv.evaluateJavascript("cycleQuality();") { r -> val q = r?.replace("\"", "")?.takeIf { it != "null" } ?: "Auto"; android.widget.Toast.makeText(wv.context, "📺 Calidad: $q", android.widget.Toast.LENGTH_SHORT).show() }
-                "TOGGLE_SUBTITLES", "SUBTITLE_TOGGLE" -> wv.evaluateJavascript("toggleSubtitles();") { r -> val s = r?.replace("\"", "")?.takeIf { it != "null" } ?: "Off"; android.widget.Toast.makeText(wv.context, "💬 Subtítulos: $s", android.widget.Toast.LENGTH_SHORT).show() }
+                "SHOW_CONTROLS" -> playerState = playerState.copy(isControlsVisible = true)
+                "CYCLE_QUALITY" -> wv.evaluateJavascript("cycleQuality();") { r ->
+                    val q = r?.replace("\"", "")?.takeIf { it != "null" } ?: "Auto"
+                    playerState = playerState.copy(currentQuality = q)
+                    android.widget.Toast.makeText(wv.context, "📺 Calidad: $q", android.widget.Toast.LENGTH_SHORT).show()
+                }
+                "TOGGLE_SUBTITLES", "SUBTITLE_TOGGLE" -> wv.evaluateJavascript("toggleSubtitles();") { r ->
+                    val s = r?.replace("\"", "")?.takeIf { it != "null" } ?: "Desactivados"
+                    playerState = playerState.copy(currentSubtitle = s)
+                    android.widget.Toast.makeText(wv.context, "💬 Subtítulos: $s", android.widget.Toast.LENGTH_SHORT).show()
+                }
+                "TOGGLE_MENU", "CYCLE_ZOOM" -> {
+                    playerState = playerState.copy(isSettingsOpen = !playerState.isSettingsOpen)
+                }
             }
         }
     }
 
     Box(modifier = Modifier.fillMaxSize().background(Color.Black), contentAlignment = Alignment.Center) {
-        IconButton(
-            onClick = onCloseClick,
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .padding(start = 24.dp, top = 24.dp)
-                .size(38.dp)
-                .background(Color(0x990F172A), RoundedCornerShape(10.dp))
-        ) {
-            ModernExitIcon()
-        }
-
         if (customView != null) {
             AndroidView(factory = { customView!! }, modifier = Modifier.fillMaxSize())
         } else {
@@ -117,8 +102,19 @@ fun TvWebStreamScreen(
                                 }
                             }
                             addJavascriptInterface(object {
-                                @android.webkit.JavascriptInterface
-                                fun onPlaybackStatus(c: Double, d: Double, p: Boolean) { onPlaybackStatus?.invoke((c * 1000).toLong(), (d * 1000).toLong(), p) }
+                                @JavascriptInterface
+                                fun onPlaybackStatus(c: Double, d: Double, p: Boolean) {
+                                    val cMs = (c * 1000).toLong()
+                                    val dMs = (d * 1000).toLong()
+                                    playerState = playerState.copy(currentPositionMs = cMs, durationMs = dMs, isPlaying = p)
+                                    onPlaybackStatus?.invoke(cMs, dMs, p)
+                                }
+                                @JavascriptInterface
+                                fun onMetadataLoaded(qStr: String, sStr: String) {
+                                    val qList = qStr.split(",").filter { it.isNotBlank() }
+                                    val sList = sStr.split(",").filter { it.isNotBlank() }
+                                    playerState = playerState.copy(availableQualities = qList, availableSubtitles = sList)
+                                }
                             }, "AndroidBridge")
                             webViewClient = com.omnicast.receiver.ui.TvReceiverHelper.createWebClient(streamUrl, headers)
                             webChromeClient = object : WebChromeClient() {
@@ -130,143 +126,11 @@ fun TvWebStreamScreen(
                                 }
                             }
 
-                            val hlsCode = WebPlayerAssetHelper.getHlsJs(ctx)
+                            val hlsCode = TvWebHtmlBuilder.getHlsJs(ctx)
                             val safeUrl = streamUrl.replace("\\", "\\\\").replace("\"", "\\\"")
                             val startSec = (startPositionMs / 1000.0).coerceAtLeast(0.0)
                             val baseUrl = com.omnicast.receiver.ui.TvReceiverHelper.resolveBaseUrl(streamUrl, headers)
-
-                            val html = """
-                                <!DOCTYPE html>
-                                <html>
-                                <head>
-                                <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-                                <style>
-                                  * { margin:0; padding:0; box-sizing:border-box; }
-                                  html, body { width:100vw; height:100vh; overflow:hidden; background:#000; }
-                                  video { width:100vw; height:100vh; object-fit:contain; background:#000; border:none; outline:none; }
-                                </style>
-                                <script>$hlsCode</script>
-                                </head>
-                                <body>
-                                  <video id="vplayer" autoplay playsinline controls></video>
-                                  <script>
-                                    var vid = document.getElementById('vplayer');
-                                    var streamUrl = "$safeUrl";
-                                    var startSec = $startSec;
-                                    var hasResumed = false;
-
-                                    function reportStatus() {
-                                      if (window.AndroidBridge && vid) {
-                                        var cur = vid.currentTime || 0;
-                                        var dur = vid.duration || 0;
-                                        var playing = !vid.paused && !vid.ended && vid.readyState > 2;
-                                        window.AndroidBridge.onPlaybackStatus(cur, dur, playing);
-                                      }
-                                    }
-
-                                    vid.addEventListener('play', reportStatus);
-                                    vid.addEventListener('pause', reportStatus);
-                                    vid.addEventListener('ended', reportStatus);
-
-                                    function seekStart() {
-                                      if (startSec > 0 && !hasResumed && vid) {
-                                        hasResumed = true;
-                                        vid.currentTime = startSec;
-                                      }
-                                    }
-                                    vid.addEventListener('loadedmetadata', seekStart);
-                                    vid.addEventListener('canplay', seekStart);
-
-                                    var hls = null;
-                                    function initHls() {
-                                      if (window.Hls && Hls.isSupported()) {
-                                        if (hls) { try { hls.destroy(); } catch(_) {} hls = null; }
-                                        var requireCreds = ${headers["X-With-Credentials"] == "true"};
-                                        var cfg = { enableWorker: true, lowLatencyMode: false, backBufferLength: 10, maxBufferLength: 20, maxMaxBufferLength: 30, maxBufferSize: 30 * 1024 * 1024 };
-                                        if (requireCreds) { cfg.xhrSetup = function(xhr) { try { xhr.withCredentials = true; } catch(_) {} }; }
-                                        hls = new Hls(cfg);
-                                        hls.loadSource(streamUrl);
-                                        hls.attachMedia(vid);
-                                        hls.on(Hls.Events.MANIFEST_PARSED, function() { console.log('TvWebStreamJS [MANIFEST_PARSED]', streamUrl); vid.play().catch(function(){}); });
-                                        hls.on(Hls.Events.ERROR, function(ev, data) {
-                                          console.error('TvWebStreamJS [HLS_ERROR] ' + data.type + ' ' + data.details + ' code=' + (data.response ? data.response.code : 'none'));
-                                          if (data.fatal) {
-                                            if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
-                                              if (cfg.xhrSetup) {
-                                                console.warn('TvWebStreamJS [CORS_FALLBACK] Reintentando sin credenciales XHR...');
-                                                delete cfg.xhrSetup;
-                                                try { hls.destroy(); } catch(_) {}
-                                                hls = new Hls(cfg);
-                                                hls.loadSource(streamUrl);
-                                                hls.attachMedia(vid);
-                                              } else { hls.startLoad(); }
-                                            }
-                                            else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) hls.recoverMediaError();
-                                            else { vid.src = streamUrl; vid.play().catch(function(){}); }
-                                          }
-                                        });
-                                      } else { vid.src = streamUrl; vid.play().catch(function(){}); }
-                                    }
-
-                                    if (streamUrl.indexOf('.m3u8') !== -1) initHls(); else { vid.src = streamUrl; vid.play().catch(function(){}); }
-
-                                    function playStream() { if (vid) vid.play().catch(function(){}); }
-                                    function pauseStream() { if (vid) vid.pause(); }
-                                    function togglePlay() { if (vid) { if (vid.paused) vid.play().catch(function(){}); else vid.pause(); } }
-                                    function seekTo(s) { if (vid) vid.currentTime = Math.max(0, s); }
-                                    function seekRel(d) { if (vid) vid.currentTime = Math.max(0, (vid.currentTime || 0) + d); }
-                                    function setVolume(v) { if (vid) vid.volume = Math.max(0, Math.min(1, v)); }
-                                    function cycleQuality() {
-                                      try {
-                                        if (!hls || !hls.levels || !hls.levels.length) return 'Única';
-                                        var n = (hls.currentLevel + 2) % (hls.levels.length + 1) - 1;
-                                        hls.currentLevel = n;
-                                        if (n === -1) return 'Auto';
-                                        var l = hls.levels[n];
-                                        return l && l.height ? (l.height + 'p') : ('Nivel ' + n);
-                                      } catch(_) { return 'Auto'; }
-                                    }
-                                    function toggleSubtitles() {
-                                      try {
-                                        if (hls && hls.subtitleTracks && hls.subtitleTracks.length) {
-                                          var n = (hls.subtitleTrack + 2) % (hls.subtitleTracks.length + 1) - 1;
-                                          hls.subtitleTrack = n;
-                                          if (n === -1) return 'Desactivados';
-                                          var t = hls.subtitleTracks[n];
-                                          return t.name || t.lang || ('Pista ' + n);
-                                        }
-                                        if (vid && vid.textTracks && vid.textTracks.length) {
-                                          for (var i = 0; i < vid.textTracks.length; i++) {
-                                            if (vid.textTracks[i].mode === 'showing') { vid.textTracks[i].mode = 'disabled'; return 'Desactivados'; }
-                                          }
-                                          vid.textTracks[0].mode = 'showing';
-                                          return vid.textTracks[0].label || vid.textTracks[0].language || 'Pista 1';
-                                        }
-                                        return 'Sin subtítulos';
-                                      } catch(_) { return 'Sin subtítulos'; }
-                                    }
-                                    function stopStream() {
-                                      if (hls) { try { hls.destroy(); hls = null; } catch(_) {} }
-                                      if (vid) { vid.pause(); vid.removeAttribute('src'); vid.load(); }
-                                    }
-
-                                    function setDisplayMode(mode, zoom, panY, panX) {
-                                      if (!vid) return;
-                                      if (mode === 'FILL' || mode === 'EXTEND_16_9') { vid.style.objectFit = 'fill'; vid.style.transform = 'scale(1.0)'; }
-                                      else if (mode === 'FIT') { vid.style.objectFit = 'contain'; vid.style.transform = 'scale(1.0)'; }
-                                      else {
-                                        var z = zoom || 1.0; var px = panX || 0; var py = panY || 0;
-                                        var tx = (Math.abs(px) <= 2.5 && px !== 0) ? (px * window.innerWidth) : px;
-                                        var ty = (Math.abs(py) <= 2.5 && py !== 0) ? (py * window.innerHeight) : py;
-                                        vid.style.objectFit = 'contain'; vid.style.transform = 'translate(' + tx + 'px, ' + ty + 'px) scale(' + z + ')';
-                                      }
-                                    }
-
-                                    setInterval(reportStatus, 5000);
-                                  </script>
-                                </body>
-                                </html>
-                            """.trimIndent()
+                            val html = TvWebHtmlBuilder.buildPlayerHtml(safeUrl, startSec, hlsCode, headers)
                             loadDataWithBaseURL(baseUrl, html, "text/html", "UTF-8", null)
                         }
                     },
@@ -287,13 +151,51 @@ fun TvWebStreamScreen(
             }
         }
 
-        AnimatedVisibility(visible = showBanner, exit = fadeOut(), modifier = Modifier.align(Alignment.TopCenter).padding(top = 28.dp)) {
-            Card(colors = CardDefaults.cardColors(containerColor = Color(0xDD0F172A)), shape = RoundedCornerShape(12.dp)) {
-                Column(modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(text = "OmniCast Web Player", color = Color(0xFF38BDF8), fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                    Text(text = title, color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        // Superposición nativa de controles D-Pad
+        TvWebUnifiedOverlay(
+            title = title,
+            badgeText = "🌐 OmniCast HTML5",
+            state = playerState,
+            onTogglePlay = { webViewRef?.evaluateJavascript("togglePlay();", null) },
+            onSeekRelative = { deltaMs -> webViewRef?.evaluateJavascript("seekRel(${deltaMs / 1000.0});", null) },
+            onToggleSettings = { playerState = playerState.copy(isSettingsOpen = !playerState.isSettingsOpen) },
+            onShowControls = { playerState = playerState.copy(isControlsVisible = true) },
+            onHideControls = { playerState = playerState.copy(isControlsVisible = false) }
+        )
+
+        // Modal de configuración nativo D-Pad
+        TvWebSettingsModal(
+            state = playerState,
+            onSelectQuality = { q ->
+                playerState = playerState.copy(currentQuality = q)
+                webViewRef?.evaluateJavascript("setQuality('$q');", null)
+            },
+            onSelectSubtitle = { s ->
+                playerState = playerState.copy(currentSubtitle = s)
+                webViewRef?.evaluateJavascript("setSubtitle('$s');", null)
+            },
+            onToggleAspect = {
+                val nextAspect = when (playerState.aspectRatio) {
+                    "FIT" -> "FILL"
+                    "FILL" -> "EXTEND_16_9"
+                    else -> "FIT"
                 }
-            }
+                playerState = playerState.copy(aspectRatio = nextAspect)
+                webViewRef?.evaluateJavascript("setDisplayMode('$nextAspect', 1.0, 0, 0);", null)
+            },
+            onClose = { playerState = playerState.copy(isSettingsOpen = false) }
+        )
+
+        // Botón de salida
+        IconButton(
+            onClick = onCloseClick,
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .padding(start = 24.dp, top = 24.dp)
+                .size(38.dp)
+                .background(Color(0x990F172A), RoundedCornerShape(10.dp))
+        ) {
+            ModernExitIcon()
         }
     }
 }

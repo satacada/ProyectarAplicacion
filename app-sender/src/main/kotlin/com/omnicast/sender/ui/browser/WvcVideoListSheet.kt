@@ -64,7 +64,7 @@ fun WvcVideoListSheet(
                 }
                 Spacer(Modifier.width(8.dp))
                 Text(
-                    text = "Lista de videos",
+                    text = if (options.isNotEmpty()) "Lista de videos (${options.size})" else "Lista de videos",
                     color = Color.White,
                     fontWeight = FontWeight.Bold,
                     fontSize = 19.sp,
@@ -208,14 +208,25 @@ fun WvcVideoListItem(
         Spacer(Modifier.width(14.dp))
 
         Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = displayName,
-                color = Color.White,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 14.sp,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
+            val srvBadge = remember(option.streamUrl) { BrowserUrlHelper.resolveServerBadge(option.streamUrl) }
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Surface(
+                    color = Color(0xFF1E3A8A),
+                    shape = RoundedCornerShape(4.dp),
+                    modifier = Modifier.padding(end = 6.dp)
+                ) {
+                    Text(text = srvBadge, color = Color(0xFF60A5FA), fontSize = 10.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp))
+                }
+                Text(
+                    text = displayName,
+                    color = Color.White,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 14.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f)
+                )
+            }
             Text(
                 text = streamHostOrUrl,
                 color = Color(0xFF9E9E9E),

@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 318,
-  "versionCodeReceiver": 301,
-  "versionName": "3.5.67",
-  "releaseTag": "v3.5.67",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.67/omnicast-sender-v3.5.67.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.67/omnicast-receiver-v3.5.67.apk",
-  "changelog": "v3.5.67 (Blindaje Universal de Clics y Neutralización Estricta de Dominios Rotativos): 1) Blindaje Universal Anti-Secuestro Estricto (WvcShieldSecurityEngine.kt): Eliminación de restricciones condicionales en shouldBlockClickHijack y shouldBlockDelayedRedirect. En portales de películas/streaming, todo salto con o sin gesto táctil hacia un dominio externo que no sea same-site, reproductor conocido, captcha o whitelist se bloquea de forma incondicional e inmediata, aprendiendo el dominio en SQLite e informando al usuario vía toast, sin depender de que el dominio rotativo esté previamente indexado en EasyList."
+  "versionCodeSender": 319,
+  "versionCodeReceiver": 302,
+  "versionName": "3.5.68",
+  "releaseTag": "v3.5.68",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.68/omnicast-sender-v3.5.68.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.68/omnicast-receiver-v3.5.68.apk",
+  "changelog": "v3.5.68 (Controles D-Pad Nativos Unificados OSD para HTML5/YouTube, Badges de Servidores y Truncado de URL): 1) Sender: Truncado elegante de URL con puntos suspensivos en reposo (TextOverflow.Ellipsis) manteniendo dirección completa subyacente. 2) Sender: Identificación visual de servidores de video con badges distintivos ([Mixdrop], [DropCDN], [Fastream], [StreamWish], etc.) y contador visible en lista de videos detectados ('Lista de videos (X)'). 3) Receiver: Controles OSD D-Pad 100% nativos (TvWebUnifiedOverlay y TvWebSettingsModal) para reproductores web (HTML5 y YouTube) con botones de transporte [⏪ -10s], [▶/⏸], [⏩ +10s], [⚙️ Ajustes], barra de tiempo interactiva y resaltado cyan de alto contraste al enfocar, suprimiendo controles HTML5 no funcionales de Chromium. 4) Telemetría: Registro persistente de versión activa en disparadores de error y caja negra."
 }

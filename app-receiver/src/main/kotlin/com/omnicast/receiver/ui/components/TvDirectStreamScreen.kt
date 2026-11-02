@@ -1,28 +1,19 @@
 package com.omnicast.receiver.ui.components
 
 import android.widget.Toast
-import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Forward10
-import androidx.compose.material.icons.rounded.Pause
-import androidx.compose.material.icons.rounded.PlayArrow
-import androidx.compose.material.icons.rounded.Replay10
-import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.media3.ui.PlayerView
 import com.omnicast.receiver.directstream.ExoPlayerTvManager
+import com.omnicast.receiver.directstream.PvrStreamRecorder
+import com.omnicast.receiver.directstream.TvRecordTimerManager
 import kotlinx.coroutines.delay
 
 @Composable
@@ -35,9 +26,11 @@ fun TvDirectStreamScreen(
     onCloseClick: () -> Unit = {}
 ) {
     val context = LocalContext.current
-    val pvrProgress by com.omnicast.receiver.directstream.PvrStreamRecorder.progress.collectAsState()
+    val pvrProgress by PvrStreamRecorder.progress.collectAsState()
+    val timerState by TvRecordTimerManager.timerState.collectAsState()
     var showSettingsDialog by remember { mutableStateOf(false) }
     var showRecordDialog by remember { mutableStateOf(false) }
+    var showStopConfirm by remember { mutableStateOf(false) }
     var isControlsVisible by remember { mutableStateOf(true) }
     var userInteractionCount by remember { mutableIntStateOf(0) }
     var currentQuality by remember { mutableStateOf(exoPlayerManager.getCurrentVideoQuality()) }
@@ -59,7 +52,7 @@ fun TvDirectStreamScreen(
     }
 
     LaunchedEffect(userInteractionCount, isPlaying) {
-        if (isControlsVisible && isPlaying && !showSettingsDialog) {
+        if (isControlsVisible && isPlaying && !showSettingsDialog && !showRecordDialog && !showStopConfirm) {
             delay(5000)
             isControlsVisible = false
             exoPlayerManager.isControlsShowing = false
@@ -119,8 +112,8 @@ fun TvDirectStreamScreen(
                     val z = if (currentZoom.floatValue > 0f) currentZoom.floatValue else 1.0f
                     pv.scaleX = z
                     pv.scaleY = z
-                    val w = pv.width.takeIf { it > 0 }?.toFloat() ?: 1920f
-                    val h = pv.height.takeIf { it > 0 }?.toFloat() ?: 1080f
+                    val w = pv.width.toFloat()
+                    val h = pv.height.toFloat()
                     val px = currentPanX.floatValue
                     val py = currentPanY.floatValue
                     pv.translationX = if (kotlin.math.abs(px) <= 2.5f) px * w else px * (w / 1080f)
@@ -130,141 +123,66 @@ fun TvDirectStreamScreen(
             )
         }
 
-        // 1. Controles Centrales Clásicos de ExoPlayer (-10s flecha circular, Play/Pausa, +10s flecha circular)
-        AnimatedVisibility(
-            visible = isControlsVisible,
-            enter = fadeIn() + scaleIn(initialScale = 0.85f),
-            exit = fadeOut() + scaleOut(targetScale = 0.85f),
-            modifier = Modifier.align(Alignment.Center)
-        ) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(24.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                TvCircleButton(
-                    text = "Retroceder 10s",
-                    icon = Icons.Rounded.Replay10,
-                    size = 56.dp,
-                    onClick = {
-                        val next = (currentPosMs - 10_000L).coerceAtLeast(0L)
-                        exoPlayerManager.seekTo(next)
-                        currentPosMs = next
-                        userInteractionCount++
-                    }
-                )
-                TvCircleButton(
-                    text = if (isPlaying) "Pausar" else "Reproducir",
-                    icon = if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
-                    size = 76.dp,
-                    isPrimary = true,
-                    onClick = {
-                        if (isPlaying) exoPlayerManager.pause() else exoPlayerManager.resume()
-                        isPlaying = !isPlaying
-                        userInteractionCount++
-                    }
-                )
-                TvCircleButton(
-                    text = "Adelantar 10s",
-                    icon = Icons.Rounded.Forward10,
-                    size = 56.dp,
-                    onClick = {
-                        val maxDur = if (durationMs > 0L) durationMs else Long.MAX_VALUE
-                        val next = (currentPosMs + 10_000L).coerceAtMost(maxDur)
-                        exoPlayerManager.seekTo(next)
-                        currentPosMs = next
-                        userInteractionCount++
-                    }
-                )
-            }
-        }
+        // Insignia flotante de grabación OSD
+        TvRecFloatingBadge(
+            isRecording = pvrProgress.isRecording,
+            durationSeconds = pvrProgress.durationSeconds,
+            remainingSeconds = if (timerState.isRunning && timerState.remainingSeconds > 0) timerState.remainingSeconds else -1L,
+            modifier = Modifier.align(Alignment.TopEnd).padding(end = 24.dp, top = 24.dp)
+        )
 
-        // 2. Barra Inferior Interactiva para TV (Línea de tiempo seleccionable con D-Pad, Opciones y Tuerca)
-        AnimatedVisibility(
-            visible = isControlsVisible,
-            enter = fadeIn() + slideInVertically { it / 2 },
-            exit = fadeOut() + slideOutVertically { it / 2 },
-            modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth()
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Brush.verticalGradient(listOf(Color.Transparent, Color(0xF2070D18))))
-                    .padding(horizontal = 28.dp, vertical = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                // Título
-                Text(
-                    text = title.ifBlank { "Transmisión en TV Box" },
-                    color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold,
-                    maxLines = 1, overflow = TextOverflow.Ellipsis
-                )
-
-                // Línea de tiempo interactiva (seleccionable con el control remoto de la TV)
-                TvInteractiveTimeline(
-                    currentPosMs = currentPosMs,
-                    durationMs = durationMs,
-                    onSeekTo = { targetMs ->
-                        exoPlayerManager.seekTo(targetMs)
-                        currentPosMs = targetMs
-                    },
-                    onUserInteraction = { userInteractionCount++ }
-                )
-
-                // Fila de Opciones: Subtítulos, Calidad, Escala, Salir y Tuerca Ajustes a la derecha
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                        TvPlayerButton(label = "📺 $currentQuality", onClick = {
-                            currentQuality = exoPlayerManager.cycleVideoQuality()
-                            Toast.makeText(context, "📺 Calidad: $currentQuality", Toast.LENGTH_SHORT).show()
-                            userInteractionCount++
-                        })
-                        TvPlayerButton(label = if (subsEnabled) "💬 Sub: Sí" else "💬 Sub: No", onClick = {
-                            subsEnabled = exoPlayerManager.toggleSubtitles()
-                            Toast.makeText(context, if (subsEnabled) "💬 Subtítulos Activados" else "💬 Subtítulos Desactivados", Toast.LENGTH_SHORT).show()
-                            userInteractionCount++
-                        })
-                        TvPlayerButton(label = "🔲 $currentResizeLabel", onClick = {
-                            exoPlayerManager.toggleResizeMode()
-                            currentResizeLabel = exoPlayerManager.aspectRatioHelper.currentMode.value.label
-                            userInteractionCount++
-                        })
-                        TvPlayerButton(label = "🚪 Salir", isDanger = true, onClick = {
-                            exoPlayerManager.stop("Botón Salir TV")
-                            onCloseClick()
-                        })
-                    }
-
-                    // Boton Directo [📥 Guardar / 🔴 REC] y Tuerca de Ajustes
-                    val isLive = durationMs <= 0L
-                    val recBtnLabel = when {
-                        pvrProgress.isRecording -> "🔴 REC ${formatTvTime(pvrProgress.durationSeconds * 1000L)} ⏹"
-                        isLive -> "🔴 REC"
-                        else -> "📥 Guardar"
-                    }
-
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                        TvPlayerButton(
-                            label = recBtnLabel,
-                            isDanger = pvrProgress.isRecording,
-                            onClick = {
-                                if (pvrProgress.isRecording) {
-                                    com.omnicast.receiver.directstream.PvrStreamRecorder.stopRecording("⏹ Grabación detenida")
-                                    Toast.makeText(context, "⏹ Grabación guardada exitosamente", Toast.LENGTH_SHORT).show()
-                                } else {
-                                    showRecordDialog = true
-                                }
-                                userInteractionCount++
-                            }
-                        )
-                        TvPlayerButton(label = "⚙ Ajustes", isSettings = true, onClick = { showSettingsDialog = true; userInteractionCount++ })
-                    }
+        // Superposición completa de controles D-Pad
+        TvDirectControlsOverlay(
+            title = title,
+            streamUrl = streamUrl,
+            isControlsVisible = isControlsVisible,
+            isPlaying = isPlaying,
+            currentPosMs = currentPosMs,
+            durationMs = durationMs,
+            currentQuality = currentQuality,
+            subsEnabled = subsEnabled,
+            currentResizeLabel = currentResizeLabel,
+            pvrProgress = pvrProgress,
+            onSeekRelative = { delta ->
+                val maxDur = if (durationMs > 0L) durationMs else Long.MAX_VALUE
+                val next = (currentPosMs + delta).coerceIn(0L, maxDur)
+                exoPlayerManager.seekTo(next)
+                currentPosMs = next
+            },
+            onTogglePlay = {
+                if (isPlaying) exoPlayerManager.pause() else exoPlayerManager.resume()
+                isPlaying = !isPlaying
+            },
+            onCycleQuality = {
+                currentQuality = exoPlayerManager.cycleVideoQuality()
+                Toast.makeText(context, "📺 Calidad: $currentQuality", Toast.LENGTH_SHORT).show()
+            },
+            onToggleSubtitles = {
+                subsEnabled = exoPlayerManager.toggleSubtitles()
+                Toast.makeText(context, if (subsEnabled) "💬 Subtítulos Activados" else "💬 Subtítulos Desactivados", Toast.LENGTH_SHORT).show()
+            },
+            onToggleResize = {
+                exoPlayerManager.toggleResizeMode()
+                currentResizeLabel = exoPlayerManager.aspectRatioHelper.currentMode.value.label
+            },
+            onExit = {
+                exoPlayerManager.stop("Botón Salir TV")
+                onCloseClick()
+            },
+            onRecordClick = {
+                if (pvrProgress.isRecording) {
+                    showStopConfirm = true
+                } else {
+                    showRecordDialog = true
                 }
-            }
-        }
+            },
+            onOpenSettings = { showSettingsDialog = true },
+            onSeekTo = { targetMs ->
+                exoPlayerManager.seekTo(targetMs)
+                currentPosMs = targetMs
+            },
+            onUserInteraction = { userInteractionCount++ }
+        )
 
         if (showSettingsDialog) {
             TvPlayerSettingsDialog(
@@ -280,7 +198,17 @@ fun TvDirectStreamScreen(
         }
 
         if (showRecordDialog && streamUrl.isNotBlank()) {
-            val isLive = durationMs <= 0L
+            val isLive = durationMs <= 0L ||
+                title.contains("news", ignoreCase = true) ||
+                title.contains("sky", ignoreCase = true) ||
+                title.contains("directo", ignoreCase = true) ||
+                title.contains("envivo", ignoreCase = true) ||
+                title.contains("en vivo", ignoreCase = true) ||
+                title.contains("live", ignoreCase = true) ||
+                streamUrl.contains("live", ignoreCase = true) ||
+                streamUrl.contains("linear", ignoreCase = true) ||
+                streamUrl.contains("chunklist", ignoreCase = true)
+
             TvRecordDialog(
                 title = title.ifBlank { if (isLive) "Canal en Vivo" else "Película en reproducción" },
                 streamUrl = streamUrl, headers = exoPlayerManager.currentHeaders,
@@ -289,5 +217,26 @@ fun TvDirectStreamScreen(
                 onRecordingStarted = { userInteractionCount++ }
             )
         }
+
+        TvConfirmStopRecordDialog(
+            isOpen = showStopConfirm,
+            recordedDurationSec = pvrProgress.durationSeconds,
+            onKeep = {
+                showStopConfirm = false
+                PvrStreamRecorder.stopRecording("⏹ Grabación guardada")
+                Toast.makeText(context, "💾 Grabación conservada exitosamente", Toast.LENGTH_SHORT).show()
+                userInteractionCount++
+            },
+            onDiscard = {
+                showStopConfirm = false
+                PvrStreamRecorder.stopAndDiscardRecording("🗑️ Grabación descartada y eliminada")
+                Toast.makeText(context, "🗑️ Grabación descartada y eliminada", Toast.LENGTH_SHORT).show()
+                userInteractionCount++
+            },
+            onContinue = {
+                showStopConfirm = false
+                userInteractionCount++
+            }
+        )
     }
 }

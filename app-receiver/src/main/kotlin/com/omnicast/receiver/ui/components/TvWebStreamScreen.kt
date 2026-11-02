@@ -34,6 +34,10 @@ fun TvWebStreamScreen(
     onPlaybackFailed: ((String) -> Unit)? = null, onCloseClick: () -> Unit = {}
 ) {
     val mainHandler = remember { android.os.Handler(android.os.Looper.getMainLooper()) }
+    val pvrProgress by com.omnicast.receiver.directstream.PvrStreamRecorder.progress.collectAsState()
+    val timerState by com.omnicast.receiver.directstream.TvRecordTimerManager.timerState.collectAsState()
+    var showRecordDialog by remember { mutableStateOf(false) }
+    var showStopConfirm by remember { mutableStateOf(false) }
     var playerState by remember(streamUrl, timestamp) {
         mutableStateOf(
             TvWebPlayerState(
@@ -152,9 +156,11 @@ fun TvWebStreamScreen(
                         try {
                             if (webViewRef == webView) webViewRef = null
                             webView.stopLoading()
+                            webView.onPause()
                             webView.evaluateJavascript("stopStream();", null)
                             webView.loadUrl("about:blank")
                             webView.clearHistory()
+                            webView.clearCache(true)
                             webView.removeAllViews()
                             webView.freeMemory()
                             webView.destroy()
@@ -177,9 +183,18 @@ fun TvWebStreamScreen(
             onHideControls = { playerState = playerState.copy(isControlsVisible = false) }
         )
 
+        // Insignia flotante de grabación OSD
+        TvRecFloatingBadge(
+            isRecording = pvrProgress.isRecording,
+            durationSeconds = pvrProgress.durationSeconds,
+            remainingSeconds = if (timerState.isRunning && timerState.remainingSeconds > 0) timerState.remainingSeconds else -1L,
+            modifier = Modifier.align(Alignment.TopEnd).padding(end = 24.dp, top = 24.dp)
+        )
+
         // Modal de configuración nativo D-Pad
         TvWebSettingsModal(
             state = playerState,
+            isRecording = pvrProgress.isRecording,
             onSelectQuality = { q ->
                 playerState = playerState.copy(currentQuality = q)
                 webViewRef?.evaluateJavascript("setQuality('$q');", null)
@@ -197,7 +212,54 @@ fun TvWebStreamScreen(
                 playerState = playerState.copy(aspectRatio = nextAspect)
                 webViewRef?.evaluateJavascript("setDisplayMode('$nextAspect', 1.0, 0, 0);", null)
             },
-            onClose = { playerState = playerState.copy(isSettingsOpen = false) }
+            onClose = { playerState = playerState.copy(isSettingsOpen = false) },
+            onToggleRecord = {
+                playerState = playerState.copy(isSettingsOpen = false)
+                if (pvrProgress.isRecording) {
+                    showStopConfirm = true
+                } else {
+                    showRecordDialog = true
+                }
+            }
+        )
+
+        if (showRecordDialog && streamUrl.isNotBlank()) {
+            val isLive = playerState.durationMs <= 0L ||
+                title.contains("news", ignoreCase = true) ||
+                title.contains("sky", ignoreCase = true) ||
+                title.contains("directo", ignoreCase = true) ||
+                title.contains("envivo", ignoreCase = true) ||
+                title.contains("en vivo", ignoreCase = true) ||
+                title.contains("live", ignoreCase = true) ||
+                streamUrl.contains("live", ignoreCase = true) ||
+                streamUrl.contains("linear", ignoreCase = true) ||
+                streamUrl.contains("chunklist", ignoreCase = true)
+
+            TvRecordDialog(
+                title = title.ifBlank { if (isLive) "Canal en Vivo" else "Película en reproducción" },
+                streamUrl = streamUrl, headers = headers,
+                durationMs = playerState.durationMs, isLive = isLive,
+                onDismiss = { showRecordDialog = false },
+                onRecordingStarted = {}
+            )
+        }
+
+        TvConfirmStopRecordDialog(
+            isOpen = showStopConfirm,
+            recordedDurationSec = pvrProgress.durationSeconds,
+            onKeep = {
+                showStopConfirm = false
+                com.omnicast.receiver.directstream.PvrStreamRecorder.stopRecording("⏹ Grabación guardada")
+                android.widget.Toast.makeText(webViewRef?.context ?: return@TvConfirmStopRecordDialog, "💾 Grabación conservada exitosamente", android.widget.Toast.LENGTH_SHORT).show()
+            },
+            onDiscard = {
+                showStopConfirm = false
+                com.omnicast.receiver.directstream.PvrStreamRecorder.stopAndDiscardRecording("🗑️ Grabación descartada y eliminada")
+                android.widget.Toast.makeText(webViewRef?.context ?: return@TvConfirmStopRecordDialog, "🗑️ Grabación descartada y eliminada", android.widget.Toast.LENGTH_SHORT).show()
+            },
+            onContinue = {
+                showStopConfirm = false
+            }
         )
 
         // Botón de salida

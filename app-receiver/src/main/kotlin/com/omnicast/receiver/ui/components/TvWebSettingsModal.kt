@@ -36,7 +36,9 @@ fun TvWebSettingsModal(
     onSelectQuality: (String) -> Unit,
     onSelectSubtitle: (String) -> Unit,
     onToggleAspect: () -> Unit,
-    onClose: () -> Unit
+    onClose: () -> Unit,
+    isRecording: Boolean = false,
+    onToggleRecord: (() -> Unit)? = null
 ) {
     if (!state.isSettingsOpen) return
 
@@ -96,6 +98,15 @@ fun TvWebSettingsModal(
                         current = state.currentSubtitle,
                         options = state.availableSubtitles,
                         onSelect = onSelectSubtitle
+                    )
+                }
+
+                if (onToggleRecord != null) {
+                    Spacer(modifier = Modifier.height(10.dp))
+                    TvSettingsOptionRow(
+                        label = if (isRecording) "⏹ Detener Grabación" else "🔴 Iniciar Grabación PVR",
+                        value = if (isRecording) "Grabando..." else "PVR",
+                        onClick = onToggleRecord
                     )
                 }
 

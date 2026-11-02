@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 320,
-  "versionCodeReceiver": 303,
-  "versionName": "3.5.69",
-  "releaseTag": "v3.5.69",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.69/omnicast-sender-v3.5.69.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.69/omnicast-receiver-v3.5.69.apk",
-  "changelog": "v3.5.69 (Sincronización en MainLooper de Tiempo Real, Avance Progresivo Acumulativo D-Pad y Depuración de Controles Inoperativos): 1) Receiver (TvWebStreamScreen y TvYouTubeScreen): Despacho de onPlaybackStatus y metadatos estrictamente en el hilo principal (MainLooper), garantizando el refresco en tiempo real de la barra de tiempo (tiempo actual, duración total y posición donde se quedó la película). 2) Receiver (TvWebUnifiedOverlay): Foco D-Pad persistente que no es arrebatado hacia Play al pulsar Adelantar/Retroceder. 3) Receiver (TvWebUnifiedOverlay): Avance progresivo acumulativo (+10s, +20s, +30s...) con debounce de 500ms y badge flotante. 4) Receiver (TvWebSettingsModal): Supresión de botones y selectores inoperativos (en YouTube se ocultan ajustes fijos; en HTML5 solo se muestran calidades y subtítulos cuando el flujo realmente los contiene)."
+  "versionCodeSender": 321,
+  "versionCodeReceiver": 304,
+  "versionName": "3.5.70",
+  "releaseTag": "v3.5.70",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.70/omnicast-sender-v3.5.70.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.70/omnicast-receiver-v3.5.70.apk",
+  "changelog": "v3.5.70 (Grabación PVR Desatendida, Detección Canales en Vivo Sky News, Badge OSD REC y Fase 3 Búfer Dinámico / Purga VRAM): 1) Receiver (PvrStreamRecorder y TvRecordDialog): Detección semántica de canales en vivo (news, sky, linear, directo) enrutando directamente a Grabación Inteligente PVR con temporizador desatendido y blindaje de 2.0 GB de reserva. 2) Receiver (TvRecFloatingBadge): Insignia flotante parpadeante 🔴 REC con duración en vivo y cuenta regresiva en esquina superior derecha sin ocultar los controles de reproducción. 3) Receiver (TvConfirmStopRecordDialog): Diálogo de confirmación al detener grabación (Conservar vs Descartar y Borrar). 4) Receiver (TvWebStreamScreen y TvWebHtmlBuilder - Fase 3): PVR habilitado en HTML5, desalojo continuo de back-buffer (cleanBackBuffer), límite estricto de 25 MB en Hls.js y purga de VRAM/caché en pausas y salida."
 }

@@ -247,6 +247,17 @@ object PvrStreamRecorder {
         )
     }
 
+    fun stopAndDiscardRecording(reasonNotice: String? = null) {
+        val fileToDelete = currentOutFile
+        stopRecording(reasonNotice ?: "🗑️ Grabación descartada y eliminada")
+        try {
+            if (fileToDelete != null && fileToDelete.exists()) {
+                fileToDelete.delete()
+            }
+        } catch (_: Throwable) {}
+        currentOutFile = null
+    }
+
     private fun fetchText(url: String, headers: Map<String, String>): String {
         val conn = (URL(url).openConnection() as HttpURLConnection).apply {
             connectTimeout = 5000

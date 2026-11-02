@@ -48,6 +48,9 @@ object TvWebHtmlBuilder {
                     var playing = !vid.paused && !vid.ended && vid.readyState > 2;
                     window.AndroidBridge.onPlaybackStatus(cur, dur, playing);
                   }
+                  if (hls && hls.bufferController && typeof hls.bufferController.cleanBackBuffer === 'function') {
+                    try { hls.bufferController.cleanBackBuffer(); } catch(_) {}
+                  }
                 }
 
                 vid.addEventListener('play', reportStatus);
@@ -69,7 +72,7 @@ object TvWebHtmlBuilder {
                 function initHls() {
                   if (window.Hls && Hls.isSupported()) {
                     if (hls) { try { hls.destroy(); } catch(_) {} hls = null; }
-                    var cfg = { enableWorker: true, lowLatencyMode: false, backBufferLength: 10, maxBufferLength: 20, maxMaxBufferLength: 30, maxBufferSize: 30 * 1024 * 1024 };
+                    var cfg = { enableWorker: true, lowLatencyMode: false, backBufferLength: 10, maxBufferLength: 20, maxMaxBufferLength: 30, maxBufferSize: 25 * 1024 * 1024, maxBufferHole: 0.5 };
                     if ($requireCreds) { cfg.xhrSetup = function(xhr) { try { xhr.withCredentials = true; } catch(_) {} }; }
                     hls = new Hls(cfg);
                     hls.loadSource(streamUrl);

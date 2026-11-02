@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 321,
-  "versionCodeReceiver": 304,
-  "versionName": "3.5.70",
-  "releaseTag": "v3.5.70",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.70/omnicast-sender-v3.5.70.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.70/omnicast-receiver-v3.5.70.apk",
-  "changelog": "v3.5.70 (Grabación PVR Desatendida, Detección Canales en Vivo Sky News, Badge OSD REC y Fase 3 Búfer Dinámico / Purga VRAM): 1) Receiver (PvrStreamRecorder y TvRecordDialog): Detección semántica de canales en vivo (news, sky, linear, directo) enrutando directamente a Grabación Inteligente PVR con temporizador desatendido y blindaje de 2.0 GB de reserva. 2) Receiver (TvRecFloatingBadge): Insignia flotante parpadeante 🔴 REC con duración en vivo y cuenta regresiva en esquina superior derecha sin ocultar los controles de reproducción. 3) Receiver (TvConfirmStopRecordDialog): Diálogo de confirmación al detener grabación (Conservar vs Descartar y Borrar). 4) Receiver (TvWebStreamScreen y TvWebHtmlBuilder - Fase 3): PVR habilitado en HTML5, desalojo continuo de back-buffer (cleanBackBuffer), límite estricto de 25 MB en Hls.js y purga de VRAM/caché en pausas y salida."
+  "versionCodeSender": 322,
+  "versionCodeReceiver": 305,
+  "versionName": "3.5.71",
+  "releaseTag": "v3.5.71",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.71/omnicast-sender-v3.5.71.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.71/omnicast-receiver-v3.5.71.apk",
+  "changelog": "v3.5.71 (PVR CoroutineScope Persistente, Ticker 1s en OSD REC, Auto-recuperación BehindLiveWindow en ExoPlayer y Unificación Botón REC HTML5): 1) Receiver (PvrStreamRecorder y TvRecordDialog): Grabación desacoplada del ciclo de vida del diálogo usando recorderScope independiente, garantizando que no se cancele al cerrar el diálogo, y ticker de corrutina de 1 segundo para avance fluido del contador. 2) Receiver (ExoPlayerTvManager): Auto-reconexión fluida ante BehindLiveWindowException con seekToDefaultPosition(), erradicando congelamientos en transmisiones en vivo. 3) Receiver (TvWebUnifiedOverlay): Botón REC promovido a la barra principal de controles en HTML5 igual que ExoPlayer, con badge flotante zIndex 99f. 4) Receiver (TvWebStreamScreen y TvYouTubeScreen): Removido el botón flotante de salida redundante en la esquina superior izquierda."
 }

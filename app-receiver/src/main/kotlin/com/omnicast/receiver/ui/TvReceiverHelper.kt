@@ -106,18 +106,16 @@ object TvReceiverHelper {
                 }
                 else -> return
             }
-            scope.launch {
-                com.omnicast.receiver.directstream.PvrStreamRecorder.startRecording(
-                    context = context, title = title, url = url, headers = hdrs, useUsb = false, scope = scope, timerMinutes = 60,
-                    onStopped = { reason ->
-                        android.widget.Toast.makeText(context, reason, android.widget.Toast.LENGTH_LONG).show()
-                        if (reason == "TIMER_FINISHED") {
-                            exoPlayerManager.stop("Timer PVR Finalizado")
-                            receiverState.value = ReceiverUiState.Standby
-                        }
+            com.omnicast.receiver.directstream.PvrStreamRecorder.startRecording(
+                context = context, title = title, url = url, headers = hdrs, useUsb = false, timerMinutes = 60,
+                onStopped = { reason ->
+                    android.widget.Toast.makeText(context, reason, android.widget.Toast.LENGTH_LONG).show()
+                    if (reason == "TIMER_FINISHED") {
+                        exoPlayerManager.stop("Timer PVR Finalizado")
+                        receiverState.value = ReceiverUiState.Standby
                     }
-                )
-            }
+                }
+            )
             android.widget.Toast.makeText(context, "🔴 Grabación PVR Iniciada (60 min)", android.widget.Toast.LENGTH_SHORT).show()
         }
     }

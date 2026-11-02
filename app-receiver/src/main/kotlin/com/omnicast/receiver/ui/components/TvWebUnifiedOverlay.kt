@@ -41,6 +41,8 @@ fun TvWebUnifiedOverlay(
     badgeText: String,
     state: TvWebPlayerState,
     hasSettings: Boolean = true,
+    isRecording: Boolean = false,
+    onRecordClick: (() -> Unit)? = null,
     onTogglePlay: () -> Unit,
     onSeekRelative: (Long) -> Unit,
     onToggleSettings: () -> Unit,
@@ -93,10 +95,18 @@ fun TvWebUnifiedOverlay(
                 TvWebTimelineBar(currentMs = state.currentPositionMs, durationMs = state.durationMs, onSeekDelta = { delta -> triggerSeek(delta) })
                 Spacer(modifier = Modifier.height(16.dp))
 
-                Row(horizontalArrangement = Arrangement.spacedBy(20.dp), verticalAlignment = Alignment.CenterVertically) {
+                Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
                     TvWebDpadButton(label = "⏪", icon = "⏪", onClick = { triggerSeek(-10_000L) })
                     TvWebDpadButton(label = if (state.isPlaying) "Pausar" else "Reproducir", icon = if (state.isPlaying) "⏸" else "▶", isPrimary = true, focusRequester = playFocusRequester, onClick = { onTogglePlay(); hideTimerKey++ })
                     TvWebDpadButton(label = "⏩", icon = "⏩", onClick = { triggerSeek(10_000L) })
+                    if (onRecordClick != null) {
+                        TvWebDpadButton(
+                            label = if (isRecording) "⏹ Detener REC" else "🔴 Iniciar REC",
+                            icon = if (isRecording) "⏹" else "🔴",
+                            isDanger = isRecording,
+                            onClick = { onRecordClick(); hideTimerKey++ }
+                        )
+                    }
                     if (hasSettings) {
                         TvWebDpadButton(label = "⚙️", icon = "⚙️", onClick = { onToggleSettings(); hideTimerKey++ })
                     }
@@ -139,7 +149,14 @@ private fun TvWebTimelineBar(currentMs: Long, durationMs: Long, onSeekDelta: (Lo
 }
 
 @Composable
-private fun TvWebDpadButton(label: String, icon: String, isPrimary: Boolean = false, focusRequester: FocusRequester? = null, onClick: () -> Unit) {
+private fun TvWebDpadButton(
+    label: String,
+    icon: String,
+    isPrimary: Boolean = false,
+    isDanger: Boolean = false,
+    focusRequester: FocusRequester? = null,
+    onClick: () -> Unit
+) {
     val interactionSource = remember { MutableInteractionSource() }
     val isFocused by interactionSource.collectIsFocusedAsState()
     val size = if (isPrimary) 58.dp else 46.dp
@@ -149,7 +166,12 @@ private fun TvWebDpadButton(label: String, icon: String, isPrimary: Boolean = fa
         modifier = Modifier.size(size)
             .then(if (focusRequester != null) Modifier.focusRequester(focusRequester) else Modifier)
             .focusable(interactionSource = interactionSource).clickable { onClick() }.clip(shape)
-            .background(when { isFocused -> Color(0xFF0284C7); isPrimary -> Color(0x880284C7); else -> Color(0x660F172A) })
+            .background(when {
+                isFocused -> if (isDanger) Color(0xFFDC2626) else Color(0xFF0284C7)
+                isDanger -> Color(0x99DC2626)
+                isPrimary -> Color(0x880284C7)
+                else -> Color(0x660F172A)
+            })
             .border(if (isFocused) 2.5.dp else 1.dp, if (isFocused) Color(0xFF38BDF8) else Color(0x33FFFFFF), shape),
         contentAlignment = Alignment.Center
     ) {

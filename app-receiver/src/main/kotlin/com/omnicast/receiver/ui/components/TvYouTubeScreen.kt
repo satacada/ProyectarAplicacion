@@ -167,16 +167,5 @@ fun TvYouTubeScreen(
             onShowControls = { playerState = playerState.copy(isControlsVisible = true) },
             onHideControls = { playerState = playerState.copy(isControlsVisible = false) }
         )
-
-        IconButton(
-            onClick = onCloseClick,
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .padding(start = 24.dp, top = 24.dp)
-                .size(38.dp)
-                .background(Color(0x990F172A), RoundedCornerShape(10.dp))
-        ) {
-            ModernExitIcon()
-        }
     }
 }

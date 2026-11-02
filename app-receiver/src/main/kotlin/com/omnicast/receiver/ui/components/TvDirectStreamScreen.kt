@@ -10,6 +10,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.ui.zIndex
 import androidx.media3.ui.PlayerView
 import com.omnicast.receiver.directstream.ExoPlayerTvManager
 import com.omnicast.receiver.directstream.PvrStreamRecorder
@@ -123,14 +124,6 @@ fun TvDirectStreamScreen(
             )
         }
 
-        // Insignia flotante de grabación OSD
-        TvRecFloatingBadge(
-            isRecording = pvrProgress.isRecording,
-            durationSeconds = pvrProgress.durationSeconds,
-            remainingSeconds = if (timerState.isRunning && timerState.remainingSeconds > 0) timerState.remainingSeconds else -1L,
-            modifier = Modifier.align(Alignment.TopEnd).padding(end = 24.dp, top = 24.dp)
-        )
-
         // Superposición completa de controles D-Pad
         TvDirectControlsOverlay(
             title = title,
@@ -237,6 +230,14 @@ fun TvDirectStreamScreen(
                 showStopConfirm = false
                 userInteractionCount++
             }
+        )
+
+        // Insignia flotante de grabación OSD (siempre visible arriba a la derecha sobre cualquier control)
+        TvRecFloatingBadge(
+            isRecording = pvrProgress.isRecording,
+            durationSeconds = pvrProgress.durationSeconds,
+            remainingSeconds = if (timerState.isRunning && timerState.remainingSeconds > 0) timerState.remainingSeconds else -1L,
+            modifier = Modifier.align(Alignment.TopEnd).padding(end = 28.dp, top = 28.dp).zIndex(99f)
         )
     }
 }

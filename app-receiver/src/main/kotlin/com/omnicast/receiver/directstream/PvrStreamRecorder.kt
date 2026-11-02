@@ -43,6 +43,8 @@ object PvrStreamRecorder {
     @Volatile
     private var recordJob: Job? = null
     @Volatile
+    private var tickerJob: Job? = null
+    @Volatile
     private var currentOutFile: File? = null
     @Volatile
     private var isPausedInternal = false
@@ -65,67 +67,82 @@ object PvrStreamRecorder {
         }
     }
 
-    suspend fun startRecording(
+    val recorderScope = CoroutineScope(kotlinx.coroutines.SupervisorJob() + Dispatchers.IO)
+
+    fun startRecording(
         context: Context,
         title: String,
         url: String,
         headers: Map<String, String>,
         useUsb: Boolean,
-        scope: CoroutineScope,
         timerMinutes: Int = 0,
         onStopped: (String) -> Unit
-    ) = withContext(Dispatchers.IO) {
+    ) {
         if (_progress.value.isRecording) {
-            return@withContext
+            return
         }
 
-        val targetDir = TvStorageSafetyManager.getPvrRecordingsDir(context, useUsb)
-        val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
-        val safeTitle = title.replace(Regex("[^a-zA-Z0-9_\\- ]"), "").trim().replace(' ', '_').ifBlank { "Canal_PVR" }
-        val outFile = File(targetDir, "${safeTitle}_$timeStamp.mp4")
-        currentOutFile = outFile
-        isPausedInternal = false
+        recorderScope.launch {
+            val targetDir = TvStorageSafetyManager.getPvrRecordingsDir(context, useUsb)
+            val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
+            val safeTitle = title.replace(Regex("[^a-zA-Z0-9_\\- ]"), "").trim().replace(' ', '_').ifBlank { "Canal_PVR" }
+            val outFile = File(targetDir, "${safeTitle}_$timeStamp.mp4")
+            currentOutFile = outFile
+            isPausedInternal = false
 
-        _progress.value = PvrRecordProgress(
-            isRecording = true,
-            isPaused = false,
-            filePath = outFile.absolutePath,
-            channelTitle = title,
-            statusNotice = "🔴 Grabando..."
-        )
+            _progress.value = PvrRecordProgress(
+                isRecording = true,
+                isPaused = false,
+                filePath = outFile.absolutePath,
+                channelTitle = title,
+                statusNotice = "🔴 Grabando..."
+            )
 
-        // 1. Iniciar Supervisor de Almacenamiento en Caliente (Watchdog cada 5s)
-        TvStorageSafetyManager.startWatchdog(targetDir.path, useUsb, scope) { alertMsg ->
-            stopRecording(alertMsg)
-            onStopped(alertMsg)
-        }
-
-        // 2. Iniciar Temporizador si se especificó
-        if (timerMinutes > 0) {
-            TvRecordTimerManager.startTimer(timerMinutes, scope) {
-                stopRecording("⏰ Temporizador completado. Grabación guardada.")
-                onStopped("TIMER_FINISHED")
+            // 1. Iniciar Supervisor de Almacenamiento en Caliente (Watchdog cada 5s)
+            TvStorageSafetyManager.startWatchdog(targetDir.path, useUsb, recorderScope) { alertMsg ->
+                stopRecording(alertMsg)
+                onStopped(alertMsg)
             }
-        }
 
-        recordJob = scope.launch(Dispatchers.IO) {
-            var fileOutput: FileOutputStream? = null
-            try {
-                fileOutput = FileOutputStream(outFile, true)
-                val isHls = url.lowercase().run { contains(".m3u8") || contains("urlset") || contains(".txt") }
+            // 2. Iniciar Temporizador si se especificó
+            if (timerMinutes > 0) {
+                TvRecordTimerManager.startTimer(timerMinutes, recorderScope) {
+                    stopRecording("⏰ Temporizador completado. Grabación guardada.")
+                    onStopped("TIMER_FINISHED")
+                }
+            }
 
-                if (isHls) {
-                    recordLiveHlsLoop(url, headers, fileOutput)
-                } else {
-                    recordDirectStream(url, headers, fileOutput)
+            // 3. Iniciar contador de tiempo fluido segundo a segundo
+            tickerJob = recorderScope.launch(Dispatchers.Default) {
+                while (isActive && _progress.value.isRecording) {
+                    delay(1000L)
+                    if (!isPausedInternal && _progress.value.isRecording) {
+                        _progress.value = _progress.value.copy(
+                            durationSeconds = _progress.value.durationSeconds + 1L
+                        )
+                    }
                 }
-            } catch (e: Throwable) {
-                if (isActive) {
-                    _progress.value = _progress.value.copy(errorMsg = "Error en grabación: ${e.message ?: "Conexión perdida"}")
+            }
+
+            recordJob = recorderScope.launch(Dispatchers.IO) {
+                var fileOutput: FileOutputStream? = null
+                try {
+                    fileOutput = FileOutputStream(outFile, true)
+                    val isHls = url.lowercase().run { contains(".m3u8") || contains("urlset") || contains(".txt") }
+
+                    if (isHls) {
+                        recordLiveHlsLoop(url, headers, fileOutput)
+                    } else {
+                        recordDirectStream(url, headers, fileOutput)
+                    }
+                } catch (e: Throwable) {
+                    if (isActive) {
+                        _progress.value = _progress.value.copy(errorMsg = "Error en grabación: ${e.message ?: "Conexión perdida"}")
+                    }
+                } finally {
+                    runCatching { fileOutput?.flush() }
+                    runCatching { fileOutput?.close() }
                 }
-            } finally {
-                runCatching { fileOutput?.flush() }
-                runCatching { fileOutput?.close() }
             }
         }
     }
@@ -190,11 +207,7 @@ object PvrStreamRecorder {
             accumulatedDurationSec += ((now - startTs) / 1000L).coerceAtLeast(0L)
             startTs = now
 
-            _progress.value = _progress.value.copy(
-                recordedBytes = recordedBytes,
-                durationSeconds = accumulatedDurationSec
-            )
-
+            _progress.value = _progress.value.copy(recordedBytes = recordedBytes)
             delay(2500L)
         }
     }
@@ -211,7 +224,6 @@ object PvrStreamRecorder {
         }
         val buf = ByteArray(64 * 1024)
         var recordedBytes = 0L
-        val startTs = System.currentTimeMillis()
 
         conn.inputStream.use { input ->
             while (isActive && _progress.value.isRecording) {
@@ -223,11 +235,7 @@ object PvrStreamRecorder {
                 if (r == -1) break
                 output.write(buf, 0, r)
                 recordedBytes += r
-                val dur = (System.currentTimeMillis() - startTs) / 1000L
-                _progress.value = _progress.value.copy(
-                    recordedBytes = recordedBytes,
-                    durationSeconds = dur
-                )
+                _progress.value = _progress.value.copy(recordedBytes = recordedBytes)
             }
         }
     }
@@ -235,6 +243,8 @@ object PvrStreamRecorder {
     fun stopRecording(reasonNotice: String? = null) {
         TvStorageSafetyManager.stopWatchdog()
         TvRecordTimerManager.cancelTimer()
+        tickerJob?.cancel()
+        tickerJob = null
         recordJob?.cancel()
         recordJob = null
         isPausedInternal = false

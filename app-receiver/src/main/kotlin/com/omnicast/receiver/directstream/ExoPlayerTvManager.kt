@@ -83,7 +83,7 @@ class ExoPlayerTvManager(private val context: Context) {
                             com.omnicast.receiver.log.ReceiverLogger.log(TAG, "❌ Error en ExoPlayer ($activeBranch): ${error.errorCodeName} ($code): ${error.message}", error)
                             if (TvBranchPlayerConfig.isLiveOrContinuous(activeBranch)) {
                                 com.omnicast.receiver.log.ReceiverLogger.log(TAG, "🔄 Auto-reconexión silenciosa en vivo (live edge)")
-                                android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({ player?.prepare(); player?.play() }, 800)
+                                android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({ player?.seekToDefaultPosition(); player?.prepare(); player?.play() }, 500)
                                 return
                             }
                             // Auto-reparación proactiva: Si falla el parser de manifiesto (ej. era MP4 sin extensión o HLS en .txt)

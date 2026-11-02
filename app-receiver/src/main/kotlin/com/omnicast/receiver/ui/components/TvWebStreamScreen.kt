@@ -176,6 +176,14 @@ fun TvWebStreamScreen(
             title = title,
             badgeText = "🌐 OmniCast HTML5",
             state = playerState,
+            isRecording = pvrProgress.isRecording,
+            onRecordClick = {
+                if (pvrProgress.isRecording) {
+                    showStopConfirm = true
+                } else {
+                    showRecordDialog = true
+                }
+            },
             onTogglePlay = { webViewRef?.evaluateJavascript("togglePlay();", null) },
             onSeekRelative = { deltaMs -> webViewRef?.evaluateJavascript("seekRel(${deltaMs / 1000.0});", null) },
             onToggleSettings = { playerState = playerState.copy(isSettingsOpen = !playerState.isSettingsOpen) },
@@ -261,17 +269,5 @@ fun TvWebStreamScreen(
                 showStopConfirm = false
             }
         )
-
-        // Botón de salida
-        IconButton(
-            onClick = onCloseClick,
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .padding(start = 24.dp, top = 24.dp)
-                .size(38.dp)
-                .background(Color(0x990F172A), RoundedCornerShape(10.dp))
-        ) {
-            ModernExitIcon()
-        }
     }
 }

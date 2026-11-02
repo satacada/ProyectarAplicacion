@@ -37,7 +37,6 @@ fun TvRecordDialog(
     onRecordingStarted: () -> Unit
 ) {
     val context = LocalContext.current
-    val scope = rememberCoroutineScope()
     val units = remember { TvStorageSafetyManager.detectAvailableStorageUnits(context) }
     var selectedUnitIndex by remember { mutableIntStateOf(units.indexOfFirst { it.canRecord }.coerceAtLeast(0)) }
     val currentUnit = units.getOrNull(selectedUnitIndex) ?: units.firstOrNull()
@@ -152,22 +151,19 @@ fun TvRecordDialog(
                             val effectiveTimer = autoCapped.first
                             val isUsb = currentUnit?.isUsb == true
                             if (isLive) {
-                                scope.launch {
-                                    PvrStreamRecorder.startRecording(
-                                        context = context,
-                                        title = title,
-                                        url = streamUrl,
-                                        headers = headers,
-                                        useUsb = isUsb,
-                                        scope = scope,
-                                        timerMinutes = effectiveTimer,
-                                        onStopped = { reason ->
-                                            Toast.makeText(context, reason, Toast.LENGTH_LONG).show()
-                                        }
-                                    )
-                                }
+                                PvrStreamRecorder.startRecording(
+                                    context = context,
+                                    title = title,
+                                    url = streamUrl,
+                                    headers = headers,
+                                    useUsb = isUsb,
+                                    timerMinutes = effectiveTimer,
+                                    onStopped = { reason ->
+                                        Toast.makeText(context, reason, Toast.LENGTH_LONG).show()
+                                    }
+                                )
                             } else {
-                                TvDownloadManager.activeJob = scope.launch {
+                                TvDownloadManager.activeJob = PvrStreamRecorder.recorderScope.launch {
                                     TvDownloadManager.downloadMovieInBridgeMode(
                                         context = context,
                                         title = title,

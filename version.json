@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 319,
-  "versionCodeReceiver": 302,
-  "versionName": "3.5.68",
-  "releaseTag": "v3.5.68",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.68/omnicast-sender-v3.5.68.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.68/omnicast-receiver-v3.5.68.apk",
-  "changelog": "v3.5.68 (Controles D-Pad Nativos Unificados OSD para HTML5/YouTube, Badges de Servidores y Truncado de URL): 1) Sender: Truncado elegante de URL con puntos suspensivos en reposo (TextOverflow.Ellipsis) manteniendo dirección completa subyacente. 2) Sender: Identificación visual de servidores de video con badges distintivos ([Mixdrop], [DropCDN], [Fastream], [StreamWish], etc.) y contador visible en lista de videos detectados ('Lista de videos (X)'). 3) Receiver: Controles OSD D-Pad 100% nativos (TvWebUnifiedOverlay y TvWebSettingsModal) para reproductores web (HTML5 y YouTube) con botones de transporte [⏪ -10s], [▶/⏸], [⏩ +10s], [⚙️ Ajustes], barra de tiempo interactiva y resaltado cyan de alto contraste al enfocar, suprimiendo controles HTML5 no funcionales de Chromium. 4) Telemetría: Registro persistente de versión activa en disparadores de error y caja negra."
+  "versionCodeSender": 320,
+  "versionCodeReceiver": 303,
+  "versionName": "3.5.69",
+  "releaseTag": "v3.5.69",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.69/omnicast-sender-v3.5.69.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.69/omnicast-receiver-v3.5.69.apk",
+  "changelog": "v3.5.69 (Sincronización en MainLooper de Tiempo Real, Avance Progresivo Acumulativo D-Pad y Depuración de Controles Inoperativos): 1) Receiver (TvWebStreamScreen y TvYouTubeScreen): Despacho de onPlaybackStatus y metadatos estrictamente en el hilo principal (MainLooper), garantizando el refresco en tiempo real de la barra de tiempo (tiempo actual, duración total y posición donde se quedó la película). 2) Receiver (TvWebUnifiedOverlay): Foco D-Pad persistente que no es arrebatado hacia Play al pulsar Adelantar/Retroceder. 3) Receiver (TvWebUnifiedOverlay): Avance progresivo acumulativo (+10s, +20s, +30s...) con debounce de 500ms y badge flotante. 4) Receiver (TvWebSettingsModal): Supresión de botones y selectores inoperativos (en YouTube se ocultan ajustes fijos; en HTML5 solo se muestran calidades y subtítulos cuando el flujo realmente los contiene)."
 }

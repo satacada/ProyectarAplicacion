@@ -44,7 +44,7 @@ object TvWebHtmlBuilder {
                 function reportStatus() {
                   if (window.AndroidBridge && vid) {
                     var cur = vid.currentTime || 0;
-                    var dur = vid.duration || 0;
+                    var dur = (vid.duration && isFinite(vid.duration) && !isNaN(vid.duration)) ? vid.duration : 0;
                     var playing = !vid.paused && !vid.ended && vid.readyState > 2;
                     window.AndroidBridge.onPlaybackStatus(cur, dur, playing);
                   }
@@ -53,6 +53,8 @@ object TvWebHtmlBuilder {
                 vid.addEventListener('play', reportStatus);
                 vid.addEventListener('pause', reportStatus);
                 vid.addEventListener('ended', reportStatus);
+                vid.addEventListener('timeupdate', reportStatus);
+                vid.addEventListener('durationchange', reportStatus);
 
                 function seekStart() {
                   if (startSec > 0 && !hasResumed && vid) {
@@ -60,7 +62,7 @@ object TvWebHtmlBuilder {
                     vid.currentTime = startSec;
                   }
                 }
-                vid.addEventListener('loadedmetadata', seekStart);
+                vid.addEventListener('loadedmetadata', function() { seekStart(); reportStatus(); });
                 vid.addEventListener('canplay', seekStart);
 
                 var hls = null;
@@ -191,7 +193,7 @@ object TvWebHtmlBuilder {
                   }
                 }
 
-                setInterval(reportStatus, 3000);
+                setInterval(reportStatus, 1000);
               </script>
             </body>
             </html>

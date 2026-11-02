@@ -77,27 +77,27 @@ fun TvWebSettingsModal(
                     onClick = onToggleAspect
                 )
 
-                Spacer(modifier = Modifier.height(10.dp))
+                // Selector de Calidad (solo si el flujo reporta más de 1 nivel real)
+                if (state.availableQualities.size > 1) {
+                    Spacer(modifier = Modifier.height(10.dp))
+                    TvSettingsMultiOption(
+                        title = "🎥 Calidad de Video",
+                        current = state.currentQuality,
+                        options = state.availableQualities,
+                        onSelect = onSelectQuality
+                    )
+                }
 
-                // Selector de Calidad
-                val qualities = if (state.availableQualities.isNotEmpty()) state.availableQualities else listOf("Auto")
-                TvSettingsMultiOption(
-                    title = "🎥 Calidad de Video",
-                    current = state.currentQuality,
-                    options = qualities,
-                    onSelect = onSelectQuality
-                )
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                // Selector de Subtítulos
-                val subtitles = if (state.availableSubtitles.isNotEmpty()) state.availableSubtitles else listOf("Desactivados")
-                TvSettingsMultiOption(
-                    title = "💬 Subtítulos",
-                    current = state.currentSubtitle,
-                    options = subtitles,
-                    onSelect = onSelectSubtitle
-                )
+                // Selector de Subtítulos (solo si el flujo reporta subtítulos disponibles)
+                if (state.availableSubtitles.size > 1) {
+                    Spacer(modifier = Modifier.height(10.dp))
+                    TvSettingsMultiOption(
+                        title = "💬 Subtítulos",
+                        current = state.currentSubtitle,
+                        options = state.availableSubtitles,
+                        onSelect = onSelectSubtitle
+                    )
+                }
 
                 Spacer(modifier = Modifier.height(16.dp))
 

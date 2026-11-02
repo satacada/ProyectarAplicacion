@@ -1,6 +1,8 @@
 package com.omnicast.receiver.ui.components
 
 import android.annotation.SuppressLint
+import android.os.Handler
+import android.os.Looper
 import android.view.View
 import android.view.ViewGroup
 import android.webkit.*
@@ -19,7 +21,7 @@ import kotlinx.coroutines.flow.Flow
 
 /**
  * Reproductor de YouTube para Android TV Box usando la API oficial IFrame Player.
- * Equipado con superposición OSD D-Pad nativa (TvWebUnifiedOverlay y TvWebSettingsModal).
+ * Equipado con superposición OSD D-Pad 100% nativa y funcional (tiempo exacto y transporte estable).
  */
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
@@ -31,14 +33,9 @@ fun TvYouTubeScreen(
     onPlaybackStatus: ((posMs: Long, durMs: Long, isPlaying: Boolean) -> Unit)? = null,
     onCloseClick: () -> Unit = {}
 ) {
+    val mainHandler = remember { Handler(Looper.getMainLooper()) }
     var playerState by remember(videoId, timestamp) {
-        mutableStateOf(
-            TvWebPlayerState(
-                isControlsVisible = true,
-                availableQualities = listOf("Auto", "1080p", "720p", "480p", "360p"),
-                availableSubtitles = listOf("Desactivados", "Español", "Inglés")
-            )
-        )
+        mutableStateOf(TvWebPlayerState(isControlsVisible = true))
     }
     var customView by remember(videoId, timestamp) { mutableStateOf<View?>(null) }
     var webViewRef by remember(videoId, timestamp) { mutableStateOf<WebView?>(null) }
@@ -56,7 +53,6 @@ fun TvYouTubeScreen(
                 "STOP" -> wv.evaluateJavascript("sendYtCommand('stopVideo');", null)
                 "SHOW_CONTROLS" -> playerState = playerState.copy(isControlsVisible = true)
                 "TOGGLE_SUBTITLES", "SUBTITLE_TOGGLE" -> wv.evaluateJavascript("toggleYtCaptions();", null)
-                "TOGGLE_MENU" -> playerState = playerState.copy(isSettingsOpen = !playerState.isSettingsOpen)
             }
         }
     }
@@ -81,9 +77,11 @@ fun TvYouTubeScreen(
                                 fun onPlaybackStatus(curSec: Float, durSec: Float, state: Int) {
                                     val isPlaying = (state == 1)
                                     val posMs = (curSec * 1000).toLong()
-                                    val durMs = (durSec * 1000).toLong()
-                                    playerState = playerState.copy(currentPositionMs = posMs, durationMs = durMs, isPlaying = isPlaying)
-                                    onPlaybackStatus?.invoke(posMs, durMs, isPlaying)
+                                    val durMs = if (durSec.isFinite() && durSec > 0) (durSec * 1000).toLong() else 0L
+                                    mainHandler.post {
+                                        playerState = playerState.copy(currentPositionMs = posMs, durationMs = durMs, isPlaying = isPlaying)
+                                        onPlaybackStatus?.invoke(posMs, durMs, isPlaying)
+                                    }
                                 }
                             }, "AndroidBridge")
                             webViewClient = WebViewClient()
@@ -110,12 +108,6 @@ fun TvYouTubeScreen(
                                     var captionsOn = false; var lastState = 1; var curTime = 0; var totalDur = 0;
                                     function toggleYtPlay() { if (lastState === 1) sendYtCommand('pauseVideo'); else sendYtCommand('playVideo'); }
                                     function seekYtRel(deltaSec) { var target = Math.max(0, curTime + deltaSec); sendYtCommand('seekTo', [target, true]); }
-                                    function setYtQuality(q) {
-                                      var qMap = { '1080p':'hd1080', '720p':'hd720', '480p':'large', '360p':'medium', 'Auto':'auto' };
-                                      var val = qMap[q] || 'auto';
-                                      sendYtCommand('setPlaybackQuality', [val]);
-                                      sendYtCommand('setPlaybackQualityRange', [val]);
-                                    }
                                     function toggleYtCaptions() {
                                       captionsOn = !captionsOn;
                                       if (captionsOn) sendYtCommand('loadModule', ['captions']); else sendYtCommand('unloadModule', ['captions']);
@@ -163,31 +155,17 @@ fun TvYouTubeScreen(
             }
         }
 
-        // Superposición nativa de controles D-Pad
+        // Superposición nativa de controles D-Pad (solo controles 100% funcionales para YouTube)
         TvWebUnifiedOverlay(
             title = title,
             badgeText = "📺 YouTube TV Box",
             state = playerState,
+            hasSettings = false,
             onTogglePlay = { webViewRef?.evaluateJavascript("toggleYtPlay();", null) },
             onSeekRelative = { deltaMs -> webViewRef?.evaluateJavascript("seekYtRel(${deltaMs / 1000.0});", null) },
-            onToggleSettings = { playerState = playerState.copy(isSettingsOpen = !playerState.isSettingsOpen) },
+            onToggleSettings = {},
             onShowControls = { playerState = playerState.copy(isControlsVisible = true) },
             onHideControls = { playerState = playerState.copy(isControlsVisible = false) }
-        )
-
-        // Modal de configuración nativo D-Pad
-        TvWebSettingsModal(
-            state = playerState,
-            onSelectQuality = { q ->
-                playerState = playerState.copy(currentQuality = q)
-                webViewRef?.evaluateJavascript("setYtQuality('$q');", null)
-            },
-            onSelectSubtitle = { s ->
-                playerState = playerState.copy(currentSubtitle = s)
-                webViewRef?.evaluateJavascript("toggleYtCaptions();", null)
-            },
-            onToggleAspect = {},
-            onClose = { playerState = playerState.copy(isSettingsOpen = false) }
         )
 
         IconButton(

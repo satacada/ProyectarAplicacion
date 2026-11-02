@@ -33,8 +33,14 @@ fun TvWebStreamScreen(
     onPlaybackStatus: ((posMs: Long, durMs: Long, isPlaying: Boolean) -> Unit)? = null,
     onPlaybackFailed: ((String) -> Unit)? = null, onCloseClick: () -> Unit = {}
 ) {
+    val mainHandler = remember { android.os.Handler(android.os.Looper.getMainLooper()) }
     var playerState by remember(streamUrl, timestamp) {
-        mutableStateOf(TvWebPlayerState(isControlsVisible = true))
+        mutableStateOf(
+            TvWebPlayerState(
+                currentPositionMs = startPositionMs,
+                isControlsVisible = true
+            )
+        )
     }
     var customView by remember(streamUrl, timestamp) { mutableStateOf<View?>(null) }
     var webViewRef by remember(streamUrl, timestamp) { mutableStateOf<WebView?>(null) }
@@ -105,15 +111,23 @@ fun TvWebStreamScreen(
                                 @JavascriptInterface
                                 fun onPlaybackStatus(c: Double, d: Double, p: Boolean) {
                                     val cMs = (c * 1000).toLong()
-                                    val dMs = (d * 1000).toLong()
-                                    playerState = playerState.copy(currentPositionMs = cMs, durationMs = dMs, isPlaying = p)
-                                    onPlaybackStatus?.invoke(cMs, dMs, p)
+                                    val dMs = if (d.isFinite() && d > 0) (d * 1000).toLong() else 0L
+                                    mainHandler.post {
+                                        playerState = playerState.copy(
+                                            currentPositionMs = cMs,
+                                            durationMs = if (dMs > 0L) dMs else playerState.durationMs,
+                                            isPlaying = p
+                                        )
+                                        onPlaybackStatus?.invoke(cMs, dMs, p)
+                                    }
                                 }
                                 @JavascriptInterface
                                 fun onMetadataLoaded(qStr: String, sStr: String) {
                                     val qList = qStr.split(",").filter { it.isNotBlank() }
                                     val sList = sStr.split(",").filter { it.isNotBlank() }
-                                    playerState = playerState.copy(availableQualities = qList, availableSubtitles = sList)
+                                    mainHandler.post {
+                                        playerState = playerState.copy(availableQualities = qList, availableSubtitles = sList)
+                                    }
                                 }
                             }, "AndroidBridge")
                             webViewClient = com.omnicast.receiver.ui.TvReceiverHelper.createWebClient(streamUrl, headers)

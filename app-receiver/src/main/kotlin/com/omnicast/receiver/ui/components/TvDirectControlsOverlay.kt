@@ -146,21 +146,9 @@ fun TvDirectControlsOverlay(
                         TvPlayerButton(label = "🚪 Salir", isDanger = true, onClick = onExit)
                     }
 
-                    val isLive = durationMs <= 0L ||
-                        title.contains("news", ignoreCase = true) ||
-                        title.contains("sky", ignoreCase = true) ||
-                        title.contains("directo", ignoreCase = true) ||
-                        title.contains("envivo", ignoreCase = true) ||
-                        title.contains("en vivo", ignoreCase = true) ||
-                        title.contains("live", ignoreCase = true) ||
-                        streamUrl.contains("live", ignoreCase = true) ||
-                        streamUrl.contains("linear", ignoreCase = true) ||
-                        streamUrl.contains("chunklist", ignoreCase = true)
-
                     val recBtnLabel = when {
                         pvrProgress.isRecording -> "🔴 REC ${formatTvTime(pvrProgress.durationSeconds * 1000L)} ⏹"
-                        isLive -> "🔴 REC"
-                        else -> "📥 Guardar"
+                        else -> "🔴 REC"
                     }
 
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {

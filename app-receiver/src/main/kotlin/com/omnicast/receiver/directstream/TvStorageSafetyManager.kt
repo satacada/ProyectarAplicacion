@@ -28,7 +28,8 @@ data class TvStorageUnit(
 enum class VideoBitratePreset(val label: String, val mbPerMin: Double, val kbps: Int) {
     FULL_HD_1080P("1080p Full HD (~3.5 Mbps)", 26.2, 3500),
     HD_720P("720p HD (~2.0 Mbps)", 15.0, 2000),
-    SD_480P("480p SD (~1.0 Mbps)", 7.5, 1000)
+    SD_480P("480p SD (~1.0 Mbps)", 7.5, 1000),
+    LOW_360P("360p Ahorro (~0.6 Mbps)", 4.5, 600)
 }
 
 /**

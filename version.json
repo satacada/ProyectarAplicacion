@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 322,
-  "versionCodeReceiver": 305,
-  "versionName": "3.5.71",
-  "releaseTag": "v3.5.71",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.71/omnicast-sender-v3.5.71.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.71/omnicast-receiver-v3.5.71.apk",
-  "changelog": "v3.5.71 (PVR CoroutineScope Persistente, Ticker 1s en OSD REC, Auto-recuperación BehindLiveWindow en ExoPlayer y Unificación Botón REC HTML5): 1) Receiver (PvrStreamRecorder y TvRecordDialog): Grabación desacoplada del ciclo de vida del diálogo usando recorderScope independiente, garantizando que no se cancele al cerrar el diálogo, y ticker de corrutina de 1 segundo para avance fluido del contador. 2) Receiver (ExoPlayerTvManager): Auto-reconexión fluida ante BehindLiveWindowException con seekToDefaultPosition(), erradicando congelamientos en transmisiones en vivo. 3) Receiver (TvWebUnifiedOverlay): Botón REC promovido a la barra principal de controles en HTML5 igual que ExoPlayer, con badge flotante zIndex 99f. 4) Receiver (TvWebStreamScreen y TvYouTubeScreen): Removido el botón flotante de salida redundante en la esquina superior izquierda."
+  "versionCodeSender": 323,
+  "versionCodeReceiver": 306,
+  "versionName": "3.5.72",
+  "releaseTag": "v3.5.72",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.72/omnicast-sender-v3.5.72.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.72/omnicast-receiver-v3.5.72.apk",
+  "changelog": "v3.5.72 (Fase 4 PVR Ring Buffer Asíncrono 128KB, Selector Resolución 1080p/720p/480p/360p, Muxing A/V Demuxed Sky News, Punto Exacto de Inicio, Neutralización Universal de Cookies y Botón REC Unificado): 1) Receiver (PvrStreamRecorder, PvrRingBuffer y PvrHlsMasterParser - Fase 4): Búfer circular asíncrono de 16 MB con volcado en bloques alineados de 128 KB hacia USB/Flash con 0 dropped frames; parser de audio desmultiplexado (#EXT-X-MEDIA:TYPE=AUDIO) empaquetando video y audio sincronizados; descarte automático de 30s históricos para grabar desde el segundo exacto presente. 2) Receiver (TvRecordDialog y TvDirectControlsOverlay): Selector interactivo D-Pad de resoluciones (1080p, 720p, 480p, 360p) y unificación absoluta de etiqueta [🔴 REC]. 3) Sender (AdBlocker): Neutralización universal de capas de consentimiento de cookies (Didomi, OneTrust, CMP) y desbloqueo de scroll sin hardcodear dominios."
 }

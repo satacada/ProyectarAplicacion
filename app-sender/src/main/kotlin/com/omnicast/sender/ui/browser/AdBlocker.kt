@@ -149,10 +149,12 @@ object AdBlocker {
                 function cleanDoc(doc) {
                     if (!doc) return;
                     try {
-                        var css = 'div[class*="popunder"], div[id*="popunder"], .ad-overlay, #ad-overlay, .click-shield, div[class*="click-shield"], div[class*="player-banner"], div[id*="ad_wrapper"], div[class*="vast-"], div[class*="banner-ads"], #click-overlay, .click-overlay, #vplayer_overlay, .vplayer-overlay { display: none !important; pointer-events: none !important; }';
+                        var css = 'div[class*="popunder"], div[id*="popunder"], .ad-overlay, #ad-overlay, .click-shield, div[class*="click-shield"], div[class*="player-banner"], div[id*="ad_wrapper"], div[class*="vast-"], div[class*="banner-ads"], #click-overlay, .click-overlay, #vplayer_overlay, .vplayer-overlay, div[id*="didomi-host"], div[class*="didomi-popup-backdrop"], div[id*="onetrust-consent-sdk"], div[class*="onetrust-pc-dark-filter"], div[class*="cookie-consent"], div[class*="cmp-backdrop"] { display: none !important; pointer-events: none !important; }';
                         var st = doc.createElement('style');
                         st.textContent = css;
                         (doc.head || doc.documentElement).appendChild(st);
+                        if (doc.body) { doc.body.style.setProperty('overflow', 'auto', 'important'); }
+                        if (doc.documentElement) { doc.documentElement.style.setProperty('overflow', 'auto', 'important'); }
                     } catch(__) {}
                     var selectors = [
                         'div[class*="ad-box"]', 'div[class*="ad-container"]', 'div[id*="ad-banner"]',

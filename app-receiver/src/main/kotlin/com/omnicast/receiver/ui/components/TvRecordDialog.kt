@@ -41,6 +41,7 @@ fun TvRecordDialog(
     var selectedUnitIndex by remember { mutableIntStateOf(units.indexOfFirst { it.canRecord }.coerceAtLeast(0)) }
     val currentUnit = units.getOrNull(selectedUnitIndex) ?: units.firstOrNull()
 
+    var selectedResolution by remember { mutableIntStateOf(1080) }
     var selectedBitrate by remember { mutableStateOf(VideoBitratePreset.FULL_HD_1080P) }
     var selectedTimerMinutes by remember { mutableIntStateOf(if (isLive) 60 else 0) }
 
@@ -116,6 +117,34 @@ fun TvRecordDialog(
                     }
                 }
 
+                // Selector de Resolución / Calidad
+                Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text("📺 Calidad de Grabación:", color = Color(0xFF94A3B8), fontSize = 11.sp)
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        listOf(
+                            1080 to "🌟 1080p",
+                            720 to "📺 720p",
+                            480 to "480p",
+                            360 to "360p"
+                        ).forEach { (res, label) ->
+                            TvDialogSelectBtn(
+                                text = label,
+                                isSelected = selectedResolution == res,
+                                modifier = Modifier.weight(1f),
+                                onClick = {
+                                    selectedResolution = res
+                                    selectedBitrate = when (res) {
+                                        1080 -> VideoBitratePreset.FULL_HD_1080P
+                                        720 -> VideoBitratePreset.HD_720P
+                                        480 -> VideoBitratePreset.SD_480P
+                                        else -> VideoBitratePreset.LOW_360P
+                                    }
+                                }
+                            )
+                        }
+                    }
+                }
+
                 // Selector de Temporizador (para Live PVR)
                 if (isLive) {
                     Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -157,6 +186,7 @@ fun TvRecordDialog(
                                     url = streamUrl,
                                     headers = headers,
                                     useUsb = isUsb,
+                                    targetHeight = selectedResolution,
                                     timerMinutes = effectiveTimer,
                                     onStopped = { reason ->
                                         Toast.makeText(context, reason, Toast.LENGTH_LONG).show()

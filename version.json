@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 329,
-  "versionCodeReceiver": 312,
-  "versionName": "3.5.78",
-  "releaseTag": "v3.5.78",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.78/omnicast-sender-v3.5.78.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.78/omnicast-receiver-v3.5.78.apk",
-  "changelog": "v3.5.78 (Proxy de Ventana Simulada Estándar Brave/uBlock en WvcShield): 1) Sender (WvcShieldSecurityEngine.kt): Interceptación modular en window.open; preserva la navegación Same-Origin en la ventana principal, y para popups publicitarios externos entrega un objeto simulado (Fake Window Proxy) sin mover la pantalla, permitiendo que la web considere satisfecho el anuncio y proceda limpiamente a seleccionar películas en Tio Plus sin interferir con PelisPlus."
+  "versionCodeSender": 330,
+  "versionCodeReceiver": 313,
+  "versionName": "3.5.79",
+  "releaseTag": "v3.5.79",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.79/omnicast-sender-v3.5.79.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.79/omnicast-receiver-v3.5.79.apk",
+  "changelog": "v3.5.79 (Blindaje Definitivo de Barra de Búsqueda contra Cierres en Compose): 1) Sender (BrowserTopBar.kt): Erradicación del cierre forzado fatal (IllegalArgumentException: offset out of bounds) al acotar estrictamente los índices de selección del cursor (safeStart/safeEnd) y mantener innerTextField() siempre conectado en la jerarquía visual de BasicTextField, eliminando cualquier desincronización de foco y cursor entre el teclado de Android y Jetpack Compose."
 }

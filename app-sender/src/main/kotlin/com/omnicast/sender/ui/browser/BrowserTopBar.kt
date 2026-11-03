@@ -120,11 +120,16 @@ fun BrowserTopBar(
                         Spacer(modifier = Modifier.width(4.dp))
                         BasicTextField(
                             value = textFieldValue,
-                            onValueChange = { newValue ->
-                                textFieldValue = newValue
-                                if (newValue.text != inputUrl) onInputUrlChange(newValue.text)
+                            onValueChange = { nv ->
+                                val l = nv.text.length; val ss = nv.selection.start.coerceIn(0, l); val se = nv.selection.end.coerceIn(0, l)
+                                textFieldValue = if (ss == nv.selection.start && se == nv.selection.end) nv else nv.copy(selection = TextRange(ss, se))
+                                if (nv.text != inputUrl) onInputUrlChange(nv.text)
                             },
-                            modifier = Modifier.weight(1f).fillMaxHeight().onFocusChanged { isFocused = it.isFocused },
+                            modifier = Modifier.weight(1f).fillMaxHeight().onFocusChanged { focus ->
+                                isFocused = focus.isFocused
+                                val l = textFieldValue.text.length; val s = textFieldValue.selection.start.coerceIn(0, l); val e = textFieldValue.selection.end.coerceIn(0, l)
+                                if (s != textFieldValue.selection.start || e != textFieldValue.selection.end) textFieldValue = textFieldValue.copy(selection = TextRange(s, e))
+                            },
                             singleLine = true,
                             cursorBrush = androidx.compose.ui.graphics.SolidColor(Color(0xFF38BDF8)),
                             textStyle = androidx.compose.ui.text.TextStyle(
@@ -137,17 +142,14 @@ fun BrowserTopBar(
                                 Box(contentAlignment = Alignment.CenterStart, modifier = Modifier.fillMaxSize()) {
                                     if (textFieldValue.text.isEmpty()) {
                                         Text(com.omnicast.sender.language.AppLanguageManager.t(context, "browser_search_hint"), color = Color(0xFF64748B), fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, softWrap = false)
-                                    } else if (!isFocused) {
-                                        Text(text = textFieldValue.text, color = Color.White, fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, softWrap = false)
-                                    } else {
-                                        innerTextField()
                                     }
+                                    innerTextField()
                                 }
                             }
                         )
                         if (textFieldValue.text.isNotEmpty()) {
                             IconButton(
-                                onClick = { textFieldValue = TextFieldValue(""); onInputUrlChange("") },
+                                onClick = { textFieldValue = TextFieldValue("", TextRange.Zero); onInputUrlChange("") },
                                 modifier = Modifier.size(24.dp)
                             ) {
                                 Icon(Icons.Rounded.Close, contentDescription = "Borrar texto", tint = Color(0xFFCBD5E1), modifier = Modifier.size(17.dp))

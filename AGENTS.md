@@ -29,6 +29,10 @@ Este repositorio sigue el estándar abierto AGENTS.md para el desarrollo de la a
   1. Identificar explícitamente los posibles efectos colaterales negativos sobre los flujos ya probados y aprobados (YouTube, Dailymotion, PelisGO, LuluStream, deportes en vivo y proyección de pantalla).
   2. Detallar qué contramedidas arquitectónicas específicas se incorporan en la solución para anular cada uno de los riesgos detectados.
   Queda terminantemente PROHIBIDO proponer soluciones "a ciegas" que solucionen la casuística de una web individual a costa de degradar la estabilidad global de la aplicación.
+- **Principio de Evaluación y Poda de Soluciones Ineficaces (Cero Código Muerto por Hipótesis Fallidas):**
+  Toda propuesta o ajuste de código implementado que tras pruebas reales de campo NO produzca resultados (el video sigue sin reproducirse, el contador permanece en '0' o el fallo persiste) DEBE ser evaluado críticamente de forma inmediata:
+  1. *Discriminación Estructural:* Se preserva únicamente la infraestructura arquitectónica limpia y desacoplada (tests de oráculo unitarios en `:core:domain`, contratos de interfaz pura o correcciones de sintaxis de bajo nivel).
+  2. *Poda Inmediata de Código Inútil:* Queda terminantemente PROHIBIDO dejar acumulados en el repositorio parches ciegos, listas hardcodeadas de dominios espejo, variables huérfanas o adaptadores que no resolvieron el problema. Todo código introducido bajo una hipótesis que resultó ser falsa o ineficaz debe ser purgado o revertido, impidiendo que la base de código se degrade con capas de código basura acumulado.
 - **Estándar C++20 Moderno Obligatorio (Zero-Leak & Zero-Copy):**
   Toda implementación en C++ DEBE programarse bajo el estándar C++20 moderno (`CMAKE_CXX_STANDARD 20`):
   1. **Zero-Allocation:** Uso obligatorio de `std::string_view` y `std::span` para operaciones de lectura y parseo, prohibiendo copias innecesarias de cadenas (`std::string`).

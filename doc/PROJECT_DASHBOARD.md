@@ -1,8 +1,8 @@
 # 📊 PROJECT DASHBOARD — OmniCast Pro
 
-**Última actualización:** 2026-11-03 (Restauración de Sintaxis JavaScript en universal_sniffer.js y Activación de Detección DOM)  
+**Última actualización:** 2026-11-03 (Restauración de Sintaxis JavaScript en universal_sniffer.js, Activación de Detección DOM y Principio de Evaluación/Poda de Código Ineficaz)  
 **Versión de producción actual:** v3.5.86 (Sender: 337) / v3.5.86 (Receiver: 320)  
-**Estándar de calidad:** AGENTS.md (Archivos <= 300 líneas, Clean Architecture, 100% Offline/Local, C++20 Zero-Allocation)
+**Estándar de calidad:** AGENTS.md (Archivos <= 300 líneas, Clean Architecture, 100% Offline/Local, C++20 Zero-Allocation, Poda Obligatoria de Código Inútil ante Hipótesis Fallidas)
 
 ---
 

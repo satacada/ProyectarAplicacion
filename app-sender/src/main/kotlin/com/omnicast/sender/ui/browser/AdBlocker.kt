@@ -191,30 +191,57 @@ object AdBlocker {
                 window.__omniAdBlockInjected = true;
 
                 // Neutralización reactiva en fase de captura del evento click:
-                // Solo neutraliza velos transparentes que no sean botones ni enlaces
                 document.addEventListener('click', function(e) {
                     var el = e.target;
                     if (!el) return;
-                    if (el.closest && el.closest('input, textarea, select, button, form, [role="button"], [contenteditable="true"], [role="search"], [role="textbox"], [role="combobox"]')) return;
-                    if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT' || el.tagName === 'FORM' || el.tagName === 'BUTTON') return;
+                    if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT' || el.tagName === 'VIDEO') return;
+
+                    var w = window.innerWidth || 360;
+                    var h = window.innerHeight || 640;
+                    var curH = (window.location.hostname || '').toLowerCase();
+
+                    // 1. Detección y destrucción de trampa de enlace 'a' externa (Click-Jacking)
+                    var link = (el.tagName === 'A') ? el : (el.closest ? el.closest('a') : null);
+                    if (link && link.href) {
+                        var linkH = '';
+                        try { linkH = new URL(link.href, window.location.href).hostname.toLowerCase(); } catch(_) {}
+                        var isExt = linkH && linkH !== curH && !linkH.endsWith('.' + curH) && !curH.endsWith('.' + linkH);
+                        if (isExt && linkH.indexOf('challenges.cloudflare') === -1 && linkH.indexOf('turnstile') === -1) {
+                            var csLink = window.getComputedStyle(link);
+                            var rectLink = link.getBoundingClientRect();
+                            var isFixedOverlay = csLink && (csLink.position === 'fixed' || csLink.position === 'absolute') && rectLink.width >= w * 0.3 && rectLink.height >= h * 0.2;
+                            var isFullTrap = (rectLink.width >= w * 0.7 && rectLink.height >= h * 0.5);
+                            if (isFixedOverlay || isFullTrap || link.getAttribute('target') === '_blank') {
+                                var isMedia = (linkH.indexOf('stream') !== -1 || linkH.indexOf('player') !== -1 || linkH.indexOf('wish') !== -1 || linkH.indexOf('moon') !== -1 || linkH.indexOf('drop') !== -1 || linkH.indexOf('hide') !== -1 || linkH.indexOf('fast') !== -1 || linkH.indexOf('voe') !== -1 || linkH.indexOf('dood') !== -1);
+                                if (!isMedia) {
+                                    e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
+                                    link.style.pointerEvents = 'none';
+                                    link.remove();
+                                    var under = document.elementFromPoint(e.clientX, e.clientY);
+                                    if (under && under !== el && under !== link) under.click();
+                                    return false;
+                                }
+                            }
+                        }
+                    }
+
+                    // 2. Detección y eliminación de velos transparentes (div/span con z-index alto)
                     if (el !== document.body && el !== document.documentElement) {
                         var cs = window.getComputedStyle(el);
                         if (cs && (cs.position === 'fixed' || cs.position === 'absolute')) {
                             var z = parseInt(cs.zIndex, 10);
                             var rect = el.getBoundingClientRect();
-                            var w = window.innerWidth || 360;
-                            var h = window.innerHeight || 640;
                             if (!isNaN(z) && z >= 5 && rect.width >= w * 0.5 && rect.height >= h * 0.3) {
                                 var op = parseFloat(cs.opacity);
                                 var bg = cs.backgroundColor;
                                 var isTrans = (bg === 'transparent' || bg === 'rgba(0, 0, 0, 0)' || bg === 'rgba(255, 255, 255, 0)');
                                 var noText = !el.innerText || el.innerText.trim().length === 0;
-                                if ((op <= 0.08 || (isTrans && noText)) && !el.querySelector('video, iframe, button, input, a')) {
+                                if ((op <= 0.08 || (isTrans && noText)) && !el.querySelector('video, iframe, button, input')) {
                                     e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
                                     el.style.pointerEvents = 'none';
                                     el.remove();
-                                    var under = document.elementFromPoint(e.clientX, e.clientY);
-                                    if (under && under !== el) under.click();
+                                    var under2 = document.elementFromPoint(e.clientX, e.clientY);
+                                    if (under2 && under2 !== el) under2.click();
                                     return false;
                                 }
                             }

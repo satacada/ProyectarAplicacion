@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 326,
-  "versionCodeReceiver": 309,
-  "versionName": "3.5.75",
-  "releaseTag": "v3.5.75",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.75/omnicast-sender-v3.5.75.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.75/omnicast-receiver-v3.5.75.apk",
-  "changelog": "v3.5.75 (Motor Dinámico Auto-Actualizable de Reproductores con Auditoría de Fallos y Desbloqueo de Servidores): 1) Sender (MediaPlayerSyncManager.kt): Nuevo gestor de sincronización de reproductores multimedia con descarga remota, auto-aprendizaje heurístico y registro formal de fallos (PLAYER_SYNC_ERROR) con código y timestamp. 2) Sender (WvcShieldSecurityEngine.kt): Limpieza total de JavaScript sin palabras mágicas en duro, delegando la validación de servidores a Kotlin/SQLite. 3) Sender (BrowserWebView.kt): Auto-aprendizaje de dominios de reproductores al detectar streams válidos."
+  "versionCodeSender": 327,
+  "versionCodeReceiver": 310,
+  "versionName": "3.5.76",
+  "releaseTag": "v3.5.76",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.76/omnicast-sender-v3.5.76.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.76/omnicast-receiver-v3.5.76.apk",
+  "changelog": "v3.5.76 (Traspaso Táctil y Neutralización Reactiva de Enlaces Click-Jacking en AdBlocker): 1) Sender (AdBlocker.kt): Detección en 0ms y destrucción inmediata de enlaces 'a' y capas superpuestas de secuestro publicitario externo (werefilledwit.org, kettledroopingcontinuation.com), aplicando pointer-events: none y disparando de forma transparente el toque táctil hacia el botón legítimo subyacente (elementFromPoint.click()). Permite que los botones de servidores y reproductor en Tio Plus, PelisPlus y portales de películas respondan al primer toque."
 }

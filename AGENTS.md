@@ -23,7 +23,7 @@ Este repositorio sigue el estándar abierto AGENTS.md para el desarrollo de la a
 - **Diseño de Código:** Aplicar 'Fail Fast' (evitar 'if-else' anidados). Sin 'Magic Numbers' o puertos de red 'hardcoded'.
 - **Comentarios:** Solo explicar el 'POR QUÉ' de un parche o limitación técnica del hardware. Prohibido narrar lo que hace el código.
 - **Catálogo de Versiones:** Declarar dependencias únicamente en 'gradle/libs.versions.toml'.
-- **Ley de Intocabilidad de lo Probado:** Toda funcionalidad, pantalla, extractor, flujo de red, cálculo de escala o reproductor validado y aprobado por el usuario queda **SELLADO E INMUTABLE**. Queda PROHIBIDO refactorizarlo, reescribirlo, simplificarlo o "generalizarlo" bajo pretexto de elegancia o modularidad. Si funciona, no se toca.
+- **Ley de Intocabilidad de lo Probado:** Toda funcionalidad, pantalla, extractor, flujo de red, cálculo de escala o reproductor validado y aprobado por el usuario queda **SELLADO E INMUTABLE**. Queda PROHIBIDO refactorizarlo, reescribirlo, simplificarlo o "generalizarlo" bajo pretexto de elegancia o modularidad. Si funciona, no se toca. *Cláusula de Captura y Selectores:* El ciclo de vida de captura, reseteo y auto-apertura del selector de casteo en `InAppBrowserScreen.kt` está sellado e inmutable; ante fallos de detección de video en portales específicos, queda TERMINANTEMENTE PROHIBIDO alterar la lógica de apertura de la ventana de casteo creyendo que "no se abrió"; la causa raíz siempre residirá en la ausencia del extractor modular de la CDN correspondiente o bloqueo del AdBlocker.
 - **Separación entre Consulta del Usuario y Orden de Modificación:** Ante una consulta teórica, pregunta conceptual ("¿qué pasó con esto?", "¿cómo funciona?", "¿por qué?") o análisis solicitado por el usuario, la IA responderá ÚNICAMENTE con diagnóstico, datos y explicación técnica. Queda TERMINANTEMENTE PROHIBIDO modificar archivos, ejecutar refactorizaciones o crear commits como reacción a una consulta. Toda modificación de código requiere una instrucción explícita del usuario o la aprobación previa de una propuesta.
 - **Estándar C++20 Moderno Obligatorio (Zero-Leak & Zero-Copy):**
   Toda implementación en C++ DEBE programarse bajo el estándar C++20 moderno (`CMAKE_CXX_STANDARD 20`):
@@ -64,6 +64,13 @@ Este repositorio sigue el estándar abierto AGENTS.md para el desarrollo de la a
   Ningún pilar puede invadir, depender o alterar el ciclo de vida de los otros tres.
 - **Prohibición en WebViews:** PROHIBIDO usar bucles 'MutationObserver' o 'querySelectorAll' masivos que saturen el hilo de JavaScript. Toda neutralización de trampas debe ser reactiva al evento del usuario.
 - **Catálogo Técnico de Variantes (Obligatorio):** Todo análisis de compatibilidad, selección de reproductor y gestión de cabeceras DEBE consultar y respetar el catálogo técnico documentado en `doc/referencias/CATALOGO_VARIANTES_STREAMING.md` antes de proponer cambios en red o reproductores.
+- **Protocolo de Servidores Protegidos y CDNs Anti-Scrape (Protocolo Doodstream):**
+  Ante un reporte de que un video se reproduce en pantalla pero el contador de videos permanece en '0' y no se captura:
+  1. *Regla de Intocabilidad:* NUNCA alterar el selector ni el ciclo de vida en `InAppBrowserScreen.kt`. El selector no se abre porque no hay stream registrado en el caso de uso.
+  2. *Desbloqueo de AdBlock:* Verificar que el host del reproductor esté en `known_media_players.json` y en `MediaPlayerSyncManager.kt` para no bloquear el iframe ni los scripts de handshake (`/pass_md5/`).
+  3. *Adaptador Hexagonal Aislado:* Crear un nuevo adaptador modular `[Proveedor]ExtractorAdapter.kt` implementando `IMediaStreamExtractorPort` e inscribirlo en `StreamExtractorRegistry.kt`.
+  4. *Filtro del Sniffer DOM:* Registrar el patrón o subdominio de la CDN en `isMediaUrl()` de `universal_sniffer.js` para que la etiqueta `<video>` no sea descartada.
+  5. *Inyección de Cabeceras:* Inyectar obligatoriamente `Referer: https://[host]/` y `Origin` para evitar que la CDN responda `HTTP 403 Forbidden` en la TV Box.
 
 
 ---

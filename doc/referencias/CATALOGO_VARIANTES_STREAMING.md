@@ -63,6 +63,24 @@ Este documento recopila la base de conocimiento técnico e ingeniería inversa s
 
 ---
 
+### Variante 7: Servidores Anti-Scrape sin Extensión y CDN con Handshake Criptográfico (Doodstream / Doopstream / DoodCDN)
+* **Ejemplos:** Doodstream (`doodstream.com`, `dood.li`, `dood.so`, `doods.pro`), Doopstream (`doopstream.com`), DS2Play (`ds2play.com`), DoodCDN (`*.doodcdn.co`, `*.doodcdn.com`).
+* **Firma en URL:** Rutas sin extensión estándar de video (`.mp4`, `.m3u8` ausentes), rutas con prefijo `/pass/`, tokens en query string (`?token=...&expiry=...`) o subdominios CDN (`*.doodcdn.*`, `/pass_md5/`).
+* **Firma en Cabeceras:** Requiere obligatoriamente cabecera `Referer: https://[dood_domain]/` y `Origin: https://[dood_domain]` coherentes con el reproductor incrustado.
+* **Comportamiento Crítico (Anti-Scrape / Detección Temprana):**
+  1. El reproductor ejecuta un handshake mediante XHR a `/pass_md5/{md5}/{token}` para obtener el prefijo de la CDN.
+  2. El JavaScript ensambla la URL final concatenando caracteres aleatorios y parámetros de seguridad, asignándola al elemento `<video>`.
+  3. Al no terminar en extensión estándar, los extractores genéricos descartan la URL si no existe un adaptador modular.
+  4. Si se solicita la URL sin la cabecera `Referer` legítima del reproductor, la CDN de Doodstream rechaza la conexión con `HTTP 403 Forbidden`.
+* **Reproductor Requerido:** **`ExoPlayer` nativo** con inyección de cabecera `Referer` y `User-Agent: UA_MOBILE` o **`TvWebStreamScreen`** en fallback.
+* **Protocolo de Resolución Hexagonal (Protocolo Doodstream):**
+  1. *Catálogo de Reproductores:* Añadir dominios del reproductor a `known_media_players.json` y regla por prefijo en `MediaPlayerSyncManager.kt` para evitar que el bloqueador de anuncios destruya el iframe o el script `/pass_md5/`.
+  2. *Adaptador Modular ("Poner y Sacar"):* Crear adaptador `DoodstreamExtractorAdapter.kt` implementando `IMediaStreamExtractorPort` e inscribirlo en `StreamExtractorRegistry.kt`.
+  3. *Reconocimiento en Sniffer DOM:* Registrar el patrón de CDN (`doodcdn`, `doopstream`, `/pass/`) en `isMediaUrl()` de `universal_sniffer.js` para que el evento `<video>` no sea ignorado por el in-page script.
+  4. *Inyección de Cabeceras:* Configurar `Referer: https://[host]/` y `Origin` en el `MediaStream` extraído.
+
+---
+
 ## 2. REGLAS TÉCNICAS INVIOLABLES DE CABECERAS Y RED
 
 1. **Aislamiento Estricto Same-Site de Cookies (Regla Anti-Sopa de Cookies):**
@@ -109,6 +127,7 @@ SINO -> ExoPlayer (Hardware Nativo 60fps)
 | **Reypelis** | `reypelis.vip`<br>CDN: `spark.9bg.net` | Flujo HLS VOD directo<br>(Fastream resolutivo) | **`ExoPlayerTvManager`**<br>(AndroidX Media3 HW) | Decodificación por hardware a 1080p nativo, respuesta ultra-rápida al mando D-Pad y salto ±10s. |
 | **PelisGO** | `pelisgo.online`<br>CDN: `*.tnmr.org` | Flujo HLS VOD directo<br>(LuluStream resuelto) | **`ExoPlayerTvManager`**<br>(AndroidX Media3 HW) | Perfil resuelto y guardado en `StreamProfileDb`. Decodificación continua por hardware con jitter-buffer anti-tirones. |
 | **YouTube** | `youtube.com` | ID de video oficial | **`TvYouTubeScreen`** | Reproducción en visor IFrame oficial de TV con IFrame API nativa. Inmunidad total de desconexión ante apagado/bloqueo de pantalla del móvil tras 60s (v3.5.62), latido continuo de telemetría (1000ms) y sincronización de estado. Cero bloqueo HTTP 403 Forbidden por delegación de BotGuard/PO Token al reproductor oficial de Google. |
+| **DoodStream / DoopStream** | `doopstream.com`, `dood.*`<br>CDN: `*.doodcdn.co` | CDN con token dinámico<br>(sin extensión `.mp4`) | **`ExoPlayerTvManager`**<br>(AndroidX Media3 HW) | Extraído por `DoodstreamExtractorAdapter` con inyección de cabecera `Referer: https://[dood_domain]/`. Decodificación por hardware nativo en TV Box. Fallback a `TvWebStreamScreen` ante cualquier rechazo 403. |
 | **Screen Mirroring** | Celular en vivo | Socket WebRTC LAN | **`WebRtcReceiverManager`** | Pipeline H.264 acelerado por hardware (<60ms) con modos Pantalla Completa y Por Aplicación (HU-013). |
 
 ---

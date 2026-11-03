@@ -43,6 +43,7 @@
         if (l.indexOf('holdbitter') !== -1 || l.indexOf('/gambling/') !== -1 || l.indexOf('bonus-') !== -1 || l.indexOf('bonus_') !== -1) return false;
         return l.indexOf('.m3u8') !== -1 || l.indexOf('.mp4') !== -1 || l.indexOf('.mpd') !== -1 ||
                l.indexOf('/hls') !== -1 || l.indexOf('/stream/') !== -1 || l.indexOf('/manifest') !== -1 ||
+               l.indexOf('doodcdn') !== -1 || l.indexOf('doopstream') !== -1 || l.indexOf('/pass/') !== -1 ||
                l.indexOf('/live') !== -1 || l.indexOf('chunklist') !== -1 ||
                l.indexOf('p.php?url=') !== -1 || (l.indexOf('/p.php') !== -1 && l.indexOf('sig=') !== -1) ||
                ((l.indexOf('mycdn.me') !== -1 || l.indexOf('okcdn.ru') !== -1) && (l.indexOf('vd') !== -1 || l.indexOf('video') !== -1 || l.indexOf('cmd=video') !== -1 || l.indexOf('/cmd/') !== -1 || l.indexOf('sig=') !== -1)) ||

@@ -51,7 +51,6 @@ fun MainActionCards(
         else -> tvScaleMode
     }
     val rfShort = selectedProfile.label.replace(" @ ", "@")
-    val isAnyActive = isStreaming || isCasting || isGalleryCasting
 
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
 
@@ -120,7 +119,7 @@ fun MainActionCards(
                     }
                 }
 
-                if (isAnyActive) {
+                if (isStreaming) {
                     Button(
                         onClick = onStopProjection,
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDC2626)),

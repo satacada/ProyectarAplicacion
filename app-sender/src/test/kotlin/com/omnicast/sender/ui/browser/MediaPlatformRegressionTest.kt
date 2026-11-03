@@ -211,4 +211,27 @@ class MediaPlatformRegressionTest {
         assertTrue("Debe bloquear banners del reproductor", AdBlocker.isVideoAd("https://tnmr.org/assets/player-banner.png"))
         assertTrue("Debe bloquear clases banner-ads", AdBlocker.isVideoAd("https://site.com/banner-ads/300x250.jpg"))
     }
+
+    @Test
+    fun testDoodstreamExtractorAdapter() {
+        val adapter = com.omnicast.sender.ui.browser.extractors.DoodstreamExtractorAdapter()
+        val cdnCandidate = com.omnicast.core.domain.models.StreamCandidate(
+            url = "https://m12.doodcdn.co/pass/xyz123/video.mp4?token=abc-123&expiry=1800000000",
+            pageUrl = "https://doopstream.com/e/abc123xyz",
+            pageTitle = "Spider-Man"
+        )
+        assertTrue(adapter.canHandle(cdnCandidate))
+        val extracted = adapter.extract(cdnCandidate)
+        assertEquals("MP4", extracted.format)
+        assertEquals("Spider-Man", extracted.title)
+        assertEquals("https://doopstream.com/", extracted.headers["Referer"])
+        assertEquals("https://doopstream.com", extracted.headers["Origin"])
+
+        // Verificar que no confunda páginas HTML de embed
+        val embedCandidate = com.omnicast.core.domain.models.StreamCandidate(
+            url = "https://doopstream.com/e/abc123xyz",
+            pageUrl = "https://pelisplus.hair/pelicula"
+        )
+        assertFalse(adapter.canHandle(embedCandidate))
+    }
 }

@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 331,
-  "versionCodeReceiver": 314,
-  "versionName": "3.5.80",
-  "releaseTag": "v3.5.80",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.80/omnicast-sender-v3.5.80.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.80/omnicast-receiver-v3.5.80.apk",
-  "changelog": "v3.5.80 (Reconocimiento Cross-TLD de Marca y Desbloqueo Dinámico de Doodstream): 1) Sender (WvcShieldSecurityEngine.kt): Comparación de marca raíz entre dominios espejo (repelisplus.lat -> repelisplus.my) para no bloquear la navegación legítima del usuario hacia películas. 2) Sender (known_media_players.json / MediaPlayerSyncManager.kt): Inclusión de variantes activas de Doodstream/Doopstream (dood.*, ds2play.*) garantizando la carga de sus scripts y el posterior desencriptado de streaming."
+  "versionCodeSender": 332,
+  "versionCodeReceiver": 315,
+  "versionName": "3.5.81",
+  "releaseTag": "v3.5.81",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.81/omnicast-sender-v3.5.81.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.81/omnicast-receiver-v3.5.81.apk",
+  "changelog": "v3.5.81 (Extractor Modular Doodstream/Doopstream y Aislamiento de Botón Detener): 1) Sender (MainActionCards.kt): Aislamiento estricto del botón Detener en la tarjeta de Proyección de Pantalla dependiente exclusivamente de isStreaming, eliminando duplicidad cuando se castea video web. 2) Sender (DoodstreamExtractorAdapter.kt / StreamExtractorRegistry.kt / universal_sniffer.js): Implementación de extractor modular hexagonal para Doodstream/Doopstream (doodcdn.*, /pass/) con inyección de Referer legítimo, habilitando captura inmediata en Pelisplus y Repelisplus al dar Play. 3) Archivo y ratificación estricta de la Ley de Intocabilidad de lo Probado (Sección 3) sobre el ciclo de vida del selector de streaming."
 }

@@ -19,6 +19,7 @@ object StreamExtractorRegistry {
 
                 // Extractores modulares por sitio ("poner y sacar")
                 FastreamExtractorAdapter(),
+                DoodstreamExtractorAdapter(),
                 OkRuSiteExtractorAdapter(),
                 YouTubeExtractorAdapter()
             )

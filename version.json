@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 336,
-  "versionCodeReceiver": 319,
-  "versionName": "3.5.85",
-  "releaseTag": "v3.5.85",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.85/omnicast-sender-v3.5.85.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.85/omnicast-receiver-v3.5.85.apk",
-  "changelog": "v3.5.85 (Validador Centralizado de Dominio StreamCandidateValidator y Estandarización Hexagonal): 1) Core Domain (StreamCandidateValidator.kt): Creación del validador centralizado en la capa pura de dominio para discernir streams binarios (.m3u8, .mp4, .mpd, /pass/, video~, /hls2/) de documentos web, assets e iframes (/e/, /embed, op=watch, /dood?, /pass_md5/, /cdn-cgi/). 2) Sender (DoodstreamExtractorAdapter / FastreamExtractorAdapter): Estandarización de canHandle delegando en StreamCandidateValidator.isValidCdnStream, eliminando la duplicidad y reinvención artesanal de filtros. 3) Documentación (AGENTS.md y PROJECT_DASHBOARD.md): Registro del estándar obligatorio de validación centralizada de dominio para todo extractor actual y futuro."
+  "versionCodeSender": 337,
+  "versionCodeReceiver": 320,
+  "versionName": "3.5.86",
+  "releaseTag": "v3.5.86",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.86/omnicast-sender-v3.5.86.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.86/omnicast-receiver-v3.5.86.apk",
+  "changelog": "v3.5.86 (Restauración de Sintaxis JavaScript en universal_sniffer.js y Activación de Detección DOM): 1) Sender (universal_sniffer.js): Corrección del bloque try-catch en la preservación de Blobs (líneas 10-24) que provocaba SyntaxError en el motor V8 de Chromium e impedía la carga del sniffer en el navegador. 2) Sender (universal_sniffer.js): Activación plena de los observadores de reproducción HTML5, listeners de eventos play/playing y captura heurística de video por hardware en Cinecalidad, Pelisplus y Doodstream."
 }

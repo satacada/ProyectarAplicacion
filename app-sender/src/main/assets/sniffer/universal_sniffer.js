@@ -21,6 +21,8 @@
                 }
             };
         }
+    } catch(e) {}
+
     // 1b. Intercepción segura de window.open contra popups publicitarios
     try {
         window.open = function(u, t, f) {

@@ -240,5 +240,16 @@ class MediaPlatformRegressionTest {
             pageUrl = "https://doopstream.com/e/abc123xyz"
         )
         assertFalse(adapter.canHandle(handshakeCandidate))
+
+        // Verificar soporte para CDN PlayMogo / espejos con Referer inyectado
+        val playmogoCandidate = com.omnicast.core.domain.models.StreamCandidate(
+            url = "https://playmogo.com/video~123abc456?token=secret123&expiry=1800000000",
+            pageUrl = "https://playmogo.com/e/6jsygz89bckajy0ylm2e9837",
+            pageTitle = "Película Playmogo"
+        )
+        assertTrue(adapter.canHandle(playmogoCandidate))
+        val extractedPlaymogo = adapter.extract(playmogoCandidate)
+        assertEquals("MP4", extractedPlaymogo.format)
+        assertEquals("https://playmogo.com/", extractedPlaymogo.headers["Referer"])
     }
 }

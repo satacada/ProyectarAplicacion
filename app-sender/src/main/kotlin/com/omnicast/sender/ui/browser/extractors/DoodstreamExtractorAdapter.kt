@@ -21,20 +21,38 @@ class DoodstreamExtractorAdapter : IMediaStreamExtractorPort {
         if (lower.contains("/pass_md5/")) return false
 
         val host = try { URI(candidate.url).host?.lowercase() ?: "" } catch (_: Throwable) { "" }
+        val pageHost = try { URI(candidate.pageUrl).host?.lowercase() ?: "" } catch (_: Throwable) { "" }
+
         val isDoodHost = host.contains("doodcdn") || host.contains("doopstream") || host.contains("ds2play") ||
-                         host.contains("doodstream") || host.contains("doo.la") || host.startsWith("dood.")
+                         host.contains("doodstream") || host.contains("doo.la") || host.startsWith("dood.") ||
+                         host.contains("playmogo") || host.contains("d000d") || host.contains("myvidplay")
+
+        val isDoodPage = pageHost.contains("doopstream") || pageHost.contains("doodstream") ||
+                         pageHost.contains("playmogo") || pageHost.contains("ds2play") ||
+                         pageHost.contains("doo.la") || pageHost.contains("d000d") || pageHost.startsWith("dood.")
+
         val isDoodPath = lower.contains("/pass/") || lower.contains("video~")
-        return isDoodHost || isDoodPath
+        return isDoodHost || isDoodPath || (isDoodPage && !lower.contains(".m3u8") && !lower.contains(".mpd"))
     }
 
     override fun extract(candidate: StreamCandidate): MediaStream {
         val url = candidate.url
         val title = candidate.pageTitle ?: "Video Doodstream"
         val docUrl = candidate.pageUrl
+        val host = try { URI(candidate.url).host?.lowercase() ?: "" } catch (_: Throwable) { "" }
 
         val refererHost = try {
             val u = URI(docUrl)
-            if (!u.host.isNullOrBlank()) "${u.scheme ?: "https"}://${u.host}/" else "https://doodstream.com/"
+            val h = u.host?.lowercase()
+            if (!h.isNullOrBlank() && (h.contains("doop") || h.contains("dood") || h.contains("playmogo") || h.contains("ds2play") || h.contains("d000d"))) {
+                "${u.scheme ?: "https"}://$h/"
+            } else if (host.contains("playmogo")) {
+                "https://playmogo.com/"
+            } else if (host.contains("doopstream")) {
+                "https://doopstream.com/"
+            } else {
+                "https://doodstream.com/"
+            }
         } catch (_: Throwable) {
             "https://doodstream.com/"
         }

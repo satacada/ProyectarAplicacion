@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 333,
-  "versionCodeReceiver": 316,
-  "versionName": "3.5.82",
-  "releaseTag": "v3.5.82",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.82/omnicast-sender-v3.5.82.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.82/omnicast-receiver-v3.5.82.apk",
-  "changelog": "v3.5.82 (Exclusión de Handshake /pass_md5/ en Doodstream): 1) Sender (DoodstreamExtractorAdapter.kt): Exclusión explícita del endpoint de handshake de API /pass_md5/ para evitar que la app capture la llamada de token en vez del archivo de video real de la CDN. Permite que el reproductor resuelva su flujo y entrega a ExoPlayer el video legítimo. 2) Suite de pruebas unitarias actualizada validando descarte de /pass_md5/."
+  "versionCodeSender": 334,
+  "versionCodeReceiver": 317,
+  "versionName": "3.5.83",
+  "releaseTag": "v3.5.83",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.83/omnicast-sender-v3.5.83.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.83/omnicast-receiver-v3.5.83.apk",
+  "changelog": "v3.5.83 (Proactividad por Hardware en DOM, Soporte Espejos PlayMogo y Directiva de Contraste): 1) Sender (universal_sniffer.js): Captura pura de <video> por heurística de hardware (videoWidth>=240, duration>60, reproducción activa sin anuncios) erradicando la exigencia de extensiones .mp4 rígidas. 2) Sender (DoodstreamExtractorAdapter.kt / known_media_players.json): Reconocimiento dinámico de espejos de Doodstream (playmogo, ds2play, d000d, myvidplay) con inyección de Referer legítimo. 3) AGENTS.md: Registro inviolable de la Ley de Proactividad y Gobernanza Dinámica por Datos (SQLite + Supabase) y la Obligación de Análisis de Contras y Regresión."
 }

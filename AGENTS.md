@@ -25,6 +25,10 @@ Este repositorio sigue el estándar abierto AGENTS.md para el desarrollo de la a
 - **Catálogo de Versiones:** Declarar dependencias únicamente en 'gradle/libs.versions.toml'.
 - **Ley de Intocabilidad de lo Probado:** Toda funcionalidad, pantalla, extractor, flujo de red, cálculo de escala o reproductor validado y aprobado por el usuario queda **SELLADO E INMUTABLE**. Queda PROHIBIDO refactorizarlo, reescribirlo, simplificarlo o "generalizarlo" bajo pretexto de elegancia o modularidad. Si funciona, no se toca. *Cláusula de Captura y Selectores:* El ciclo de vida de captura, reseteo y auto-apertura del selector de casteo en `InAppBrowserScreen.kt` está sellado e inmutable; ante fallos de detección de video en portales específicos, queda TERMINANTEMENTE PROHIBIDO alterar la lógica de apertura de la ventana de casteo creyendo que "no se abrió"; la causa raíz siempre residirá en la ausencia del extractor modular de la CDN correspondiente o bloqueo del AdBlocker.
 - **Separación entre Consulta del Usuario y Orden de Modificación:** Ante una consulta teórica, pregunta conceptual ("¿qué pasó con esto?", "¿cómo funciona?", "¿por qué?") o análisis solicitado por el usuario, la IA responderá ÚNICAMENTE con diagnóstico, datos y explicación técnica. Queda TERMINANTEMENTE PROHIBIDO modificar archivos, ejecutar refactorizaciones o crear commits como reacción a una consulta. Toda modificación de código requiere una instrucción explícita del usuario o la aprobación previa de una propuesta.
+- **Obligación de Análisis de Contras, Regresión y Daño Colateral (Contraste Pre-Propuesta):** Antes de formular cualquier propuesta de modificación o aplicar un cambio en el código, el agente DEBE realizar y presentar obligatoriamente una auditoría de impacto y contraste técnico:
+  1. Identificar explícitamente los posibles efectos colaterales negativos sobre los flujos ya probados y aprobados (YouTube, Dailymotion, PelisGO, LuluStream, deportes en vivo y proyección de pantalla).
+  2. Detallar qué contramedidas arquitectónicas específicas se incorporan en la solución para anular cada uno de los riesgos detectados.
+  Queda terminantemente PROHIBIDO proponer soluciones "a ciegas" que solucionen la casuística de una web individual a costa de degradar la estabilidad global de la aplicación.
 - **Estándar C++20 Moderno Obligatorio (Zero-Leak & Zero-Copy):**
   Toda implementación en C++ DEBE programarse bajo el estándar C++20 moderno (`CMAKE_CXX_STANDARD 20`):
   1. **Zero-Allocation:** Uso obligatorio de `std::string_view` y `std::span` para operaciones de lectura y parseo, prohibiendo copias innecesarias de cadenas (`std::string`).
@@ -71,6 +75,11 @@ Este repositorio sigue el estándar abierto AGENTS.md para el desarrollo de la a
   3. *Adaptador Hexagonal Aislado:* Crear un nuevo adaptador modular `[Proveedor]ExtractorAdapter.kt` implementando `IMediaStreamExtractorPort` e inscribirlo en `StreamExtractorRegistry.kt`.
   4. *Filtro del Sniffer DOM:* Registrar el patrón o subdominio de la CDN en `isMediaUrl()` de `universal_sniffer.js` para que la etiqueta `<video>` no sea descartada.
   5. *Inyección de Cabeceras:* Inyectar obligatoriamente `Referer: https://[host]/` y `Origin` para evitar que la CDN responda `HTTP 403 Forbidden` en la TV Box.
+- **Ley de Proactividad y Gobernanza Dinámica por Datos (Cero Código en Duro):**
+  Queda terminantemente PROHIBIDO hardcodear dominios web, CDNs rotativas o patrones de sitios específicos dentro de archivos Kotlin o scripts JavaScript. El sistema DEBE gobernarse exclusivamente por datos dinámicos:
+  1. *Almacenamiento Local (SQLite):* La base de datos SQLite en el dispositivo (`StreamProfileDatabase` / `AdBlockDatabase`) es la fuente única de verdad para el reconocimiento de reproductores, políticas de cabeceras y dominios permitidos. Se precarga en el primer inicio (*seeding*) y opera de forma offline en 0 ms.
+  2. *Sincronización Centralizada (Supabase):* Supabase actúa como repositorio central en la nube, nutriéndose de fuentes oficiales y repositorios especializados de la industria. La aplicación sincroniza en segundo plano actualizando el SQLite local sin necesidad de recompilar ni desplegar nuevas versiones de la aplicación ante cambios de dominio de terceros.
+  3. *DOM Heurístico Puro:* En `universal_sniffer.js`, la detección de video en etiquetas `<video>` debe basarse en el comportamiento real del reproductor (dimensiones visuales >= 240 px, decodificación activa en GPU y duración de película sin anuncios), delegando la validación del host a la base de datos.
 
 
 ---

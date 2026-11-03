@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 335,
-  "versionCodeReceiver": 318,
-  "versionName": "3.5.84",
-  "releaseTag": "v3.5.84",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.84/omnicast-sender-v3.5.84.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.84/omnicast-receiver-v3.5.84.apk",
-  "changelog": "v3.5.84 (Blindaje de Rutas Iframe en Doodstream y Validación Binaria Obligatoria): 1) Sender (DoodstreamExtractorAdapter.kt): Exclusión categórica de rutas de reproductor web (op=watch, op=download, /dood?, /watch, /e/, /embed, /pass_md5/) para evitar que URLs HTML sean interpretadas como flujos directos. 2) Sender (DoodstreamExtractorAdapter.kt): Exigencia estricta de firma binaria (isBinaryMedia: /pass/, video~, .mp4, .m3u8) garantizando entrega autónoma de stream a ExoPlayer sin error 403. 3) Sender (MediaPlatformRegressionTest.kt): Nueva prueba unitaria verificando el descarte de URLs de iframe playmogo/dood?op=watch."
+  "versionCodeSender": 336,
+  "versionCodeReceiver": 319,
+  "versionName": "3.5.85",
+  "releaseTag": "v3.5.85",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.85/omnicast-sender-v3.5.85.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.85/omnicast-receiver-v3.5.85.apk",
+  "changelog": "v3.5.85 (Validador Centralizado de Dominio StreamCandidateValidator y Estandarización Hexagonal): 1) Core Domain (StreamCandidateValidator.kt): Creación del validador centralizado en la capa pura de dominio para discernir streams binarios (.m3u8, .mp4, .mpd, /pass/, video~, /hls2/) de documentos web, assets e iframes (/e/, /embed, op=watch, /dood?, /pass_md5/, /cdn-cgi/). 2) Sender (DoodstreamExtractorAdapter / FastreamExtractorAdapter): Estandarización de canHandle delegando en StreamCandidateValidator.isValidCdnStream, eliminando la duplicidad y reinvención artesanal de filtros. 3) Documentación (AGENTS.md y PROJECT_DASHBOARD.md): Registro del estándar obligatorio de validación centralizada de dominio para todo extractor actual y futuro."
 }

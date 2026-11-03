@@ -5,6 +5,8 @@ import com.omnicast.core.domain.models.StreamCandidate
 import com.omnicast.core.domain.ports.IMediaStreamExtractorPort
 import com.omnicast.sender.ui.browser.UA_MOBILE
 
+import com.omnicast.core.domain.usecases.StreamCandidateValidator
+
 /**
  * Adaptador modular ("poner y sacar") para reproductor Fastream.
  * Garantiza cabeceras legítimas y extracción de flujos de video protegidos.
@@ -17,12 +19,8 @@ class FastreamExtractorAdapter : IMediaStreamExtractorPort {
 
     override fun canHandle(candidate: StreamCandidate): Boolean {
         val lower = candidate.url.lowercase()
-        // Rechazar explícitamente telemetría CDN, páginas web de iframe o embeds
-        if (lower.contains("/cdn-cgi/") || lower.contains("/e/") || lower.contains("/embed")) return false
-
         val isDomain = lower.contains("fastream.to") || lower.contains("dropcdn.io") || lower.contains("dr0pstream.com") || lower.contains("/hls2/")
-        val isMedia = lower.contains(".m3u8") || lower.contains("/hls") || lower.contains(".mp4")
-        return isDomain && isMedia
+        return StreamCandidateValidator.isValidCdnStream(candidate.url, isDomain)
     }
 
     override fun extract(candidate: StreamCandidate): MediaStream? {

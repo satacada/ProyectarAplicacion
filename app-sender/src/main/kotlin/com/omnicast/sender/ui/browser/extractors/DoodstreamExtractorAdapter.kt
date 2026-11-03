@@ -4,6 +4,7 @@ import com.omnicast.core.domain.models.MediaStream
 import com.omnicast.core.domain.models.StreamCandidate
 import com.omnicast.core.domain.ports.IMediaStreamExtractorPort
 import com.omnicast.sender.ui.browser.UA_MOBILE
+import com.omnicast.core.domain.usecases.StreamCandidateValidator
 import java.net.URI
 
 /**
@@ -15,15 +16,6 @@ class DoodstreamExtractorAdapter : IMediaStreamExtractorPort {
     override val priority: Int = 24
 
     override fun canHandle(candidate: StreamCandidate): Boolean {
-        val lower = candidate.url.lowercase()
-        if (lower.contains("/cdn-cgi/") || lower.contains("/e/") || lower.contains("/embed")) return false
-        if (lower.contains("/dood?") || lower.contains("op=watch") || lower.contains("op=download") || lower.contains("/watch")) return false
-        if (lower.endsWith(".html") || lower.endsWith(".htm") || lower.endsWith(".js") || lower.endsWith(".css")) return false
-        if (lower.contains("/pass_md5/")) return false
-
-        val isBinaryMedia = lower.contains("/pass/") || lower.contains("video~") ||
-                            lower.contains(".mp4") || lower.contains(".m3u8")
-
         val host = try { URI(candidate.url).host?.lowercase() ?: "" } catch (_: Throwable) { "" }
         val pageHost = try { URI(candidate.pageUrl).host?.lowercase() ?: "" } catch (_: Throwable) { "" }
 
@@ -35,7 +27,7 @@ class DoodstreamExtractorAdapter : IMediaStreamExtractorPort {
                          pageHost.contains("playmogo") || pageHost.contains("ds2play") ||
                          pageHost.contains("doo.la") || pageHost.contains("d000d") || pageHost.startsWith("dood.")
 
-        return (isDoodHost || isDoodPage) && isBinaryMedia
+        return StreamCandidateValidator.isValidCdnStream(candidate.url, isDoodHost || isDoodPage)
     }
 
     override fun extract(candidate: StreamCandidate): MediaStream {

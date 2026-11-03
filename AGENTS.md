@@ -80,7 +80,11 @@ Este repositorio sigue el estándar abierto AGENTS.md para el desarrollo de la a
   1. *Almacenamiento Local (SQLite):* La base de datos SQLite en el dispositivo (`StreamProfileDatabase` / `AdBlockDatabase`) es la fuente única de verdad para el reconocimiento de reproductores, políticas de cabeceras y dominios permitidos. Se precarga en el primer inicio (*seeding*) y opera de forma offline en 0 ms.
   2. *Sincronización Centralizada (Supabase):* Supabase actúa como repositorio central en la nube, nutriéndose de fuentes oficiales y repositorios especializados de la industria. La aplicación sincroniza en segundo plano actualizando el SQLite local sin necesidad de recompilar ni desplegar nuevas versiones de la aplicación ante cambios de dominio de terceros.
   3. *DOM Heurístico Puro:* En `universal_sniffer.js`, la detección de video en etiquetas `<video>` debe basarse en el comportamiento real del reproductor (dimensiones visuales >= 240 px, decodificación activa en GPU y duración de película sin anuncios), delegando la validación del host a la base de datos.
-
+- **Validador Centralizado de Dominio para Extractores (`StreamCandidateValidator`) [ESTÁNDAR OBLIGATORIO]:**
+  Para erradicar la reinvención artesanal de filtros en `canHandle()`, todo nuevo extractor modular (`[Proveedor]ExtractorAdapter.kt`) DEBE delegar la comprobación binaria en `StreamCandidateValidator.isValidCdnStream(candidate.url, isDomainMatches)` o `StreamCandidateValidator.isBinaryMediaStream(url)`.
+  1. *Descarte Automático:* Descarta incondicionalmente páginas HTML, documentos, scripts (.js, .css), assets, iframes (/e/, /embed, /watch, /dood?), endpoints de control (/pass_md5/) y telemetría (/cdn-cgi/).
+  2. *Contrato Binario:* Valida firmas binarias legítimas (.m3u8, .mp4, .mpd, /pass/, video~, /hls2/).
+  3. *Mejora Continua:* Cualquier nuevo patrón global de CDN o trampa web se incorpora directamente en `StreamCandidateValidator.kt` dentro de `:core:domain`, protegiendo automáticamente a todos los extractores del sistema sin modificar su código individual ni generar código repetitivo.
 
 ---
 

@@ -233,5 +233,12 @@ class MediaPlatformRegressionTest {
             pageUrl = "https://pelisplus.hair/pelicula"
         )
         assertFalse(adapter.canHandle(embedCandidate))
+
+        // Verificar que no confunda el endpoint de handshake /pass_md5/ con un video
+        val handshakeCandidate = com.omnicast.core.domain.models.StreamCandidate(
+            url = "https://playmogo.com/pass_md5/285698111-190-55-1793716930-1da1c31de0e79917f6b67ee00e4f8452/6jsygz89bckajy0ylm2e9837",
+            pageUrl = "https://doopstream.com/e/abc123xyz"
+        )
+        assertFalse(adapter.canHandle(handshakeCandidate))
     }
 }

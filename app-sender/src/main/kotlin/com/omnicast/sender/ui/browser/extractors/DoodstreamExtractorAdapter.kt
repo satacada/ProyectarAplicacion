@@ -18,11 +18,12 @@ class DoodstreamExtractorAdapter : IMediaStreamExtractorPort {
         val lower = candidate.url.lowercase()
         if (lower.contains("/cdn-cgi/") || lower.contains("/e/") || lower.contains("/embed")) return false
         if (lower.endsWith(".html") || lower.endsWith(".htm") || lower.endsWith(".js") || lower.endsWith(".css")) return false
+        if (lower.contains("/pass_md5/")) return false
 
         val host = try { URI(candidate.url).host?.lowercase() ?: "" } catch (_: Throwable) { "" }
         val isDoodHost = host.contains("doodcdn") || host.contains("doopstream") || host.contains("ds2play") ||
                          host.contains("doodstream") || host.contains("doo.la") || host.startsWith("dood.")
-        val isDoodPath = lower.contains("/pass/") || lower.contains("/pass_md5/") || lower.contains("video~")
+        val isDoodPath = lower.contains("/pass/") || lower.contains("video~")
         return isDoodHost || isDoodPath
     }
 

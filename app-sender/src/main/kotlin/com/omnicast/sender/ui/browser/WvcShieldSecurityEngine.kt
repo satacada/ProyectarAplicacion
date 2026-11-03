@@ -153,6 +153,12 @@ object WvcShieldSecurityEngine {
         }
     }
 
+    private fun extractBrand(host: String): String {
+        val clean = host.removePrefix("www.").substringBefore(':')
+        val parts = clean.split('.')
+        return if (parts.size >= 2) parts[parts.size - 2] else clean
+    }
+
     /**
      * Evalúa si una navegación en `shouldOverrideUrlLoading` es un secuestro de clic (click-jacking)
      * que intenta desviar al usuario hacia páginas publicitarias, buscadores o dominios externos
@@ -165,6 +171,8 @@ object WvcShieldSecurityEngine {
         val targetHost = extractHost(targetUrl) ?: return false
 
         if (targetHost == curHost || targetHost.endsWith(".$curHost") || curHost.endsWith(".$targetHost") || AdBlocker.isKnownMediaHost(targetHost)) return false
+        val curBrand = extractBrand(curHost); val targetBrand = extractBrand(targetHost)
+        if (curBrand.length >= 4 && curBrand == targetBrand) return false
         if (AdBlocker.isVerificationOrCaptcha(targetUrl) || AdBlockWhitelistManager.isWhitelistedHost(targetHost)) return false
 
         val isTargetSearchEngine = AdBlocker.isSearchEngine(targetHost)

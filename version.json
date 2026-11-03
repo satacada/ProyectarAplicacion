@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 330,
-  "versionCodeReceiver": 313,
-  "versionName": "3.5.79",
-  "releaseTag": "v3.5.79",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.79/omnicast-sender-v3.5.79.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.79/omnicast-receiver-v3.5.79.apk",
-  "changelog": "v3.5.79 (Blindaje Definitivo de Barra de Búsqueda contra Cierres en Compose): 1) Sender (BrowserTopBar.kt): Erradicación del cierre forzado fatal (IllegalArgumentException: offset out of bounds) al acotar estrictamente los índices de selección del cursor (safeStart/safeEnd) y mantener innerTextField() siempre conectado en la jerarquía visual de BasicTextField, eliminando cualquier desincronización de foco y cursor entre el teclado de Android y Jetpack Compose."
+  "versionCodeSender": 331,
+  "versionCodeReceiver": 314,
+  "versionName": "3.5.80",
+  "releaseTag": "v3.5.80",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.80/omnicast-sender-v3.5.80.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.80/omnicast-receiver-v3.5.80.apk",
+  "changelog": "v3.5.80 (Reconocimiento Cross-TLD de Marca y Desbloqueo Dinámico de Doodstream): 1) Sender (WvcShieldSecurityEngine.kt): Comparación de marca raíz entre dominios espejo (repelisplus.lat -> repelisplus.my) para no bloquear la navegación legítima del usuario hacia películas. 2) Sender (known_media_players.json / MediaPlayerSyncManager.kt): Inclusión de variantes activas de Doodstream/Doopstream (dood.*, ds2play.*) garantizando la carga de sus scripts y el posterior desencriptado de streaming."
 }

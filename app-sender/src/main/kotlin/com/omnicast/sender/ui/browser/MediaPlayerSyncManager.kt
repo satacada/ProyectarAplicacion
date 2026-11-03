@@ -56,7 +56,7 @@ object MediaPlayerSyncManager {
                 return true
             }
         }
-        return lower.contains("embed") || lower.contains("player") || lower.contains("stream") || lower.contains("cdn")
+        return lower.contains("embed") || lower.contains("player") || lower.contains("stream") || lower.contains("cdn") || lower.startsWith("dood.") || lower.startsWith("doopstream.")
     }
 
     fun learnAndSavePlayer(host: String?, context: Context? = null) {

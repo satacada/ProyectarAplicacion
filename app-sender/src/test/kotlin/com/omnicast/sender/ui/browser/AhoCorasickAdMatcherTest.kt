@@ -116,6 +116,16 @@ class AhoCorasickAdMatcherTest {
             currentUrl = moviePortalPage
         )
         assertFalse("Navegación interna dentro del portal de películas debe permitirse", allowedInternalMovie)
+
+        // 8. Navegación hacia dominio espejo de la misma marca (ej. repelisplus.lat -> repelisplus.my) -> NO DEBE BLOQUEARSE
+        val repelisLat = "https://repelisplus.lat/peliculas"
+        val repelisMy = "https://repelisplus.my/pelicula/deadpool"
+        val allowedMirror = WvcShieldSecurityEngine.shouldBlockClickHijack(
+            hasGesture = true,
+            targetUrl = repelisMy,
+            currentUrl = repelisLat
+        )
+        assertFalse("Navegación hacia dominio espejo de la misma marca debe permitirse", allowedMirror)
     }
 
     @Test

@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 328,
-  "versionCodeReceiver": 311,
-  "versionName": "3.5.77",
-  "releaseTag": "v3.5.77",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.77/omnicast-sender-v3.5.77.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.77/omnicast-receiver-v3.5.77.apk",
-  "changelog": "v3.5.77 (Regresión de AdBlocker a Base v3.5.75 y Preservación de Motor Dinámico MediaPlayerSyncManager): 1) Sender (AdBlocker.kt): Reversión del listener reactivo de enlaces a la implementación estable de v3.5.75 a petición del usuario. 2) Sender (MediaPlayerSyncManager.kt): Se preserva intacto el motor dinámico de reproductores multimedia con auto-descarga y auditoría de fallos."
+  "versionCodeSender": 329,
+  "versionCodeReceiver": 312,
+  "versionName": "3.5.78",
+  "releaseTag": "v3.5.78",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.78/omnicast-sender-v3.5.78.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.78/omnicast-receiver-v3.5.78.apk",
+  "changelog": "v3.5.78 (Proxy de Ventana Simulada Estándar Brave/uBlock en WvcShield): 1) Sender (WvcShieldSecurityEngine.kt): Interceptación modular en window.open; preserva la navegación Same-Origin en la ventana principal, y para popups publicitarios externos entrega un objeto simulado (Fake Window Proxy) sin mover la pantalla, permitiendo que la web considere satisfecho el anuncio y proceda limpiamente a seleccionar películas en Tio Plus sin interferir con PelisPlus."
 }

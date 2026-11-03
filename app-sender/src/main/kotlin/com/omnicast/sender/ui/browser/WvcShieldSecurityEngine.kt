@@ -35,10 +35,25 @@ object WvcShieldSecurityEngine {
                         return _realOpen ? _realOpen.apply(this, arguments) : null;
                     }
                     try {
-                        window.location.href = url;
-                        return null;
+                        var curH = (window.location.hostname || '').toLowerCase();
+                        var isRelative = (url.charAt(0) === '/' || url.indexOf('://') === -1);
+                        var targetH = isRelative ? curH : (new URL(url, window.location.href).hostname || '').toLowerCase();
+                        var isSameHost = (targetH === curH || targetH.endsWith('.' + curH) || curH.endsWith('.' + targetH));
+
+                        if (isRelative || isSameHost) {
+                            window.location.href = url;
+                            return null;
+                        }
                     } catch(_) {}
-                    return null;
+
+                    return {
+                        closed: false,
+                        name: target || '',
+                        location: { href: url },
+                        focus: function() {},
+                        blur: function() {},
+                        close: function() { this.closed = true; }
+                    };
                 };
             } catch(_) {}
 

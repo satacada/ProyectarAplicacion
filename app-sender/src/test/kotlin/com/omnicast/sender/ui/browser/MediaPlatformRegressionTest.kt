@@ -227,12 +227,18 @@ class MediaPlatformRegressionTest {
         assertEquals("https://doopstream.com/", extracted.headers["Referer"])
         assertEquals("https://doopstream.com", extracted.headers["Origin"])
 
-        // Verificar que no confunda páginas HTML de embed
+        // Verificar que no confunda páginas HTML de embed ni rutas de reproductor op=watch
         val embedCandidate = com.omnicast.core.domain.models.StreamCandidate(
             url = "https://doopstream.com/e/abc123xyz",
             pageUrl = "https://pelisplus.hair/pelicula"
         )
         assertFalse(adapter.canHandle(embedCandidate))
+
+        val watchCandidate = com.omnicast.core.domain.models.StreamCandidate(
+            url = "https://playmogo.com/dood?op=watch&hash=285698111&token=6jsygz89b",
+            pageUrl = "https://www.cinecalidad.ro/"
+        )
+        assertFalse(adapter.canHandle(watchCandidate))
 
         // Verificar que no confunda el endpoint de handshake /pass_md5/ con un video
         val handshakeCandidate = com.omnicast.core.domain.models.StreamCandidate(

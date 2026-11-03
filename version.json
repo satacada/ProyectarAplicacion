@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 334,
-  "versionCodeReceiver": 317,
-  "versionName": "3.5.83",
-  "releaseTag": "v3.5.83",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.83/omnicast-sender-v3.5.83.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.83/omnicast-receiver-v3.5.83.apk",
-  "changelog": "v3.5.83 (Proactividad por Hardware en DOM, Soporte Espejos PlayMogo y Directiva de Contraste): 1) Sender (universal_sniffer.js): Captura pura de <video> por heurística de hardware (videoWidth>=240, duration>60, reproducción activa sin anuncios) erradicando la exigencia de extensiones .mp4 rígidas. 2) Sender (DoodstreamExtractorAdapter.kt / known_media_players.json): Reconocimiento dinámico de espejos de Doodstream (playmogo, ds2play, d000d, myvidplay) con inyección de Referer legítimo. 3) AGENTS.md: Registro inviolable de la Ley de Proactividad y Gobernanza Dinámica por Datos (SQLite + Supabase) y la Obligación de Análisis de Contras y Regresión."
+  "versionCodeSender": 335,
+  "versionCodeReceiver": 318,
+  "versionName": "3.5.84",
+  "releaseTag": "v3.5.84",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.84/omnicast-sender-v3.5.84.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.84/omnicast-receiver-v3.5.84.apk",
+  "changelog": "v3.5.84 (Blindaje de Rutas Iframe en Doodstream y Validación Binaria Obligatoria): 1) Sender (DoodstreamExtractorAdapter.kt): Exclusión categórica de rutas de reproductor web (op=watch, op=download, /dood?, /watch, /e/, /embed, /pass_md5/) para evitar que URLs HTML sean interpretadas como flujos directos. 2) Sender (DoodstreamExtractorAdapter.kt): Exigencia estricta de firma binaria (isBinaryMedia: /pass/, video~, .mp4, .m3u8) garantizando entrega autónoma de stream a ExoPlayer sin error 403. 3) Sender (MediaPlatformRegressionTest.kt): Nueva prueba unitaria verificando el descarte de URLs de iframe playmogo/dood?op=watch."
 }

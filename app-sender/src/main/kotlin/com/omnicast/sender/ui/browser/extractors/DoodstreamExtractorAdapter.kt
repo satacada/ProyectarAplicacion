@@ -17,8 +17,12 @@ class DoodstreamExtractorAdapter : IMediaStreamExtractorPort {
     override fun canHandle(candidate: StreamCandidate): Boolean {
         val lower = candidate.url.lowercase()
         if (lower.contains("/cdn-cgi/") || lower.contains("/e/") || lower.contains("/embed")) return false
+        if (lower.contains("/dood?") || lower.contains("op=watch") || lower.contains("op=download") || lower.contains("/watch")) return false
         if (lower.endsWith(".html") || lower.endsWith(".htm") || lower.endsWith(".js") || lower.endsWith(".css")) return false
         if (lower.contains("/pass_md5/")) return false
+
+        val isBinaryMedia = lower.contains("/pass/") || lower.contains("video~") ||
+                            lower.contains(".mp4") || lower.contains(".m3u8")
 
         val host = try { URI(candidate.url).host?.lowercase() ?: "" } catch (_: Throwable) { "" }
         val pageHost = try { URI(candidate.pageUrl).host?.lowercase() ?: "" } catch (_: Throwable) { "" }
@@ -31,8 +35,7 @@ class DoodstreamExtractorAdapter : IMediaStreamExtractorPort {
                          pageHost.contains("playmogo") || pageHost.contains("ds2play") ||
                          pageHost.contains("doo.la") || pageHost.contains("d000d") || pageHost.startsWith("dood.")
 
-        val isDoodPath = lower.contains("/pass/") || lower.contains("video~")
-        return isDoodHost || isDoodPath || (isDoodPage && !lower.contains(".m3u8") && !lower.contains(".mpd"))
+        return (isDoodHost || isDoodPage) && isBinaryMedia
     }
 
     override fun extract(candidate: StreamCandidate): MediaStream {

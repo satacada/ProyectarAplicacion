@@ -146,19 +146,47 @@ object TvStorageSafetyManager {
         return units
     }
 
-    fun getPvrRecordingsDir(context: Context, useUsb: Boolean): File {
+    fun getAvailableFolders(context: Context, useUsb: Boolean): List<Pair<String, String>> {
+        val list = mutableListOf<Pair<String, String>>()
         if (useUsb) {
             val extDirs = context.getExternalFilesDirs(null).filterNotNull()
             if (extDirs.size > 1) {
-                val usbDir = File(extDirs[1], "PVR_Grabaciones")
+                val usbRoot = extDirs[1]
+                list.add("USB > PVR_Grabaciones" to File(usbRoot, "PVR_Grabaciones").apply { mkdirs() }.absolutePath)
+                list.add("USB > Pelis_descargas" to File(usbRoot, "Pelis_descargas").apply { mkdirs() }.absolutePath)
+                list.add("USB > Movies" to File(usbRoot, "Movies").apply { mkdirs() }.absolutePath)
+                return list
+            }
+        }
+        val pubDownloads = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+        val pubMovies = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES)
+        list.add("Download > PVR_Grabaciones" to File(pubDownloads, "PVR_Grabaciones").apply { mkdirs() }.absolutePath)
+        list.add("Download > Pelis_descargas" to File(pubDownloads, "Pelis_descargas").apply { mkdirs() }.absolutePath)
+        list.add("Movies > OmniCast" to File(pubMovies, "OmniCast").apply { mkdirs() }.absolutePath)
+        return list
+    }
+
+    fun getPvrRecordingsDir(context: Context, useUsb: Boolean, subFolder: String = "PVR_Grabaciones"): File {
+        if (useUsb) {
+            val extDirs = context.getExternalFilesDirs(null).filterNotNull()
+            if (extDirs.size > 1) {
+                val usbDir = File(extDirs[1], subFolder)
                 if (usbDir.exists() || usbDir.mkdirs()) return usbDir
             }
         }
         val publicDownloads = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-        val pvrDir = File(publicDownloads, "PVR_Grabaciones")
+        val pvrDir = File(publicDownloads, subFolder)
         if (pvrDir.exists() || pvrDir.mkdirs()) return pvrDir
         val base = context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS) ?: context.filesDir
-        return File(base, "PVR_Grabaciones").apply { mkdirs() }
+        return File(base, subFolder).apply { mkdirs() }
+    }
+
+    fun getTargetDirectory(context: Context, useUsb: Boolean, customPath: String? = null, defaultFolder: String = "PVR_Grabaciones"): File {
+        if (!customPath.isNullOrBlank()) {
+            val f = File(customPath)
+            if (f.exists() || f.mkdirs()) return f
+        }
+        return getPvrRecordingsDir(context, useUsb, defaultFolder)
     }
 
     fun startWatchdog(

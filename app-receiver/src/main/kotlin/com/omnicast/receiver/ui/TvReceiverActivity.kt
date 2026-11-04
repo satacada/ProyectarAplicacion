@@ -6,8 +6,11 @@ import android.view.WindowManager
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
 import androidx.lifecycle.lifecycleScope
 import com.omnicast.core.protocol.SignalingMessage
 import com.omnicast.receiver.audio.DigitalAudioReceiver
@@ -23,20 +26,17 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
 
 class TvReceiverActivity : ComponentActivity() {
-
     private val receiverState = mutableStateOf<ReceiverUiState>(ReceiverUiState.Standby); private val localIpAddress = mutableStateOf("127.0.0.1"); private val connectedClientAddress = mutableStateOf<String?>(null)
     private val currentDisplayMode = mutableStateOf<SignalingMessage.SetDisplayMode?>(null); private val expiredItemForRenew = mutableStateOf<com.omnicast.receiver.directstream.TvPlaylistItem?>(null)
     private val youTubeControlFlow = MutableSharedFlow<SignalingMessage.PlayControl>(extraBufferCapacity = 16)
     private lateinit var webRtcReceiver: WebRtcReceiverManager; private lateinit var exoPlayerManager: ExoPlayerTvManager; private lateinit var signalingServer: LocalSignalingServer
     private lateinit var nsdAdvertiser: NsdAdvertiserManager; private lateinit var historyManager: com.omnicast.receiver.directstream.TvPlaybackHistoryManager; private lateinit var playlistManager: com.omnicast.receiver.directstream.TvPlaylistManager
     private lateinit var updateManager: com.omnicast.receiver.update.TvUpdateManager; private var digitalAudioReceiver: DigitalAudioReceiver? = null; private var statusJob: Job? = null; private var lastDirectHeaders: Map<String, String> = emptyMap()
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON); localIpAddress.value = TvReceiverHelper.getLocalIpAddress()
-        com.omnicast.receiver.log.ReceiverLogger.init(this)
         val ver = try { packageManager.getPackageInfo(packageName, 0).versionName } catch (_: Throwable) { "?" }
-        com.omnicast.receiver.log.ReceiverLogger.log("TV_RECEIVER", "🚀 OmniCast Receiver v$ver en ${localIpAddress.value}:8088")
+        com.omnicast.receiver.log.ReceiverLogger.init(this); com.omnicast.receiver.log.ReceiverLogger.log("TV_RECEIVER", "🚀 OmniCast Receiver v$ver en ${localIpAddress.value}:8088")
         lifecycleScope.launch(kotlinx.coroutines.Dispatchers.IO) { com.omnicast.receiver.directstream.TvMediaCacheManager.clearDiskCache(this@TvReceiverActivity) }
         webRtcReceiver = WebRtcReceiverManager(this).apply {
             initialize()
@@ -97,7 +97,8 @@ class TvReceiverActivity : ComponentActivity() {
             val playlistsList by playlistManager.playlists.collectAsState()
             val otaState by updateManager.updateState.collectAsState()
             MaterialTheme(colorScheme = darkColorScheme(primary = androidx.compose.ui.graphics.Color(0xFF38BDF8), background = androidx.compose.ui.graphics.Color(0xFF0F172A))) {
-                when (val state = receiverState.value) {
+                Box(modifier = Modifier.fillMaxSize()) {
+                    when (val state = receiverState.value) {
                     is ReceiverUiState.Standby, is ReceiverUiState.ClientConnectedStandby -> TvStandbyCleanScreen(
                         ipAddress = localIpAddress.value, connectedClientIp = connectedClientAddress.value, history = historyList, playlists = playlistsList,
                         onPlayHistory = { playHistoryItem(it) },
@@ -172,9 +173,11 @@ class TvReceiverActivity : ComponentActivity() {
                         onRotateClick = { (receiverState.value as? ReceiverUiState.ImageDisplaying)?.let { receiverState.value = it.copy(rotation = (it.rotation + 90f) % 360f) } }
                     )
                 }
+                TvGlobalRecordOverlay(isStandby = receiverState.value is ReceiverUiState.Standby || receiverState.value is ReceiverUiState.ClientConnectedStandby)
             }
         }
     }
+}
 
     private fun handleSignalingMessage(message: SignalingMessage) {
         when (message) {
@@ -226,9 +229,7 @@ class TvReceiverActivity : ComponentActivity() {
                     "VOLUME" -> TvReceiverHelper.applySystemAndPlayerVolume(this, exoPlayerManager, message.volume)
                     "SUBTITLE_TOGGLE", "TOGGLE_SUBTITLES" -> exoPlayerManager.toggleSubtitles(); "SET_SUBTITLE_TRACK" -> message.param?.toIntOrNull()?.let { exoPlayerManager.selectTextTrack(it) }; "SET_AUDIO_TRACK" -> message.param?.toIntOrNull()?.let { exoPlayerManager.selectAudioTrack(it) }
                     "CYCLE_AUDIO" -> { val a = exoPlayerManager.cycleAudioTrack(); Toast.makeText(this@TvReceiverActivity, "🔊 Audio: $a", Toast.LENGTH_SHORT).show() }
-                    "CYCLE_QUALITY" -> { val q = exoPlayerManager.cycleVideoQuality(); Toast.makeText(this@TvReceiverActivity, "📺 Calidad: $q", Toast.LENGTH_SHORT).show() }
-                    "RECORD" -> TvReceiverHelper.handleRemoteRecord(this@TvReceiverActivity, lifecycleScope, receiverState, exoPlayerManager)
-                    "STOP_RECORD" -> com.omnicast.receiver.directstream.PvrStreamRecorder.stopRecording("⏹ Grabación detenida")
+                    "RECORD", "REQUEST_RECORD_INFO", "START_RECORD", "STOP_RECORD" -> TvReceiverHelper.handleRemoteRecord(this@TvReceiverActivity, lifecycleScope, receiverState, exoPlayerManager, message.action, message.param) { lifecycleScope.launch { signalingServer.sendMessage(it) } }
                     "ROTATE" -> (receiverState.value as? ReceiverUiState.ImageDisplaying)?.let { receiverState.value = it.copy(rotation = (it.rotation + 90f) % 360f) }
                 }
             }
@@ -248,12 +249,9 @@ class TvReceiverActivity : ComponentActivity() {
                 delay(1000)
                 val cur = receiverState.value
                 if (cur is ReceiverUiState.DirectStreamPlaying) {
-                    val isPlaying = exoPlayerManager.isPlaying
-                    val pos = exoPlayerManager.currentPositionMs
-                    val dur = exoPlayerManager.durationMs
-                    val st = if (isPlaying) "PLAYING" else "PAUSED"
-                    signalingServer.sendMessage(SignalingMessage.PlaybackStatus(st, pos, dur, cur.streamUrl, cur.title))
-                    historyManager.updateProgress(cur.streamUrl, pos, dur); playlistManager.updateProgress(cur.streamUrl, pos)
+                    val st = if (exoPlayerManager.isPlaying) "PLAYING" else "PAUSED"
+                    signalingServer.sendMessage(SignalingMessage.PlaybackStatus(st, exoPlayerManager.currentPositionMs, exoPlayerManager.durationMs, cur.streamUrl, cur.title))
+                    historyManager.updateProgress(cur.streamUrl, exoPlayerManager.currentPositionMs, exoPlayerManager.durationMs); playlistManager.updateProgress(cur.streamUrl, exoPlayerManager.currentPositionMs)
                 } else {
                     signalingServer.sendMessage(SignalingMessage.PlaybackStatus("STOPPED", 0L, 0L))
                     break
@@ -264,9 +262,8 @@ class TvReceiverActivity : ComponentActivity() {
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
         if (event.action == KeyEvent.ACTION_DOWN && TvRemoteKeyHandler.handleKeyDown(
-                this, event.keyCode, event, receiverState.value, exoPlayerManager,
-                webRtcReceiver, digitalAudioReceiver, youTubeControlFlow, lifecycleScope,
-                { lifecycleScope.launch { signalingServer.sendMessage(it) } }, { receiverState.value = ReceiverUiState.Standby }
+                this, event.keyCode, event, receiverState.value, exoPlayerManager, webRtcReceiver, digitalAudioReceiver,
+                youTubeControlFlow, lifecycleScope, { lifecycleScope.launch { signalingServer.sendMessage(it) } }, { receiverState.value = ReceiverUiState.Standby }
             )) return true
         return super.dispatchKeyEvent(event)
     }
@@ -287,12 +284,14 @@ class TvReceiverActivity : ComponentActivity() {
             exoPlayerManager.playStream(url, headers, title, posMs); startPlaybackStatusReporting()
         }
     }
-    private fun playHistoryItem(item: com.omnicast.receiver.directstream.TvHistoryItem) = startOrAutoRecastMedia(item.mediaUrl, item.title, item.lastPositionMs, item.pageUrl, item.headers); private fun playPlaylistItem(item: com.omnicast.receiver.directstream.TvPlaylistItem) = startOrAutoRecastMedia(item.url, item.title, playlistManager.getResumePosition(item), item.pageUrl, item.headers)
+    private fun playHistoryItem(item: com.omnicast.receiver.directstream.TvHistoryItem) =
+        startOrAutoRecastMedia(item.mediaUrl, item.title, item.lastPositionMs, item.pageUrl, item.headers)
+    private fun playPlaylistItem(item: com.omnicast.receiver.directstream.TvPlaylistItem) =
+        startOrAutoRecastMedia(item.url, item.title, playlistManager.getResumePosition(item), item.pageUrl, item.headers)
 
     override fun onStop() {
         super.onStop(); lifecycleScope.launch { signalingServer.sendMessage(SignalingMessage.PlaybackStatus("STOPPED", 0L, 0L)) }
     }
-
     override fun onDestroy() {
         super.onDestroy(); com.omnicast.receiver.log.ReceiverLogger.stop(); digitalAudioReceiver?.stop()
         nsdAdvertiser.unregisterService(); signalingServer.stop(); webRtcReceiver.release(); exoPlayerManager.release()

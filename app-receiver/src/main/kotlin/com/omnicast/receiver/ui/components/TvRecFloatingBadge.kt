@@ -6,6 +6,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -21,15 +22,18 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 /**
- * Insignia OSD flotante de grabación PVR en vivo para Android TV.
- * Muestra el clásico punto rojo parpadeante "🔴 REC" y el contador de tiempo en vivo.
+ * Insignia OSD flotante de grabación PVR y descarga de películas para Android TV.
+ * Muestra el clásico punto rojo parpadeante "🔴 REC" o "🔴 GUARDANDO XX%" y el tiempo transcurrido.
  */
 @Composable
 fun TvRecFloatingBadge(
     isRecording: Boolean,
     durationSeconds: Long,
     remainingSeconds: Long = -1L,
-    modifier: Modifier = Modifier
+    isMovieDownload: Boolean = false,
+    progressPct: Int = 0,
+    modifier: Modifier = Modifier,
+    onClick: (() -> Unit)? = null
 ) {
     AnimatedVisibility(
         visible = isRecording,
@@ -48,11 +52,16 @@ fun TvRecFloatingBadge(
             label = "RedDotAlpha"
         )
 
+        val clickableMod = if (onClick != null) {
+            Modifier.androidxClickable(onClick)
+        } else Modifier
+
         Row(
             modifier = Modifier
                 .clip(RoundedCornerShape(10.dp))
                 .background(Color(0xDD0B132B))
                 .border(1.5.dp, Color(0xFFDC2626), RoundedCornerShape(10.dp))
+                .then(clickableMod)
                 .padding(horizontal = 14.dp, vertical = 7.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -65,13 +74,22 @@ fun TvRecFloatingBadge(
                     .background(Color(0xFFDC2626).copy(alpha = alpha))
             )
 
-            // Texto REC y tiempo transcurrido
+            // Texto REC o GUARDANDO
             Text(
-                text = "REC",
+                text = if (isMovieDownload) "GUARDANDO" else "REC",
                 color = Color.White,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Bold
             )
+
+            if (isMovieDownload) {
+                Text(
+                    text = "$progressPct%",
+                    color = Color(0xFF38BDF8),
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.ExtraBold
+                )
+            }
 
             Text(
                 text = formatDuration(durationSeconds * 1000L),
@@ -91,3 +109,7 @@ fun TvRecFloatingBadge(
         }
     }
 }
+
+private fun Modifier.androidxClickable(onClick: () -> Unit): Modifier =
+    this.clickable { onClick() }
+

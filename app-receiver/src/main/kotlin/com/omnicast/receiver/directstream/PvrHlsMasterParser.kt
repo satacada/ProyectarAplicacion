@@ -89,4 +89,23 @@ object PvrHlsMasterParser {
         val match = pattern.find(tagLine) ?: return null
         return match.groupValues[1].ifEmpty { match.groupValues[2] }
     }
+
+    suspend fun probeResolutions(manifestUrl: String, headers: Map<String, String>): List<Int> = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+        val lower = manifestUrl.lowercase()
+        val isHls = lower.contains(".m3u8") || lower.contains("urlset") || lower.contains(".txt")
+        if (!isHls) return@withContext emptyList()
+        try {
+            val conn = (java.net.URL(manifestUrl).openConnection() as java.net.HttpURLConnection).apply {
+                connectTimeout = 4000
+                readTimeout = 4000
+                headers.forEach { (k, v) -> setRequestProperty(k, v) }
+            }
+            val text = conn.inputStream.bufferedReader().use { it.readText() }
+            val master = parseMaster(text, manifestUrl)
+            val resList = master.variants.map { it.height }.filter { it > 0 }.distinct().sortedDescending()
+            if (resList.isNotEmpty()) resList else emptyList()
+        } catch (_: Throwable) {
+            emptyList()
+        }
+    }
 }

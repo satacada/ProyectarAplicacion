@@ -237,7 +237,10 @@ fun TvDirectStreamScreen(
             isRecording = pvrProgress.isRecording,
             durationSeconds = pvrProgress.durationSeconds,
             remainingSeconds = if (timerState.isRunning && timerState.remainingSeconds > 0) timerState.remainingSeconds else -1L,
-            modifier = Modifier.align(Alignment.TopEnd).padding(end = 28.dp, top = 28.dp).zIndex(99f)
+            isMovieDownload = pvrProgress.isMovieDownload,
+            progressPct = pvrProgress.progressPct,
+            modifier = Modifier.align(Alignment.TopEnd).padding(end = 28.dp, top = 28.dp).zIndex(99f),
+            onClick = { showStopConfirm = true; userInteractionCount++ }
         )
     }
 }

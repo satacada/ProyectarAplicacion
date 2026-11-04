@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 340,
-  "versionCodeReceiver": 323,
-  "versionName": "3.5.89",
-  "releaseTag": "v3.5.89",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.89/omnicast-sender-v3.5.89.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.89/omnicast-receiver-v3.5.89.apk",
-  "changelog": "v3.5.89 (Firma Binaria de CDNs con Virgulilla y Soporte Dinámico CloudataCDN): 1) Core Domain (StreamCandidateValidator.kt): Reconocimiento estructural de tokens binarios con virgulilla (~ + token= + expiry=) sin hardcodear dominios efímeros, permitiendo la captura universal de flujos ofuscados en CDNs modernas. 2) Sender (DoodstreamExtractorAdapter.kt / StreamManifestProbe.kt): Inclusión de cloudatacdn en adaptadores y perfiles predeterminados con inyección de Referer legítimo (playmogo.com) para reproducción garantizada."
+  "versionCodeSender": 341,
+  "versionCodeReceiver": 324,
+  "versionName": "3.5.90",
+  "releaseTag": "v3.5.90",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.90/omnicast-sender-v3.5.90.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.90/omnicast-receiver-v3.5.90.apk",
+  "changelog": "v3.5.90 (Grabación Inteligente PVR y Descarga de Películas en TV Box y Móvil): 1) Telemetría Remota Bidireccional (RecordTelemetry): El celular muestra espacio real en disco de la TV Box, alerta de blindaje anti-brick (2.0 GB interno / 500 MB USB), calidades detectadas del flujo y carpeta de destino. 2) Unificación de Motores PVR y Descarga VOD en TV (PvrStreamRecorder / TvDownloadManager): Badge flotante unificado en TV (REC y porcentaje descargado), selector de carpetas personalizadas (Download, Movies, USB) y sondeo de resoluciones reales del manifiesto HLS. 3) Descarga en Segundo Plano con Overlay Global (TvGlobalRecordOverlay): Continuidad de descarga al terminar de ver la película o en Standby con opciones de parar/conservar o descartar/eliminar."
 }

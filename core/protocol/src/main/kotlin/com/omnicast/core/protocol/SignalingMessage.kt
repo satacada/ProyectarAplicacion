@@ -130,4 +130,26 @@ sealed class SignalingMessage {
     data class SyncPlaylists(
         val playlistsJson: String
     ) : SignalingMessage()
+
+    @Serializable
+    @SerialName("RECORD_TELEMETRY")
+    data class RecordTelemetry(
+        val isRecording: Boolean = false,
+        val isMovieDownload: Boolean = false,
+        val canRecord: Boolean = true,
+        val warningMessage: String? = null,
+        val freeBytes: Long = 0L,
+        val usableBytes: Long = 0L,
+        val isUsbAvailable: Boolean = false,
+        val usbFreeBytes: Long = 0L,
+        val usbUsableBytes: Long = 0L,
+        val internalPath: String = "",
+        val usbPath: String = "",
+        val availableResolutions: List<Int> = emptyList(),
+        val currentTitle: String = "",
+        val isLive: Boolean = false,
+        val progressPct: Int = 0,
+        val recordedDurationSec: Long = 0L,
+        val targetFolder: String = ""
+    ) : SignalingMessage()
 }

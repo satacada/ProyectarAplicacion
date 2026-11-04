@@ -222,9 +222,10 @@ class SenderMainActivity : ComponentActivity() {
                     }
                 } else if (msg is SignalingMessage.TracksInfo) {
                     ActiveStreamHolder.updateTracksInfo(msg)
+                } else if (msg is SignalingMessage.RecordTelemetry) {
+                    ActiveStreamHolder.updateRecordTelemetry(msg)
                 } else if (msg is SignalingMessage.SyncPlaylists) {
-                    val synced = playlistManager.syncFromTv(msg.playlistsJson)
-                    if (synced) runOnUiThread { Toast.makeText(this@SenderMainActivity, "🎬 Lista sincronizada desde la TV", Toast.LENGTH_SHORT).show() }
+                    if (playlistManager.syncFromTv(msg.playlistsJson)) runOnUiThread { Toast.makeText(this@SenderMainActivity, "🎬 Lista sincronizada desde la TV", Toast.LENGTH_SHORT).show() }
                 } else if (msg is SignalingMessage.PlayControl && msg.action == "AUTO_RECAST") {
                     val parts = msg.param?.split("|||").orEmpty()
                     val pageUrl = parts.getOrNull(0).orEmpty()
@@ -244,9 +245,8 @@ class SenderMainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent); setIntent(intent); checkAutoMirroring(intent); handleIncomingSharedIntent(intent)
     }
-    private fun handleIncomingSharedIntent(intent: Intent) {
+    private fun handleIncomingSharedIntent(intent: Intent) =
         SharedIntentHandler.handle(this, intent, clipboardExtractor, { u, t -> sendDirectStreamToTv(u, t) }, { u, t -> sendImageToTv(u, t) }, { moveTaskToBack(true) })
-    }
 
     fun sendDirectStreamToTv(url: String, title: String? = null, headers: Map<String, String> = emptyMap(), resumePositionMs: Long? = null, subtitles: List<SignalingMessage.SubtitleTrack> = emptyList()) {
         val now = System.currentTimeMillis()

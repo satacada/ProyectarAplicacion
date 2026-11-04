@@ -54,6 +54,8 @@ fun RemoteExpandedControls(
     val tracksInfo by com.omnicast.sender.stream.ActiveStreamHolder.tracksInfo.collectAsState()
     val qualityLabels = remember { listOf("Auto", "1080p", "720p", "540p", "360p", "270p") }
     var qualityIdx by remember { mutableIntStateOf(0) }
+    var showRecordSheet by remember { mutableStateOf(false) }
+    val recordTelemetry by com.omnicast.sender.stream.ActiveStreamHolder.recordTelemetry.collectAsState()
     Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 2.dp)) {
 
         // ========================================================
@@ -227,16 +229,17 @@ fun RemoteExpandedControls(
                         Text(text = "+10s", color = Color(0xFF94A3B8), fontSize = 10.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(start = 4.dp))
                     }
 
+                    val isRec = recordTelemetry?.isRecording == true
                     IconButton(
                         onClick = {
-                            SignalingClientHolder.get().sendMessage(SignalingMessage.PlayControl("RECORD"))
-                            Toast.makeText(context, "🔴 Grabación PVR solicitada en TV", Toast.LENGTH_SHORT).show()
+                            SignalingClientHolder.get().sendMessage(SignalingMessage.PlayControl("REQUEST_RECORD_INFO"))
+                            showRecordSheet = true
                         },
                         modifier = Modifier
                             .align(Alignment.CenterStart)
                             .size(28.dp)
-                            .background(Color(0xFF2D1515), RoundedCornerShape(6.dp))
-                            .border(1.dp, Color(0xFFEF4444).copy(alpha = 0.5f), RoundedCornerShape(6.dp))
+                            .background(if (isRec) Color(0xFF7F1D1D) else Color(0xFF2D1515), RoundedCornerShape(6.dp))
+                            .border(1.dp, Color(0xFFEF4444).copy(alpha = if (isRec) 1.0f else 0.5f), RoundedCornerShape(6.dp))
                     ) {
                         Box(modifier = Modifier.size(10.dp).background(Color(0xFFEF4444), CircleShape))
                     }
@@ -244,11 +247,7 @@ fun RemoteExpandedControls(
                     if (onStop != null) {
                         IconButton(
                             onClick = onStop,
-                            modifier = Modifier
-                                .align(Alignment.CenterEnd)
-                                .size(28.dp)
-                                .background(Color(0xFF2D1515), RoundedCornerShape(6.dp))
-                                .border(1.dp, Color(0xFFEF4444).copy(alpha = 0.5f), RoundedCornerShape(6.dp))
+                            modifier = Modifier.align(Alignment.CenterEnd).size(28.dp).background(Color(0xFF2D1515), RoundedCornerShape(6.dp)).border(1.dp, Color(0xFFEF4444).copy(alpha = 0.5f), RoundedCornerShape(6.dp))
                         ) {
                             Icon(Icons.Rounded.Stop, contentDescription = "Detener flujo", tint = Color(0xFFEF4444), modifier = Modifier.size(18.dp))
                         }
@@ -256,22 +255,12 @@ fun RemoteExpandedControls(
                 }
 
                 // 3. Fila de Volumen
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+                Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     var curVol by remember(volume) { mutableFloatStateOf(volume) }
                     Icon(if (curVol <= 0.01f) Icons.Rounded.VolumeMute else Icons.Rounded.VolumeUp, contentDescription = "Volumen", tint = Color(0xFF94A3B8), modifier = Modifier.size(18.dp))
                     Slider(
-                        value = curVol,
-                        onValueChange = { curVol = it },
-                        onValueChangeFinished = { onVolumeChange(curVol) },
-                        valueRange = 0f..1f,
-                        colors = SliderDefaults.colors(
-                            thumbColor = Color(0xFF00B4D8),
-                            activeTrackColor = Color(0xFF00B4D8),
-                            inactiveTrackColor = Color(0xFF1E283D)
-                        ),
+                        value = curVol, onValueChange = { curVol = it }, onValueChangeFinished = { onVolumeChange(curVol) }, valueRange = 0f..1f,
+                        colors = SliderDefaults.colors(thumbColor = Color(0xFF00B4D8), activeTrackColor = Color(0xFF00B4D8), inactiveTrackColor = Color(0xFF1E283D)),
                         modifier = Modifier.weight(1f).height(18.dp).padding(horizontal = 6.dp)
                     )
                     Text("${(curVol * 100).toInt()}%", color = Color(0xFF94A3B8), fontSize = 10.sp, fontWeight = FontWeight.Bold)
@@ -279,13 +268,24 @@ fun RemoteExpandedControls(
             }
         }
     }
+
+    if (showRecordSheet) {
+        SenderRecordBottomSheet(
+            telemetry = recordTelemetry ?: SignalingMessage.RecordTelemetry(canRecord = true, internalPath = "/storage/emulated/0/Download/PVR_Grabaciones"),
+            onStartRecord = { useUsb, res, timer, folder ->
+                SignalingClientHolder.get().sendMessage(SignalingMessage.PlayControl("START_RECORD", param = "useUsb=$useUsb,res=$res,timer=$timer,folder=$folder"))
+                Toast.makeText(context, "🔴 Orden de grabación enviada a TV Box", Toast.LENGTH_SHORT).show()
+            },
+            onStopRecord = { discard ->
+                SignalingClientHolder.get().sendMessage(SignalingMessage.PlayControl("STOP_RECORD", param = if (discard) "DISCARD" else "KEEP"))
+                Toast.makeText(context, if (discard) "🗑️ Descarte enviado a TV Box" else "💾 Finalización enviada a TV Box", Toast.LENGTH_SHORT).show()
+            },
+            onDismiss = { showRecordSheet = false }
+        )
+    }
 }
 
-fun formatTimeString(ms: Long): String {
-    if (ms <= 0L) return "00:00"
-    val totalSec = ms / 1000
-    val sec = totalSec % 60
-    val min = (totalSec / 60) % 60
-    val hrs = totalSec / 3600
-    return if (hrs > 0) String.format("%02d:%02d:%02d", hrs, min, sec) else String.format("%02d:%02d", min, sec)
+fun formatTimeString(ms: Long): String = if (ms <= 0L) "00:00" else ms.let {
+    val s = it / 1000; val h = s / 3600; val m = (s / 60) % 60; val sec = s % 60
+    if (h > 0) String.format("%02d:%02d:%02d", h, m, sec) else String.format("%02d:%02d", m, sec)
 }

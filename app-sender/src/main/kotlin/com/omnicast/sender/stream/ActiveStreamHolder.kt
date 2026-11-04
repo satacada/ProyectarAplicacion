@@ -41,6 +41,13 @@ object ActiveStreamHolder {
     private val _isProxied = MutableStateFlow(false)
     val isProxied = _isProxied.asStateFlow()
 
+    private val _recordTelemetry = MutableStateFlow<com.omnicast.core.protocol.SignalingMessage.RecordTelemetry?>(null)
+    val recordTelemetry = _recordTelemetry.asStateFlow()
+
+    fun updateRecordTelemetry(telemetry: com.omnicast.core.protocol.SignalingMessage.RecordTelemetry) {
+        _recordTelemetry.value = telemetry
+    }
+
     fun setProxied(proxied: Boolean) { _isProxied.value = proxied }
     fun notifyPlaybackError(err: String?) { _playbackError.value = err }
     fun clearPlaybackError() { _playbackError.value = null }
@@ -111,6 +118,7 @@ object ActiveStreamHolder {
         _isCasting.value = false
         _isPlaying.value = false
         _tracksInfo.value = null
+        _recordTelemetry.value = null
         com.omnicast.sender.overlay.FloatingIndicatorService.updateMode()
         if (notifyTv) {
             onSendPlayControl?.invoke("STOP", 0L, 1.0f, null)

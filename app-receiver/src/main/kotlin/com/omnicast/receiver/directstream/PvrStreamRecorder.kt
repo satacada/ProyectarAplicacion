@@ -13,19 +13,8 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-data class PvrRecordProgress(
-    val isRecording: Boolean = false,
-    val isPaused: Boolean = false,
-    val recordedBytes: Long = 0L,
-    val durationSeconds: Long = 0L,
-    val filePath: String = "",
-    val channelTitle: String = "",
-    val errorMsg: String? = null,
-    val statusNotice: String? = null
-)
-
 /**
- * Motor de Grabación PVR Asíncrono para TV en Vivo (Fase 4).
+ * Motor de Grabación PVR Asíncrono para TV en Vivo y Descarga VOD (Fase 4).
  * Ring Buffer de 16 MB con volcado en bloques alineados de 128 KB,
  * selección de resolución, punto de inicio exacto y soporte de audio demuxed.
  */
@@ -48,15 +37,13 @@ object PvrStreamRecorder {
 
     fun pause() {
         if (_progress.value.isRecording && !_progress.value.isPaused) {
-            isPausedInternal = true
-            _progress.value = _progress.value.copy(isPaused = true, statusNotice = "⏸ Grabación en Pausa")
+            isPausedInternal = true; _progress.value = _progress.value.copy(isPaused = true, statusNotice = "⏸ Grabación en Pausa")
         }
     }
 
     fun resume() {
         if (_progress.value.isRecording && _progress.value.isPaused) {
-            isPausedInternal = false
-            _progress.value = _progress.value.copy(isPaused = false, statusNotice = "🔴 Grabando...")
+            isPausedInternal = false; _progress.value = _progress.value.copy(isPaused = false, statusNotice = "🔴 Grabando...")
         }
     }
 
@@ -68,6 +55,7 @@ object PvrStreamRecorder {
         url: String,
         headers: Map<String, String>,
         useUsb: Boolean,
+        customFolder: String? = null,
         targetHeight: Int = 1080,
         timerMinutes: Int = 0,
         onStopped: (String) -> Unit
@@ -75,7 +63,7 @@ object PvrStreamRecorder {
         if (_progress.value.isRecording) return
 
         recorderScope.launch {
-            val targetDir = TvStorageSafetyManager.getPvrRecordingsDir(context, useUsb)
+            val targetDir = TvStorageSafetyManager.getTargetDirectory(context, useUsb, customFolder, "PVR_Grabaciones")
             val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
             val safeTitle = title.replace(Regex("[^a-zA-Z0-9_\\- ]"), "").trim().replace(' ', '_').ifBlank { "Canal_PVR" }
             val outFile = File(targetDir, "${safeTitle}_${targetHeight}p_$timeStamp.mp4")
@@ -83,8 +71,9 @@ object PvrStreamRecorder {
             isPausedInternal = false
 
             _progress.value = PvrRecordProgress(
-                isRecording = true, isPaused = false,
-                filePath = outFile.absolutePath, channelTitle = title, statusNotice = "🔴 Grabando..."
+                isRecording = true, isPaused = false, isMovieDownload = false,
+                filePath = outFile.absolutePath, channelTitle = title,
+                targetFolder = targetDir.absolutePath, statusNotice = "🔴 Grabando..."
             )
 
             TvStorageSafetyManager.startWatchdog(targetDir.path, useUsb, recorderScope) { alert ->
@@ -124,6 +113,68 @@ object PvrStreamRecorder {
                 } finally {
                     fileOutput?.let { ringBuffer.flushAndClose(it) }
                 }
+            }
+        }
+    }
+
+    fun startMovieDownload(
+        context: Context,
+        title: String,
+        url: String,
+        headers: Map<String, String>,
+        useUsb: Boolean,
+        customFolder: String? = null,
+        targetHeight: Int = 1080,
+        expectedBytes: Long = 800_000_000L,
+        onStopped: (String) -> Unit
+    ) {
+        if (_progress.value.isRecording) return
+
+        recorderScope.launch {
+            val targetDir = TvStorageSafetyManager.getTargetDirectory(context, useUsb, customFolder, "Pelis_descargas")
+            val safeTitle = title.replace(Regex("[^a-zA-Z0-9_\\- ]"), "").trim().replace(' ', '_').ifBlank { "pelicula_omnicast" }
+            val lower = url.lowercase()
+            val isHls = lower.contains(".m3u8") || lower.contains("urlset") || lower.contains(".txt")
+            val ext = if (isHls) "ts" else "mp4"
+            val outFile = File(targetDir, "${safeTitle}_${targetHeight}p.$ext")
+            currentOutFile = outFile
+            isPausedInternal = false
+
+            _progress.value = PvrRecordProgress(
+                isRecording = true, isPaused = false, isMovieDownload = true,
+                totalExpectedBytes = expectedBytes,
+                filePath = outFile.absolutePath, channelTitle = title,
+                targetFolder = targetDir.absolutePath, statusNotice = "📥 Descargando película..."
+            )
+
+            TvStorageSafetyManager.startWatchdog(targetDir.path, useUsb, recorderScope) { alert ->
+                stopRecording(alert); onStopped(alert)
+            }
+
+            tickerJob = recorderScope.launch(Dispatchers.Default) {
+                while (isActive && _progress.value.isRecording) {
+                    delay(1000L)
+                    if (!isPausedInternal && _progress.value.isRecording) {
+                        _progress.value = _progress.value.copy(durationSeconds = _progress.value.durationSeconds + 1L)
+                    }
+                }
+            }
+
+            recordJob = recorderScope.launch(Dispatchers.IO) {
+                TvDownloadManager.downloadMovieInBridgeMode(
+                    context = context, title = title, url = url, headers = headers,
+                    expectedBytes = expectedBytes, useUsb = useUsb, targetDir = targetDir,
+                    targetHeight = targetHeight,
+                    onProgress = { p ->
+                        if (!p.isDownloading && p.isCompleted) {
+                            stopRecording("✅ Película guardada exitosamente"); onStopped("✅ Película guardada exitosamente")
+                        } else if (!p.isDownloading && p.errorMsg != null) {
+                            stopRecording(p.errorMsg); onStopped(p.errorMsg)
+                        } else {
+                            _progress.value = _progress.value.copy(progressPct = p.percent, recordedBytes = p.downloadedBytes, totalExpectedBytes = p.totalBytes)
+                        }
+                    }
+                )
             }
         }
     }
@@ -226,31 +277,20 @@ object PvrStreamRecorder {
     }
 
     fun stopRecording(reasonNotice: String? = null) {
-        TvStorageSafetyManager.stopWatchdog()
-        TvRecordTimerManager.cancelTimer()
-        tickerJob?.cancel(); tickerJob = null
-        recordJob?.cancel(); recordJob = null
-        isPausedInternal = false
-
+        TvStorageSafetyManager.stopWatchdog(); TvRecordTimerManager.cancelTimer()
+        tickerJob?.cancel(); tickerJob = null; recordJob?.cancel(); recordJob = null; isPausedInternal = false
         val last = _progress.value
-        _progress.value = last.copy(
-            isRecording = false, isPaused = false,
-            statusNotice = reasonNotice ?: "✅ Grabación guardada exitosamente"
-        )
+        _progress.value = last.copy(isRecording = false, isPaused = false, statusNotice = reasonNotice ?: "✅ Grabación guardada exitosamente")
     }
 
     fun stopAndDiscardRecording(reasonNotice: String? = null) {
-        val fileToDelete = currentOutFile
-        stopRecording(reasonNotice ?: "🗑️ Grabación descartada y eliminada")
-        try { fileToDelete?.takeIf { it.exists() }?.delete() } catch (_: Throwable) {}
+        val f = currentOutFile; stopRecording(reasonNotice ?: "🗑️ Grabación descartada y eliminada")
+        try { f?.takeIf { it.exists() }?.delete() } catch (_: Throwable) {}
         currentOutFile = null
     }
 
-    private fun fetchText(url: String, headers: Map<String, String>): String {
-        val conn = (URL(url).openConnection() as HttpURLConnection).apply {
-            connectTimeout = 5000; readTimeout = 6000
-            headers.forEach { (k, v) -> setRequestProperty(k, v) }
-        }
-        return conn.inputStream.bufferedReader().use { it.readText() }
-    }
+    private fun fetchText(url: String, headers: Map<String, String>): String =
+        (URL(url).openConnection() as HttpURLConnection).apply {
+            connectTimeout = 5000; readTimeout = 6000; headers.forEach { (k, v) -> setRequestProperty(k, v) }
+        }.inputStream.bufferedReader().use { it.readText() }
 }

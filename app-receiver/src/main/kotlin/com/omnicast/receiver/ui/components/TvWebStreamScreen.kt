@@ -196,7 +196,10 @@ fun TvWebStreamScreen(
             isRecording = pvrProgress.isRecording,
             durationSeconds = pvrProgress.durationSeconds,
             remainingSeconds = if (timerState.isRunning && timerState.remainingSeconds > 0) timerState.remainingSeconds else -1L,
-            modifier = Modifier.align(Alignment.TopEnd).padding(end = 24.dp, top = 24.dp)
+            isMovieDownload = pvrProgress.isMovieDownload,
+            progressPct = pvrProgress.progressPct,
+            modifier = Modifier.align(Alignment.TopEnd).padding(end = 24.dp, top = 24.dp),
+            onClick = { showStopConfirm = true }
         )
 
         // Modal de configuración nativo D-Pad

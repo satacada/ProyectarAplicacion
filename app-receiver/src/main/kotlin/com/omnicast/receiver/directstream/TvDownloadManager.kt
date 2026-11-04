@@ -137,19 +137,20 @@ object TvDownloadManager {
         headers: Map<String, String>,
         expectedBytes: Long,
         useUsb: Boolean,
+        targetDir: File = getBridgeDir(context, useUsb),
+        targetHeight: Int = 1080,
         onProgress: (TvBridgeDownloadProgress) -> Unit
     ) = withContext(Dispatchers.IO) {
-        val targetDir = getBridgeDir(context, useUsb)
         val safeName = title.replace(Regex("[^a-zA-Z0-9_\\- ]"), "").trim().replace(' ', '_').ifBlank { "pelicula_omnicast" }
         val lower = url.lowercase()
         val isHls = lower.contains(".m3u8") || lower.contains("urlset") || lower.contains("master.txt")
         val ext = if (isHls) "ts" else "mp4"
-        val outFile = File(targetDir, "${safeName}.$ext")
+        val outFile = File(targetDir, "${safeName}_${targetHeight}p.$ext")
 
         try {
             onProgress(TvBridgeDownloadProgress(isDownloading = true, totalBytes = expectedBytes, savedFilePath = outFile.absolutePath))
             if (isHls) {
-                downloadHlsStream(url, headers, outFile, expectedBytes, onProgress)
+                downloadHlsStream(url, headers, outFile, expectedBytes, targetHeight, onProgress)
             } else {
                 downloadDirectStream(url, headers, outFile, expectedBytes, onProgress)
             }
@@ -194,14 +195,14 @@ object TvDownloadManager {
         headers: Map<String, String>,
         outFile: File,
         expectedBytes: Long,
+        targetHeight: Int,
         onProgress: (TvBridgeDownloadProgress) -> Unit
     ) = withContext(Dispatchers.IO) {
         val text = fetchText(manifestUrl, headers)
-        val lines = text.lines().map { it.trim() }.filter { it.isNotEmpty() }
-        val subPlaylistUrl = lines.firstOrNull { !it.startsWith("#") && (it.contains(".m3u8") || it.contains(".txt")) }
-            ?.let { resolveRelativeUrl(manifestUrl, it) }
-        val finalManifestUrl = subPlaylistUrl ?: manifestUrl
-        val finalLines = if (subPlaylistUrl != null) fetchText(subPlaylistUrl, headers).lines().map { it.trim() } else lines
+        val master = PvrHlsMasterParser.parseMaster(text, manifestUrl)
+        val chosenVariant = PvrHlsMasterParser.selectVariant(master.variants, targetHeight)
+        val finalManifestUrl = chosenVariant?.url ?: manifestUrl
+        val finalLines = if (chosenVariant != null) fetchText(finalManifestUrl, headers).lines().map { it.trim() } else text.lines().map { it.trim() }
         val segments = finalLines.filter { it.isNotEmpty() && !it.startsWith("#") }.map { resolveRelativeUrl(finalManifestUrl, it) }
 
         if (segments.isEmpty()) {

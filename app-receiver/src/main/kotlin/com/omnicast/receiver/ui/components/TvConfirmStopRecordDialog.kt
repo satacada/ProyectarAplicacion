@@ -20,6 +20,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -128,5 +129,84 @@ private fun TvConfirmActionBtn(
             fontSize = 13.sp,
             fontWeight = FontWeight.SemiBold
         )
+    }
+}
+
+/**
+ * Diálogo de advertencia cuando el usuario intenta salir de la app (tecla Atrás en Standby)
+ * mientras hay una grabación o descarga activa en disco.
+ */
+@Composable
+fun TvRecordExitConfirmDialog(
+    isOpen: Boolean,
+    recordedDurationSec: Long,
+    isMovieDownload: Boolean = false,
+    progressPct: Int = 0,
+    onContinue: () -> Unit,
+    onKeepAndExit: () -> Unit,
+    onDiscardAndExit: () -> Unit
+) {
+    if (!isOpen) return
+
+    val continueFocusRequester = remember { FocusRequester() }
+    LaunchedEffect(Unit) {
+        continueFocusRequester.requestFocus()
+    }
+
+    Dialog(onDismissRequest = onContinue) {
+        Card(
+            modifier = Modifier.width(460.dp).padding(16.dp),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = Color(0xF20F172A)),
+            border = BorderStroke(2.dp, Color(0xFFF59E0B))
+        ) {
+            Column(
+                modifier = Modifier.fillMaxWidth().padding(22.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "⚠️ Grabación en Curso",
+                    color = Color(0xFFF59E0B),
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(bottom = 6.dp)
+                )
+
+                val detail = if (isMovieDownload) "Descarga de película al $progressPct%" else "Grabación activa: ${formatDuration(recordedDurationSec * 1000L)}"
+                Text(
+                    text = "Hay una grabación activa en disco ($detail). Si sales de la aplicación se detendrá la grabación. ¿Qué deseas hacer?",
+                    color = Color(0xFFCBD5E1),
+                    fontSize = 13.sp,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(bottom = 18.dp)
+                )
+
+                TvConfirmActionBtn(
+                    text = "▶️ Continuar Grabando (Quedarse en la app)",
+                    bgColor = Color(0xFF0284C7),
+                    focusColor = Color(0xFF38BDF8),
+                    focusRequester = continueFocusRequester,
+                    onClick = onContinue
+                )
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                TvConfirmActionBtn(
+                    text = "💾 Detener, Conservar y Salir",
+                    bgColor = Color(0xFF047857),
+                    focusColor = Color(0xFF10B981),
+                    onClick = onKeepAndExit
+                )
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                TvConfirmActionBtn(
+                    text = "🗑️ Descartar, Borrar y Salir",
+                    bgColor = Color(0xFF991B1B),
+                    focusColor = Color(0xFFEF4444),
+                    onClick = onDiscardAndExit
+                )
+            }
+        }
     }
 }

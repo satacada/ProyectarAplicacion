@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 342,
-  "versionCodeReceiver": 325,
-  "versionName": "3.5.91",
-  "releaseTag": "v3.5.91",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.91/omnicast-sender-v3.5.91.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.91/omnicast-receiver-v3.5.91.apk",
-  "changelog": "v3.5.91 (Pestaña Descargas en TV, Reproducción Local y Botones Modernos): 1) Corrección de Crash en Detención de Descarga: Erradicado el fallo de Toast en hilo IO al presionar 'Conservar'. 2) Pestaña 'Descargas' (TvDownloadsManager): Reemplazada la pestaña '⭐ Guardados' por '📥 Descargas' con escaneo automático de almacenamiento interno y memorias USB, reproduciendo videos locales con un clic en ExoPlayer. 3) Detección de Archivo en Disco: En 'Recientes', 'Ver más tarde' y 'Favoritos', las películas descargadas reemplazan el icono de descarga por un botón moderno '💾 En disco' que permite reproducir desde disco o eliminar para liberar espacio. 4) Interfaz Moderna: Sustitución de etiquetas dobles por estrella única y diseño flat/frosted glass con anillos D-Pad de alto contraste."
+  "versionCodeSender": 343,
+  "versionCodeReceiver": 326,
+  "versionName": "3.5.92",
+  "releaseTag": "v3.5.92",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.92/omnicast-sender-v3.5.92.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.92/omnicast-receiver-v3.5.92.apk",
+  "changelog": "v3.5.92 (Guardián de Salida ante Grabación en Curso): 1) Diálogo de Confirmación al Salir (TvRecordExitConfirmDialog): Intercepción de la tecla Volver (BACK) en la pantalla principal del TV cuando una grabación o descarga de película está activa, evitando cierres accidentales y abortos de descarga. 2) Opciones Claras y Foco Seguro: Ofrece continuar grabando (foco predeterminado), detener y conservar el avance en disco, o descartar/borrar el archivo antes de salir. 3) Protección de Descargas en Segundo Plano: Mantiene informada la TV con tiempo grabado y porcentaje completado."
 }

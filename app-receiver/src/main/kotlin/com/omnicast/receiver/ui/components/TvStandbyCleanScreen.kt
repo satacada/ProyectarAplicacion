@@ -52,26 +52,19 @@ fun TvStandbyCleanScreen(
     expiredItemForRenew: TvPlaylistItem? = null,
     onClearExpiredRenew: () -> Unit = {}
 ) {
-    var selectedTab by remember { mutableIntStateOf(1) } // 0: Recientes, 1: Guardados, 2: Descargas
-    var enteredPlaylistId by remember { mutableStateOf<String?>(null) }
-    var menuItem by remember { mutableStateOf<TvPlaylistItem?>(null) }
-    var sharingItem by remember { mutableStateOf<TvPlaylistItem?>(null) }
-    var renewItem by remember { mutableStateOf<TvPlaylistItem?>(null) }
-    var downloadingItem by remember { mutableStateOf<TvPlaylistItem?>(null) }
-    var savingDialogItem by remember { mutableStateOf<TvPlaylistItem?>(null) }
-    var searchQuery by remember { mutableStateOf("") }
-    var showTvLangDialog by remember { mutableStateOf(false) }
-    var selectedSort by remember { mutableStateOf(TvVideoSortOrder.NEWEST) }
-    val listState = androidx.compose.foundation.lazy.rememberLazyListState()
-    val firstItemFocusRequester = remember { FocusRequester() }
-    val backButtonFocusRequester = remember { FocusRequester() }
-    val selectedUrls = remember { mutableStateListOf<String>() }
-    val scope = rememberCoroutineScope()
-    val isPhoneConnected = !connectedClientIp.isNullOrBlank()
+    var selectedTab by remember { mutableIntStateOf(1) }; var enteredPlaylistId by remember { mutableStateOf<String?>(null) }
+    var menuItem by remember { mutableStateOf<TvPlaylistItem?>(null) }; var sharingItem by remember { mutableStateOf<TvPlaylistItem?>(null) }
+    var renewItem by remember { mutableStateOf<TvPlaylistItem?>(null) }; var downloadingItem by remember { mutableStateOf<TvPlaylistItem?>(null) }
+    var savingDialogItem by remember { mutableStateOf<TvPlaylistItem?>(null) }; var searchQuery by remember { mutableStateOf("") }
+    var showTvLangDialog by remember { mutableStateOf(false) }; var selectedSort by remember { mutableStateOf(TvVideoSortOrder.NEWEST) }
+    val listState = androidx.compose.foundation.lazy.rememberLazyListState(); val firstItemFocusRequester = remember { FocusRequester() }
+    val backButtonFocusRequester = remember { FocusRequester() }; val selectedUrls = remember { mutableStateListOf<String>() }
+    val scope = rememberCoroutineScope(); val isPhoneConnected = !connectedClientIp.isNullOrBlank()
     val context = androidx.compose.ui.platform.LocalContext.current
     var downloadedVideos by remember { mutableStateOf<List<TvDownloadedVideo>>(emptyList()) }
-    var localActionVideo by remember { mutableStateOf<TvDownloadedVideo?>(null) }
-    var refreshDownloadsTrigger by remember { mutableIntStateOf(0) }
+    var localActionVideo by remember { mutableStateOf<TvDownloadedVideo?>(null) }; var refreshDownloadsTrigger by remember { mutableIntStateOf(0) }
+    val pvrProgress by com.omnicast.receiver.directstream.PvrStreamRecorder.progress.collectAsState()
+    var showExitRecordDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(selectedTab, refreshDownloadsTrigger) {
         withContext(Dispatchers.IO) {
@@ -89,6 +82,9 @@ fun TvStandbyCleanScreen(
 
     BackHandler(enabled = enteredPlaylistId != null) {
         enteredPlaylistId = null; searchQuery = ""; selectedUrls.clear()
+    }
+    BackHandler(enabled = enteredPlaylistId == null && pvrProgress.isRecording) {
+        showExitRecordDialog = true
     }
 
     LaunchedEffect(expiredItemForRenew) {
@@ -177,10 +173,8 @@ fun TvStandbyCleanScreen(
                                     TvPlaylistItemRow(
                                         item = item, isPhoneConnected = isPhoneConnected, downloadedVideo = dl,
                                         onPlay = { onPlayPlaylist(item) }, onMenu = { menuItem = item },
-                                        onSaveToFolder = { savingDialogItem = item },
-                                        onRemoveSaved = { onDeletePlaylist(item) },
-                                        onDownload = { downloadingItem = item },
-                                        onLocalAction = { localActionVideo = dl },
+                                        onSaveToFolder = { savingDialogItem = item }, onRemoveSaved = { onDeletePlaylist(item) },
+                                        onDownload = { downloadingItem = item }, onLocalAction = { localActionVideo = dl },
                                         isSelected = isSel, onToggleSelect = { if (isSel) selectedUrls.remove(item.url) else selectedUrls.add(item.url) },
                                         modifier = if (index == 0) Modifier.focusRequester(firstItemFocusRequester) else Modifier
                                     )
@@ -204,10 +198,8 @@ fun TvStandbyCleanScreen(
                                             val dl = remember(item.title, downloadedVideos) { TvDownloadsManager.findDownloadedVideo(item.title, downloadedVideos) }
                                             TvRecentItemRow(
                                                 item = item, isSaved = saved, downloadedVideo = dl, isPhoneConnected = isPhoneConnected,
-                                                onClick = { onPlayHistory(item) },
-                                                onToggleSave = { if (saved) onDeletePlaylist(asPlItem) else savingDialogItem = asPlItem },
-                                                onDownload = { downloadingItem = asPlItem },
-                                                onLocalAction = { localActionVideo = dl }
+                                                onClick = { onPlayHistory(item) }, onToggleSave = { if (saved) onDeletePlaylist(asPlItem) else savingDialogItem = asPlItem },
+                                                onDownload = { downloadingItem = asPlItem }, onLocalAction = { localActionVideo = dl }
                                             )
                                         }
                                     }
@@ -226,11 +218,7 @@ fun TvStandbyCleanScreen(
                                 } else {
                                     LazyColumn(state = listState, verticalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxSize()) {
                                         items(downloadedVideos, key = { it.filePath }) { video ->
-                                            TvDownloadItemRow(
-                                                video = video,
-                                                onPlay = { onPlayLocalVideo(video.filePath, video.title) },
-                                                onDelete = { localActionVideo = video }
-                                            )
+                                            TvDownloadItemRow(video = video, onPlay = { onPlayLocalVideo(video.filePath, video.title) }, onDelete = { localActionVideo = video })
                                         }
                                     }
                                 }
@@ -281,8 +269,7 @@ fun TvStandbyCleanScreen(
         downloadingItem?.let { item -> TvDownloadMovieDialog(item = item, onDismiss = { downloadingItem = null }) }
         localActionVideo?.let { video ->
             TvLocalVideoActionDialog(
-                video = video,
-                onPlay = { v -> onPlayLocalVideo(v.filePath, v.title) },
+                video = video, onPlay = { v -> onPlayLocalVideo(v.filePath, v.title) },
                 onDelete = { v ->
                     if (TvDownloadsManager.deleteDownloadedVideo(v.filePath)) {
                         android.widget.Toast.makeText(context, "🗑️ Video eliminado del disco", android.widget.Toast.LENGTH_SHORT).show()
@@ -293,5 +280,20 @@ fun TvStandbyCleanScreen(
             )
         }
         if (showTvLangDialog) TvLanguageDialog(onDismiss = { showTvLangDialog = false }, onLanguageSelected = { showTvLangDialog = false })
+        if (showExitRecordDialog) {
+            TvRecordExitConfirmDialog(
+                isOpen = showExitRecordDialog, recordedDurationSec = pvrProgress.durationSeconds,
+                isMovieDownload = pvrProgress.isMovieDownload, progressPct = pvrProgress.progressPct,
+                onContinue = { showExitRecordDialog = false },
+                onKeepAndExit = {
+                    showExitRecordDialog = false; com.omnicast.receiver.directstream.PvrStreamRecorder.stopRecording("💾 Grabación conservada al salir")
+                    (context as? android.app.Activity)?.finish()
+                },
+                onDiscardAndExit = {
+                    showExitRecordDialog = false; com.omnicast.receiver.directstream.PvrStreamRecorder.stopAndDiscardRecording("🗑️ Grabación descartada al salir")
+                    (context as? android.app.Activity)?.finish()
+                }
+            )
+        }
     }
 }

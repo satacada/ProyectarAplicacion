@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 344,
-  "versionCodeReceiver": 327,
-  "versionName": "3.5.93",
-  "releaseTag": "v3.5.93",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.93/omnicast-sender-v3.5.93.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.93/omnicast-receiver-v3.5.93.apk",
-  "changelog": "v3.5.93 (Insignia REC Unificada y Nuevo Icono Castera Tv para Pantalla Principal de TV): 1) Insignia Superior 'Rec XXX': Reemplazado el texto 'GUARDANDO' por 'Rec $progressPct%' (ej: 'Rec 15%') en la insignia OSD flotante de descarga de películas tanto en reproductor como en modo Standby. 2) Icono y Banner Oficial para Pantalla Principal de Televisores: Sustituido el fondo azul por fondo blanco puro en el banner de Android TV (320x180) y en los iconos de la app (mipmap), incorporando la tipografía de Paramount+ en color azul característico (#0064FF) con el texto 'Castera Tv' centrado y de alta definición."
+  "versionCodeSender": 345,
+  "versionCodeReceiver": 328,
+  "versionName": "3.5.94",
+  "releaseTag": "v3.5.94",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.94/omnicast-sender-v3.5.94.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.94/omnicast-receiver-v3.5.94.apk",
+  "changelog": "v3.5.94 (Icono Castera Original con Fondo Blanco y Título Castera TV): 1) Preservación Total del Icono Original: Mantenido el emblema característico del teléfono celular emitiendo ondas de transmisión hacia la pantalla de TV. 2) Fondo Blanco Puro y Título Superior: Eliminado el fondo negro/oscuro, reemplazándolo por fondo blanco puro, e incorporando encima del icono el texto 'Castera TV' con la tipografía oficial de Paramount+ en azul brillante (#0064FF) para el banner (320x180) y todos los launcher icons de Android TV."
 }

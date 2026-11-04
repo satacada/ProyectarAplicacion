@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 337,
-  "versionCodeReceiver": 320,
-  "versionName": "3.5.86",
-  "releaseTag": "v3.5.86",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.86/omnicast-sender-v3.5.86.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.86/omnicast-receiver-v3.5.86.apk",
-  "changelog": "v3.5.86 (Restauración de Sintaxis JavaScript en universal_sniffer.js y Activación de Detección DOM): 1) Sender (universal_sniffer.js): Corrección del bloque try-catch en la preservación de Blobs (líneas 10-24) que provocaba SyntaxError en el motor V8 de Chromium e impedía la carga del sniffer en el navegador. 2) Sender (universal_sniffer.js): Activación plena de los observadores de reproducción HTML5, listeners de eventos play/playing y captura heurística de video por hardware en Cinecalidad, Pelisplus y Doodstream."
+  "versionCodeSender": 338,
+  "versionCodeReceiver": 321,
+  "versionName": "3.5.87",
+  "releaseTag": "v3.5.87",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.87/omnicast-sender-v3.5.87.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.87/omnicast-receiver-v3.5.87.apk",
+  "changelog": "v3.5.87 (Resolución Heurística de Blobs MSE y Poda de Dominios Muertos): 1) Sender (universal_sniffer.js): Implementación de resolveRealMediaSource() para enlazar streams blob: asignados al tag <video> con sus URLs de red legítimas (v.__hls.url, window.__omniGetLiveStream(), window.__omniCapturedMedia) con filtro estricto anti-comerciales (>60s) y blindaje absoluto de YouTube. 2) Sender (universal_sniffer.js): Poda de dominios espejo muertos (playmogo, d000d, myvidplay, ds2play) bajo el Principio de Evaluación y Poda de Soluciones Ineficaces de AGENTS.md."
 }

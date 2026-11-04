@@ -1,7 +1,7 @@
 # 🏛️ ARQUITECTURA DEL SISTEMA: OMNICAST PRO
 
-**Versión Canónica:** v3.5.58  
-**Última actualización:** 2026-10-31  
+**Versión Canónica:** v3.5.89  
+**Última actualización:** 2026-11-04 (Detección Dual en Tenaza Red+DOM y Validador Binario Estructural)  
 **Estándar de Calidad:** Clean Architecture, Arquitectura Hexagonal (Ports & Adapters), Offline-First, Fail-Fast, Zero-Crash  
 
 ---
@@ -253,3 +253,5 @@ sequenceDiagram
 - [ADR-014: Resolución Universal Master HLS (RFC 8216) y Canales YouTube Live](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/adr/ADR-014-resolucion-universal-master-hls-y-canales-youtube-live.md)
 - [ADR-015: Clasificación Universal de TV Lineal, Grabación Dual (PVR/Descarga) y Puente HTTP para Deep Link QR](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/adr/ADR-015-clasificacion-universal-tv-lineal-pvr-y-puente-qr.md)
 - [ADR-016: Gobernanza Dinámica por SQLite, Preservación Fiel de Dominios CDN y TV Box Pasiva](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/adr/ADR-016-gobernanza-sqlite-resiliencia-dropcdn-y-tv-pasiva.md)
+- [ADR-017: Sistema Inteligente de Grabación PVR, Almacenamiento Seguro con Blindaje de 2.0 GB y Temporizador](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/adr/ADR-017-sistema-grabacion-pvr-blindaje-almacenamiento-seguro.md)
+- [ADR-018: Detección Dual en Tenaza (Red + DOM) y Validador Binario Estructural para CDNs Ofuscadas](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/adr/ADR-018-deteccion-dual-tenaza-red-dom-y-validador-estructural-cdns.md)

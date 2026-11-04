@@ -1,7 +1,7 @@
 # 🗺️ MAPA MAESTRO DEL SISTEMA Y GUÍA DE FLUJO DE CÓDIGO (CALL GRAPH)
 
 > **Documento Canónico para Desarrolladores Humanos y Agentes de IA**  
-> **Versión del Sistema:** `v3.5.58` | **Estado:** Producción Activa  
+> **Versión del Sistema:** `v3.5.89` | **Estado:** Producción Activa  
 > **Propósito:** Proporcionar una visión integral de 360 grados de todo el código fuente: árbol de directorios, roles de cada módulo, pantallas/páginas, funciones clave y trazabilidad exacta de llamadas archivo por archivo (call graph) para la reproducción de películas, proyección de pantalla y fotos.
 
 ---
@@ -132,55 +132,60 @@ proyectarAplicacion/
 
 ## 4. Trazabilidad de Código Paso a Paso (Call Graph de Archivo a Archivo)
 
-### FLUJO A: Reproducción de una Película Web (Web Video Caster)
-Desde que el usuario navega a un portal (ej. `pelisplus.hair` o `ok.ru`) hasta que la película se decodifica en la TV Box:
+#### FLUJO A: Reproducción de una Película Web (Web Video Caster - Arquitectura en Tenaza Dual)
+Desde que el usuario navega a un portal (ej. `cinecalidad.men`, `pelisplus.hair` o `ok.ru`) hasta que la película se decodifica en la TV Box:
 
 ```text
-[1. Usuario toca Play en la web]
+[1. Usuario navega o pulsa Play en la película]
         │
-        ▼
-[BrowserWebView.kt]
-  │  (Chromium WebView intercepta peticiones en shouldInterceptRequest)
-  ├─► Consulta AdBlocker.kt / NativeAdBlockEngine.kt (Descarta anuncios en 0ms)
-  └─► Inyecta assets/sniffer/universal_sniffer.js en onPageStarted / onPageFinished
-        │
-        ▼
-[universal_sniffer.js]
-  │  (Hook transparente sobre window.fetch, XMLHttpRequest.open y HTMLMediaElement.play)
-  ├─► Captura la URL del manifiesto (.m3u8, .mpd) o archivo (.mp4) junto con sus headers
-  └─► Invoca el puente nativo: window.OmniCastSniffer.onMediaDetected(url, mime, headersJson)
-        │
-        ▼
-[DynamicSnifferManager.kt / WvcDomSniffer.kt]
-  │  (Recibe la llamada del puente JavaScript)
-  └─► Notifica a InAppBrowserScreen.kt mediante el callback onMediaDetected
-        │
-        ▼
+        ├──► BRAZO 1: INTERCEPCIÓN EN RED NATIVA (Iframes Cerrados / CDNs Ofuscadas)
+        │    [BrowserWebView.kt -> shouldInterceptRequest]
+        │      ├─► Filtro 1: if (r.isForMainFrame) -> Deja pasar la página HTML base
+        │      ├─► Filtro 2: AdBlocker / NativeAdBlockEngine C++20 -> Descarta anuncios (0ms)
+        │      ├─► Filtro 3: NativeStreamClassifier.shouldDiscard() -> Descarta telemetría y assets
+        │      └─► Construye StreamCandidate(url, pageUrl=Referer, headers=r.requestHeaders)
+        │            │
+        │            ▼
+        └──► BRAZO 2: INSPECCIÓN EN DOM JAVASCRIPT (Metadatos Visuales / Anti-Prerolls / SPAs)
+             [universal_sniffer.js]
+               ├─► monitorVideo(): Evalúa video.duration (<60s es comercial y se descarta)
+               ├─► sniffPlayerApis(): Extrae calidades 1080p/720p de JWPlayer/Clappr
+               └─► reportMedia(): Despacha OMNICAST_STREAM: JSON hacia BrowserWebView.kt
+                     │
+        ┌────────────┴────────────────────────┐
+        ▼                                     ▼
 [DetectMediaStreamUseCase.kt] (Núcleo Hexagonal :core:domain)
-  │  (Analiza la URL candidata)
+  │  (Orquestación limpia sin dependencias Android)
   ├─► Paso 1: TelemetryFilterAdapter.isTelemetryOrGarbage(url)
-  │          Descarta /cdn-cgi/, trackers, telemetría y páginas iframe sin extensión
-  └─► Paso 2: StreamExtractorRegistry.findExtractor(url)
-             Enruta hacia OkRuSiteExtractorAdapter, FastreamExtractorAdapter o UniversalHlsExtractorAdapter
+  └─► Paso 2: Evalúa extractores registrados ordenados por prioridad:
+              for (extractor in sortedExtractors) {
+                  if (extractor.canHandle(candidate)) -> return extractor.extract(candidate)
+              }
+        │
+        ├─► Delegación obligatoria en [StreamCandidateValidator.kt]:
+        │     ├─► isWebDocumentOrPlayerRoute(): Descarta .html, .js, .css, /embed/, /e/, /cdn-cgi/
+        │     └─► isBinaryMediaStream(): Certifica .m3u8, .mp4, .mpd, /hls/, /pass/,
+        │                                y patrón estructural: (~ + token= + expiry=)
         │
         ▼
-[StreamQualityDetector.kt]
-  │  (Sondeo asíncrono y enriquecimiento de metadatos)
-  ├─► Inspecciona las variantes HLS/DASH (#EXT-X-STREAM-INF) sin quemar el token
-  └─► Añade la opción limpia a la lista de ActiveStreamHolder
+[Adaptadores Modulares Especializados ('Poner y Sacar')]
+  ├─► UniversalMp4ExtractorAdapter: Extrae MP4, WEBM, MKV
+  ├─► UniversalHlsExtractorAdapter: Extrae listas HLS .m3u8 y chunklists
+  ├─► UniversalDashExtractorAdapter: Extrae manifiestos .mpd
+  ├─► DoodstreamExtractorAdapter: Reconoce Doodstream / PlayMogo / CloudataCDN
+  │                               e inyecta Referer legítimo (https://playmogo.com/)
+  └─► FastreamExtractorAdapter: Inyecta User-Agent Desktop (UA_FASTREAM)
         │
         ▼
 [InAppBrowserScreen.kt / WvcVideoListSheet.kt]
-  │  (Muestra el botón flotante FAB con contador de videos detectados)
-  ├─► El usuario abre la hoja modal y selecciona el video deseado
-  └─► Invoca MediaPlatformResolver.prepareStreamForPlayback(selectedStream)
+  │  (Muestra el botón flotante con contador de videos >= 1)
+  ├─► Abre automáticamente el selector de casteo
+  └─► El usuario pulsa Transmitir -> MediaPlatformResolver.prepareStreamForPlayback()
         │
         ▼
-[MediaPlatformResolver.kt]
-  │  (Renovación síncrona en 0ms y preservación de cabeceras)
-  ├─► Si es Fastream/DropCDN: Configura Referer canónico de embed y User-Agent adecuado
-  ├─► Si es OK.ru: Inyecta Referer oficial y preserva opciones DASH/Progresivas
-  └─► Entrega el flujo listo al cliente de red
+[StreamProfileDatabase.kt (SQLite) & CloudStreamRuleSyncManager.kt (Supabase)]
+  ├─► SQLite Local: Guarda host + Referer + TargetPlayer (0ms)
+  └─► Nube: Reporta regla validada a Supabase (omnicast_stream_rules) tras 2 min continuos
         │
         ▼
 [SignalingClient.kt / QuickSignalingHelper.kt]

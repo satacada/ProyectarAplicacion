@@ -87,8 +87,13 @@ Este repositorio sigue el estándar abierto AGENTS.md para el desarrollo de la a
 - **Validador Centralizado de Dominio para Extractores (`StreamCandidateValidator`) [ESTÁNDAR OBLIGATORIO]:**
   Para erradicar la reinvención artesanal de filtros en `canHandle()`, todo nuevo extractor modular (`[Proveedor]ExtractorAdapter.kt`) DEBE delegar la comprobación binaria en `StreamCandidateValidator.isValidCdnStream(candidate.url, isDomainMatches)` o `StreamCandidateValidator.isBinaryMediaStream(url)`.
   1. *Descarte Automático:* Descarta incondicionalmente páginas HTML, documentos, scripts (.js, .css), assets, iframes (/e/, /embed, /watch, /dood?), endpoints de control (/pass_md5/) y telemetría (/cdn-cgi/).
-  2. *Contrato Binario:* Valida firmas binarias legítimas (.m3u8, .mp4, .mpd, /pass/, video~, /hls2/).
+  2. *Contrato Binario:* Valida firmas binarias legítimas (.m3u8, .mp4, .mpd, /pass/, video~, /hls2/ y tokens criptográficos con virgulilla ~ + token= + expiry=).
   3. *Mejora Continua:* Cualquier nuevo patrón global de CDN o trampa web se incorpora directamente en `StreamCandidateValidator.kt` dentro de `:core:domain`, protegiendo automáticamente a todos los extractores del sistema sin modificar su código individual ni generar código repetitivo.
+- **Estrategia en Tenaza Dual Obligatoria (Red + DOM / ADR-018 / HU-020):**
+  La captura de streams opera mediante dos brazos complementarios que convergen en `DetectMediaStreamUseCase`:
+  1. *Brazo de Red (`shouldInterceptRequest` en `BrowserWebView.kt`):* Captura el 100% del tráfico crudo emitido por `<iframe>`s cross-origin cerrados donde JavaScript tiene el acceso vedado por la *Same-Origin Policy* de Chromium. Extrae la URL de la CDN y su `Referer` legítimo (`docUrl`).
+  2. *Brazo de DOM (`universal_sniffer.js`):* Monitorea la etiqueta `<video>`, descarta anuncios comerciales (< 60 segundos), extrae calidades de JWPlayer/Clappr y captura navegaciones SPA en YouTube.
+  Queda TERMINANTEMENTE PROHIBIDO desmantelar cualquiera de los dos brazos; ambos se complementan mutuamente para garantizar la cobertura total de la web abierta y portales de cine.
 
 ---
 

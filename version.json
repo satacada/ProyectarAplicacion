@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 338,
-  "versionCodeReceiver": 321,
-  "versionName": "3.5.87",
-  "releaseTag": "v3.5.87",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.87/omnicast-sender-v3.5.87.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.87/omnicast-receiver-v3.5.87.apk",
-  "changelog": "v3.5.87 (Resolución Heurística de Blobs MSE y Poda de Dominios Muertos): 1) Sender (universal_sniffer.js): Implementación de resolveRealMediaSource() para enlazar streams blob: asignados al tag <video> con sus URLs de red legítimas (v.__hls.url, window.__omniGetLiveStream(), window.__omniCapturedMedia) con filtro estricto anti-comerciales (>60s) y blindaje absoluto de YouTube. 2) Sender (universal_sniffer.js): Poda de dominios espejo muertos (playmogo, d000d, myvidplay, ds2play) bajo el Principio de Evaluación y Poda de Soluciones Ineficaces de AGENTS.md."
+  "versionCodeSender": 339,
+  "versionCodeReceiver": 322,
+  "versionName": "3.5.88",
+  "releaseTag": "v3.5.88",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.88/omnicast-sender-v3.5.88.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.88/omnicast-receiver-v3.5.88.apk",
+  "changelog": "v3.5.88 (Observabilidad Cruda en Red shouldInterceptRequest y Poda de Hipótesis Fallida de Blobs DOM): 1) Sender (BrowserWebView.kt): Implementación de sensor de red OMNICAST_NET en shouldInterceptRequest para capturar tráfico de medios no estáticos emitido por iframes cerrados, revelando en tiempo real las peticiones de red hacia CDNs de video. 2) Sender (universal_sniffer.js): Poda completa de resolveRealMediaSource() y eliminación de sondeo inútil de __hls/blobs en el marco principal conforme a AGENTS.md."
 }

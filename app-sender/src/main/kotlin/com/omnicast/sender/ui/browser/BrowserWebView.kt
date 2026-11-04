@@ -208,6 +208,13 @@ fun BrowserWebView(
                             if (isAdBlockEnabled && (AdBlocker.isAd(reqUrl) || AdBlocker.isVideoAd(reqUrl) || NativeAdBlockEngine.shouldBlock(reqUrl, docUrl))) {
                                 return AdBlocker.createEmptyResponse()
                             }
+                            val cleanPath = reqUrl.substringBefore('?').lowercase()
+                            val isGenericAsset = cleanPath.endsWith(".css") || cleanPath.endsWith(".js") || cleanPath.endsWith(".png") ||
+                                                 cleanPath.endsWith(".jpg") || cleanPath.endsWith(".woff") || cleanPath.endsWith(".woff2") ||
+                                                 cleanPath.endsWith(".svg") || cleanPath.endsWith(".ico")
+                            if (!isGenericAsset) {
+                                android.util.Log.i("OMNICAST_NET", "🌐 Red: $reqUrl (Ref: $docUrl)")
+                            }
                             if (com.omnicast.sender.nativeclassifier.NativeStreamClassifier.shouldDiscard(reqUrl) || AdBlocker.isVideoAd(reqUrl)) {
                                 return super.shouldInterceptRequest(v, r)
                             }
@@ -218,6 +225,7 @@ fun BrowserWebView(
                             )
                             val detectedStream = com.omnicast.sender.ui.browser.extractors.StreamExtractorRegistry.useCase.execute(candidate)
                             if (detectedStream != null) {
+                                android.util.Log.i("OMNICAST_NET", "🎯 ¡Stream Detectado!: ${detectedStream.url}")
                                 val hdrs = BrowserUrlHelper.buildSafeHeaders(detectedStream.url, docUrl, UA_MOBILE, detectedStream.headers)
                                 try { java.net.URI(docUrl).host?.let { MediaPlayerSyncManager.learnAndSavePlayer(it, ctx) } } catch (_: Throwable) {}
                                 post {

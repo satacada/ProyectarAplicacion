@@ -74,22 +74,13 @@ fun TvRecFloatingBadge(
                     .background(Color(0xFFDC2626).copy(alpha = alpha))
             )
 
-            // Texto REC o GUARDANDO
+            // Texto REC o Rec XXX (donde XXX es el progreso %)
             Text(
-                text = if (isMovieDownload) "GUARDANDO" else "REC",
+                text = if (isMovieDownload) "Rec $progressPct%" else "REC",
                 color = Color.White,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Bold
             )
-
-            if (isMovieDownload) {
-                Text(
-                    text = "$progressPct%",
-                    color = Color(0xFF38BDF8),
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.ExtraBold
-                )
-            }
 
             Text(
                 text = formatDuration(durationSeconds * 1000L),

@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 343,
-  "versionCodeReceiver": 326,
-  "versionName": "3.5.92",
-  "releaseTag": "v3.5.92",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.92/omnicast-sender-v3.5.92.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.92/omnicast-receiver-v3.5.92.apk",
-  "changelog": "v3.5.92 (Guardián de Salida ante Grabación en Curso): 1) Diálogo de Confirmación al Salir (TvRecordExitConfirmDialog): Intercepción de la tecla Volver (BACK) en la pantalla principal del TV cuando una grabación o descarga de película está activa, evitando cierres accidentales y abortos de descarga. 2) Opciones Claras y Foco Seguro: Ofrece continuar grabando (foco predeterminado), detener y conservar el avance en disco, o descartar/borrar el archivo antes de salir. 3) Protección de Descargas en Segundo Plano: Mantiene informada la TV con tiempo grabado y porcentaje completado."
+  "versionCodeSender": 344,
+  "versionCodeReceiver": 327,
+  "versionName": "3.5.93",
+  "releaseTag": "v3.5.93",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.93/omnicast-sender-v3.5.93.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.93/omnicast-receiver-v3.5.93.apk",
+  "changelog": "v3.5.93 (Insignia REC Unificada y Nuevo Icono Castera Tv para Pantalla Principal de TV): 1) Insignia Superior 'Rec XXX': Reemplazado el texto 'GUARDANDO' por 'Rec $progressPct%' (ej: 'Rec 15%') en la insignia OSD flotante de descarga de películas tanto en reproductor como en modo Standby. 2) Icono y Banner Oficial para Pantalla Principal de Televisores: Sustituido el fondo azul por fondo blanco puro en el banner de Android TV (320x180) y en los iconos de la app (mipmap), incorporando la tipografía de Paramount+ en color azul característico (#0064FF) con el texto 'Castera Tv' centrado y de alta definición."
 }

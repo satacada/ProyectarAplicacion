@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 345,
-  "versionCodeReceiver": 328,
-  "versionName": "3.5.94",
-  "releaseTag": "v3.5.94",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.94/omnicast-sender-v3.5.94.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.94/omnicast-receiver-v3.5.94.apk",
-  "changelog": "v3.5.94 (Icono Castera Original con Fondo Blanco y Título Castera TV): 1) Preservación Total del Icono Original: Mantenido el emblema característico del teléfono celular emitiendo ondas de transmisión hacia la pantalla de TV. 2) Fondo Blanco Puro y Título Superior: Eliminado el fondo negro/oscuro, reemplazándolo por fondo blanco puro, e incorporando encima del icono el texto 'Castera TV' con la tipografía oficial de Paramount+ en azul brillante (#0064FF) para el banner (320x180) y todos los launcher icons de Android TV."
+  "versionCodeSender": 346,
+  "versionCodeReceiver": 329,
+  "versionName": "3.5.95",
+  "releaseTag": "v3.5.95",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.95/omnicast-sender-v3.5.95.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.95/omnicast-receiver-v3.5.95.apk",
+  "changelog": "v3.5.95 (Nuevo Icono y Banner Oficial Castera TV): 1) Nuevo Arte Oficial para TV Box: Integración exacta de la nueva imagen de marca con monitor curvo, pantalla con degradado estético, smartphone en primer plano emitiendo ondas de proyección y tipografía moderna 'Castera TV' sobre fondo blanco puro. 2) Actualización Integral de Assets: Generados y aplicados tv_banner.png (320x180), ic_castera_logo.png (512x512) y todos los launcher icons (ic_launcher e ic_launcher_round) para todas las densidades de pantalla (mdpi, hdpi, xhdpi, xxhdpi, xxxhdpi)."
 }

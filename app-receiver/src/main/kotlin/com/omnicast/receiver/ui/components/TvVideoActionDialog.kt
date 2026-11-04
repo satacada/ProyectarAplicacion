@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.omnicast.receiver.directstream.TvPlaylistItem
+import com.omnicast.receiver.directstream.TvDownloadedVideo
 
 @Composable
 fun TvVideoActionDialog(
@@ -41,23 +42,14 @@ fun TvVideoActionDialog(
             shape = RoundedCornerShape(16.dp),
             modifier = Modifier.width(420.dp).wrapContentHeight().border(2.dp, Color(0xFF38BDF8), RoundedCornerShape(16.dp))
         ) {
-            Column(
-                modifier = Modifier.fillMaxWidth().padding(20.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(9.dp)
-            ) {
+            Column(modifier = Modifier.fillMaxWidth().padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(9.dp)) {
                 Text("🎬 Opciones de la Película", color = Color(0xFF38BDF8), fontSize = 17.sp, fontWeight = FontWeight.Bold)
-                Text(
-                    text = item.title.ifBlank { "Película guardada" }, color = Color.White, fontSize = 13.sp,
-                    fontWeight = FontWeight.SemiBold, maxLines = 2, textAlign = TextAlign.Center, overflow = TextOverflow.Ellipsis
-                )
+                Text(text = item.title.ifBlank { "Película guardada" }, color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, maxLines = 2, textAlign = TextAlign.Center, overflow = TextOverflow.Ellipsis)
                 Spacer(modifier = Modifier.height(2.dp))
                 TvDialogButton(text = "▶️ Reproducir película", isPrimary = true, onClick = { onPlay(); onDismiss() })
                 TvDialogButton(text = "⬇️ Descargar película (Modo Puente / Aviso Disco)", isPrimary = false, onClick = { onDownload(); onDismiss() })
                 TvDialogButton(text = "🔄 Renovar enlace (QR móvil)", isPrimary = false, onClick = { onRenew(); onDismiss() })
-                if (TvShareHelper.canShare(item)) {
-                    TvDialogButton(text = "🔗 Compartir enlace", isPrimary = false, onClick = { onShare(); onDismiss() })
-                }
+                if (TvShareHelper.canShare(item)) { TvDialogButton(text = "🔗 Compartir enlace", isPrimary = false, onClick = { onShare(); onDismiss() }) }
                 TvDialogButton(text = "🗑️ Eliminar de guardados", isDanger = true, onClick = { onDelete(); onDismiss() })
                 TvDialogButton(text = "✕ Cancelar", isPrimary = false, onClick = onDismiss)
             }
@@ -66,13 +58,7 @@ fun TvVideoActionDialog(
 }
 
 @Composable
-private fun TvDialogButton(
-    text: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    isPrimary: Boolean = false,
-    isDanger: Boolean = false
-) {
+private fun TvDialogButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier, isPrimary: Boolean = false, isDanger: Boolean = false) {
     var isFocused by remember { mutableStateOf(false) }
     val bgColor = when {
         isFocused -> if (isDanger) Color(0xFFEF4444) else Color(0xFF38BDF8)
@@ -80,17 +66,10 @@ private fun TvDialogButton(
         isPrimary -> Color(0xFF2563EB)
         else -> Color(0xFF2D243F)
     }
-
     Surface(
-        color = bgColor,
-        shape = RoundedCornerShape(8.dp),
-        modifier = modifier
-            .fillMaxWidth()
-            .height(42.dp)
-            .border(if (isFocused) 2.dp else 1.dp, if (isFocused) Color.White else Color(0xFF3E3255), RoundedCornerShape(8.dp))
-            .onFocusChanged { isFocused = it.isFocused }
-            .focusable()
-            .clickable(onClick = onClick)
+        color = bgColor, shape = RoundedCornerShape(8.dp),
+        modifier = modifier.fillMaxWidth().height(42.dp).border(if (isFocused) 2.dp else 1.dp, if (isFocused) Color.White else Color(0xFF3E3255), RoundedCornerShape(8.dp))
+            .onFocusChanged { isFocused = it.isFocused }.focusable().clickable(onClick = onClick)
     ) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text(text = text, color = if (isFocused && !isDanger) Color.Black else Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold)
@@ -99,23 +78,14 @@ private fun TvDialogButton(
 }
 
 @Composable
-fun TvSaveToFolderDialog(
-    movieTitle: String,
-    onSaveToFavorites: () -> Unit,
-    onSaveToWatchLater: () -> Unit,
-    onDismiss: () -> Unit
-) {
+fun TvSaveToFolderDialog(movieTitle: String, onSaveToFavorites: () -> Unit, onSaveToWatchLater: () -> Unit, onDismiss: () -> Unit) {
     Dialog(onDismissRequest = onDismiss) {
         Card(
             colors = CardDefaults.cardColors(containerColor = Color(0xFF1E182A)),
             shape = RoundedCornerShape(16.dp),
             modifier = Modifier.width(400.dp).wrapContentHeight().border(2.dp, Color(0xFF38BDF8), RoundedCornerShape(16.dp))
         ) {
-            Column(
-                modifier = Modifier.fillMaxWidth().padding(20.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
+            Column(modifier = Modifier.fillMaxWidth().padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text("🔖 Guardar Película", color = Color(0xFF38BDF8), fontSize = 17.sp, fontWeight = FontWeight.Bold)
                 Text(movieTitle.ifBlank { "Película" }, color = Color.White, fontSize = 13.sp, maxLines = 2, textAlign = TextAlign.Center, overflow = TextOverflow.Ellipsis)
                 TvDialogButton(text = "⭐ Guardar en Favoritos", isPrimary = true, onClick = { onSaveToFavorites(); onDismiss() })
@@ -131,11 +101,13 @@ fun TvSaveToFolderDialog(
 fun TvPlaylistItemRow(
     item: TvPlaylistItem,
     isPhoneConnected: Boolean = false,
+    downloadedVideo: TvDownloadedVideo? = null,
     onPlay: () -> Unit,
     onMenu: () -> Unit,
     onSaveToFolder: (() -> Unit)? = null,
     onRemoveSaved: (() -> Unit)? = null,
     onDownload: (() -> Unit)? = null,
+    onLocalAction: (() -> Unit)? = null,
     isSelected: Boolean = false,
     onToggleSelect: (() -> Unit)? = null,
     modifier: Modifier = Modifier
@@ -184,9 +156,10 @@ fun TvPlaylistItemRow(
                         isPhoneConnected -> "📱 Proyectar directo desde celular"
                         else -> "🔒 Enlace temporal (Conecta celular)"
                     }
+                    val diskBadge = if (downloadedVideo != null) " • 💾 En disco" else ""
                     Text(
-                        text = "$minLeft • 🌐 $webName • $actionLabel",
-                        color = if (isFocused) Color(0xFF7DD3FC) else if (!hasEphemeralToken) Color(0xFF34D399) else if (isPhoneConnected) Color(0xFF38BDF8) else Color(0xFF94A3B8),
+                        text = "$minLeft • 🌐 $webName • $actionLabel$diskBadge",
+                        color = if (downloadedVideo != null) Color(0xFF34D399) else if (isFocused) Color(0xFF7DD3FC) else if (!hasEphemeralToken) Color(0xFF34D399) else if (isPhoneConnected) Color(0xFF38BDF8) else Color(0xFF94A3B8),
                         fontSize = 11.sp,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
@@ -251,7 +224,18 @@ fun TvPlaylistItemRow(
             }
         }
 
-        if (onDownload != null) {
+        if (downloadedVideo != null) {
+            var isDiskFocused by remember { mutableStateOf(false) }
+            Box(
+                modifier = Modifier.height(38.dp).onFocusChanged { isDiskFocused = it.isFocused }
+                    .background(if (isDiskFocused) Color(0xFF10B981) else Color(0xFF064E3B), RoundedCornerShape(8.dp))
+                    .border(if (isDiskFocused) 2.dp else 1.dp, if (isDiskFocused) Color.White else Color(0xFF10B981), RoundedCornerShape(8.dp))
+                    .focusable().clickable { onLocalAction?.invoke() }.padding(horizontal = 10.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(text = "💾 En disco", color = if (isDiskFocused) Color.Black else Color(0xFF6EE7B7), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+            }
+        } else if (onDownload != null) {
             var isDlFocused by remember { mutableStateOf(false) }
             Box(
                 modifier = Modifier.size(38.dp).onFocusChanged { isDlFocused = it.isFocused }

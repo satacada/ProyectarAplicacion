@@ -64,8 +64,8 @@ class ExoPlayerTvManager(private val context: Context) {
 
             val httpFactory = DefaultHttpDataSource.Factory()
                 .setUserAgent(DEFAULT_UA).setAllowCrossProtocolRedirects(true).setConnectTimeoutMs(20000).setReadTimeoutMs(20000)
-
-            val mediaSourceFactory = DefaultMediaSourceFactory(context).setDataSourceFactory(httpFactory)
+            val dsFactory = androidx.media3.datasource.DefaultDataSource.Factory(context, httpFactory)
+            val mediaSourceFactory = DefaultMediaSourceFactory(context).setDataSourceFactory(dsFactory)
 
             player = ExoPlayer.Builder(context, renderersFactory)
                 .setMediaSourceFactory(mediaSourceFactory)
@@ -152,7 +152,7 @@ class ExoPlayerTvManager(private val context: Context) {
         val safeHeaders = filterSafeHeaders(effectiveUrl, headers)
         val mediaItem = buildMediaItem(effectiveUrl, title, branch, subtitles)
 
-        if (safeHeaders.isEmpty()) {
+        if (safeHeaders.isEmpty() || effectiveUrl.startsWith("/") || effectiveUrl.startsWith("file://")) {
             playClean(effectiveUrl, title, startPositionMs, branch, subtitles)
             return
         }
@@ -165,9 +165,8 @@ class ExoPlayerTvManager(private val context: Context) {
                 .setReadTimeoutMs(15000)
                 .setDefaultRequestProperties(safeHeaders)
 
-            val mediaSource = DefaultMediaSourceFactory(context)
-                .setDataSourceFactory(httpFactory)
-                .createMediaSource(mediaItem)
+            val dsFactory = androidx.media3.datasource.DefaultDataSource.Factory(context, httpFactory)
+            val mediaSource = DefaultMediaSourceFactory(context).setDataSourceFactory(dsFactory).createMediaSource(mediaItem)
 
             player?.apply {
                 stop()
@@ -194,7 +193,8 @@ class ExoPlayerTvManager(private val context: Context) {
             val httpFactory = DefaultHttpDataSource.Factory()
                 .setUserAgent(safe["User-Agent"] ?: DEFAULT_UA).setAllowCrossProtocolRedirects(true).setConnectTimeoutMs(15000).setReadTimeoutMs(15000)
             if (safe.isNotEmpty()) httpFactory.setDefaultRequestProperties(safe)
-            val mediaSource = DefaultMediaSourceFactory(context).setDataSourceFactory(httpFactory).createMediaSource(mediaItem)
+            val dsFactory = androidx.media3.datasource.DefaultDataSource.Factory(context, httpFactory)
+            val mediaSource = DefaultMediaSourceFactory(context).setDataSourceFactory(dsFactory).createMediaSource(mediaItem)
             player?.apply {
                 stop(); clearMediaItems(); setMediaSource(mediaSource)
                 if (startPositionMs > 0L) seekTo(startPositionMs) else seekToDefaultPosition()

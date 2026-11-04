@@ -28,6 +28,10 @@ import androidx.compose.ui.unit.sp
 import com.omnicast.receiver.directstream.TvHistoryItem
 import com.omnicast.receiver.directstream.TvPlaylist
 import com.omnicast.receiver.directstream.TvPlaylistItem
+import com.omnicast.receiver.directstream.TvDownloadedVideo
+import com.omnicast.receiver.directstream.TvDownloadsManager
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 @Composable
 fun TvStandbyCleanScreen(
@@ -36,6 +40,7 @@ fun TvStandbyCleanScreen(
     history: List<TvHistoryItem> = emptyList(),
     playlists: List<TvPlaylist> = emptyList(),
     onPlayHistory: (TvHistoryItem) -> Unit = {},
+    onPlayLocalVideo: (String, String) -> Unit = { _, _ -> },
     onSaveMovieToFolder: (String, String, Long, Long, String?, Map<String, String>, String) -> Unit = { _, _, _, _, _, _, _ -> },
     isMovieSaved: (String, String) -> Boolean = { _, _ -> false },
     onPlayPlaylist: (TvPlaylistItem) -> Unit = {},
@@ -47,7 +52,7 @@ fun TvStandbyCleanScreen(
     expiredItemForRenew: TvPlaylistItem? = null,
     onClearExpiredRenew: () -> Unit = {}
 ) {
-    var selectedTab by remember { mutableIntStateOf(1) } // 0: Recientes (Historial), 1: Todo (Principal), 2: Favoritos
+    var selectedTab by remember { mutableIntStateOf(1) } // 0: Recientes, 1: Guardados, 2: Descargas
     var enteredPlaylistId by remember { mutableStateOf<String?>(null) }
     var menuItem by remember { mutableStateOf<TvPlaylistItem?>(null) }
     var sharingItem by remember { mutableStateOf<TvPlaylistItem?>(null) }
@@ -63,6 +68,17 @@ fun TvStandbyCleanScreen(
     val selectedUrls = remember { mutableStateListOf<String>() }
     val scope = rememberCoroutineScope()
     val isPhoneConnected = !connectedClientIp.isNullOrBlank()
+    val context = androidx.compose.ui.platform.LocalContext.current
+    var downloadedVideos by remember { mutableStateOf<List<TvDownloadedVideo>>(emptyList()) }
+    var localActionVideo by remember { mutableStateOf<TvDownloadedVideo?>(null) }
+    var refreshDownloadsTrigger by remember { mutableIntStateOf(0) }
+
+    LaunchedEffect(selectedTab, refreshDownloadsTrigger) {
+        withContext(Dispatchers.IO) {
+            val list = TvDownloadsManager.getDownloadedVideos(context)
+            withContext(Dispatchers.Main) { downloadedVideos = list }
+        }
+    }
 
     LaunchedEffect(enteredPlaylistId) {
         if (enteredPlaylistId != null) {
@@ -130,14 +146,10 @@ fun TvStandbyCleanScreen(
                         modifier = Modifier.onFocusChanged { isTrashFocused = it.isFocused }.focusable()
                             .clickable {
                                 if (hasSel) {
-                                    val count = selectedUrls.size
-                                    onDeleteMultiple(selectedUrls.toSet())
-                                    selectedUrls.clear()
+                                    val count = selectedUrls.size; onDeleteMultiple(selectedUrls.toSet()); selectedUrls.clear()
                                     scope.launch {
                                         kotlinx.coroutines.delay(120)
-                                        val remaining = currentPlaylist?.items?.size ?: 0
-                                        if (remaining > count) runCatching { firstItemFocusRequester.requestFocus() }
-                                        else runCatching { backButtonFocusRequester.requestFocus() }
+                                        if ((currentPlaylist?.items?.size ?: 0) > count) runCatching { firstItemFocusRequester.requestFocus() } else runCatching { backButtonFocusRequester.requestFocus() }
                                     }
                                 }
                             }
@@ -161,12 +173,14 @@ fun TvStandbyCleanScreen(
                             LazyColumn(state = listState, verticalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxSize()) {
                                 itemsIndexed(playlistFilteredItems, key = { _, it -> it.url }) { index, item ->
                                     val isSel = selectedUrls.contains(item.url)
+                                    val dl = remember(item.title, downloadedVideos) { TvDownloadsManager.findDownloadedVideo(item.title, downloadedVideos) }
                                     TvPlaylistItemRow(
-                                        item = item, isPhoneConnected = isPhoneConnected,
+                                        item = item, isPhoneConnected = isPhoneConnected, downloadedVideo = dl,
                                         onPlay = { onPlayPlaylist(item) }, onMenu = { menuItem = item },
                                         onSaveToFolder = { savingDialogItem = item },
                                         onRemoveSaved = { onDeletePlaylist(item) },
                                         onDownload = { downloadingItem = item },
+                                        onLocalAction = { localActionVideo = dl },
                                         isSelected = isSel, onToggleSelect = { if (isSel) selectedUrls.remove(item.url) else selectedUrls.add(item.url) },
                                         modifier = if (index == 0) Modifier.focusRequester(firstItemFocusRequester) else Modifier
                                     )
@@ -187,22 +201,37 @@ fun TvStandbyCleanScreen(
                                                 pageUrl = item.pageUrl ?: item.headers["X-Source-Page-Url"] ?: item.headers["Referer"],
                                                 headers = item.headers, lastPositionMs = item.lastPositionMs, durationMs = item.durationMs
                                             )
+                                            val dl = remember(item.title, downloadedVideos) { TvDownloadsManager.findDownloadedVideo(item.title, downloadedVideos) }
                                             TvRecentItemRow(
-                                                item = item, isSaved = saved, isPhoneConnected = isPhoneConnected,
+                                                item = item, isSaved = saved, downloadedVideo = dl, isPhoneConnected = isPhoneConnected,
                                                 onClick = { onPlayHistory(item) },
-                                                onSave = { savingDialogItem = asPlItem },
-                                                onUnsave = { onDeletePlaylist(asPlItem) },
-                                                onDownload = { downloadingItem = asPlItem }
+                                                onToggleSave = { if (saved) onDeletePlaylist(asPlItem) else savingDialogItem = asPlItem },
+                                                onDownload = { downloadingItem = asPlItem },
+                                                onLocalAction = { localActionVideo = dl }
                                             )
                                         }
                                     }
                                 }
                             }
-                            1, 2 -> {
-                                val folders = if (selectedTab == 2) activePlaylists.filter { it.isDefault || it.name.contains("Favorito", ignoreCase = true) } else activePlaylists
+                            1 -> {
                                 LazyColumn(state = listState, verticalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxSize()) {
-                                    items(folders, key = { it.id }) { pl ->
+                                    items(activePlaylists, key = { it.id }) { pl ->
                                         TvFolderRow(name = pl.name, date = formatFolderDate(pl.createdAt), itemCount = pl.items.size, onClick = { enteredPlaylistId = pl.id; searchQuery = ""; selectedUrls.clear() })
+                                    }
+                                }
+                            }
+                            2 -> {
+                                if (downloadedVideos.isEmpty()) {
+                                    TvEmptyState("No hay videos descargados en el TV Box ni en la memoria USB.")
+                                } else {
+                                    LazyColumn(state = listState, verticalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxSize()) {
+                                        items(downloadedVideos, key = { it.filePath }) { video ->
+                                            TvDownloadItemRow(
+                                                video = video,
+                                                onPlay = { onPlayLocalVideo(video.filePath, video.title) },
+                                                onDelete = { localActionVideo = video }
+                                            )
+                                        }
                                     }
                                 }
                             }
@@ -215,7 +244,7 @@ fun TvStandbyCleanScreen(
             Box(modifier = Modifier.fillMaxWidth().padding(top = 10.dp), contentAlignment = Alignment.Center) {
                 Surface(color = Color(0xFF251C35), shape = RoundedCornerShape(20.dp), modifier = Modifier.padding(vertical = 4.dp)) {
                     Text(
-                        if (enteredPlaylistId != null) "Pulsa [Atrás] en el control para volver a las carpetas" else "¿No encuentras tus archivos? Revisa Recientes (Historial) o proyecta desde tu celular",
+                        if (enteredPlaylistId != null) "Pulsa [Atrás] en el control para volver a las carpetas" else if (selectedTab == 2) "Películas descargadas localmente • Disponibles 100% offline" else "¿No encuentras tus archivos? Revisa Recientes (Historial) o proyecta desde tu celular",
                         color = Color(0xFF38BDF8), fontSize = 12.sp, modifier = Modifier.padding(horizontal = 18.dp, vertical = 6.dp)
                     )
                 }
@@ -232,9 +261,7 @@ fun TvStandbyCleanScreen(
                     onDeletePlaylist(item); menuItem = null
                     scope.launch {
                         kotlinx.coroutines.delay(120)
-                        val rem = currentPlaylist?.items?.size ?: 0
-                        if (rem > 1) runCatching { firstItemFocusRequester.requestFocus() }
-                        else runCatching { backButtonFocusRequester.requestFocus() }
+                        if ((currentPlaylist?.items?.size ?: 0) > 1) runCatching { firstItemFocusRequester.requestFocus() } else runCatching { backButtonFocusRequester.requestFocus() }
                     }
                 },
                 onDismiss = { menuItem = null }
@@ -252,31 +279,19 @@ fun TvStandbyCleanScreen(
         sharingItem?.let { item -> TvShareDialog(item = item, onDismiss = { sharingItem = null }) }
         renewItem?.let { item -> TvRenewQrDialog(item = item, onDismiss = { renewItem = null; onClearExpiredRenew() }) }
         downloadingItem?.let { item -> TvDownloadMovieDialog(item = item, onDismiss = { downloadingItem = null }) }
-        if (showTvLangDialog) {
-            TvLanguageDialog(onDismiss = { showTvLangDialog = false }, onLanguageSelected = { showTvLangDialog = false })
+        localActionVideo?.let { video ->
+            TvLocalVideoActionDialog(
+                video = video,
+                onPlay = { v -> onPlayLocalVideo(v.filePath, v.title) },
+                onDelete = { v ->
+                    if (TvDownloadsManager.deleteDownloadedVideo(v.filePath)) {
+                        android.widget.Toast.makeText(context, "🗑️ Video eliminado del disco", android.widget.Toast.LENGTH_SHORT).show()
+                        refreshDownloadsTrigger++
+                    } else android.widget.Toast.makeText(context, "⚠️ No se pudo eliminar el archivo", android.widget.Toast.LENGTH_SHORT).show()
+                },
+                onDismiss = { localActionVideo = null }
+            )
         }
-    }
-}
-
-@Composable
-private fun TvFolderDetailHeader(folderName: String, itemCount: Int, onBack: () -> Unit, modifier: Modifier = Modifier) {
-    var isBackFocused by remember { mutableStateOf(false) }
-    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-        Card(
-            colors = CardDefaults.cardColors(containerColor = if (isBackFocused) Color(0xFF38BDF8) else Color(0xFF251C35)),
-            shape = RoundedCornerShape(8.dp),
-            modifier = modifier.onFocusChanged { isBackFocused = it.isFocused }.focusable().clickable(onClick = onBack)
-                .border(1.dp, if (isBackFocused) Color.White else Color(0xFF38BDF8), RoundedCornerShape(8.dp))
-        ) {
-            Text("◀ Volver a carpetas", color = if (isBackFocused) Color.Black else Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp))
-        }
-        Text("📂 $folderName ($itemCount película${if (itemCount != 1) "s" else ""})", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
-    }
-}
-
-@Composable
-private fun TvEmptyState(msg: String) {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text(msg, color = Color(0xFF64748B), fontSize = 14.sp)
+        if (showTvLangDialog) TvLanguageDialog(onDismiss = { showTvLangDialog = false }, onLanguageSelected = { showTvLangDialog = false })
     }
 }

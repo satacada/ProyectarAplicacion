@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 341,
-  "versionCodeReceiver": 324,
-  "versionName": "3.5.90",
-  "releaseTag": "v3.5.90",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.90/omnicast-sender-v3.5.90.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.90/omnicast-receiver-v3.5.90.apk",
-  "changelog": "v3.5.90 (Grabación Inteligente PVR y Descarga de Películas en TV Box y Móvil): 1) Telemetría Remota Bidireccional (RecordTelemetry): El celular muestra espacio real en disco de la TV Box, alerta de blindaje anti-brick (2.0 GB interno / 500 MB USB), calidades detectadas del flujo y carpeta de destino. 2) Unificación de Motores PVR y Descarga VOD en TV (PvrStreamRecorder / TvDownloadManager): Badge flotante unificado en TV (REC y porcentaje descargado), selector de carpetas personalizadas (Download, Movies, USB) y sondeo de resoluciones reales del manifiesto HLS. 3) Descarga en Segundo Plano con Overlay Global (TvGlobalRecordOverlay): Continuidad de descarga al terminar de ver la película o en Standby con opciones de parar/conservar o descartar/eliminar."
+  "versionCodeSender": 342,
+  "versionCodeReceiver": 325,
+  "versionName": "3.5.91",
+  "releaseTag": "v3.5.91",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.91/omnicast-sender-v3.5.91.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.91/omnicast-receiver-v3.5.91.apk",
+  "changelog": "v3.5.91 (Pestaña Descargas en TV, Reproducción Local y Botones Modernos): 1) Corrección de Crash en Detención de Descarga: Erradicado el fallo de Toast en hilo IO al presionar 'Conservar'. 2) Pestaña 'Descargas' (TvDownloadsManager): Reemplazada la pestaña '⭐ Guardados' por '📥 Descargas' con escaneo automático de almacenamiento interno y memorias USB, reproduciendo videos locales con un clic en ExoPlayer. 3) Detección de Archivo en Disco: En 'Recientes', 'Ver más tarde' y 'Favoritos', las películas descargadas reemplazan el icono de descarga por un botón moderno '💾 En disco' que permite reproducir desde disco o eliminar para liberar espacio. 4) Interfaz Moderna: Sustitución de etiquetas dobles por estrella única y diseño flat/frosted glass con anillos D-Pad de alto contraste."
 }

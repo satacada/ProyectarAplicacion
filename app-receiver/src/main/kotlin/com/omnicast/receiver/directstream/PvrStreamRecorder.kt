@@ -77,12 +77,12 @@ object PvrStreamRecorder {
             )
 
             TvStorageSafetyManager.startWatchdog(targetDir.path, useUsb, recorderScope) { alert ->
-                stopRecording(alert); onStopped(alert)
+                stopRecording(alert); recorderScope.launch(Dispatchers.Main) { onStopped(alert) }
             }
 
             if (timerMinutes > 0) {
                 TvRecordTimerManager.startTimer(timerMinutes, recorderScope) {
-                    stopRecording("⏰ Temporizador completado. Grabación guardada."); onStopped("TIMER_FINISHED")
+                    stopRecording("⏰ Temporizador completado. Grabación guardada."); recorderScope.launch(Dispatchers.Main) { onStopped("TIMER_FINISHED") }
                 }
             }
 
@@ -167,9 +167,9 @@ object PvrStreamRecorder {
                     targetHeight = targetHeight,
                     onProgress = { p ->
                         if (!p.isDownloading && p.isCompleted) {
-                            stopRecording("✅ Película guardada exitosamente"); onStopped("✅ Película guardada exitosamente")
+                            stopRecording("✅ Película guardada exitosamente"); recorderScope.launch(Dispatchers.Main) { onStopped("✅ Película guardada exitosamente") }
                         } else if (!p.isDownloading && p.errorMsg != null) {
-                            stopRecording(p.errorMsg); onStopped(p.errorMsg)
+                            stopRecording(p.errorMsg); recorderScope.launch(Dispatchers.Main) { onStopped(p.errorMsg) }
                         } else {
                             _progress.value = _progress.value.copy(progressPct = p.percent, recordedBytes = p.downloadedBytes, totalExpectedBytes = p.totalBytes)
                         }

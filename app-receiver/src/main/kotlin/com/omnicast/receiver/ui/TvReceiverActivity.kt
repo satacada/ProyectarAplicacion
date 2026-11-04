@@ -101,7 +101,7 @@ class TvReceiverActivity : ComponentActivity() {
                     when (val state = receiverState.value) {
                     is ReceiverUiState.Standby, is ReceiverUiState.ClientConnectedStandby -> TvStandbyCleanScreen(
                         ipAddress = localIpAddress.value, connectedClientIp = connectedClientAddress.value, history = historyList, playlists = playlistsList,
-                        onPlayHistory = { playHistoryItem(it) },
+                        onPlayHistory = { playHistoryItem(it) }, onPlayLocalVideo = { path, title -> startOrAutoRecastMedia(path, title, 0L, null, emptyMap()) },
                         onSaveMovieToFolder = { title, url, posMs, durMs, pageUrl, headers, folderId ->
                             val srcPage = pageUrl ?: headers["X-Source-Page-Url"] ?: headers["Referer"]
                             playlistManager.saveMovie(title, url, posMs, srcPage, headers, folderId, durMs)

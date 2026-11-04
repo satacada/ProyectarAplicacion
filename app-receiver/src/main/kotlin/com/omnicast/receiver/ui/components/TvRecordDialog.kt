@@ -217,14 +217,14 @@ fun TvRecordDialog(
                                     context = context, title = title, url = streamUrl, headers = headers,
                                     useUsb = isUsb, customFolder = targetPath, targetHeight = selectedResolution,
                                     timerMinutes = effectiveTimer,
-                                    onStopped = { reason -> Toast.makeText(context, reason, Toast.LENGTH_LONG).show() }
+                                    onStopped = { reason -> android.os.Handler(android.os.Looper.getMainLooper()).post { Toast.makeText(context.applicationContext, reason, Toast.LENGTH_LONG).show() } }
                                 )
                             } else {
                                 PvrStreamRecorder.startMovieDownload(
                                     context = context, title = title, url = streamUrl, headers = headers,
                                     useUsb = isUsb, customFolder = targetPath, targetHeight = selectedResolution,
                                     expectedBytes = durationMs.takeIf { it > 0 }?.let { (it / 1000L) * 165_000L } ?: 800_000_000L,
-                                    onStopped = { reason -> Toast.makeText(context, reason, Toast.LENGTH_LONG).show() }
+                                    onStopped = { reason -> android.os.Handler(android.os.Looper.getMainLooper()).post { Toast.makeText(context.applicationContext, reason, Toast.LENGTH_LONG).show() } }
                                 )
                             }
                             onRecordingStarted(); onDismiss()

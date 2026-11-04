@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.omnicast.receiver.directstream.TvHistoryItem
 import com.omnicast.receiver.directstream.TvPlaylistItem
+import com.omnicast.receiver.directstream.TvDownloadedVideo
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -63,7 +64,7 @@ fun TvCleanTopBar(
         Row(horizontalArrangement = Arrangement.spacedBy(20.dp), verticalAlignment = Alignment.CenterVertically) {
             TvTopTab(label = com.omnicast.receiver.language.TvLanguageManager.t(ctx, "recent_watched", tvLang), isSelected = selectedTab == 0, onClick = { onSelectTab(0) })
             TvTopTab(label = com.omnicast.receiver.language.TvLanguageManager.t(ctx, "saved_title", tvLang), isSelected = selectedTab == 1, onClick = { onSelectTab(1) })
-            TvTopTab(label = "⭐ " + com.omnicast.receiver.language.TvLanguageManager.t(ctx, "saved_title", tvLang), isSelected = selectedTab == 2, onClick = { onSelectTab(2) })
+            TvTopTab(label = "📥 Descargas", isSelected = selectedTab == 2, onClick = { onSelectTab(2) })
         }
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             var isLangFocused by remember { mutableStateOf(false) }
@@ -133,35 +134,22 @@ fun TvBookmarkOutlineIcon(modifier: Modifier = Modifier, color: Color = Color(0x
 }
 
 @Composable
-fun TvBookmarkRemoveIcon(modifier: Modifier = Modifier, color: Color = Color(0xFFF87171)) {
-    Canvas(modifier = modifier) {
-        val w = size.width; val h = size.height; val stroke = 1.7.dp.toPx()
-        val path = androidx.compose.ui.graphics.Path().apply {
-            moveTo(w * 0.20f, h * 0.12f); lineTo(w * 0.68f, h * 0.12f); lineTo(w * 0.68f, h * 0.86f); lineTo(w * 0.44f, h * 0.68f); lineTo(w * 0.20f, h * 0.86f); close()
-        }
-        drawPath(path = path, color = color, style = Stroke(width = stroke, cap = StrokeCap.Round, join = StrokeJoin.Round))
-        drawLine(color = color, start = Offset(w * 0.64f, h * 0.26f), end = Offset(w * 0.90f, h * 0.52f), strokeWidth = stroke, cap = StrokeCap.Round)
-        drawLine(color = color, start = Offset(w * 0.90f, h * 0.26f), end = Offset(w * 0.64f, h * 0.52f), strokeWidth = stroke, cap = StrokeCap.Round)
-    }
-}
-
-@Composable
 fun TvRecentItemRow(
     item: TvHistoryItem,
     isSaved: Boolean = false,
+    downloadedVideo: TvDownloadedVideo? = null,
     isPhoneConnected: Boolean = false,
     onClick: () -> Unit,
-    onSave: () -> Unit = {},
-    onUnsave: () -> Unit = {},
-    onDownload: () -> Unit = {}
+    onToggleSave: () -> Unit = {},
+    onDownload: () -> Unit = {},
+    onLocalAction: () -> Unit = {}
 ) {
     var isPlayFocused by remember { mutableStateOf(false) }
     var isSaveFocused by remember { mutableStateOf(false) }
-    var isUnsaveFocused by remember { mutableStateOf(false) }
-    var isDlFocused by remember { mutableStateOf(false) }
+    var isActionFocused by remember { mutableStateOf(false) }
     val webName = remember(item) { com.omnicast.receiver.directstream.TvPlaylistManager.extractCleanWebName(item.pageUrl, item.headers, item.mediaUrl) }
     val hasEphemeralToken = remember(item.mediaUrl) { com.omnicast.core.domain.usecases.StreamManifestProbe.hasSignedSecurityToken(item.mediaUrl) }
-    val rowHighlighted = isPlayFocused || isSaveFocused || isUnsaveFocused || isDlFocused
+    val rowHighlighted = isPlayFocused || isSaveFocused || isActionFocused
 
     Card(
         colors = CardDefaults.cardColors(containerColor = if (rowHighlighted) Color(0xFF281F3B) else Color(0xFF1E182A)),
@@ -177,57 +165,52 @@ fun TvRecentItemRow(
                 Text("▶", color = if (isPlayFocused) Color(0xFF38BDF8) else Color(0xFF10B981), fontSize = 16.sp)
                 Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     Text(text = item.title, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    val isLive = item.durationMs <= 0L || item.mediaUrl.contains("linear", true) || item.mediaUrl.contains("live", true); val minLeft = if (isLive) "🔴 EN VIVO" else if (item.lastPositionMs > 0L) "⏱ Quedó en ${formatDuration(item.lastPositionMs)}" else "⏱ Desde el inicio (0:00)"
+                    val isLive = item.durationMs <= 0L || item.mediaUrl.contains("linear", true) || item.mediaUrl.contains("live", true)
+                    val minLeft = if (isLive) "🔴 EN VIVO" else if (item.lastPositionMs > 0L) "⏱ Quedó en ${formatDuration(item.lastPositionMs)}" else "⏱ Desde el inicio (0:00)"
                     val actionLabel = when {
                         !hasEphemeralToken -> "▶ Continuar viendo"
                         isPhoneConnected -> "📱 Proyectar directo desde celular"
                         else -> "🔒 Enlace temporal (Conecta celular)"
                     }
+                    val diskBadge = if (downloadedVideo != null) " • 💾 En disco" else ""
                     Text(
-                        text = "$minLeft • 🌐 $webName • $actionLabel",
-                        color = if (!hasEphemeralToken) Color(0xFF34D399) else if (isPhoneConnected) Color(0xFF38BDF8) else Color(0xFF94A3B8),
-                        fontSize = 11.sp,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
+                        text = "$minLeft • 🌐 $webName • $actionLabel$diskBadge",
+                        color = if (downloadedVideo != null) Color(0xFF34D399) else if (!hasEphemeralToken) Color(0xFF34D399) else if (isPhoneConnected) Color(0xFF38BDF8) else Color(0xFF94A3B8),
+                        fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis
                     )
                 }
             }
 
             Box(
                 modifier = Modifier.size(38.dp).onFocusChanged { isSaveFocused = it.isFocused }
-                    .background(if (isSaveFocused) Color(0xFF10B981) else if (isSaved) Color(0xFF064E3B) else Color(0xFF251C38), RoundedCornerShape(8.dp))
-                    .border(if (isSaveFocused) 2.dp else 1.dp, if (isSaveFocused) Color.White else if (isSaved) Color(0xFF10B981) else Color(0xFF38BDF8), RoundedCornerShape(8.dp))
-                    .focusable().clickable { onSave() },
+                    .background(if (isSaveFocused) Color(0xFFF59E0B) else if (isSaved) Color(0xFF3B2E15) else Color(0xFF251C38), RoundedCornerShape(8.dp))
+                    .border(if (isSaveFocused) 2.dp else 1.dp, if (isSaveFocused) Color.White else if (isSaved) Color(0xFFF59E0B) else Color(0xFF38BDF8), RoundedCornerShape(8.dp))
+                    .focusable().clickable { onToggleSave() },
                 contentAlignment = Alignment.Center
             ) {
-                TvBookmarkOutlineIcon(
-                    modifier = Modifier.size(18.dp),
-                    color = if (isSaveFocused) Color.Black else if (isSaved) Color(0xFF10B981) else Color(0xFF38BDF8),
-                    filled = isSaved
-                )
+                Text(text = if (isSaved) "⭐" else "☆", fontSize = 16.sp, color = if (isSaveFocused) Color.Black else if (isSaved) Color(0xFFF59E0B) else Color(0xFF94A3B8))
             }
 
-            Box(
-                modifier = Modifier.size(38.dp).onFocusChanged { isUnsaveFocused = it.isFocused }
-                    .background(if (isUnsaveFocused) Color(0xFFEF4444) else Color(0xFF2B1924), RoundedCornerShape(8.dp))
-                    .border(if (isUnsaveFocused) 2.dp else 1.dp, if (isUnsaveFocused) Color.White else Color(0xFFF87171), RoundedCornerShape(8.dp))
-                    .focusable().clickable { onUnsave() },
-                contentAlignment = Alignment.Center
-            ) {
-                TvBookmarkRemoveIcon(
-                    modifier = Modifier.size(18.dp),
-                    color = if (isUnsaveFocused) Color.White else Color(0xFFF87171)
-                )
-            }
-
-            Box(
-                modifier = Modifier.size(38.dp).onFocusChanged { isDlFocused = it.isFocused }
-                    .background(if (isDlFocused) Color(0xFFF59E0B) else Color(0xFF332510), RoundedCornerShape(8.dp))
-                    .border(if (isDlFocused) 2.dp else 1.dp, if (isDlFocused) Color.White else Color(0xFFF59E0B), RoundedCornerShape(8.dp))
-                    .focusable().clickable { onDownload() },
-                contentAlignment = Alignment.Center
-            ) {
-                Text("⬇️", fontSize = 14.sp)
+            if (downloadedVideo != null) {
+                Box(
+                    modifier = Modifier.height(38.dp).onFocusChanged { isActionFocused = it.isFocused }
+                        .background(if (isActionFocused) Color(0xFF10B981) else Color(0xFF064E3B), RoundedCornerShape(8.dp))
+                        .border(if (isActionFocused) 2.dp else 1.dp, if (isActionFocused) Color.White else Color(0xFF10B981), RoundedCornerShape(8.dp))
+                        .focusable().clickable { onLocalAction() }.padding(horizontal = 10.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(text = "💾 En disco", color = if (isActionFocused) Color.Black else Color(0xFF6EE7B7), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                }
+            } else {
+                Box(
+                    modifier = Modifier.size(38.dp).onFocusChanged { isActionFocused = it.isFocused }
+                        .background(if (isActionFocused) Color(0xFFF59E0B) else Color(0xFF332510), RoundedCornerShape(8.dp))
+                        .border(if (isActionFocused) 2.dp else 1.dp, if (isActionFocused) Color.White else Color(0xFFF59E0B), RoundedCornerShape(8.dp))
+                        .focusable().clickable { onDownload() },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("⬇️", fontSize = 14.sp)
+                }
             }
         }
     }
@@ -288,11 +271,28 @@ fun formatDuration(ms: Long): String {
     val totalSec = ms / 1000
     val min = totalSec / 60
     val sec = totalSec % 60
-    return if (min >= 60) {
-        val hr = min / 60
-        val remMin = min % 60
-        String.format(Locale.US, "%d:%02d:%02d", hr, remMin, sec)
-    } else {
-        String.format(Locale.US, "%d:%02d", min, sec)
+    return if (min >= 60) String.format(Locale.US, "%d:%02d:%02d", min / 60, min % 60, sec) else String.format(Locale.US, "%d:%02d", min, sec)
+}
+
+@Composable
+fun TvFolderDetailHeader(folderName: String, itemCount: Int, onBack: () -> Unit, modifier: Modifier = Modifier) {
+    var isBackFocused by remember { mutableStateOf(false) }
+    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+        Card(
+            colors = CardDefaults.cardColors(containerColor = if (isBackFocused) Color(0xFF38BDF8) else Color(0xFF251C35)),
+            shape = RoundedCornerShape(8.dp),
+            modifier = modifier.onFocusChanged { isBackFocused = it.isFocused }.focusable().clickable(onClick = onBack)
+                .border(1.dp, if (isBackFocused) Color.White else Color(0xFF38BDF8), RoundedCornerShape(8.dp))
+        ) {
+            Text("◀ Volver a carpetas", color = if (isBackFocused) Color.Black else Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp))
+        }
+        Text("📂 $folderName ($itemCount película${if (itemCount != 1) "s" else ""})", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+    }
+}
+
+@Composable
+fun TvEmptyState(msg: String) {
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Text(msg, color = Color(0xFF64748B), fontSize = 14.sp)
     }
 }

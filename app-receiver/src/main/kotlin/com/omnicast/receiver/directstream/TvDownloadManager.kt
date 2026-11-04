@@ -154,6 +154,9 @@ object TvDownloadManager {
             } else {
                 downloadDirectStream(url, headers, outFile, expectedBytes, onProgress)
             }
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            val len = if (outFile.exists()) outFile.length() else 0L
+            onProgress(TvBridgeDownloadProgress(isDownloading = false, isCompleted = true, downloadedBytes = len, totalBytes = expectedBytes, savedFilePath = outFile.absolutePath))
         } catch (e: Throwable) {
             onProgress(TvBridgeDownloadProgress(isDownloading = false, errorMsg = "Error en descarga: ${e.message ?: "Red interrumpida"}"))
         }

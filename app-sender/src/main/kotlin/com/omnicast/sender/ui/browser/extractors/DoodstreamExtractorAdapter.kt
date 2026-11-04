@@ -21,7 +21,8 @@ class DoodstreamExtractorAdapter : IMediaStreamExtractorPort {
 
         val isDoodHost = host.contains("doodcdn") || host.contains("doopstream") || host.contains("ds2play") ||
                          host.contains("doodstream") || host.contains("doo.la") || host.startsWith("dood.") ||
-                         host.contains("playmogo") || host.contains("d000d") || host.contains("myvidplay")
+                         host.contains("playmogo") || host.contains("d000d") || host.contains("myvidplay") ||
+                         host.contains("cloudatacdn")
 
         val isDoodPage = pageHost.contains("doopstream") || pageHost.contains("doodstream") ||
                          pageHost.contains("playmogo") || pageHost.contains("ds2play") ||
@@ -41,7 +42,7 @@ class DoodstreamExtractorAdapter : IMediaStreamExtractorPort {
             val h = u.host?.lowercase()
             if (!h.isNullOrBlank() && (h.contains("doop") || h.contains("dood") || h.contains("playmogo") || h.contains("ds2play") || h.contains("d000d"))) {
                 "${u.scheme ?: "https"}://$h/"
-            } else if (host.contains("playmogo")) {
+            } else if (host.contains("playmogo") || host.contains("cloudatacdn")) {
                 "https://playmogo.com/"
             } else if (host.contains("doopstream")) {
                 "https://doopstream.com/"

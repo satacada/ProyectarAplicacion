@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 339,
-  "versionCodeReceiver": 322,
-  "versionName": "3.5.88",
-  "releaseTag": "v3.5.88",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.88/omnicast-sender-v3.5.88.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.88/omnicast-receiver-v3.5.88.apk",
-  "changelog": "v3.5.88 (Observabilidad Cruda en Red shouldInterceptRequest y Poda de Hipótesis Fallida de Blobs DOM): 1) Sender (BrowserWebView.kt): Implementación de sensor de red OMNICAST_NET en shouldInterceptRequest para capturar tráfico de medios no estáticos emitido por iframes cerrados, revelando en tiempo real las peticiones de red hacia CDNs de video. 2) Sender (universal_sniffer.js): Poda completa de resolveRealMediaSource() y eliminación de sondeo inútil de __hls/blobs en el marco principal conforme a AGENTS.md."
+  "versionCodeSender": 340,
+  "versionCodeReceiver": 323,
+  "versionName": "3.5.89",
+  "releaseTag": "v3.5.89",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.89/omnicast-sender-v3.5.89.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.89/omnicast-receiver-v3.5.89.apk",
+  "changelog": "v3.5.89 (Firma Binaria de CDNs con Virgulilla y Soporte Dinámico CloudataCDN): 1) Core Domain (StreamCandidateValidator.kt): Reconocimiento estructural de tokens binarios con virgulilla (~ + token= + expiry=) sin hardcodear dominios efímeros, permitiendo la captura universal de flujos ofuscados en CDNs modernas. 2) Sender (DoodstreamExtractorAdapter.kt / StreamManifestProbe.kt): Inclusión de cloudatacdn en adaptadores y perfiles predeterminados con inyección de Referer legítimo (playmogo.com) para reproducción garantizada."
 }

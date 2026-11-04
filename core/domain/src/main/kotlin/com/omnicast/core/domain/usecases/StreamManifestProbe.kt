@@ -36,7 +36,8 @@ object StreamManifestProbe {
         "boltdns.net" to ("EXOPLAYER" to false), "canela.tv" to ("EXOPLAYER" to false), "okcdn.ru" to ("EXOPLAYER" to false),
         "mycdn.me" to ("EXOPLAYER" to false), "ok.ru" to ("EXOPLAYER" to false), "spark.9bg.net" to ("EXOPLAYER" to false),
         "dailymotion.com" to ("EXOPLAYER" to false), "dmcdn.net" to ("EXOPLAYER" to false),
-        "cloudfront.net" to ("EXOPLAYER" to false)
+        "cloudfront.net" to ("EXOPLAYER" to false), "cloudatacdn.com" to ("EXOPLAYER" to false),
+        "playmogo.com" to ("EXOPLAYER" to false)
     )
 
     fun lookupSeedProfile(urlOrReferer: String): Pair<String, Boolean>? {

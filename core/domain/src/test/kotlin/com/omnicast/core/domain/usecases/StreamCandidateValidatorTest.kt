@@ -36,6 +36,7 @@ class StreamCandidateValidatorTest {
         assertTrue(StreamCandidateValidator.isBinaryMediaStream("https://dr0pstream.com/hls2/01/00038/master.m3u8?t=123"))
         assertTrue(StreamCandidateValidator.isBinaryMediaStream("https://m12.doodcdn.co/pass/xyz123/video.mp4?token=abc"))
         assertTrue(StreamCandidateValidator.isBinaryMediaStream("https://playmogo.com/video~123abc456?token=secret"))
+        assertTrue(StreamCandidateValidator.isBinaryMediaStream("https://uha211.cloudatacdn.com/path/xmobbs6ryg~1mD7KEshPZ?token=s3qrrcubquq0jgu10n1g7glx&expiry=1793794255217"))
         assertTrue(StreamCandidateValidator.isBinaryMediaStream("https://cdn.example.com/manifest.mpd"))
         assertTrue(StreamCandidateValidator.isBinaryMediaStream("https://cdn.example.com/stream/chunklist.m3u8"))
     }

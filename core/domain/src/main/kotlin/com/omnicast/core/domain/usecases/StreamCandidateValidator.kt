@@ -82,6 +82,7 @@ object StreamCandidateValidator {
         // Firmas reconocidas de rutas de entrega de segmentos o streaming continuo
         if (lower.contains("/hls/") || lower.contains("/hls2/") ||
             lower.contains("/pass/") || lower.contains("video~") ||
+            (lower.contains("~") && lower.contains("token=") && lower.contains("expiry=")) ||
             lower.contains("chunklist") || lower.contains("format=dash") ||
             lower.contains("master.m3u8") || lower.contains("manifest.mpd")
         ) return true

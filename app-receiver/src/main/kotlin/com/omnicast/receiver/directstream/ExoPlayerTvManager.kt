@@ -22,7 +22,6 @@ class ExoPlayerTvManager(private val context: Context) {
 
     companion object {
         private const val TAG = "ExoPlayerTvManager"
-        private const val DEFAULT_UA = "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36"
     }
 
     var player: ExoPlayer? = null; private set
@@ -63,7 +62,7 @@ class ExoPlayerTvManager(private val context: Context) {
             trackManager = tm
 
             val httpFactory = DefaultHttpDataSource.Factory()
-                .setUserAgent(DEFAULT_UA).setAllowCrossProtocolRedirects(true).setConnectTimeoutMs(20000).setReadTimeoutMs(20000)
+                .setUserAgent(TvMediaItemBuilder.DEFAULT_UA).setAllowCrossProtocolRedirects(true).setConnectTimeoutMs(20000).setReadTimeoutMs(20000)
             val dsFactory = androidx.media3.datasource.DefaultDataSource.Factory(context, httpFactory)
             val mediaSourceFactory = DefaultMediaSourceFactory(context).setDataSourceFactory(dsFactory)
 
@@ -140,17 +139,30 @@ class ExoPlayerTvManager(private val context: Context) {
     }
 
     @OptIn(UnstableApi::class)
-    fun playStream(url: String, headers: Map<String, String> = emptyMap(), title: String? = null, startPositionMs: Long = 0L, branch: com.omnicast.core.domain.models.MediaBranch = com.omnicast.core.domain.models.MediaBranch.VOD_HLS_MP4, subtitles: List<com.omnicast.core.protocol.SignalingMessage.SubtitleTrack> = emptyList()) {
+    fun playStream(
+        url: String,
+        headers: Map<String, String> = emptyMap(),
+        title: String? = null,
+        startPositionMs: Long = 0L,
+        branch: com.omnicast.core.domain.models.MediaBranch = com.omnicast.core.domain.models.MediaBranch.VOD_HLS_MP4,
+        subtitles: List<com.omnicast.core.protocol.SignalingMessage.SubtitleTrack> = emptyList()
+    ) {
         if (url.contains("stub.mp4", ignoreCase = true) || url.contains("dummy.mp4", ignoreCase = true)) {
             com.omnicast.receiver.log.ReceiverLogger.log(TAG, "⚠️ Ignorando video dummy/placeholder: $url")
             return
         }
+        if (currentUrl != url) fallbackMime = null
         initialize(branch)
         val effectiveUrl = com.omnicast.core.domain.usecases.HlsMasterResolver.deriveMasterPlaylistUrl(url) ?: url
-        currentUrl = effectiveUrl; currentTitle = title; currentHeaders = headers; isRetryingClean = false; hasPlaybackStarted = false
+        currentUrl = effectiveUrl
+        currentTitle = title
+        currentHeaders = headers
+        isRetryingClean = false
+        hasPlaybackStarted = false
 
-        val safeHeaders = filterSafeHeaders(effectiveUrl, headers)
-        val mediaItem = buildMediaItem(effectiveUrl, title, branch, subtitles)
+        val safeHeaders = TvMediaItemBuilder.filterSafeHeaders(effectiveUrl, headers)
+        activeMimeType = TvMediaItemBuilder.inferTargetMime(effectiveUrl, branch, fallbackMime)
+        val mediaItem = TvMediaItemBuilder.buildMediaItem(effectiveUrl, title, branch, subtitles, fallbackMime)
 
         if (safeHeaders.isEmpty() || effectiveUrl.startsWith("/") || effectiveUrl.startsWith("file://")) {
             playClean(effectiveUrl, title, startPositionMs, branch, subtitles)
@@ -159,7 +171,7 @@ class ExoPlayerTvManager(private val context: Context) {
 
         try {
             val httpFactory = DefaultHttpDataSource.Factory()
-                .setUserAgent(safeHeaders["User-Agent"] ?: DEFAULT_UA)
+                .setUserAgent(safeHeaders["User-Agent"] ?: TvMediaItemBuilder.DEFAULT_UA)
                 .setAllowCrossProtocolRedirects(true)
                 .setConnectTimeoutMs(15000)
                 .setReadTimeoutMs(15000)
@@ -183,77 +195,40 @@ class ExoPlayerTvManager(private val context: Context) {
         }
     }
 
-    fun playClean(url: String, title: String? = null, startPositionMs: Long = 0L, branch: com.omnicast.core.domain.models.MediaBranch = activeBranch, subtitles: List<com.omnicast.core.protocol.SignalingMessage.SubtitleTrack> = emptyList()) {
+    fun playClean(
+        url: String,
+        title: String? = null,
+        startPositionMs: Long = 0L,
+        branch: com.omnicast.core.domain.models.MediaBranch = activeBranch,
+        subtitles: List<com.omnicast.core.protocol.SignalingMessage.SubtitleTrack> = emptyList()
+    ) {
         if (url.contains("stub.mp4", ignoreCase = true) || url.contains("dummy.mp4", ignoreCase = true)) return
         initialize(branch)
         val effectiveUrl = com.omnicast.core.domain.usecases.HlsMasterResolver.deriveMasterPlaylistUrl(url) ?: url
         runCatching {
-            val mediaItem = buildMediaItem(effectiveUrl, title, branch, subtitles)
-            val safe = filterSafeHeaders(effectiveUrl, emptyMap())
+            activeMimeType = TvMediaItemBuilder.inferTargetMime(effectiveUrl, branch, fallbackMime)
+            val mediaItem = TvMediaItemBuilder.buildMediaItem(effectiveUrl, title, branch, subtitles, fallbackMime)
+            val safe = TvMediaItemBuilder.filterSafeHeaders(effectiveUrl, emptyMap())
             val httpFactory = DefaultHttpDataSource.Factory()
-                .setUserAgent(safe["User-Agent"] ?: DEFAULT_UA).setAllowCrossProtocolRedirects(true).setConnectTimeoutMs(15000).setReadTimeoutMs(15000)
+                .setUserAgent(safe["User-Agent"] ?: TvMediaItemBuilder.DEFAULT_UA)
+                .setAllowCrossProtocolRedirects(true)
+                .setConnectTimeoutMs(15000)
+                .setReadTimeoutMs(15000)
             if (safe.isNotEmpty()) httpFactory.setDefaultRequestProperties(safe)
             val dsFactory = androidx.media3.datasource.DefaultDataSource.Factory(context, httpFactory)
             val mediaSource = DefaultMediaSourceFactory(context).setDataSourceFactory(dsFactory).createMediaSource(mediaItem)
             player?.apply {
-                stop(); clearMediaItems(); setMediaSource(mediaSource)
+                stop()
+                clearMediaItems()
+                setMediaSource(mediaSource)
                 if (startPositionMs > 0L) seekTo(startPositionMs) else seekToDefaultPosition()
-                prepare(); play()
+                prepare()
+                play()
             }
             com.omnicast.receiver.log.ReceiverLogger.log(TAG, "Reproduciendo flujo limpio ($branch): $url (pos=${startPositionMs}ms)")
         }.onFailure { err ->
             com.omnicast.receiver.log.ReceiverLogger.log(TAG, "Error crítico reproduciendo flujo limpio: ${err.message}", err)
         }
-    }
-
-    private fun buildMediaItem(url: String, title: String?, branch: com.omnicast.core.domain.models.MediaBranch = activeBranch, subtitles: List<com.omnicast.core.protocol.SignalingMessage.SubtitleTrack> = emptyList()): MediaItem {
-        val metadata = MediaMetadata.Builder().setTitle(title ?: "Transmisión Web").setDisplayTitle(title ?: "Transmisión Web").build()
-        val builder = MediaItem.Builder().setUri(url).setMediaMetadata(metadata)
-        if (subtitles.isNotEmpty()) {
-            val subConfigs = subtitles.map { sub ->
-                val mime = if (sub.url.contains(".srt", true)) androidx.media3.common.MimeTypes.APPLICATION_SUBRIP else androidx.media3.common.MimeTypes.TEXT_VTT
-                MediaItem.SubtitleConfiguration.Builder(android.net.Uri.parse(sub.url)).setMimeType(mime).setLanguage(sub.lang).setSelectionFlags(androidx.media3.common.C.SELECTION_FLAG_DEFAULT).build()
-            }
-            builder.setSubtitleConfigurations(subConfigs)
-        }
-        if (branch == com.omnicast.core.domain.models.MediaBranch.LIVE_HLS) {
-            builder.setLiveConfiguration(MediaItem.LiveConfiguration.Builder().setMaxPlaybackSpeed(1.02f).setMinPlaybackSpeed(0.98f).build())
-        }
-        val uri = android.net.Uri.parse(url); val p = (uri.path ?: "").lowercase(); val q = (uri.query ?: "").lowercase()
-        val isOk = (uri.host ?: "").lowercase().let { it.contains("mycdn.me") || it.contains("okcdn.ru") }
-        val isHls = p.contains(".m3u8") || p.contains("/hls") || (isOk && (p.contains("m3u8") || q.contains("format=hls"))) || (p.contains(".txt") && (p.contains("master") || p.contains("index"))) || q.contains("format=hls")
-        val isDash = p.contains(".mpd") || (isOk && (q.contains("ct=6") || q.contains("format=dash"))) || q.contains("format=dash")
-        val inferred = when {
-            branch == com.omnicast.core.domain.models.MediaBranch.AUDIO_ONLY || p.endsWith(".mp3") || p.endsWith(".aac") -> androidx.media3.common.MimeTypes.AUDIO_MPEG
-            isHls -> androidx.media3.common.MimeTypes.APPLICATION_M3U8
-            branch == com.omnicast.core.domain.models.MediaBranch.DASH_MPD || isDash -> androidx.media3.common.MimeTypes.APPLICATION_MPD
-            p.endsWith(".webm") || q.contains("format=webm") -> androidx.media3.common.MimeTypes.VIDEO_WEBM
-            else -> androidx.media3.common.MimeTypes.APPLICATION_MP4
-        }
-        val targetMime = fallbackMime ?: inferred
-        activeMimeType = targetMime
-        builder.setMimeType(targetMime)
-        return builder.build()
-    }
-
-    private fun filterSafeHeaders(url: String, headers: Map<String, String>): Map<String, String> {
-        val allowed = mutableMapOf<String, String>()
-        headers.forEach { (k, v) ->
-            if (v.isNotBlank()) {
-                when {
-                    k.equals("referer", true) -> allowed["Referer"] = v
-                    k.equals("user-agent", true) -> allowed["User-Agent"] = v
-                    k.equals("cookie", true) -> allowed["Cookie"] = v
-                    k.equals("authorization", true) -> allowed["Authorization"] = v
-                }
-            }
-        }
-        val lower = url.lowercase()
-        if ((lower.contains("mycdn.me") || lower.contains("okcdn.ru")) && !allowed.containsKey("Referer")) {
-            allowed["Referer"] = "https://ok.ru/"
-        }
-        if (!allowed.containsKey("User-Agent")) allowed["User-Agent"] = DEFAULT_UA
-        return allowed
     }
 
     var resizeMode: Int = androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_FIT; private set

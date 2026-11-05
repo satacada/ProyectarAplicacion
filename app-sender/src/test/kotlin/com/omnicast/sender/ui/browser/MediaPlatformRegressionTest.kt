@@ -146,6 +146,7 @@ class MediaPlatformRegressionTest {
 
         assertFalse("isRealMedia debe rechazar telemetría", BrowserUrlHelper.isRealMedia("https://dr0pstream.com/cdn-cgi/rum?"))
         assertFalse("isRealMedia debe rechazar página /e/", BrowserUrlHelper.isRealMedia("https://dr0pstream.com/e/loaxgshq39l6"))
+        assertFalse("isRealMedia debe rechazar librería hls.js con versión npm", BrowserUrlHelper.isRealMedia("https://cdn.jsdelivr.net/npm/hls.js@1.6.16"))
         assertTrue("isRealMedia debe aceptar master.m3u8", BrowserUrlHelper.isRealMedia("https://dr0pstream.com/hls2/01/00038/loaxgshq39l6_n/master.m3u8?t=123"))
     }
 

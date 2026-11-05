@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 346,
-  "versionCodeReceiver": 329,
-  "versionName": "3.5.95",
-  "releaseTag": "v3.5.95",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.95/omnicast-sender-v3.5.95.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.95/omnicast-receiver-v3.5.95.apk",
-  "changelog": "v3.5.95 (Nuevo Icono y Banner Oficial Castera TV): 1) Nuevo Arte Oficial para TV Box: Integración exacta de la nueva imagen de marca con monitor curvo, pantalla con degradado estético, smartphone en primer plano emitiendo ondas de proyección y tipografía moderna 'Castera TV' sobre fondo blanco puro. 2) Actualización Integral de Assets: Generados y aplicados tv_banner.png (320x180), ic_castera_logo.png (512x512) y todos los launcher icons (ic_launcher e ic_launcher_round) para todas las densidades de pantalla (mdpi, hdpi, xhdpi, xxhdpi, xxxhdpi)."
+  "versionCodeSender": 347,
+  "versionCodeReceiver": 330,
+  "versionName": "3.5.96",
+  "releaseTag": "v3.5.96",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.96/omnicast-sender-v3.5.96.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.96/omnicast-receiver-v3.5.96.apk",
+  "changelog": "v3.5.96 (Blindaje Anti-Scripts NPM y Optimización Modular de ExoPlayer en TV): 1) Sender y Dominio: Descarte determinista de scripts y librerías web empaquetadas (.js@version, .min.js, cdn.jsdelivr.net, unpkg.com, cdnjs) en StreamCandidateValidator y BrowserUrlHelper, erradicando que archivos como hls.js sean capturados como video. 2) Receiver: Creación del satélite modular TvMediaItemBuilder.kt, desacoplando la inferencia de contenedores y filtrado de cabeceras de ExoPlayerTvManager (reduciendo el archivo a 272 líneas). 3) Reseteo de Fallback de Medios: Eliminada la fuga de estado de fallbackMime al cambiar de canal o video, y blindada la prioridad canónica de manifiestos HLS (.m3u8), garantizando la reproducción inmediata de señales como Angienet sin corrupción de formato."
 }

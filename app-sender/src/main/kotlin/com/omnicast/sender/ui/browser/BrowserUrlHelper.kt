@@ -72,9 +72,12 @@ object BrowserUrlHelper {
             clean.contains("/default_audio") || clean.contains("/default_video") ||
             clean.contains("/lang/") || clean.contains("/subs/") || clean.contains("_spa/") ||
             clean.contains("mastersubs") || clean.contains("masteraudio")) return false
+        val lower = s.lowercase()
         if (clean.endsWith(".vtt") || clean.endsWith(".srt") || clean.endsWith(".key") ||
             clean.endsWith(".ts") || clean.endsWith(".m4s") || clean.endsWith(".html") ||
             clean.endsWith(".htm") || clean.endsWith(".jsp") || clean.endsWith(".js") ||
+            clean.contains(".js@") || clean.contains(".min.js") || clean.endsWith(".mjs") ||
+            lower.contains(".js?") || lower.contains("cdn.jsdelivr.net") || lower.contains("cdnjs.cloudflare.com") || lower.contains("unpkg.com") ||
             clean.endsWith(".css") || clean.endsWith(".json") || clean.endsWith(".webmanifest")) return false
         val isPhpStream = clean.endsWith(".php") && (s.contains(".m3u8", true) || s.contains(".mp4", true) || s.contains("p.php?", true) || s.contains("url=", true) || s.contains("stream", true) || s.contains("hls", true))
         if (clean.endsWith(".php") && !isPhpStream) return false

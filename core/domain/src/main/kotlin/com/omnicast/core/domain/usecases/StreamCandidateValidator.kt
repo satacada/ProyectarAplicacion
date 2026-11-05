@@ -45,7 +45,13 @@ object StreamCandidateValidator {
         val lower = url.lowercase()
         val cleanPath = lower.substringBefore('?').substringBefore('#')
 
-        // 1. Extensiones de documentos web y assets estáticos
+        // 1. Detección de scripts y librerías web (incluyendo versiones npm ej: .js@1.6.16 y CDNs públicas)
+        if (cleanPath.endsWith(".js") || cleanPath.contains(".js@") || cleanPath.contains(".min.js") ||
+            cleanPath.endsWith(".mjs") || lower.contains(".js?") ||
+            lower.contains("cdn.jsdelivr.net") || lower.contains("cdnjs.cloudflare.com") || lower.contains("unpkg.com")
+        ) return true
+
+        // 2. Extensiones de documentos web y assets estáticos
         for (ext in WEB_DOCUMENT_EXTENSIONS) {
             if (cleanPath.endsWith(ext)) return true
         }

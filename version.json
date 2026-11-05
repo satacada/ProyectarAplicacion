@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 351,
-  "versionCodeReceiver": 334,
-  "versionName": "3.6.00",
-  "releaseTag": "v3.6.00",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.6.00/omnicast-sender-v3.6.00.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.6.00/omnicast-receiver-v3.6.00.apk",
-  "changelog": "v3.6.00 (Telemetría de Errores Completa en Emisor y Captura Global): 1) Telemetría Remota en Navegador: Enlazado WvcShieldSecurityEngine y BrowserWebView directamente con SenderLogger para reportar secuestro de clics (CLICK_HIJACK_BLOCKED), redirecciones abusivas (DELAYED_REDIRECT_BLOCKED), fallos de renderizado de Chromium (RENDER_PROCESS_GONE) y errores de carga (BROWSER_LOAD_ERROR). 2) Trazabilidad de Navegación: Registrado evento BROWSER_NAV en InAppBrowserScreen hacia Supabase. 3) Capturador Global de Excepciones: Registrado handler de Thread.setDefaultUncaughtExceptionHandler en SenderLogger para reportar cualquier error fatal no controlado a Supabase en 0ms."
+  "versionCodeSender": 352,
+  "versionCodeReceiver": 335,
+  "versionName": "3.6.01",
+  "releaseTag": "v3.6.01",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.6.01/omnicast-sender-v3.6.01.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.6.01/omnicast-receiver-v3.6.01.apk",
+  "changelog": "v3.6.01 (Aislamiento de Iframes, Neutralización de Pasarelas y Protocolo de Arqueología de Precedentes): 1) Blindaje de Iframe y Pasarelas: En WvcShieldSecurityEngine.kt, las llamadas window.open desde iframes secundarios (reproductores de terceros) quedan aisladas sin permiso de secuestrar la ventana principal, y las pasarelas publicitarias (/out.php, /pop.php) se neutralizan con { closed: false }, impidiendo desvíos a sitios de trading (Bitunix) y preservando intacta la navegación legítima entre servidores y capítulos. 2) Protocolo de Arqueología de Precedentes: Añadida ley inviolable en AGENTS.md exigiendo git log -S antes de tocar condiciones históricas. 3) Oráculo de Regresión: Añadido test automatizado en MediaPlatformRegressionTest para blindar reproductores válidos y bloquear pasarelas."
 }

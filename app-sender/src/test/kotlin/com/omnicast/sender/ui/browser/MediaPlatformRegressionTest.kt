@@ -270,4 +270,18 @@ class MediaPlatformRegressionTest {
         assertEquals("https://netu.ac/", headers["Referer"])
         assertEquals("https://netu.ac", headers["Origin"])
     }
+
+    @Test
+    fun testAdGatewayIsolationAndValidPlayerPreservation() {
+        val curPage = "https://cineplus123.org/capitulo/1x3"
+        // 1. Reproductores legítimos y capítulos deben permitirse (false = no bloquear)
+        assertFalse(WvcShieldSecurityEngine.shouldBlockClickHijack(hasGesture = true, "https://netu.ac/e/KCF3y774chHk", curPage))
+        assertFalse(WvcShieldSecurityEngine.shouldBlockClickHijack(hasGesture = true, "https://streamwish.to/e/abc123xyz", curPage))
+        assertFalse(WvcShieldSecurityEngine.shouldBlockClickHijack(hasGesture = true, "https://cineplus123.org/capitulo/1x4", curPage))
+
+        // 2. Pasarelas de publicidad (/out.php, /pop.php) deben bloquearse siempre (true = bloquear)
+        assertTrue(WvcShieldSecurityEngine.shouldBlockClickHijack(hasGesture = true, "https://netu.ac/out.php?noads=0", curPage))
+        assertTrue(WvcShieldSecurityEngine.shouldBlockClickHijack(hasGesture = true, "https://ams.re3r.com/impcs/ad123", curPage))
+        assertTrue(WvcShieldSecurityEngine.shouldBlockDelayedRedirect(hasGesture = false, "https://netu.ac/out.php", curPage))
+    }
 }

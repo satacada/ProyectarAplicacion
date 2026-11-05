@@ -34,6 +34,20 @@ object WvcShieldSecurityEngine {
                     if (u.indexOf('challenges.cloudflare') !== -1 || u.indexOf('turnstile') !== -1) {
                         return _realOpen ? _realOpen.apply(this, arguments) : null;
                     }
+                    var isAdGateway = (u.indexOf('/out.php') !== -1 || u.indexOf('/pop.php') !== -1 ||
+                                       u.indexOf('/ad.php') !== -1 || u.indexOf('/redirect.php') !== -1 ||
+                                       u.indexOf('/click.php') !== -1 || u.indexOf('/delivery/') !== -1);
+                    var isInsideIframe = (window.self !== window.top);
+
+                    // Si es pasarela o se invoca desde un iframe reproductor, absorbe el popup sin cambiar de ventana
+                    if (isAdGateway || isInsideIframe) {
+                        return {
+                            closed: false, name: target || '', location: { href: url },
+                            focus: function() {}, blur: function() {}, close: function() { this.closed = true; }
+                        };
+                    }
+
+                    // Si es ventana principal legítima del usuario, permite enlaces del mismo sitio o relativos
                     try {
                         var curH = (window.location.hostname || '').toLowerCase();
                         var isRelative = (url.charAt(0) === '/' || url.indexOf('://') === -1);
@@ -115,6 +129,7 @@ object WvcShieldSecurityEngine {
     fun shouldBlockDelayedRedirect(hasGesture: Boolean, targetUrl: String, currentUrl: String): Boolean {
         if (!isEnabled || hasGesture) return false
         if (targetUrl.isBlank() || targetUrl.startsWith("about:")) return false
+        if (targetUrl.lowercase().contains("/out.php") || targetUrl.lowercase().contains("/pop.php")) return true
         if (AdBlocker.isVerificationOrCaptcha(targetUrl)) return false
         if (AdBlockWhitelistManager.isWhitelisted(targetUrl)) return false
 
@@ -169,6 +184,12 @@ object WvcShieldSecurityEngine {
         if (!isEnabled || !hasGesture) return false
         val curHost = extractHost(currentUrl) ?: return false
         val targetHost = extractHost(targetUrl) ?: return false
+
+        val targetLower = targetUrl.lowercase()
+        if (targetLower.contains("/out.php") || targetLower.contains("/pop.php")) {
+            com.omnicast.sender.log.SenderLogger.w("AD_GATEWAY_BLOCKED", "🛑 Pasarela bloqueada: $targetHost (desde $curHost)", details = mapOf("target_host" to targetHost, "cur_host" to curHost, "target_url" to targetUrl))
+            return true
+        }
 
         if (targetHost == curHost || targetHost.endsWith(".$curHost") || curHost.endsWith(".$targetHost") || AdBlocker.isKnownMediaHost(targetHost)) return false
         val curBrand = extractBrand(curHost); val targetBrand = extractBrand(targetHost)

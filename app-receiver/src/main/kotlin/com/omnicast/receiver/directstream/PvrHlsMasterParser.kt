@@ -67,10 +67,21 @@ object PvrHlsMasterParser {
     }
 
     fun parseSegments(manifestText: String, baseUrl: String): List<String> {
-        return manifestText.lines()
-            .map { it.trim() }
-            .filter { it.isNotEmpty() && !it.startsWith("#") }
-            .map { resolveRelativeUrl(baseUrl, it) }
+        val result = mutableListOf<String>()
+        for (rawLine in manifestText.lines()) {
+            val line = rawLine.trim()
+            if (line.isEmpty()) continue
+            if (line.startsWith("#EXT-X-MAP:", ignoreCase = true)) {
+                val initUri = extractTagValue(line, "URI")
+                if (!initUri.isNullOrBlank()) {
+                    val resolvedInit = resolveRelativeUrl(baseUrl, initUri)
+                    if (!result.contains(resolvedInit)) result.add(resolvedInit)
+                }
+            } else if (!line.startsWith("#")) {
+                result.add(resolveRelativeUrl(baseUrl, line))
+            }
+        }
+        return result
     }
 
     fun resolveRelativeUrl(baseUrl: String, rel: String): String {
@@ -95,12 +106,7 @@ object PvrHlsMasterParser {
         val isHls = lower.contains(".m3u8") || lower.contains("urlset") || lower.contains(".txt")
         if (!isHls) return@withContext emptyList()
         try {
-            val conn = (java.net.URL(manifestUrl).openConnection() as java.net.HttpURLConnection).apply {
-                connectTimeout = 4000
-                readTimeout = 4000
-                headers.forEach { (k, v) -> setRequestProperty(k, v) }
-            }
-            val text = conn.inputStream.bufferedReader().use { it.readText() }
+            val text = PvrNetworkHelper.fetchText(manifestUrl, headers, 4000, 4000)
             val master = parseMaster(text, manifestUrl)
             val resList = master.variants.map { it.height }.filter { it > 0 }.distinct().sortedDescending()
             if (resList.isNotEmpty()) resList else emptyList()

@@ -186,7 +186,12 @@ object TvReceiverHelper {
             val currentState = receiverState.value
             val (url, title, hdrs, durationMs) = when (currentState) {
                 is ReceiverUiState.DirectStreamPlaying -> listOf(currentState.streamUrl, currentState.title ?: "Canal en Vivo", exoPlayerManager.currentHeaders, exoPlayerManager.durationMs)
-                is ReceiverUiState.WebStreamPlaying -> listOf(currentState.streamUrl, currentState.title, currentState.headers, 0L)
+                is ReceiverUiState.WebStreamPlaying -> listOf(
+                    currentState.streamUrl,
+                    currentState.title,
+                    currentState.headers,
+                    com.omnicast.receiver.directstream.TvWebPvrBridge.activeDurationMs.takeIf { it > 0L } ?: 5_400_000L
+                )
                 is ReceiverUiState.YouTubePlaying -> {
                     android.widget.Toast.makeText(context, "⚠️ YouTube no admite grabación PVR directa (reproductor protegido por Google)", android.widget.Toast.LENGTH_LONG).show()
                     return

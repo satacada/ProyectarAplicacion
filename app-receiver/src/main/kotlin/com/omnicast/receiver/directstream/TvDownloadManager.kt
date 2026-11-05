@@ -143,8 +143,9 @@ object TvDownloadManager {
     ) = withContext(Dispatchers.IO) {
         val safeName = title.replace(Regex("[^a-zA-Z0-9_\\- ]"), "").trim().replace(' ', '_').ifBlank { "pelicula_omnicast" }
         val lower = url.lowercase()
-        val isHls = lower.contains(".m3u8") || lower.contains("urlset") || lower.contains("master.txt")
-        val ext = if (isHls) "ts" else "mp4"
+        val isHls = lower.contains(".m3u8") || lower.contains("urlset") || lower.contains("master.txt") || lower.contains(".txt")
+        val isFmp4 = lower.contains("dailymotion.com") || lower.contains("dmcdn.net")
+        val ext = if (isHls && !isFmp4) "ts" else "mp4"
         val outFile = File(targetDir, "${safeName}_${targetHeight}p.$ext")
 
         try {
@@ -155,9 +156,11 @@ object TvDownloadManager {
                 downloadDirectStream(url, headers, outFile, expectedBytes, onProgress)
             }
         } catch (e: kotlinx.coroutines.CancellationException) {
+            if (outFile.exists() && outFile.length() == 0L) runCatching { outFile.delete() }
             val len = if (outFile.exists()) outFile.length() else 0L
-            onProgress(TvBridgeDownloadProgress(isDownloading = false, isCompleted = true, downloadedBytes = len, totalBytes = expectedBytes, savedFilePath = outFile.absolutePath))
+            onProgress(TvBridgeDownloadProgress(isDownloading = false, isCompleted = len > 0L, downloadedBytes = len, totalBytes = expectedBytes, savedFilePath = outFile.absolutePath))
         } catch (e: Throwable) {
+            if (outFile.exists() && outFile.length() == 0L) runCatching { outFile.delete() }
             onProgress(TvBridgeDownloadProgress(isDownloading = false, errorMsg = "Error en descarga: ${e.message ?: "Red interrumpida"}"))
         }
     }
@@ -173,17 +176,21 @@ object TvDownloadManager {
         val total = conn.contentLengthLong.takeIf { it > 0L } ?: expectedBytes
         var downloaded = 0L
         val buf = ByteArray(64 * 1024)
-        conn.inputStream.use { input ->
-            FileOutputStream(outFile).use { output ->
+        var fos: FileOutputStream? = null
+        try {
+            conn.inputStream.use { input ->
                 while (isActive) {
                     val read = input.read(buf)
                     if (read == -1) break
-                    output.write(buf, 0, read)
+                    val out = fos ?: FileOutputStream(outFile).also { fos = it }
+                    out.write(buf, 0, read)
                     downloaded += read
                     val pct = if (total > 0L) ((downloaded * 100L) / total).toInt().coerceIn(1, 99) else 50
                     onProgress(TvBridgeDownloadProgress(true, false, downloaded, total, pct, outFile.absolutePath))
                 }
             }
+        } finally {
+            runCatching { fos?.flush() }; runCatching { fos?.close() }
         }
         onProgress(TvBridgeDownloadProgress(false, true, downloaded, downloaded, 100, outFile.absolutePath))
     }
@@ -196,12 +203,19 @@ object TvDownloadManager {
         targetHeight: Int,
         onProgress: (TvBridgeDownloadProgress) -> Unit
     ) = withContext(Dispatchers.IO) {
+        // Variante 1 (TvWebStreamScreen activo): delegar al puente Chromium para evitar bloqueo TLS 403
+        if (TvWebPvrBridge.canHandleWebStream(manifestUrl)) {
+            val ok = TvWebPvrBridge.downloadViaChromium(outFile, expectedBytes, onProgress)
+            if (ok) return@withContext
+            throw java.io.IOException("Flujo web protegido interrumpido o rechazado por CDN")
+        }
+
         val text = PvrNetworkHelper.fetchText(manifestUrl, headers)
         val master = PvrHlsMasterParser.parseMaster(text, manifestUrl)
         val chosenVariant = PvrHlsMasterParser.selectVariant(master.variants, targetHeight)
         val finalManifestUrl = chosenVariant?.url ?: manifestUrl
-        val finalLines = if (chosenVariant != null) PvrNetworkHelper.fetchText(finalManifestUrl, headers).lines().map { it.trim() } else text.lines().map { it.trim() }
-        val segments = finalLines.filter { it.isNotEmpty() && !it.startsWith("#") }.map { resolveRelativeUrl(finalManifestUrl, it) }
+        val finalText = if (chosenVariant != null) PvrNetworkHelper.fetchText(finalManifestUrl, headers) else text
+        val segments = PvrHlsMasterParser.parseSegments(finalText, finalManifestUrl)
 
         if (segments.isEmpty()) {
             downloadDirectStream(manifestUrl, headers, outFile, expectedBytes, onProgress)
@@ -210,7 +224,8 @@ object TvDownloadManager {
 
         var downloaded = 0L
         val buf = ByteArray(64 * 1024)
-        FileOutputStream(outFile).use { output ->
+        var fos: FileOutputStream? = null
+        try {
             for ((idx, segUrl) in segments.withIndex()) {
                 if (!isActive) break
                 val conn = PvrNetworkHelper.openConnection(segUrl, headers, 8000, 12000)
@@ -218,20 +233,18 @@ object TvDownloadManager {
                     while (isActive) {
                         val r = input.read(buf)
                         if (r == -1) break
-                        output.write(buf, 0, r)
+                        val out = fos ?: FileOutputStream(outFile).also { fos = it }
+                        out.write(buf, 0, r)
                         downloaded += r
                     }
                 }
                 val pct = (((idx + 1) * 100) / segments.size).coerceIn(1, 99)
                 onProgress(TvBridgeDownloadProgress(true, false, downloaded, expectedBytes, pct, outFile.absolutePath))
             }
+        } finally {
+            runCatching { fos?.flush() }; runCatching { fos?.close() }
         }
         onProgress(TvBridgeDownloadProgress(false, true, downloaded, downloaded, 100, outFile.absolutePath))
-    }
-
-    private fun resolveRelativeUrl(baseUrl: String, relative: String): String {
-        if (relative.startsWith("http://") || relative.startsWith("https://")) return relative
-        return try { URI(baseUrl).resolve(relative).toString() } catch (_: Throwable) { relative }
     }
 
     fun findDownloadedMovie(context: Context, title: String): File? {

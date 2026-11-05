@@ -108,14 +108,11 @@ fun TvWebStreamScreen(
                     factory = { ctx ->
                         WebView(ctx).apply {
                             webViewRef = this
+                            com.omnicast.receiver.directstream.TvWebPvrBridge.attach(this, streamUrl)
                             isFocusable = false; isFocusableInTouchMode = false; clearFocus(); setBackgroundColor(android.graphics.Color.BLACK)
                             layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
-                            settings.javaScriptEnabled = true
-                            settings.domStorageEnabled = true
-                            settings.databaseEnabled = true
-                            settings.mediaPlaybackRequiresUserGesture = false
-                            settings.useWideViewPort = true
-                            settings.loadWithOverviewMode = true
+                            settings.javaScriptEnabled = true; settings.domStorageEnabled = true; settings.databaseEnabled = true
+                            settings.mediaPlaybackRequiresUserGesture = false; settings.useWideViewPort = true; settings.loadWithOverviewMode = true
                             settings.userAgentString = headers["User-Agent"] ?: "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Mobile Safari/537.36"
                             val cm = CookieManager.getInstance(); cm.setAcceptCookie(true); cm.setAcceptThirdPartyCookies(this, true)
                             headers["Cookie"]?.let { ck ->
@@ -127,11 +124,13 @@ fun TvWebStreamScreen(
                                     cm.flush()
                                 }
                             }
+                            addJavascriptInterface(com.omnicast.receiver.directstream.TvWebPvrBridge, "OmniPvrBridge")
                             addJavascriptInterface(object {
                                 @JavascriptInterface
                                 fun onPlaybackStatus(c: Double, d: Double, p: Boolean) {
                                     val cMs = (c * 1000).toLong()
                                     val dMs = if (d.isFinite() && d > 0) (d * 1000).toLong() else 0L
+                                    if (dMs > 0L) com.omnicast.receiver.directstream.TvWebPvrBridge.activeDurationMs = dMs
                                     mainHandler.post {
                                         if (p && (cMs > 50L || dMs > 0L)) isVideoReady = true
                                         playerState = playerState.copy(
@@ -177,6 +176,7 @@ fun TvWebStreamScreen(
                     },
                     onRelease = { webView ->
                         try {
+                            com.omnicast.receiver.directstream.TvWebPvrBridge.detach(webView)
                             if (webViewRef == webView) webViewRef = null
                             webView.stopLoading(); webView.onPause(); webView.evaluateJavascript("stopStream();", null)
                             webView.loadUrl("about:blank"); webView.clearHistory(); webView.clearCache(true)
@@ -257,12 +257,12 @@ fun TvWebStreamScreen(
         )
 
         if (showRecordDialog && streamUrl.isNotBlank()) {
-            val isLive = playerState.durationMs <= 0L || listOf("news", "sky", "directo", "envivo", "en vivo", "live", "linear", "chunklist").any { title.contains(it, true) || streamUrl.contains(it, true) }
+            val isLive = listOf("news", "sky", "directo", "envivo", "en vivo", "live", "linear", "chunklist").any { title.contains(it, true) || streamUrl.contains(it, true) }
 
             TvRecordDialog(
                 title = title.ifBlank { if (isLive) "Canal en Vivo" else "Película en reproducción" },
                 streamUrl = streamUrl, headers = headers,
-                durationMs = playerState.durationMs, isLive = isLive,
+                durationMs = playerState.durationMs.takeIf { it > 0L } ?: 5_400_000L, isLive = isLive,
                 onDismiss = { showRecordDialog = false },
                 onRecordingStarted = {}
             )

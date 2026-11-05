@@ -51,14 +51,12 @@ object PvrNetworkHelper {
             val ua = headers["User-Agent"]?.takeIf { it.isNotBlank() } ?: UA_DEFAULT
             setRequestProperty("User-Agent", ua)
 
-            // 2. Referer y Origin
+            // 2. Referer y Origin (Regla #2 Catálogo: no inventar Origin si fue omitido por políticas anti-403)
             headers["Referer"]?.takeIf { it.isNotBlank() }?.let { ref ->
                 setRequestProperty("Referer", ref)
-                val origin = headers["Origin"]?.takeIf { it.isNotBlank() } ?: try {
-                    val u = java.net.URI(ref)
-                    if (!u.scheme.isNullOrBlank() && !u.host.isNullOrBlank()) "${u.scheme}://${u.host}" else null
-                } catch (_: Throwable) { null }
-                origin?.let { setRequestProperty("Origin", it) }
+            }
+            if (!urlStr.contains("dropcdn.io", ignoreCase = true) && !urlStr.contains("dr0pstream.com", ignoreCase = true)) {
+                headers["Origin"]?.takeIf { it.isNotBlank() }?.let { setRequestProperty("Origin", it) }
             }
 
             // 3. Cookies de Chromium + headers

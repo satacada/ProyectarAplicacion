@@ -27,10 +27,14 @@ object TvDownloadsManager {
 
         // 1. Almacenamiento Interno
         val internalDownload = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+        val appExtDownload = context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS) ?: context.filesDir
         val internalFolders = listOf(
             File(internalDownload, "PVR_Grabaciones"),
             File(internalDownload, "Pelis_descargas"),
-            File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES), "PVR_Grabaciones")
+            File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES), "PVR_Grabaciones"),
+            File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES), "OmniCast"),
+            File(appExtDownload, "PVR_Grabaciones"),
+            File(appExtDownload, "Pelis_descargas")
         )
         for (f in internalFolders) {
             if (f.exists() && f.isDirectory && scannedDirs.add(f.absolutePath)) {
@@ -67,6 +71,10 @@ object TvDownloadsManager {
         val files = folder.listFiles() ?: return
         val dateFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
         for (f in files) {
+            if (f.isFile && f.length() == 0L && !PvrStreamRecorder.isRecordingActive()) {
+                runCatching { f.delete() }
+                continue
+            }
             if (f.isFile && f.length() > 0L) {
                 val ext = f.extension.lowercase()
                 if (ext in MEDIA_EXTENSIONS) {

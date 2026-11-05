@@ -27,9 +27,12 @@ object TvWebResourceInterceptor {
         sslContext.socketFactory
     }
 
+    private val nativeChromiumHosts = java.util.concurrent.ConcurrentHashMap.newKeySet<String>()
+
     fun shouldIntercept(request: WebResourceRequest?, defaultHeaders: Map<String, String>): WebResourceResponse? {
         val req = request ?: return null
         val urlStr = req.url?.toString() ?: return null
+        val host = req.url?.host?.lowercase() ?: ""
         val method = req.method ?: "GET"
 
         val reqOrigin = req.requestHeaders?.get("Origin")?.takeIf { it.isNotBlank() } ?: defaultHeaders["Origin"] ?: "*"
@@ -44,6 +47,8 @@ object TvWebResourceInterceptor {
             )
             return WebResourceResponse("text/plain", "UTF-8", 200, "OK", preflightHeaders, ByteArrayInputStream(ByteArray(0)))
         }
+
+        if (host.isNotEmpty() && nativeChromiumHosts.contains(host)) return null
 
         val lower = urlStr.lowercase()
         val isMedia = lower.contains(".m3u8") || lower.contains(".ts") || lower.contains(".m4s") ||
@@ -72,9 +77,9 @@ object TvWebResourceInterceptor {
                     setRequestProperty("Referer", ref)
                 }
 
-                // Origin: coherente con el Referer si aplica
-                val origin = defaultHeaders["Origin"] ?: ref?.substringBeforeLast('/')
-                if (!origin.isNullOrBlank()) {
+                // Origin: solo si fue provisto explícitamente (evita rechazo 403 en DropCDN)
+                val origin = defaultHeaders["Origin"]
+                if (!origin.isNullOrBlank() && !lower.contains("dropcdn.io")) {
                     setRequestProperty("Origin", origin)
                 }
 
@@ -89,6 +94,7 @@ object TvWebResourceInterceptor {
 
             val code = conn.responseCode
             if (code !in 200..299) {
+                if (code == 403 && host.isNotEmpty()) nativeChromiumHosts.add(host)
                 com.omnicast.receiver.log.ReceiverLogger.log("TvWebResourceInterceptor", "⚠️ Error HTTP $code en: $urlStr")
                 conn.disconnect()
                 return null

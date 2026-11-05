@@ -112,6 +112,7 @@ object PvrStreamRecorder {
                     if (isActive) _progress.value = _progress.value.copy(errorMsg = "Error en grabación: ${e.message}")
                 } finally {
                     fileOutput?.let { ringBuffer.flushAndClose(it) }
+                    if (outFile.exists() && outFile.length() == 0L) runCatching { outFile.delete() }
                 }
             }
         }
@@ -135,7 +136,8 @@ object PvrStreamRecorder {
             val safeTitle = title.replace(Regex("[^a-zA-Z0-9_\\- ]"), "").trim().replace(' ', '_').ifBlank { "pelicula_omnicast" }
             val lower = url.lowercase()
             val isHls = lower.contains(".m3u8") || lower.contains("urlset") || lower.contains(".txt")
-            val ext = if (isHls) "ts" else "mp4"
+            val isFmp4 = lower.contains("dailymotion.com") || lower.contains("dmcdn.net")
+            val ext = if (isHls && !isFmp4) "ts" else "mp4"
             val outFile = File(targetDir, "${safeTitle}_${targetHeight}p.$ext")
             currentOutFile = outFile
             isPausedInternal = false
@@ -206,11 +208,13 @@ object PvrStreamRecorder {
                     PvrHlsMasterParser.parseSegments(aText, audioPlaylistUrl)
                 } else emptyList()
 
-                // Fase 4: Descartar los 30s históricos del pasado y sincronizar al punto actual
                 if (isFirstFetch) {
                     isFirstFetch = false
-                    if (videoSegments.size > 1) downloadedSegments.addAll(videoSegments.dropLast(1))
-                    if (audioSegments.size > 1) downloadedSegments.addAll(audioSegments.dropLast(1))
+                    val isVod = videoText.contains("#EXT-X-ENDLIST", ignoreCase = true) || videoText.contains("#EXT-X-PLAYLIST-TYPE:VOD", ignoreCase = true)
+                    if (!isVod) {
+                        if (videoSegments.size > 1) downloadedSegments.addAll(videoSegments.dropLast(1).filterNot { it.contains("init.mp4", true) })
+                        if (audioSegments.size > 1) downloadedSegments.addAll(audioSegments.dropLast(1).filterNot { it.contains("init.mp4", true) })
+                    }
                 }
 
                 for (i in videoSegments.indices) {
@@ -221,7 +225,6 @@ object PvrStreamRecorder {
                         downloadedSegments.add(vSeg)
                     }
 
-                    // Descargar audio correspondiente si viene desmultiplexado
                     val aSeg = audioSegments.getOrNull(i)
                     if (aSeg != null && !downloadedSegments.contains(aSeg)) {
                         downloadSegmentToRing(aSeg, headers, ringBuffer)
@@ -272,7 +275,9 @@ object PvrStreamRecorder {
 
     fun stopRecording(reasonNotice: String? = null) {
         TvStorageSafetyManager.stopWatchdog(); TvRecordTimerManager.cancelTimer()
+        TvWebPvrBridge.abortActiveDownload()
         tickerJob?.cancel(); tickerJob = null; recordJob?.cancel(); recordJob = null; isPausedInternal = false
+        currentOutFile?.let { if (it.exists() && it.length() == 0L) runCatching { it.delete() } }
         val last = _progress.value
         _progress.value = last.copy(isRecording = false, isPaused = false, statusNotice = reasonNotice ?: "✅ Grabación guardada exitosamente")
     }

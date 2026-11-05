@@ -134,7 +134,8 @@ fun BrowserWebView(
 
                 webViewClient = object : WebViewClient() {
                     override fun onRenderProcessGone(view: WebView?, detail: RenderProcessGoneDetail?): Boolean {
-                        android.util.Log.e("BrowserWebView", "🛡️ Chromium Render Process terminó de forma imprevista. Evitando cierre de la app.")
+                        val crashed = detail?.didCrash() ?: false
+                        com.omnicast.sender.log.SenderLogger.e("RENDER_PROCESS_GONE", "🛡️ Chromium Render Process terminó de forma imprevista (crashed=$crashed)", details = mapOf("crashed" to crashed, "url" to (view?.url ?: currentUrl)))
                         swipeRefresh.isRefreshing = false
                         return true
                     }
@@ -183,7 +184,7 @@ fun BrowserWebView(
 
                         if (isAdBlockEnabled && !isSourceWhitelisted) {
                             if (AdBlocker.isAd(reqUrl) || NativeAdBlockEngine.shouldBlock(reqUrl, liveUrl)) {
-                                android.util.Log.w("BrowserWebView", "🛑 Redirección publicitaria bloqueada: $targetHost")
+                                com.omnicast.sender.log.SenderLogger.w("AD_REDIRECT_BLOCKED", "🛑 Redirección publicitaria bloqueada: $targetHost (desde $curHost)", details = mapOf("target_host" to targetHost, "cur_host" to curHost, "target_url" to reqUrl))
                                 targetHost?.let { AdBlocker.learnAndBlockAdHost(it, curHost) }
                                 showBlockedToast(ctx)
                                 return true
@@ -197,6 +198,9 @@ fun BrowserWebView(
                         if (req?.isForMainFrame != true) return
                         val u = req.url.toString()
                         if (AdBlocker.isAd(u) || AdBlocker.isExternalRedirect(u)) return
+                        val desc = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) err?.description?.toString() ?: "" else ""
+                        val code = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) err?.errorCode ?: -1 else -1
+                        com.omnicast.sender.log.SenderLogger.w("BROWSER_LOAD_ERROR", "⚠️ Error cargando página: $desc (code=$code)", details = mapOf("url" to u, "description" to desc, "code" to code))
                         super.onReceivedError(v, req, err)
                     }
 

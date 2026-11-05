@@ -229,7 +229,7 @@ fun InAppBrowserScreen(
                         val isSame = currentUrl.isNotBlank() && (BrowserUrlHelper.extractYouTubeId(newUrl)?.let { it == BrowserUrlHelper.extractYouTubeId(currentUrl) } ?: (newUrl.substringBefore('?').substringBefore('#').trimEnd('/') == currentUrl.substringBefore('?').substringBefore('#').trimEnd('/')))
                         if (!newUrl.startsWith("about:") && !isSame) { resetStreamDetections(); pageTitle = "Cargando..." }
                         inputUrl = newUrl; currentUrl = newUrl; com.omnicast.sender.history.NavigationTrackManager.recordStep(newUrl, pageTitle)
-                        if (!newUrl.startsWith("about:")) { prefs.edit().putString("saved_browser_last_url", newUrl).apply(); com.omnicast.sender.history.NavigationTrackManager.pushBrowserHistory(context, newUrl, pageTitle) }; checkPlatformUrls(newUrl)
+                        if (!newUrl.startsWith("about:")) { com.omnicast.sender.log.SenderLogger.i("BROWSER_NAV", "🌐 Navegando a: ${newUrl.take(120)}", mapOf("url" to newUrl)); prefs.edit().putString("saved_browser_last_url", newUrl).apply(); com.omnicast.sender.history.NavigationTrackManager.pushBrowserHistory(context, newUrl, pageTitle) }; checkPlatformUrls(newUrl)
                     },
                     onPageFinished = { t, u -> if (!t.isNullOrBlank() && t != "Transmisión" && !t.contains("about:blank")) pageTitle = t; u?.let { checkPlatformUrls(it, pageTitle); com.omnicast.sender.history.NavigationTrackManager.recordStep(it, pageTitle) } },
                     onHistoryUpdated = { u, t ->

@@ -36,6 +36,12 @@ object SenderLogger {
             val pInfo = context.packageManager.getPackageInfo(context.packageName, 0)
             appVersion = "v${pInfo.versionName ?: "3.32.28"}"
         }
+        val defaultHandler = Thread.getDefaultUncaughtExceptionHandler()
+        Thread.setDefaultUncaughtExceptionHandler { t, e ->
+            e("UNCAUGHT_EXCEPTION", "💥 Error fatal no capturado en hilo ${t.name}: ${e.message}", e)
+            try { Thread.sleep(600) } catch (_: Throwable) {}
+            defaultHandler?.uncaughtException(t, e)
+        }
         i("SENDER_INIT", "🚀 OmniCast Sender $appVersion iniciado en $deviceModel ($androidVersion)")
     }
 
@@ -57,9 +63,10 @@ object SenderLogger {
         logBuffer.add(line)
         while (logBuffer.size > MAX_LOGS) { logBuffer.poll() }
 
-        // Enviar a Supabase eventos clave (fallos, sesiones de captura o inicio de proyeccion)
+        // Enviar a Supabase eventos clave (fallos, sesiones de captura, navegación o inicio de proyección)
         val shouldDispatchCloud = level == "ERROR" || level == "WARN" || tag == "SENDER_INIT" ||
-                tag == "PROJECTION_START" || tag == "STREAM_CAPTURE_SESSION" || tag == "ADBLOCK_NEUTRALIZATION"
+                tag == "PROJECTION_START" || tag == "STREAM_CAPTURE_SESSION" || tag == "ADBLOCK_NEUTRALIZATION" ||
+                tag == "BROWSER_NAV"
         if (shouldDispatchCloud) {
             dispatchToCloud(level, tag, message, errStr, details)
         }

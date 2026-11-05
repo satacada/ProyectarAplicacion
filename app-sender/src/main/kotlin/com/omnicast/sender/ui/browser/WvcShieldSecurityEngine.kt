@@ -138,7 +138,7 @@ object WvcShieldSecurityEngine {
             (curHost != null && targetHost != null)
 
         if (isAd) {
-            android.util.Log.w("WvcShieldSecurity", "🛡️ [WVC Shield] Redirección publicitaria sin gesto táctil bloqueada: $targetHost")
+            com.omnicast.sender.log.SenderLogger.w("DELAYED_REDIRECT_BLOCKED", "🛡️ Redirección sin gesto bloqueada: $targetHost (desde $curHost)", details = mapOf("target_host" to targetHost, "cur_host" to curHost, "target_url" to targetUrl))
             targetHost?.let { AdBlocker.learnAndBlockAdHost(it, curHost) }
             return true
         }
@@ -180,14 +180,14 @@ object WvcShieldSecurityEngine {
         if (isSourceSearchEngine) return false
 
         if (isTargetSearchEngine) {
-            try { android.util.Log.w("WvcShieldSecurity", "🛑 [WVC Shield] Secuestro de clic hacia buscador ($targetHost) bloqueado desde: $curHost") } catch (_: Throwable) {}
+            com.omnicast.sender.log.SenderLogger.w("CLICK_HIJACK_BLOCKED", "🛑 Clic a buscador bloqueado: $targetHost desde $curHost", details = mapOf("target_host" to targetHost, "cur_host" to curHost, "target_url" to targetUrl))
             return true
         }
 
         if (AdBlockWhitelistManager.isWhitelistedHost(curHost)) return false
 
         try {
-            android.util.Log.w("WvcShieldSecurity", "🛑 [WVC Shield] Secuestro de clic publicitario bloqueado hacia: $targetHost desde: $curHost")
+            com.omnicast.sender.log.SenderLogger.w("CLICK_HIJACK_BLOCKED", "🛑 Secuestro de clic bloqueado hacia: $targetHost desde $curHost", details = mapOf("target_host" to targetHost, "cur_host" to curHost, "target_url" to targetUrl))
             AdBlocker.learnAndBlockAdHost(targetHost, curHost)
         } catch (_: Throwable) {}
         return true

@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 350,
-  "versionCodeReceiver": 333,
-  "versionName": "3.5.99",
-  "releaseTag": "v3.5.99",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.99/omnicast-sender-v3.5.99.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.99/omnicast-receiver-v3.5.99.apk",
-  "changelog": "v3.5.99 (Bypass SSL en Interceptor Web TV y Telemetría Estructurada JSONB): 1) Resiliencia SSL en TV Box: En TvWebResourceInterceptor.kt se incorpora TRUST_ALL_SSL_FACTORY y HostnameVerifier permisivo para la descarga de manifiestos y fragmentos (.m3u8, .ts), y en TvReceiverHelper.kt se añade onReceivedSslError con handler.proceed(), erradicando CertPathValidatorException (Trust anchor not found) y los errores code=0 / net::ERR_CERT_AUTHORITY_INVALID en reproductores web de TV. 2) Telemetría Estructurada JSONB en Supabase: Enriquecido SenderLogger y ReceiverLogger para despachar objetos details completos con stream_url, target_player, http_code, error_reason y contexto de captura."
+  "versionCodeSender": 351,
+  "versionCodeReceiver": 334,
+  "versionName": "3.6.00",
+  "releaseTag": "v3.6.00",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.6.00/omnicast-sender-v3.6.00.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.6.00/omnicast-receiver-v3.6.00.apk",
+  "changelog": "v3.6.00 (Telemetría de Errores Completa en Emisor y Captura Global): 1) Telemetría Remota en Navegador: Enlazado WvcShieldSecurityEngine y BrowserWebView directamente con SenderLogger para reportar secuestro de clics (CLICK_HIJACK_BLOCKED), redirecciones abusivas (DELAYED_REDIRECT_BLOCKED), fallos de renderizado de Chromium (RENDER_PROCESS_GONE) y errores de carga (BROWSER_LOAD_ERROR). 2) Trazabilidad de Navegación: Registrado evento BROWSER_NAV en InAppBrowserScreen hacia Supabase. 3) Capturador Global de Excepciones: Registrado handler de Thread.setDefaultUncaughtExceptionHandler en SenderLogger para reportar cualquier error fatal no controlado a Supabase en 0ms."
 }

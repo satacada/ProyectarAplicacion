@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 352,
-  "versionCodeReceiver": 335,
-  "versionName": "3.6.01",
-  "releaseTag": "v3.6.01",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.6.01/omnicast-sender-v3.6.01.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.6.01/omnicast-receiver-v3.6.01.apk",
-  "changelog": "v3.6.01 (Aislamiento de Iframes, Neutralización de Pasarelas y Protocolo de Arqueología de Precedentes): 1) Blindaje de Iframe y Pasarelas: En WvcShieldSecurityEngine.kt, las llamadas window.open desde iframes secundarios (reproductores de terceros) quedan aisladas sin permiso de secuestrar la ventana principal, y las pasarelas publicitarias (/out.php, /pop.php) se neutralizan con { closed: false }, impidiendo desvíos a sitios de trading (Bitunix) y preservando intacta la navegación legítima entre servidores y capítulos. 2) Protocolo de Arqueología de Precedentes: Añadida ley inviolable en AGENTS.md exigiendo git log -S antes de tocar condiciones históricas. 3) Oráculo de Regresión: Añadido test automatizado en MediaPlatformRegressionTest para blindar reproductores válidos y bloquear pasarelas."
+  "versionCodeSender": 353,
+  "versionCodeReceiver": 336,
+  "versionName": "3.6.02",
+  "releaseTag": "v3.6.02",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.6.02/omnicast-sender-v3.6.02.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.6.02/omnicast-receiver-v3.6.02.apk",
+  "changelog": "v3.6.02 (Centinela 2 de Diagnóstico Web y Centinela 3 Anti-Honeypot): 1) Centinela 2 en Móvil: universal_sniffer.js escucha errores nativos de <video> (error, stalled) y WvcDomSniffer captura logs críticos de reproductores (olplayer, videojs, VAST adError, anti-adblock) reportándolos en tiempo real a Supabase (DOM_VIDEO_ERROR, WEB_PLAYER_LOG). 2) Centinela 3 en TV Box: TvWebResourceInterceptor inspecciona el payload de la CDN y detecta respuestas engañosas HTML (Content-Type: text/html en .m3u8), capturando la muestra HTML hacia Supabase (CDN_HONEYPOT_HTML) y evitando colapsos de Hls.js."
 }

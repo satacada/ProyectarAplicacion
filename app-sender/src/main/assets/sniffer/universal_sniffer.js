@@ -137,6 +137,21 @@
         v.addEventListener('play', function() { skipIfCommercial(); checkAndReport(true); }, true);
         v.addEventListener('playing', function() { skipIfCommercial(); checkAndReport(true); }, true);
         v.addEventListener('timeupdate', function() { skipIfCommercial(); }, true);
+        v.addEventListener('error', function() {
+            var err = v.error;
+            console.warn('OMNI_DOM_VIDEO_ERROR:' + JSON.stringify({
+                code: err ? err.code : 0,
+                message: err ? (err.message || '') : '',
+                src: v.currentSrc || v.src || '',
+                page: window.location.href || ''
+            }));
+        }, true);
+        v.addEventListener('stalled', function() {
+            console.warn('OMNI_DOM_VIDEO_STALLED:' + JSON.stringify({
+                src: v.currentSrc || v.src || '',
+                page: window.location.href || ''
+            }));
+        }, true);
         if (v.readyState >= 1) { skipIfCommercial(); checkAndReport(!v.paused); }
     }
 

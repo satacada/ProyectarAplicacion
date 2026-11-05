@@ -261,10 +261,11 @@ class MediaPlatformRegressionTest {
     }
 
     @Test
-    fun testCfglobalcdnHeadersUseNetuRefererAndOrigin() {
+    fun testBuildSafeHeadersAdoptsDynamicHeaders() {
         val streamUrl = "https://t9lr3d.cfglobalcdn.com/silverlight/secip/123/hls-vod/flv/videos/test.mp4.m3u8"
         val pageUrl = "https://cineplus123.org/capitulo/1x1"
-        val headers = BrowserUrlHelper.buildSafeHeaders(streamUrl, pageUrl, "MobileUA", emptyMap())
+        val dynamicHeaders = mapOf("Referer" to "https://netu.ac/", "Origin" to "https://netu.ac")
+        val headers = BrowserUrlHelper.buildSafeHeaders(streamUrl, pageUrl, "MobileUA", dynamicHeaders)
 
         assertEquals("https://netu.ac/", headers["Referer"])
         assertEquals("https://netu.ac", headers["Origin"])

@@ -185,9 +185,6 @@ class StreamProfileDatabase private constructor(context: Context) :
                 if (targetPlayer == "CHROMIUM_ANTI_CORS" || host.contains("dropcdn") || host.contains("dr0pstream") || host.contains("fastream")) {
                     seedHeaders["User-Agent"] = com.omnicast.sender.ui.browser.MediaPlatformResolver.UA_FASTREAM
                 }
-                if (host.contains("cfglobalcdn") || host.contains("netu")) {
-                    seedHeaders["Referer"] = "https://netu.ac/"; seedHeaders["Origin"] = "https://netu.ac"
-                }
                 val merged = (existing?.headers ?: emptyMap()) + seedHeaders
                 recordSuccess(host, merged, true, MediaBranch.VOD_HLS_MP4)
             }

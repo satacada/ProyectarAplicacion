@@ -151,7 +151,7 @@ object AdBlocker {
                 function cleanDoc(doc) {
                     if (!doc) return;
                     try {
-                        var css = 'div[class*="popunder"], div[id*="popunder"], .ad-overlay, #ad-overlay, .click-shield, div[class*="click-shield"], div[class*="player-banner"], div[id*="ad_wrapper"], div[class*="vast-"], div[class*="banner-ads"], #click-overlay, .click-overlay, #vplayer_overlay, .vplayer-overlay { display: none !important; pointer-events: none !important; }';
+                        var css = 'div[class*="popunder"], div[id*="popunder"], .ad-overlay, #ad-overlay, .click-shield, div[class*="click-shield"], div[class*="player-banner"], div[id*="ad_wrapper"], div[class*="vast-"], div[class*="banner-ads"], #click-overlay, .click-overlay, #vplayer_overlay, .vplayer-overlay, #fakeplayer, .fakeplayer, #clickfakeplayer, #oscuridad, div[class*="fake-player"] { display: none !important; pointer-events: none !important; }';
                         var st = doc.createElement('style');
                         st.textContent = css;
                         (doc.head || doc.documentElement).appendChild(st);
@@ -164,13 +164,15 @@ object AdBlocker {
                         'div[class*="player-banner"]', 'div[id*="ad_wrapper"]', 'div[class*="vast-"]',
                         'div[class*="banner-ads"]', 'div[id*="banner-ads"]',
                         '#click-overlay', '.click-overlay', '#vplayer_overlay', '.vplayer-overlay',
-                        '.vp_layer_fake', 'div[class*="fake-player"]'
+                        '.vp_layer_fake', 'div[class*="fake-player"]',
+                        '#fakeplayer', '.fakeplayer', '#clickfakeplayer', '#oscuridad'
                     ];
                     for (var s = 0; s < selectors.length; s++) {
                         try {
                             var found = doc.querySelectorAll(selectors[s]);
                             for (var f = 0; f < found.length; f++) {
                                 var item = found[f];
+                                if (item.id === 'clickfakeplayer' || item.id === 'oscuridad') { item.remove(); continue; }
                                 if (!item.querySelector('video, iframe, input, form, textarea, select, button, a')) item.remove();
                             }
                         } catch(e) {}

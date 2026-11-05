@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 348,
-  "versionCodeReceiver": 331,
-  "versionName": "3.5.97",
-  "releaseTag": "v3.5.97",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.97/omnicast-sender-v3.5.97.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.97/omnicast-receiver-v3.5.97.apk",
-  "changelog": "v3.5.97 (Soporte Nativo Netu/Waaw y CDN Silverlight cfglobalcdn): 1) Gobernanza SQLite y Supabase: Incorporada la regla de streaming para cfglobalcdn.com y netu.ac en Supabase (omnicast_stream_rules) y SQLite local con enrutamiento a CHROMIUM_ANTI_CORS. 2) Inyección de Cabeceras: Inyección obligatoria de Referer: https://netu.ac/ y Origin para flujos de cfglobalcdn.com en BrowserUrlHelper y StreamProfileDatabase, erradicando el rechazo y timeout en portales de cine como Pelis123. 3) Filtro AdBlock: Agregados netu.ac, waaw.ac y cfglobalcdn.com a KNOWN_MEDIA_HOSTS y known_media_players.json para proteger el iframe y controles interactivos."
+  "versionCodeSender": 349,
+  "versionCodeReceiver": 332,
+  "versionName": "3.5.98",
+  "releaseTag": "v3.5.98",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.98/omnicast-sender-v3.5.98.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.98/omnicast-receiver-v3.5.98.apk",
+  "changelog": "v3.5.98 (Neutralización de FakePlayer DooPlay y Poda de Código Duro): 1) Neutralización AdBlock de FakePlayer: En AdBlocker.kt, se neutralizan las trampas de DooPlay (#fakeplayer, .fakeplayer, #clickfakeplayer, #oscuridad) tanto vía CSS estricto con pointer-events: none como en el selector DOM reactivo, permitiendo hacer clic en las opciones de servidor (player-option-1, player-option-2) sin que la interfaz quede congelada ni redirija a registros falsos. 2) Poda de Código Duro y Gobernanza Pura por Datos: Purgados los parches hardcodeados de netu/cfglobalcdn en BrowserUrlHelper y StreamProfileDatabase; las cabeceras requeridas fluyen 100% dinámicas desde Supabase (omnicast_stream_rules) y SQLite local sin código en duro."
 }

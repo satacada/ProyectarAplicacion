@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 353,
-  "versionCodeReceiver": 336,
-  "versionName": "3.6.02",
-  "releaseTag": "v3.6.02",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.6.02/omnicast-sender-v3.6.02.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.6.02/omnicast-receiver-v3.6.02.apk",
-  "changelog": "v3.6.02 (Centinela 2 de Diagnóstico Web y Centinela 3 Anti-Honeypot): 1) Centinela 2 en Móvil: universal_sniffer.js escucha errores nativos de <video> (error, stalled) y WvcDomSniffer captura logs críticos de reproductores (olplayer, videojs, VAST adError, anti-adblock) reportándolos en tiempo real a Supabase (DOM_VIDEO_ERROR, WEB_PLAYER_LOG). 2) Centinela 3 en TV Box: TvWebResourceInterceptor inspecciona el payload de la CDN y detecta respuestas engañosas HTML (Content-Type: text/html en .m3u8), capturando la muestra HTML hacia Supabase (CDN_HONEYPOT_HTML) y evitando colapsos de Hls.js."
+  "versionCodeSender": 354,
+  "versionCodeReceiver": 337,
+  "versionName": "3.6.03",
+  "releaseTag": "v3.6.03",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.6.03/omnicast-sender-v3.6.03.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.6.03/omnicast-receiver-v3.6.03.apk",
+  "changelog": "v3.6.03 (Desacoplamiento Hexagonal Puro de Centinelas 2 y 3): 1) WebPlayerDiagnosticSentinel desacoplado en satélite autónomo en Sender para captura y telemetría de errores DOM y reproductores web sin invadir BrowserWebView ni WvcDomSniffer. 2) CdnHoneypotSentinel desacoplado en satélite autónomo en Receiver para detección en 0ms y telemetría de respuestas engañosas text/html (honeypot/parked domains) en streams HLS."
 }

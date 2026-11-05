@@ -110,26 +110,4 @@ object WvcDomSniffer {
         if (AdBlocker.isAd(url)) return false
         return BrowserUrlHelper.isPlayableStream(url)
     }
-
-    fun handleDiagnosticConsoleMessage(message: String, currentUrl: String): Boolean {
-        if (message.startsWith("OMNI_DOM_VIDEO_ERROR:")) {
-            val payload = message.removePrefix("OMNI_DOM_VIDEO_ERROR:").trim()
-            com.omnicast.sender.log.SenderLogger.w("DOM_VIDEO_ERROR", "⚠️ Error en etiqueta video del DOM", details = mapOf("payload" to payload, "page" to currentUrl))
-            return true
-        }
-        if (message.startsWith("OMNI_DOM_VIDEO_STALLED:")) {
-            val payload = message.removePrefix("OMNI_DOM_VIDEO_STALLED:").trim()
-            com.omnicast.sender.log.SenderLogger.w("DOM_VIDEO_STALLED", "⏳ Etiqueta video estancada (stalled)", details = mapOf("payload" to payload, "page" to currentUrl))
-            return true
-        }
-        val lower = message.lowercase()
-        val isPlayerLog = lower.contains("olplayer") || lower.contains("cant connect") || lower.contains("disable adblock") ||
-                (lower.contains("vast") && (lower.contains("error") || lower.contains("aderror"))) ||
-                (lower.contains("videojs") && lower.contains("error"))
-        if (isPlayerLog) {
-            com.omnicast.sender.log.SenderLogger.w("WEB_PLAYER_LOG", "📺 Log reproductor web: $message", details = mapOf("msg" to message, "page" to currentUrl))
-            return true
-        }
-        return false
-    }
 }

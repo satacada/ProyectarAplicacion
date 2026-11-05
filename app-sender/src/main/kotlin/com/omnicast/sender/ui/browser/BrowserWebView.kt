@@ -274,7 +274,7 @@ fun BrowserWebView(
                             post { sniffedList.forEach { onSniffedVideo(it) } }
                             return true
                         }
-                        if (WvcDomSniffer.handleDiagnosticConsoleMessage(msg, currentUrl)) return true
+                        if (com.omnicast.sender.ui.browser.sentinel.WebPlayerDiagnosticSentinel.handleDiagnosticConsoleMessage(msg, currentUrl)) return true
                         return super.onConsoleMessage(cm)
                     }
                 }

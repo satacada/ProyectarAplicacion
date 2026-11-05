@@ -94,10 +94,7 @@ object TvWebResourceInterceptor {
                 return null
             }
 
-            val cType = conn.contentType?.lowercase() ?: ""
-            if (cType.contains("text/html") && (lower.contains(".m3u8") || lower.contains(".ts") || lower.contains(".mp4"))) {
-                val sample = try { conn.inputStream.bufferedReader().use { it.readText().take(200) } } catch (_: Throwable) { "" }
-                com.omnicast.receiver.log.ReceiverLogger.log("CDN_HONEYPOT_HTML", "🛑 CDN respondió HTML en vez de stream: $urlStr | Muestra: $sample", details = mapOf("url" to urlStr, "content_type" to cType, "sample" to sample))
+            if (com.omnicast.receiver.ui.components.sentinel.CdnHoneypotSentinel.isHoneypotHtml(conn, urlStr)) {
                 conn.disconnect()
                 return null
             }

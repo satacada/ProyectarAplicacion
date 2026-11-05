@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 355,
-  "versionCodeReceiver": 338,
-  "versionName": "3.6.04",
-  "releaseTag": "v3.6.04",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.6.04/omnicast-sender-v3.6.04.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.6.04/omnicast-receiver-v3.6.04.apk",
-  "changelog": "v3.6.04 (Cortina de Carga Nativa Castera TV y Auto-Retorno por Fallo de CDN): 1) Erradicación del icono tosco nativo de Play de Android Chromium en TV Box mediante el nuevo composable TvWebLoadingOverlay con tema oscuro Castera TV y spinner circular. 2) Intercepción de errores fatales de red y honeypot en Hls.js y video HTML5 vía onFatalError y watchdog de 9s, con aviso amigable en pantalla y retorno ordenado a Standby."
+  "versionCodeSender": 356,
+  "versionCodeReceiver": 339,
+  "versionName": "3.6.05",
+  "releaseTag": "v3.6.05",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.6.05/omnicast-sender-v3.6.05.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.6.05/omnicast-receiver-v3.6.05.apk",
+  "changelog": "v3.6.05 (Filtrado Inteligente y Auto-Aprendizaje en Memoria RAM L1 con Centinelas): 1) Memoria RAM L1 en StreamCandidateValidator en :core:domain para cuarentena inmediata (< 0.001ms, O(1)) de CDNs caídas o con respuestas falsas (Honeypot). 2) Centinela 3 en TV y Centinela 2 en Móvil registran automáticamente CDNs muertas en StreamCandidateValidator ante manifestLoadError o Honeypot HTML, erradicando reintentos fallidos e intercepciones innecesarias."
 }

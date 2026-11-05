@@ -15,10 +15,12 @@ object WebPlayerDiagnosticSentinel {
     fun handleDiagnosticConsoleMessage(message: String, currentUrl: String): Boolean {
         if (message.startsWith(PREFIX_VIDEO_ERROR)) {
             val payload = message.removePrefix(PREFIX_VIDEO_ERROR).trim()
+            val activeUrl = com.omnicast.sender.stream.ActiveStreamHolder.streamUrl.orEmpty()
+            if (activeUrl.isNotBlank()) com.omnicast.core.domain.usecases.StreamCandidateValidator.markCdnHostOffline(activeUrl)
             SenderLogger.w(
                 "DOM_VIDEO_ERROR",
                 "⚠️ Error en etiqueta video del DOM",
-                details = mapOf("payload" to payload, "page" to currentUrl)
+                details = mapOf("payload" to payload, "page" to currentUrl, "streamUrl" to activeUrl)
             )
             return true
         }
@@ -39,6 +41,14 @@ object WebPlayerDiagnosticSentinel {
                 (lower.contains("videojs") && lower.contains("error"))
 
         if (isPlayerLog) {
+            val isFatal = lower.contains("manifestloaderror") || lower.contains("media_err_network")
+            if (isFatal) {
+                val activeUrl = com.omnicast.sender.stream.ActiveStreamHolder.streamUrl.orEmpty()
+                if (activeUrl.isNotBlank()) {
+                    com.omnicast.core.domain.usecases.StreamCandidateValidator.markCdnHostOffline(activeUrl)
+                    com.omnicast.sender.stream.ActiveStreamHolder.notifyPlaybackError("MANIFEST_LOAD_ERROR")
+                }
+            }
             SenderLogger.w(
                 "WEB_PLAYER_LOG",
                 "📺 Log reproductor web: $message",

@@ -189,7 +189,7 @@ class SenderMainActivity : ComponentActivity() {
                         val errKey = if (isTimeout) "TIMEOUT" else "HTTP_403"
                         val errUrl = mUrl ?: ActiveStreamHolder.streamUrl.orEmpty()
                         val errHost = com.omnicast.sender.stream.StreamProfileDatabase.extractHost(errUrl)
-                        if (errHost.isNotBlank()) com.omnicast.sender.stream.StreamProfileDatabase.recordFailure(errHost)
+                        if (errHost.isNotBlank()) { com.omnicast.sender.stream.StreamProfileDatabase.recordFailure(errHost); com.omnicast.core.domain.usecases.StreamCandidateValidator.markCdnHostOffline(errUrl) }
                         com.omnicast.sender.log.SenderFailedPlaybackManager.recordFailure(this@SenderMainActivity, errUrl, if (ActiveStreamHolder.headers["X-Target-Player"] == "WEBVIEW") "WEBVIEW" else "EXOPLAYER", errKey, msg.title.orEmpty(), if (isTimeout) "Timeout en TV" else "HTTP 403 en TV")
                         ActiveStreamHolder.notifyPlaybackError(errKey); ActiveStreamHolder.stopCasting(notifyTv = false); com.omnicast.sender.service.CastMediaNotificationService.stop(this@SenderMainActivity)
                     } else if ((msg.state == "PLAYING" || msg.state == "PAUSED") && !mUrl.isNullOrBlank()) {

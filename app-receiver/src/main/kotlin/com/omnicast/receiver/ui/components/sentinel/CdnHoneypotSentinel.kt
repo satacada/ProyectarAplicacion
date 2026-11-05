@@ -22,6 +22,7 @@ object CdnHoneypotSentinel {
                 conn.inputStream.bufferedReader().use { it.readText().take(200) }
             } catch (_: Throwable) { "" }
 
+            com.omnicast.core.domain.usecases.StreamCandidateValidator.markCdnHostOffline(urlStr)
             ReceiverLogger.log(
                 "CDN_HONEYPOT_HTML",
                 "🛑 CDN respondió HTML en vez de stream: $urlStr | Muestra: $sample",

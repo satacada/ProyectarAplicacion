@@ -55,4 +55,19 @@ class StreamCandidateValidatorTest {
         assertFalse("Debe rechazar si es ruta de reproductor/iframe", StreamCandidateValidator.isValidCdnStream(iframeUrl, domainMatches = true))
         assertFalse("Debe rechazar dominio no coincidente", StreamCandidateValidator.isValidCdnStream(wrongDomain, domainMatches = false))
     }
+
+    @Test
+    fun testOfflineCdnQuarantine() {
+        val stream = "https://f9rw3r.cfglobalcdn.com/silverlight/secip/video.mp4.m3u8"
+        StreamCandidateValidator.clearOfflineCdnHosts()
+        assertTrue(StreamCandidateValidator.isValidCdnStream(stream, domainMatches = true))
+
+        StreamCandidateValidator.markCdnHostOffline(stream)
+        assertTrue(StreamCandidateValidator.isCdnHostOffline(stream))
+        assertFalse("Debe rechazar stream si el host está en cuarentena", StreamCandidateValidator.isValidCdnStream(stream, domainMatches = true))
+
+        StreamCandidateValidator.clearOfflineCdnHosts()
+        assertFalse(StreamCandidateValidator.isCdnHostOffline(stream))
+        assertTrue(StreamCandidateValidator.isValidCdnStream(stream, domainMatches = true))
+    }
 }

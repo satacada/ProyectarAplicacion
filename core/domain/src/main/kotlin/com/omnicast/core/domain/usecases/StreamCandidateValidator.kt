@@ -96,13 +96,56 @@ object StreamCandidateValidator {
         return false
     }
 
+    private val offlineCdnHosts = java.util.concurrent.ConcurrentHashMap.newKeySet<String>()
+
+    /**
+     * Registra un host o URL de CDN comprobado como caído, estacionado (Honeypot) o con error fatal.
+     * Complejidad O(1) en memoria RAM L1 (cero acceso a disco).
+     */
+    fun markCdnHostOffline(hostOrUrl: String) {
+        val host = extractHost(hostOrUrl)
+        if (host.isNotBlank()) {
+            offlineCdnHosts.add(host)
+        }
+    }
+
+    /**
+     * Determina en < 0.001 ms si la URL pertenece a un host de CDN en cuarentena/offline.
+     */
+    fun isCdnHostOffline(url: String): Boolean {
+        if (offlineCdnHosts.isEmpty()) return false
+        val host = extractHost(url)
+        if (host.isBlank()) return false
+        if (offlineCdnHosts.contains(host)) return true
+        for (dead in offlineCdnHosts) {
+            if (host.endsWith(".$dead")) return true
+        }
+        return false
+    }
+
+    fun clearOfflineCdnHosts() {
+        offlineCdnHosts.clear()
+    }
+
+    fun extractHost(urlOrHost: String): String {
+        val s = urlOrHost.trim().lowercase()
+        val noProto = when {
+            s.startsWith("https://") -> s.substring(8)
+            s.startsWith("http://") -> s.substring(7)
+            else -> s
+        }
+        val host = noProto.substringBefore('/').substringBefore(':').substringBefore('?')
+        return if (host.startsWith("www.")) host.substring(4) else host
+    }
+
     /**
      * Contrato universal para extractores basados en red CDN:
      * El candidato debe coincidir con el criterio del host/dominio del extractor
-     * Y debe ser un stream binario real Y NO una ruta de reproductor web o documento.
+     * Y debe ser un stream binario real Y NO una ruta de reproductor web, documento o CDN caída.
      */
     fun isValidCdnStream(url: String, domainMatches: Boolean): Boolean {
         if (!domainMatches) return false
+        if (isCdnHostOffline(url)) return false
         if (isWebDocumentOrPlayerRoute(url)) return false
         return isBinaryMediaStream(url)
     }

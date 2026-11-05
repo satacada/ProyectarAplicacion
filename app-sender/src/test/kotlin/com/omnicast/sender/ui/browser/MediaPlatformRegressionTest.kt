@@ -259,4 +259,14 @@ class MediaPlatformRegressionTest {
         assertEquals("MP4", extractedPlaymogo.format)
         assertEquals("https://playmogo.com/", extractedPlaymogo.headers["Referer"])
     }
+
+    @Test
+    fun testCfglobalcdnHeadersUseNetuRefererAndOrigin() {
+        val streamUrl = "https://t9lr3d.cfglobalcdn.com/silverlight/secip/123/hls-vod/flv/videos/test.mp4.m3u8"
+        val pageUrl = "https://cineplus123.org/capitulo/1x1"
+        val headers = BrowserUrlHelper.buildSafeHeaders(streamUrl, pageUrl, "MobileUA", emptyMap())
+
+        assertEquals("https://netu.ac/", headers["Referer"])
+        assertEquals("https://netu.ac", headers["Origin"])
+    }
 }

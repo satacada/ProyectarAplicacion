@@ -30,6 +30,7 @@ object StreamManifestProbe {
     }
 
     val DEFAULT_HOST_PROFILES: Map<String, Pair<String, Boolean>> = mapOf(
+        "cfglobalcdn.com" to ("CHROMIUM_ANTI_CORS" to true), "netu.ac" to ("CHROMIUM_ANTI_CORS" to true), "netu.tv" to ("CHROMIUM_ANTI_CORS" to true),
         "dropcdn.io" to ("CHROMIUM_ANTI_CORS" to true), "dr0pstream.com" to ("CHROMIUM_ANTI_CORS" to true), "pelisplus.hair" to ("WEBVIEW" to true),
         "fastream.to" to ("CHROMIUM_ANTI_CORS" to true), "luluvdo.com" to ("WEBVIEW" to true), "lulustream.com" to ("WEBVIEW" to true),
         "pelisgo.online" to ("WEBVIEW" to true), "pelisgo" to ("WEBVIEW" to true), "tnmr.org" to ("EXOPLAYER" to true),

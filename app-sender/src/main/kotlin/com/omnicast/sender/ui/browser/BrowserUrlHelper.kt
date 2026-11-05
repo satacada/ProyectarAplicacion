@@ -115,6 +115,7 @@ object BrowserUrlHelper {
             val id = MediaPlatformResolver.extractFastreamId(streamUrl)
             val isDrop = streamUrl.contains("dropcdn.io", true) || streamUrl.contains("dr0pstream.com", true)
             val isFast = streamUrl.contains("fastream.to", true)
+            val isNetu = streamUrl.contains("cfglobalcdn.com", true) || streamUrl.contains("netu.ac", true) || streamUrl.contains("netu.tv", true)
             if (isDrop && id != null) {
                 headers["Referer"] = "https://dr0pstream.com/e/$id"
                 headers["Origin"] = "https://dr0pstream.com"
@@ -122,6 +123,10 @@ object BrowserUrlHelper {
             } else if (isFast && id != null) {
                 headers["Referer"] = "https://fastream.to/embed-$id.html"
                 headers["Origin"] = "https://fastream.to"
+                headers["Sec-Fetch-Mode"] = "cors"; headers["Sec-Fetch-Site"] = "cross-site"; headers["Sec-Fetch-Dest"] = "empty"
+            } else if (isNetu) {
+                headers["Referer"] = "https://netu.ac/"
+                headers["Origin"] = "https://netu.ac"
                 headers["Sec-Fetch-Mode"] = "cors"; headers["Sec-Fetch-Site"] = "cross-site"; headers["Sec-Fetch-Dest"] = "empty"
             } else if (!headers.containsKey("Referer") && currentUrl.isNotBlank()) {
                 headers["Referer"] = currentUrl

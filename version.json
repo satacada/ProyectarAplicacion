@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 347,
-  "versionCodeReceiver": 330,
-  "versionName": "3.5.96",
-  "releaseTag": "v3.5.96",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.96/omnicast-sender-v3.5.96.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.96/omnicast-receiver-v3.5.96.apk",
-  "changelog": "v3.5.96 (Blindaje Anti-Scripts NPM y Optimización Modular de ExoPlayer en TV): 1) Sender y Dominio: Descarte determinista de scripts y librerías web empaquetadas (.js@version, .min.js, cdn.jsdelivr.net, unpkg.com, cdnjs) en StreamCandidateValidator y BrowserUrlHelper, erradicando que archivos como hls.js sean capturados como video. 2) Receiver: Creación del satélite modular TvMediaItemBuilder.kt, desacoplando la inferencia de contenedores y filtrado de cabeceras de ExoPlayerTvManager (reduciendo el archivo a 272 líneas). 3) Reseteo de Fallback de Medios: Eliminada la fuga de estado de fallbackMime al cambiar de canal o video, y blindada la prioridad canónica de manifiestos HLS (.m3u8), garantizando la reproducción inmediata de señales como Angienet sin corrupción de formato."
+  "versionCodeSender": 348,
+  "versionCodeReceiver": 331,
+  "versionName": "3.5.97",
+  "releaseTag": "v3.5.97",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.97/omnicast-sender-v3.5.97.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.97/omnicast-receiver-v3.5.97.apk",
+  "changelog": "v3.5.97 (Soporte Nativo Netu/Waaw y CDN Silverlight cfglobalcdn): 1) Gobernanza SQLite y Supabase: Incorporada la regla de streaming para cfglobalcdn.com y netu.ac en Supabase (omnicast_stream_rules) y SQLite local con enrutamiento a CHROMIUM_ANTI_CORS. 2) Inyección de Cabeceras: Inyección obligatoria de Referer: https://netu.ac/ y Origin para flujos de cfglobalcdn.com en BrowserUrlHelper y StreamProfileDatabase, erradicando el rechazo y timeout en portales de cine como Pelis123. 3) Filtro AdBlock: Agregados netu.ac, waaw.ac y cfglobalcdn.com a KNOWN_MEDIA_HOSTS y known_media_players.json para proteger el iframe y controles interactivos."
 }

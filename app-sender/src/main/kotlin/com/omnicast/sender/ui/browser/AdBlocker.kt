@@ -10,7 +10,7 @@ object AdBlocker {
         "yandex.com", "yandex.ru", "ya.ru", "dzen.ru", "yastatic.net",
         "streamwish.to", "filemoon.sx", "doodstream.com", "mixdrop.co", "mixdrop.to", "mixdrop.ag", "mixdrop.club", "mixdrop.vc", "mixdrop.bz", "mixdrop.sx", "vidmoly.me",
         "voe.sx", "vidoza.net", "streamtape.com", "mp4upload.com", "upstream.to",
-        "waaw.to", "netu.tv", "vidguard.to", "uqload.com", "luluvdo.com",
+        "waaw.to", "waaw.ac", "netu.tv", "netu.ac", "cfglobalcdn.com", "vidguard.to", "uqload.com", "luluvdo.com",
         "streamlare.com", "wolfstream.tv", "streamcloud.club", "embedgram.com",
         "vidhide.com", "vidhidepro.com", "vidhidepre.com", "embed69.org",
         "pelismart.mov", "pelismart.com", "pelismart.online", "pelismart.vip", "pelismart.net", "pelismart.lat", "pelismart.app", "pelismart.org",

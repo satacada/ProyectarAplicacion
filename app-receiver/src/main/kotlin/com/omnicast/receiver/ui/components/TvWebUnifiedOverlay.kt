@@ -51,6 +51,8 @@ fun TvWebUnifiedOverlay(
     modifier: Modifier = Modifier
 ) {
     val playFocusRequester = remember { FocusRequester() }
+    val rewindFocusRequester = remember { FocusRequester() }
+    val forwardFocusRequester = remember { FocusRequester() }
     var hideTimerKey by remember { mutableStateOf(0) }
     var accumulatedSeekDelta by remember { mutableStateOf(0L) }
     var seekNoticeText by remember { mutableStateOf("") }
@@ -68,11 +70,19 @@ fun TvWebUnifiedOverlay(
         }
     }
 
+    // Foco inicial únicamente al abrir los controles desde estado oculto
+    LaunchedEffect(state.isControlsVisible) {
+        if (state.isControlsVisible) {
+            runCatching { playFocusRequester.requestFocus() }
+        }
+    }
+
+    // Temporizador de auto-ocultamiento de controles renovable por interacción
     LaunchedEffect(state.isControlsVisible, hideTimerKey) {
         if (state.isControlsVisible) {
-            if (hideTimerKey == 0) runCatching { playFocusRequester.requestFocus() }
-            delay(4500L); hideTimerKey = 0; onHideControls()
-        } else { hideTimerKey = 0 }
+            delay(4500L)
+            onHideControls()
+        }
     }
 
     AnimatedVisibility(visible = state.isControlsVisible, enter = fadeIn(), exit = fadeOut(), modifier = modifier.fillMaxSize()) {
@@ -85,20 +95,23 @@ fun TvWebUnifiedOverlay(
             }
 
             Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 40.dp, vertical = 24.dp).align(Alignment.BottomCenter), horizontalAlignment = Alignment.CenterHorizontally) {
-                if (seekNoticeText.isNotBlank()) {
-                    Box(modifier = Modifier.clip(RoundedCornerShape(8.dp)).background(Color(0xD90284C7)).padding(horizontal = 14.dp, vertical = 4.dp)) {
-                        Text(text = "⏩ $seekNoticeText", color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.Bold)
+                // Espacio fijo para el aviso OSD: evita desplazamiento y pérdida de foco en D-Pad
+                Box(modifier = Modifier.fillMaxWidth().height(32.dp), contentAlignment = Alignment.Center) {
+                    if (seekNoticeText.isNotBlank()) {
+                        Box(modifier = Modifier.clip(RoundedCornerShape(8.dp)).background(Color(0xD90284C7)).padding(horizontal = 14.dp, vertical = 4.dp)) {
+                            Text(text = "⏩ $seekNoticeText", color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.Bold)
+                        }
                     }
-                    Spacer(modifier = Modifier.height(8.dp))
                 }
+                Spacer(modifier = Modifier.height(8.dp))
 
                 TvWebTimelineBar(currentMs = state.currentPositionMs, durationMs = state.durationMs, onSeekDelta = { delta -> triggerSeek(delta) })
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                    TvWebDpadButton(label = "⏪", icon = "⏪", onClick = { triggerSeek(-10_000L) })
+                    TvWebDpadButton(label = "⏪", icon = "⏪", focusRequester = rewindFocusRequester, onClick = { triggerSeek(-10_000L); runCatching { rewindFocusRequester.requestFocus() } })
                     TvWebDpadButton(label = if (state.isPlaying) "Pausar" else "Reproducir", icon = if (state.isPlaying) "⏸" else "▶", isPrimary = true, focusRequester = playFocusRequester, onClick = { onTogglePlay(); hideTimerKey++ })
-                    TvWebDpadButton(label = "⏩", icon = "⏩", onClick = { triggerSeek(10_000L) })
+                    TvWebDpadButton(label = "⏩", icon = "⏩", focusRequester = forwardFocusRequester, onClick = { triggerSeek(10_000L); runCatching { forwardFocusRequester.requestFocus() } })
                     if (onRecordClick != null) {
                         TvWebDpadButton(
                             label = if (isRecording) "⏹ Detener REC" else "🔴 Iniciar REC",

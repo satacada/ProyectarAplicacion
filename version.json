@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 357,
-  "versionCodeReceiver": 340,
-  "versionName": "3.6.06",
-  "releaseTag": "v3.6.06",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.6.06/omnicast-sender-v3.6.06.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.6.06/omnicast-receiver-v3.6.06.apk",
-  "changelog": "v3.6.06: 1) Franjas de video negro puro #000000 en TvWebHtmlBuilder y WebView, eliminando la banda gris/púrpura inferior en películas ultrawide (21:9). 2) Watchdog timeout ampliado a 22s en TvWebStreamScreen para tolerar la carga inicial de CDNs lentas europeas (DropCDN, LuluStream) sin falsos positivos de 'Servidor no disponible', manteniendo salida inmediata de 3s en errores explícitos (Honeypot/404)."
+  "versionCodeSender": 358,
+  "versionCodeReceiver": 341,
+  "versionName": "3.6.07",
+  "releaseTag": "v3.6.07",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.6.07/omnicast-sender-v3.6.07.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.6.07/omnicast-receiver-v3.6.07.apk",
+  "changelog": "v3.6.07: 1) Resiliencia de Grabación PVR con Satélite Hexagonal PvrNetworkHelper: inyección de cookies vivas de Chromium (CookieManager), User-Agent real de navegador, cabeceras anti-WAF y SSL permisivo en TvDownloadManager y PvrStreamRecorder, erradicando el error HTTP 403 Forbidden en CDNs protegidas (DropCDN). 2) Blindaje de Foco D-Pad en TvWebUnifiedOverlay: espacio fijo para aviso OSD (+10s, -10s) y retención continua de foco en botones de rebobinado (<<) y avance (>>), permitiendo saltos acumulativos consecutivos sin saltar a Play/Pausa."
 }

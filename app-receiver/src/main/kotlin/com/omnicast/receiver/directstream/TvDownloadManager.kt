@@ -169,12 +169,7 @@ object TvDownloadManager {
         expectedBytes: Long,
         onProgress: (TvBridgeDownloadProgress) -> Unit
     ) = withContext(Dispatchers.IO) {
-        val conn = (URL(url).openConnection() as HttpURLConnection).apply {
-            connectTimeout = 10000
-            readTimeout = 15000
-            instanceFollowRedirects = true
-            headers.forEach { (k, v) -> setRequestProperty(k, v) }
-        }
+        val conn = PvrNetworkHelper.openConnection(url, headers, 10000, 15000)
         val total = conn.contentLengthLong.takeIf { it > 0L } ?: expectedBytes
         var downloaded = 0L
         val buf = ByteArray(64 * 1024)
@@ -201,11 +196,11 @@ object TvDownloadManager {
         targetHeight: Int,
         onProgress: (TvBridgeDownloadProgress) -> Unit
     ) = withContext(Dispatchers.IO) {
-        val text = fetchText(manifestUrl, headers)
+        val text = PvrNetworkHelper.fetchText(manifestUrl, headers)
         val master = PvrHlsMasterParser.parseMaster(text, manifestUrl)
         val chosenVariant = PvrHlsMasterParser.selectVariant(master.variants, targetHeight)
         val finalManifestUrl = chosenVariant?.url ?: manifestUrl
-        val finalLines = if (chosenVariant != null) fetchText(finalManifestUrl, headers).lines().map { it.trim() } else text.lines().map { it.trim() }
+        val finalLines = if (chosenVariant != null) PvrNetworkHelper.fetchText(finalManifestUrl, headers).lines().map { it.trim() } else text.lines().map { it.trim() }
         val segments = finalLines.filter { it.isNotEmpty() && !it.startsWith("#") }.map { resolveRelativeUrl(finalManifestUrl, it) }
 
         if (segments.isEmpty()) {
@@ -218,11 +213,7 @@ object TvDownloadManager {
         FileOutputStream(outFile).use { output ->
             for ((idx, segUrl) in segments.withIndex()) {
                 if (!isActive) break
-                val conn = (URL(segUrl).openConnection() as HttpURLConnection).apply {
-                    connectTimeout = 8000
-                    readTimeout = 12000
-                    headers.forEach { (k, v) -> setRequestProperty(k, v) }
-                }
+                val conn = PvrNetworkHelper.openConnection(segUrl, headers, 8000, 12000)
                 conn.inputStream.use { input ->
                     while (isActive) {
                         val r = input.read(buf)
@@ -236,15 +227,6 @@ object TvDownloadManager {
             }
         }
         onProgress(TvBridgeDownloadProgress(false, true, downloaded, downloaded, 100, outFile.absolutePath))
-    }
-
-    private fun fetchText(url: String, headers: Map<String, String>): String {
-        val conn = (URL(url).openConnection() as HttpURLConnection).apply {
-            connectTimeout = 8000
-            readTimeout = 8000
-            headers.forEach { (k, v) -> setRequestProperty(k, v) }
-        }
-        return conn.inputStream.bufferedReader().use { it.readText() }
     }
 
     private fun resolveRelativeUrl(baseUrl: String, relative: String): String {

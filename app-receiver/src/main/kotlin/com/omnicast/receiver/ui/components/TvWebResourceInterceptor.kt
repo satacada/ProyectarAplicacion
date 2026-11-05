@@ -62,8 +62,8 @@ object TvWebResourceInterceptor {
                 instanceFollowRedirects = true
                 requestMethod = method
 
-                // User-Agent: usar Desktop UA si viene de Fastream/DropCDN o si defaultHeaders lo especifica
-                val ua = defaultHeaders["User-Agent"]?.takeIf { !it.contains("Android", true) } ?: UA_DESKTOP
+                // User-Agent: usar el provisto por el emisor/reproductor o Desktop por defecto
+                val ua = defaultHeaders["User-Agent"]?.takeIf { it.isNotBlank() } ?: UA_DESKTOP
                 setRequestProperty("User-Agent", ua)
 
                 // Referer: obligatorio para autorizar la descarga (Fastream, OK.ru, DropCDN)

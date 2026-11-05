@@ -241,10 +241,7 @@ object PvrStreamRecorder {
     }
 
     private fun downloadSegmentToRing(segUrl: String, headers: Map<String, String>, ringBuffer: PvrRingBuffer) {
-        val conn = (URL(segUrl).openConnection() as HttpURLConnection).apply {
-            connectTimeout = 6000; readTimeout = 8000
-            headers.forEach { (k, v) -> setRequestProperty(k, v) }
-        }
+        val conn = PvrNetworkHelper.openConnection(segUrl, headers, 6000, 8000)
         val buf = ByteArray(32 * 1024)
         conn.inputStream.use { input ->
             while (!isPausedInternal) {
@@ -260,10 +257,7 @@ object PvrStreamRecorder {
         headers: Map<String, String>,
         ringBuffer: PvrRingBuffer
     ) = withContext(Dispatchers.IO) {
-        val conn = (URL(url).openConnection() as HttpURLConnection).apply {
-            connectTimeout = 8000; readTimeout = 12000
-            headers.forEach { (k, v) -> setRequestProperty(k, v) }
-        }
+        val conn = PvrNetworkHelper.openConnection(url, headers, 8000, 12000)
         val buf = ByteArray(64 * 1024)
         conn.inputStream.use { input ->
             while (isActive && _progress.value.isRecording) {
@@ -290,7 +284,5 @@ object PvrStreamRecorder {
     }
 
     private fun fetchText(url: String, headers: Map<String, String>): String =
-        (URL(url).openConnection() as HttpURLConnection).apply {
-            connectTimeout = 5000; readTimeout = 6000; headers.forEach { (k, v) -> setRequestProperty(k, v) }
-        }.inputStream.bufferedReader().use { it.readText() }
+        PvrNetworkHelper.fetchText(url, headers, 5000, 6000)
 }

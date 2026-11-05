@@ -28,8 +28,9 @@ object TvWebHtmlBuilder {
             <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
             <style>
               * { margin:0; padding:0; box-sizing:border-box; }
-              html, body { width:100vw; height:100vh; overflow:hidden; background:#000; }
-              video { width:100vw; height:100vh; object-fit:contain; background:#000; border:none; outline:none; }
+              html, body { width:100vw; height:100vh; overflow:hidden; background:#0A0E17; }
+              video { width:100vw; height:100vh; object-fit:contain; background:#0A0E17; border:none; outline:none; }
+              video::-webkit-media-controls { display:none !important; }
             </style>
             <script>$hlsCode</script>
             </head>
@@ -58,6 +59,12 @@ object TvWebHtmlBuilder {
                 vid.addEventListener('ended', reportStatus);
                 vid.addEventListener('timeupdate', reportStatus);
                 vid.addEventListener('durationchange', reportStatus);
+                vid.addEventListener('error', function() {
+                  if (window.AndroidBridge && window.AndroidBridge.onFatalError) {
+                    var code = vid.error ? vid.error.code : 0;
+                    window.AndroidBridge.onFatalError('VIDEO_ERR_' + code);
+                  }
+                });
 
                 function seekStart() {
                   if (startSec > 0 && !hasResumed && vid) {
@@ -93,10 +100,18 @@ object TvWebHtmlBuilder {
                             hls = new Hls(cfg);
                             hls.loadSource(streamUrl);
                             hls.attachMedia(vid);
-                          } else { hls.startLoad(); }
+                          } else {
+                            if (window.AndroidBridge && window.AndroidBridge.onFatalError) {
+                              window.AndroidBridge.onFatalError(data.details || 'NETWORK_ERROR');
+                            }
+                          }
                         }
                         else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) hls.recoverMediaError();
-                        else { vid.src = streamUrl; vid.play().catch(function(){}); }
+                        else {
+                          if (window.AndroidBridge && window.AndroidBridge.onFatalError) {
+                            window.AndroidBridge.onFatalError(data.details || 'FATAL_ERROR');
+                          }
+                        }
                       }
                     });
                   } else { vid.src = streamUrl; vid.play().catch(function(){}); }

@@ -38,6 +38,8 @@ fun TvWebStreamScreen(
     val timerState by com.omnicast.receiver.directstream.TvRecordTimerManager.timerState.collectAsState()
     var showRecordDialog by remember { mutableStateOf(false) }
     var showStopConfirm by remember { mutableStateOf(false) }
+    var isVideoReady by remember(streamUrl, timestamp) { mutableStateOf(false) }
+    var fatalErrorReason by remember(streamUrl, timestamp) { mutableStateOf<String?>(null) }
     var playerState by remember(streamUrl, timestamp) {
         mutableStateOf(
             TvWebPlayerState(
@@ -48,6 +50,20 @@ fun TvWebStreamScreen(
     }
     var customView by remember(streamUrl, timestamp) { mutableStateOf<View?>(null) }
     var webViewRef by remember(streamUrl, timestamp) { mutableStateOf<WebView?>(null) }
+
+    LaunchedEffect(streamUrl, timestamp, isVideoReady, fatalErrorReason) {
+        if (fatalErrorReason != null) {
+            delay(3000L)
+            onPlaybackFailed?.invoke(fatalErrorReason ?: "FATAL_ERROR")
+            return@LaunchedEffect
+        }
+        if (!isVideoReady) {
+            delay(9000L)
+            if (!isVideoReady && fatalErrorReason == null) {
+                fatalErrorReason = "WATCHDOG_TIMEOUT"
+            }
+        }
+    }
 
     LaunchedEffect(displayMode, webViewRef) {
         val dm = displayMode ?: return@LaunchedEffect; val wv = webViewRef ?: return@LaunchedEffect
@@ -117,12 +133,19 @@ fun TvWebStreamScreen(
                                     val cMs = (c * 1000).toLong()
                                     val dMs = if (d.isFinite() && d > 0) (d * 1000).toLong() else 0L
                                     mainHandler.post {
+                                        if (p && (cMs > 50L || dMs > 0L)) isVideoReady = true
                                         playerState = playerState.copy(
                                             currentPositionMs = cMs,
                                             durationMs = if (dMs > 0L) dMs else playerState.durationMs,
                                             isPlaying = p
                                         )
                                         onPlaybackStatus?.invoke(cMs, dMs, p)
+                                    }
+                                }
+                                @JavascriptInterface
+                                fun onFatalError(reason: String) {
+                                    mainHandler.post {
+                                        if (!isVideoReady && fatalErrorReason == null) fatalErrorReason = reason
                                     }
                                 }
                                 @JavascriptInterface
@@ -155,20 +178,19 @@ fun TvWebStreamScreen(
                     onRelease = { webView ->
                         try {
                             if (webViewRef == webView) webViewRef = null
-                            webView.stopLoading()
-                            webView.onPause()
-                            webView.evaluateJavascript("stopStream();", null)
-                            webView.loadUrl("about:blank")
-                            webView.clearHistory()
-                            webView.clearCache(true)
-                            webView.removeAllViews()
-                            webView.freeMemory()
-                            webView.destroy()
+                            webView.stopLoading(); webView.onPause(); webView.evaluateJavascript("stopStream();", null)
+                            webView.loadUrl("about:blank"); webView.clearHistory(); webView.clearCache(true)
+                            webView.removeAllViews(); webView.freeMemory(); webView.destroy()
                         } catch (_: Throwable) {}
                     },
                     modifier = Modifier.fillMaxSize()
                 )
             }
+        }
+
+        // Cortina de carga moderna que oculta Chromium y su icono nativo de Play hasta recibir video
+        if (!isVideoReady) {
+            TvWebLoadingOverlay(title = title, errorMessage = fatalErrorReason)
         }
 
         // Superposición nativa de controles D-Pad
@@ -235,16 +257,7 @@ fun TvWebStreamScreen(
         )
 
         if (showRecordDialog && streamUrl.isNotBlank()) {
-            val isLive = playerState.durationMs <= 0L ||
-                title.contains("news", ignoreCase = true) ||
-                title.contains("sky", ignoreCase = true) ||
-                title.contains("directo", ignoreCase = true) ||
-                title.contains("envivo", ignoreCase = true) ||
-                title.contains("en vivo", ignoreCase = true) ||
-                title.contains("live", ignoreCase = true) ||
-                streamUrl.contains("live", ignoreCase = true) ||
-                streamUrl.contains("linear", ignoreCase = true) ||
-                streamUrl.contains("chunklist", ignoreCase = true)
+            val isLive = playerState.durationMs <= 0L || listOf("news", "sky", "directo", "envivo", "en vivo", "live", "linear", "chunklist").any { title.contains(it, true) || streamUrl.contains(it, true) }
 
             TvRecordDialog(
                 title = title.ifBlank { if (isLive) "Canal en Vivo" else "Película en reproducción" },

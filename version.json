@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 354,
-  "versionCodeReceiver": 337,
-  "versionName": "3.6.03",
-  "releaseTag": "v3.6.03",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.6.03/omnicast-sender-v3.6.03.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.6.03/omnicast-receiver-v3.6.03.apk",
-  "changelog": "v3.6.03 (Desacoplamiento Hexagonal Puro de Centinelas 2 y 3): 1) WebPlayerDiagnosticSentinel desacoplado en satélite autónomo en Sender para captura y telemetría de errores DOM y reproductores web sin invadir BrowserWebView ni WvcDomSniffer. 2) CdnHoneypotSentinel desacoplado en satélite autónomo en Receiver para detección en 0ms y telemetría de respuestas engañosas text/html (honeypot/parked domains) en streams HLS."
+  "versionCodeSender": 355,
+  "versionCodeReceiver": 338,
+  "versionName": "3.6.04",
+  "releaseTag": "v3.6.04",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.6.04/omnicast-sender-v3.6.04.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.6.04/omnicast-receiver-v3.6.04.apk",
+  "changelog": "v3.6.04 (Cortina de Carga Nativa Castera TV y Auto-Retorno por Fallo de CDN): 1) Erradicación del icono tosco nativo de Play de Android Chromium en TV Box mediante el nuevo composable TvWebLoadingOverlay con tema oscuro Castera TV y spinner circular. 2) Intercepción de errores fatales de red y honeypot en Hls.js y video HTML5 vía onFatalError y watchdog de 9s, con aviso amigable en pantalla y retorno ordenado a Standby."
 }

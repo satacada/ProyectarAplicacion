@@ -58,7 +58,7 @@ fun TvWebStreamScreen(
             return@LaunchedEffect
         }
         if (!isVideoReady) {
-            delay(9000L)
+            delay(22000L)
             if (!isVideoReady && fatalErrorReason == null) {
                 fatalErrorReason = "WATCHDOG_TIMEOUT"
             }
@@ -108,7 +108,7 @@ fun TvWebStreamScreen(
                     factory = { ctx ->
                         WebView(ctx).apply {
                             webViewRef = this
-                            isFocusable = false; isFocusableInTouchMode = false; clearFocus()
+                            isFocusable = false; isFocusableInTouchMode = false; clearFocus(); setBackgroundColor(android.graphics.Color.BLACK)
                             layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
                             settings.javaScriptEnabled = true
                             settings.domStorageEnabled = true

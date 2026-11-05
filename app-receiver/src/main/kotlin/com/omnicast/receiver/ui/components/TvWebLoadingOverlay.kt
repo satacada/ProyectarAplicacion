@@ -33,7 +33,7 @@ fun TvWebLoadingOverlay(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(Color(0xFF0A0E17)),
+            .background(Color.Black),
         contentAlignment = Alignment.Center
     ) {
         Column(

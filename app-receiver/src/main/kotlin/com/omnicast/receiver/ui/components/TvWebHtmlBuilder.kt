@@ -28,8 +28,8 @@ object TvWebHtmlBuilder {
             <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
             <style>
               * { margin:0; padding:0; box-sizing:border-box; }
-              html, body { width:100vw; height:100vh; overflow:hidden; background:#0A0E17; }
-              video { width:100vw; height:100vh; object-fit:contain; background:#0A0E17; border:none; outline:none; }
+              html, body { width:100vw; height:100vh; overflow:hidden; background:#000000; }
+              video { width:100vw; height:100vh; object-fit:contain; background:#000000; border:none; outline:none; }
               video::-webkit-media-controls { display:none !important; }
             </style>
             <script>$hlsCode</script>

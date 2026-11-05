@@ -59,7 +59,7 @@ object ReceiverLogger {
         startHttpServer()
     }
 
-    fun log(tag: String, message: String, throwable: Throwable? = null) {
+    fun log(tag: String, message: String, throwable: Throwable? = null, details: Map<String, Any?>? = null) {
         val time = dateFormat.format(Date())
         val errStr = throwable?.let { "\n" + Log.getStackTraceString(it) } ?: ""
         val line = "[$time][$tag] $message$errStr"
@@ -75,15 +75,16 @@ object ReceiverLogger {
         thread(isDaemon = true) {
             runCatching { logFile?.appendText("$line\n") }
             if (isErrorOrWarning || isStreamEvent || isMilestone) {
-                dispatchToSupabase(tag, message, errStr, if (isErrorOrWarning) "error" else "info")
+                dispatchToSupabase(tag, message, errStr, if (isErrorOrWarning) "error" else "info", details)
             }
         }
     }
 
-    private fun dispatchToSupabase(tag: String, message: String, errStr: String, level: String) {
+    private fun dispatchToSupabase(tag: String, message: String, errStr: String, level: String, details: Map<String, Any?>? = null) {
         runCatching {
             val detailsObj = JSONObject().apply {
-                if (errStr.isNotBlank()) put("stack_trace", errStr.take(1500))
+                details?.forEach { (k, v) -> if (v != null) put(k, v) }
+                if (errStr.isNotBlank() && !has("stack_trace")) put("stack_trace", errStr.take(1500))
             }
             val payload = JSONObject().apply {
                 put("role", "tv")

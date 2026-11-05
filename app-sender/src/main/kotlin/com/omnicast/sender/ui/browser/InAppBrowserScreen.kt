@@ -127,7 +127,7 @@ fun InAppBrowserScreen(
         val primaryUrl = detectedStreams.firstOrNull { com.omnicast.core.domain.usecases.HlsMasterResolver.isMasterPlaylistUrl(it) } ?: detectedStreams.firstOrNull { isRealMedia(it) } ?: targetUrl
         val cleanT = if (pageTitle.isNotBlank() && pageTitle != "Cargando..." && pageTitle != "Transmisión") pageTitle else "Video Web"
         ActiveStreamHolder.update(primaryUrl, cleanT, streamHeaders[primaryUrl] ?: hdrs)
-        android.util.Log.i("StreamDetection", "🎬 Flujo registrado [isMaster=$isM, freshToken=true]: $targetUrl")
+        com.omnicast.sender.log.SenderLogger.i("STREAM_CAPTURE_SESSION", "🎬 Stream: $cleanT", mapOf("page_url" to currentUrl, "stream_url" to targetUrl, "is_master" to isM, "count" to detectedStreams.size))
         if (isPrimary) userDismissedSheetForUrl = ""
         val isNewPage = currentUrl.isNotBlank() && currentUrl != castingPageUrl
         if (!showOptionsSheet && (!isCasting || isPrimary || isNewPage) && userDismissedSheetForUrl != currentUrl && autoOpenJob?.isActive != true) {

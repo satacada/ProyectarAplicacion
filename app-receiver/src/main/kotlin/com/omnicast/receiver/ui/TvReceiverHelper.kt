@@ -69,12 +69,18 @@ object TvReceiverHelper {
     }
 
     fun createWebClient(streamUrl: String, headers: Map<String, String>): android.webkit.WebViewClient {
-        if (!shouldUseAntiCorsInterceptor(streamUrl, headers)) {
-            return android.webkit.WebViewClient()
-        }
         return object : android.webkit.WebViewClient() {
-            override fun shouldInterceptRequest(v: android.webkit.WebView?, r: android.webkit.WebResourceRequest?): android.webkit.WebResourceResponse? =
-                com.omnicast.receiver.ui.components.TvWebResourceInterceptor.shouldIntercept(r, headers) ?: super.shouldInterceptRequest(v, r)
+            override fun shouldInterceptRequest(v: android.webkit.WebView?, r: android.webkit.WebResourceRequest?): android.webkit.WebResourceResponse? {
+                if (shouldUseAntiCorsInterceptor(streamUrl, headers)) {
+                    val resp = com.omnicast.receiver.ui.components.TvWebResourceInterceptor.shouldIntercept(r, headers)
+                    if (resp != null) return resp
+                }
+                return super.shouldInterceptRequest(v, r)
+            }
+
+            override fun onReceivedSslError(view: android.webkit.WebView?, handler: android.webkit.SslErrorHandler?, error: android.net.http.SslError?) {
+                handler?.proceed()
+            }
         }
     }
 

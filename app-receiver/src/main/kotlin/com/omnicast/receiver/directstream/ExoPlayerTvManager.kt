@@ -79,7 +79,17 @@ class ExoPlayerTvManager(private val context: Context) {
                         }
                         override fun onPlayerError(error: PlaybackException) {
                             val code = error.errorCode
-                            com.omnicast.receiver.log.ReceiverLogger.log(TAG, "❌ Error en ExoPlayer ($activeBranch): ${error.errorCodeName} ($code): ${error.message}", error)
+                            val httpCode = (error.cause as? androidx.media3.datasource.HttpDataSource.InvalidResponseCodeException)?.responseCode ?: -1
+                            val errDetails = mapOf(
+                                "stream_url" to (currentUrl ?: ""),
+                                "target_player" to "EXOPLAYER",
+                                "branch" to activeBranch.name,
+                                "error_code" to code,
+                                "error_name" to error.errorCodeName,
+                                "http_code" to httpCode,
+                                "headers_sent" to currentHeaders.keys.joinToString(",")
+                            )
+                            com.omnicast.receiver.log.ReceiverLogger.log(TAG, "❌ Error en ExoPlayer ($activeBranch): ${error.errorCodeName} ($code): ${error.message}", error, errDetails)
                             if (TvBranchPlayerConfig.isLiveOrContinuous(activeBranch)) {
                                 com.omnicast.receiver.log.ReceiverLogger.log(TAG, "🔄 Auto-reconexión silenciosa en vivo (live edge)")
                                 android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({ player?.seekToDefaultPosition(); player?.prepare(); player?.play() }, 500)

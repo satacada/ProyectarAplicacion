@@ -39,11 +39,11 @@ object SenderLogger {
         i("SENDER_INIT", "🚀 OmniCast Sender $appVersion iniciado en $deviceModel ($androidVersion)")
     }
 
-    fun i(tag: String, message: String) = log("INFO", tag, message, null)
-    fun w(tag: String, message: String, throwable: Throwable? = null) = log("WARN", tag, message, throwable)
-    fun e(tag: String, message: String, throwable: Throwable? = null) = log("ERROR", tag, message, throwable)
+    fun i(tag: String, message: String, details: Map<String, Any?>? = null) = log("INFO", tag, message, null, details)
+    fun w(tag: String, message: String, throwable: Throwable? = null, details: Map<String, Any?>? = null) = log("WARN", tag, message, throwable, details)
+    fun e(tag: String, message: String, throwable: Throwable? = null, details: Map<String, Any?>? = null) = log("ERROR", tag, message, throwable, details)
 
-    fun log(level: String, tag: String, message: String, throwable: Throwable? = null) {
+    fun log(level: String, tag: String, message: String, throwable: Throwable? = null, details: Map<String, Any?>? = null) {
         val time = dateFormat.format(Date())
         val errStr = throwable?.let { "\n" + Log.getStackTraceString(it) } ?: ""
         val line = "[$time][$level][$tag] $message$errStr"
@@ -57,18 +57,20 @@ object SenderLogger {
         logBuffer.add(line)
         while (logBuffer.size > MAX_LOGS) { logBuffer.poll() }
 
-        // Enviar a Supabase solo eventos clave (inicio de sesion o fallos warn/error)
-        val shouldDispatchCloud = level == "ERROR" || level == "WARN" || tag == "SENDER_INIT" || tag == "PROJECTION_START"
+        // Enviar a Supabase eventos clave (fallos, sesiones de captura o inicio de proyeccion)
+        val shouldDispatchCloud = level == "ERROR" || level == "WARN" || tag == "SENDER_INIT" ||
+                tag == "PROJECTION_START" || tag == "STREAM_CAPTURE_SESSION" || tag == "ADBLOCK_NEUTRALIZATION"
         if (shouldDispatchCloud) {
-            dispatchToCloud(level, tag, message, errStr)
+            dispatchToCloud(level, tag, message, errStr, details)
         }
     }
 
-    private fun dispatchToCloud(level: String, tag: String, message: String, errStr: String) {
+    private fun dispatchToCloud(level: String, tag: String, message: String, errStr: String, details: Map<String, Any?>? = null) {
         thread(isDaemon = true, name = "SenderCloudLog") {
             runCatching {
                 val detailsObj = JSONObject().apply {
-                    if (errStr.isNotBlank()) put("stack_trace", errStr.take(1500))
+                    details?.forEach { (k, v) -> if (v != null) put(k, v) }
+                    if (errStr.isNotBlank() && !has("stack_trace")) put("stack_trace", errStr.take(1500))
                 }
                 val payload = JSONObject().apply {
                     put("role", "phone")

@@ -1,9 +1,9 @@
 {
-  "versionCodeSender": 349,
-  "versionCodeReceiver": 332,
-  "versionName": "3.5.98",
-  "releaseTag": "v3.5.98",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.98/omnicast-sender-v3.5.98.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.98/omnicast-receiver-v3.5.98.apk",
-  "changelog": "v3.5.98 (Neutralización de FakePlayer DooPlay y Poda de Código Duro): 1) Neutralización AdBlock de FakePlayer: En AdBlocker.kt, se neutralizan las trampas de DooPlay (#fakeplayer, .fakeplayer, #clickfakeplayer, #oscuridad) tanto vía CSS estricto con pointer-events: none como en el selector DOM reactivo, permitiendo hacer clic en las opciones de servidor (player-option-1, player-option-2) sin que la interfaz quede congelada ni redirija a registros falsos. 2) Poda de Código Duro y Gobernanza Pura por Datos: Purgados los parches hardcodeados de netu/cfglobalcdn en BrowserUrlHelper y StreamProfileDatabase; las cabeceras requeridas fluyen 100% dinámicas desde Supabase (omnicast_stream_rules) y SQLite local sin código en duro."
+  "versionCodeSender": 350,
+  "versionCodeReceiver": 333,
+  "versionName": "3.5.99",
+  "releaseTag": "v3.5.99",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.99/omnicast-sender-v3.5.99.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.5.99/omnicast-receiver-v3.5.99.apk",
+  "changelog": "v3.5.99 (Bypass SSL en Interceptor Web TV y Telemetría Estructurada JSONB): 1) Resiliencia SSL en TV Box: En TvWebResourceInterceptor.kt se incorpora TRUST_ALL_SSL_FACTORY y HostnameVerifier permisivo para la descarga de manifiestos y fragmentos (.m3u8, .ts), y en TvReceiverHelper.kt se añade onReceivedSslError con handler.proceed(), erradicando CertPathValidatorException (Trust anchor not found) y los errores code=0 / net::ERR_CERT_AUTHORITY_INVALID en reproductores web de TV. 2) Telemetría Estructurada JSONB en Supabase: Enriquecido SenderLogger y ReceiverLogger para despachar objetos details completos con stream_url, target_player, http_code, error_reason y contexto de captura."
 }

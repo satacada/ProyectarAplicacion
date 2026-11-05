@@ -16,6 +16,17 @@ object TvWebResourceInterceptor {
 
     private const val UA_DESKTOP = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
 
+    private val TRUST_ALL_SSL_FACTORY: javax.net.ssl.SSLSocketFactory by lazy {
+        val trustAllCerts = arrayOf<javax.net.ssl.TrustManager>(object : javax.net.ssl.X509TrustManager {
+            override fun getAcceptedIssuers(): Array<java.security.cert.X509Certificate> = arrayOf()
+            override fun checkClientTrusted(certs: Array<java.security.cert.X509Certificate>, authType: String) {}
+            override fun checkServerTrusted(certs: Array<java.security.cert.X509Certificate>, authType: String) {}
+        })
+        val sslContext = javax.net.ssl.SSLContext.getInstance("TLS")
+        sslContext.init(null, trustAllCerts, java.security.SecureRandom())
+        sslContext.socketFactory
+    }
+
     fun shouldIntercept(request: WebResourceRequest?, defaultHeaders: Map<String, String>): WebResourceResponse? {
         val req = request ?: return null
         val urlStr = req.url?.toString() ?: return null
@@ -42,6 +53,10 @@ object TvWebResourceInterceptor {
         // 2. Interceptar y descargar inyectando Access-Control-Allow-Origin: *
         return try {
             val conn = (URL(urlStr).openConnection() as HttpURLConnection).apply {
+                if (this is javax.net.ssl.HttpsURLConnection) {
+                    sslSocketFactory = TRUST_ALL_SSL_FACTORY
+                    hostnameVerifier = javax.net.ssl.HostnameVerifier { _, _ -> true }
+                }
                 connectTimeout = 10000
                 readTimeout = 15000
                 instanceFollowRedirects = true
@@ -103,7 +118,16 @@ object TvWebResourceInterceptor {
 
             WebResourceResponse(mime, encoding, 200, "OK", respHeaders, inStream)
         } catch (e: Throwable) {
-            com.omnicast.receiver.log.ReceiverLogger.log("TvWebResourceInterceptor", "Excepción en recurso web: ${e.message}")
+            com.omnicast.receiver.log.ReceiverLogger.log(
+                "TvWebResourceInterceptor",
+                "Excepción en recurso web: ${e.message}",
+                e,
+                mapOf(
+                    "stream_url" to urlStr,
+                    "target_player" to "TvWebStreamScreen",
+                    "error_reason" to (e.javaClass.simpleName)
+                )
+            )
             null
         }
     }

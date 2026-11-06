@@ -1,12 +1,12 @@
 {
-  "versionName": "3.6.10",
-  "versionCodeSender": 361,
-  "versionCodeReceiver": 344,
-  "releaseTag": "v3.6.10",
-  "senderApk": "omnicast-sender-v3.6.10.apk",
-  "receiverApk": "omnicast-receiver-v3.6.10.apk",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.6.10/omnicast-sender-v3.6.10.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.6.10/omnicast-receiver-v3.6.10.apk",
-  "releaseNotes": "v3.6.10: Unificacion centralizada de configuracion Cloud Supabase en :core:domain y cierre 100% de Fase 1",
-  "changelog": "v3.6.10: Unificacion centralizada de configuracion Cloud Supabase en :core:domain y cierre 100% de Fase 1"
+  "versionName": "3.6.11",
+  "versionCodeSender": 362,
+  "versionCodeReceiver": 345,
+  "releaseTag": "v3.6.11",
+  "senderApk": "omnicast-sender-v3.6.11.apk",
+  "receiverApk": "omnicast-receiver-v3.6.11.apk",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.6.11/omnicast-sender-v3.6.11.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.6.11/omnicast-receiver-v3.6.11.apk",
+  "releaseNotes": "v3.6.11: Nuevos adaptadores modulares 'Poner y Sacar' LuluStream y Streamwish, desahogo de StreamProfileDatabase a <250L",
+  "changelog": "v3.6.11: Nuevos adaptadores modulares 'Poner y Sacar' LuluStream y Streamwish, desahogo de StreamProfileDatabase a <250L"
 }

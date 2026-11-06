@@ -1,12 +1,12 @@
 {
-  "versionName": "3.6.09",
-  "versionCodeSender": 360,
-  "versionCodeReceiver": 343,
-  "releaseTag": "v3.6.09",
-  "senderApk": "omnicast-sender-v3.6.09.apk",
-  "receiverApk": "omnicast-receiver-v3.6.09.apk",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.6.09/omnicast-sender-v3.6.09.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.6.09/omnicast-receiver-v3.6.09.apk",
-  "releaseNotes": "v3.6.09: Saneamiento y modularizacion <300L (VideoCastPlayerControls, GalleryPermissionHelper) y blindaje .gitignore",
-  "changelog": "v3.6.09: Saneamiento y modularizacion <300L (VideoCastPlayerControls, GalleryPermissionHelper) y blindaje .gitignore"
+  "versionName": "3.6.10",
+  "versionCodeSender": 361,
+  "versionCodeReceiver": 344,
+  "releaseTag": "v3.6.10",
+  "senderApk": "omnicast-sender-v3.6.10.apk",
+  "receiverApk": "omnicast-receiver-v3.6.10.apk",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.6.10/omnicast-sender-v3.6.10.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.6.10/omnicast-receiver-v3.6.10.apk",
+  "releaseNotes": "v3.6.10: Unificacion centralizada de configuracion Cloud Supabase en :core:domain y cierre 100% de Fase 1",
+  "changelog": "v3.6.10: Unificacion centralizada de configuracion Cloud Supabase en :core:domain y cierre 100% de Fase 1"
 }

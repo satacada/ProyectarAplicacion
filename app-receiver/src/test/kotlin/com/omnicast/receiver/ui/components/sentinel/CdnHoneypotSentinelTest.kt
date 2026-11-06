@@ -37,4 +37,37 @@ class CdnHoneypotSentinelTest {
         val mediaUrl = "https://f9rw3r.cfglobalcdn.com/playlist.m3u8"
         assertFalse(CdnHoneypotSentinel.isHoneypotHtml(conn, mediaUrl))
     }
+
+    @Test
+    fun testIsHoneypotHtmlDetectsDashMpdHoneypot() {
+        val htmlConn = FakeHttpUrlConnection("text/html; charset=UTF-8", "<html><body>Error 404</body></html>")
+        val dashUrl = "https://cdn.example.com/dash/manifest.mpd"
+        assertTrue(CdnHoneypotSentinel.isHoneypotHtml(htmlConn, dashUrl))
+
+        val legitConn = FakeHttpUrlConnection("application/dash+xml", "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\"><Period></Period></MPD>")
+        assertFalse(CdnHoneypotSentinel.isHoneypotHtml(legitConn, dashUrl))
+    }
+
+    @Test
+    fun testIsHoneypotHtmlDetectsDeceptiveHtmlSignatures() {
+        val signatures = listOf(
+            "<!doctype html><html><body>Parking</body></html>",
+            "<html><head><title>Bot Check</title></head></html>",
+            "Welcome to domain parking service",
+            "<script src=\"/cdn-cgi/challenge-platform/h/b/orchestrate/chl_page/v1\"></script>"
+        )
+
+        val mediaUrls = listOf(
+            "https://cdn.example.com/video.m3u8",
+            "https://cdn.example.com/manifest.mpd",
+            "https://cdn.example.com/segment.ts",
+            "https://cdn.example.com/clip.mp4"
+        )
+
+        for ((index, sig) in signatures.withIndex()) {
+            val conn = FakeHttpUrlConnection("application/octet-stream", sig)
+            val url = mediaUrls[index]
+            assertTrue("Expected honeypot detected for signature: $sig on $url", CdnHoneypotSentinel.isHoneypotHtml(conn, url))
+        }
+    }
 }

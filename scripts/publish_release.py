@@ -45,7 +45,7 @@ def api_request(url, method="GET", data=None, content_type="application/json"):
 def upload_asset(upload_url_template, file_path, content_type="application/octet-stream"):
     file_name = os.path.basename(file_path)
     clean_upload_url = upload_url_template.split("{")[0] + f"?name={file_name}"
-    print(f"📤 Subiendo asset: {file_name} ({os.path.getsize(file_path)} bytes)...")
+    print(f"📤 Subiendo asset: {file_name} ({os.path.getsize(file_path)} bytes)...", flush=True)
     with open(file_path, "rb") as f:
         file_bytes = f.read()
     headers = {
@@ -57,10 +57,10 @@ def upload_asset(upload_url_template, file_path, content_type="application/octet
     req = urllib.request.Request(clean_upload_url, data=file_bytes, headers=headers, method="POST")
     try:
         with urllib.request.urlopen(req) as resp:
-            print(f"✅ Asset subido con éxito: {file_name}")
+            print(f"✅ Asset subido con éxito: {file_name}", flush=True)
             return json.loads(resp.read().decode("utf-8"))
     except urllib.error.HTTPError as e:
-        print(f"❌ Error subiendo {file_name}: {e.read().decode('utf-8')}")
+        print(f"❌ Error subiendo {file_name}: {e.read().decode('utf-8')}", flush=True)
         return None
 
 def main():

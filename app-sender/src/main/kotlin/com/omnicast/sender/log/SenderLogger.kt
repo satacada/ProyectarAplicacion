@@ -3,6 +3,7 @@ package com.omnicast.sender.log
 import android.content.Context
 import android.os.Build
 import android.util.Log
+import com.omnicast.core.domain.config.SupabaseCloudConfig
 import java.net.HttpURLConnection
 import java.net.URL
 import java.text.SimpleDateFormat
@@ -17,8 +18,6 @@ import org.json.JSONObject
  */
 object SenderLogger {
     private const val TAG = "SenderLogger"
-    private const val SUPABASE_URL = "https://pfhjrplnfuupftgzdnop.supabase.co/rest/v1/omnicast_system_logs"
-    private const val SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBmaGpycGxuZnV1cGZ0Z3pkbm9wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg5NTc4NDEsImV4cCI6MjEwNDUzMzg0MX0.u2ysI-hTvT7LczA7QL2YS2mudW8pSI644Ig8gyvTs7o"
 
     private val logBuffer = ConcurrentLinkedQueue<String>()
     private const val MAX_LOGS = 500
@@ -90,13 +89,13 @@ object SenderLogger {
                     put("details", detailsObj)
                 }
 
-                val conn = (URL(SUPABASE_URL).openConnection() as HttpURLConnection).apply {
+                val conn = (URL(SupabaseCloudConfig.LOGS_URL).openConnection() as HttpURLConnection).apply {
                     requestMethod = "POST"
                     connectTimeout = 3000
                     readTimeout = 3000
                     doOutput = true
-                    setRequestProperty("apikey", SUPABASE_ANON_KEY)
-                    setRequestProperty("Authorization", "Bearer $SUPABASE_ANON_KEY")
+                    setRequestProperty("apikey", SupabaseCloudConfig.ANON_KEY)
+                    setRequestProperty("Authorization", "Bearer ${SupabaseCloudConfig.ANON_KEY}")
                     setRequestProperty("Content-Type", "application/json")
                     setRequestProperty("Prefer", "return=minimal")
                 }

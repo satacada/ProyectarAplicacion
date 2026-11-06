@@ -12,7 +12,7 @@ object HlsMasterResolver {
     )
 
     @Volatile var subvariantDisqualifiers: Set<String> = setOf(
-        "#EXTINF:", "#EXT-X-TARGETDURATION:", "#EXT-X-MEDIA-SEQUENCE:"
+        "#EXTINF:", "#EXT-X-TARGETDURATION:", "#EXT-X-MEDIA-SEQUENCE:", "#EXT-X-ENDLIST"
     )
 
     @Volatile var rawSegmentExts: Set<String> = setOf(
@@ -45,9 +45,10 @@ object HlsMasterResolver {
         if (isAudioOrRawSegment(url)) return true
         val lower = url.lowercase().substringBefore('?')
         if (lower.contains("masteraudio") || lower.contains("mastersubs") ||
-            lower.contains("/audio/") || lower.contains("_audio/") ||
-            lower.contains("/lang/") || lower.contains("_spa/") ||
-            lower.contains("/subs/") || lower.contains("chunklist")) return true
+            lower.contains("/audio/") || lower.contains("_audio") || lower.contains("audio_") ||
+            lower.contains("/lang/") || lower.contains("_spa/") || lower.contains("tracks-a") ||
+            lower.contains("/subs/") || lower.contains("subtitles_") ||
+            lower.contains("rendition") || lower.contains("chunklist")) return true
         return Regex("/stream\\d+/").containsMatchIn(lower) ||
                Regex("master\\d+p").containsMatchIn(lower) ||
                Regex("index_\\d+").containsMatchIn(lower) ||

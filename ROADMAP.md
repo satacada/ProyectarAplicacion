@@ -53,7 +53,7 @@ Todo lo listado en la Fase 0 se encuentra en producción, validado por 78 tests 
 
 ---
 
-## 🧹 FASE 1 — Saneamiento y Reestructuración Quirúrgica (`3 / 4 completadas — 75%`)
+## 🧹 FASE 1 — Saneamiento y Reestructuración Quirúrgica (`[x]` — 4 / 4 completadas — 100%)
 
 Actividades acotadas de Cirugía Mínima para resolver la deuda técnica detectada en la auditoría forense sin alterar ninguna lógica funcional:
 
@@ -79,10 +79,10 @@ Actividades acotadas de Cirugía Mínima para resolver la deuda técnica detecta
     - `app-sender/src/test/kotlin/com/omnicast/sender/gallery/GalleryRouteNavigationTest.kt` (verificación de no-regresión)
   - **Agentes Involucrados:** `planner-architect` (`Argon`) ➔ `surgical-developer` (`flash`) ➔ `qa-oracle-tester` (`flash`) ➔ `sync-documenter` (`flash`) ➔ `git-ota-releaser` (`flash_lite`).
 
-- `[ ]` **Actividad 1.4 `[ver]` — Unificación de Configuración Cloud Supabase y Script Canónico de Release OTA (`core/domain/src/main/kotlin/com/omnicast/core/domain/config/SupabaseCloudConfig.kt`, `app-sender/src/main/kotlin/com/omnicast/sender/stream/CloudStreamRuleSyncManager.kt`, `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/AdBlockRuleSyncManager.kt`, `app-sender/src/main/kotlin/com/omnicast/sender/log/SenderLogger.kt`, `app-receiver/src/main/kotlin/com/omnicast/receiver/log/ReceiverLogger.kt`, `scratch/publish_release.py`, `scripts/publish_release.py`):**
+- `[x]` **Actividad 1.4 `[ver]` — Unificación de Configuración Cloud Supabase y Script Canónico de Release OTA (`core/domain/src/main/kotlin/com/omnicast/core/domain/config/SupabaseCloudConfig.kt`, `app-sender/src/main/kotlin/com/omnicast/sender/stream/CloudStreamRuleSyncManager.kt`, `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/AdBlockRuleSyncManager.kt`, `app-sender/src/main/kotlin/com/omnicast/sender/log/SenderLogger.kt`, `app-receiver/src/main/kotlin/com/omnicast/receiver/log/ReceiverLogger.kt`, `scratch/publish_release.py`, `scripts/publish_release.py`):**
   - **Objetivo:** Eliminar la duplicación textual de la URL y `SUPABASE_ANON_KEY` en 4 archivos de telemetría/sincronización y alinear `scratch/publish_release.py` con `scripts/publish_release.py` para garantizar despliegues OTA consistentes.
   - **Archivos Objetivo Exactos:**
-    - `core/domain/src/main/kotlin/com/omnicast/core/domain/config/SupabaseCloudConfig.kt`
+    - `core/domain/src/main/kotlin/com/omnicast/core/domain/config/SupabaseCloudConfig.kt` (nuevo objeto centralizado en `:core:domain`)
     - `app-sender/src/main/kotlin/com/omnicast/sender/stream/CloudStreamRuleSyncManager.kt`
     - `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/AdBlockRuleSyncManager.kt`
     - `app-sender/src/main/kotlin/com/omnicast/sender/log/SenderLogger.kt`
@@ -92,18 +92,22 @@ Actividades acotadas de Cirugía Mínima para resolver la deuda técnica detecta
 
 ---
 
-## 🌐 FASE 2 — Evolución de Resiliencia CDN Anti-Scrape y Gobernanza Cloud (`[ ]`)
+## 🌐 FASE 2 — Evolución de Resiliencia CDN Anti-Scrape y Gobernanza Cloud (`[x]` — 2 / 2 completadas — 100%)
 
-- `[ ]` **Actividad 2.1 `[ver]` — Nuevos Adaptadores Modulares "Poner y Sacar" (`IMediaStreamExtractorPort`) y Reglas Dinámicas (`core/domain/src/main/kotlin/com/omnicast/core/domain/usecases/StreamCandidateValidator.kt`, `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/extractors/`, `app-sender/src/main/kotlin/com/omnicast/sender/stream/StreamProfileDatabase.kt`, `app-sender/src/test/kotlin/com/omnicast/sender/ui/browser/MediaPlatformRegressionTest.kt`):**
+- `[x]` **Actividad 2.1 `[ver]` — Nuevos Adaptadores Modulares "Poner y Sacar" (`IMediaStreamExtractorPort`) y Reglas Dinámicas (`core/domain/src/main/kotlin/com/omnicast/core/domain/usecases/StreamCandidateValidator.kt`, `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/extractors/LuluStreamExtractorAdapter.kt`, `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/extractors/StreamwishExtractorAdapter.kt`, `app-sender/src/main/kotlin/com/omnicast/sender/stream/StreamProfileDbSchema.kt`, `app-sender/src/main/kotlin/com/omnicast/sender/stream/StreamProfileDatabase.kt`, `app-sender/src/test/kotlin/com/omnicast/sender/ui/browser/MediaPlatformRegressionTest.kt`):**
   - **Objetivo:** Incorporar soporte para nuevas CDNs de portales de cine y deportes en vivo como adaptadores aislados delegando la validación binaria en `StreamCandidateValidator.isValidCdnStream()`, sin tocar extractores universales ni `InAppBrowserScreen.kt`.
   - **Archivos Objetivo Exactos:**
     - `core/domain/src/main/kotlin/com/omnicast/core/domain/usecases/StreamCandidateValidator.kt`
-    - `core/domain/src/main/kotlin/com/omnicast/core/domain/extractor/` y `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/extractors/`
-    - `app-sender/src/main/kotlin/com/omnicast/sender/stream/StreamProfileDatabase.kt`
+    - `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/extractors/LuluStreamExtractorAdapter.kt` (nuevo adaptador modular: 61 líneas)
+    - `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/extractors/StreamwishExtractorAdapter.kt` (nuevo adaptador modular: 63 líneas)
+    - `app-sender/src/main/kotlin/com/omnicast/sender/stream/StreamProfileDbSchema.kt` (nuevo esquema SQLite delegado: 79 líneas)
+    - `app-sender/src/main/kotlin/com/omnicast/sender/stream/StreamProfileDatabase.kt` (reducido a 247 líneas)
+    - `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/extractors/StreamExtractorRegistry.kt`
     - `app-sender/src/test/kotlin/com/omnicast/sender/ui/browser/MediaPlatformRegressionTest.kt`
+    - `core/domain/src/test/kotlin/com/omnicast/core/domain/usecases/StreamCandidateValidatorTest.kt`
   - **Agentes Involucrados:** `planner-architect` (`Argon`) ➔ `specialist-stream-extraction` (`flash`) ➔ `surgical-developer` (`flash`) ➔ `qa-oracle-tester` (`flash`) ➔ `sync-documenter` (`flash`) ➔ `git-ota-releaser` (`flash_lite`).
 
-- `[ ]` **Actividad 2.2 `[ver]` — Refuerzo Heurístico de Variantes HLS/DASH y Centinela Anti-Honeypot (`core/domain/src/main/kotlin/com/omnicast/core/domain/usecases/HlsMasterResolver.kt`, `core/domain/src/main/kotlin/com/omnicast/core/domain/usecases/StreamManifestProbe.kt`, `app-receiver/src/test/kotlin/com/omnicast/receiver/ui/components/sentinel/CdnHoneypotSentinelTest.kt`):**
+- `[x]` **Actividad 2.2 `[ver]` — Refuerzo Heurístico de Variantes HLS/DASH y Centinela Anti-Honeypot (`core/domain/src/main/kotlin/com/omnicast/core/domain/usecases/HlsMasterResolver.kt`, `core/domain/src/main/kotlin/com/omnicast/core/domain/usecases/StreamManifestProbe.kt`, `app-receiver/src/test/kotlin/com/omnicast/receiver/ui/components/sentinel/CdnHoneypotSentinelTest.kt`):**
   - **Objetivo:** Ampliar la detección de pistas de audio/subtítulos desacopladas y escudos anti-honeypot en manifiestos HLS compuestos respetando la Ley Anti-Colisión RFC 8216.
   - **Archivos Objetivo Exactos:**
     - `core/domain/src/main/kotlin/com/omnicast/core/domain/usecases/HlsMasterResolver.kt`

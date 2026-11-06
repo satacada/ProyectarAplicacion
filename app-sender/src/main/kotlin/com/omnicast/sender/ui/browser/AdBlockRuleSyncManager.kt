@@ -2,6 +2,7 @@ package com.omnicast.sender.ui.browser
 
 import android.content.Context
 import android.util.Log
+import com.omnicast.core.domain.config.SupabaseCloudConfig
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -27,8 +28,6 @@ object AdBlockRuleSyncManager {
     private const val DYNAMIC_RULES_URL =
         "https://raw.githubusercontent.com/satacada/ProyectarAplicacion/main/app-sender/src/main/assets/adblock/default_ad_rules.json"
 
-    private const val SUPABASE_LOGS_URL = "https://pfhjrplnfuupftgzdnop.supabase.co/rest/v1/omnicast_system_logs"
-    private const val SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBmaGpycGxuZnV1cGZ0Z3pkbm9wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg5NTc4NDEsImV4cCI6MjEwNDUzMzg0MX0.u2ysI-hTvT7LczA7QL2YS2mudW8pSI644Ig8gyvTs7o"
     private const val KEY_LAST_CROWD_SYNC = "last_crowd_sync_timestamp"
     private const val CROWD_SYNC_INTERVAL_MS = 2 * 60 * 60 * 1000L // 2 horas
 
@@ -150,13 +149,13 @@ object AdBlockRuleSyncManager {
                     put("message", domain)
                     put("details", details)
                 }
-                val conn = (URL(SUPABASE_LOGS_URL).openConnection() as HttpURLConnection).apply {
+                val conn = (URL(SupabaseCloudConfig.LOGS_URL).openConnection() as HttpURLConnection).apply {
                     requestMethod = "POST"
                     connectTimeout = 4000
                     readTimeout = 4000
                     doOutput = true
-                    setRequestProperty("apikey", SUPABASE_ANON_KEY)
-                    setRequestProperty("Authorization", "Bearer $SUPABASE_ANON_KEY")
+                    setRequestProperty("apikey", SupabaseCloudConfig.ANON_KEY)
+                    setRequestProperty("Authorization", "Bearer ${SupabaseCloudConfig.ANON_KEY}")
                     setRequestProperty("Content-Type", "application/json")
                     setRequestProperty("Prefer", "return=minimal")
                 }
@@ -180,13 +179,13 @@ object AdBlockRuleSyncManager {
                 val now = System.currentTimeMillis()
                 if (now - lastCrowdSync < CROWD_SYNC_INTERVAL_MS) return@launch
 
-                val queryUrl = "$SUPABASE_LOGS_URL?select=message&event=eq.ADBLOCK_LEARNED_DOMAIN&order=created_at.desc&limit=500"
+                val queryUrl = "${SupabaseCloudConfig.LOGS_URL}?select=message&event=eq.ADBLOCK_LEARNED_DOMAIN&order=created_at.desc&limit=500"
                 val conn = (URL(queryUrl).openConnection() as HttpURLConnection).apply {
                     requestMethod = "GET"
                     connectTimeout = 5000
                     readTimeout = 6000
-                    setRequestProperty("apikey", SUPABASE_ANON_KEY)
-                    setRequestProperty("Authorization", "Bearer $SUPABASE_ANON_KEY")
+                    setRequestProperty("apikey", SupabaseCloudConfig.ANON_KEY)
+                    setRequestProperty("Authorization", "Bearer ${SupabaseCloudConfig.ANON_KEY}")
                 }
                 if (conn.responseCode in 200..299) {
                     val body = conn.inputStream.bufferedReader().use { it.readText() }

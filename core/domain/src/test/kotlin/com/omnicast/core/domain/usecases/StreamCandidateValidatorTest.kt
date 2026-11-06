@@ -70,4 +70,18 @@ class StreamCandidateValidatorTest {
         assertFalse(StreamCandidateValidator.isCdnHostOffline(stream))
         assertTrue(StreamCandidateValidator.isValidCdnStream(stream, domainMatches = true))
     }
+
+    @Test
+    fun testLuluStreamAndStreamwishCandidateValidation() {
+        val luluValid = "https://s4.luluvdo.com/hls/01/00123/master.m3u8?t=token123"
+        val luluIframe = "https://luluvdo.com/e/abc123xyz"
+        val swishValid = "https://cdn.streamwish.to/hls/02/00456/index.m3u8"
+        val swishIframe = "https://streamwish.to/e/def456"
+
+        assertTrue(StreamCandidateValidator.isValidCdnStream(luluValid, domainMatches = true))
+        assertFalse(StreamCandidateValidator.isValidCdnStream(luluIframe, domainMatches = true))
+        assertTrue(StreamCandidateValidator.isValidCdnStream(swishValid, domainMatches = true))
+        assertFalse(StreamCandidateValidator.isValidCdnStream(swishIframe, domainMatches = true))
+    }
 }
+

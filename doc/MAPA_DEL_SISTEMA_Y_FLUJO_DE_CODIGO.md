@@ -15,6 +15,7 @@ proyectarAplicacion/
 ├── core/                               # NÚCLEO PURO COMPARTIDO (Kotlin JVM 17 Puro)
 │   ├── domain/                         # Entidades de dominio, modelos puros y puertos hexagonales
 │   │   └── src/main/kotlin/com/omnicast/core/domain/
+│   │       ├── config/                 # Configuración Cloud centralizada: SupabaseCloudConfig
 │   │       ├── model/                  # MediaStream, StreamProfile, MediaBranch, DeviceTarget, etc.
 │   │       ├── port/                   # Interfaces: IMediaStreamExtractorPort, IPlayerTargetDecisionPort, etc.
 │   │       └── usecase/                # DetectMediaStreamUseCase, StreamCandidateValidator, HlsMasterResolver, StreamManifestProbe
@@ -37,10 +38,10 @@ proyectarAplicacion/
 │           ├── overlay/                # Pantallas flotantes, PhotoCastViewerActivity, GalleryPickerActivity (GalleryPermissionHelper.kt), VideoCastPlayerActivity (VideoCastPlayerControls.kt)
 │           ├── playlist/               # Gestor de listas de reproducción y favoritos locales
 │           ├── service/                # Foreground Services (ProjectionForegroundService, CastMediaNotificationService, FloatingIndicatorService)
-│           ├── stream/                 # ActiveStreamHolder, StreamProfileDatabase (SQLite 0ms) y CloudStreamRuleSyncManager (Supabase)
+│           ├── stream/                 # ActiveStreamHolder, StreamProfileDatabase.kt (247L), StreamProfileDbSchema.kt (79L) y CloudStreamRuleSyncManager.kt (Supabase)
 │           ├── ui/
 │           │   ├── browser/            # NAVEGADOR WEB, ADBLOCKER Y DETECCIÓN DE MEDIOS
-│           │   │   ├── extractors/     # Adaptadores hexagonales 'Poner y Sacar': OkRu, Fastream, Doodstream, HLS, DASH, MP4, YouTube
+│           │   │   ├── extractors/     # Adaptadores hexagonales 'Poner y Sacar': OkRu, Fastream, Doodstream, LuluStream, Streamwish, HLS, DASH, MP4, YouTube
 │           │   │   ├── AdBlocker.kt & AdBlockDatabase.kt # Interceptor de red HTTP + SQLite + sincronización Supabase
 │           │   │   ├── BrowserWebView.kt # Chromium WebView con brazo de red shouldInterceptRequest y supresión de popups
 │           │   │   ├── InAppBrowserScreen.kt # Pantalla completa del navegador web (ciclo de captura SELLADO)
@@ -98,7 +99,9 @@ proyectarAplicacion/
 
 ### 1. Núcleo Hexagonal (`:core:domain` y `:core:protocol`)
 - **Regla Fundamental:** Cero dependencias de Android framework o UI en `:core:domain`.
+- **`SupabaseCloudConfig.kt`:** Fuente única de verdad centralizada para la configuración de Supabase Cloud (`BASE_URL`, endpoints REST `omnicast_system_logs` y `omnicast_stream_rules`, y `ANON_KEY`) sin duplicación textual entre emisor y receptor.
 - **`DetectMediaStreamUseCase.kt`:** Orquesta la detección. Primero ejecuta el filtro de telemetría e higiene (`isTelemetryOrGarbage`) y luego consulta a los adaptadores registrados en `StreamExtractorRegistry`.
+- **`HlsMasterResolver.kt`:** Resolutor heurístico de variantes maestras HLS según RFC 8216. Descalifica playlists de segmentos mediante etiquetas de lista cerrada (`#EXT-X-ENDLIST`, `#EXT-X-MEDIA-SEQUENCE:`) y filtra patrones de pistas desacopladas de audio y subtítulos (`tracks-a`, `audio_`, `_audio`, `subtitles_`, `rendition`).
 - **`SignalingMessage.kt`:** Vocabulario común cliente-servidor serializado con Kotlinx Serialization:
   - `Offer` / `Answer` / `IceCandidate`: Negociación WebRTC para duplicar pantalla.
   - `DirectStreamHandoff`: Entrega la URL de una película a la TV Box con su mapa de cabeceras (`Referer`, `User-Agent`), pistas de subtítulos y rama multimedia.
@@ -113,6 +116,7 @@ proyectarAplicacion/
 
 ### 3. Receptor Android TV (`:app-receiver`)
 - **Servidor WebSocket Local (`LocalSignalingServer.kt`):** Escucha en el puerto `8088`. No requiere internet; opera en red WiFi doméstica.
+- **Centinela Anti-Honeypot (`CdnHoneypotSentinel.kt`):** Satélite modular desacoplado en TV Box ("Poner y Sacar"). Intercepta y descarta en 0 ms respuestas de CDN que devuelven HTML (páginas de error, dominios en parking o retos de Cloudflare) simulando extensiones `.m3u8`, `.ts`, `.mp4` o `.mpd` mediante inspección de payload en memoria, protegiendo a `Hls.js` y `ExoPlayer` de errores de parseo (`manifestParsingError code=200`).
 - **Reproductor de Hardware (`ExoPlayerTvManager.kt`):** Acelerado por hardware para flujos MP4 directos, IPTV y DASH (`.mpd` de OK.ru con VP9 y Opus).
 - **Reproductor Web Híbrido (`TvWebStreamScreen.kt` + `TvWebResourceInterceptor.kt`):** Ejecuta Chromium con `Hls.js` para CDNs protegidas (DropCDN de PelisPlus, Fastream). Descarga fragmentos inyectando `Access-Control-Allow-Origin: *` y conservando las cabeceras exactas de navegación.
 - **Telemetría en Vivo (`:8087/logs`):** Servidor HTTP local para diagnosticar fallos en la TV Box con timestamps en milisegundos.
@@ -184,6 +188,10 @@ Desde que el usuario navega a un portal (ej. `cinecalidad.men`, `pelisplus.hair`
   ├─► UniversalDashExtractorAdapter: Extrae manifiestos .mpd
   ├─► DoodstreamExtractorAdapter: Reconoce Doodstream / PlayMogo / CloudataCDN
   │                               e inyecta Referer legítimo (https://playmogo.com/)
+  ├─► LuluStreamExtractorAdapter: Reconoce CDN LuluStream / TNMR (*.tnmr.org, luluvdo)
+  │                               e inyecta Referer legítimo canónico
+  ├─► StreamwishExtractorAdapter: Reconoce CDN Streamwish / Vidhide / Wish
+  │                               e inyecta User-Agent Desktop y cabeceras de origen
   └─► FastreamExtractorAdapter: Inyecta User-Agent Desktop (UA_FASTREAM)
         │
         ▼

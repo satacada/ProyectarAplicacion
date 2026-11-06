@@ -39,6 +39,20 @@ class HlsMasterResolverTest {
             chunk.ts
         """.trimIndent()
         assertFalse(HlsMasterResolver.isMasterContent(fakeMasterWithExtinf))
+
+        val fakeMasterWithEndList = """
+            #EXTM3U
+            #EXT-X-STREAM-INF:BANDWIDTH=1280000
+            #EXT-X-ENDLIST
+        """.trimIndent()
+        assertFalse(HlsMasterResolver.isMasterContent(fakeMasterWithEndList))
+
+        val fakeMasterWithMediaSeq = """
+            #EXTM3U
+            #EXT-X-STREAM-INF:BANDWIDTH=1280000
+            #EXT-X-MEDIA-SEQUENCE:100
+        """.trimIndent()
+        assertFalse(HlsMasterResolver.isMasterContent(fakeMasterWithMediaSeq))
     }
 
     @Test
@@ -59,6 +73,22 @@ class HlsMasterResolverTest {
         assertTrue(HlsMasterResolver.isLikelySubVariantUrl("https://cdn.example.com/hls/stream04/chunklist.m3u8"))
         assertFalse(HlsMasterResolver.isLikelySubVariantUrl("https://cdn.example.com/hls/master.m3u8"))
         assertFalse(HlsMasterResolver.isLikelySubVariantUrl("https://cdn.example.com/live/playlist.m3u8"))
+    }
+
+    @Test
+    fun `isLikelySubVariantUrl detects decoupled audio and subtitle tracks patterns`() {
+        assertTrue(HlsMasterResolver.isLikelySubVariantUrl("https://cdn.example.com/hls/tracks-a1.m3u8"))
+        assertTrue(HlsMasterResolver.isLikelySubVariantUrl("https://cdn.example.com/live/audio/stream.m3u8"))
+        assertTrue(HlsMasterResolver.isLikelySubVariantUrl("https://cdn.example.com/live/stream_audio_en.m3u8"))
+        assertTrue(HlsMasterResolver.isLikelySubVariantUrl("https://cdn.example.com/live/audio_spa.m3u8"))
+        assertTrue(HlsMasterResolver.isLikelySubVariantUrl("https://cdn.example.com/live/subs/es.m3u8"))
+        assertTrue(HlsMasterResolver.isLikelySubVariantUrl("https://cdn.example.com/live/_spa/stream.m3u8"))
+        assertTrue(HlsMasterResolver.isLikelySubVariantUrl("https://cdn.example.com/live/masteraudio.m3u8"))
+        assertTrue(HlsMasterResolver.isLikelySubVariantUrl("https://cdn.example.com/live/mastersubs.m3u8"))
+        assertTrue(HlsMasterResolver.isLikelySubVariantUrl("https://cdn.example.com/live/subtitles_spa.m3u8"))
+        assertTrue(HlsMasterResolver.isLikelySubVariantUrl("https://cdn.example.com/live/audio_rendition.m3u8"))
+        assertFalse(HlsMasterResolver.isLikelySubVariantUrl("https://cdn.example.com/live/master.m3u8"))
+        assertFalse(HlsMasterResolver.isLikelySubVariantUrl("https://cdn.example.com/live/index.m3u8"))
     }
 
     @Test

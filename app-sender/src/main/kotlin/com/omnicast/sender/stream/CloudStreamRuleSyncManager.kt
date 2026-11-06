@@ -2,6 +2,7 @@ package com.omnicast.sender.stream
 
 import android.content.Context
 import android.util.Log
+import com.omnicast.core.domain.config.SupabaseCloudConfig
 import com.omnicast.core.domain.models.MediaBranch
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -21,10 +22,6 @@ object CloudStreamRuleSyncManager {
     private const val KEY_LAST_SYNC = "last_stream_rules_sync"
     private const val SYNC_INTERVAL_MS = 3 * 3600 * 1000L // 3 horas
 
-    private const val SUPABASE_RULES_URL = "https://pfhjrplnfuupftgzdnop.supabase.co/rest/v1/omnicast_stream_rules"
-    private const val SUPABASE_LOGS_URL = "https://pfhjrplnfuupftgzdnop.supabase.co/rest/v1/omnicast_system_logs"
-    private const val SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBmaGpycGxuZnV1cGZ0Z3pkbm9wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg5NTc4NDEsImV4cCI6MjEwNDUzMzg0MX0.u2ysI-hTvT7LczA7QL2YS2mudW8pSI644Ig8gyvTs7o"
-
     private val scope = CoroutineScope(Dispatchers.IO)
     @Volatile private var isSyncing = false
 
@@ -41,8 +38,8 @@ object CloudStreamRuleSyncManager {
         isSyncing = true
         scope.launch {
             try {
-                var loaded = parseRulesEndpoint("$SUPABASE_RULES_URL?select=host,branch,bypass_proxy,headers&order=last_verified_at.desc&limit=100")
-                if (!loaded) loaded = parseLogsEndpoint("$SUPABASE_LOGS_URL?tag=eq.STREAM_PROFILE_VERIFIED&order=created_at.desc&limit=50")
+                var loaded = parseRulesEndpoint("${SupabaseCloudConfig.RULES_URL}?select=host,branch,bypass_proxy,headers&order=last_verified_at.desc&limit=100")
+                if (!loaded) loaded = parseLogsEndpoint("${SupabaseCloudConfig.LOGS_URL}?tag=eq.STREAM_PROFILE_VERIFIED&order=created_at.desc&limit=50")
                 if (loaded) {
                     context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit().putLong(KEY_LAST_SYNC, System.currentTimeMillis()).apply()
                 }
@@ -55,7 +52,7 @@ object CloudStreamRuleSyncManager {
     private fun parseRulesEndpoint(urlStr: String): Boolean {
         val conn = (URL(urlStr).openConnection() as HttpURLConnection).apply {
             requestMethod = "GET"; connectTimeout = 8000; readTimeout = 8000
-            setRequestProperty("apikey", SUPABASE_ANON_KEY); setRequestProperty("Authorization", "Bearer $SUPABASE_ANON_KEY")
+            setRequestProperty("apikey", SupabaseCloudConfig.ANON_KEY); setRequestProperty("Authorization", "Bearer ${SupabaseCloudConfig.ANON_KEY}")
         }
         if (conn.responseCode !in 200..299) { conn.disconnect(); return false }
         val array = JSONArray(conn.inputStream.bufferedReader().use { it.readText() })
@@ -84,7 +81,7 @@ object CloudStreamRuleSyncManager {
     private fun parseLogsEndpoint(urlStr: String): Boolean {
         val conn = (URL(urlStr).openConnection() as HttpURLConnection).apply {
             requestMethod = "GET"; connectTimeout = 8000; readTimeout = 8000
-            setRequestProperty("apikey", SUPABASE_ANON_KEY); setRequestProperty("Authorization", "Bearer $SUPABASE_ANON_KEY")
+            setRequestProperty("apikey", SupabaseCloudConfig.ANON_KEY); setRequestProperty("Authorization", "Bearer ${SupabaseCloudConfig.ANON_KEY}")
         }
         if (conn.responseCode !in 200..299) { conn.disconnect(); return false }
         val array = JSONArray(conn.inputStream.bufferedReader().use { it.readText() })
@@ -119,10 +116,10 @@ object CloudStreamRuleSyncManager {
                     put("bypass_proxy", bypassProxy)
                     put("last_verified_at", "NOW()")
                 }
-                val conn = (URL(SUPABASE_RULES_URL).openConnection() as HttpURLConnection).apply {
+                val conn = (URL(SupabaseCloudConfig.RULES_URL).openConnection() as HttpURLConnection).apply {
                     requestMethod = "POST"; connectTimeout = 6000; readTimeout = 6000; doOutput = true
                     setRequestProperty("Content-Type", "application/json")
-                    setRequestProperty("apikey", SUPABASE_ANON_KEY); setRequestProperty("Authorization", "Bearer $SUPABASE_ANON_KEY")
+                    setRequestProperty("apikey", SupabaseCloudConfig.ANON_KEY); setRequestProperty("Authorization", "Bearer ${SupabaseCloudConfig.ANON_KEY}")
                     setRequestProperty("Prefer", "resolution=merge-duplicates,return=minimal")
                 }
                 conn.outputStream.use { it.write(rulePayload.toString().toByteArray(Charsets.UTF_8)) }
@@ -140,10 +137,10 @@ object CloudStreamRuleSyncManager {
                 put("tag", "STREAM_PROFILE_VERIFIED"); put("level", "INFO"); put("message", "Perfil: $host")
                 put("metadata", JSONObject().apply { put("host", host); put("branch", branch.name); put("bypass_proxy", bypassProxy) }.toString())
             }
-            val conn = (URL(SUPABASE_LOGS_URL).openConnection() as HttpURLConnection).apply {
+            val conn = (URL(SupabaseCloudConfig.LOGS_URL).openConnection() as HttpURLConnection).apply {
                 requestMethod = "POST"; connectTimeout = 5000; readTimeout = 5000; doOutput = true
                 setRequestProperty("Content-Type", "application/json")
-                setRequestProperty("apikey", SUPABASE_ANON_KEY); setRequestProperty("Authorization", "Bearer $SUPABASE_ANON_KEY")
+                setRequestProperty("apikey", SupabaseCloudConfig.ANON_KEY); setRequestProperty("Authorization", "Bearer ${SupabaseCloudConfig.ANON_KEY}")
             }
             conn.outputStream.use { it.write(payload.toString().toByteArray(Charsets.UTF_8)) }
             conn.responseCode; conn.disconnect()

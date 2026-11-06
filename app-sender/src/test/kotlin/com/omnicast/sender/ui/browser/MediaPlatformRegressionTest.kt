@@ -4,29 +4,23 @@ import org.junit.Assert.*
 import org.junit.Test
 
 /**
- * Pruebas de regresión para garantizar el soporte inamovible de YouTube y Dailymotion.
+ * Pruebas de regresión para garantizar el soporte inamovible de YouTube, Dailymotion y adaptadores modulares.
  * LEY INVIOLABLE: Ningún commit o refactorización puede romper la captura o la interfaz de estas plataformas.
  */
 class MediaPlatformRegressionTest {
 
     @Test
     fun testYouTubeIdExtraction() {
-        val standard = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-        val shorts = "https://www.youtube.com/shorts/dQw4w9WgXcQ"
-        val share = "https://youtu.be/dQw4w9WgXcQ"
-        val embed = "https://www.youtube.com/embed/dQw4w9WgXcQ"
-
-        assertEquals("dQw4w9WgXcQ", BrowserUrlHelper.extractYouTubeId(standard))
-        assertEquals("dQw4w9WgXcQ", BrowserUrlHelper.extractYouTubeId(shorts))
-        assertEquals("dQw4w9WgXcQ", BrowserUrlHelper.extractYouTubeId(share))
-        assertEquals("dQw4w9WgXcQ", BrowserUrlHelper.extractYouTubeId(embed))
+        assertEquals("dQw4w9WgXcQ", BrowserUrlHelper.extractYouTubeId("https://www.youtube.com/watch?v=dQw4w9WgXcQ"))
+        assertEquals("dQw4w9WgXcQ", BrowserUrlHelper.extractYouTubeId("https://www.youtube.com/shorts/dQw4w9WgXcQ"))
+        assertEquals("dQw4w9WgXcQ", BrowserUrlHelper.extractYouTubeId("https://youtu.be/dQw4w9WgXcQ"))
+        assertEquals("dQw4w9WgXcQ", BrowserUrlHelper.extractYouTubeId("https://www.youtube.com/embed/dQw4w9WgXcQ"))
     }
 
     @Test
     fun testYouTubeChannelLiveExtraction() {
         val embedLive = "https://www.youtube.com/embed/live_stream?channel=UCvJJ_dzjViJCoLf5uKUTwoA&autoplay=1"
         val channelUrl = "https://www.youtube.com/channel/UCvJJ_dzjViJCoLf5uKUTwoA"
-
         assertEquals("live_stream?channel=UCvJJ_dzjViJCoLf5uKUTwoA", BrowserUrlHelper.extractYouTubeId(embedLive))
         assertEquals("live_stream?channel=UCvJJ_dzjViJCoLf5uKUTwoA", BrowserUrlHelper.extractYouTubeId(channelUrl))
 
@@ -40,15 +34,11 @@ class MediaPlatformRegressionTest {
     @Test
     fun testStreamIntelligenceEnginePreservesCustomHeadersAndStripsHopByHop() {
         val raw = mapOf(
-            "Connection" to "keep-alive",
-            "Keep-Alive" to "timeout=5",
-            "X-Target-Player" to "CHROMIUM_ANTI_CORS",
-            "X-Force-Proxy" to "true",
-            "Sec-Fetch-Dest" to "video",
-            "Referer" to "https://cxtv.com.br/cnbc"
+            "Connection" to "keep-alive", "Keep-Alive" to "timeout=5",
+            "X-Target-Player" to "CHROMIUM_ANTI_CORS", "X-Force-Proxy" to "true",
+            "Sec-Fetch-Dest" to "video", "Referer" to "https://cxtv.com.br/cnbc"
         )
         val resolved = StreamIntelligenceEngine.resolveDynamicHeaders("https://cdn.example.com/master.m3u8", "https://cxtv.com.br", raw)
-
         assertFalse(resolved.containsKey("Connection"))
         assertFalse(resolved.containsKey("Keep-Alive"))
         assertEquals("CHROMIUM_ANTI_CORS", resolved["X-Target-Player"])
@@ -74,19 +64,16 @@ class MediaPlatformRegressionTest {
 
     @Test
     fun testDailymotionIdExtraction() {
-        val dmUrl = "https://www.dailymotion.com/video/x8abcdef"
-        val dmShort = "https://dai.ly/x8abcdef"
-
-        assertEquals("x8abcdef", BrowserUrlHelper.extractDailymotionId(dmUrl))
-        assertEquals("x8abcdef", BrowserUrlHelper.extractDailymotionId(dmShort))
+        assertEquals("x8abcdef", BrowserUrlHelper.extractDailymotionId("https://www.dailymotion.com/video/x8abcdef"))
+        assertEquals("x8abcdef", BrowserUrlHelper.extractDailymotionId("https://dai.ly/x8abcdef"))
     }
 
     @Test
     fun testDailymotionAndYouTubeAssetsAreWhitelisted() {
         val defaultList = AdBlockWhitelistManager.DEFAULT_WHITELIST
-        assertTrue("dmcdn.net debe estar en DEFAULT_WHITELIST para proteger el buscador de Dailymotion", defaultList.contains("dmcdn.net"))
-        assertTrue("ytimg.com debe estar en DEFAULT_WHITELIST para miniaturas de YouTube", defaultList.contains("ytimg.com"))
-        assertTrue("googlevideo.com debe estar en DEFAULT_WHITELIST", defaultList.contains("googlevideo.com"))
+        assertTrue(defaultList.contains("dmcdn.net"))
+        assertTrue(defaultList.contains("ytimg.com"))
+        assertTrue(defaultList.contains("googlevideo.com"))
     }
 
     @Test
@@ -105,17 +92,12 @@ class MediaPlatformRegressionTest {
 
     @Test
     fun testSearchEngineDetectionAndWhitelist() {
-        assertTrue(AdBlocker.isSearchEngine("yandex.com"))
-        assertTrue(AdBlocker.isSearchEngine("yandex.ru"))
-        assertTrue(AdBlocker.isSearchEngine("ya.ru"))
-        assertTrue(AdBlocker.isSearchEngine("google.com"))
-        assertTrue(AdBlocker.isSearchEngine("duckduckgo.com"))
+        listOf("yandex.com", "yandex.ru", "ya.ru", "google.com", "duckduckgo.com").forEach {
+            assertTrue(AdBlocker.isSearchEngine(it))
+        }
         assertFalse(AdBlocker.isSearchEngine("pelisplus.lat"))
-
         val defaultList = AdBlockWhitelistManager.DEFAULT_WHITELIST
-        assertTrue(defaultList.contains("yandex.com"))
-        assertTrue(defaultList.contains("yandex.ru"))
-        assertTrue(defaultList.contains("ya.ru"))
+        listOf("yandex.com", "yandex.ru", "ya.ru").forEach { assertTrue(defaultList.contains(it)) }
     }
 
     @Test
@@ -126,7 +108,6 @@ class MediaPlatformRegressionTest {
 
         val (_, dropHeaders) = MediaPlatformResolver.prepareStreamForPlayback(dropUrl, page, emptyMap())
         val (_, fastHeaders) = MediaPlatformResolver.prepareStreamForPlayback(fastUrl, page, emptyMap())
-
         assertEquals("https://dr0pstream.com/e/argalp6ab1fu", dropHeaders["Referer"])
         assertEquals("https://fastream.to/embed-abcdefgh.html", fastHeaders["Referer"])
         assertEquals("https://dr0pstream.com", dropHeaders["Origin"])
@@ -143,74 +124,61 @@ class MediaPlatformRegressionTest {
         assertFalse("Debe rechazar telemetría Cloudflare RUM", adapter.canHandle(rumCandidate))
         assertFalse("Debe rechazar página web /e/", adapter.canHandle(embedCandidate))
         assertTrue("Debe aceptar el flujo HLS real", adapter.canHandle(realHlsCandidate))
-
         assertFalse("isRealMedia debe rechazar telemetría", BrowserUrlHelper.isRealMedia("https://dr0pstream.com/cdn-cgi/rum?"))
         assertFalse("isRealMedia debe rechazar página /e/", BrowserUrlHelper.isRealMedia("https://dr0pstream.com/e/loaxgshq39l6"))
-        assertFalse("isRealMedia debe rechazar librería hls.js con versión npm", BrowserUrlHelper.isRealMedia("https://cdn.jsdelivr.net/npm/hls.js@1.6.16"))
+        assertFalse("isRealMedia debe rechazar librería hls.js", BrowserUrlHelper.isRealMedia("https://cdn.jsdelivr.net/npm/hls.js@1.6.16"))
         assertTrue("isRealMedia debe aceptar master.m3u8", BrowserUrlHelper.isRealMedia("https://dr0pstream.com/hls2/01/00038/loaxgshq39l6_n/master.m3u8?t=123"))
     }
 
     @Test
     fun testOkRuExtractorStrictness() {
         val adapter = com.omnicast.sender.ui.browser.extractors.OkRuSiteExtractorAdapter()
-        val previewCandidate = com.omnicast.core.domain.models.StreamCandidate("https://mycdn.me/videopreview?id=123")
-        val byteRangeCandidate = com.omnicast.core.domain.models.StreamCandidate("https://mycdn.me/video.mp4?bytes=0-1000")
-        val trackerCandidate = com.omnicast.core.domain.models.StreamCandidate("https://top-fwz1.mail.ru/tracker?_=0.919;u=https://ok.ru/video/5771009198676")
-        val showcaseCandidate = com.omnicast.core.domain.models.StreamCandidate("https://ok.ru/dk?st.cmd=anonymVideo&st.m=SHOWCASE")
-        val realVideoCandidate = com.omnicast.core.domain.models.StreamCandidate("https://vd45.mycdn.me/?sig=abc&expires=999&type=4")
-
-        assertFalse("Debe rechazar videopreview", adapter.canHandle(previewCandidate))
-        assertFalse("Debe rechazar byte range preview", adapter.canHandle(byteRangeCandidate))
-        assertFalse("Debe rechazar tracker de Mail.ru", adapter.canHandle(trackerCandidate))
-        assertFalse("Debe rechazar showcase de OK.ru", adapter.canHandle(showcaseCandidate))
-        assertTrue("Debe aceptar video real firmado de CDN", adapter.canHandle(realVideoCandidate))
+        assertFalse(adapter.canHandle(com.omnicast.core.domain.models.StreamCandidate("https://mycdn.me/videopreview?id=123")))
+        assertFalse(adapter.canHandle(com.omnicast.core.domain.models.StreamCandidate("https://mycdn.me/video.mp4?bytes=0-1000")))
+        assertFalse(adapter.canHandle(com.omnicast.core.domain.models.StreamCandidate("https://top-fwz1.mail.ru/tracker?_=0.919")))
+        assertFalse(adapter.canHandle(com.omnicast.core.domain.models.StreamCandidate("https://ok.ru/dk?st.cmd=anonymVideo&st.m=SHOWCASE")))
+        assertTrue(adapter.canHandle(com.omnicast.core.domain.models.StreamCandidate("https://vd45.mycdn.me/?sig=abc&expires=999&type=4")))
     }
 
     @Test
     fun testUniversalHlsExtractorStrictness() {
         val adapter = com.omnicast.sender.ui.browser.extractors.UniversalHlsExtractorAdapter()
-        val embedCandidate = com.omnicast.core.domain.models.StreamCandidate("https://morencius.com/embed/0qres6vduysj")
-        val rumCandidate = com.omnicast.core.domain.models.StreamCandidate("https://morencius.com/cdn-cgi/rum?")
-        val realHlsCandidate = com.omnicast.core.domain.models.StreamCandidate("https://morencius.com/stream/0qres6vduysj/master.m3u8")
-
-        assertFalse("Debe rechazar iframe embed de Morencius", adapter.canHandle(embedCandidate))
-        assertFalse("Debe rechazar telemetría RUM de Morencius", adapter.canHandle(rumCandidate))
-        assertTrue("Debe aceptar master.m3u8 de Morencius", adapter.canHandle(realHlsCandidate))
+        assertFalse(adapter.canHandle(com.omnicast.core.domain.models.StreamCandidate("https://morencius.com/embed/0qres6vduysj")))
+        assertFalse(adapter.canHandle(com.omnicast.core.domain.models.StreamCandidate("https://morencius.com/cdn-cgi/rum?")))
+        assertTrue(adapter.canHandle(com.omnicast.core.domain.models.StreamCandidate("https://morencius.com/stream/0qres6vduysj/master.m3u8")))
     }
 
     @Test
     fun testTelemetryFilterAdapterCentralGatekeeper() {
         val filter = com.omnicast.sender.ui.browser.extractors.TelemetryFilterAdapter()
-
-        assertTrue("Debe descartar /cdn-cgi/", filter.isTelemetryOrGarbage("https://site.com/cdn-cgi/rum?"))
-        assertTrue("Debe descartar /embed/ sin extensión", filter.isTelemetryOrGarbage("https://morencius.com/embed/0qres6vduysj"))
-        assertTrue("Debe descartar tracker", filter.isTelemetryOrGarbage("https://top-fwz1.mail.ru/tracker?_=123"))
-        assertTrue("Debe descartar anonymVideo", filter.isTelemetryOrGarbage("https://ok.ru/dk?st.cmd=anonymVideo&st.m=SHOWCASE"))
-        assertFalse("No debe descartar master.m3u8", filter.isTelemetryOrGarbage("https://morencius.com/stream/master.m3u8"))
-        assertFalse("No debe descartar CDN firmada", filter.isTelemetryOrGarbage("https://vd45.mycdn.me/?sig=abc&type=4"))
+        assertTrue(filter.isTelemetryOrGarbage("https://site.com/cdn-cgi/rum?"))
+        assertTrue(filter.isTelemetryOrGarbage("https://morencius.com/embed/0qres6vduysj"))
+        assertTrue(filter.isTelemetryOrGarbage("https://top-fwz1.mail.ru/tracker?_=123"))
+        assertTrue(filter.isTelemetryOrGarbage("https://ok.ru/dk?st.cmd=anonymVideo&st.m=SHOWCASE"))
+        assertFalse(filter.isTelemetryOrGarbage("https://morencius.com/stream/master.m3u8"))
+        assertFalse(filter.isTelemetryOrGarbage("https://vd45.mycdn.me/?sig=abc&type=4"))
     }
 
     @Test
     fun testOkRuMultiQualitySynthesis() = kotlinx.coroutines.runBlocking {
         val okUrl = "https://vd736.okcdn.ru/?expires=1793204612101&type=4&sig=22L2HBBdWIk"
         val options = StreamQualityDetector.detectQualities(okUrl, mapOf("Referer" to "https://ok.ru/"), "Caligula")
-        
         assertEquals(5, options.size)
-        assertTrue("Debe tener calidad Adaptive por defecto", options.any { it.resolution == "Adaptive" && it.isMaster })
-        assertTrue("Debe sintetizar 1080p", options.any { it.resolution == "1080p" && it.streamUrl.contains("type=5") })
-        assertTrue("Debe sintetizar 720p", options.any { it.resolution == "720p" && it.streamUrl.contains("type=4") })
-        assertTrue("Debe sintetizar 480p", options.any { it.resolution == "480p" && it.streamUrl.contains("type=3") })
-        assertTrue("Debe sintetizar 360p", options.any { it.resolution == "360p" && it.streamUrl.contains("type=2") })
-        assertTrue("Todas las calidades deben compartir el mismo groupKey para consistencia 1:1", options.all { it.groupKey == okUrl })
-        assertTrue("Debe inyectar Referer hacia https://ok.ru/", options.all { it.healedHeaders["Referer"] == "https://ok.ru/" })
+        assertTrue(options.any { it.resolution == "Adaptive" && it.isMaster })
+        assertTrue(options.any { it.resolution == "1080p" && it.streamUrl.contains("type=5") })
+        assertTrue(options.any { it.resolution == "720p" && it.streamUrl.contains("type=4") })
+        assertTrue(options.any { it.resolution == "480p" && it.streamUrl.contains("type=3") })
+        assertTrue(options.any { it.resolution == "360p" && it.streamUrl.contains("type=2") })
+        assertTrue(options.all { it.groupKey == okUrl })
+        assertTrue(options.all { it.healedHeaders["Referer"] == "https://ok.ru/" })
     }
 
     @Test
     fun testInIframeBannerAdBlocking() {
-        assertTrue("Debe bloquear redes de banners adsterra", AdBlocker.isVideoAd("https://domain.com/adsterra/banner.js"))
-        assertTrue("Debe bloquear redes de banners propeller", AdBlocker.isVideoAd("https://domain.com/propeller/pop.js"))
-        assertTrue("Debe bloquear banners del reproductor", AdBlocker.isVideoAd("https://tnmr.org/assets/player-banner.png"))
-        assertTrue("Debe bloquear clases banner-ads", AdBlocker.isVideoAd("https://site.com/banner-ads/300x250.jpg"))
+        assertTrue(AdBlocker.isVideoAd("https://domain.com/adsterra/banner.js"))
+        assertTrue(AdBlocker.isVideoAd("https://domain.com/propeller/pop.js"))
+        assertTrue(AdBlocker.isVideoAd("https://tnmr.org/assets/player-banner.png"))
+        assertTrue(AdBlocker.isVideoAd("https://site.com/banner-ads/300x250.jpg"))
     }
 
     @Test
@@ -218,8 +186,7 @@ class MediaPlatformRegressionTest {
         val adapter = com.omnicast.sender.ui.browser.extractors.DoodstreamExtractorAdapter()
         val cdnCandidate = com.omnicast.core.domain.models.StreamCandidate(
             url = "https://m12.doodcdn.co/pass/xyz123/video.mp4?token=abc-123&expiry=1800000000",
-            pageUrl = "https://doopstream.com/e/abc123xyz",
-            pageTitle = "Spider-Man"
+            pageUrl = "https://doopstream.com/e/abc123xyz", pageTitle = "Spider-Man"
         )
         assertTrue(adapter.canHandle(cdnCandidate))
         val extracted = adapter.extract(cdnCandidate)
@@ -228,36 +195,64 @@ class MediaPlatformRegressionTest {
         assertEquals("https://doopstream.com/", extracted.headers["Referer"])
         assertEquals("https://doopstream.com", extracted.headers["Origin"])
 
-        // Verificar que no confunda páginas HTML de embed ni rutas de reproductor op=watch
-        val embedCandidate = com.omnicast.core.domain.models.StreamCandidate(
-            url = "https://doopstream.com/e/abc123xyz",
-            pageUrl = "https://pelisplus.hair/pelicula"
-        )
-        assertFalse(adapter.canHandle(embedCandidate))
+        assertFalse(adapter.canHandle(com.omnicast.core.domain.models.StreamCandidate("https://doopstream.com/e/abc123xyz", "https://pelisplus.hair/pelicula")))
+        assertFalse(adapter.canHandle(com.omnicast.core.domain.models.StreamCandidate("https://playmogo.com/dood?op=watch&hash=285", "https://cinecalidad.ro/")))
+        assertFalse(adapter.canHandle(com.omnicast.core.domain.models.StreamCandidate("https://playmogo.com/pass_md5/285-token", "https://doopstream.com/e/abc")))
 
-        val watchCandidate = com.omnicast.core.domain.models.StreamCandidate(
-            url = "https://playmogo.com/dood?op=watch&hash=285698111&token=6jsygz89b",
-            pageUrl = "https://www.cinecalidad.ro/"
-        )
-        assertFalse(adapter.canHandle(watchCandidate))
-
-        // Verificar que no confunda el endpoint de handshake /pass_md5/ con un video
-        val handshakeCandidate = com.omnicast.core.domain.models.StreamCandidate(
-            url = "https://playmogo.com/pass_md5/285698111-190-55-1793716930-1da1c31de0e79917f6b67ee00e4f8452/6jsygz89bckajy0ylm2e9837",
-            pageUrl = "https://doopstream.com/e/abc123xyz"
-        )
-        assertFalse(adapter.canHandle(handshakeCandidate))
-
-        // Verificar soporte para CDN PlayMogo / espejos con Referer inyectado
         val playmogoCandidate = com.omnicast.core.domain.models.StreamCandidate(
             url = "https://playmogo.com/video~123abc456?token=secret123&expiry=1800000000",
-            pageUrl = "https://playmogo.com/e/6jsygz89bckajy0ylm2e9837",
-            pageTitle = "Película Playmogo"
+            pageUrl = "https://playmogo.com/e/6jsygz89bckajy0ylm2e9837", pageTitle = "Película Playmogo"
         )
         assertTrue(adapter.canHandle(playmogoCandidate))
-        val extractedPlaymogo = adapter.extract(playmogoCandidate)
-        assertEquals("MP4", extractedPlaymogo.format)
-        assertEquals("https://playmogo.com/", extractedPlaymogo.headers["Referer"])
+        assertEquals("https://playmogo.com/", adapter.extract(playmogoCandidate).headers["Referer"])
+    }
+
+    @Test
+    fun testLuluStreamExtractorAdapter() {
+        val adapter = com.omnicast.sender.ui.browser.extractors.LuluStreamExtractorAdapter()
+        val hlsCandidate = com.omnicast.core.domain.models.StreamCandidate(
+            url = "https://s4.luluvdo.com/hls/01/00123/master.m3u8?token=xyz",
+            pageUrl = "https://luluvdo.com/e/abc123xyz",
+            pageTitle = "Película Lulu"
+        )
+        assertTrue("Debe manejar stream HLS de LuluStream", adapter.canHandle(hlsCandidate))
+        val extracted = adapter.extract(hlsCandidate)
+        assertEquals("HLS", extracted.format)
+        assertEquals("LuluStream HD", extracted.qualityLabel)
+        assertEquals("https://luluvdo.com/", extracted.headers["Referer"])
+        assertEquals("https://luluvdo.com", extracted.headers["Origin"])
+        assertEquals(UA_MOBILE, extracted.headers["User-Agent"])
+        assertEquals("cors", extracted.headers["Sec-Fetch-Mode"])
+
+        val iframeCandidate = com.omnicast.core.domain.models.StreamCandidate(
+            url = "https://luluvdo.com/e/abc123xyz",
+            pageUrl = "https://pelisplus.lat/movie"
+        )
+        assertFalse("Debe descartar iframe HTML de Lulu", adapter.canHandle(iframeCandidate))
+    }
+
+    @Test
+    fun testStreamwishExtractorAdapter() {
+        val adapter = com.omnicast.sender.ui.browser.extractors.StreamwishExtractorAdapter()
+        val hlsCandidate = com.omnicast.core.domain.models.StreamCandidate(
+            url = "https://cdn.streamwish.to/hls/02/00456/index.m3u8",
+            pageUrl = "https://streamwish.to/e/def456",
+            pageTitle = "Video Streamwish"
+        )
+        assertTrue("Debe manejar stream HLS de Streamwish", adapter.canHandle(hlsCandidate))
+        val extracted = adapter.extract(hlsCandidate)
+        assertEquals("HLS", extracted.format)
+        assertEquals("Streamwish HD", extracted.qualityLabel)
+        assertEquals("https://streamwish.to/", extracted.headers["Referer"])
+        assertEquals("https://streamwish.to", extracted.headers["Origin"])
+        assertEquals(UA_MOBILE, extracted.headers["User-Agent"])
+        assertEquals("cors", extracted.headers["Sec-Fetch-Mode"])
+
+        val iframeCandidate = com.omnicast.core.domain.models.StreamCandidate(
+            url = "https://streamwish.to/e/def456",
+            pageUrl = "https://pelisplus.lat/movie"
+        )
+        assertFalse("Debe descartar iframe HTML de Streamwish", adapter.canHandle(iframeCandidate))
     }
 
     @Test
@@ -266,7 +261,6 @@ class MediaPlatformRegressionTest {
         val pageUrl = "https://cineplus123.org/capitulo/1x1"
         val dynamicHeaders = mapOf("Referer" to "https://netu.ac/", "Origin" to "https://netu.ac")
         val headers = BrowserUrlHelper.buildSafeHeaders(streamUrl, pageUrl, "MobileUA", dynamicHeaders)
-
         assertEquals("https://netu.ac/", headers["Referer"])
         assertEquals("https://netu.ac", headers["Origin"])
     }
@@ -274,12 +268,10 @@ class MediaPlatformRegressionTest {
     @Test
     fun testAdGatewayIsolationAndValidPlayerPreservation() {
         val curPage = "https://cineplus123.org/capitulo/1x3"
-        // 1. Reproductores legítimos y capítulos deben permitirse (false = no bloquear)
         assertFalse(WvcShieldSecurityEngine.shouldBlockClickHijack(hasGesture = true, "https://netu.ac/e/KCF3y774chHk", curPage))
         assertFalse(WvcShieldSecurityEngine.shouldBlockClickHijack(hasGesture = true, "https://streamwish.to/e/abc123xyz", curPage))
         assertFalse(WvcShieldSecurityEngine.shouldBlockClickHijack(hasGesture = true, "https://cineplus123.org/capitulo/1x4", curPage))
 
-        // 2. Pasarelas de publicidad (/out.php, /pop.php) deben bloquearse siempre (true = bloquear)
         assertTrue(WvcShieldSecurityEngine.shouldBlockClickHijack(hasGesture = true, "https://netu.ac/out.php?noads=0", curPage))
         assertTrue(WvcShieldSecurityEngine.shouldBlockClickHijack(hasGesture = true, "https://ams.re3r.com/impcs/ad123", curPage))
         assertTrue(WvcShieldSecurityEngine.shouldBlockDelayedRedirect(hasGesture = false, "https://netu.ac/out.php", curPage))

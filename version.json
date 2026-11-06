@@ -1,12 +1,12 @@
 {
-  "versionName": "3.6.11",
-  "versionCodeSender": 362,
-  "versionCodeReceiver": 345,
-  "releaseTag": "v3.6.11",
-  "senderApk": "omnicast-sender-v3.6.11.apk",
-  "receiverApk": "omnicast-receiver-v3.6.11.apk",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.6.11/omnicast-sender-v3.6.11.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.6.11/omnicast-receiver-v3.6.11.apk",
-  "releaseNotes": "v3.6.11: Nuevos adaptadores modulares 'Poner y Sacar' LuluStream y Streamwish, desahogo de StreamProfileDatabase a <250L",
-  "changelog": "v3.6.11: Nuevos adaptadores modulares 'Poner y Sacar' LuluStream y Streamwish, desahogo de StreamProfileDatabase a <250L"
+  "versionName": "3.6.12",
+  "versionCodeSender": 363,
+  "versionCodeReceiver": 346,
+  "releaseTag": "v3.6.12",
+  "senderApk": "omnicast-sender-v3.6.12.apk",
+  "receiverApk": "omnicast-receiver-v3.6.12.apk",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.6.12/omnicast-sender-v3.6.12.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.6.12/omnicast-receiver-v3.6.12.apk",
+  "releaseNotes": "v3.6.12: Refuerzo heuristico HLS RFC 8216 y Centinela Anti-Honeypot DASH/HTML, cierre 100% de Fase 2",
+  "changelog": "v3.6.12: Refuerzo heuristico HLS RFC 8216 y Centinela Anti-Honeypot DASH/HTML, cierre 100% de Fase 2"
 }

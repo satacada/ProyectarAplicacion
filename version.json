@@ -1,9 +1,12 @@
 {
-  "versionCodeSender": 359,
-  "versionCodeReceiver": 342,
-  "versionName": "3.6.08",
-  "releaseTag": "v3.6.08",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.6.08/omnicast-sender-v3.6.08.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.6.08/omnicast-receiver-v3.6.08.apk",
-  "changelog": "v3.6.08: 1) Puente Hexagonal TvWebPvrBridge para Variante 1 (DropCDN / Fastream en TvWebStreamScreen): descarga de segmentos directamente desde el manifiesto en RAM de Hls.js y la pila BoringSSL nativa de Chromium, evitando bloqueos HTTP 403 TLS Lock y clasificando correctamente las películas en Pelis_descargas. 2) Soporte HLS fMP4 (#EXT-X-MAP:URI=\"init.mp4\") en PvrHlsMasterParser para grabación/descarga 100% reproducible de Dailymotion en ExoPlayer. 3) Creación perezosa de archivos de salida y limpieza automática de archivos de 0 bytes."
+  "versionName": "3.6.09",
+  "versionCodeSender": 360,
+  "versionCodeReceiver": 343,
+  "releaseTag": "v3.6.09",
+  "senderApk": "omnicast-sender-v3.6.09.apk",
+  "receiverApk": "omnicast-receiver-v3.6.09.apk",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.6.09/omnicast-sender-v3.6.09.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.6.09/omnicast-receiver-v3.6.09.apk",
+  "releaseNotes": "v3.6.09: Saneamiento y modularizacion <300L (VideoCastPlayerControls, GalleryPermissionHelper) y blindaje .gitignore",
+  "changelog": "v3.6.09: Saneamiento y modularizacion <300L (VideoCastPlayerControls, GalleryPermissionHelper) y blindaje .gitignore"
 }

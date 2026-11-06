@@ -1,8 +1,8 @@
 # 🗺️ MAPA MAESTRO DEL SISTEMA Y GUÍA DE FLUJO DE CÓDIGO (CALL GRAPH)
 
 > **Documento Canónico para Desarrolladores Humanos y Agentes de IA**  
-> **Versión del Sistema:** `v3.5.89` | **Estado:** Producción Activa  
-> **Propósito:** Proporcionar una visión integral de 360 grados de todo el código fuente: árbol de directorios, roles de cada módulo, pantallas/páginas, funciones clave y trazabilidad exacta de llamadas archivo por archivo (call graph) para la reproducción de películas, proyección de pantalla y fotos.
+> **Versión del Sistema:** `v3.6.08` | **Estado:** Producción Activa (20 HUs + 19 ADRs Sellados)  
+> **Propósito:** Proporcionar una visión integral de 360 grados de todo el código fuente: árbol de directorios, roles de cada módulo, pantallas/páginas, funciones clave y trazabilidad exacta de llamadas archivo por archivo (call graph) para la reproducción de películas, grabación PVR, proyección de pantalla y fotos.
 
 ---
 
@@ -12,41 +12,39 @@ El proyecto está organizado como un monorepositorio Android Multi-Módulo bajo 
 
 ```text
 proyectarAplicacion/
-├── core/                               # NÚCLEO PURO COMPARTIDO (Kotlin Multiplatform / Android)
+├── core/                               # NÚCLEO PURO COMPARTIDO (Kotlin JVM 17 Puro)
 │   ├── domain/                         # Entidades de dominio, modelos puros y puertos hexagonales
 │   │   └── src/main/kotlin/com/omnicast/core/domain/
-│   │       ├── models/                 # MediaStream, StreamProfile, MediaBranch, DeviceTarget, etc.
-│   │       ├── ports/                  # Interfaces: IMediaStreamExtractorPort, IStreamTelemetryFilterPort, etc.
-│   │       └── usecases/               # DetectMediaStreamUseCase, StreamManifestProbe, UrlStreamExtractor
+│   │       ├── model/                  # MediaStream, StreamProfile, MediaBranch, DeviceTarget, etc.
+│   │       ├── port/                   # Interfaces: IMediaStreamExtractorPort, IPlayerTargetDecisionPort, etc.
+│   │       └── usecase/                # DetectMediaStreamUseCase, StreamCandidateValidator, HlsMasterResolver, StreamManifestProbe
 │   └── protocol/                       # Protocolo de señalización y control local P2P
 │       └── src/main/kotlin/com/omnicast/core/protocol/
-│           └── SignalingMessage.kt     # Clases selladas JSON: Offer, Answer, DirectStreamHandoff, PlayControl, etc.
+│           └── SignalingMessage.kt     # Clases selladas JSON: Offer, Answer, DirectStreamHandoff, PlayControl, RecordTelemetry
 │
 ├── app-sender/                         # APLICACIÓN EMISORA PARA TELÉFONO MÓVIL (:app-sender)
 │   └── src/main/
 │       ├── assets/sniffer/             # Scripts JS inyectados en el navegador
 │       │   └── universal_sniffer.js    # Interceptor JS de fetch, XHR y HTMLMediaElement en tiempo real
-│       ├── cpp/                        # Motor C++ nativo de alto rendimiento
-│       │   ├── stream_classifier.h     # Cabeceras del clasificador Bloom Filter / Trie en C++
-│       │   └── stream_classifier.cpp   # Implementación C++ de evaluación de URLs en microsegundos
+│       ├── cpp/                        # Motor C++20 nativo Zero-Allocation (JNI)
+│       │   ├── stream_classifier.cpp   # Clasificador C++20 de evaluación de URLs en microsegundos
+│       │   ├── dean_edwards_unpacker.cpp # Desempaquetador C++20 de scripts ofuscados Dean Edwards (<0.8ms)
+│       │   └── ad_pattern_matcher.cpp  # Motor C++20 Aho-Corasick de bloqueo publicitario (<5μs)
 │       └── kotlin/com/omnicast/sender/
 │           ├── media/                  # Servidor HTTP local (:8087) para fotos y videos locales
-│           ├── nativeclassifier/       # Envoltorio JNI para el clasificador C++
-│           ├── network/                # Clientes WebSocket de señalización (SignalingClient, QuickSignalingHelper)
-│           ├── overlay/                # Pantallas flotantes, visor de fotos, selector de galería y controles de video
+│           ├── nativeclassifier/       # Envoltorio JNI para el motor C++20 (NativeStreamClassifier, DeanEdwardsUnpacker, AhoCorasickAdMatcher)
+│           ├── network/                # Clientes WebSocket de señalización (SignalingClient, QuickSignalingHelper, SenderLogger)
+│           ├── overlay/                # Pantallas flotantes, PhotoCastViewerActivity, GalleryPickerActivity (GalleryPermissionHelper.kt), VideoCastPlayerActivity (VideoCastPlayerControls.kt)
 │           ├── playlist/               # Gestor de listas de reproducción y favoritos locales
-│           ├── service/                # Foreground Services (MediaProjection, CastSession, TvZoomManager)
-│           ├── stream/                 # ActiveStreamHolder, perfiles de streams y persistencia SQLite
+│           ├── service/                # Foreground Services (ProjectionForegroundService, CastMediaNotificationService, FloatingIndicatorService)
+│           ├── stream/                 # ActiveStreamHolder, StreamProfileDatabase (SQLite 0ms) y CloudStreamRuleSyncManager (Supabase)
 │           ├── ui/
 │           │   ├── browser/            # NAVEGADOR WEB, ADBLOCKER Y DETECCIÓN DE MEDIOS
-│           │   │   ├── extractors/     # Adaptadores hexagonales: OkRu, Fastream, HLS, DASH, YouTube, Telemetría
-│           │   │   ├── AdBlocker.kt    # Interceptor de red HTTP en WebView (0ms con 200 OK vacío)
-│           │   │   ├── BrowserWebView.kt # Chromium WebView configurado con blindaje anti-popup nativo
-│           │   │   ├── InAppBrowserScreen.kt # Pantalla completa del navegador web con barra de herramientas
+│           │   │   ├── extractors/     # Adaptadores hexagonales 'Poner y Sacar': OkRu, Fastream, Doodstream, HLS, DASH, MP4, YouTube
+│           │   │   ├── AdBlocker.kt & AdBlockDatabase.kt # Interceptor de red HTTP + SQLite + sincronización Supabase
+│           │   │   ├── BrowserWebView.kt # Chromium WebView con brazo de red shouldInterceptRequest y supresión de popups
+│           │   │   ├── InAppBrowserScreen.kt # Pantalla completa del navegador web (ciclo de captura SELLADO)
 │           │   │   ├── MediaPlatformResolver.kt # Orquestador hexagonal y preparador de enlaces en caliente
-│           │   │   ├── StreamQualityDetector.kt # Analizador asíncrono de variantes HLS/DASH
-│           │   │   ├── WvcDomSniffer.kt # Explorador DOM de etiquetas <video> e iframes
-│           │   │   ├── WvcShieldSecurityEngine.kt # Blindaje DOM anti-trampas y neutralización de velos
 │           │   │   └── WvcVideoListSheet.kt # Selector modal de videos en lista plana 1:1 estándar WVC
 │           │   ├── components/         # Componentes Compose: barras de control remoto, tarjetas, diálogos
 │           │   ├── SenderMainActivity.kt # Actividad principal del teléfono
@@ -59,29 +57,39 @@ proyectarAplicacion/
 │       │   └── hls.light.min.js        # Librería Hls.js oficial para reproducción HTML5 en Chromium TV
 │       └── kotlin/com/omnicast/receiver/
 │           ├── audio/                  # DigitalAudioReceiver (reproducción de audio PCM estéreo 48kHz)
-│           ├── directstream/           # ExoPlayerTvManager (reproductor de hardware nativo MediaCodec)
+│           ├── directstream/           # REPRODUCTOR HW Y MOTOR PVR DUAL (v3.6.08)
+│           │   ├── ExoPlayerTvManager.kt # Reproductor de hardware nativo MediaCodec (MP4, HLS, DASH)
+│           │   ├── PvrStreamRecorder.kt # Grabador PVR con Ring Buffer en RAM y bloques de 128 KB
+│           │   ├── PvrHlsMasterParser.kt # Resolutor de variantes HLS (.ts) y fMP4 (#EXT-X-MAP:URI="init.mp4")
+│           │   ├── TvWebPvrBridge.kt   # Puente Hexagonal PVR para Variante 1 (DropCDN/Fastream vía Chromium BoringSSL)
+│           │   └── TvStorageSafetyManager.kt # Guardián anti-brick (reserva sagrada 2.0 GB TV / 500 MB USB y purga 0 bytes)
 │           ├── discovery/              # NsdAdvertiserManager (anuncio mDNS _omnicast._tcp)
-│           ├── server/                 # LocalSignalingServer (servidor WebSocket en puerto :8088)
+│           ├── server/                 # LocalSignalingServer (WebSocket :8088) y ReceiverLogger (:8087/logs + Supabase)
 │           ├── ui/
 │           │   ├── components/         # Pantallas Compose TV y reproductores especializados:
-│           │   │   ├── TvStandbyCleanScreen.kt # Pantalla de reposo limpia con IP y estado WiFi
-│           │   │   ├── TvDirectStreamScreen.kt # Vista contenedora de ExoPlayer con controles de foco
-│           │   │   ├── TvWebStreamScreen.kt # Reproductor Chromium HTML5 + Hls.js con control D-Pad
-│           │   │   ├── TvWebResourceInterceptor.kt # Interceptor nativo Anti-CORS y descarga de fragmentos
-│           │   │   ├── TvYouTubeScreen.kt # Reproductor oficial de YouTube sin publicidad invasiva
+│           │   │   ├── TvStandbyCleanScreen.kt # Pantalla de reposo limpia con IP, QR y estado WiFi
+│           │   │   ├── TvDirectStreamScreen.kt # Vista contenedora de ExoPlayer con controles de foco y PVR
+│           │   │   ├── TvWebStreamScreen.kt # Reproductor Chromium HTML5 + Hls.js con control D-Pad y TvWebPvrBridge
+│           │   │   ├── TvWebResourceInterceptor.kt # Interceptor nativo Anti-CORS (Access-Control-Allow-Origin: *)
+│           │   │   ├── TvRecordExitConfirmDialog.kt # Guardián de confirmación al salir durante grabación PVR activa
+│           │   │   ├── TvYouTubeScreen.kt # Reproductor oficial de YouTube IFrame inmune a 403 Botguard
 │           │   │   ├── TvImageScreen.kt # Visor de fotos de alta resolución proyectadas desde el móvil
-│           │   │   └── TvScreens.kt # Lienzo de Screen Mirroring WebRTC (Pantalla Completa vs Por App)
+│           │   │   └── TvScreens.kt # Lienzo de Screen Mirroring WebRTC SELLADO (Pantalla Completa vs Por App)
 │           │   ├── TvReceiverActivity.kt # Actividad principal y máquina de estados de Android TV
 │           │   ├── TvReceiverHelper.kt # Enrutador de reproductores, resolución de BaseURL y telemetría HTTP :8087
-│           │   └── TvRemoteKeyHandler.kt # Manejo ergonómico del control remoto físico (D-Pad, Zoom, Subs)
-│           └── webrtc/                 # Receptor WebRTC por hardware (WebRtcReceiverManager)
+│           │   └── TvRemoteKeyHandler.kt # Manejo ergonómico del control remoto físico (D-Pad, Zoom, Subs, REC)
+│           └── webrtc/                 # Receptor WebRTC por hardware SELLADO (WebRtcReceiverManager)
 │
-└── doc/                                # DOCUMENTACIÓN VIVA DEL PROYECTO
-    ├── adr/                            # Architecture Decision Records (ADR-001 al ADR-013)
-    ├── historias-usuario/              # Contratos de experiencia de usuario (HU-001 al HU-016)
-    ├── referencias/                    # Catálogo técnico de variantes de streaming y WVC
-    ├── ARCHITECTURE.md                 # Arquitectura de alto nivel (C4 Model)
-    └── PROJECT_DASHBOARD.md            # Bitácora viva de versiones y estado del hardware
+├── .agents/skills/                     # ESCUADRÓN DE 9 AGENTES ESPECIALIZADOS (Pipeline Fast-Track)
+├── doc/                                # DOCUMENTACIÓN VIVA DEL PROYECTO
+│   ├── adr/                            # Architecture Decision Records (ADR-000 al ADR-018)
+│   ├── historias-usuario/              # Contratos de experiencia de usuario (HU-001 al HU-020)
+│   ├── referencias/                    # Catálogo técnico de variantes de streaming y WVC
+│   ├── ARCHITECTURE.md                 # Arquitectura de alto nivel (C4 Model)
+│   └── PROJECT_DASHBOARD.md            # Bitácora viva de versiones y estado del hardware
+├── AGENTS.md                           # Leyes inviolables del repositorio y gobernanza multi-agente
+├── ROADMAP.md                          # Hoja de ruta maestra unificada (Fases 0 a 4)
+└── PROGRESS.md                         # Estado vivo, semáforo de 78 tests y monitor de 300 líneas
 ```
 
 ---
@@ -122,6 +130,8 @@ proyectarAplicacion/
 | **Barra de Control Remoto** | [RemoteControlBar.kt](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/app-sender/src/main/kotlin/com/omnicast/sender/ui/components/RemoteControlBar.kt) | `:app-sender` | Barra flotante inferior en el móvil para pausar, reanudar o detener el video proyectado en la TV Box sin salir de la navegación web. |
 | **Controles Remotos Expandidos** | [RemoteExpandedControls.kt](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/app-sender/src/main/kotlin/com/omnicast/sender/ui/components/RemoteExpandedControls.kt) | `:app-sender` | Panel completo con barra de tiempo (seek bar), volumen, alternar subtítulos VTT y ciclar calidades HLS. |
 | **Visor de Fotos Proyectadas** | [PhotoCastViewerActivity.kt](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/app-sender/src/main/kotlin/com/omnicast/sender/overlay/PhotoCastViewerActivity.kt) | `:app-sender` | Permite deslizar fotos con swipe en el móvil mientras se proyectan instantáneamente en la TV vía WebSocket. |
+| **Selector y Permisos de Galería** | [GalleryPickerActivity.kt](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/app-sender/src/main/kotlin/com/omnicast/sender/overlay/GalleryPickerActivity.kt) & [GalleryPermissionHelper.kt](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/app-sender/src/main/kotlin/com/omnicast/sender/overlay/GalleryPermissionHelper.kt) | `:app-sender` | Explorador y selector de fotos/videos locales con resolución desacoplada de permisos de almacenamiento/cámara y URIs. |
+| **Reproductor Local y Controles de Video** | [VideoCastPlayerActivity.kt](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/app-sender/src/main/kotlin/com/omnicast/sender/overlay/VideoCastPlayerActivity.kt) & [VideoCastPlayerControls.kt](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/app-sender/src/main/kotlin/com/omnicast/sender/overlay/VideoCastPlayerControls.kt) | `:app-sender` | Reproductor local sincronizado con controles táctiles delegados (Play/Pausa, Seekbar, saltos ±10s) al transmitir video local a la TV. |
 | **Pantalla de Reposo TV** | [TvStandbyCleanScreen.kt](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/app-receiver/src/main/kotlin/com/omnicast/receiver/ui/components/TvStandbyCleanScreen.kt) | `:app-receiver` | Pantalla limpia de espera en la TV Box mostrando la dirección IP de conexión (`192.168.0.x`), código PIN y estado del WiFi. |
 | **Reproductor Web TV (HTML5)** | [TvWebStreamScreen.kt](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/app-receiver/src/main/kotlin/com/omnicast/receiver/ui/components/TvWebStreamScreen.kt) | `:app-receiver` | WebView en Android TV con Hls.js oficial, `baseUrl` fijado al Referer canónico y User-Agent móvil para CDNs con tokens estrictos. |
 | **Interceptor Anti-CORS TV** | [TvWebResourceInterceptor.kt](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/app-receiver/src/main/kotlin/com/omnicast/receiver/ui/components/TvWebResourceInterceptor.kt) | `:app-receiver` | Intercepta descargas de `.m3u8` y `.ts` en la TV, inyectando `Access-Control-Allow-Origin: *` y respondiendo preflights OPTIONS en 0ms. |
@@ -275,7 +285,7 @@ Desde que el usuario navega a un portal (ej. `cinecalidad.men`, `pelisplus.hair`
 ### FLUJO C: Proyección de Fotos y Videos de la Galería
 
 ```text
-[1. Usuario selecciona fotos en GalleryPickerActivity.kt]
+[1. Usuario selecciona fotos en GalleryPickerActivity.kt (gestión de permisos vía GalleryPermissionHelper.kt)]
         │
         ▼
 [LocalImageServer.kt] (Emisor Móvil en puerto :8087)

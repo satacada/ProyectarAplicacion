@@ -32,6 +32,11 @@ references/decompiled/
 !scripts/**
 !supabase/**
 
+# ADB debug dumps & runtime screen captures
+phone_*
+screen_*
+*.dump
+
 # IDE
 .idea/
 .system_generated/

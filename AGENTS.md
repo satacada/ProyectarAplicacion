@@ -188,7 +188,71 @@ Queda terminantemente PROHIBIDO compilar o proponer una versión sin auditar pre
    - `TvYouTubeScreen` opera con el IFrame oficial de Google en la TV Box con inmunidad total de desconexión (`ClientStatus.Disconnected`). Los streams de YouTube NO deben ser forzados a peticiones directas de red que carezcan de PO Token / firma de Botguard, evitando el bloqueo `HTTP 403 Forbidden` de `googlevideo.com`.
    - Toda optimización en el flujo de streaming debe canalizarse a través del motor C++20 (`libstream_classifier.so`) respetando el estándar Zero-Allocation.
 
+---
+
+## 9. GOBERNANZA MULTI-AGENTE FAST-TRACK Y REGLA ANTI-EXPLORACIÓN REDUNDANTE (LEY INVIOLABLE)
+
+1. **Prohibición Estricta del Explorador Forense en Actividades Diarias:**
+   - El subagente Explorador Forense (`research`) se utilizó **por única vez** durante la auditoría inicial de rescate para levantar el mapa del proyecto.
+   - Dado que `ROADMAP.md`, `PROGRESS.md` y `doc/MAPA_DEL_SISTEMA_Y_FLUJO_DE_CODIGO.md` ya contienen todas las rutas exactas de archivos y el Documentador las actualiza al cierre de cada actividad, **queda TERMINANTEMENTE PROHIBIDO disparar al Explorador Forense en cada actividad diaria**. El Planificador debe leer directamente los archivos mapeados en `ROADMAP.md` y `doc/`.
+
+2. **Política Fija de Modelos y Escuadrón de Agentes (`.agents/skills/`):**
+   - **Planificador / Arquitecto Forense (`planner-architect`):** Modelo `Argon` (`inherit`/`pro`). Lee directo `ROADMAP.md` + `PROGRESS.md` + `doc/`, ejecuta `git log -S` / `git log -L` (Arqueología de Precedentes) y emite Auditoría de Contras/Regresión antes de autorizar cambios.
+   - **Agentes Especialistas del Stack (`flash`):**
+     - `specialist-stream-extraction`: Extracción hexagonal (`:core:domain`), `StreamCandidateValidator`, `universal_sniffer.js`, SQLite (`StreamProfileDatabase`, `AdBlockDatabase`) y Supabase.
+     - `specialist-tv-player-pvr`: Receptor TV (`:app-receiver`), `ExoPlayerTvManager`, `TvWebStreamScreen`, `TvWebResourceInterceptor` y motor PVR (`PvrStreamRecorder`, `PvrHlsMasterParser`, `TvWebPvrBridge`, `TvStorageSafetyManager`).
+     - `specialist-webrtc-mirroring`: Señalización WebSocket (`:core:protocol`), `WebRtcSenderManager` y guardianía de inmutabilidad sobre `WebRtcReceiverManager.kt` y `TvScreens.kt`.
+     - `specialist-cpp20-jni`: Motor nativo C++20 Zero-Allocation (`stream_classifier.cpp`, `dean_edwards_unpacker.cpp`, `ad_pattern_matcher.cpp`).
+   - **Desarrollador Quirúrgico (`surgical-developer`):** Modelo `flash`. Cirugía Mínima sobre los archivos indicados, límite estricto `< 300` líneas por archivo y respeto absoluto a las Zonas Sagradas.
+   - **Tester QA Anti-Regresión (`qa-oracle-tester`):** Modelo `flash`. Ejecuta obligatoriamente el Oráculo (`./gradlew :core:domain:test :core:protocol:test :app-sender:testDebugUnitTest :app-receiver:testDebugUnitTest`), verifica `wc -l <= 300` en archivos tocados y audita el Checklist Pre-Vuelo (Sección 8).
+   - **Documentador Sincrónico (`sync-documenter`):** Modelo `flash`. Sincroniza al cierre de cada actividad `PROGRESS.md`, `ROADMAP.md`, `doc/PROJECT_DASHBOARD.md` y `doc/MAPA_DEL_SISTEMA_Y_FLUJO_DE_CODIGO.md`.
+   - **Versionador Git & OTA Release (`git-ota-releaser`):** Modelo `flash_lite`. Ejecuta commit semántico (`feat/fix(modulo): ...`), sincroniza `version.json` + `build.gradle.kts`, compila release, instala vía ADB y publica en GitHub Releases (`publish_release.py`).
+
+3. **Pipeline Operativo en Cadena y Regla `"1 Actividad = 1 Chat"`:**
+   - Cadena obligatoria por actividad: `Planificador (Argon, lectura directa)` ➔ `Especialista (flash)` ➔ `Desarrollador Quirúrgico (flash)` ➔ `Tester QA Anti-Regresión (flash)` ➔ `Documentador Sincrónico (flash)` ➔ `Versionador Git & OTA (flash_lite)`.
+   - Al concluir cualquier actividad de `ROADMAP.md`, la respuesta final al usuario DEBE cerrar con la **Ficha Fija de 4 Renglones**:
+     1. **✅ Actividad Completada:** `[ID y Nombre de la actividad en ROADMAP.md] — Versión [vX.Y.Z]`
+     2. **🛠️ Archivos Modificados y Tests:** `[Rutas exactas tocadas (<300L)] | Oráculo: [N/N tests passing (100%)]`
+     3. **📄 Estado Documental y Release OTA:** `[PROGRESS.md + ROADMAP.md + doc/ sincronizados | Estado APK ADB y GitHub Release]`
+     4. **🚀 Próxima Actividad Sugerida (Copiar en nuevo chat):** `"Ejecutar Actividad [Siguiente ID] de ROADMAP.md"`
 
 
 
 
+
+
+
+---
+
+## ⚡ DICCIONARIO DE MICRO-COMANDOS ([auto] y [ver] — ESCUADRÓN CON SUBAGENTES Y MODELOS FIJOS)
+
+### 1. Orquestación por Modelos Fijos y Cero Deterioro de Memoria
+El Agente Principal de la sesión actúa siempre como el **Planificador / Arquitecto Maestro (`planner-architect`, Modelo `Argon` / `inherit` / `pro`)**. Para mantener el contexto del chat 100% libre de contaminación de código masivo o logs extensos (garantía de 0% deterioro de memoria), delega cada etapa operativa a los subagentes especializados de `.agents/skills/` mediante `invoke_subagent` respetando estrictamente su matriz de modelos asignados:
+1. **Desarrollo / Especialista de Dominio (`Model: "flash"`):** Ejecuta la cirugía mínima de código (`surgical-developer` o `specialist-*`) sobre los archivos objetivo mapeados (< 300 líneas).
+2. **Tester QA Anti-Regresión (`Model: "flash"`):** `qa-oracle-tester` ejecuta el Oráculo completo (`:core:domain:test`, `:core:protocol:test`, `:app-sender:testDebugUnitTest`, `:app-receiver:testDebugUnitTest`), valida tamaños de archivos y checklist pre-vuelo.
+3. **Documentador Sincrónico (`Model: "flash"`):** `sync-documenter` actualiza `PROGRESS.md`, `ROADMAP.md`, `doc/PROJECT_DASHBOARD.md` y `doc/MAPA_DEL_SISTEMA_Y_FLUJO_DE_CODIGO.md`.
+4. **Versionador Git & Publicador OTA (`Model: "flash_lite"`):** `git-ota-releaser` bump de versión, commit semántico, compila `assembleRelease`, instala en ADB y publica OTA en GitHub Releases.
+
+Cada subagente devuelve exclusivamente un reporte conciso de confirmación o la Ficha Fija de 4 Renglones y se cierra, manteniendo la memoria principal limpia.
+
+### 2. Regla Anti-Explorador Redundante (Cero Búsquedas Inútiles)
+Queda terminantemente PROHIBIDO invocar agentes de exploración o búsqueda abierta (`research` / explorador forense) en actividades cuyas rutas de archivos objetivo ya estén mapeadas y delimitadas en `ROADMAP.md` o en la documentación de `doc/`. El Planificador (`Argon`) lee directamente dichos archivos o delega directamente la cirugía a los subagentes sin exploraciones redundantes.
+
+### 3. Definición de Modos Operativos: `[auto]` vs `[ver]`
+- **Modo `[auto]` (Ejecución Autónoma de Tareas Estándar):**
+  - **Ámbito:** CRUD, componentes de UI, tests unitarios, reportes de cobertura, refactorizaciones cosméticas o tareas acotadas de bajo riesgo.
+  - **Comportamiento:** El Planificador (`Argon`) analiza el lote solicitado, presenta un plan unificado al usuario y espera un **único `"APROBADO"`** inicial. Una vez aprobado, coordina la cadena completa de subagentes (`flash` / `flash_lite`) a través de todas las tareas del lote de corrido, sin pausar entre actividades, hasta concluir y emitir la Ficha de Cierre.
+- **Modo `[ver]` (Verificación Estricta y Supervisada de Zonas Críticas):**
+  - **Ámbito:** Modificaciones en seguridad, pagos, señalización WebSocket/WebRTC, gestión de memoria nativa C++20, motores PVR directos, bases de datos centrales o arquitectura delicada.
+  - **Comportamiento:** Usa los mismos subagentes limpios para evitar deterioro de memoria, pero aplica **DOS FRENOS OBLIGATORIOS**:
+    1. **Freno Pre-Cirugía:** Antes de tocar cualquier línea de código, el Planificador expone la Auditoría de Contras, Arqueología de Precedentes (`git log -S`) y el plan de cambios exacto línea por línea, y **FRENA** esperando `"APROBADO"`.
+    2. **Freno Post-Verificación:** Al finalizar la tarea, ejecuta el Oráculo (`qa-oracle-tester`), muestra el log de tests y telemetría, y **FRENA** esperando confirmación explícita del usuario antes de avanzar a la siguiente actividad del roadmap.
+
+### 4. Manual Rápido de Micro-Comandos (4 Patrones de 1 Línea)
+
+| Comando de Ejemplo | Modo y Alcance | Comportamiento del Escuadrón Multi-Agente |
+| :--- | :--- | :--- |
+| `/goal 2.2, 2.3 y 2.4 [auto]` | Lote Autónomo | El Planificador valida el lote, pide 1 aprobación inicial y ejecuta 2.2, 2.3 y 2.4 de corrido usando subagentes `flash` y `flash_lite`. |
+| `/goal 2.1 [ver], 2.2 [auto], 2.3 [auto], 2.4 [ver]` | Lote Mixto | Frena antes y después de 2.1; luego corre 2.2 y 2.3 de corrido; frena antes y después de 2.4. |
+| `/goal Ejecuta Fase 2` | Fase Completa por Defecto | Respeta las etiquetas predefinidas de cada actividad en `ROADMAP.md` (`[ver]` o `[auto]`). |
+| `Ejecuta 2.1 [ver]` | Actividad Individual Crítica | Muestra plan detallado de 2.1, espera `"APROBADO"`, ejecuta mediante subagentes, valida tests y frena para confirmación. |

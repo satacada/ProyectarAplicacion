@@ -132,20 +132,20 @@ SINO -> ExoPlayer (Hardware Nativo 60fps)
 
 ---
 
-## 5. HOJA DE RUTA Y PLAN TÉCNICO C++20 (PLANIFICADO / PENDIENTE DE IMPLEMENTACIÓN)
+## 5. MOTOR NATIVO C++20 E INFRAESTRUCTURA PVR EN PRODUCCIÓN (`[x]` COMPLETADO — v3.6.08)
 
-El motor nativo C++20 (`libstream_classifier.so`) cuenta con clasificación de streams activa (`stream_classifier.cpp`). Las siguientes fases han sido diseñadas y planificadas bajo el Estándar C++20 Moderno de `AGENTS.md` para su posterior implementación y validación por fases:
+El motor nativo C++20 (`libstream_classifier.so`) y el subsistema de grabación PVR operan en producción bajo el Estándar C++20 Moderno de `AGENTS.md` (Zero-Allocation, `std::string_view`, RAII):
 
-1. **Clasificación y Enrutamiento Activo (`stream_classifier.cpp` - En Producción):**
+1. **Clasificación y Enrutamiento Activo (`stream_classifier.cpp` - `[x]` En Producción):**
    * Evaluación de 6 ramas multimedia en < 0.1 ms mediante `std::string_view` y búsqueda de patrones `constexpr`.
-2. **Fase 1 (Pendiente): Desempaquetado de Reproductores Ofuscados (`MediaPlatformResolver`):**
-   * Desofuscación de algoritmos Dean Edwards / packed scripts (PelisPlus, Fastream, LuluStream) en C++20 con memoria contigua (objetivo < 0.8 ms vs 60 ms en Kotlin).
-3. **Fase 2 (Pendiente): Filtrado Masivo de Publicidad (`NativeAdBlockEngine`):**
+2. **Fase 1 (`[x]` Completada en v3.5.63): Desempaquetado de Reproductores Ofuscados (`dean_edwards_unpacker.cpp`):**
+   * Desofuscación de algoritmos Dean Edwards / packed scripts (PelisPlus, Fastream, LuluStream) en C++20 con memoria contigua (< 0.8 ms vs 60 ms en Kotlin).
+3. **Fase 2 (`[x]` Completada en v3.5.64): Filtrado Masivo de Publicidad (`ad_pattern_matcher.cpp`):**
    * Búsqueda multi-patrón Aho-Corasick en C++20 para evaluar más de 100 peticiones web por segundo en < 5 microsegundos.
-4. **Fase 3 (Pendiente): Purga de VRAM y Búfer Dinámico en TV Box (`TvWebStreamScreen`):**
+4. **Fase 3 (`[x]` Completada en v3.5.70): Purga de VRAM y Búfer Dinámico en TV Box (`TvWebStreamScreen.kt`):**
    * Búfer dinámico adaptativo en Chromium y purga proactiva de VRAM al pausar o cambiar de video.
-5. **Fase 4 (Pendiente): Grabación PVR Asíncrona en TV Box (`PvrStreamRecorder`):**
-   * Búfer circular en RAM (*Ring Buffer*) en C++20 con volcado en bloques alineados de 128 KB hacia almacenamiento flash/USB, erradicando micro-congelamientos de fotogramas en ExoPlayer.
+5. **Fase 4 (`[x]` Completada en v3.5.72 / v3.6.08): Grabación PVR Dual Asíncrona en TV Box (`PvrStreamRecorder.kt`, `PvrHlsMasterParser.kt`, `TvWebPvrBridge.kt`):**
+   * Búfer circular en RAM (*Ring Buffer*) con volcado alineado de 128 KB, soporte HLS fMP4 (`#EXT-X-MAP`), puente Chromium BoringSSL para Variante 1 y guardián anti-brick `TvStorageSafetyManager.kt` (2.0 GB TV / 500 MB USB).
 
 
 

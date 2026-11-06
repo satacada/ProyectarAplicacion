@@ -1,6 +1,6 @@
 # 📊 PROJECT DASHBOARD — OmniCast Pro
 
-**Última actualización:** 2026-11-05 (Puente Hexagonal TvWebPvrBridge para Variante 1 y Soporte HLS fMP4 para Dailymotion)  
+**Última actualización:** 2026-11-06 (Saneamiento Quirúrgico 1.1, 1.2 y 1.3: Límite <= 300L y Limpieza Forense)  
 **Versión de producción actual:** v3.6.08 (Sender: 359) / v3.6.08 (Receiver: 342)  
 **Estándar de calidad:** AGENTS.md (Archivos <= 300 líneas, Clean Architecture, 100% Offline/Local, C++20 Zero-Allocation, Poda Obligatoria de Código Inútil ante Hipótesis Fallidas)
 
@@ -12,7 +12,7 @@
 |---|---|---|---|
 | `:core:domain` | `StreamCandidateValidator`, `HlsMasterResolver`, `CasteraI18n`, `StreamManifestProbe`, `StreamProfile`, `QualityMode`, `MediaBranch`, `DetectMediaStreamUseCase` | 🟢 Estable | **Cuarentena Dinámica L1 en RAM (`v3.6.05` / ADR-006, HU-012):** Almacenamiento $O(1)$ en memoria RAM en `StreamCandidateValidator` para descarte en 0 ms (< 0.001 ms) de dominios de CDN caídos o con Honeypots HTML. |
 | `:core:protocol` | `SignalingMessage`, `SignalingProtocolTest` | 🟢 Estable | **Telemetría Bidireccional de Grabación (`v3.5.90` / HU-019):** Mensaje `RecordTelemetry` para intercambio en caliente de espacio libre, blindaje anti-brick, calidades detectadas y carpeta destino. Modelo `SubtitleTrack` y lista `subtitles` en `DirectStreamHandoff`. |
-| `:app-sender` | `WebPlayerDiagnosticSentinel`, `BrowserUrlHelper`, `WvcShieldSecurityEngine`, `MediaPlatformRegressionTest`, `ActiveStreamHolder`, `DoodstreamExtractorAdapter`, `StreamProfileDatabase`, `SenderMainActivity`, `BrowserWebView`, `BrowserTopBar`, `WvcVideoListSheet` | 🟢 Estable | **Centinela 2 Activo (`v3.6.05` / HU-007, HU-012, HU-018):** Marcado en cuarentena inmediata de CDNs muertas en `StreamCandidateValidator` ante fallos nativos de `manifestLoadError` o `DOM_VIDEO_ERROR` y telemetría de errores en tiempo real. |
+| `:app-sender` | `WebPlayerDiagnosticSentinel`, `BrowserUrlHelper`, `WvcShieldSecurityEngine`, `MediaPlatformRegressionTest`, `ActiveStreamHolder`, `DoodstreamExtractorAdapter`, `StreamProfileDatabase`, `SenderMainActivity`, `BrowserWebView`, `BrowserTopBar`, `WvcVideoListSheet`, `VideoCastPlayerActivity` (`VideoCastPlayerControls`), `GalleryPickerActivity` (`GalleryPermissionHelper`) | 🟢 Estable | **Saneamiento Quirúrgico 1.2 y 1.3 (`<= 300L`):** Modularización desacoplada de controles de reproducción de video (`VideoCastPlayerControls.kt` [233L]) y gestión de permisos/URIs (`GalleryPermissionHelper.kt` [108L]) en `overlay/`, dejando `VideoCastPlayerActivity.kt` en 159L y `GalleryPickerActivity.kt` en 235L. Centinela 2 Activo en RAM L1. |
 | `:app-receiver` | `TvWebPvrBridge`, `PvrHlsMasterParser`, `PvrNetworkHelper`, `TvWebUnifiedOverlay`, `TvWebStreamScreen`, `TvWebHtmlBuilder`, `TvWebLoadingOverlay`, `CdnHoneypotSentinel`, `TvMediaItemBuilder`, `ExoPlayerTvManager`, `tv_banner.png`, `ic_launcher.png`, `TvRecFloatingBadge`, `TvRecordExitConfirmDialog`, `TvDownloadsManager`, `TvDownloadItemRow`, `TvLocalVideoActionDialog`, `PvrStreamRecorder`, `TvDownloadManager`, `TvRecordDialog`, `TvGlobalRecordOverlay`, `TvStandbyCleanScreen` | 🟢 Estable | **Puente Hexagonal TvWebPvrBridge y Soporte HLS fMP4 Dailymotion (`v3.6.08` / HU-012, HU-019):** 1) `TvWebPvrBridge` descarga flujos Variante 1 (DropCDN, Fastream) directamente desde el manifiesto en RAM de `Hls.js` y la pila BoringSSL nativa de Chromium en `TvWebStreamScreen`. 2) Soporte de `#EXT-X-MAP:URI="init.mp4"` en `PvrHlsMasterParser` para descarga completa de Dailymotion en `ExoPlayer`. 3) Creación perezosa de archivos de salida (cero archivos de 0 bytes). |
 
 ---
@@ -401,11 +401,11 @@
   - Ratificación de `TvYouTubeScreen` (IFrame API oficial de Google en TV Box) como el estándar oficial de reproducción invulnerable a bloqueos 403, con inmunidad de desconexión y latido continuo aprobados en v3.5.62.
 - **Benchmark Real C++20 en Dispositivo Móvil (Xiaomi ARM64 via ADB):**
   - Compilación de micro-benchmark C++20 con Clang 17 NDK (`-std=c++20 -O3`) ejecutado en hardware real: 10,000 iteraciones en 9.72 ms ($0.97\ \mu\text{s}$ por video, 257,104x más rápido que Java/WebView con cero recolección de basura).
-- **Hoja de Ruta Planificada C++20 (Fases 1 a 4 - Pendiente de Implementación):**
-  - *Fase 1 (Pendiente):* Desempaquetador Dean Edwards en C++20 (`MediaPlatformResolver`, objetivo <0.8ms).
-  - *Fase 2 (Pendiente):* Filtrado Masivo de Publicidad Aho-Corasick en C++20 (`NativeAdBlockEngine`, objetivo <5μs).
-  - *Fase 3 (Pendiente):* Purga de VRAM y Búfer dinámico adaptativo en TV Box (`TvWebStreamScreen`).
-  - *Fase 4 (Pendiente):* Ring Buffer asíncrono para PVR en TV Box (`PvrStreamRecorder`).
+- **Hoja de Ruta C++20 Implementada y Sellada en Producción (Fases 1 a 4 - `[x]` Completado):**
+  - *Fase 1 (`[x]` Completada en v3.5.63):* Desempaquetador Dean Edwards en C++20 (`dean_edwards_unpacker.cpp` + `MediaPlatformResolver`, <0.8ms Zero-Allocation).
+  - *Fase 2 (`[x]` Completada en v3.5.64):* Filtrado Masivo de Publicidad Aho-Corasick en C++20 (`ad_pattern_matcher.cpp` + `NativeAdBlockEngine`, <5μs).
+  - *Fase 3 (`[x]` Completada en v3.5.70):* Purga de VRAM y Búfer dinámico adaptativo en TV Box (`TvWebStreamScreen`).
+  - *Fase 4 (`[x]` Completada en v3.5.72 / v3.6.08):* Ring Buffer asíncrono para PVR en TV Box (`PvrStreamRecorder`), soporte fMP4 (`PvrHlsMasterParser`) y puente Chromium (`TvWebPvrBridge`).
   - *Norma de Código:* Estándar C++20 Moderno obligatorio registrado en `AGENTS.md` (Zero-Leak, Zero-Copy con `std::string_view` y RAII).
 
 ---

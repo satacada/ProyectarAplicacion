@@ -2,8 +2,8 @@
 
 > **Versión Actual en Producción:** `v3.6.08` (`versionCodeSender: 359` | `versionCodeReceiver: 342`)  
 > **Última Sincronización Agéntica:** `2026-11-06`  
-> **Estado del Oráculo de Pruebas:** 🟢 **117 Tests Passing (100% — 0 fallos)**  
-> **Próxima Actividad en Cola:** `Actividad 3.2 [ver] — Reanudación Inteligente y Telemetría Enriquecida de Grabaciones VOD/PVR`
+> **Estado del Oráculo de Pruebas:** 🟢 **122 Tests Passing (100% — 0 fallos)**  
+> **Próxima Actividad en Cola:** `Actividad 4.1 [auto] — Cobertura Automatizada Jacoco y Ampliación de Suites de Tests`
 
 ---
 
@@ -14,26 +14,26 @@
 | **Fase 0** | Base Heredada e Inmutable (20 HUs + 4 Pilares + Motor PVR `v3.6.08`) | `[x]` Sellada | **4 / 4 (100%)** |
 | **Fase 1** | Saneamiento y Reestructuración Quirúrgica (`< 300` líneas y limpieza) | `[x]` Completada | **4 / 4 (100%)** |
 | **Fase 2** | Evolución de Resiliencia CDN Anti-Scrape y Gobernanza Cloud | `[x]` Completada | **2 / 2 (100%)** |
-| **Fase 3** | Evolución del Motor PVR y Biblioteca de Grabaciones en TV | `[ ]` En progreso | **1 / 2 (50%)** |
+| **Fase 3** | Evolución del Motor PVR y Biblioteca de Grabaciones en TV | `[x]` Completada | **2 / 2 (100%)** |
 | **Fase 4** | Cobertura Cuantitativa de Tests y Telemetría Proactiva | `[ ]` Pendiente | **0 / 1 (0%)** |
 
 ---
 
-## 2. Semáforo de Salud del Oráculo Unitario (117 Tests Passing)
+## 2. Semáforo de Salud del Oráculo Unitario (122 Tests Passing)
 
 | Módulo Gradle | Comando de Verificación | Tests | Estado |
 | :--- | :--- | :---: | :---: |
 | **`:core:domain`** | `./gradlew :core:domain:test` | 28 | 🟢 100% Passing (0 fallos) |
-| **`:core:protocol`** | `./gradlew :core:protocol:test` | 7 | 🟢 100% Passing (0 fallos) |
+| **`:core:protocol`** | `./gradlew :core:protocol:test` | 9 | 🟢 100% Passing (0 fallos) |
 | **`:app-sender`** | `./gradlew :app-sender:testDebugUnitTest` | 33 | 🟢 100% Passing (0 fallos) |
-| **`:app-receiver`** | `./gradlew :app-receiver:testDebugUnitTest` | 19 | 🟢 100% Passing (0 fallos) |
+| **`:app-receiver`** | `./gradlew :app-receiver:testDebugUnitTest` | 22 | 🟢 100% Passing (0 fallos) |
 
 ---
 
 ## 3. Monitor de Límite de 300 Líneas (`AGENTS.md` Regla 3)
 
 ### 🔴 Archivos por encima de 300 líneas
-> *(Cero archivos Kotlin por encima de 300 líneas tras saneamiento 1.2, 1.3 y desahogo modular en Actividad 2.1; `StreamProfileDatabase.kt` se redujo de 295L a 247L y salió de vigilancia)*
+> *(Cero archivos Kotlin por encima de 300 líneas tras saneamiento 1.2, 1.3 y desahogos modulares en Actividades 2.1 y 3.2; `PvrStreamRecorder.kt` se redujo de 293L a 250L tras delegar metadatos en `PvrResumeMetadataStore.kt` [62L] y salió exitosamente de vigilancia)*
 - `app-sender/src/main/assets/sniffer/universal_sniffer.js`: **403 líneas** *(Asset JS DOM sellado e inmutable)*
 
 ### 🟡 Archivos en Zona de Vigilancia (289 – 300 líneas)
@@ -51,7 +51,6 @@
 | `app-sender/src/main/kotlin/com/omnicast/sender/service/CastMediaNotificationService.kt` | **297** | ⚠️ Al límite |
 | `app-sender/src/main/kotlin/com/omnicast/sender/ui/components/MainActionCards.kt` | **295** | ⚠️ Al límite |
 | `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/BrowserWebView.kt` | **294** | 🛡️ Sellado (Zona Sagrada) |
-| `app-receiver/src/main/kotlin/com/omnicast/receiver/directstream/PvrStreamRecorder.kt` | **293** | 🛡️ Sellado (`v3.6.08`) |
 | `app-sender/src/main/kotlin/com/omnicast/sender/ui/components/RemoteExpandedControls.kt` | **291** | ⚠️ Al límite |
 | `app-sender/src/main/kotlin/com/omnicast/sender/ui/SenderMainScreen.kt` | **289** | ⚠️ Al límite |
 | `app-receiver/src/main/kotlin/com/omnicast/receiver/ui/components/TvWebStreamScreen.kt` | **289** | 🛡️ Sellado (Zona Sagrada) |
@@ -59,6 +58,16 @@
 ---
 
 ## 4. Historial de Sesiones Multi-Agente
+
+### `[2026-11-06]` — Motor PVR 3.2 (Reanudación Inteligente VOD/PVR con PvrResumeMetadataStore y Telemetría Enriquecida en SignalingMessage)
+- **Acción:**
+  - **Actividad 3.2:** Implementación desacoplada de `PvrResumeMetadataStore.kt` (62L) en `com.omnicast.receiver.directstream`, persistiendo metadatos JSON atómicos (`.pvr_resume.json`) para permitir la reanudación segura de descargas VOD ante micro-cortes o pausas de red.
+  - Desahogo modular de `PvrStreamRecorder.kt` (reducido de 293L a 250L, saliendo de la Zona de Vigilancia) delegando la persistencia y lectura de estado de reanudación en `PvrResumeMetadataStore`.
+  - Ampliación de telemetría bidireccional en `SignalingMessage.RecordTelemetry` incorporando métricas precisas: `bytesDownloaded`, `totalSizeBytes`, `isResumable` y `errorNotice`.
+  - Soporte de reanudación y actualización de telemetría en `PvrRecordProgress.kt` y `TvReceiverHelper.kt`.
+  - Incorporación de pruebas unitarias en `PvrResumeMetadataStoreTest.kt` (3 tests passing: guardado, lectura y purga de metadatos) y `SignalingProtocolTest.kt` (2 tests passing: serialización de nuevos campos en `RecordTelemetry`).
+- **Salud del Oráculo:** 122 tests passing (100% — 0 fallos). Cero archivos Kotlin > 300 líneas.
+- **Siguiente paso:** Iniciar **Fase 4** ➔ **Actividad 4.1 `[auto]` — Cobertura Automatizada Jacoco y Ampliación de Suites de Tests**.
 
 ### `[2026-11-06]` — Motor PVR 3.1 (Gestión de biblioteca local/USB de grabaciones PVR en Android TV y barra de resumen modular TvPvrLibrarySummaryBar)
 - **Acción:**

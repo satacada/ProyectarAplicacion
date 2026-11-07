@@ -142,7 +142,11 @@ object TvReceiverHelper {
             isLive = liveMode,
             progressPct = pvrProgress.progressPct,
             recordedDurationSec = pvrProgress.durationSeconds,
-            targetFolder = pvrProgress.targetFolder.ifBlank { intPath }
+            targetFolder = pvrProgress.targetFolder.ifBlank { intPath },
+            bytesDownloaded = pvrProgress.recordedBytes,
+            totalSizeBytes = pvrProgress.totalExpectedBytes,
+            isResumable = pvrProgress.isResumable,
+            errorNotice = pvrProgress.errorMsg ?: pvrProgress.statusNotice
         )
     }
 

@@ -1,12 +1,12 @@
 {
-  "versionName": "3.6.12",
-  "versionCodeSender": 363,
-  "versionCodeReceiver": 346,
-  "releaseTag": "v3.6.12",
-  "senderApk": "omnicast-sender-v3.6.12.apk",
-  "receiverApk": "omnicast-receiver-v3.6.12.apk",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.6.12/omnicast-sender-v3.6.12.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.6.12/omnicast-receiver-v3.6.12.apk",
-  "releaseNotes": "v3.6.12: Refuerzo heuristico HLS RFC 8216 y Centinela Anti-Honeypot DASH/HTML, cierre 100% de Fase 2",
-  "changelog": "v3.6.12: Refuerzo heuristico HLS RFC 8216 y Centinela Anti-Honeypot DASH/HTML, cierre 100% de Fase 2"
+  "versionName": "3.6.14",
+  "versionCodeSender": 365,
+  "versionCodeReceiver": 348,
+  "releaseTag": "v3.6.14",
+  "senderApk": "omnicast-sender-v3.6.14.apk",
+  "receiverApk": "omnicast-receiver-v3.6.14.apk",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.6.14/omnicast-sender-v3.6.14.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.6.14/omnicast-receiver-v3.6.14.apk",
+  "releaseNotes": "v3.6.14: Reanudacion inteligente VOD/PVR con PvrResumeMetadataStore, telemetria enriquecida y cierre 100% de Fase 3",
+  "changelog": "v3.6.14: Reanudacion inteligente VOD/PVR con PvrResumeMetadataStore, telemetria enriquecida y cierre 100% de Fase 3"
 }

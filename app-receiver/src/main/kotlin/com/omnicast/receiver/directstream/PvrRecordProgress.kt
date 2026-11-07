@@ -12,5 +12,6 @@ data class PvrRecordProgress(
     val channelTitle: String = "",
     val targetFolder: String = "",
     val errorMsg: String? = null,
-    val statusNotice: String? = null
+    val statusNotice: String? = null,
+    val isResumable: Boolean = false
 )

@@ -135,4 +135,44 @@ class SignalingProtocolTest {
         assertEquals(-10.0f, decodedTransform.panY, 0.001f)
         assertEquals(90.0f, decodedTransform.rotation, 0.001f)
     }
+
+    @Test
+    fun testRecordTelemetrySerializationAndDefaults() {
+        val telemetry = SignalingMessage.RecordTelemetry(
+            isRecording = true,
+            isMovieDownload = false,
+            canRecord = true
+        )
+        val encoded = json.encodeToString<SignalingMessage>(telemetry)
+        assertTrue(encoded.contains("\"type\":\"RECORD_TELEMETRY\""))
+        assertTrue(encoded.contains("\"isRecording\":true"))
+
+        val decoded = json.decodeFromString<SignalingMessage>(encoded)
+        assertTrue(decoded is SignalingMessage.RecordTelemetry)
+        val decodedTelemetry = decoded as SignalingMessage.RecordTelemetry
+        assertTrue(decodedTelemetry.isRecording)
+        assertEquals(0L, decodedTelemetry.bytesDownloaded)
+        assertEquals(0L, decodedTelemetry.totalSizeBytes)
+        assertFalse(decodedTelemetry.isResumable)
+        assertNull(decodedTelemetry.errorNotice)
+    }
+
+    @Test
+    fun testRecordTelemetryEnrichedSerialization() {
+        val telemetry = SignalingMessage.RecordTelemetry(
+            isRecording = true,
+            isMovieDownload = true,
+            canRecord = true,
+            bytesDownloaded = 524288000L,
+            totalSizeBytes = 1048576000L,
+            isResumable = true,
+            errorNotice = "Reanudando tras corte de red"
+        )
+        val encoded = json.encodeToString<SignalingMessage>(telemetry)
+        val decoded = json.decodeFromString<SignalingMessage>(encoded) as SignalingMessage.RecordTelemetry
+        assertEquals(524288000L, decoded.bytesDownloaded)
+        assertEquals(1048576000L, decoded.totalSizeBytes)
+        assertTrue(decoded.isResumable)
+        assertEquals("Reanudando tras corte de red", decoded.errorNotice)
+    }
 }

@@ -150,6 +150,10 @@ sealed class SignalingMessage {
         val isLive: Boolean = false,
         val progressPct: Int = 0,
         val recordedDurationSec: Long = 0L,
-        val targetFolder: String = ""
+        val targetFolder: String = "",
+        val bytesDownloaded: Long = 0L,
+        val totalSizeBytes: Long = 0L,
+        val isResumable: Boolean = false,
+        val errorNotice: String? = null
     ) : SignalingMessage()
 }

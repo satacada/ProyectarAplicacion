@@ -118,7 +118,7 @@ Actividades acotadas de Cirugía Mínima para resolver la deuda técnica detecta
 
 ---
 
-## 📼 FASE 3 — Evolución del Motor PVR y Biblioteca de Grabaciones en TV (`[ ]` — 1 / 2 completadas — 50%)
+## 📼 FASE 3 — Evolución del Motor PVR y Biblioteca de Grabaciones en TV (`[x]` — 2 / 2 completadas — 100%)
 
 - `[x]` **Actividad 3.1 `[auto]` — Gestión de Biblioteca Local/USB de Grabaciones PVR en Android TV (`app-receiver/src/main/kotlin/com/omnicast/receiver/directstream/TvStorageSafetyManager.kt`, `app-receiver/src/main/kotlin/com/omnicast/receiver/ui/components/TvPvrLibrarySummaryBar.kt`, `app-receiver/src/test/kotlin/com/omnicast/receiver/directstream/TvStorageSafetyManagerTest.kt`):**
   - **Objetivo:** Permitir explorar, reproducir y administrar las grabaciones `.ts`/`.mp4` almacenadas en `/Download/PVR_Grabaciones` y `Pelis_descargas` (memoria interna o USB) desde la interfaz de TV respetando el límite `< 300` líneas y la reserva sagrada de `TvStorageSafetyManager.kt`.
@@ -128,13 +128,15 @@ Actividades acotadas de Cirugía Mínima para resolver la deuda técnica detecta
     - `app-receiver/src/test/kotlin/com/omnicast/receiver/directstream/TvStorageSafetyManagerTest.kt` (8 tests unitarios de escaneo, reserva y cálculo de bitrate)
   - **Agentes Involucrados:** `planner-architect` (`Argon`) ➔ `specialist-tv-player-pvr` (`flash`) ➔ `surgical-developer` (`flash`) ➔ `qa-oracle-tester` (`flash`) ➔ `sync-documenter` (`flash`) ➔ `git-ota-releaser` (`flash_lite`).
 
-- `[ ]` **Actividad 3.2 `[ver]` — Reanudación Inteligente y Telemetría Enriquecida de Descargas VOD/PVR (`core/protocol/src/main/kotlin/com/omnicast/core/protocol/SignalingMessage.kt`, `app-receiver/src/main/kotlin/com/omnicast/receiver/directstream/PvrStreamRecorder.kt`, `app-receiver/src/main/kotlin/com/omnicast/receiver/directstream/TvWebPvrBridge.kt`):**
-  - **Objetivo:** Persistir metadatos de progreso de descarga y permitir reanudación segura ante micro-cortes de red en flujos VOD.
+- `[x]` **Actividad 3.2 `[ver]` — Reanudación Inteligente y Telemetría Enriquecida de Descargas VOD/PVR (`core/protocol/src/main/kotlin/com/omnicast/core/protocol/SignalingMessage.kt`, `app-receiver/src/main/kotlin/com/omnicast/receiver/directstream/PvrResumeMetadataStore.kt`, `app-receiver/src/main/kotlin/com/omnicast/receiver/directstream/PvrStreamRecorder.kt`, `app-receiver/src/test/kotlin/com/omnicast/receiver/directstream/PvrResumeMetadataStoreTest.kt`):**
+  - **Objetivo:** Persistir metadatos de progreso de descarga y permitir reanudación segura ante micro-cortes de red en flujos VOD desacoplando la persistencia de metadatos en un archivo independiente.
   - **Archivos Objetivo Exactos:**
-    - `core/protocol/src/main/kotlin/com/omnicast/core/protocol/SignalingMessage.kt`
-    - `app-receiver/src/main/kotlin/com/omnicast/receiver/directstream/PvrResumeMetadataStore.kt`
-    - `app-receiver/src/main/kotlin/com/omnicast/receiver/directstream/PvrStreamRecorder.kt`
-    - `app-receiver/src/main/kotlin/com/omnicast/receiver/directstream/TvWebPvrBridge.kt`
+    - `core/protocol/src/main/kotlin/com/omnicast/core/protocol/SignalingMessage.kt` (ampliado con `bytesDownloaded`, `totalSizeBytes`, `isResumable` y `errorNotice` en `RecordTelemetry`)
+    - `app-receiver/src/main/kotlin/com/omnicast/receiver/directstream/PvrResumeMetadataStore.kt` (nuevo almacén atómico JSON de metadatos de reanudación: 62 líneas)
+    - `app-receiver/src/main/kotlin/com/omnicast/receiver/directstream/PvrStreamRecorder.kt` (reducido a 250 líneas al delegar metadatos y reanudación)
+    - `app-receiver/src/main/kotlin/com/omnicast/receiver/directstream/PvrRecordProgress.kt` y `TvReceiverHelper.kt` (soporte de bytes y reanudación VOD)
+    - `app-receiver/src/test/kotlin/com/omnicast/receiver/directstream/PvrResumeMetadataStoreTest.kt` (3 tests unitarios de persistencia, carga y purga)
+    - `core/protocol/src/test/kotlin/com/omnicast/core/protocol/SignalingProtocolTest.kt` (2 tests unitarios de serialización de nuevos campos)
   - **Agentes Involucrados:** `planner-architect` (`Argon`) ➔ `specialist-tv-player-pvr` (`flash`) ➔ `surgical-developer` (`flash`) ➔ `qa-oracle-tester` (`flash`) ➔ `sync-documenter` (`flash`) ➔ `git-ota-releaser` (`flash_lite`).
 
 ---

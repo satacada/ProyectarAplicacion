@@ -60,7 +60,8 @@ proyectarAplicacion/
 │           ├── audio/                  # DigitalAudioReceiver (reproducción de audio PCM estéreo 48kHz)
 │           ├── directstream/           # REPRODUCTOR HW Y MOTOR PVR DUAL (v3.6.08)
 │           │   ├── ExoPlayerTvManager.kt # Reproductor de hardware nativo MediaCodec (MP4, HLS, DASH)
-│           │   ├── PvrStreamRecorder.kt # Grabador PVR con Ring Buffer en RAM y bloques de 128 KB
+│           │   ├── PvrStreamRecorder.kt # Grabador PVR con Ring Buffer en RAM y bloques de 128 KB (250L)
+│           │   ├── PvrResumeMetadataStore.kt # Almacén atómico JSON de metadatos (.pvr_resume.json) para reanudación VOD (62L)
 │           │   ├── PvrHlsMasterParser.kt # Resolutor de variantes HLS (.ts) y fMP4 (#EXT-X-MAP:URI="init.mp4")
 │           │   ├── TvWebPvrBridge.kt   # Puente Hexagonal PVR para Variante 1 (DropCDN/Fastream vía Chromium BoringSSL)
 │           │   └── TvStorageSafetyManager.kt # Guardián anti-brick (reserva 2.0GB TV / 500MB USB, escaneo seguro de grabaciones y TvPvrRecordingFile)
@@ -108,6 +109,7 @@ proyectarAplicacion/
   - `DirectStreamHandoff`: Entrega la URL de una película a la TV Box con su mapa de cabeceras (`Referer`, `User-Agent`), pistas de subtítulos y rama multimedia.
   - `PlayControl`: Comandos de reproducción (`PLAY`, `PAUSE`, `SEEK`, `STOP`, `SET_VOLUME`).
   - `PlaybackStatus`: Retroalimentación de la TV hacia el teléfono (`position`, `duration`, `state`).
+  - `RecordTelemetry`: Telemetría bidireccional en tiempo real de grabación y reanudación VOD (`isRecording`, `isLive`, `progressPct`, `recordedDurationSec`, `targetFolder`, `bytesDownloaded`, `totalSizeBytes`, `isResumable`, `errorNotice`).
 
 ### 2. Emisor Móvil (`:app-sender`)
 - **Navegación Web y AdBlock:** Combina un interceptor C++ nativo con el interceptor Java `AdBlocker.kt`. Suprime popups sin crear WebViews auxiliares (`onCreateWindow` retorna `false`).
@@ -121,6 +123,7 @@ proyectarAplicacion/
 - **Reproductor de Hardware (`ExoPlayerTvManager.kt`):** Acelerado por hardware para flujos MP4 directos, IPTV y DASH (`.mpd` de OK.ru con VP9 y Opus).
 - **Reproductor Web Híbrido (`TvWebStreamScreen.kt` + `TvWebResourceInterceptor.kt`):** Ejecuta Chromium con `Hls.js` para CDNs protegidas (DropCDN de PelisPlus, Fastream). Descarga fragmentos inyectando `Access-Control-Allow-Origin: *` y conservando las cabeceras exactas de navegación.
 - **Guardián Anti-Brick y Escaneo PVR (`TvStorageSafetyManager.kt`):** Protege la reserva sagrada (2.0 GB TV / 500 MB USB), purga archivos vacíos de 0 bytes y escanea heurísticamente grabaciones `.ts`/`.mp4` en memoria interna (`PVR_Grabaciones`, `Pelis_descargas`) y unidades extraíbles USB mapeando a `TvPvrRecordingFile`.
+- **Reanudación Inteligente VOD (`PvrResumeMetadataStore.kt`):** Persiste metadatos atómicos JSON (`.pvr_resume.json`) registrando bytes acumulados y tamaño total, permitiendo retomar descargas ante micro-cortes y reduciendo `PvrStreamRecorder.kt` a 250 líneas.
 - **Barra de Resumen de Biblioteca PVR (`TvPvrLibrarySummaryBar.kt`):** Composable modular de UI que presenta métricas de grabaciones, tamaño acumulado, espacio útil y tiempo de grabación remanente a 1080p.
 - **Telemetría en Vivo (`:8087/logs`):** Servidor HTTP local para diagnosticar fallos en la TV Box con timestamps en milisegundos.
 

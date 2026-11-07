@@ -55,7 +55,9 @@ object AdBlocker {
                lower.contains("clickadu") || lower.contains("hilltopads") ||
                lower.contains("banner-ads") || lower.contains("player-banner") ||
                lower.contains("luugy.com") || lower.contains("frs2c.com") ||
-               lower.contains("innodesdevering")
+               lower.contains("innodesdevering") ||
+               lower.contains("overroll_") || lower.contains("gasparin") ||
+               lower.contains("/public/video.mp4")
     }
 
     private val l1HostCache = android.util.LruCache<String, Boolean>(1024)

@@ -170,4 +170,44 @@ class TvStorageSafetyManagerTest {
         val results = TvStorageSafetyManager.scanDirectoryForRecordings(nonExistent, isUsb = false)
         assertTrue(results.isEmpty())
     }
+
+    @Test
+    fun testStorageBoundaryLimitsAndEdgeCases() {
+        val tvReserve = TvStorageSafetyManager.INTERNAL_SAFETY_RESERVE_BYTES
+        val usbReserve = TvStorageSafetyManager.EXTERNAL_USB_SAFETY_RESERVE_BYTES
+
+        // Exactamente en el umbral (2.0 GB TV / 500 MB USB)
+        assertEquals(0L, TvStorageSafetyManager.calculateUsableBytes(tvReserve, isUsb = false))
+        assertFalse(TvStorageSafetyManager.isStorageSafeForRecording(tvReserve, isUsb = false))
+
+        assertEquals(0L, TvStorageSafetyManager.calculateUsableBytes(usbReserve, isUsb = true))
+        assertFalse(TvStorageSafetyManager.isStorageSafeForRecording(usbReserve, isUsb = true))
+
+        // 1 byte por debajo de la reserva (no seguro)
+        assertEquals(0L, TvStorageSafetyManager.calculateUsableBytes(tvReserve - 1L, isUsb = false))
+        assertFalse(TvStorageSafetyManager.isStorageSafeForRecording(tvReserve - 1L, isUsb = false))
+
+        assertEquals(0L, TvStorageSafetyManager.calculateUsableBytes(usbReserve - 1L, isUsb = true))
+        assertFalse(TvStorageSafetyManager.isStorageSafeForRecording(usbReserve - 1L, isUsb = true))
+
+        // 1 byte por encima de la reserva (seguro)
+        assertEquals(1L, TvStorageSafetyManager.calculateUsableBytes(tvReserve + 1L, isUsb = false))
+        assertTrue(TvStorageSafetyManager.isStorageSafeForRecording(tvReserve + 1L, isUsb = false))
+
+        assertEquals(1L, TvStorageSafetyManager.calculateUsableBytes(usbReserve + 1L, isUsb = true))
+        assertTrue(TvStorageSafetyManager.isStorageSafeForRecording(usbReserve + 1L, isUsb = true))
+
+        // 0 bytes libres
+        assertEquals(0L, TvStorageSafetyManager.calculateUsableBytes(0L, isUsb = false))
+        assertFalse(TvStorageSafetyManager.isStorageSafeForRecording(0L, isUsb = false))
+        assertEquals(0L, TvStorageSafetyManager.calculateUsableBytes(0L, isUsb = true))
+        assertFalse(TvStorageSafetyManager.isStorageSafeForRecording(0L, isUsb = true))
+
+        // Cálculo de minutos máximos con 0 bytes usables (todos los presets)
+        VideoBitratePreset.values().forEach { preset ->
+            assertEquals(0L, TvStorageSafetyManager.calculateMaxSafeMinutes(0L, preset))
+            assertEquals(0L, TvStorageSafetyManager.calculateMaxSafeMinutes(-1024L, preset))
+        }
+    }
 }
+

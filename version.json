@@ -1,12 +1,12 @@
 {
-  "versionName": "3.6.15",
-  "versionCodeSender": 366,
-  "versionCodeReceiver": 349,
-  "releaseTag": "v3.6.15",
-  "senderApk": "omnicast-sender-v3.6.15.apk",
-  "receiverApk": "omnicast-receiver-v3.6.15.apk",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.6.15/omnicast-sender-v3.6.15.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.6.15/omnicast-receiver-v3.6.15.apk",
-  "releaseNotes": "v3.6.15: Cobertura JaCoCo en :core:domain, ampliacion del Oraculo a 100 tests y cierre definitivo del Roadmap Maestro v4.4 (100%)",
-  "changelog": "v3.6.15: Cobertura JaCoCo en :core:domain, ampliacion del Oraculo a 100 tests y cierre definitivo del Roadmap Maestro v4.4 (100%)"
+  "versionName": "3.6.16",
+  "versionCodeSender": 367,
+  "versionCodeReceiver": 350,
+  "releaseTag": "v3.6.16",
+  "senderApk": "omnicast-sender-v3.6.16.apk",
+  "receiverApk": "omnicast-receiver-v3.6.16.apk",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.6.16/omnicast-sender-v3.6.16.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.6.16/omnicast-receiver-v3.6.16.apk",
+  "releaseNotes": "v3.6.16: Blindaje en UniversalHlsExtractorAdapter contra assets web y neutralización de prerolls falsos de Doodstream (overroll_, gasparin, /public/video.mp4)",
+  "changelog": "v3.6.16: Blindaje en UniversalHlsExtractorAdapter contra assets web y neutralización de prerolls falsos de Doodstream (overroll_, gasparin, /public/video.mp4)"
 }

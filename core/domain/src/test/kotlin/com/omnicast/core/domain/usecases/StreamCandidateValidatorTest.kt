@@ -83,5 +83,28 @@ class StreamCandidateValidatorTest {
         assertTrue(StreamCandidateValidator.isValidCdnStream(swishValid, domainMatches = true))
         assertFalse(StreamCandidateValidator.isValidCdnStream(swishIframe, domainMatches = true))
     }
+
+    @Test
+    fun testRejectsFakePrerolls() {
+        assertTrue(StreamCandidateValidator.isWebDocumentOrPlayerRoute("https://cdn.doodstream.com/overroll_ad123.mp4"))
+        assertTrue(StreamCandidateValidator.isWebDocumentOrPlayerRoute("https://gasparin.example.com/video.mp4"))
+        assertTrue(StreamCandidateValidator.isWebDocumentOrPlayerRoute("https://cdn.example.com/public/video.mp4"))
+        assertFalse(StreamCandidateValidator.isValidCdnStream("https://cdn.example.com/public/video.mp4", domainMatches = true))
+    }
+
+    @Test
+    fun testRejectsWebAssetsUnderStreamRoute() {
+        assertTrue(StreamCandidateValidator.isWebDocumentOrPlayerRoute("https://example.com/stream/poster.webp"))
+        assertTrue(StreamCandidateValidator.isWebDocumentOrPlayerRoute("https://example.com/stream/thumb.jpg"))
+        assertTrue(StreamCandidateValidator.isWebDocumentOrPlayerRoute("https://example.com/stream/icon.png"))
+        assertTrue(StreamCandidateValidator.isWebDocumentOrPlayerRoute("https://example.com/stream/banner.gif"))
+    }
+
+    @Test
+    fun testAllowsHlsTextPlaylists() {
+        assertFalse(StreamCandidateValidator.isWebDocumentOrPlayerRoute("https://cdn.pelisgo.com/hls/master.txt"))
+        assertFalse(StreamCandidateValidator.isWebDocumentOrPlayerRoute("https://cdn.example.com/hls/index.txt"))
+        assertTrue(StreamCandidateValidator.isWebDocumentOrPlayerRoute("https://example.com/robots.txt"))
+    }
 }
 

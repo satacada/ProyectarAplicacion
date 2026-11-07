@@ -3,6 +3,8 @@ package com.omnicast.sender.ui.browser.extractors
 import com.omnicast.core.domain.models.MediaStream
 import com.omnicast.core.domain.models.StreamCandidate
 import com.omnicast.core.domain.ports.IMediaStreamExtractorPort
+import com.omnicast.core.domain.usecases.HlsMasterResolver
+import com.omnicast.core.domain.usecases.StreamCandidateValidator
 
 /**
  * Adaptador universal intocable para transmisiones HLS (HTTP Live Streaming).
@@ -13,7 +15,8 @@ class UniversalHlsExtractorAdapter : IMediaStreamExtractorPort {
     override val priority: Int = 10
 
     override fun canHandle(candidate: StreamCandidate): Boolean {
-        if (com.omnicast.core.domain.usecases.HlsMasterResolver.isAudioOrRawSegment(candidate.url)) return false
+        if (StreamCandidateValidator.isWebDocumentOrPlayerRoute(candidate.url)) return false
+        if (HlsMasterResolver.isAudioOrRawSegment(candidate.url)) return false
         val cleanPath = candidate.url.substringBefore('?').lowercase()
         if (cleanPath.endsWith(".vtt") || cleanPath.endsWith(".srt") || cleanPath.endsWith(".key") ||
             cleanPath.endsWith(".ts") || cleanPath.endsWith(".m4s") || cleanPath.endsWith(".css") ||

@@ -33,7 +33,10 @@ object StreamCandidateValidator {
         "videostat",
         "beacon",
         "statnew",
-        "tracking"
+        "tracking",
+        "overroll_",
+        "gasparin",
+        "/public/video.mp4"
     )
 
     /**
@@ -53,10 +56,15 @@ object StreamCandidateValidator {
 
         // 2. Extensiones de documentos web y assets estáticos
         for (ext in WEB_DOCUMENT_EXTENSIONS) {
-            if (cleanPath.endsWith(ext)) return true
+            if (cleanPath.endsWith(ext)) {
+                if (ext == ".txt" && (cleanPath.contains("master") || cleanPath.contains("index") || lower.contains("/hls"))) {
+                    continue
+                }
+                return true
+            }
         }
 
-        // 2. Rutas de páginas web de reproductor, iframes o endpoints de control
+        // 3. Rutas de páginas web de reproductor, iframes, endpoints de control y falsos prerolls
         for (route in NON_MEDIA_ROUTES) {
             if (lower.contains(route)) return true
         }

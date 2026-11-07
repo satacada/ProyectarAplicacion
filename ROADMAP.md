@@ -1,7 +1,8 @@
 # 🗺️ ROADMAP MAESTRO UNIFICADO — OmniCast Pro (`v4.4` Multi-Agente)
 
 > **Versión Base de Rescate:** `v3.6.08` (`versionCodeSender: 359` | `versionCodeReceiver: 342`)  
-> **Política Operativa `v4.4`:** Micro-comandos `[auto]` y `[ver]` orquestados por el Planificador (`Argon`) invocando subagentes aislados (`flash` / `flash_lite`) | **Prohibido disparar Explorador Forense en tareas mapeadas** (todas las rutas están en este archivo y en [`doc/MAPA_DEL_SISTEMA_Y_FLUJO_DE_CODIGO.md`](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/MAPA_DEL_SISTEMA_Y_FLUJO_DE_CODIGO.md)).
+> **Política Operativa `v4.4`:** Micro-comandos `[auto]` y `[ver]` orquestados por el Planificador (`Argon`) invocando subagentes aislados (`flash` / `flash_lite`) | **Prohibido disparar Explorador Forense en tareas mapeadas** (todas las rutas están en este archivo y en [`doc/MAPA_DEL_SISTEMA_Y_FLUJO_DE_CODIGO.md`](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/MAPA_DEL_SISTEMA_Y_FLUJO_DE_CODIGO.md)).  
+> **Estado Global:** 🎉 **100% COMPLETADO (Fases 0 a 4 — 13 / 13 Hitos Cerrados — 100 Tests Oráculo Certificados con JaCoCo)**
 
 ---
 
@@ -141,13 +142,13 @@ Actividades acotadas de Cirugía Mínima para resolver la deuda técnica detecta
 
 ---
 
-## 🧪 FASE 4 — Cobertura Cuantitativa de Tests y Telemetría Proactiva (`[ ]`)
+## 🧪 FASE 4 — Cobertura Cuantitativa de Tests y Telemetría Proactiva (`[x]` — 1 / 1 completada — 100%)
 
-- `[ ]` **Actividad 4.1 `[auto]` — Ampliación del Oráculo Unitario y Métricas de Regresión por Pilar (`build.gradle.kts`, `core/domain/src/test/kotlin/com/omnicast/core/domain/`, `app-sender/src/test/kotlin/com/omnicast/sender/`, `app-receiver/src/test/kotlin/com/omnicast/receiver/`):**
-  - **Objetivo:** Incorporar reportes cuantitativos de cobertura unitaria y expandir los casos de prueba de bordes en `:core:domain`, `:app-sender` y `:app-receiver`.
+- `[x]` **Actividad 4.1 `[auto]` — Ampliación del Oráculo Unitario y Métricas de Regresión por Pilar (`core/domain/build.gradle.kts`, `core/domain/src/test/kotlin/com/omnicast/core/domain/usecases/HlsMasterResolverTest.kt`, `core/protocol/src/test/kotlin/com/omnicast/core/protocol/SignalingProtocolTest.kt`, `app-receiver/src/test/kotlin/com/omnicast/receiver/directstream/TvStorageSafetyManagerTest.kt`):**
+  - **Objetivo:** Incorporar reportes cuantitativos de cobertura unitaria con JaCoCo en `:core:domain` (`jacocoTestReport`) y expandir casos de prueba de bordes en `:core:domain` (múltiples etiquetas HLS `#EXT-X-MEDIA`, query parameters codificados y URLs relativas), `:core:protocol` (claves JSON desconocidas, strings vacíos y valores numéricos extremos) y `:app-receiver` (límites de frontera matemática en reserva sagrada 2.0GB/500MB, cálculo seguro de minutos y purga de 0 bytes).
   - **Archivos Objetivo Exactos:**
-    - `build.gradle.kts`
-    - `core/domain/src/test/kotlin/com/omnicast/core/domain/`
-    - `app-sender/src/test/kotlin/com/omnicast/sender/`
-    - `app-receiver/src/test/kotlin/com/omnicast/receiver/`
+    - `core/domain/build.gradle.kts` (plugin JaCoCo y tarea `jacocoTestReport` con salida XML y HTML)
+    - `core/domain/src/test/kotlin/com/omnicast/core/domain/usecases/HlsMasterResolverTest.kt` (ampliado con 3 tests de borde: 187 líneas)
+    - `core/protocol/src/test/kotlin/com/omnicast/core/protocol/SignalingProtocolTest.kt` (ampliado con 3 tests de resiliencia: 268 líneas)
+    - `app-receiver/src/test/kotlin/com/omnicast/receiver/directstream/TvStorageSafetyManagerTest.kt` (ampliado con test de límites de frontera: 213 líneas)
   - **Agentes Involucrados:** `planner-architect` (`Argon`) ➔ `qa-oracle-tester` (`flash`) ➔ `surgical-developer` (`flash`) ➔ `sync-documenter` (`flash`) ➔ `git-ota-releaser` (`flash_lite`).

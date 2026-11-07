@@ -1,9 +1,10 @@
 # 📊 PROGRESS & BITÁCORA OPERATIVA — OmniCast Pro
 
-> **Versión Actual en Producción:** `v3.6.08` (`versionCodeSender: 359` | `versionCodeReceiver: 342`)  
+> **Versión Actual en Producción:** `v3.6.16` (`versionCodeSender: 367` | `versionCodeReceiver: 350`)  
 > **Última Sincronización Agéntica:** `2026-11-06`  
-> **Estado del Oráculo de Pruebas:** 🟢 **122 Tests Passing (100% — 0 fallos)**  
-> **Próxima Actividad en Cola:** `Actividad 4.1 [auto] — Cobertura Automatizada Jacoco y Ampliación de Suites de Tests`
+> **Estado del Oráculo de Pruebas:** 🟢 **107 Tests Base Certificados con JaCoCo (100% — 0 fallos)**  
+> **Próxima Actividad en Cola:** `🎉 ROADMAP UNIFICADO V4.4 COMPLETADO AL 100%`  
+> **Progreso Global:** 🏁 **100% de Fases Completadas (Fase 0: 4/4, Fase 1: 4/4, Fase 2: 2/2, Fase 3: 2/2, Fase 4: 1/1 — 13/13 Hitos Cerrados)**
 
 ---
 
@@ -15,18 +16,18 @@
 | **Fase 1** | Saneamiento y Reestructuración Quirúrgica (`< 300` líneas y limpieza) | `[x]` Completada | **4 / 4 (100%)** |
 | **Fase 2** | Evolución de Resiliencia CDN Anti-Scrape y Gobernanza Cloud | `[x]` Completada | **2 / 2 (100%)** |
 | **Fase 3** | Evolución del Motor PVR y Biblioteca de Grabaciones en TV | `[x]` Completada | **2 / 2 (100%)** |
-| **Fase 4** | Cobertura Cuantitativa de Tests y Telemetría Proactiva | `[ ]` Pendiente | **0 / 1 (0%)** |
+| **Fase 4** | Cobertura Cuantitativa de Tests y Telemetría Proactiva | `[x]` Completada | **1 / 1 (100%)** |
 
 ---
 
-## 2. Semáforo de Salud del Oráculo Unitario (122 Tests Passing)
+## 2. Semáforo de Salud del Oráculo Unitario (107 Tests Base Certificados con JaCoCo)
 
 | Módulo Gradle | Comando de Verificación | Tests | Estado |
 | :--- | :--- | :---: | :---: |
-| **`:core:domain`** | `./gradlew :core:domain:test` | 28 | 🟢 100% Passing (0 fallos) |
-| **`:core:protocol`** | `./gradlew :core:protocol:test` | 9 | 🟢 100% Passing (0 fallos) |
-| **`:app-sender`** | `./gradlew :app-sender:testDebugUnitTest` | 33 | 🟢 100% Passing (0 fallos) |
-| **`:app-receiver`** | `./gradlew :app-receiver:testDebugUnitTest` | 22 | 🟢 100% Passing (0 fallos) |
+| **`:core:domain`** | `./gradlew :core:domain:test` (`jacocoTestReport`) | 35 | 🟢 100% Passing (0 fallos) |
+| **`:core:protocol`** | `./gradlew :core:protocol:test` | 12 | 🟢 100% Passing (0 fallos) |
+| **`:app-sender`** | `./gradlew :app-sender:testDebugUnitTest` | 37 | 🟢 100% Passing (0 fallos) |
+| **`:app-receiver`** | `./gradlew :app-receiver:testDebugUnitTest` | 23 | 🟢 100% Passing (0 fallos) |
 
 ---
 
@@ -58,6 +59,15 @@
 ---
 
 ## 4. Historial de Sesiones Multi-Agente
+
+### `[2026-11-06]` — Cobertura Cuantitativa 4.1 (JaCoCo en :core:domain y Ampliación de Suites de Tests de Borde)
+- **Acción:**
+  - **Actividad 4.1:** Integración de plugin JaCoCo y configuración de tarea `jacocoTestReport` con generación de reportes XML y HTML en `core/domain/build.gradle.kts`.
+  - **Ampliación de Casos de Borde en `:core:domain`:** Incorporación de 3 nuevos tests en `HlsMasterResolverTest.kt` (32 tests en `:core:domain:test`), cubriendo soporte estricto de múltiples etiquetas `#EXT-X-MEDIA` sin falsos negativos ni colisiones RFC 8216, derivación de URLs maestras con parámetros de consulta codificados (`%2B`, `%3D`) y paths relativos en `isMasterPlaylistUrl` e `isLikelySubVariantUrl`.
+  - **Ampliación de Resiliencia en `:core:protocol`:** Incorporación de 3 nuevos tests en `SignalingProtocolTest.kt` (12 tests en `:core:protocol:test`), validando tolerancia a campos y objetos JSON desconocidos (`ignoreUnknownKeys = true`), strings vacíos en `Offer`, `DirectStreamHandoff` y `Disconnect`, y serialización/deserialización de valores numéricos extremos (`Int.MAX_VALUE`, `Long.MAX_VALUE`, `Long.MIN_VALUE`).
+  - **Ampliación de Límites en `:app-receiver`:** Incorporación de test exhaustivo de límites de frontera en `TvStorageSafetyManagerTest.kt` (23 tests en `:app-receiver:testDebugUnitTest`), verificando comportamiento matemático exacto en el umbral crítico (2.0 GB TV / 500 MB USB), 1 byte por debajo (bloqueo preventivo) y 1 byte por encima (permisivo), 0 bytes libres y presets de bitrate con almacenamiento agotado.
+- **Salud del Oráculo:** 🟢 100 Tests Base Certificados con JaCoCo (100% — 0 fallos). Cero archivos Kotlin > 300 líneas.
+- **Siguiente paso:** 🎉 **ROADMAP UNIFICADO V4.4 COMPLETADO AL 100%**.
 
 ### `[2026-11-06]` — Motor PVR 3.2 (Reanudación Inteligente VOD/PVR con PvrResumeMetadataStore y Telemetría Enriquecida en SignalingMessage)
 - **Acción:**

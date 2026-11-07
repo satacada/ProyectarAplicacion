@@ -175,4 +175,94 @@ class SignalingProtocolTest {
         assertTrue(decoded.isResumable)
         assertEquals("Reanudando tras corte de red", decoded.errorNotice)
     }
+
+    @Test
+    fun testResilienceAgainstUnknownAndExtraJsonKeys() {
+        val offerWithExtras = """
+            {
+                "type": "OFFER",
+                "sdp": "v=0\r\no=alice 123 456\r\n",
+                "width": 1920,
+                "height": 1080,
+                "fps": 60,
+                "bitrateKbps": 8000,
+                "smoothBuffer": true,
+                "unknown_experimental_feature": true,
+                "future_nested_data": {
+                    "codec_profile": "high",
+                    "latency_tier": 1
+                },
+                "arbitrary_tags": ["tv", "hdr", 42]
+            }
+        """.trimIndent()
+
+        val decodedOffer = json.decodeFromString<SignalingMessage>(offerWithExtras)
+        assertTrue(decodedOffer is SignalingMessage.Offer)
+        val offer = decodedOffer as SignalingMessage.Offer
+        assertEquals(1920, offer.width)
+        assertEquals(1080, offer.height)
+
+        val handoffWithExtras = """
+            {
+                "type": "DIRECT_STREAM_HANDOFF",
+                "mediaUrl": "https://example.com/stream.m3u8",
+                "format": "HLS",
+                "title": "Partido en Vivo",
+                "extraTokenField": "token_12345",
+                "analyticsPayload": {"bitrate": 5000}
+            }
+        """.trimIndent()
+        val decodedHandoff = json.decodeFromString<SignalingMessage>(handoffWithExtras)
+        assertTrue(decodedHandoff is SignalingMessage.DirectStreamHandoff)
+        assertEquals("https://example.com/stream.m3u8", (decodedHandoff as SignalingMessage.DirectStreamHandoff).mediaUrl)
+    }
+
+    @Test
+    fun testSerializationWithEmptyStrings() {
+        val emptyOffer = SignalingMessage.Offer(sdp = "", width = 0, height = 0, fps = 0, bitrateKbps = 0)
+        val encodedOffer = json.encodeToString<SignalingMessage>(emptyOffer)
+        val decodedOffer = json.decodeFromString<SignalingMessage>(encodedOffer) as SignalingMessage.Offer
+        assertEquals("", decodedOffer.sdp)
+
+        val emptyHandoff = SignalingMessage.DirectStreamHandoff(mediaUrl = "", title = "")
+        val encodedHandoff = json.encodeToString<SignalingMessage>(emptyHandoff)
+        val decodedHandoff = json.decodeFromString<SignalingMessage>(encodedHandoff) as SignalingMessage.DirectStreamHandoff
+        assertEquals("", decodedHandoff.mediaUrl)
+        assertEquals("", decodedHandoff.title)
+
+        val emptyDisconnect = SignalingMessage.Disconnect(reason = "")
+        val decodedDisconnect = json.decodeFromString<SignalingMessage>(json.encodeToString<SignalingMessage>(emptyDisconnect))
+        assertEquals("", (decodedDisconnect as SignalingMessage.Disconnect).reason)
+    }
+
+    @Test
+    fun testSerializationWithExtremeNumericValues() {
+        val extremeOffer = SignalingMessage.Offer(
+            sdp = "test",
+            width = Int.MAX_VALUE,
+            height = Int.MIN_VALUE,
+            fps = Int.MAX_VALUE,
+            bitrateKbps = Int.MAX_VALUE
+        )
+        val decodedOffer = json.decodeFromString<SignalingMessage>(json.encodeToString<SignalingMessage>(extremeOffer)) as SignalingMessage.Offer
+        assertEquals(Int.MAX_VALUE, decodedOffer.width)
+        assertEquals(Int.MIN_VALUE, decodedOffer.height)
+        assertEquals(Int.MAX_VALUE, decodedOffer.fps)
+
+        val extremeTelemetry = SignalingMessage.RecordTelemetry(
+            freeBytes = Long.MAX_VALUE,
+            usableBytes = Long.MIN_VALUE,
+            progressPct = Int.MAX_VALUE
+        )
+        val decodedTelemetry = json.decodeFromString<SignalingMessage>(json.encodeToString<SignalingMessage>(extremeTelemetry)) as SignalingMessage.RecordTelemetry
+        assertEquals(Long.MAX_VALUE, decodedTelemetry.freeBytes)
+        assertEquals(Long.MIN_VALUE, decodedTelemetry.usableBytes)
+        assertEquals(Int.MAX_VALUE, decodedTelemetry.progressPct)
+
+        val ping = SignalingMessage.Ping(clientTimestamp = Long.MAX_VALUE)
+        val pong = SignalingMessage.Pong(serverTimestamp = Long.MIN_VALUE)
+        assertEquals(Long.MAX_VALUE, (json.decodeFromString<SignalingMessage>(json.encodeToString<SignalingMessage>(ping)) as SignalingMessage.Ping).clientTimestamp)
+        assertEquals(Long.MIN_VALUE, (json.decodeFromString<SignalingMessage>(json.encodeToString<SignalingMessage>(pong)) as SignalingMessage.Pong).serverTimestamp)
+    }
 }
+

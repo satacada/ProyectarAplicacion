@@ -119,4 +119,69 @@ class HlsMasterResolverTest {
         assertNull(HlsMasterResolver.deriveMasterPlaylistUrl("https://example.com/hls/master.m3u8"))
         assertNull(HlsMasterResolver.deriveMasterPlaylistUrl("https://fast-channels.sinclairstoryline.com/CHARGE/index.m3u8"))
     }
+
+    @Test
+    fun `isMasterContent handles CRLF line endings and empty or blank manifests`() {
+        val crlfMaster = "#EXTM3U\r\n#EXT-X-VERSION:3\r\n#EXT-X-STREAM-INF:BANDWIDTH=800000,RESOLUTION=640x360\r\nstream.m3u8\r\n"
+        assertTrue(HlsMasterResolver.isMasterContent(crlfMaster))
+
+        val crlfMedia = "#EXTM3U\r\n#EXT-X-TARGETDURATION:6\r\n#EXTINF:6.0,\r\nchunk01.ts\r\n#EXT-X-ENDLIST\r\n"
+        assertFalse(HlsMasterResolver.isMasterContent(crlfMedia))
+
+        assertFalse(HlsMasterResolver.isMasterContent(""))
+        assertFalse(HlsMasterResolver.isMasterContent("   \n\r\n   \t  "))
+    }
+
+    @Test
+    fun `isMasterContent strictly handles multiple EXT-X-MEDIA tags without false negatives or collisions`() {
+        val masterWithMultipleMedia = """
+            #EXTM3U
+            #EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID="audio",NAME="English",DEFAULT=YES,AUTOSELECT=YES,URI="audio/en.m3u8"
+            #EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID="audio",NAME="Spanish",DEFAULT=NO,AUTOSELECT=YES,URI="audio/es.m3u8"
+            #EXT-X-MEDIA:TYPE=SUBTITLES,GROUP-ID="subs",NAME="English",DEFAULT=YES,URI="subs/en.m3u8"
+            #EXT-X-MEDIA:TYPE=SUBTITLES,GROUP-ID="subs",NAME="Spanish",DEFAULT=NO,URI="subs/es.m3u8"
+            #EXT-X-STREAM-INF:BANDWIDTH=2500000,RESOLUTION=1280x720,AUDIO="audio",SUBTITLES="subs"
+            720p.m3u8
+            #EXT-X-STREAM-INF:BANDWIDTH=5000000,RESOLUTION=1920x1080,AUDIO="audio",SUBTITLES="subs"
+            1080p.m3u8
+        """.trimIndent()
+        assertTrue(HlsMasterResolver.isMasterContent(masterWithMultipleMedia))
+
+        val audioSubvariantWithDisqualifier = """
+            #EXTM3U
+            #EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID="audio",NAME="English",URI="audio.m3u8"
+            #EXT-X-TARGETDURATION:10
+            #EXTINF:10.0,
+            audio_segment1.m4a
+        """.trimIndent()
+        assertFalse(HlsMasterResolver.isMasterContent(audioSubvariantWithDisqualifier))
+    }
+
+    @Test
+    fun `deriveMasterPlaylistUrl handles relative URLs and encoded query parameters`() {
+        val encodedUrl = "https://cdn.example.com/hls/stream03/chunklist.m3u8?token=abc%2Bxyz%3D%3D&expires=1700000000&sig=foo%26bar"
+        val expectedMaster = "https://cdn.example.com/hls/master.m3u8?token=abc%2Bxyz%3D%3D&expires=1700000000&sig=foo%26bar"
+        assertEquals(expectedMaster, HlsMasterResolver.deriveMasterPlaylistUrl(encodedUrl))
+
+        val relIndexed = "channels/live_1080.m3u8?auth=123"
+        assertEquals("channels/live.m3u8?auth=123", HlsMasterResolver.deriveMasterPlaylistUrl(relIndexed))
+
+        val relFolder = "live/stream02/chunklist.m3u8"
+        assertEquals("live/master.m3u8", HlsMasterResolver.deriveMasterPlaylistUrl(relFolder))
+
+        assertNull(HlsMasterResolver.deriveMasterPlaylistUrl(""))
+        assertNull(HlsMasterResolver.deriveMasterPlaylistUrl("   "))
+    }
+
+    @Test
+    fun `isMasterPlaylistUrl and isLikelySubVariantUrl support encoded query strings and relative paths`() {
+        assertTrue(HlsMasterResolver.isMasterPlaylistUrl("hls/master.m3u8?auth=token%3D123%26sig%3Dabc"))
+        assertTrue(HlsMasterResolver.isMasterPlaylistUrl("index.m3u8"))
+        assertFalse(HlsMasterResolver.isMasterPlaylistUrl("stream01/chunklist.m3u8"))
+
+        assertTrue(HlsMasterResolver.isLikelySubVariantUrl("/audio/stream.m3u8?token=abc%20123"))
+        assertTrue(HlsMasterResolver.isLikelySubVariantUrl("tracks-a1.m3u8"))
+        assertFalse(HlsMasterResolver.isLikelySubVariantUrl("master.m3u8?token=abc%20123"))
+    }
 }
+

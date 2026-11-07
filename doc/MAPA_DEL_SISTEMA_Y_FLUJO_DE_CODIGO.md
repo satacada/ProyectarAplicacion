@@ -14,6 +14,7 @@ El proyecto está organizado como un monorepositorio Android Multi-Módulo bajo 
 proyectarAplicacion/
 ├── core/                               # NÚCLEO PURO COMPARTIDO (Kotlin JVM 17 Puro)
 │   ├── domain/                         # Entidades de dominio, modelos puros y puertos hexagonales
+│   │   ├── build.gradle.kts            # Plugin JaCoCo y tarea jacocoTestReport (cobertura XML y HTML)
 │   │   └── src/main/kotlin/com/omnicast/core/domain/
 │   │       ├── config/                 # Configuración Cloud centralizada: SupabaseCloudConfig
 │   │       ├── model/                  # MediaStream, StreamProfile, MediaBranch, DeviceTarget, etc.
@@ -101,10 +102,11 @@ proyectarAplicacion/
 
 ### 1. Núcleo Hexagonal (`:core:domain` y `:core:protocol`)
 - **Regla Fundamental:** Cero dependencias de Android framework o UI en `:core:domain`.
+- **Cobertura Cuantitativa con JaCoCo (`jacocoTestReport`):** Configurado en `core/domain/build.gradle.kts` con emisión de reportes XML y HTML. Blindaje de 32 tests unitarios en `:core:domain:test` y 12 tests en `:core:protocol:test` (100 tests base certificados en el Oráculo global con 0 fallos).
 - **`SupabaseCloudConfig.kt`:** Fuente única de verdad centralizada para la configuración de Supabase Cloud (`BASE_URL`, endpoints REST `omnicast_system_logs` y `omnicast_stream_rules`, y `ANON_KEY`) sin duplicación textual entre emisor y receptor.
 - **`DetectMediaStreamUseCase.kt`:** Orquesta la detección. Primero ejecuta el filtro de telemetría e higiene (`isTelemetryOrGarbage`) y luego consulta a los adaptadores registrados en `StreamExtractorRegistry`.
-- **`HlsMasterResolver.kt`:** Resolutor heurístico de variantes maestras HLS según RFC 8216. Descalifica playlists de segmentos mediante etiquetas de lista cerrada (`#EXT-X-ENDLIST`, `#EXT-X-MEDIA-SEQUENCE:`) y filtra patrones de pistas desacopladas de audio y subtítulos (`tracks-a`, `audio_`, `_audio`, `subtitles_`, `rendition`).
-- **`SignalingMessage.kt`:** Vocabulario común cliente-servidor serializado con Kotlinx Serialization:
+- **`HlsMasterResolver.kt`:** Resolutor heurístico de variantes maestras HLS según RFC 8216. Descalifica playlists de segmentos mediante etiquetas de lista cerrada (`#EXT-X-ENDLIST`, `#EXT-X-MEDIA-SEQUENCE:`), filtra patrones de pistas desacopladas de audio y subtítulos (`tracks-a`, `audio_`, `_audio`, `subtitles_`, `rendition`), deriva URLs con query parameters codificados y admite paths relativos.
+- **`SignalingMessage.kt`:** Vocabulario común cliente-servidor serializado con Kotlinx Serialization blindado ante claves JSON desconocidas (`ignoreUnknownKeys = true`), strings vacíos y extremos numéricos:
   - `Offer` / `Answer` / `IceCandidate`: Negociación WebRTC para duplicar pantalla.
   - `DirectStreamHandoff`: Entrega la URL de una película a la TV Box con su mapa de cabeceras (`Referer`, `User-Agent`), pistas de subtítulos y rama multimedia.
   - `PlayControl`: Comandos de reproducción (`PLAY`, `PAUSE`, `SEEK`, `STOP`, `SET_VOLUME`).

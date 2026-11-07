@@ -45,22 +45,25 @@ def api_request(url, method="GET", data=None, content_type="application/json"):
 def upload_asset(upload_url_template, file_path, content_type="application/octet-stream"):
     file_name = os.path.basename(file_path)
     clean_upload_url = upload_url_template.split("{")[0] + f"?name={file_name}"
-    print(f"📤 Subiendo asset: {file_name} ({os.path.getsize(file_path)} bytes)...", flush=True)
-    with open(file_path, "rb") as f:
-        file_bytes = f.read()
+    file_size = os.path.getsize(file_path)
+    print(f"📤 Subiendo asset con requests: {file_name} ({file_size} bytes)...", flush=True)
     headers = {
         "Authorization": f"token {GITHUB_TOKEN}",
         "Accept": "application/vnd.github.v3+json",
         "Content-Type": content_type,
         "User-Agent": "OmniCast-Release-Script"
     }
-    req = urllib.request.Request(clean_upload_url, data=file_bytes, headers=headers, method="POST")
-    try:
-        with urllib.request.urlopen(req) as resp:
-            print(f"✅ Asset subido con éxito: {file_name}", flush=True)
-            return json.loads(resp.read().decode("utf-8"))
-    except urllib.error.HTTPError as e:
-        print(f"❌ Error subiendo {file_name}: {e.read().decode('utf-8')}", flush=True)
+    import requests
+    with open(file_path, "rb") as f:
+        resp = requests.post(clean_upload_url, headers=headers, data=f, timeout=300)
+    if resp.status_code in (200, 201):
+        print(f"✅ Asset subido con éxito: {file_name}", flush=True)
+        try:
+            return resp.json()
+        except Exception:
+            return {}
+    else:
+        print(f"❌ Error subiendo {file_name}: HTTP {resp.status_code} - {resp.text}", flush=True)
         return None
 
 def main():

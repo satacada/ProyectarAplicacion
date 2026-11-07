@@ -99,4 +99,75 @@ class TvStorageSafetyManagerTest {
         assertEquals(0, capped3)
         assertNull(warn3)
     }
+
+    @Test
+    fun testTvPvrRecordingFileDataClass() {
+        val file = TvPvrRecordingFile(
+            name = "partido_final.ts",
+            path = "/storage/emulated/0/Download/PVR_Grabaciones/partido_final.ts",
+            sizeBytes = 1024L * 1024L * 500L,
+            formattedSize = "500 MB",
+            lastModified = 1700000000000L,
+            isUsb = false
+        )
+        assertEquals("partido_final.ts", file.name)
+        assertEquals("/storage/emulated/0/Download/PVR_Grabaciones/partido_final.ts", file.path)
+        assertEquals(500L * 1024L * 1024L, file.sizeBytes)
+        assertEquals("500 MB", file.formattedSize)
+        assertEquals(1700000000000L, file.lastModified)
+        assertFalse(file.isUsb)
+    }
+
+    @Test
+    fun testScanDirectoryForRecordingsFiltersZeroBytesAndNonMedia() {
+        val tempDir = java.nio.file.Files.createTempDirectory("pvr_test").toFile()
+        try {
+            // 1. Archivos válidos > 0 bytes (.ts y .mp4)
+            java.io.File(tempDir, "rec_20261107_120000.ts").apply {
+                writeBytes(ByteArray(1024) { 0x47 })
+                setLastModified(1000L)
+            }
+            java.io.File(tempDir, "pelicula_cine.mp4").apply {
+                writeBytes(ByteArray(2048) { 1 })
+                setLastModified(2000L)
+            }
+
+            // 2. Archivos vacíos (0 bytes) que deben ser descartados
+            java.io.File(tempDir, "grabacion_vacia.ts").createNewFile()
+            java.io.File(tempDir, "corrupto.mp4").createNewFile()
+
+            // 3. Extensiones no válidas que deben ignorarse
+            java.io.File(tempDir, "notes.txt").writeText("informacion")
+            java.io.File(tempDir, "video.mkv").writeBytes(ByteArray(512))
+
+            val scanned = TvStorageSafetyManager.scanDirectoryForRecordings(tempDir, isUsb = true)
+
+            // Deben detectarse únicamente los 2 archivos válidos
+            assertEquals(2, scanned.size)
+
+            // Orden descendente por lastModified: validMp4 (2000L) primero, luego validTs (1000L)
+            assertEquals("pelicula_cine.mp4", scanned[0].name)
+            assertEquals(2048L, scanned[0].sizeBytes)
+            assertTrue(scanned[0].isUsb)
+            assertEquals(2000L, scanned[0].lastModified)
+
+            assertEquals("rec_20261107_120000.ts", scanned[1].name)
+            assertEquals(1024L, scanned[1].sizeBytes)
+            assertTrue(scanned[1].isUsb)
+            assertEquals(1000L, scanned[1].lastModified)
+
+            // Verificar que no contenga archivos de 0 bytes ni extensiones descartadas
+            assertFalse(scanned.any { it.sizeBytes == 0L })
+            assertFalse(scanned.any { it.name.endsWith(".txt") || it.name.endsWith(".mkv") })
+        } finally {
+            tempDir.deleteRecursively()
+        }
+    }
+
+    @Test
+    fun testScanDirectoryNonExistentReturnsEmpty() {
+        val nonExistent = java.io.File("/tmp/non_existent_pvr_dir_${System.currentTimeMillis()}")
+        val results = TvStorageSafetyManager.scanDirectoryForRecordings(nonExistent, isUsb = false)
+        assertTrue(results.isEmpty())
+    }
 }

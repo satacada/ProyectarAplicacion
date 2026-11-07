@@ -118,14 +118,14 @@ Actividades acotadas de Cirugía Mínima para resolver la deuda técnica detecta
 
 ---
 
-## 📼 FASE 3 — Evolución del Motor PVR y Biblioteca de Grabaciones en TV (`[ ]`)
+## 📼 FASE 3 — Evolución del Motor PVR y Biblioteca de Grabaciones en TV (`[ ]` — 1 / 2 completadas — 50%)
 
-- `[ ]` **Actividad 3.1 `[auto]` — Gestión de Biblioteca Local/USB de Grabaciones PVR en Android TV (`app-receiver/src/main/kotlin/com/omnicast/receiver/directstream/TvStorageSafetyManager.kt`, `app-receiver/src/main/kotlin/com/omnicast/receiver/ui/components/TvPvrLibrarySummaryBar.kt`, `app-receiver/src/test/kotlin/com/omnicast/receiver/directstream/TvStorageSafetyManagerTest.kt`):**
+- `[x]` **Actividad 3.1 `[auto]` — Gestión de Biblioteca Local/USB de Grabaciones PVR en Android TV (`app-receiver/src/main/kotlin/com/omnicast/receiver/directstream/TvStorageSafetyManager.kt`, `app-receiver/src/main/kotlin/com/omnicast/receiver/ui/components/TvPvrLibrarySummaryBar.kt`, `app-receiver/src/test/kotlin/com/omnicast/receiver/directstream/TvStorageSafetyManagerTest.kt`):**
   - **Objetivo:** Permitir explorar, reproducir y administrar las grabaciones `.ts`/`.mp4` almacenadas en `/Download/PVR_Grabaciones` y `Pelis_descargas` (memoria interna o USB) desde la interfaz de TV respetando el límite `< 300` líneas y la reserva sagrada de `TvStorageSafetyManager.kt`.
   - **Archivos Objetivo Exactos:**
-    - `app-receiver/src/main/kotlin/com/omnicast/receiver/directstream/TvStorageSafetyManager.kt`
-    - `app-receiver/src/main/kotlin/com/omnicast/receiver/ui/components/TvPvrLibrarySummaryBar.kt` (nuevo composable modular `< 250` líneas)
-    - `app-receiver/src/test/kotlin/com/omnicast/receiver/directstream/TvStorageSafetyManagerTest.kt`
+    - `app-receiver/src/main/kotlin/com/omnicast/receiver/directstream/TvStorageSafetyManager.kt` (ampliado con `scanPvrRecordings`, `scanDirectoryForRecordings` y modelo `TvPvrRecordingFile`: 274 líneas)
+    - `app-receiver/src/main/kotlin/com/omnicast/receiver/ui/components/TvPvrLibrarySummaryBar.kt` (nuevo composable modular: 161 líneas)
+    - `app-receiver/src/test/kotlin/com/omnicast/receiver/directstream/TvStorageSafetyManagerTest.kt` (8 tests unitarios de escaneo, reserva y cálculo de bitrate)
   - **Agentes Involucrados:** `planner-architect` (`Argon`) ➔ `specialist-tv-player-pvr` (`flash`) ➔ `surgical-developer` (`flash`) ➔ `qa-oracle-tester` (`flash`) ➔ `sync-documenter` (`flash`) ➔ `git-ota-releaser` (`flash_lite`).
 
 - `[ ]` **Actividad 3.2 `[ver]` — Reanudación Inteligente y Telemetría Enriquecida de Descargas VOD/PVR (`core/protocol/src/main/kotlin/com/omnicast/core/protocol/SignalingMessage.kt`, `app-receiver/src/main/kotlin/com/omnicast/receiver/directstream/PvrStreamRecorder.kt`, `app-receiver/src/main/kotlin/com/omnicast/receiver/directstream/TvWebPvrBridge.kt`):**

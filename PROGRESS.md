@@ -2,8 +2,8 @@
 
 > **Versión Actual en Producción:** `v3.6.08` (`versionCodeSender: 359` | `versionCodeReceiver: 342`)  
 > **Última Sincronización Agéntica:** `2026-11-06`  
-> **Estado del Oráculo de Pruebas:** 🟢 **84 / 84 Tests Unitarios Passing (100% — 0 fallos)**  
-> **Próxima Actividad en Cola:** `Actividad 3.1 [auto] — Gestión de Biblioteca Local/USB de Grabaciones PVR en TV`
+> **Estado del Oráculo de Pruebas:** 🟢 **117 Tests Passing (100% — 0 fallos)**  
+> **Próxima Actividad en Cola:** `Actividad 3.2 [ver] — Reanudación Inteligente y Telemetría Enriquecida de Grabaciones VOD/PVR`
 
 ---
 
@@ -14,19 +14,19 @@
 | **Fase 0** | Base Heredada e Inmutable (20 HUs + 4 Pilares + Motor PVR `v3.6.08`) | `[x]` Sellada | **4 / 4 (100%)** |
 | **Fase 1** | Saneamiento y Reestructuración Quirúrgica (`< 300` líneas y limpieza) | `[x]` Completada | **4 / 4 (100%)** |
 | **Fase 2** | Evolución de Resiliencia CDN Anti-Scrape y Gobernanza Cloud | `[x]` Completada | **2 / 2 (100%)** |
-| **Fase 3** | Evolución del Motor PVR y Biblioteca de Grabaciones en TV | `[ ]` Pendiente | **0 / 2 (0%)** |
+| **Fase 3** | Evolución del Motor PVR y Biblioteca de Grabaciones en TV | `[ ]` En progreso | **1 / 2 (50%)** |
 | **Fase 4** | Cobertura Cuantitativa de Tests y Telemetría Proactiva | `[ ]` Pendiente | **0 / 1 (0%)** |
 
 ---
 
-## 2. Semáforo de Salud del Oráculo Unitario (84 Tests)
+## 2. Semáforo de Salud del Oráculo Unitario (117 Tests Passing)
 
 | Módulo Gradle | Comando de Verificación | Tests | Estado |
 | :--- | :--- | :---: | :---: |
 | **`:core:domain`** | `./gradlew :core:domain:test` | 28 | 🟢 100% Passing (0 fallos) |
 | **`:core:protocol`** | `./gradlew :core:protocol:test` | 7 | 🟢 100% Passing (0 fallos) |
 | **`:app-sender`** | `./gradlew :app-sender:testDebugUnitTest` | 33 | 🟢 100% Passing (0 fallos) |
-| **`:app-receiver`** | `./gradlew :app-receiver:testDebugUnitTest` | 16 | 🟢 100% Passing (0 fallos) |
+| **`:app-receiver`** | `./gradlew :app-receiver:testDebugUnitTest` | 19 | 🟢 100% Passing (0 fallos) |
 
 ---
 
@@ -59,6 +59,14 @@
 ---
 
 ## 4. Historial de Sesiones Multi-Agente
+
+### `[2026-11-06]` — Motor PVR 3.1 (Gestión de biblioteca local/USB de grabaciones PVR en Android TV y barra de resumen modular TvPvrLibrarySummaryBar)
+- **Acción:**
+  - **Actividad 3.1:** Ampliación no-invasiva de `TvStorageSafetyManager.kt` (274L) incorporando escaneo heurístico y seguro de grabaciones PVR/VOD (`scanPvrRecordings`, `scanDirectoryForRecordings`) en almacenamiento interno (`Download/PVR_Grabaciones`, `Pelis_descargas`, `Movies/PVR`) y unidades extraíbles USB, mapeando a objetos inmutables `TvPvrRecordingFile`.
+  - Creación del componente composable modular `TvPvrLibrarySummaryBar.kt` (161L) en `com.omnicast.receiver.ui.components` para Android TV, reflejando conteo de grabaciones, tamaño total formateado, espacio útil con indicador de reserva sagrada (2.0 GB TV / 500 MB USB), tiempo disponible estimado a 1080p y estado de disco activo.
+  - Expansión de suite de pruebas unitarias en `TvStorageSafetyManagerTest.kt` (8 tests passing) verificando discriminación por extensión (.ts/.mp4), exclusión de archivos 0 bytes, orden descendente por fecha y detección de unidades USB.
+- **Salud del Oráculo:** 117 tests passing (100% — 0 fallos). Cero archivos Kotlin > 300 líneas.
+- **Siguiente paso:** Iniciar **Actividad 3.2 `[ver]` — Reanudación Inteligente y Telemetría Enriquecida de Grabaciones VOD/PVR**.
 
 ### `[2026-11-06]` — Evolución CDN 2.2 (Refuerzo Heurístico HLS/DASH y Centinela Anti-Honeypot en CdnHoneypotSentinel)
 - **Acción:**

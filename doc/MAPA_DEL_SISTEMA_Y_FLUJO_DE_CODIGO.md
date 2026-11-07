@@ -63,12 +63,13 @@ proyectarAplicacion/
 │           │   ├── PvrStreamRecorder.kt # Grabador PVR con Ring Buffer en RAM y bloques de 128 KB
 │           │   ├── PvrHlsMasterParser.kt # Resolutor de variantes HLS (.ts) y fMP4 (#EXT-X-MAP:URI="init.mp4")
 │           │   ├── TvWebPvrBridge.kt   # Puente Hexagonal PVR para Variante 1 (DropCDN/Fastream vía Chromium BoringSSL)
-│           │   └── TvStorageSafetyManager.kt # Guardián anti-brick (reserva sagrada 2.0 GB TV / 500 MB USB y purga 0 bytes)
+│           │   └── TvStorageSafetyManager.kt # Guardián anti-brick (reserva 2.0GB TV / 500MB USB, escaneo seguro de grabaciones y TvPvrRecordingFile)
 │           ├── discovery/              # NsdAdvertiserManager (anuncio mDNS _omnicast._tcp)
 │           ├── server/                 # LocalSignalingServer (WebSocket :8088) y ReceiverLogger (:8087/logs + Supabase)
 │           ├── ui/
 │           │   ├── components/         # Pantallas Compose TV y reproductores especializados:
 │           │   │   ├── TvStandbyCleanScreen.kt # Pantalla de reposo limpia con IP, QR y estado WiFi
+│           │   │   ├── TvPvrLibrarySummaryBar.kt # Barra de resumen de biblioteca PVR, espacio útil y reserva sagrada
 │           │   │   ├── TvDirectStreamScreen.kt # Vista contenedora de ExoPlayer con controles de foco y PVR
 │           │   │   ├── TvWebStreamScreen.kt # Reproductor Chromium HTML5 + Hls.js con control D-Pad y TvWebPvrBridge
 │           │   │   ├── TvWebResourceInterceptor.kt # Interceptor nativo Anti-CORS (Access-Control-Allow-Origin: *)
@@ -119,6 +120,8 @@ proyectarAplicacion/
 - **Centinela Anti-Honeypot (`CdnHoneypotSentinel.kt`):** Satélite modular desacoplado en TV Box ("Poner y Sacar"). Intercepta y descarta en 0 ms respuestas de CDN que devuelven HTML (páginas de error, dominios en parking o retos de Cloudflare) simulando extensiones `.m3u8`, `.ts`, `.mp4` o `.mpd` mediante inspección de payload en memoria, protegiendo a `Hls.js` y `ExoPlayer` de errores de parseo (`manifestParsingError code=200`).
 - **Reproductor de Hardware (`ExoPlayerTvManager.kt`):** Acelerado por hardware para flujos MP4 directos, IPTV y DASH (`.mpd` de OK.ru con VP9 y Opus).
 - **Reproductor Web Híbrido (`TvWebStreamScreen.kt` + `TvWebResourceInterceptor.kt`):** Ejecuta Chromium con `Hls.js` para CDNs protegidas (DropCDN de PelisPlus, Fastream). Descarga fragmentos inyectando `Access-Control-Allow-Origin: *` y conservando las cabeceras exactas de navegación.
+- **Guardián Anti-Brick y Escaneo PVR (`TvStorageSafetyManager.kt`):** Protege la reserva sagrada (2.0 GB TV / 500 MB USB), purga archivos vacíos de 0 bytes y escanea heurísticamente grabaciones `.ts`/`.mp4` en memoria interna (`PVR_Grabaciones`, `Pelis_descargas`) y unidades extraíbles USB mapeando a `TvPvrRecordingFile`.
+- **Barra de Resumen de Biblioteca PVR (`TvPvrLibrarySummaryBar.kt`):** Composable modular de UI que presenta métricas de grabaciones, tamaño acumulado, espacio útil y tiempo de grabación remanente a 1080p.
 - **Telemetría en Vivo (`:8087/logs`):** Servidor HTTP local para diagnosticar fallos en la TV Box con timestamps en milisegundos.
 
 ---
@@ -137,6 +140,7 @@ proyectarAplicacion/
 | **Selector y Permisos de Galería** | [GalleryPickerActivity.kt](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/app-sender/src/main/kotlin/com/omnicast/sender/overlay/GalleryPickerActivity.kt) & [GalleryPermissionHelper.kt](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/app-sender/src/main/kotlin/com/omnicast/sender/overlay/GalleryPermissionHelper.kt) | `:app-sender` | Explorador y selector de fotos/videos locales con resolución desacoplada de permisos de almacenamiento/cámara y URIs. |
 | **Reproductor Local y Controles de Video** | [VideoCastPlayerActivity.kt](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/app-sender/src/main/kotlin/com/omnicast/sender/overlay/VideoCastPlayerActivity.kt) & [VideoCastPlayerControls.kt](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/app-sender/src/main/kotlin/com/omnicast/sender/overlay/VideoCastPlayerControls.kt) | `:app-sender` | Reproductor local sincronizado con controles táctiles delegados (Play/Pausa, Seekbar, saltos ±10s) al transmitir video local a la TV. |
 | **Pantalla de Reposo TV** | [TvStandbyCleanScreen.kt](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/app-receiver/src/main/kotlin/com/omnicast/receiver/ui/components/TvStandbyCleanScreen.kt) | `:app-receiver` | Pantalla limpia de espera en la TV Box mostrando la dirección IP de conexión (`192.168.0.x`), código PIN y estado del WiFi. |
+| **Barra Resumen Biblioteca PVR TV** | [TvPvrLibrarySummaryBar.kt](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/app-receiver/src/main/kotlin/com/omnicast/receiver/ui/components/TvPvrLibrarySummaryBar.kt) | `:app-receiver` | Composable modular para Android TV que expone conteo de grabaciones, tamaño total formateado, espacio útil con reserva sagrada (2.0 GB TV / 500 MB USB) y tiempo disponible a 1080p. |
 | **Reproductor Web TV (HTML5)** | [TvWebStreamScreen.kt](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/app-receiver/src/main/kotlin/com/omnicast/receiver/ui/components/TvWebStreamScreen.kt) | `:app-receiver` | WebView en Android TV con Hls.js oficial, `baseUrl` fijado al Referer canónico y User-Agent móvil para CDNs con tokens estrictos. |
 | **Interceptor Anti-CORS TV** | [TvWebResourceInterceptor.kt](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/app-receiver/src/main/kotlin/com/omnicast/receiver/ui/components/TvWebResourceInterceptor.kt) | `:app-receiver` | Intercepta descargas de `.m3u8` y `.ts` en la TV, inyectando `Access-Control-Allow-Origin: *` y respondiendo preflights OPTIONS en 0ms. |
 | **Reproductor Hardware TV** | [TvDirectStreamScreen.kt](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/app-receiver/src/main/kotlin/com/omnicast/receiver/ui/components/TvDirectStreamScreen.kt) | `:app-receiver` | Lienzo de Compose que aloja `ExoPlayerTvManager` para decodificar MP4 y DASH a 60 fps sin carga de CPU. |

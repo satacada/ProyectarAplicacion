@@ -13,16 +13,14 @@ import java.io.File
 import java.util.Locale
 
 data class TvStorageUnit(
-    val id: String,
-    val name: String,
-    val rootPath: String,
-    val isUsb: Boolean,
-    val totalBytes: Long,
-    val freeBytes: Long,
-    val reserveBytes: Long,
-    val usableBytes: Long,
-    val canRecord: Boolean,
-    val warningMessage: String? = null
+    val id: String, val name: String, val rootPath: String, val isUsb: Boolean,
+    val totalBytes: Long, val freeBytes: Long, val reserveBytes: Long,
+    val usableBytes: Long, val canRecord: Boolean, val warningMessage: String? = null
+)
+
+data class TvPvrRecordingFile(
+    val name: String, val path: String, val sizeBytes: Long,
+    val formattedSize: String, val lastModified: Long, val isUsb: Boolean
 )
 
 enum class VideoBitratePreset(val label: String, val mbPerMin: Double, val kbps: Int) {
@@ -187,6 +185,54 @@ object TvStorageSafetyManager {
             if (f.exists() || f.mkdirs()) return f
         }
         return getPvrRecordingsDir(context, useUsb, defaultFolder)
+    }
+
+    fun scanPvrRecordings(context: Context): List<TvPvrRecordingFile> {
+        val results = mutableListOf<TvPvrRecordingFile>()
+        val scanned = mutableSetOf<String>()
+        val subDirs = listOf("PVR_Grabaciones", "Pelis_descargas", "Movies/PVR")
+
+        // 1. Almacenamiento Interno
+        runCatching {
+            val pubDown = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+            val pubMov = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES)
+            val appExt = context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS) ?: context.filesDir
+            listOf(pubDown, pubMov, appExt).forEach { root ->
+                subDirs.forEach { sub ->
+                    val dir = File(root, sub)
+                    if (scanned.add(dir.absolutePath)) results.addAll(scanDirectoryForRecordings(dir, false))
+                }
+            }
+            val movPvr = File(pubMov, "PVR")
+            if (scanned.add(movPvr.absolutePath)) results.addAll(scanDirectoryForRecordings(movPvr, false))
+        }
+
+        // 2. Unidades USB detectadas
+        runCatching {
+            detectAvailableStorageUnits(context).filter { it.isUsb }.forEach { unit ->
+                val uRoot = File(unit.rootPath)
+                val uParent = File(unit.rootPath.substringBefore("/Android"))
+                listOf(uRoot, uParent).forEach { root ->
+                    subDirs.forEach { sub ->
+                        val dir = File(root, sub)
+                        if (scanned.add(dir.absolutePath)) results.addAll(scanDirectoryForRecordings(dir, true))
+                        val dlDir = File(root, "Download/$sub")
+                        if (scanned.add(dlDir.absolutePath)) results.addAll(scanDirectoryForRecordings(dlDir, true))
+                    }
+                }
+            }
+        }
+        return results.sortedByDescending { it.lastModified }
+    }
+
+    fun scanDirectoryForRecordings(dir: File, isUsb: Boolean): List<TvPvrRecordingFile> {
+        if (!dir.exists() || !dir.isDirectory) return emptyList()
+        return (dir.listFiles() ?: emptyArray())
+            .filter { it.isFile && it.length() > 0L && (it.extension.equals("ts", true) || it.extension.equals("mp4", true)) }
+            .map { f ->
+                TvPvrRecordingFile(f.name, f.absolutePath, f.length(), formatBytes(f.length()), f.lastModified(), isUsb)
+            }
+            .sortedByDescending { it.lastModified }
     }
 
     fun startWatchdog(

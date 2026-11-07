@@ -1,12 +1,12 @@
 {
-  "versionName": "3.6.14",
-  "versionCodeSender": 365,
-  "versionCodeReceiver": 348,
-  "releaseTag": "v3.6.14",
-  "senderApk": "omnicast-sender-v3.6.14.apk",
-  "receiverApk": "omnicast-receiver-v3.6.14.apk",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.6.14/omnicast-sender-v3.6.14.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.6.14/omnicast-receiver-v3.6.14.apk",
-  "releaseNotes": "v3.6.14: Reanudacion inteligente VOD/PVR con PvrResumeMetadataStore, telemetria enriquecida y cierre 100% de Fase 3",
-  "changelog": "v3.6.14: Reanudacion inteligente VOD/PVR con PvrResumeMetadataStore, telemetria enriquecida y cierre 100% de Fase 3"
+  "versionName": "3.6.15",
+  "versionCodeSender": 366,
+  "versionCodeReceiver": 349,
+  "releaseTag": "v3.6.15",
+  "senderApk": "omnicast-sender-v3.6.15.apk",
+  "receiverApk": "omnicast-receiver-v3.6.15.apk",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.6.15/omnicast-sender-v3.6.15.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.6.15/omnicast-receiver-v3.6.15.apk",
+  "releaseNotes": "v3.6.15: Cobertura JaCoCo en :core:domain, ampliacion del Oraculo a 100 tests y cierre definitivo del Roadmap Maestro v4.4 (100%)",
+  "changelog": "v3.6.15: Cobertura JaCoCo en :core:domain, ampliacion del Oraculo a 100 tests y cierre definitivo del Roadmap Maestro v4.4 (100%)"
 }

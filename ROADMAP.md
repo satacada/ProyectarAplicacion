@@ -2,17 +2,26 @@
 
 > **Versión Base de Rescate:** `v3.7.0` (`versionCodeSender: 368` | `versionCodeReceiver: 351`)  
 > **Política Operativa `v4.4`:** Micro-comandos `[auto]` y `[ver]` orquestados por el Planificador (`Argon`) invocando subagentes aislados (`flash` / `flash_lite`) | **Prohibido disparar Explorador Forense en tareas mapeadas** (todas las rutas están en este archivo y en [`doc/MAPA_DEL_SISTEMA_Y_FLUJO_DE_CODIGO.md`](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/MAPA_DEL_SISTEMA_Y_FLUJO_DE_CODIGO.md)).  
-> **Estado Global:** 🎉 **Hito 7.1 [CH-07] completado al 100% (Auto-Detección Preferencial USB y Purga de Huérfanos en Android TV — 95 Tests Passing — 0 Archivos Kotlin > 300L)**
+> **Estado Global:** 🎉 **FASE 7 COMPLETADA AL 100% (Hitos 7.1 y 7.2 — PVR Inteligente, Auto-Detección USB y Modo Touchpad / Puntero Virtual en Android TV — 95 Tests Passing — 0 Archivos Kotlin > 300L)**
 
 ---
 
-## 💾 FASE 7 — PVR Inteligente y Control Remoto Touchpad (`[~]` — 1 / 2 completados)
+## 💾 FASE 7 — PVR Inteligente y Control Remoto Touchpad (`[x]` — 2 / 2 completados — 100%)
 
 - `[x]` **Hito 7.1 [CH-07] — Auto-Detección Preferencial USB y Purga de Huérfanos en Android TV (`app-receiver/src/main/kotlin/com/omnicast/receiver/directstream/TvStorageSafetyManager.kt`, `app-receiver/src/main/kotlin/com/omnicast/receiver/directstream/PvrStreamRecorder.kt`):**
   - **Objetivo:** Detectar automáticamente memorias USB conectadas con espacio holgado (`>= 1.5 GB`), aplicar la constante `SAFE_RESERVE_USB_BYTES` (500 MB) y purgar en segundo plano archivos temporales huérfanos (`.tmp`, `.part`, 0-byte) con más de 3 minutos de antigüedad, garantizando descargas y grabaciones PVR estables sin desbordar el almacenamiento de la TV Box.
   - **Archivos Objetivo Exactos:**
     - `app-receiver/src/main/kotlin/com/omnicast/receiver/directstream/TvStorageSafetyManager.kt` (290 líneas)
     - `app-receiver/src/main/kotlin/com/omnicast/receiver/directstream/PvrStreamRecorder.kt` (260 líneas)
+  - **Agentes Involucrados:** `planner-architect` (`Argon`) ➔ `specialist-tv-player-pvr` (`flash`) ➔ `surgical-developer` (`flash`) ➔ `qa-oracle-tester` (`flash`) ➔ `sync-documenter` (`flash`) ➔ `git-ota-releaser` (`flash_lite`).
+
+- `[x]` **Hito 7.2 [CH-08] — Modo Touchpad / Puntero Virtual en TV vía WebRTC/WebSocket (`core/protocol/src/main/kotlin/com/omnicast/core/protocol/SignalingMessage.kt`, `app-receiver/src/main/kotlin/com/omnicast/receiver/ui/components/TvVirtualPointerOverlay.kt`, `app-receiver/src/main/kotlin/com/omnicast/receiver/ui/components/TvGlobalRecordOverlay.kt`, `app-receiver/src/main/kotlin/com/omnicast/receiver/ui/TvReceiverActivity.kt`):**
+  - **Objetivo:** Implementar control remoto tipo touchpad y puntero virtual interactivo en la pantalla del Android TV mediante señalización WebRTC/WebSocket, permitiendo navegación precisa y feedback visual de clics.
+  - **Archivos Objetivo Exactos:**
+    - `core/protocol/src/main/kotlin/com/omnicast/core/protocol/SignalingMessage.kt` (ampliado con `PointerControl`: 169 líneas)
+    - `app-receiver/src/main/kotlin/com/omnicast/receiver/ui/components/TvVirtualPointerOverlay.kt` (nuevo HUD composable de puntero virtual: 93 líneas)
+    - `app-receiver/src/main/kotlin/com/omnicast/receiver/ui/components/TvGlobalRecordOverlay.kt` (inyección global no invasiva: 60 líneas)
+    - `app-receiver/src/main/kotlin/com/omnicast/receiver/ui/TvReceiverActivity.kt` (recepción síncrona de comandos de puntero: 296 líneas, estrictamente `< 300` líneas)
   - **Agentes Involucrados:** `planner-architect` (`Argon`) ➔ `specialist-tv-player-pvr` (`flash`) ➔ `surgical-developer` (`flash`) ➔ `qa-oracle-tester` (`flash`) ➔ `sync-documenter` (`flash`) ➔ `git-ota-releaser` (`flash_lite`).
 
 ---

@@ -12,7 +12,7 @@
 
 | Hito / Fase | Nombre del Hito / Fase | Estado | Progreso |
 | :--- | :--- | :---: | :---: |
-| **Hito 7.1 [CH-07]** | Auto-Detección Preferencial USB y Purga de Huérfanos en Android TV | `[x]` Completado | **100%** |
+| **Hito 7.2 [CH-08]** | Modo Touchpad / Puntero Virtual en TV vía WebRTC/WebSocket | `[x]` Completado | **100%** |
 | :--- | :--- | :---: | :---: |
 | **Fase 0** | Base Heredada e Inmutable (20 HUs + 4 Pilares + Motor PVR `v3.6.08`) | `[x]` Sellada | **4 / 4 (100%)** |
 | **Fase 1** | Saneamiento y Reestructuración Quirúrgica (`< 300` líneas y limpieza) | `[x]` Completada | **4 / 4 (100%)** |
@@ -21,7 +21,7 @@
 | **Fase 4** | Cobertura Cuantitativa de Tests y Telemetría Proactiva | `[x]` Completada | **1 / 1 (100%)** |
 | **Fase 5** | Modernización, Eficiencia y Rendimiento Profesional | `[x]` Completada | **4 / 4 (100%)** |
 | **Fase 6** | Telemetría OSD en Tiempo Real y Experiencia de Control Remoto | `[x]` Completada | **2 / 2 (100%)** |
-| **Fase 7** | PVR Inteligente y Control Remoto Touchpad | `[~]` En Curso | **1 / 2 (Hito 7.1 Completado)** |
+| **Fase 7** | PVR Inteligente y Control Remoto Touchpad | `[x]` Completada | **2 / 2 (100%)** |
 
 ---
 
@@ -62,6 +62,15 @@
 ---
 
 ## 4. Historial de Sesiones Multi-Agente
+
+### `[2026-11-11]` — Hito 7.2 [CH-08] — Modo Touchpad / Puntero Virtual en TV vía WebRTC/WebSocket
+- **Acción:**
+  - **Mensaje serializable `PointerControl` en `SignalingMessage.kt` (169L).**
+  - **Componente composable `TvVirtualPointerOverlay.kt` (93L):** Puntero virtual con posicionamiento mediante `IntOffset` en layout, feedback visual de escala y cambio de color ante eventos de clic, e integración de temporizador de auto-ocultación a los 4s.
+  - **Inyección global y recepción síncrona:** Inyección en `TvGlobalRecordOverlay.kt` (60L) y procesamiento síncrono en `TvReceiverActivity.kt` (296L).
+- **Verificación:** 95/95 tests pasando (0 fallos, 0 regresiones), 0 archivos Kotlin > 300 líneas.
+- **Salud del Oráculo:** 🟢 95 tests passing (100% — 0 fallos).
+- **Siguiente paso:** 🎉 **FASE 7 COMPLETADA AL 100% (Hitos 7.1 y 7.2)**.
 
 ### `[2026-11-11]` — Hito 7.1 [CH-07] — Auto-Detección Preferencial USB y Purga de Huérfanos en Android TV
 - **Acción:**

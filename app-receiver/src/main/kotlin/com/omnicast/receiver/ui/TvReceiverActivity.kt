@@ -196,9 +196,7 @@ class TvReceiverActivity : ComponentActivity() {
                     val exp = expiredItemForRenew.value
                     if (exp != null) { playlistManager.replaceExpiredUrl(exp.url, message.mediaUrl, message.headers); expiredItemForRenew.value = null }
                     else playlistManager.replaceExpiredUrl(message.mediaUrl, message.mediaUrl, message.headers)
-                    if (!message.mediaUrl.contains(":8089")) {
-                        lifecycleScope.launch { historyManager.addOrUpdate(message.mediaUrl, title, message.headers, message.startPositionMs) }
-                    }
+                    if (!message.mediaUrl.contains(":8089")) lifecycleScope.launch { historyManager.addOrUpdate(message.mediaUrl, title, message.headers, message.startPositionMs) }
                     val ytId = message.headers["X-YouTube-Id"] ?: TvReceiverHelper.extractYouTubeId(message.mediaUrl)
                     if (!ytId.isNullOrBlank()) {
                         exoPlayerManager.stop(); receiverState.value = ReceiverUiState.YouTubePlaying(ytId, title, System.currentTimeMillis())
@@ -218,9 +216,7 @@ class TvReceiverActivity : ComponentActivity() {
                 }
             }
             is SignalingMessage.PlayControl -> {
-                if (receiverState.value is ReceiverUiState.YouTubePlaying || receiverState.value is ReceiverUiState.WebStreamPlaying) {
-                    youTubeControlFlow.tryEmit(message)
-                }
+                if (receiverState.value is ReceiverUiState.YouTubePlaying || receiverState.value is ReceiverUiState.WebStreamPlaying) youTubeControlFlow.tryEmit(message)
                 when (message.action) {
                     "PLAY" -> { if (message.positionMs > 0L && !exoPlayerManager.isNearEnd()) exoPlayerManager.seekTo(message.positionMs); exoPlayerManager.resume() }
                     "PAUSE" -> exoPlayerManager.pause()
@@ -233,6 +229,7 @@ class TvReceiverActivity : ComponentActivity() {
                     "ROTATE" -> (receiverState.value as? ReceiverUiState.ImageDisplaying)?.let { receiverState.value = it.copy(rotation = (it.rotation + 90f) % 360f) }
                 }
             }
+            is SignalingMessage.PointerControl -> TvVirtualPointerManager.updatePointer(message.xPct, message.yPct, message.isClick, message.isDown, message.isVisible, lifecycleScope)
             is SignalingMessage.ImageTransform -> (receiverState.value as? ReceiverUiState.ImageDisplaying)?.let { receiverState.value = it.copy(scale = message.scale, panX = message.panX, panY = message.panY, rotation = message.rotation) }
             is SignalingMessage.SetDisplayMode -> { currentDisplayMode.value = message; webRtcReceiver.setDisplayMode(message.mode, message.zoom, message.panY, message.panX, message.isLandscape); exoPlayerManager.setDisplayMode(message.mode, message.zoom, message.panY, message.panX) }
             is SignalingMessage.ShowImage -> { digitalAudioReceiver?.stop(); exoPlayerManager.stop("Casteo Foto"); webRtcReceiver.resetConnection(); receiverState.value = ReceiverUiState.ImageDisplaying(message.imageUrl, message.title ?: "Foto de Galería") }

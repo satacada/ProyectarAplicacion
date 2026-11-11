@@ -19,6 +19,7 @@ import com.omnicast.receiver.directstream.TvRecordTimerManager
 @Composable
 fun BoxScope.TvGlobalRecordOverlay(isStandby: Boolean) {
     TvTelemetryOverlay()
+    TvVirtualPointerOverlay()
 
     if (!isStandby) return
 

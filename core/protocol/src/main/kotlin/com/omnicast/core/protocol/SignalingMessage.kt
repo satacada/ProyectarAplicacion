@@ -156,4 +156,14 @@ sealed class SignalingMessage {
         val isResumable: Boolean = false,
         val errorNotice: String? = null
     ) : SignalingMessage()
+
+    @Serializable
+    @SerialName("POINTER_CONTROL")
+    data class PointerControl(
+        val xPct: Float,
+        val yPct: Float,
+        val isClick: Boolean = false,
+        val isDown: Boolean = false,
+        val isVisible: Boolean = true
+    ) : SignalingMessage()
 }

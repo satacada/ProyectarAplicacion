@@ -112,9 +112,29 @@ object TvRemoteKeyHandler {
 
                 if (!exoPlayerManager.isControlsShowing) {
                     when (keyCode) {
-                        KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER,
-                        KeyEvent.KEYCODE_DPAD_DOWN, KeyEvent.KEYCODE_DPAD_UP,
-                        KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.KEYCODE_DPAD_RIGHT -> {
+                        KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER -> {
+                            if (exoPlayerManager.isPlaying) exoPlayerManager.pause() else exoPlayerManager.resume()
+                            exoPlayerManager.isControlsShowing = true
+                            exoPlayerManager.onWakeControls?.invoke()
+                            return true
+                        }
+                        KeyEvent.KEYCODE_DPAD_RIGHT -> {
+                            val newPos = (exoPlayerManager.currentPositionMs + 10_000L).coerceAtMost(exoPlayerManager.durationMs)
+                            exoPlayerManager.seekTo(newPos)
+                            Toast.makeText(context, "⏩ +10s", Toast.LENGTH_SHORT).show()
+                            exoPlayerManager.isControlsShowing = true
+                            exoPlayerManager.onWakeControls?.invoke()
+                            return true
+                        }
+                        KeyEvent.KEYCODE_DPAD_LEFT -> {
+                            val newPos = (exoPlayerManager.currentPositionMs - 10_000L).coerceAtLeast(0L)
+                            exoPlayerManager.seekTo(newPos)
+                            Toast.makeText(context, "⏪ -10s", Toast.LENGTH_SHORT).show()
+                            exoPlayerManager.isControlsShowing = true
+                            exoPlayerManager.onWakeControls?.invoke()
+                            return true
+                        }
+                        KeyEvent.KEYCODE_DPAD_DOWN, KeyEvent.KEYCODE_DPAD_UP -> {
                             exoPlayerManager.isControlsShowing = true
                             exoPlayerManager.onWakeControls?.invoke()
                             return true
@@ -143,9 +163,21 @@ object TvRemoteKeyHandler {
                         youTubeControlFlow.tryEmit(SignalingMessage.PlayControl("TOGGLE_MENU"))
                         return true
                     }
-                    KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER,
-                    KeyEvent.KEYCODE_DPAD_DOWN, KeyEvent.KEYCODE_DPAD_UP,
-                    KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.KEYCODE_DPAD_RIGHT -> {
+                    KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER -> {
+                        youTubeControlFlow.tryEmit(SignalingMessage.PlayControl("TOGGLE_PLAY"))
+                        return true
+                    }
+                    KeyEvent.KEYCODE_DPAD_RIGHT -> {
+                        youTubeControlFlow.tryEmit(SignalingMessage.PlayControl("SEEK_REL", 10_000L))
+                        Toast.makeText(context, "⏩ +10s", Toast.LENGTH_SHORT).show()
+                        return true
+                    }
+                    KeyEvent.KEYCODE_DPAD_LEFT -> {
+                        youTubeControlFlow.tryEmit(SignalingMessage.PlayControl("SEEK_REL", -10_000L))
+                        Toast.makeText(context, "⏪ -10s", Toast.LENGTH_SHORT).show()
+                        return true
+                    }
+                    KeyEvent.KEYCODE_DPAD_DOWN, KeyEvent.KEYCODE_DPAD_UP -> {
                         youTubeControlFlow.tryEmit(SignalingMessage.PlayControl("SHOW_CONTROLS"))
                         return false
                     }
@@ -171,9 +203,21 @@ object TvRemoteKeyHandler {
                         youTubeControlFlow.tryEmit(SignalingMessage.PlayControl("TOGGLE_MENU"))
                         return true
                     }
-                    KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER,
-                    KeyEvent.KEYCODE_DPAD_DOWN, KeyEvent.KEYCODE_DPAD_UP,
-                    KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.KEYCODE_DPAD_RIGHT -> {
+                    KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER -> {
+                        youTubeControlFlow.tryEmit(SignalingMessage.PlayControl("TOGGLE_PLAY"))
+                        return true
+                    }
+                    KeyEvent.KEYCODE_DPAD_RIGHT -> {
+                        youTubeControlFlow.tryEmit(SignalingMessage.PlayControl("SEEK_REL", 10_000L))
+                        Toast.makeText(context, "⏩ +10s", Toast.LENGTH_SHORT).show()
+                        return true
+                    }
+                    KeyEvent.KEYCODE_DPAD_LEFT -> {
+                        youTubeControlFlow.tryEmit(SignalingMessage.PlayControl("SEEK_REL", -10_000L))
+                        Toast.makeText(context, "⏪ -10s", Toast.LENGTH_SHORT).show()
+                        return true
+                    }
+                    KeyEvent.KEYCODE_DPAD_DOWN, KeyEvent.KEYCODE_DPAD_UP -> {
                         youTubeControlFlow.tryEmit(SignalingMessage.PlayControl("SHOW_CONTROLS"))
                         return false
                     }

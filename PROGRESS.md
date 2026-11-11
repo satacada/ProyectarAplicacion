@@ -12,7 +12,7 @@
 
 | Hito / Fase | Nombre del Hito / Fase | Estado | Progreso |
 | :--- | :--- | :---: | :---: |
-| **Hito 6.1 [CH-05]** | Overlay HUD de Telemetría OSD en Tiempo Real y Activación Remota | `[x]` Completado | **100%** |
+| **Hito 6.2 [CH-06]** | Controles Multimedia y Navegación D-Pad en Reproductor Web y Android TV | `[x]` Completado | **100%** |
 | :--- | :--- | :---: | :---: |
 | **Fase 0** | Base Heredada e Inmutable (20 HUs + 4 Pilares + Motor PVR `v3.6.08`) | `[x]` Sellada | **4 / 4 (100%)** |
 | **Fase 1** | Saneamiento y Reestructuración Quirúrgica (`< 300` líneas y limpieza) | `[x]` Completada | **4 / 4 (100%)** |
@@ -20,7 +20,7 @@
 | **Fase 3** | Evolución del Motor PVR y Biblioteca de Grabaciones en TV | `[x]` Completada | **2 / 2 (100%)** |
 | **Fase 4** | Cobertura Cuantitativa de Tests y Telemetría Proactiva | `[x]` Completada | **1 / 1 (100%)** |
 | **Fase 5** | Modernización, Eficiencia y Rendimiento Profesional | `[x]` Completada | **4 / 4 (100%)** |
-| **Fase 6** | Telemetría OSD en Tiempo Real y Experiencia de Control Remoto | `[~]` En Curso | **1 / 1 (Hito 6.1 Completado)** |
+| **Fase 6** | Telemetría OSD en Tiempo Real y Experiencia de Control Remoto | `[x]` Completada | **2 / 2 (100%)** |
 
 ---
 
@@ -61,6 +61,18 @@
 ---
 
 ## 4. Historial de Sesiones Multi-Agente
+
+### `[2026-11-11]` — Hito 6.2 [CH-06] — Controles Multimedia y Navegación D-Pad en Reproductor Web y Android TV
+- **Acción:**
+  - **Mapeo nativo de teclas D-Pad en `TvRemoteKeyHandler.kt` (280L):** Vinculación fluida en estados `DirectStreamPlaying`, `YouTubePlaying` y `WebStreamPlaying` permitiendo:
+    - `Center / Enter`: Alternar Reproducción (Toggle Play/Pause).
+    - `Right`: Avance rápido de +10s con notificación Toast interactiva.
+    - `Left`: Rebobinado de -10s con notificación Toast interactiva.
+    - `Down / Up`: Despliegue de controles OSD.
+  - Experiencia de control multimedia completo en mandos minimalistas de Android TV sin requerir botones dedicados de reproducción.
+- **Verificación:** 95/95 tests pasando (0 fallos, 0 regresiones), `TvRemoteKeyHandler.kt` con 280L (estrictamente `<= 300L`).
+- **Salud del Oráculo:** 🟢 95 tests passing (100% — 0 fallos).
+- **Siguiente paso:** 🎉 **FASE 6 COMPLETADA AL 100% (Hitos 6.1 y 6.2)**.
 
 ### `[2026-11-11]` — Hito 6.1 [CH-05] — Overlay HUD de Telemetría OSD en Tiempo Real y Activación Remota en Android TV
 - **Acción:**

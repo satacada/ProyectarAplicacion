@@ -2,11 +2,11 @@
 
 > **Versión Base de Rescate:** `v3.7.0` (`versionCodeSender: 368` | `versionCodeReceiver: 351`)  
 > **Política Operativa `v4.4`:** Micro-comandos `[auto]` y `[ver]` orquestados por el Planificador (`Argon`) invocando subagentes aislados (`flash` / `flash_lite`) | **Prohibido disparar Explorador Forense en tareas mapeadas** (todas las rutas están en este archivo y en [`doc/MAPA_DEL_SISTEMA_Y_FLUJO_DE_CODIGO.md`](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/MAPA_DEL_SISTEMA_Y_FLUJO_DE_CODIGO.md)).  
-> **Estado Global:** 🎉 **Hito 6.1 [CH-05] completado al 100% (Overlay HUD de Telemetría OSD en Tiempo Real y Activación Remota en Android TV — 95 Tests Passing — 0 Archivos Kotlin > 300L)**
+> **Estado Global:** 🎉 **FASE 6 COMPLETADA AL 100% (Hitos 6.1 y 6.2 — Telemetría OSD y Controles D-Pad Multimedia en Android TV — 95 Tests Passing — 0 Archivos Kotlin > 300L)**
 
 ---
 
-## 📺 FASE 6 — Telemetría OSD en Tiempo Real y Experiencia de Control Remoto (Android TV) (`[~]` — 1 / 1 completado)
+## 📺 FASE 6 — Telemetría OSD en Tiempo Real y Experiencia de Control Remoto (Android TV) (`[x]` — 2 / 2 completados — 100%)
 
 - `[x]` **Hito 6.1 [CH-05] — Overlay HUD de Telemetría OSD en Tiempo Real y Activación Remota en Android TV (`app-receiver/src/main/kotlin/com/omnicast/receiver/ui/components/TvTelemetryOverlay.kt`, `app-receiver/src/main/kotlin/com/omnicast/receiver/ui/components/TvGlobalRecordOverlay.kt`, `app-receiver/src/main/kotlin/com/omnicast/receiver/ui/TvRemoteKeyHandler.kt`):**
   - **Objetivo:** Proveer visualización instantánea en pantalla (OSD HUD) de métricas técnicas de streaming, reproducción y hardware en Android TV, permitiendo a los operadores e ingenieros diagnosticar la calidad de video sin interrumpir la reproducción.
@@ -14,6 +14,12 @@
     - `app-receiver/src/main/kotlin/com/omnicast/receiver/ui/components/TvTelemetryOverlay.kt` (nuevo componente HUD composable: 159 líneas)
     - `app-receiver/src/main/kotlin/com/omnicast/receiver/ui/components/TvGlobalRecordOverlay.kt` (inyección global no invasiva: 59 líneas)
     - `app-receiver/src/main/kotlin/com/omnicast/receiver/ui/TvRemoteKeyHandler.kt` (intercepción de atajos en control remoto: teclas `INFO`, `PROG_GREEN` y `1`: 236 líneas)
+  - **Agentes Involucrados:** `planner-architect` (`Argon`) ➔ `specialist-tv-player-pvr` (`flash`) ➔ `surgical-developer` (`flash`) ➔ `qa-oracle-tester` (`flash`) ➔ `sync-documenter` (`flash`) ➔ `git-ota-releaser` (`flash_lite`).
+
+- `[x]` **Hito 6.2 [CH-06] — Controles Multimedia y Navegación D-Pad en Reproductor Web y Android TV (`app-receiver/src/main/kotlin/com/omnicast/receiver/ui/TvRemoteKeyHandler.kt`):**
+  - **Objetivo:** Mapear nativamente las teclas D-Pad del control remoto (`Center/Enter` para Toggle Play, `Right` para avance rápido +10s con Toast, `Left` para rebobinado -10s con Toast, `Down/Up` para OSD) en estados `DirectStreamPlaying`, `YouTubePlaying` y `WebStreamPlaying`, permitiendo control multimedia fluido en mandos minimalistas de Android TV sin requerir botones dedicados.
+  - **Archivos Objetivo Exactos:**
+    - `app-receiver/src/main/kotlin/com/omnicast/receiver/ui/TvRemoteKeyHandler.kt` (ampliado a 280 líneas, cumpliendo estrictamente con la regla `< 300` líneas).
   - **Agentes Involucrados:** `planner-architect` (`Argon`) ➔ `specialist-tv-player-pvr` (`flash`) ➔ `surgical-developer` (`flash`) ➔ `qa-oracle-tester` (`flash`) ➔ `sync-documenter` (`flash`) ➔ `git-ota-releaser` (`flash_lite`).
 
 ---

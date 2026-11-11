@@ -12,7 +12,7 @@ object AdBlocker {
         "voe.sx", "vidoza.net", "streamtape.com", "mp4upload.com", "upstream.to",
         "waaw.to", "waaw.ac", "netu.tv", "netu.ac", "cfglobalcdn.com", "vidguard.to", "uqload.com", "luluvdo.com",
         "streamlare.com", "wolfstream.tv", "streamcloud.club", "embedgram.com",
-        "vidhide.com", "vidhidepro.com", "vidhidepre.com", "embed69.org",
+        "vidhide.com", "vidhidepro.com", "vidhidepre.com", "embed69.org", "pelisserieshoy.com", "player.pelisserieshoy.com",
         "pelismart.mov", "pelismart.com", "pelismart.online", "pelismart.vip", "pelismart.net", "pelismart.lat", "pelismart.app", "pelismart.org",
         "vidurl.to", "fembed.com", "fplayer.info", "swdyu.com",
         "doo.la", "ds2play.com", "ds2video.com", "fastream.to", "dropcdn.io", "dr0pstream.com"
@@ -147,13 +147,26 @@ object AdBlocker {
         (function() {
             try {
                 var h = (window.location.hostname || '').toLowerCase();
-                if (h.indexOf('dailymotion.com') !== -1 || h.indexOf('youtube.com') !== -1 || h.indexOf('google.') !== -1 || h.indexOf('bing.') !== -1 || h.indexOf('yandex.') !== -1) {
+                if (h.indexOf('dailymotion.com') !== -1 || h.indexOf('youtube.com') !== -1 || h.indexOf('google.') !== -1 || h.indexOf('bing.') !== -1 || h.indexOf('yandex.') !== -1 || h.indexOf('pelisserieshoy') !== -1 || h.indexOf('sololatino') !== -1) {
                     return;
+                }
+                function isLegitimate(el) {
+                    if (!el) return false;
+                    var c = (el.className || '').toString().toLowerCase();
+                    var id = (el.id || '').toLowerCase();
+                    if ((c.indexOf('play') !== -1 || id.indexOf('play') !== -1 || c.indexOf('player') !== -1 || id.indexOf('player') !== -1) &&
+                        c.indexOf('fake') === -1 && id.indexOf('fake') === -1 && c.indexOf('ad-') === -1 && id.indexOf('ad-') === -1) {
+                        return true;
+                    }
+                    if (el.querySelector('video, iframe, button, a, svg, [class*="play"], [id*="play"], [class*="player"], [id*="player"]')) {
+                        return true;
+                    }
+                    return false;
                 }
                 function cleanDoc(doc) {
                     if (!doc) return;
                     try {
-                        var css = 'div[class*="popunder"], div[id*="popunder"], .ad-overlay, #ad-overlay, .click-shield, div[class*="click-shield"], div[class*="player-banner"], div[id*="ad_wrapper"], div[class*="vast-"], div[class*="banner-ads"], #click-overlay, .click-overlay, #vplayer_overlay, .vplayer-overlay, #fakeplayer, .fakeplayer, #clickfakeplayer, #oscuridad, div[class*="fake-player"] { display: none !important; pointer-events: none !important; }';
+                        var css = 'div[class*="popunder"], div[id*="popunder"], .ad-overlay, #ad-overlay, div[class*="click-shield"], div[id*="ad_wrapper"], div[class*="vast-"], div[class*="banner-ads"], div[id*="banner-ads"] { display: none !important; pointer-events: none !important; }';
                         var st = doc.createElement('style');
                         st.textContent = css;
                         (doc.head || doc.documentElement).appendChild(st);
@@ -174,8 +187,12 @@ object AdBlocker {
                             var found = doc.querySelectorAll(selectors[s]);
                             for (var f = 0; f < found.length; f++) {
                                 var item = found[f];
-                                if (item.id === 'clickfakeplayer' || item.id === 'oscuridad') { item.remove(); continue; }
-                                if (!item.querySelector('video, iframe, input, form, textarea, select, button, a')) item.remove();
+                                if (isLegitimate(item)) continue;
+                                try {
+                                    item.style.setProperty('display', 'none', 'important');
+                                    item.style.setProperty('pointer-events', 'none', 'important');
+                                    item.remove();
+                                } catch(_) {}
                             }
                         } catch(e) {}
                     }
@@ -185,7 +202,11 @@ object AdBlocker {
                     cleanDoc(document);
                     var iframes = document.querySelectorAll('iframe');
                     for (var k = 0; k < iframes.length; k++) {
-                        try { cleanDoc(iframes[k].contentDocument); } catch(e) {}
+                        try {
+                            var isrc = (iframes[k].src || '').toLowerCase();
+                            if (isrc.indexOf('pelisserieshoy') !== -1 || isrc.indexOf('sololatino') !== -1 || isrc.indexOf('youtube') !== -1) continue;
+                            cleanDoc(iframes[k].contentDocument);
+                        } catch(e) {}
                     }
                 }
 
@@ -195,12 +216,12 @@ object AdBlocker {
                 window.__omniAdBlockInjected = true;
 
                 // Neutralización reactiva en fase de captura del evento click:
-                // Solo neutraliza velos transparentes que no sean botones ni enlaces
+                // Solo neutraliza velos transparentes que no sean botones ni enlaces ni controles legítimos
                 document.addEventListener('click', function(e) {
                     var el = e.target;
                     if (!el) return;
-                    if (el.closest && el.closest('input, textarea, select, button, form, [role="button"], [contenteditable="true"], [role="search"], [role="textbox"], [role="combobox"]')) return;
-                    if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT' || el.tagName === 'FORM' || el.tagName === 'BUTTON') return;
+                    if (el.closest && el.closest('input, textarea, select, button, form, a, svg, [role="button"], [contenteditable="true"], [role="search"], [role="textbox"], [role="combobox"], [class*="play"], [id*="play"], [class*="player"], [id*="player"]')) return;
+                    if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT' || el.tagName === 'FORM' || el.tagName === 'BUTTON' || el.tagName === 'A' || el.tagName === 'SVG') return;
                     if (el !== document.body && el !== document.documentElement) {
                         var cs = window.getComputedStyle(el);
                         if (cs && (cs.position === 'fixed' || cs.position === 'absolute')) {
@@ -213,7 +234,7 @@ object AdBlocker {
                                 var bg = cs.backgroundColor;
                                 var isTrans = (bg === 'transparent' || bg === 'rgba(0, 0, 0, 0)' || bg === 'rgba(255, 255, 255, 0)');
                                 var noText = !el.innerText || el.innerText.trim().length === 0;
-                                if ((op <= 0.08 || (isTrans && noText)) && !el.querySelector('video, iframe, button, input, a')) {
+                                if ((op <= 0.08 || (isTrans && noText)) && !el.querySelector('video, iframe, button, input, a, svg, [class*="play"], [id*="play"], [class*="player"], [id*="player"]')) {
                                     e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
                                     el.style.pointerEvents = 'none';
                                     el.remove();

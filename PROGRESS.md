@@ -12,7 +12,7 @@
 
 | Hito / Fase | Nombre del Hito / Fase | Estado | Progreso |
 | :--- | :--- | :---: | :---: |
-| **Hito 7.4 [CH-10]** | Modo Stealth Chrome Nativo Anti-Detección de WebView (SoloLatino / Cloudflare) | `[x]` Completado | **100%** |
+| **Hito 8.1 [CH-11]** | Foco D-Pad en Controles TV y Protección de Reproductores | `[x]` Completado | **100%** |
 | :--- | :--- | :---: | :---: |
 | **Fase 0** | Base Heredada e Inmutable (20 HUs + 4 Pilares + Motor PVR `v3.6.08`) | `[x]` Sellada | **4 / 4 (100%)** |
 | **Fase 1** | Saneamiento y Reestructuración Quirúrgica (`< 300` líneas y limpieza) | `[x]` Completada | **4 / 4 (100%)** |
@@ -62,6 +62,15 @@
 ---
 
 ## 4. Historial de Sesiones Multi-Agente
+
+### `[2026-11-11]` — Hito 8.1 [CH-11] — Foco D-Pad en Controles TV y Protección de Reproductores
+- **Acción:**
+  - **`TvRemoteKeyHandler.kt` (276L):** Gestión reactiva de D-Pad mediante `hasActiveOverlay` y `notifyControlsVisibilityChanged`, cediendo flechas D-Pad y ENTER al OSD/Compose TV para permitir seleccionar botones (Ajustes, Subtítulos, etc.), preservando atajos de salto +/-10s en pantalla limpia.
+  - **`TvDirectControlsOverlay.kt` (256L):** Captura inmediata de foco en Compose TV con `FocusRequester` en el botón central al mostrar controles OSD.
+  - **`AdBlocker.kt` (252L):** Protección de reproductores web legítimos (`isLegitimate`), eliminación de CSS `display:none` estático agresivo (`.fakeplayer`), soporte para SoloLatino (`player.pelisserieshoy.com`) e inmunidad a clicks de inicio de video.
+- **Verificación:** 95/95 tests pasando (35 en `:core:domain`, 23 en `:app-receiver`, 37 en `:app-sender`), 0 fallos, 0 archivos > 300 líneas.
+- **Salud del Oráculo:** 🟢 95 tests passing (100% — 0 fallos).
+- **Siguiente paso:** Continuar con evolución y mantenimiento del sistema.
 
 ### `[2026-11-11]` — Hito 7.4 [CH-10] — Modo Stealth Chrome Nativo Anti-Detección de WebView (SoloLatino / Cloudflare)
 - **Acción:**

@@ -19,9 +19,22 @@ import kotlinx.coroutines.launch
 object TvRemoteKeyHandler {
 
     private var lastPlaybackStartTime: Long = 0L
+    var isControlsShowing: Boolean = false
+    private var controlsVisibleUntilMs: Long = 0L
 
     fun notifyPlaybackStarted() {
         lastPlaybackStartTime = System.currentTimeMillis()
+        notifyControlsVisibilityChanged(true)
+    }
+
+    fun notifyControlsVisibilityChanged(showing: Boolean) {
+        isControlsShowing = showing
+        controlsVisibleUntilMs = if (showing) System.currentTimeMillis() + 5000L else 0L
+    }
+
+    fun hasActiveOverlay(currentState: ReceiverUiState, exoPlayerManager: ExoPlayerTvManager): Boolean {
+        if (currentState is ReceiverUiState.DirectStreamPlaying) return exoPlayerManager.isControlsShowing || isControlsShowing
+        return isControlsShowing || System.currentTimeMillis() < controlsVisibleUntilMs
     }
 
     fun handleKeyDown(
@@ -35,7 +48,8 @@ object TvRemoteKeyHandler {
         youTubeControlFlow: MutableSharedFlow<SignalingMessage.PlayControl>,
         scope: CoroutineScope,
         sendSignaling: (SignalingMessage) -> Unit,
-        onResetToStandby: () -> Unit
+        onResetToStandby: () -> Unit,
+        hasActiveOverlay: Boolean = hasActiveOverlay(currentState, exoPlayerManager)
     ): Boolean {
         TvTelemetryManager.activeWebRtc = webRtcReceiver
         when (keyCode) {
@@ -60,10 +74,12 @@ object TvRemoteKeyHandler {
             val pv = exoPlayerManager.playerView
             if (currentState is ReceiverUiState.DirectStreamPlaying && isActivelyPlaying && (exoPlayerManager.isControlsShowing || pv?.isControllerFullyVisible == true)) {
                 exoPlayerManager.isControlsShowing = false
+                notifyControlsVisibilityChanged(false)
                 pv?.hideController()
                 exoPlayerManager.onWakeControls?.invoke()
                 return true
             }
+            notifyControlsVisibilityChanged(false)
             digitalAudioReceiver?.stop(); exoPlayerManager.stop("Mando TV (Atrás/Stop)"); webRtcReceiver.resetConnection()
             onResetToStandby()
             return true
@@ -85,6 +101,7 @@ object TvRemoteKeyHandler {
                     KeyEvent.KEYCODE_SPACE -> {
                         if (exoPlayerManager.isPlaying) exoPlayerManager.pause() else exoPlayerManager.resume()
                         exoPlayerManager.isControlsShowing = true
+                        notifyControlsVisibilityChanged(true)
                         exoPlayerManager.onWakeControls?.invoke()
                         return true
                     }
@@ -92,6 +109,7 @@ object TvRemoteKeyHandler {
                         val newPos = (exoPlayerManager.currentPositionMs + 10_000L).coerceAtMost(exoPlayerManager.durationMs)
                         exoPlayerManager.seekTo(newPos)
                         exoPlayerManager.isControlsShowing = true
+                        notifyControlsVisibilityChanged(true)
                         exoPlayerManager.onWakeControls?.invoke()
                         return true
                     }
@@ -99,6 +117,7 @@ object TvRemoteKeyHandler {
                         val newPos = (exoPlayerManager.currentPositionMs - 10_000L).coerceAtLeast(0L)
                         exoPlayerManager.seekTo(newPos)
                         exoPlayerManager.isControlsShowing = true
+                        notifyControlsVisibilityChanged(true)
                         exoPlayerManager.onWakeControls?.invoke()
                         return true
                     }
@@ -110,11 +129,12 @@ object TvRemoteKeyHandler {
                     }
                 }
 
-                if (!exoPlayerManager.isControlsShowing) {
+                if (!hasActiveOverlay) {
                     when (keyCode) {
                         KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER -> {
                             if (exoPlayerManager.isPlaying) exoPlayerManager.pause() else exoPlayerManager.resume()
                             exoPlayerManager.isControlsShowing = true
+                            notifyControlsVisibilityChanged(true)
                             exoPlayerManager.onWakeControls?.invoke()
                             return true
                         }
@@ -123,6 +143,7 @@ object TvRemoteKeyHandler {
                             exoPlayerManager.seekTo(newPos)
                             Toast.makeText(context, "⏩ +10s", Toast.LENGTH_SHORT).show()
                             exoPlayerManager.isControlsShowing = true
+                            notifyControlsVisibilityChanged(true)
                             exoPlayerManager.onWakeControls?.invoke()
                             return true
                         }
@@ -131,11 +152,13 @@ object TvRemoteKeyHandler {
                             exoPlayerManager.seekTo(newPos)
                             Toast.makeText(context, "⏪ -10s", Toast.LENGTH_SHORT).show()
                             exoPlayerManager.isControlsShowing = true
+                            notifyControlsVisibilityChanged(true)
                             exoPlayerManager.onWakeControls?.invoke()
                             return true
                         }
                         KeyEvent.KEYCODE_DPAD_DOWN, KeyEvent.KEYCODE_DPAD_UP -> {
                             exoPlayerManager.isControlsShowing = true
+                            notifyControlsVisibilityChanged(true)
                             exoPlayerManager.onWakeControls?.invoke()
                             return true
                         }
@@ -143,7 +166,7 @@ object TvRemoteKeyHandler {
                 }
                 return false
             }
-            is ReceiverUiState.YouTubePlaying -> {
+            is ReceiverUiState.YouTubePlaying, is ReceiverUiState.WebStreamPlaying -> {
                 when (keyCode) {
                     KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE, KeyEvent.KEYCODE_MEDIA_PLAY, KeyEvent.KEYCODE_MEDIA_PAUSE -> {
                         youTubeControlFlow.tryEmit(SignalingMessage.PlayControl("TOGGLE_PLAY"))
@@ -163,65 +186,38 @@ object TvRemoteKeyHandler {
                         youTubeControlFlow.tryEmit(SignalingMessage.PlayControl("TOGGLE_MENU"))
                         return true
                     }
-                    KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER -> {
-                        youTubeControlFlow.tryEmit(SignalingMessage.PlayControl("TOGGLE_PLAY"))
-                        return true
-                    }
-                    KeyEvent.KEYCODE_DPAD_RIGHT -> {
-                        youTubeControlFlow.tryEmit(SignalingMessage.PlayControl("SEEK_REL", 10_000L))
-                        Toast.makeText(context, "⏩ +10s", Toast.LENGTH_SHORT).show()
-                        return true
-                    }
-                    KeyEvent.KEYCODE_DPAD_LEFT -> {
-                        youTubeControlFlow.tryEmit(SignalingMessage.PlayControl("SEEK_REL", -10_000L))
-                        Toast.makeText(context, "⏪ -10s", Toast.LENGTH_SHORT).show()
-                        return true
-                    }
-                    KeyEvent.KEYCODE_DPAD_DOWN, KeyEvent.KEYCODE_DPAD_UP -> {
-                        youTubeControlFlow.tryEmit(SignalingMessage.PlayControl("SHOW_CONTROLS"))
-                        return false
+                }
+
+                if (!hasActiveOverlay) {
+                    when (keyCode) {
+                        KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER -> {
+                            youTubeControlFlow.tryEmit(SignalingMessage.PlayControl("TOGGLE_PLAY"))
+                            notifyControlsVisibilityChanged(true)
+                            youTubeControlFlow.tryEmit(SignalingMessage.PlayControl("SHOW_CONTROLS"))
+                            return true
+                        }
+                        KeyEvent.KEYCODE_DPAD_RIGHT -> {
+                            youTubeControlFlow.tryEmit(SignalingMessage.PlayControl("SEEK_REL", 10_000L))
+                            Toast.makeText(context, "⏩ +10s", Toast.LENGTH_SHORT).show()
+                            notifyControlsVisibilityChanged(true)
+                            youTubeControlFlow.tryEmit(SignalingMessage.PlayControl("SHOW_CONTROLS"))
+                            return true
+                        }
+                        KeyEvent.KEYCODE_DPAD_LEFT -> {
+                            youTubeControlFlow.tryEmit(SignalingMessage.PlayControl("SEEK_REL", -10_000L))
+                            Toast.makeText(context, "⏪ -10s", Toast.LENGTH_SHORT).show()
+                            notifyControlsVisibilityChanged(true)
+                            youTubeControlFlow.tryEmit(SignalingMessage.PlayControl("SHOW_CONTROLS"))
+                            return true
+                        }
+                        KeyEvent.KEYCODE_DPAD_DOWN, KeyEvent.KEYCODE_DPAD_UP -> {
+                            notifyControlsVisibilityChanged(true)
+                            youTubeControlFlow.tryEmit(SignalingMessage.PlayControl("SHOW_CONTROLS"))
+                            return true
+                        }
                     }
                 }
-            }
-            is ReceiverUiState.WebStreamPlaying -> {
-                when (keyCode) {
-                    KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE, KeyEvent.KEYCODE_MEDIA_PLAY, KeyEvent.KEYCODE_MEDIA_PAUSE -> {
-                        youTubeControlFlow.tryEmit(SignalingMessage.PlayControl("TOGGLE_PLAY"))
-                        return true
-                    }
-                    KeyEvent.KEYCODE_MEDIA_FAST_FORWARD -> {
-                        youTubeControlFlow.tryEmit(SignalingMessage.PlayControl("SEEK_REL", 10_000L))
-                        Toast.makeText(context, "⏩ +10s", Toast.LENGTH_SHORT).show()
-                        return true
-                    }
-                    KeyEvent.KEYCODE_MEDIA_REWIND -> {
-                        youTubeControlFlow.tryEmit(SignalingMessage.PlayControl("SEEK_REL", -10_000L))
-                        Toast.makeText(context, "⏪ -10s", Toast.LENGTH_SHORT).show()
-                        return true
-                    }
-                    KeyEvent.KEYCODE_MENU -> {
-                        youTubeControlFlow.tryEmit(SignalingMessage.PlayControl("TOGGLE_MENU"))
-                        return true
-                    }
-                    KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER -> {
-                        youTubeControlFlow.tryEmit(SignalingMessage.PlayControl("TOGGLE_PLAY"))
-                        return true
-                    }
-                    KeyEvent.KEYCODE_DPAD_RIGHT -> {
-                        youTubeControlFlow.tryEmit(SignalingMessage.PlayControl("SEEK_REL", 10_000L))
-                        Toast.makeText(context, "⏩ +10s", Toast.LENGTH_SHORT).show()
-                        return true
-                    }
-                    KeyEvent.KEYCODE_DPAD_LEFT -> {
-                        youTubeControlFlow.tryEmit(SignalingMessage.PlayControl("SEEK_REL", -10_000L))
-                        Toast.makeText(context, "⏪ -10s", Toast.LENGTH_SHORT).show()
-                        return true
-                    }
-                    KeyEvent.KEYCODE_DPAD_DOWN, KeyEvent.KEYCODE_DPAD_UP -> {
-                        youTubeControlFlow.tryEmit(SignalingMessage.PlayControl("SHOW_CONTROLS"))
-                        return false
-                    }
-                }
+                return false
             }
             is ReceiverUiState.ScreenMirroring -> {
                 when (keyCode) {

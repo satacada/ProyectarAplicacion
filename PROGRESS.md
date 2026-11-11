@@ -12,7 +12,7 @@
 
 | Hito / Fase | Nombre del Hito / Fase | Estado | Progreso |
 | :--- | :--- | :---: | :---: |
-| **Hito 5.4 [CH-04]** | Blindaje de Vivos en Sniffer DOM y Gobernanza Dinámica | `[x]` Completado | **100%** |
+| **Hito 6.1 [CH-05]** | Overlay HUD de Telemetría OSD en Tiempo Real y Activación Remota | `[x]` Completado | **100%** |
 | :--- | :--- | :---: | :---: |
 | **Fase 0** | Base Heredada e Inmutable (20 HUs + 4 Pilares + Motor PVR `v3.6.08`) | `[x]` Sellada | **4 / 4 (100%)** |
 | **Fase 1** | Saneamiento y Reestructuración Quirúrgica (`< 300` líneas y limpieza) | `[x]` Completada | **4 / 4 (100%)** |
@@ -20,6 +20,7 @@
 | **Fase 3** | Evolución del Motor PVR y Biblioteca de Grabaciones en TV | `[x]` Completada | **2 / 2 (100%)** |
 | **Fase 4** | Cobertura Cuantitativa de Tests y Telemetría Proactiva | `[x]` Completada | **1 / 1 (100%)** |
 | **Fase 5** | Modernización, Eficiencia y Rendimiento Profesional | `[x]` Completada | **4 / 4 (100%)** |
+| **Fase 6** | Telemetría OSD en Tiempo Real y Experiencia de Control Remoto | `[~]` En Curso | **1 / 1 (Hito 6.1 Completado)** |
 
 ---
 
@@ -60,6 +61,15 @@
 ---
 
 ## 4. Historial de Sesiones Multi-Agente
+
+### `[2026-11-11]` — Hito 6.1 [CH-05] — Overlay HUD de Telemetría OSD en Tiempo Real y Activación Remota en Android TV
+- **Acción:**
+  - **Componente desacoplado `TvTelemetryOverlay.kt` (159L):** HUD composable en `com.omnicast.receiver.ui.components` mostrando en tiempo real la resolución efectiva del frame, relación de aspecto, orientación, modo de escalado (FIT / FILL), factor de zoom, consumo de RAM y estado de la conexión WebRTC.
+  - **Inyección global no invasiva:** Integración limpia en `TvGlobalRecordOverlay.kt` (59L) sobre la jerarquía visual de Android TV.
+  - **Intercepción de atajos en control remoto (`TvRemoteKeyHandler.kt` [236L]):** Vinculación de teclas dedicadas de acceso rápido para alternar o invocar la telemetría OSD en vivo (tecla `INFO`, `PROG_GREEN` y tecla numérica `1`).
+- **Verificación:** 95/95 tests pasando (0 fallos, 0 regresiones), 0 archivos Kotlin > 300 líneas.
+- **Salud del Oráculo:** 🟢 95 tests passing (100% — 0 fallos).
+- **Siguiente paso:** 🎉 **Hito 6.1 [CH-05] Completado al 100%**.
 
 ### `[2026-11-11]` — Hito 5.4 [CH-04] — Blindaje de Vivos en Sniffer DOM y Gobernanza Dinámica
 - **Acción:**

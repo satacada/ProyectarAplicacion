@@ -2,7 +2,19 @@
 
 > **Versión Base de Rescate:** `v3.7.0` (`versionCodeSender: 368` | `versionCodeReceiver: 351`)  
 > **Política Operativa `v4.4`:** Micro-comandos `[auto]` y `[ver]` orquestados por el Planificador (`Argon`) invocando subagentes aislados (`flash` / `flash_lite`) | **Prohibido disparar Explorador Forense en tareas mapeadas** (todas las rutas están en este archivo y en [`doc/MAPA_DEL_SISTEMA_Y_FLUJO_DE_CODIGO.md`](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/MAPA_DEL_SISTEMA_Y_FLUJO_DE_CODIGO.md)).  
-> **Estado Global:** 🎉 **FASE 5 COMPLETADA AL 100% (Hitos 5.1, 5.2, 5.3 y 5.4 — Blindaje de Vivos en Sniffer DOM y Gobernanza Dinámica — 95 Tests Passing — 0 Archivos Kotlin > 300L)**
+> **Estado Global:** 🎉 **Hito 6.1 [CH-05] completado al 100% (Overlay HUD de Telemetría OSD en Tiempo Real y Activación Remota en Android TV — 95 Tests Passing — 0 Archivos Kotlin > 300L)**
+
+---
+
+## 📺 FASE 6 — Telemetría OSD en Tiempo Real y Experiencia de Control Remoto (Android TV) (`[~]` — 1 / 1 completado)
+
+- `[x]` **Hito 6.1 [CH-05] — Overlay HUD de Telemetría OSD en Tiempo Real y Activación Remota en Android TV (`app-receiver/src/main/kotlin/com/omnicast/receiver/ui/components/TvTelemetryOverlay.kt`, `app-receiver/src/main/kotlin/com/omnicast/receiver/ui/components/TvGlobalRecordOverlay.kt`, `app-receiver/src/main/kotlin/com/omnicast/receiver/ui/TvRemoteKeyHandler.kt`):**
+  - **Objetivo:** Proveer visualización instantánea en pantalla (OSD HUD) de métricas técnicas de streaming, reproducción y hardware en Android TV, permitiendo a los operadores e ingenieros diagnosticar la calidad de video sin interrumpir la reproducción.
+  - **Archivos Objetivo Exactos:**
+    - `app-receiver/src/main/kotlin/com/omnicast/receiver/ui/components/TvTelemetryOverlay.kt` (nuevo componente HUD composable: 159 líneas)
+    - `app-receiver/src/main/kotlin/com/omnicast/receiver/ui/components/TvGlobalRecordOverlay.kt` (inyección global no invasiva: 59 líneas)
+    - `app-receiver/src/main/kotlin/com/omnicast/receiver/ui/TvRemoteKeyHandler.kt` (intercepción de atajos en control remoto: teclas `INFO`, `PROG_GREEN` y `1`: 236 líneas)
+  - **Agentes Involucrados:** `planner-architect` (`Argon`) ➔ `specialist-tv-player-pvr` (`flash`) ➔ `surgical-developer` (`flash`) ➔ `qa-oracle-tester` (`flash`) ➔ `sync-documenter` (`flash`) ➔ `git-ota-releaser` (`flash_lite`).
 
 ---
 

@@ -6,6 +6,7 @@ import android.widget.Toast
 import com.omnicast.core.protocol.SignalingMessage
 import com.omnicast.receiver.audio.DigitalAudioReceiver
 import com.omnicast.receiver.directstream.ExoPlayerTvManager
+import com.omnicast.receiver.ui.components.TvTelemetryManager
 import com.omnicast.receiver.webrtc.WebRtcReceiverManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -36,6 +37,14 @@ object TvRemoteKeyHandler {
         sendSignaling: (SignalingMessage) -> Unit,
         onResetToStandby: () -> Unit
     ): Boolean {
+        TvTelemetryManager.activeWebRtc = webRtcReceiver
+        when (keyCode) {
+            KeyEvent.KEYCODE_INFO, KeyEvent.KEYCODE_PROG_GREEN, KeyEvent.KEYCODE_1, KeyEvent.KEYCODE_NUMPAD_1 -> {
+                TvTelemetryManager.toggle()
+                return true
+            }
+        }
+
         val isExitKey = keyCode == KeyEvent.KEYCODE_BACK ||
                         keyCode == KeyEvent.KEYCODE_ESCAPE ||
                         keyCode == KeyEvent.KEYCODE_BUTTON_B ||

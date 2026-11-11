@@ -18,6 +18,8 @@ import com.omnicast.receiver.directstream.TvRecordTimerManager
  */
 @Composable
 fun BoxScope.TvGlobalRecordOverlay(isStandby: Boolean) {
+    TvTelemetryOverlay()
+
     if (!isStandby) return
 
     val context = LocalContext.current

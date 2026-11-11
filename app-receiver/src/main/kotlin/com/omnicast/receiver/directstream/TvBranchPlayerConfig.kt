@@ -15,6 +15,9 @@ import com.omnicast.core.domain.models.MediaBranch
 @OptIn(UnstableApi::class)
 object TvBranchPlayerConfig {
 
+    private val isLowRamDevice: Boolean
+        get() = Runtime.getRuntime().maxMemory() < 256 * 1024 * 1024L
+
     fun createLoadControl(branch: MediaBranch): LoadControl {
         return when (branch) {
             MediaBranch.LIVE_HLS -> DefaultLoadControl.Builder()
@@ -23,11 +26,19 @@ object TvBranchPlayerConfig {
                 .setBackBuffer(0, false)
                 .build()
 
-            MediaBranch.VOD_HLS_MP4 -> DefaultLoadControl.Builder()
-                .setBufferDurationsMs(30_000, 60_000, 2_500, 5_000)
-                .setPrioritizeTimeOverSizeThresholds(true)
-                .setBackBuffer(20_000, true)
-                .build()
+            MediaBranch.VOD_HLS_MP4 -> if (isLowRamDevice) {
+                DefaultLoadControl.Builder()
+                    .setBufferDurationsMs(12_000, 25_000, 1_500, 3_000)
+                    .setPrioritizeTimeOverSizeThresholds(true)
+                    .setBackBuffer(5_000, true)
+                    .build()
+            } else {
+                DefaultLoadControl.Builder()
+                    .setBufferDurationsMs(30_000, 60_000, 2_500, 5_000)
+                    .setPrioritizeTimeOverSizeThresholds(true)
+                    .setBackBuffer(20_000, true)
+                    .build()
+            }
 
             MediaBranch.DASH_MPD -> DefaultLoadControl.Builder()
                 .setBufferDurationsMs(25_000, 50_000, 2_000, 4_000)

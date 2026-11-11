@@ -51,10 +51,13 @@ class ExoPlayerTvManager(private val context: Context) {
                 .setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON)
                 .setEnableDecoderFallback(true)
 
-            val trackSelector = DefaultTrackSelector(context).apply {
+            val trackSelector = DefaultTrackSelector(
+                context,
+                androidx.media3.exoplayer.trackselection.AdaptiveTrackSelection.Factory(1500, 5000, 5000, 0.75f)
+            ).apply {
                 parameters = buildUponParameters()
                     .setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_TEXT, true)
-                    .setForceHighestSupportedBitrate(true)
+                    .setForceHighestSupportedBitrate(false)
                     .build()
             }
             TvBranchPlayerConfig.applyHardwareCodecSettings(trackSelector, branch)
@@ -62,7 +65,7 @@ class ExoPlayerTvManager(private val context: Context) {
             trackManager = tm
 
             val httpFactory = DefaultHttpDataSource.Factory()
-                .setUserAgent(TvMediaItemBuilder.DEFAULT_UA).setAllowCrossProtocolRedirects(true).setConnectTimeoutMs(20000).setReadTimeoutMs(20000)
+                .setUserAgent(TvMediaItemBuilder.DEFAULT_UA).setAllowCrossProtocolRedirects(true).setConnectTimeoutMs(8000).setReadTimeoutMs(8000)
             val dsFactory = androidx.media3.datasource.DefaultDataSource.Factory(context, httpFactory)
             val mediaSourceFactory = DefaultMediaSourceFactory(context).setDataSourceFactory(dsFactory)
 
@@ -183,8 +186,8 @@ class ExoPlayerTvManager(private val context: Context) {
             val httpFactory = DefaultHttpDataSource.Factory()
                 .setUserAgent(safeHeaders["User-Agent"] ?: TvMediaItemBuilder.DEFAULT_UA)
                 .setAllowCrossProtocolRedirects(true)
-                .setConnectTimeoutMs(15000)
-                .setReadTimeoutMs(15000)
+                .setConnectTimeoutMs(8000)
+                .setReadTimeoutMs(8000)
                 .setDefaultRequestProperties(safeHeaders)
 
             val dsFactory = androidx.media3.datasource.DefaultDataSource.Factory(context, httpFactory)
@@ -222,8 +225,8 @@ class ExoPlayerTvManager(private val context: Context) {
             val httpFactory = DefaultHttpDataSource.Factory()
                 .setUserAgent(safe["User-Agent"] ?: TvMediaItemBuilder.DEFAULT_UA)
                 .setAllowCrossProtocolRedirects(true)
-                .setConnectTimeoutMs(15000)
-                .setReadTimeoutMs(15000)
+                .setConnectTimeoutMs(8000)
+                .setReadTimeoutMs(8000)
             if (safe.isNotEmpty()) httpFactory.setDefaultRequestProperties(safe)
             val dsFactory = androidx.media3.datasource.DefaultDataSource.Factory(context, httpFactory)
             val mediaSource = DefaultMediaSourceFactory(context).setDataSourceFactory(dsFactory).createMediaSource(mediaItem)

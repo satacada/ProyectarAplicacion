@@ -19,6 +19,8 @@ import com.omnicast.core.protocol.SignalingMessage
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 
+private const val WATCHDOG_TIMEOUT_MS = 10_000L
+
 /**
  * Reproductor Web HTML5 / Chromium para TV Box.
  * Soporta flujos web protegidos con tokens de seguridad (DropCDN, Fastream, HLS)
@@ -58,7 +60,7 @@ fun TvWebStreamScreen(
             return@LaunchedEffect
         }
         if (!isVideoReady) {
-            delay(22000L)
+            delay(WATCHDOG_TIMEOUT_MS)
             if (!isVideoReady && fatalErrorReason == null) {
                 fatalErrorReason = "WATCHDOG_TIMEOUT"
             }

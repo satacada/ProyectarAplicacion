@@ -1,7 +1,7 @@
 # 📊 PROJECT DASHBOARD — OmniCast Pro
 
-**Última actualización:** 2026-11-06 (Blindaje en UniversalHlsExtractorAdapter contra assets web y neutralización de prerolls de Doodstream)  
-**Versión de producción actual:** v3.6.16 (Sender: 367) / v3.6.16 (Receiver: 350)  
+**Última actualización:** 2026-11-11 (Hito 5.2 [CH-02]: Fast-Start ABR, Low-RAM LoadControl y Optimización UX en Android TV)  
+**Versión de producción actual:** v3.7.0 (Sender: 368) / v3.7.0 (Receiver: 351)  
 **Estándar de calidad:** AGENTS.md (Archivos <= 300 líneas, Clean Architecture, 100% Offline/Local, C++20 Zero-Allocation, Poda Obligatoria de Código Inútil ante Hipótesis Fallidas)
 
 ---

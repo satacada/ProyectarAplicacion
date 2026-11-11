@@ -1,16 +1,18 @@
 # 📊 PROGRESS & BITÁCORA OPERATIVA — OmniCast Pro
 
-> **Versión Actual en Producción:** `v3.6.16` (`versionCodeSender: 367` | `versionCodeReceiver: 350`)  
-> **Última Sincronización Agéntica:** `2026-11-06`  
-> **Estado del Oráculo de Pruebas:** 🟢 **107 Tests Base Certificados con JaCoCo (100% — 0 fallos)**  
-> **Próxima Actividad en Cola:** `🎉 ROADMAP UNIFICADO V4.4 COMPLETADO AL 100%`  
-> **Progreso Global:** 🏁 **100% de Fases Completadas (Fase 0: 4/4, Fase 1: 4/4, Fase 2: 2/2, Fase 3: 2/2, Fase 4: 1/1 — 13/13 Hitos Cerrados)**
+> **Versión Actual en Producción:** `v3.7.0` (`versionCodeSender: 368` | `versionCodeReceiver: 351`)  
+> **Última Sincronización Agéntica:** `2026-11-11`  
+> **Estado del Oráculo de Pruebas:** 🟢 **58 Tests Pasando (35 en :core:domain, 23 en :app-receiver) — 100% — 0 fallos**  
+> **Próxima Actividad en Cola:** `🎉 HITO 5.2 [CH-02] COMPLETADO AL 100%`  
+> **Progreso Global:** 🏁 **Hito 5.2 [CH-02] Fast-Start ABR, Low-RAM LoadControl y Optimización UX en Android TV completado al 100%**
 
 ---
 
 ## 1. Estado Global por Fases (`ROADMAP.md`)
 
-| Fase | Nombre de la Fase | Estado | Progreso |
+| Hito / Fase | Nombre del Hito / Fase | Estado | Progreso |
+| :--- | :--- | :---: | :---: |
+| **Hito 5.2 [CH-02]** | Fast-Start ABR, Low-RAM LoadControl y Optimización UX en Android TV | `[x]` Completado | **100%** |
 | :--- | :--- | :---: | :---: |
 | **Fase 0** | Base Heredada e Inmutable (20 HUs + 4 Pilares + Motor PVR `v3.6.08`) | `[x]` Sellada | **4 / 4 (100%)** |
 | **Fase 1** | Saneamiento y Reestructuración Quirúrgica (`< 300` líneas y limpieza) | `[x]` Completada | **4 / 4 (100%)** |
@@ -59,6 +61,15 @@
 ---
 
 ## 4. Historial de Sesiones Multi-Agente
+
+### `[2026-11-11]` — Hito 5.2 [CH-02] — Fast-Start ABR, Low-RAM LoadControl y Optimización UX en Android TV
+- **Acción:**
+  - **Fast-Start ABR adaptativo:** Ajustes en `ExoPlayerTvManager.kt` evitando forzar el bitrate máximo en el frame 0, estableciendo timeouts óptimos de 8s.
+  - **Low-RAM Adaptive LoadControl:** Integración en `TvBranchPlayerConfig.kt` ajustando umbrales a 12s/25s para dispositivos de runtime < 256MB.
+  - **Optimización UX y Watchdog:** Reducción del watchdog a 10s en `TvWebStreamScreen.kt`.
+- **Verificación:** 58 / 58 tests pasando (35 en `:core:domain`, 23 en `:app-receiver`), `assembleRelease` OK, 0 archivos > 300 líneas.
+- **Salud del Oráculo:** 🟢 58 tests passing (100% — 0 fallos). Cero archivos Kotlin > 300 líneas.
+- **Siguiente paso:** 🎉 **Hito 5.2 [CH-02] Completado al 100%**.
 
 ### `[2026-11-06]` — Cobertura Cuantitativa 4.1 (JaCoCo en :core:domain y Ampliación de Suites de Tests de Borde)
 - **Acción:**

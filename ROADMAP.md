@@ -2,7 +2,7 @@
 
 > **Versión Base de Rescate:** `v3.6.08` (`versionCodeSender: 359` | `versionCodeReceiver: 342`)  
 > **Política Operativa `v4.4`:** Micro-comandos `[auto]` y `[ver]` orquestados por el Planificador (`Argon`) invocando subagentes aislados (`flash` / `flash_lite`) | **Prohibido disparar Explorador Forense en tareas mapeadas** (todas las rutas están en este archivo y en [`doc/MAPA_DEL_SISTEMA_Y_FLUJO_DE_CODIGO.md`](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/MAPA_DEL_SISTEMA_Y_FLUJO_DE_CODIGO.md)).  
-> **Estado Global:** 🎉 **100% COMPLETADO (Fases 0 a 4 — 13 / 13 Hitos Cerrados — 100 Tests Oráculo Certificados con JaCoCo)**
+> **Estado Global:** 🎉 **Hito 5.2 [CH-02] Completado al 100% (Fast-Start ABR, Low-RAM LoadControl y Optimización UX en Android TV — 58 Tests Passing — 0 Archivos > 300L)**
 
 ---
 

@@ -1,12 +1,12 @@
 {
-  "versionName": "3.7.4",
-  "versionCodeSender": 374,
-  "versionCodeReceiver": 355,
-  "releaseTag": "v3.7.4",
-  "senderApk": "omnicast-sender-v3.7.4.apk",
-  "receiverApk": "omnicast-receiver-v3.7.4.apk",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.4/omnicast-sender-v3.7.4.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.4/omnicast-receiver-v3.7.4.apk",
-  "releaseNotes": "v3.7.4: Cierre de Hito 7.2 [CH-08] y FASE 7. Modo touchpad y puntero virtual en pantalla Android TV.",
-  "changelog": "v3.7.4: Cierre de Hito 7.2 [CH-08] y FASE 7. Modo touchpad y puntero virtual en pantalla Android TV."
+  "versionName": "3.7.5",
+  "versionCodeSender": 375,
+  "versionCodeReceiver": 356,
+  "releaseTag": "v3.7.5",
+  "senderApk": "omnicast-sender-v3.7.5.apk",
+  "receiverApk": "omnicast-receiver-v3.7.5.apk",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.5/omnicast-sender-v3.7.5.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.5/omnicast-receiver-v3.7.5.apk",
+  "releaseNotes": "v3.7.5: Cierre de Hito 7.3 [CH-09]. Desacoplamiento de window.open y log de navegacion de mismo origen.",
+  "changelog": "v3.7.5: Cierre de Hito 7.3 [CH-09]. Desacoplamiento de window.open y log de navegacion de mismo origen."
 }

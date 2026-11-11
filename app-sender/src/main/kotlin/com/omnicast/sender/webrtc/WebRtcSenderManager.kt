@@ -34,6 +34,7 @@ class WebRtcSenderManager(
     private var peerConnectionFactory: PeerConnectionFactory? = null; private var peerConnection: PeerConnection? = null
     private var screenCapturer: ScreenCapturerAndroid? = null
     private var videoTrack: VideoTrack? = null; private var videoSource: VideoSource? = null
+    private var audioTrack: AudioTrack? = null; private var audioSource: AudioSource? = null
     private val queuedRemoteCandidates = mutableListOf<IceCandidate>()
     private var isRemoteDescriptionSet = false
     var tvScaleMode: String = "EXTEND_16_9"
@@ -93,6 +94,9 @@ class WebRtcSenderManager(
 
         videoTrack = peerConnectionFactory?.createVideoTrack("ARDAMSv0", videoSource)?.apply { setEnabled(true) }
         videoTrack?.let { peerConnection?.addTrack(it, listOf("ARDAMS")) }
+        audioSource = peerConnectionFactory?.createAudioSource(MediaConstraints())
+        audioTrack = peerConnectionFactory?.createAudioTrack("ARDAMSa0", audioSource)?.apply { setEnabled(true) }
+        audioTrack?.let { peerConnection?.addTrack(it, listOf("ARDAMS")) }
         _connectionState.value = P2PConnectionState.CONNECTING
     }
 
@@ -169,7 +173,8 @@ class WebRtcSenderManager(
             override fun onCreateSuccess(desc: SessionDescription?) {
                 desc?.let {
                     val baseSdp = preferH264(it.description)
-                    val sdp = WebRtcSdpTuner.tuneForFluidMotion(baseSdp)
+                    val targetBitrate = activeProfile?.targetBitrateKbps ?: 10000
+                    val sdp = WebRtcSdpTuner.tuneForFluidMotion(baseSdp, targetBitrate)
                     peerConnection?.setLocalDescription(this, SessionDescription(it.type, sdp))
                     onSdpCreated(sdp)
                 }
@@ -216,6 +221,7 @@ class WebRtcSenderManager(
         try {
             screenCapturer?.stopCapture(); screenCapturer?.dispose(); screenCapturer = null
             videoTrack?.dispose(); videoTrack = null; videoSource?.dispose(); videoSource = null
+            audioTrack?.dispose(); audioTrack = null; audioSource?.dispose(); audioSource = null
             surfaceTextureHelper?.dispose(); surfaceTextureHelper = null
             peerConnection?.close(); peerConnection = null
             eglBase?.release(); eglBase = null

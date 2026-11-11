@@ -6,30 +6,42 @@ package com.omnicast.sender.webrtc
  */
 object WebRtcSdpTuner {
 
-    fun tuneForFluidMotion(sdp: String): String {
-        val lines = sdp.split("\r\n").toMutableList()
+    fun tuneForFluidMotion(sdpDescription: String, targetBitrateKbps: Int = 10000): String {
+        val lines = sdpDescription.split("\r\n").toMutableList()
         val videoLineIdx = lines.indexOfFirst { it.startsWith("m=video") }
-        if (videoLineIdx == -1) return sdp
+        if (videoLineIdx == -1) return sdpDescription
 
-        val h264Pt = lines.firstOrNull { it.contains("H264/90000") }
-            ?.substringAfter("a=rtpmap:")?.substringBefore(" ")
+        val h264Pt = lines.firstOrNull { it.startsWith("a=rtpmap:") && it.contains("H264/90000") }
+            ?.substringAfter("a=rtpmap:")?.substringBefore(" ")?.trim()
 
         if (h264Pt != null) {
-            val parts = lines[videoLineIdx].split(" ").toMutableList()
+            val parts = lines[videoLineIdx].split(" ").filter { it.isNotEmpty() }.toMutableList()
             if (parts.size > 3 && parts.remove(h264Pt)) {
                 parts.add(3, h264Pt)
                 lines[videoLineIdx] = parts.joinToString(" ")
             }
         }
 
+        val minBitrate = 600
+        val startBitrate = (targetBitrateKbps / 3).coerceAtLeast(1500)
+        val maxBitrate = targetBitrateKbps
+
         val tunedLines = mutableListOf<String>()
         for (line in lines) {
+            if (h264Pt != null && line.startsWith("a=fmtp:$h264Pt")) {
+                continue
+            }
+            if (line.startsWith("b=AS:")) {
+                continue
+            }
+
             tunedLines.add(line)
-            if (line.startsWith("a=rtpmap:") && line.contains("H264/90000") && h264Pt != null) {
-                tunedLines.add("a=fmtp:$h264Pt level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42e028;x-google-min-bitrate=6000;x-google-start-bitrate=12000;x-google-max-bitrate=20000")
+
+            if (h264Pt != null && line.startsWith("a=rtpmap:$h264Pt") && line.contains("H264/90000")) {
+                tunedLines.add("a=fmtp:$h264Pt level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=640c28;x-google-min-bitrate=$minBitrate;x-google-start-bitrate=$startBitrate;x-google-max-bitrate=$maxBitrate")
             }
             if (line.startsWith("c=IN IP4")) {
-                tunedLines.add("b=AS:18000")
+                tunedLines.add("b=AS:$targetBitrateKbps")
             }
         }
         return tunedLines.joinToString("\r\n")

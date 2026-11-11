@@ -26,7 +26,7 @@ class WebRtcReceiverManager(private val context: Context) {
     var onConnectionClosed: (() -> Unit)? = null
     private val queuedRemoteCandidates = mutableListOf<IceCandidate>()
     private var isRemoteDescriptionSet = false
-    private var isResetting = false
+    private var isResetting = false; private var fieldTrialsInitialized = false
     private var currentScalingType = RendererCommon.ScalingType.SCALE_ASPECT_FIT
     var currentMode: String by mutableStateOf("FIT"); private set
     var isAppProjectionMode: Boolean by mutableStateOf(false); private set
@@ -161,6 +161,7 @@ class WebRtcReceiverManager(private val context: Context) {
                     surfaceViewRenderer?.let { track.addSink(it) }
                     onVideoTrackReceived?.invoke(track)
                 } else if (track is AudioTrack) {
+                    ReceiverLogger.log(TAG, "🔊 AudioTrack WebRTC recibido en TV Box (${track.id()}).")
                     track.setEnabled(true); track.setVolume(1.0)
                 }
             }
@@ -168,7 +169,8 @@ class WebRtcReceiverManager(private val context: Context) {
             override fun onIceConnectionReceivingChange(p0: Boolean) = Unit
             override fun onIceGatheringChange(p0: PeerConnection.IceGatheringState?) = Unit
             override fun onIceCandidatesRemoved(p0: Array<out IceCandidate>?) = Unit
-            override fun onAddStream(p0: MediaStream?) = Unit; override fun onRemoveStream(p0: MediaStream?) = Unit
+            override fun onAddStream(p0: MediaStream?) { p0?.audioTracks?.forEach { it.setEnabled(true); it.setVolume(1.0) } }
+            override fun onRemoveStream(p0: MediaStream?) = Unit
             override fun onDataChannel(p0: DataChannel?) = Unit; override fun onRenegotiationNeeded() = Unit
         })
     }
@@ -251,9 +253,11 @@ class WebRtcReceiverManager(private val context: Context) {
     }
 
     fun setSmoothBuffer(enabled: Boolean) {
+        if (fieldTrialsInitialized || peerConnectionFactory != null) return
         val trial = if (enabled) "WebRTC-ForcePlayoutDelay/min_ms:100,max_ms:250/" else "WebRTC-ForcePlayoutDelay/min_ms:0,max_ms:50/"
         try {
             PeerConnectionFactory.initializeFieldTrials(trial)
+            fieldTrialsInitialized = true
             ReceiverLogger.log(TAG, "🛡️ Buffer Anti-Tirones en TV: ${if (enabled) "ACTIVADO (100ms)" else "DESACTIVADO (0ms)"}")
         } catch (e: Throwable) { ReceiverLogger.log(TAG, "Buffer warning: ${e.message}") }
     }

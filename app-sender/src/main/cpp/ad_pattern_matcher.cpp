@@ -191,6 +191,41 @@ inline bool containsIgnoreCase(std::string_view str, std::string_view sub) {
     return false;
 }
 
+class JniUtfStringView {
+public:
+    JniUtfStringView(JNIEnv* env, jstring jstr) noexcept
+        : env_(env), jstr_(jstr) {
+        if (env_ != nullptr && jstr_ != nullptr) {
+            chars_ = env_->GetStringUTFChars(jstr_, nullptr);
+            if (chars_ != nullptr) {
+                view_ = std::string_view(chars_);
+            }
+        }
+    }
+
+    ~JniUtfStringView() {
+        if (env_ != nullptr && jstr_ != nullptr && chars_ != nullptr) {
+            env_->ReleaseStringUTFChars(jstr_, chars_);
+        }
+    }
+
+    JniUtfStringView(const JniUtfStringView&) = delete;
+    JniUtfStringView& operator=(const JniUtfStringView&) = delete;
+    JniUtfStringView(JniUtfStringView&&) = delete;
+    JniUtfStringView& operator=(JniUtfStringView&&) = delete;
+
+    [[nodiscard]] bool isValid() const noexcept { return chars_ != nullptr; }
+    [[nodiscard]] std::string_view view() const noexcept { return view_; }
+    [[nodiscard]] const char* c_str() const noexcept { return chars_; }
+    operator std::string_view() const noexcept { return view_; }
+
+private:
+    JNIEnv* env_{nullptr};
+    jstring jstr_{nullptr};
+    const char* chars_{nullptr};
+    std::string_view view_{};
+};
+
 } // namespace
 
 bool AdPatternMatcher::isAdOrTracker(std::string_view url, std::string_view /* pageUrl */) {
@@ -211,21 +246,14 @@ extern "C" {
 
 JNIEXPORT jboolean JNICALL
 Java_com_omnicast_sender_nativeclassifier_NativeStreamClassifier_isAdOrTrackerUrl(
-    JNIEnv* env, jobject /* this */, jstring jUrl, jstring jPageUrl) {
+    JNIEnv* env, jobject /* this */, jstring jUrl, jstring /* jPageUrl */) {
     if (!jUrl) return JNI_FALSE;
-    const char* cUrl = env->GetStringUTFChars(jUrl, nullptr);
-    if (!cUrl) return JNI_FALSE;
+    JniUtfStringView url(env, jUrl);
+    if (!url.isValid()) return JNI_FALSE;
 
-    const char* cPageUrl = jPageUrl ? env->GetStringUTFChars(jPageUrl, nullptr) : nullptr;
-
-    std::string_view urlView(cUrl);
-    std::string_view pageView(cPageUrl ? cPageUrl : "");
-
-    bool blocked = AdPatternMatcher::isAdOrTracker(urlView, pageView);
-
-    env->ReleaseStringUTFChars(jUrl, cUrl);
-    if (jPageUrl && cPageUrl) env->ReleaseStringUTFChars(jPageUrl, cPageUrl);
-
+    // pageUrl no se usa en el matcher: evitamos reservar UTFChars innecesariamente
+    // pasando una vista de forma segura y zero-copy.
+    bool blocked = AdPatternMatcher::isAdOrTracker(url.view());
     return blocked ? JNI_TRUE : JNI_FALSE;
 }
 

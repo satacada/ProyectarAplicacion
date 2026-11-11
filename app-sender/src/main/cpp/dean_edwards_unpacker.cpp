@@ -3,6 +3,8 @@
 #include <vector>
 #include <cstdint>
 #include <cctype>
+#include <algorithm>
+#include <string_view>
 
 namespace {
 
@@ -12,6 +14,41 @@ inline int charToBase(char c) {
     if (c >= 'A' && c <= 'Z') return c - 'A' + 36;
     return -1;
 }
+
+class JniUtfStringView {
+public:
+    JniUtfStringView(JNIEnv* env, jstring jstr) noexcept
+        : env_(env), jstr_(jstr) {
+        if (env_ != nullptr && jstr_ != nullptr) {
+            chars_ = env_->GetStringUTFChars(jstr_, nullptr);
+            if (chars_ != nullptr) {
+                view_ = std::string_view(chars_);
+            }
+        }
+    }
+
+    ~JniUtfStringView() {
+        if (env_ != nullptr && jstr_ != nullptr && chars_ != nullptr) {
+            env_->ReleaseStringUTFChars(jstr_, chars_);
+        }
+    }
+
+    JniUtfStringView(const JniUtfStringView&) = delete;
+    JniUtfStringView& operator=(const JniUtfStringView&) = delete;
+    JniUtfStringView(JniUtfStringView&&) = delete;
+    JniUtfStringView& operator=(JniUtfStringView&&) = delete;
+
+    [[nodiscard]] bool isValid() const noexcept { return chars_ != nullptr; }
+    [[nodiscard]] std::string_view view() const noexcept { return view_; }
+    [[nodiscard]] const char* c_str() const noexcept { return chars_; }
+    operator std::string_view() const noexcept { return view_; }
+
+private:
+    JNIEnv* env_{nullptr};
+    jstring jstr_{nullptr};
+    const char* chars_{nullptr};
+    std::string_view view_{};
+};
 
 } // namespace
 
@@ -108,7 +145,8 @@ std::string DeanEdwardsUnpacker::unpack(std::string_view html) {
 
     // 6. Split kStr by '|' into views (Zero-Copy)
     std::vector<std::string_view> kList;
-    kList.reserve(c + 16);
+    size_t safeReserve = std::min(static_cast<size_t>(c + 16), kStr.size() + 1);
+    kList.reserve(safeReserve);
     size_t segStart = 0;
     for (size_t i = 0; i <= kStr.size(); ++i) {
         if (i == kStr.size() || kStr[i] == '|') {
@@ -153,7 +191,12 @@ std::string DeanEdwardsUnpacker::unpack(std::string_view html) {
             if (validRadix) {
                 int d = charToBase(tc);
                 if (d >= 0 && static_cast<uint32_t>(d) < a) {
-                    val = val * a + static_cast<uint32_t>(d);
+                    uint64_t nextVal = static_cast<uint64_t>(val) * a + static_cast<uint32_t>(d);
+                    if (nextVal >= c) {
+                        validRadix = false;
+                    } else {
+                        val = static_cast<uint32_t>(nextVal);
+                    }
                 } else {
                     validRadix = false;
                 }
@@ -177,14 +220,10 @@ JNIEXPORT jstring JNICALL
 Java_com_omnicast_sender_nativeclassifier_NativeStreamClassifier_unpackDeanEdwardsNative(
     JNIEnv* env, jobject /* this */, jstring jHtml) {
     if (!jHtml) return nullptr;
-    const char* cHtml = env->GetStringUTFChars(jHtml, nullptr);
-    if (!cHtml) return nullptr;
+    JniUtfStringView html(env, jHtml);
+    if (!html.isValid()) return nullptr;
 
-    std::string_view htmlView(cHtml);
-    std::string unpacked = DeanEdwardsUnpacker::unpack(htmlView);
-
-    env->ReleaseStringUTFChars(jHtml, cHtml);
-
+    std::string unpacked = DeanEdwardsUnpacker::unpack(html.view());
     if (unpacked.empty()) return nullptr;
     return env->NewStringUTF(unpacked.c_str());
 }

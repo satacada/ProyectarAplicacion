@@ -64,6 +64,41 @@ std::string_view getPathOnly(std::string_view url) {
     return url;
 }
 
+class JniUtfStringView {
+public:
+    JniUtfStringView(JNIEnv* env, jstring jstr) noexcept
+        : env_(env), jstr_(jstr) {
+        if (env_ != nullptr && jstr_ != nullptr) {
+            chars_ = env_->GetStringUTFChars(jstr_, nullptr);
+            if (chars_ != nullptr) {
+                view_ = std::string_view(chars_);
+            }
+        }
+    }
+
+    ~JniUtfStringView() {
+        if (env_ != nullptr && jstr_ != nullptr && chars_ != nullptr) {
+            env_->ReleaseStringUTFChars(jstr_, chars_);
+        }
+    }
+
+    JniUtfStringView(const JniUtfStringView&) = delete;
+    JniUtfStringView& operator=(const JniUtfStringView&) = delete;
+    JniUtfStringView(JniUtfStringView&&) = delete;
+    JniUtfStringView& operator=(JniUtfStringView&&) = delete;
+
+    [[nodiscard]] bool isValid() const noexcept { return chars_ != nullptr; }
+    [[nodiscard]] std::string_view view() const noexcept { return view_; }
+    [[nodiscard]] const char* c_str() const noexcept { return chars_; }
+    operator std::string_view() const noexcept { return view_; }
+
+private:
+    JNIEnv* env_{nullptr};
+    jstring jstr_{nullptr};
+    const char* chars_{nullptr};
+    std::string_view view_{};
+};
+
 } // namespace
 
 bool StreamClassifier::isStaticAsset(std::string_view url) {
@@ -81,14 +116,9 @@ bool StreamClassifier::isTelemetryOrBeacon(std::string_view url) {
     return false;
 }
 
-bool StreamClassifier::isAdOrGarbage(std::string_view url, float durationSec) {
+bool StreamClassifier::isAdOrGarbage(std::string_view url, float /* durationSec */) {
     if (url.empty() || url.starts_with("blob:") || url.starts_with("data:") || url.starts_with("about:")) {
         return true;
-    }
-    if (durationSec > 0.0f && durationSec < 45.0f) {
-        for (const auto& kw : AD_KEYWORDS) {
-            if (containsIgnoreCase(url, kw)) return true;
-        }
     }
     for (const auto& kw : AD_KEYWORDS) {
         if (containsIgnoreCase(url, kw)) return true;
@@ -159,17 +189,11 @@ JNIEXPORT jint JNICALL
 Java_com_omnicast_sender_nativeclassifier_NativeStreamClassifier_classifyUrl(
     JNIEnv* env, jobject /* this */, jstring jUrl, jstring jDocUrl) {
     if (!jUrl) return static_cast<jint>(MediaBranchCode::DISCARD);
-    const char* cUrl = env->GetStringUTFChars(jUrl, nullptr);
-    const char* cDocUrl = jDocUrl ? env->GetStringUTFChars(jDocUrl, nullptr) : nullptr;
+    JniUtfStringView url(env, jUrl);
+    if (!url.isValid()) return static_cast<jint>(MediaBranchCode::DISCARD);
 
-    std::string_view urlView(cUrl);
-    std::string_view docUrlView(cDocUrl ? cDocUrl : "");
-
-    MediaBranchCode result = StreamClassifier::classify(urlView, docUrlView);
-
-    env->ReleaseStringUTFChars(jUrl, cUrl);
-    if (jDocUrl && cDocUrl) env->ReleaseStringUTFChars(jDocUrl, cDocUrl);
-
+    JniUtfStringView docUrl(env, jDocUrl);
+    MediaBranchCode result = StreamClassifier::classify(url.view(), docUrl.view());
     return static_cast<jint>(result);
 }
 
@@ -177,15 +201,14 @@ JNIEXPORT jboolean JNICALL
 Java_com_omnicast_sender_nativeclassifier_NativeStreamClassifier_isDiscardCandidate(
     JNIEnv* env, jobject /* this */, jstring jUrl, jfloat durationSec) {
     if (!jUrl) return JNI_TRUE;
-    const char* cUrl = env->GetStringUTFChars(jUrl, nullptr);
-    std::string_view urlView(cUrl);
+    JniUtfStringView url(env, jUrl);
+    if (!url.isValid()) return JNI_TRUE;
 
-    bool discard = StreamClassifier::isStaticAsset(urlView) ||
-                   StreamClassifier::isTelemetryOrBeacon(urlView) ||
-                   StreamClassifier::isAdOrGarbage(urlView, durationSec) ||
-                   StreamClassifier::isLooseChunk(urlView);
+    bool discard = StreamClassifier::isStaticAsset(url.view()) ||
+                   StreamClassifier::isTelemetryOrBeacon(url.view()) ||
+                   StreamClassifier::isAdOrGarbage(url.view(), durationSec) ||
+                   StreamClassifier::isLooseChunk(url.view());
 
-    env->ReleaseStringUTFChars(jUrl, cUrl);
     return discard ? JNI_TRUE : JNI_FALSE;
 }
 
@@ -193,12 +216,10 @@ JNIEXPORT jboolean JNICALL
 Java_com_omnicast_sender_nativeclassifier_NativeStreamClassifier_isTelemetryOrBeacon(
     JNIEnv* env, jobject /* this */, jstring jUrl) {
     if (!jUrl) return JNI_FALSE;
-    const char* cUrl = env->GetStringUTFChars(jUrl, nullptr);
-    std::string_view urlView(cUrl);
+    JniUtfStringView url(env, jUrl);
+    if (!url.isValid()) return JNI_FALSE;
 
-    bool result = StreamClassifier::isTelemetryOrBeacon(urlView);
-
-    env->ReleaseStringUTFChars(jUrl, cUrl);
+    bool result = StreamClassifier::isTelemetryOrBeacon(url.view());
     return result ? JNI_TRUE : JNI_FALSE;
 }
 

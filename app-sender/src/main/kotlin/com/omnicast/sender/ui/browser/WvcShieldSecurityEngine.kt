@@ -115,6 +115,38 @@ object WvcShieldSecurityEngine {
                     };
                 }
             } catch(_) {}
+
+            // 5. Camuflaje Stealth Anti-Detección de WebView (Brave/Chrome Nativo)
+            try {
+                if (!window.chrome) { window.chrome = { app: { isInstalled: false }, runtime: {} }; }
+                if (navigator.userAgentData) {
+                    var _realBrands = [
+                        { brand: 'Google Chrome', version: '124' },
+                        { brand: 'Chromium', version: '124' },
+                        { brand: 'Not-A.Brand', version: '99' }
+                    ];
+                    try {
+                        Object.defineProperty(navigator, 'userAgentData', {
+                            get: function() {
+                                return {
+                                    brands: _realBrands,
+                                    mobile: true,
+                                    platform: 'Android',
+                                    getHighEntropyValues: function() {
+                                        return Promise.resolve({
+                                            architecture: 'arm',
+                                            model: 'Pixel 7',
+                                            platform: 'Android',
+                                            platformVersion: '14.0.0',
+                                            uaFullVersion: '124.0.0.0'
+                                        });
+                                    }
+                                };
+                            }
+                        });
+                    } catch(_) {}
+                }
+            } catch(_) {}
         })();
     """.trimIndent()
 

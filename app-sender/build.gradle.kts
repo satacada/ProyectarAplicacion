@@ -84,6 +84,7 @@ dependencies {
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.media)
     implementation(libs.androidx.swiperefreshlayout)
+    implementation(libs.androidx.webkit)
     implementation(libs.adblock.filter)
 
     // Jetpack Compose UI

@@ -15,6 +15,7 @@ coroutines = "1.8.0"
 junit = "4.13.2"
 javaWebsocket = "1.5.6"
 jetty = "9.4.54.v20240208"
+webkit = "1.12.0"
 
 [libraries]
 jetty-server = { group = "org.eclipse.jetty", name = "jetty-server", version.ref = "jetty" }
@@ -26,6 +27,7 @@ androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecyc
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
 androidx-media = { group = "androidx.media", name = "media", version = "1.7.0" }
 androidx-swiperefreshlayout = { group = "androidx.swiperefreshlayout", name = "swiperefreshlayout", version = "1.1.0" }
+androidx-webkit = { group = "androidx.webkit", name = "webkit", version.ref = "webkit" }
 adblock-filter = { group = "com.github.Edsuns.AdblockAndroid", name = "adblock-client", version = "0.9.1" }
 
 # Compose UI (Mobile)

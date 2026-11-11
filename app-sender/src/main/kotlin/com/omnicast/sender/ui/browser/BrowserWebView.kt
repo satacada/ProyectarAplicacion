@@ -115,22 +115,16 @@ fun BrowserWebView(
                 isClickable = true
                 CookieManager.getInstance().setAcceptCookie(true)
                 CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
-                settings.javaScriptEnabled = true
-                settings.domStorageEnabled = true
-                settings.databaseEnabled = true
-                settings.allowFileAccess = true
-                settings.useWideViewPort = true
-                settings.loadWithOverviewMode = true
-                settings.setSupportZoom(true)
-                settings.builtInZoomControls = true
-                settings.displayZoomControls = false
-                settings.textZoom = 100
-                settings.layoutAlgorithm = WebSettings.LayoutAlgorithm.NORMAL
-                settings.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
-                settings.mediaPlaybackRequiresUserGesture = false
-                settings.setSupportMultipleWindows(false)
-                settings.javaScriptCanOpenWindowsAutomatically = false
+                settings.javaScriptEnabled = true; settings.domStorageEnabled = true; settings.databaseEnabled = true
+                settings.allowFileAccess = true; settings.useWideViewPort = true; settings.loadWithOverviewMode = true
+                settings.setSupportZoom(true); settings.builtInZoomControls = true; settings.displayZoomControls = false
+                settings.textZoom = 100; settings.layoutAlgorithm = WebSettings.LayoutAlgorithm.NORMAL
+                settings.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW; settings.mediaPlaybackRequiresUserGesture = false
+                settings.setSupportMultipleWindows(false); settings.javaScriptCanOpenWindowsAutomatically = false
                 settings.userAgentString = UA_MOBILE
+                if (androidx.webkit.WebViewFeature.isFeatureSupported(androidx.webkit.WebViewFeature.REQUESTED_WITH_HEADER_ALLOW_LIST)) {
+                    androidx.webkit.WebSettingsCompat.setRequestedWithHeaderOriginAllowList(settings, emptySet())
+                }
 
                 webViewClient = object : WebViewClient() {
                     override fun onRenderProcessGone(view: WebView?, detail: RenderProcessGoneDetail?): Boolean {

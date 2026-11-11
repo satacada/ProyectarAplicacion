@@ -1,6 +1,6 @@
 # 📊 PROJECT DASHBOARD — OmniCast Pro
 
-**Última actualización:** 2026-11-11 (FASE 7 y Hito 7.3 [CH-09] Completados al 100%: Desacoplamiento de window.open y Navegación Inteligente de Mismo Origen)  
+**Última actualización:** 2026-11-11 (FASE 7 y Hito 7.4 [CH-10] Completados al 100%: Modo Stealth Chrome Nativo Anti-Detección de WebView)  
 **Versión de producción actual:** v3.7.0 (Sender: 368) / v3.7.0 (Receiver: 351)  
 **Estándar de calidad:** AGENTS.md (Archivos <= 300 líneas, Clean Architecture, 100% Offline/Local, C++20 Zero-Allocation, Poda Obligatoria de Código Inútil ante Hipótesis Fallidas)
 

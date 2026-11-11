@@ -2,11 +2,11 @@
 
 > **Versión Base de Rescate:** `v3.7.0` (`versionCodeSender: 368` | `versionCodeReceiver: 351`)  
 > **Política Operativa `v4.4`:** Micro-comandos `[auto]` y `[ver]` orquestados por el Planificador (`Argon`) invocando subagentes aislados (`flash` / `flash_lite`) | **Prohibido disparar Explorador Forense en tareas mapeadas** (todas las rutas están en este archivo y en [`doc/MAPA_DEL_SISTEMA_Y_FLUJO_DE_CODIGO.md`](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/MAPA_DEL_SISTEMA_Y_FLUJO_DE_CODIGO.md)).  
-> **Estado Global:** 🎉 **FASE 7 COMPLETADA AL 100% (Hitos 7.1, 7.2 y 7.3 — PVR Inteligente, Touchpad y Navegación Inteligente de Mismo Origen en Android TV — 95 Tests Passing — 0 Archivos Kotlin > 300L)**
+> **Estado Global:** 🎉 **FASE 7 COMPLETADA AL 100% (Hitos 7.1, 7.2, 7.3 y 7.4 — PVR Inteligente, Touchpad, Navegación Inteligente y Stealth Chrome en Android TV — 95 Tests Passing — 0 Archivos Kotlin > 300L)**
 
 ---
 
-## 💾 FASE 7 — PVR Inteligente, Touchpad y Navegación Inteligente (`[x]` — 3 / 3 completados — 100%)
+## 💾 FASE 7 — PVR Inteligente, Touchpad, Navegación y Stealth Chrome (`[x]` — 4 / 4 completados — 100%)
 
 - `[x]` **Hito 7.1 [CH-07] — Auto-Detección Preferencial USB y Purga de Huérfanos en Android TV (`app-receiver/src/main/kotlin/com/omnicast/receiver/directstream/TvStorageSafetyManager.kt`, `app-receiver/src/main/kotlin/com/omnicast/receiver/directstream/PvrStreamRecorder.kt`):**
   - **Objetivo:** Detectar automáticamente memorias USB conectadas con espacio holgado (`>= 1.5 GB`), aplicar la constante `SAFE_RESERVE_USB_BYTES` (500 MB) y purgar en segundo plano archivos temporales huérfanos (`.tmp`, `.part`, 0-byte) con más de 3 minutos de antigüedad, garantizando descargas y grabaciones PVR estables sin desbordar el almacenamiento de la TV Box.
@@ -29,6 +29,12 @@
   - **Archivos Objetivo Exactos:**
     - `app-sender/src/main/assets/sniffer/universal_sniffer.js` (hook redundante eliminado)
     - `app-sender/src/main/kotlin/com/omnicast/sender/browser/WvcShieldSecurityEngine.kt` (log de trazabilidad: 217 líneas)
+  - **Agentes Involucrados:** `planner-architect` (`Argon`) ➔ `specialist-tv-player-pvr` (`flash`) ➔ `surgical-developer` (`flash`) ➔ `qa-oracle-tester` (`flash`) ➔ `sync-documenter` (`flash`) ➔ `git-ota-releaser` (`flash_lite`).
+
+- `[x]` **Hito 7.4 [CH-10] — Modo Stealth Chrome Nativo Anti-Detección de WebView (`app-sender/src/main/kotlin/com/omnicast/sender/browser/WvcShieldSecurityEngine.kt`):**
+  - **Objetivo:** Suprimir la cabecera `X-Requested-With` mediante AndroidX WebKit (`setRequestedWithHeaderOriginAllowList` con `emptySet`) e inyectar polyfills JavaScript en `WvcShieldSecurityEngine.kt` para spoofing de `window.chrome` y `navigator.userAgentData` con marcas nativas de Google Chrome, evadiendo defensas de Cloudflare y portales como SoloLatino.
+  - **Archivos Objetivo Exactos:**
+    - `app-sender/src/main/kotlin/com/omnicast/sender/browser/WvcShieldSecurityEngine.kt` (supresión de header y polyfill Stealth JS: 217 líneas)
   - **Agentes Involucrados:** `planner-architect` (`Argon`) ➔ `specialist-tv-player-pvr` (`flash`) ➔ `surgical-developer` (`flash`) ➔ `qa-oracle-tester` (`flash`) ➔ `sync-documenter` (`flash`) ➔ `git-ota-releaser` (`flash_lite`).
 
 ---

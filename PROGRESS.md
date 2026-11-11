@@ -12,7 +12,7 @@
 
 | Hito / Fase | Nombre del Hito / Fase | Estado | Progreso |
 | :--- | :--- | :---: | :---: |
-| **Hito 7.3 [CH-09]** | Desacoplamiento de window.open y Navegación Inteligente de Mismo Origen | `[x]` Completado | **100%** |
+| **Hito 7.4 [CH-10]** | Modo Stealth Chrome Nativo Anti-Detección de WebView (SoloLatino / Cloudflare) | `[x]` Completado | **100%** |
 | :--- | :--- | :---: | :---: |
 | **Fase 0** | Base Heredada e Inmutable (20 HUs + 4 Pilares + Motor PVR `v3.6.08`) | `[x]` Sellada | **4 / 4 (100%)** |
 | **Fase 1** | Saneamiento y Reestructuración Quirúrgica (`< 300` líneas y limpieza) | `[x]` Completada | **4 / 4 (100%)** |
@@ -21,7 +21,7 @@
 | **Fase 4** | Cobertura Cuantitativa de Tests y Telemetría Proactiva | `[x]` Completada | **1 / 1 (100%)** |
 | **Fase 5** | Modernización, Eficiencia y Rendimiento Profesional | `[x]` Completada | **4 / 4 (100%)** |
 | **Fase 6** | Telemetría OSD en Tiempo Real y Experiencia de Control Remoto | `[x]` Completada | **2 / 2 (100%)** |
-| **Fase 7** | PVR Inteligente, Touchpad y Navegación Misma Origen (Hitos 7.1, 7.2, 7.3) | `[x]` Completada | **3 / 3 (100%)** |
+| **Fase 7** | PVR Inteligente, Touchpad, Navegación y Stealth Chrome (Hitos 7.1–7.4) | `[x]` Completada | **4 / 4 (100%)** |
 
 ---
 
@@ -62,6 +62,14 @@
 ---
 
 ## 4. Historial de Sesiones Multi-Agente
+
+### `[2026-11-11]` — Hito 7.4 [CH-10] — Modo Stealth Chrome Nativo Anti-Detección de WebView (SoloLatino / Cloudflare)
+- **Acción:**
+  - **Supresión de `X-Requested-With`** mediante AndroidX WebKit (`setRequestedWithHeaderOriginAllowList` con `emptySet`), evitando que Cloudflare detecte el tráfico proveniente de un WebView embebido.
+  - **Camuflaje JavaScript en `WvcShieldSecurityEngine.kt`:** Inyección de polyfill para `window.chrome` y spoofing de `navigator.userAgentData` con marcas nativas de Google Chrome.
+- **Verificación:** 95/95 tests pasando (0 fallos, 0 regresiones), 0 archivos Kotlin > 300 líneas.
+- **Salud del Oráculo:** 🟢 95 tests passing (100% — 0 fallos).
+- **Siguiente paso:** 🎉 **FASE 7 COMPLETADA AL 100% (Hitos 7.1, 7.2, 7.3 y 7.4)**.
 
 ### `[2026-11-11]` — Hito 7.3 [CH-09] — Desacoplamiento de window.open y Navegación Inteligente de Mismo Origen
 - **Acción:**

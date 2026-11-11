@@ -68,7 +68,12 @@ object PvrStreamRecorder {
     ) {
         if (_progress.value.isRecording) return
         recorderScope.launch {
-            val targetDir = TvStorageSafetyManager.getTargetDirectory(context, useUsb, customFolder, "PVR_Grabaciones")
+            TvStorageSafetyManager.purgeOrphanTempFiles(context)
+            val (targetDir, activeUsb) = if (!useUsb && customFolder.isNullOrBlank()) {
+                TvStorageSafetyManager.getAutoPreferredDirectory(context, isMovieDownload = false)
+            } else {
+                Pair(TvStorageSafetyManager.getTargetDirectory(context, useUsb, customFolder, "PVR_Grabaciones"), useUsb)
+            }
             val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
             val outFile = File(targetDir, "${sanitizeTitle(title, "Canal_PVR")}_${targetHeight}p_$timeStamp.mp4")
             currentOutFile = outFile; isPausedInternal = false
@@ -76,7 +81,7 @@ object PvrStreamRecorder {
                 isRecording = true, filePath = outFile.absolutePath, channelTitle = title,
                 targetFolder = targetDir.absolutePath, statusNotice = "🔴 Grabando..."
             )
-            TvStorageSafetyManager.startWatchdog(targetDir.path, useUsb, recorderScope) { alert ->
+            TvStorageSafetyManager.startWatchdog(targetDir.path, activeUsb, recorderScope) { alert ->
                 stopRecording(alert); recorderScope.launch(Dispatchers.Main) { onStopped(alert) }
             }
             if (timerMinutes > 0) {
@@ -112,7 +117,12 @@ object PvrStreamRecorder {
     ) {
         if (_progress.value.isRecording) return
         recorderScope.launch {
-            val targetDir = TvStorageSafetyManager.getTargetDirectory(context, useUsb, customFolder, "Pelis_descargas")
+            TvStorageSafetyManager.purgeOrphanTempFiles(context)
+            val (targetDir, activeUsb) = if (!useUsb && customFolder.isNullOrBlank()) {
+                TvStorageSafetyManager.getAutoPreferredDirectory(context, isMovieDownload = true)
+            } else {
+                Pair(TvStorageSafetyManager.getTargetDirectory(context, useUsb, customFolder, "Pelis_descargas"), useUsb)
+            }
             val lower = url.lowercase()
             val isHls = lower.contains(".m3u8") || lower.contains("urlset") || lower.contains(".txt")
             val isFmp4 = lower.contains("dailymotion.com") || lower.contains("dmcdn.net")
@@ -127,14 +137,14 @@ object PvrStreamRecorder {
                 targetFolder = targetDir.absolutePath, isResumable = true,
                 statusNotice = if (initialBytes > 0L) "🔄 Reanudando descarga de película..." else "📥 Descargando película..."
             )
-            TvStorageSafetyManager.startWatchdog(targetDir.path, useUsb, recorderScope) { alert ->
+            TvStorageSafetyManager.startWatchdog(targetDir.path, activeUsb, recorderScope) { alert ->
                 stopRecording(alert); onStopped(alert)
             }
             tickerJob = launchTicker()
             recordJob = recorderScope.launch(Dispatchers.IO) {
                 TvDownloadManager.downloadMovieInBridgeMode(
                     context = context, title = title, url = url, headers = headers,
-                    expectedBytes = expectedBytes, useUsb = useUsb, targetDir = targetDir,
+                    expectedBytes = expectedBytes, useUsb = activeUsb, targetDir = targetDir,
                     targetHeight = targetHeight,
                     onProgress = { p ->
                         if (!p.isDownloading && p.isCompleted) {

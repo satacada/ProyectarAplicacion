@@ -38,37 +38,24 @@ object TvStorageSafetyManager {
 
     const val INTERNAL_SAFETY_RESERVE_BYTES: Long = 2L * 1024L * 1024L * 1024L // 2.0 GB
     const val EXTERNAL_USB_SAFETY_RESERVE_BYTES: Long = 500L * 1024L * 1024L // 500 MB
+    const val SAFE_RESERVE_USB_BYTES: Long = EXTERNAL_USB_SAFETY_RESERVE_BYTES
 
     @Volatile
     private var watchdogJob: Job? = null
 
-    fun calculateReserveBytes(isUsb: Boolean): Long =
-        if (isUsb) EXTERNAL_USB_SAFETY_RESERVE_BYTES else INTERNAL_SAFETY_RESERVE_BYTES
+    fun calculateReserveBytes(isUsb: Boolean): Long = if (isUsb) EXTERNAL_USB_SAFETY_RESERVE_BYTES else INTERNAL_SAFETY_RESERVE_BYTES
+    fun calculateUsableBytes(freeBytes: Long, isUsb: Boolean): Long = (freeBytes - calculateReserveBytes(isUsb)).coerceAtLeast(0L)
+    fun isStorageSafeForRecording(freeBytes: Long, isUsb: Boolean): Boolean = freeBytes > calculateReserveBytes(isUsb)
+    fun isUsbStorageAvailable(context: Context): Boolean = context.getExternalFilesDirs(null).filterNotNull().size > 1
+    fun getAvailableBytes(path: String): Long = runCatching { StatFs(path).availableBytes }.getOrDefault(0L)
 
-    fun calculateUsableBytes(freeBytes: Long, isUsb: Boolean): Long {
-        val reserve = calculateReserveBytes(isUsb)
-        return (freeBytes - reserve).coerceAtLeast(0L)
-    }
-
-    fun isStorageSafeForRecording(freeBytes: Long, isUsb: Boolean): Boolean {
-        val reserve = calculateReserveBytes(isUsb)
-        return freeBytes > reserve
-    }
-
-    fun calculateMaxSafeMinutes(usableBytes: Long, preset: VideoBitratePreset): Long {
-        if (usableBytes <= 0L || preset.mbPerMin <= 0.0) return 0L
-        val mbAvailable = usableBytes.toDouble() / (1024.0 * 1024.0)
-        return (mbAvailable / preset.mbPerMin).toLong()
-    }
+    fun calculateMaxSafeMinutes(usableBytes: Long, preset: VideoBitratePreset): Long =
+        if (usableBytes <= 0L || preset.mbPerMin <= 0.0) 0L else ((usableBytes.toDouble() / (1024.0 * 1024.0)) / preset.mbPerMin).toLong()
 
     fun formatBytes(bytes: Long): String {
         if (bytes <= 0L) return "0 MB"
         val mb = bytes.toDouble() / (1024.0 * 1024.0)
-        return if (mb >= 1024.0) {
-            String.format(Locale.US, "%.2f GB", mb / 1024.0)
-        } else {
-            String.format(Locale.US, "%.0f MB", mb)
-        }
+        return if (mb >= 1024.0) String.format(Locale.US, "%.2f GB", mb / 1024.0) else String.format(Locale.US, "%.0f MB", mb)
     }
 
     fun detectAvailableStorageUnits(context: Context): List<TvStorageUnit> {
@@ -90,16 +77,9 @@ object TvStorageSafetyManager {
 
             units.add(
                 TvStorageUnit(
-                    id = "internal",
-                    name = "Memoria Interna",
-                    rootPath = internalPath,
-                    isUsb = false,
-                    totalBytes = totalBytes,
-                    freeBytes = freeBytes,
-                    reserveBytes = reserve,
-                    usableBytes = usable,
-                    canRecord = safe,
-                    warningMessage = warn
+                    id = "internal", name = "Memoria Interna", rootPath = internalPath, isUsb = false,
+                    totalBytes = totalBytes, freeBytes = freeBytes, reserveBytes = reserve,
+                    usableBytes = usable, canRecord = safe, warningMessage = warn
                 )
             )
         }
@@ -125,16 +105,9 @@ object TvStorageSafetyManager {
 
                     units.add(
                         TvStorageUnit(
-                            id = "usb_$i",
-                            name = "USB ($label)",
-                            rootPath = usbDir.path,
-                            isUsb = true,
-                            totalBytes = totalBytes,
-                            freeBytes = freeBytes,
-                            reserveBytes = reserve,
-                            usableBytes = usable,
-                            canRecord = safe,
-                            warningMessage = warn
+                            id = "usb_$i", name = "USB ($label)", rootPath = usbDir.path, isUsb = true,
+                            totalBytes = totalBytes, freeBytes = freeBytes, reserveBytes = reserve,
+                            usableBytes = usable, canRecord = safe, warningMessage = warn
                         )
                     )
                 }
@@ -185,6 +158,49 @@ object TvStorageSafetyManager {
             if (f.exists() || f.mkdirs()) return f
         }
         return getPvrRecordingsDir(context, useUsb, defaultFolder)
+    }
+
+    fun getTargetDirectory(context: Context, isMovieDownload: Boolean, useUsb: Boolean): File? {
+        if (useUsb && !isUsbStorageAvailable(context)) return null
+        val sub = if (isMovieDownload) "Pelis_descargas" else "PVR_Grabaciones"
+        return getPvrRecordingsDir(context, useUsb, sub)
+    }
+
+    fun purgeOrphanTempFiles(context: Context) {
+        runCatching {
+            val dirs = listOfNotNull(
+                getTargetDirectory(context, isMovieDownload = false, useUsb = false),
+                getTargetDirectory(context, isMovieDownload = true, useUsb = false),
+                getTargetDirectory(context, isMovieDownload = false, useUsb = true),
+                getTargetDirectory(context, isMovieDownload = true, useUsb = true)
+            ).distinct()
+            dirs.forEach { dir ->
+                if (dir.exists() && dir.isDirectory) {
+                    dir.listFiles()?.forEach { file ->
+                        val name = file.name.lowercase()
+                        if (name.endsWith(".tmp") || name.endsWith(".part") || (file.isFile && file.length() == 0L)) {
+                            // Purga solo si tiene más de 3 minutos de antigüedad para no borrar grabaciones en curso
+                            if (System.currentTimeMillis() - file.lastModified() > 180_000L) {
+                                file.delete()
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    fun getAutoPreferredDirectory(context: Context, isMovieDownload: Boolean): Pair<File, Boolean> {
+        val usbDir = getTargetDirectory(context, isMovieDownload, useUsb = true)
+        if (usbDir != null && isUsbStorageAvailable(context)) {
+            val freeBytes = getAvailableBytes(usbDir.absolutePath)
+            if (freeBytes > (SAFE_RESERVE_USB_BYTES + 1_000_000_000L)) { // >= 1.5 GB
+                return Pair(usbDir, true)
+            }
+        }
+        val internalDir = getTargetDirectory(context, isMovieDownload, useUsb = false)
+            ?: context.filesDir
+        return Pair(internalDir, false)
     }
 
     fun scanPvrRecordings(context: Context): List<TvPvrRecordingFile> {

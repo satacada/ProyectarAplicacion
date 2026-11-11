@@ -1,12 +1,12 @@
 {
-  "versionName": "3.7.1",
-  "versionCodeSender": 371,
-  "versionCodeReceiver": 352,
-  "releaseTag": "v3.7.1",
-  "senderApk": "omnicast-sender-v3.7.1.apk",
-  "receiverApk": "omnicast-receiver-v3.7.1.apk",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.1/omnicast-sender-v3.7.1.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.1/omnicast-receiver-v3.7.1.apk",
-  "releaseNotes": "v3.7.1: Cierre de Hito 6.1 [CH-05]. HUD de telemetría OSD en tiempo real y activación remota.",
-  "changelog": "v3.7.1: Cierre de Hito 6.1 [CH-05]. HUD de telemetría OSD en tiempo real y activación remota."
+  "versionName": "3.7.3",
+  "versionCodeSender": 373,
+  "versionCodeReceiver": 354,
+  "releaseTag": "v3.7.3",
+  "senderApk": "omnicast-sender-v3.7.3.apk",
+  "receiverApk": "omnicast-receiver-v3.7.3.apk",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.3/omnicast-sender-v3.7.3.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.3/omnicast-receiver-v3.7.3.apk",
+  "releaseNotes": "v3.7.3: Cierre de Hito 7.1 [CH-07]. Auto-detección preferencial USB y purga de huérfanos en Android TV.",
+  "changelog": "v3.7.3: Cierre de Hito 7.1 [CH-07]. Auto-detección preferencial USB y purga de huérfanos en Android TV."
 }

@@ -57,7 +57,7 @@ object StreamCandidateValidator {
         // 2. Extensiones de documentos web y assets estáticos
         for (ext in WEB_DOCUMENT_EXTENSIONS) {
             if (cleanPath.endsWith(ext)) {
-                if (ext == ".txt" && (cleanPath.contains("master") || cleanPath.contains("index") || lower.contains("/hls"))) {
+                if (ext == ".txt" && (cleanPath.contains("master") || cleanPath.contains("index") || lower.contains("hls") || lower.contains(".txt?hls") || lower.contains("master.txt"))) {
                     continue
                 }
                 return true
@@ -99,6 +99,12 @@ object StreamCandidateValidator {
             (lower.contains("~") && lower.contains("token=") && lower.contains("expiry=")) ||
             lower.contains("chunklist") || lower.contains("format=dash") ||
             lower.contains("master.m3u8") || lower.contains("manifest.mpd")
+        ) return true
+
+        // Rutas de manifiesto dinámicas y proxies de streaming (.txt?hls, master.txt, .php?url=)
+        if (lower.contains(".txt?hls") || lower.contains("master.txt") ||
+            lower.contains(".php?url=") || lower.contains("p.php?url=") ||
+            (cleanPath.endsWith(".txt") && lower.contains("hls"))
         ) return true
 
         return false
@@ -156,5 +162,36 @@ object StreamCandidateValidator {
         if (isCdnHostOffline(url)) return false
         if (isWebDocumentOrPlayerRoute(url)) return false
         return isBinaryMediaStream(url)
+    }
+
+    /**
+     * Verifica si el host de url o pageUrl pertenece a la familia de un proveedor.
+     * Evalúa si contiene el providerFamilyTag (en minúsculas) o coincide con alguno de fallbackDomains.
+     */
+    fun matchesProviderFamily(
+        url: String,
+        pageUrl: String?,
+        providerFamilyTag: String,
+        fallbackDomains: List<String>
+    ): Boolean {
+        val tag = providerFamilyTag.trim().lowercase()
+        val urlHost = extractHost(url)
+        val pageHost = pageUrl?.takeIf { it.isNotBlank() }?.let { extractHost(it) }.orEmpty()
+
+        if (tag.isNotEmpty()) {
+            if (urlHost.contains(tag) || pageHost.contains(tag)) return true
+        }
+
+        for (domain in fallbackDomains) {
+            val d = domain.trim().lowercase()
+            if (d.isEmpty()) continue
+            val cleanDomain = if (d.startsWith("www.")) d.substring(4) else d
+            if (urlHost == cleanDomain || urlHost.endsWith(".$cleanDomain") || urlHost.contains(cleanDomain) ||
+                pageHost == cleanDomain || pageHost.endsWith(".$cleanDomain") || pageHost.contains(cleanDomain)
+            ) {
+                return true
+            }
+        }
+        return false
     }
 }

@@ -15,13 +15,23 @@ class StreamwishExtractorAdapter : IMediaStreamExtractorPort {
 
     override val priority: Int = 22
 
+    companion object {
+        private val DOMAINS = listOf(
+            "streamwish.to",
+            "streamwish.com",
+            "strwish.com",
+            "swish.com",
+            "flaswish.com"
+        )
+    }
+
     override fun canHandle(candidate: StreamCandidate): Boolean {
-        val url = candidate.url.lowercase()
-        val page = candidate.pageUrl.lowercase()
-        val isDomainMatches = url.contains("streamwish.to") || url.contains("streamwish.com") ||
-                              url.contains("strwish.com") || url.contains("swish.com") || url.contains("flaswish.com") ||
-                              page.contains("streamwish.to") || page.contains("streamwish.com") ||
-                              page.contains("strwish.com") || page.contains("swish.com") || page.contains("flaswish.com")
+        val isDomainMatches = StreamCandidateValidator.matchesProviderFamily(
+            candidate.url,
+            candidate.pageUrl,
+            "streamwish",
+            DOMAINS
+        )
         return StreamCandidateValidator.isValidCdnStream(candidate.url, isDomainMatches)
     }
 

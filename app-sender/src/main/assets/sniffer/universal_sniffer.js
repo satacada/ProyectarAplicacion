@@ -48,9 +48,9 @@
                l.indexOf('doodcdn') !== -1 || l.indexOf('doopstream') !== -1 ||
                l.indexOf('doodstream') !== -1 || l.indexOf('/pass/') !== -1 ||
                l.indexOf('/live') !== -1 || l.indexOf('chunklist') !== -1 ||
-               l.indexOf('p.php?url=') !== -1 || (l.indexOf('/p.php') !== -1 && l.indexOf('sig=') !== -1) ||
+               l.indexOf('.php?url=') !== -1 || l.indexOf('p.php?url=') !== -1 || (l.indexOf('/p.php') !== -1 && l.indexOf('sig=') !== -1) ||
                ((l.indexOf('mycdn.me') !== -1 || l.indexOf('okcdn.ru') !== -1) && (l.indexOf('vd') !== -1 || l.indexOf('video') !== -1 || l.indexOf('cmd=video') !== -1 || l.indexOf('/cmd/') !== -1 || l.indexOf('sig=') !== -1)) ||
-               (l.indexOf('master.txt') !== -1 && l.indexOf('/hls') !== -1);
+               l.indexOf('master.txt') !== -1 || l.indexOf('.txt?hls') !== -1 || (l.indexOf('.txt') !== -1 && l.indexOf('hls') !== -1);
     }
 
     function isCommercial(v) {
@@ -70,30 +70,56 @@
         return false;
     }
 
-    function reportMedia(src, title, duration, isPlaying, label) {
-        if (!src || !isMediaUrl(src)) return;
-        var dur = (typeof duration === 'number' && !isNaN(duration)) ? duration : 0;
-        if (dur > 0 && dur < 60) return;
-        var t = title || document.title || 'Transmisión Web';
-        if (dur <= 0) {
-            try {
-                var vids = document.getElementsByTagName('video');
-                for (var k = 0; k < vids.length; k++) {
-                    if (vids[k].duration && !isNaN(vids[k].duration) && vids[k].duration > 0) {
-                        if (vids[k].duration < 60) return;
-                        dur = vids[k].duration;
-                        break;
-                    }
-                }
-            } catch(e) {}
+    function reportMedia(v, explicitUrl, duration, isPlaying, label) {
+        var src = '';
+        var t = '';
+        var dur = 0;
+        var playing = false;
+        var lbl = '';
+
+        if (v && typeof v === 'object' && (v.nodeName === 'VIDEO' || v.tagName === 'VIDEO' || typeof v.duration !== 'undefined')) {
+            src = explicitUrl || v.currentSrc || v.src || '';
+            dur = v.duration;
+            t = (typeof duration === 'string' && duration) ? duration : (document.title || 'Transmisión Web');
+            playing = (typeof isPlaying === 'boolean') ? isPlaying : !v.paused;
+            lbl = label || '';
+        } else {
+            src = (typeof v === 'string') ? v : (explicitUrl || '');
+            t = (typeof explicitUrl === 'string' && explicitUrl && typeof v === 'string') ? explicitUrl : (document.title || 'Transmisión Web');
+            dur = duration;
+            playing = !!isPlaying;
+            lbl = label || '';
         }
+
+        if (!src || !isMediaUrl(src)) return;
+
+        var uLower = src.toLowerCase();
+        var isLiveStream = uLower.indexOf('.m3u8') !== -1 ||
+                           uLower.indexOf('/live') !== -1 ||
+                           uLower.indexOf('chunklist') !== -1 ||
+                           uLower.indexOf('master') !== -1 ||
+                           uLower.indexOf('hls') !== -1;
+
+        if (dur === 0 || isNaN(dur) || dur === Infinity || !isFinite(dur)) {
+            if (isLiveStream) {
+                dur = 0;
+            }
+        }
+
+        if (typeof dur === 'number' && !isNaN(dur) && dur > 0 && dur < 60 && !isLiveStream) {
+            return;
+        }
+
+        var finalDur = (typeof dur === 'number' && !isNaN(dur) && isFinite(dur) && dur > 0) ? dur : 0;
+
         console.log(PREFIX + JSON.stringify({
-            type: isPlaying ? 'videoPlaying' : 'video',
+            type: playing ? 'videoPlaying' : 'video',
             video: src,
             src: src,
             title: t,
-            label: label || '',
-            duration: dur,
+            label: lbl,
+            duration: finalDur,
+            isLive: isLiveStream,
             frameUrl: window.location.href || ''
         }));
     }
@@ -120,15 +146,15 @@
             if (isYouTube) return;
             var s = v.currentSrc || v.src;
             if (s && s.indexOf('blob:') !== 0 && s.indexOf('data:') !== 0) {
-                reportMedia(s, document.title, v.duration || 0, playing);
+                reportMedia(v, s, document.title, playing);
             }
             try {
                 var sources = v.getElementsByTagName('source');
                 for (var si = 0; si < sources.length; si++) {
-                    if (sources[si].src) reportMedia(sources[si].src, document.title, v.duration || 0, false);
+                    if (sources[si].src) reportMedia(v, sources[si].src, document.title, false);
                 }
                 var dSrc = v.getAttribute('data-src');
-                if (dSrc) reportMedia(dSrc, document.title, v.duration || 0, false);
+                if (dSrc) reportMedia(v, dSrc, document.title, false);
             } catch(_) {}
         }
 
@@ -347,7 +373,7 @@
                 monitorVideo(v);
                 var s = v.currentSrc || v.src;
                 if (s && isMediaUrl(s)) {
-                    reportMedia(s, document.title, v.duration || 0, !v.paused);
+                    reportMedia(v, s, document.title, !v.paused);
                 }
             }
             if (window.__omniCapturedMedia && window.__omniCapturedMedia.length > 0) {

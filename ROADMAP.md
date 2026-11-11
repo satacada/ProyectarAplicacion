@@ -1,8 +1,8 @@
 # 🗺️ ROADMAP MAESTRO UNIFICADO — OmniCast Pro (`v4.4` Multi-Agente)
 
-> **Versión Base de Rescate:** `v3.6.08` (`versionCodeSender: 359` | `versionCodeReceiver: 342`)  
+> **Versión Base de Rescate:** `v3.7.0` (`versionCodeSender: 368` | `versionCodeReceiver: 351`)  
 > **Política Operativa `v4.4`:** Micro-comandos `[auto]` y `[ver]` orquestados por el Planificador (`Argon`) invocando subagentes aislados (`flash` / `flash_lite`) | **Prohibido disparar Explorador Forense en tareas mapeadas** (todas las rutas están en este archivo y en [`doc/MAPA_DEL_SISTEMA_Y_FLUJO_DE_CODIGO.md`](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/MAPA_DEL_SISTEMA_Y_FLUJO_DE_CODIGO.md)).  
-> **Estado Global:** 🎉 **Hito 5.2 [CH-02] Completado al 100% (Fast-Start ABR, Low-RAM LoadControl y Optimización UX en Android TV — 58 Tests Passing — 0 Archivos > 300L)**
+> **Estado Global:** 🎉 **FASE 5 COMPLETADA AL 100% (Hitos 5.1, 5.2, 5.3 y 5.4 — Blindaje de Vivos en Sniffer DOM y Gobernanza Dinámica — 95 Tests Passing — 0 Archivos Kotlin > 300L)**
 
 ---
 

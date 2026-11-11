@@ -23,13 +23,7 @@
         }
     } catch(e) {}
 
-    // 1b. Intercepción segura de window.open contra popups publicitarios
-    try {
-        window.open = function(u, t, f) {
-            console.warn('OMNICAST_AD_POPUP_BLOCKED: ' + u);
-            return null;
-        };
-    } catch(e) {}
+    // 1b. Gestión de window.open delegada canónicamente en WvcShieldSecurityEngine.kt (HU-007/ADR-006)
 
     // 2. Filtro de URLs de medios
     function isMediaUrl(u) {

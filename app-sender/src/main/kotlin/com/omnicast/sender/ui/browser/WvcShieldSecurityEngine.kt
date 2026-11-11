@@ -55,6 +55,7 @@ object WvcShieldSecurityEngine {
                         var isSameHost = (targetH === curH || targetH.endsWith('.' + curH) || curH.endsWith('.' + targetH));
 
                         if (isRelative || isSameHost) {
+                            console.log('OMNICAST_NAV_SAME_ORIGIN: ' + url);
                             window.location.href = url;
                             return null;
                         }

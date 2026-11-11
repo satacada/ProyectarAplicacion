@@ -2,11 +2,11 @@
 
 > **Versión Base de Rescate:** `v3.7.0` (`versionCodeSender: 368` | `versionCodeReceiver: 351`)  
 > **Política Operativa `v4.4`:** Micro-comandos `[auto]` y `[ver]` orquestados por el Planificador (`Argon`) invocando subagentes aislados (`flash` / `flash_lite`) | **Prohibido disparar Explorador Forense en tareas mapeadas** (todas las rutas están en este archivo y en [`doc/MAPA_DEL_SISTEMA_Y_FLUJO_DE_CODIGO.md`](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/MAPA_DEL_SISTEMA_Y_FLUJO_DE_CODIGO.md)).  
-> **Estado Global:** 🎉 **FASE 7 COMPLETADA AL 100% (Hitos 7.1 y 7.2 — PVR Inteligente, Auto-Detección USB y Modo Touchpad / Puntero Virtual en Android TV — 95 Tests Passing — 0 Archivos Kotlin > 300L)**
+> **Estado Global:** 🎉 **FASE 7 COMPLETADA AL 100% (Hitos 7.1, 7.2 y 7.3 — PVR Inteligente, Touchpad y Navegación Inteligente de Mismo Origen en Android TV — 95 Tests Passing — 0 Archivos Kotlin > 300L)**
 
 ---
 
-## 💾 FASE 7 — PVR Inteligente y Control Remoto Touchpad (`[x]` — 2 / 2 completados — 100%)
+## 💾 FASE 7 — PVR Inteligente, Touchpad y Navegación Inteligente (`[x]` — 3 / 3 completados — 100%)
 
 - `[x]` **Hito 7.1 [CH-07] — Auto-Detección Preferencial USB y Purga de Huérfanos en Android TV (`app-receiver/src/main/kotlin/com/omnicast/receiver/directstream/TvStorageSafetyManager.kt`, `app-receiver/src/main/kotlin/com/omnicast/receiver/directstream/PvrStreamRecorder.kt`):**
   - **Objetivo:** Detectar automáticamente memorias USB conectadas con espacio holgado (`>= 1.5 GB`), aplicar la constante `SAFE_RESERVE_USB_BYTES` (500 MB) y purgar en segundo plano archivos temporales huérfanos (`.tmp`, `.part`, 0-byte) con más de 3 minutos de antigüedad, garantizando descargas y grabaciones PVR estables sin desbordar el almacenamiento de la TV Box.
@@ -22,6 +22,13 @@
     - `app-receiver/src/main/kotlin/com/omnicast/receiver/ui/components/TvVirtualPointerOverlay.kt` (nuevo HUD composable de puntero virtual: 93 líneas)
     - `app-receiver/src/main/kotlin/com/omnicast/receiver/ui/components/TvGlobalRecordOverlay.kt` (inyección global no invasiva: 60 líneas)
     - `app-receiver/src/main/kotlin/com/omnicast/receiver/ui/TvReceiverActivity.kt` (recepción síncrona de comandos de puntero: 296 líneas, estrictamente `< 300` líneas)
+  - **Agentes Involucrados:** `planner-architect` (`Argon`) ➔ `specialist-tv-player-pvr` (`flash`) ➔ `surgical-developer` (`flash`) ➔ `qa-oracle-tester` (`flash`) ➔ `sync-documenter` (`flash`) ➔ `git-ota-releaser` (`flash_lite`).
+
+- `[x]` **Hito 7.3 [CH-09] — Desacoplamiento de window.open y Navegación Inteligente de Mismo Origen (`app-sender/src/main/assets/sniffer/universal_sniffer.js`, `app-sender/src/main/kotlin/com/omnicast/sender/browser/WvcShieldSecurityEngine.kt`):**
+  - **Objetivo:** Eliminar el hook ciego redundante de `window.open` en `universal_sniffer.js` que interfería con la heurística de seguridad de `WvcShieldSecurityEngine.kt`, incorporando trazas de auditoría (`OMNICAST_NAV_SAME_ORIGIN`) para clics legítimos en portales de deportes en vivo (LiveSports808) gobernados por SQLite (`AdBlockDatabase`) y C++20 (`NativeAdBlockEngine`).
+  - **Archivos Objetivo Exactos:**
+    - `app-sender/src/main/assets/sniffer/universal_sniffer.js` (hook redundante eliminado)
+    - `app-sender/src/main/kotlin/com/omnicast/sender/browser/WvcShieldSecurityEngine.kt` (log de trazabilidad: 217 líneas)
   - **Agentes Involucrados:** `planner-architect` (`Argon`) ➔ `specialist-tv-player-pvr` (`flash`) ➔ `surgical-developer` (`flash`) ➔ `qa-oracle-tester` (`flash`) ➔ `sync-documenter` (`flash`) ➔ `git-ota-releaser` (`flash_lite`).
 
 ---

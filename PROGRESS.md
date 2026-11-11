@@ -12,7 +12,7 @@
 
 | Hito / Fase | Nombre del Hito / Fase | Estado | Progreso |
 | :--- | :--- | :---: | :---: |
-| **Hito 7.2 [CH-08]** | Modo Touchpad / Puntero Virtual en TV vía WebRTC/WebSocket | `[x]` Completado | **100%** |
+| **Hito 7.3 [CH-09]** | Desacoplamiento de window.open y Navegación Inteligente de Mismo Origen | `[x]` Completado | **100%** |
 | :--- | :--- | :---: | :---: |
 | **Fase 0** | Base Heredada e Inmutable (20 HUs + 4 Pilares + Motor PVR `v3.6.08`) | `[x]` Sellada | **4 / 4 (100%)** |
 | **Fase 1** | Saneamiento y Reestructuración Quirúrgica (`< 300` líneas y limpieza) | `[x]` Completada | **4 / 4 (100%)** |
@@ -21,7 +21,7 @@
 | **Fase 4** | Cobertura Cuantitativa de Tests y Telemetría Proactiva | `[x]` Completada | **1 / 1 (100%)** |
 | **Fase 5** | Modernización, Eficiencia y Rendimiento Profesional | `[x]` Completada | **4 / 4 (100%)** |
 | **Fase 6** | Telemetría OSD en Tiempo Real y Experiencia de Control Remoto | `[x]` Completada | **2 / 2 (100%)** |
-| **Fase 7** | PVR Inteligente y Control Remoto Touchpad | `[x]` Completada | **2 / 2 (100%)** |
+| **Fase 7** | PVR Inteligente, Touchpad y Navegación Misma Origen (Hitos 7.1, 7.2, 7.3) | `[x]` Completada | **3 / 3 (100%)** |
 
 ---
 
@@ -62,6 +62,15 @@
 ---
 
 ## 4. Historial de Sesiones Multi-Agente
+
+### `[2026-11-11]` — Hito 7.3 [CH-09] — Desacoplamiento de window.open y Navegación Inteligente de Mismo Origen
+- **Acción:**
+  - **Eliminación del hook ciego redundante de `window.open`** en `universal_sniffer.js` que anulaba la heurística de seguridad de `WvcShieldSecurityEngine.kt`.
+  - **Trazabilidad en Logcat:** Incorporación de log de auditoría `'OMNICAST_NAV_SAME_ORIGIN: ' + url` en `WvcShieldSecurityEngine.kt` (217L) para registrar clics legítimos en portales de deportes en vivo (LiveSports808).
+  - Gobernanza 100% agnóstica gestionada por SQLite (`AdBlockDatabase`) y C++20 (`NativeAdBlockEngine`), sin nombres de sitios hardcodeados en el código fuente.
+- **Verificación:** 95/95 tests pasando (0 fallos, 0 regresiones), 0 archivos Kotlin > 300 líneas.
+- **Salud del Oráculo:** 🟢 95 tests passing (100% — 0 fallos).
+- **Siguiente paso:** 🎉 **FASE 7 COMPLETADA AL 100% (Hitos 7.1, 7.2 y 7.3)**.
 
 ### `[2026-11-11]` — Hito 7.2 [CH-08] — Modo Touchpad / Puntero Virtual en TV vía WebRTC/WebSocket
 - **Acción:**

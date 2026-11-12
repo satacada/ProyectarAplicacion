@@ -1,12 +1,12 @@
 {
-  "versionName": "3.7.8",
-  "versionCodeSender": 378,
-  "versionCodeReceiver": 359,
-  "releaseTag": "v3.7.8",
-  "senderApk": "omnicast-sender-v3.7.8.apk",
-  "receiverApk": "omnicast-receiver-v3.7.8.apk",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.8/omnicast-sender-v3.7.8.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.8/omnicast-receiver-v3.7.8.apk",
-  "releaseNotes": "v3.7.8: Cierre de Hito 8.2 [CH-12]. Blindaje anti-desvio 1er toque y calibracion de buffer doupload y doodstream.",
-  "changelog": "v3.7.8: Cierre de Hito 8.2 [CH-12]. Blindaje anti-desvio 1er toque y calibracion de buffer doupload y doodstream."
+  "versionName": "3.7.9",
+  "versionCodeSender": 379,
+  "versionCodeReceiver": 360,
+  "releaseTag": "v3.7.9",
+  "senderApk": "omnicast-sender-v3.7.9.apk",
+  "receiverApk": "omnicast-receiver-v3.7.9.apk",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.9/omnicast-sender-v3.7.9.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.9/omnicast-receiver-v3.7.9.apk",
+  "releaseNotes": "v3.7.9: Cierre de Hito 8.3 [CH-13]. Blindaje anti-popups de iframes y watchdog adaptativo de buffer.",
+  "changelog": "v3.7.9: Cierre de Hito 8.3 [CH-13]. Blindaje anti-popups de iframes y watchdog adaptativo de buffer."
 }

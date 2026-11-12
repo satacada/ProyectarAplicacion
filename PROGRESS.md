@@ -3,8 +3,8 @@
 > **Versión Actual en Producción:** `v3.7.0` (`versionCodeSender: 368` | `versionCodeReceiver: 351`)  
 > **Última Sincronización Agéntica:** `2026-11-12`  
 > **Estado del Oráculo de Pruebas:** 🟢 **167 Tests Pasando (35 en :core:domain, 12 en :core:protocol, 25 en :app-sender, 23 en :app-receiver) — 100% — 0 fallos**  
-> **Próxima Actividad en Cola:** 🎉 **FASE 8 COMPLETADA AL 100% (Hitos 8.1 [CH-11], 8.2 [CH-12], 8.3 [CH-13], 8.4 [CH-14], 8.5 [CH-15], 8.6 [CH-16], 8.7 [CH-17], 8.8 [CH-18] y 8.9 [CH-19])**  
-> **Progreso Global:** 🏁 **Hito 8.9 [CH-19] Defensa Universal de Iframes en Document_Start y Normalización de Orígenes completado al 100%**
+> **Próxima Actividad en Cola:** 🎉 **FASE 8 COMPLETADA AL 100% (Hitos 8.1 [CH-11] al 8.10 [CH-20] — Poda de Código Inútil e Interceptación Desacoplada Anti-Embed a Nivel de Red)**  
+> **Progreso Global:** 🏁 **Hito 8.10 [CH-20] Poda de Código Inútil y Vía 1: Interceptación Desacoplada Anti-Embed a Nivel de Red completado al 100%**
 
 ---
 
@@ -12,6 +12,7 @@
 
 | Hito / Fase | Nombre del Hito / Fase | Estado | Progreso |
 | :--- | :--- | :---: | :---: |
+| **Hito 8.10 [CH-20]** | Poda de Código Inútil y Vía 1: Interceptación Desacoplada Anti-Embed a Nivel de Red | `[x]` Completado | **100%** |
 | **Hito 8.9 [CH-19]** | Defensa Universal de Iframes en Document_Start y Normalización de Orígenes | `[x]` Completado | **100%** |
 | **Hito 8.8 [CH-18]** | Erradicación Universal de Huellas In-App y Autonomía Pura de Scripts | `[x]` Completado | **100%** |
 | **Hito 8.7 [CH-17]** | Sincronización Canónica de UserAgentMetadata y Client Hints Oficiales | `[x]` Completado | **100%** |
@@ -63,15 +64,24 @@
 | `app-sender/src/main/kotlin/com/omnicast/sender/service/CastMediaNotificationService.kt` | **297** | ⚠️ Al límite |
 | `app-receiver/src/main/kotlin/com/omnicast/receiver/ui/TvReceiverActivity.kt` | **296** | ⚠️ Al límite |
 | `app-sender/src/main/kotlin/com/omnicast/sender/ui/components/MainActionCards.kt` | **295** | ⚠️ Al límite |
+| `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/BrowserWebView.kt` | **292** | 🛡️ Sellado (Zona Sagrada) |
 | `app-sender/src/main/kotlin/com/omnicast/sender/ui/components/RemoteExpandedControls.kt` | **291** | ⚠️ Al límite |
 | `app-receiver/src/main/kotlin/com/omnicast/receiver/directstream/TvStorageSafetyManager.kt` | **290** | ⚠️ Al límite |
 | `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/BrowserUrlHelper.kt` | **290** | ⚠️ Al límite |
-| `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/BrowserWebView.kt` | **290** | 🛡️ Sellado (Zona Sagrada) |
 | `app-sender/src/main/kotlin/com/omnicast/sender/ui/SenderMainScreen.kt` | **289** | ⚠️ Al límite |
 
 ---
 
 ## 4. Historial de Sesiones Multi-Agente
+
+### `[2026-11-12]` — Hito 8.10 [CH-20] — Poda de Código Inútil y Vía 1: Interceptación Desacoplada Anti-Embed a Nivel de Red
+- **Acción:**
+  - **`WvcShieldSecurityEngine.kt` (241L):** Poda rigurosa de los hooks ineficaces en JavaScript de `window.URL` y `Element.prototype.innerHTML`, eliminando código muerto y reduciendo el tamaño del archivo a 241 líneas en estricto cumplimiento del Principio de Evaluación y Poda de Soluciones Ineficaces.
+  - **`PlayerAntiEmbedNetworkInterceptor.kt` (62L):** Creación de un interceptor satélite modular desacoplado que actúa a nivel de la capa de transporte de red (`shouldInterceptRequest` para subframes `Sec-Fetch-Dest: iframe` / `text/html`) con cookies y cabeceras completas (`Cookie`, `User-Agent`, `Referer`), inyectando en la respuesta HTML la neutralización de la condición de comprobación `isAllowedHost` (forzando retorno `true`) y neutralizando `window.stop()`.
+  - **`BrowserWebView.kt` (292L):** Integración desacoplada de `PlayerAntiEmbedNetworkInterceptor.shouldInterceptIframe(view, request)` en la primera línea de `shouldInterceptRequest`, permitiendo que el reproductor Plyr/HLS cargue al 100% de forma nativa sin manipulación frágil del DOM y con 0% código en duro.
+- **Verificación:** 167 tests pasando (100% — 0 fallos), 0 archivos Kotlin > 300 líneas (`BrowserWebView.kt` en 292L, `WvcShieldSecurityEngine.kt` en 241L, `PlayerAntiEmbedNetworkInterceptor.kt` en 62L).
+- **Salud del Oráculo:** 🟢 167 tests passing (100% — 0 fallos).
+- **Siguiente paso:** 🎉 **FASE 8 COMPLETADA AL 100% (Hitos 8.1 al 8.10)**.
 
 ### `[2026-11-12]` — Hito 8.9 [CH-19] — Defensa Universal de Iframes en Document_Start y Normalización de Orígenes
 - **Acción:**

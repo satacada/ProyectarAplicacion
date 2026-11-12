@@ -2,11 +2,11 @@
 
 > **Versión Base de Rescate:** `v3.7.0` (`versionCodeSender: 368` | `versionCodeReceiver: 351`)  
 > **Política Operativa `v4.4`:** Micro-comandos `[auto]` y `[ver]` orquestados por el Planificador (`Argon`) invocando subagentes aislados (`flash` / `flash_lite`) | **Prohibido disparar Explorador Forense en tareas mapeadas** (todas las rutas están en este archivo y en [`doc/MAPA_DEL_SISTEMA_Y_FLUJO_DE_CODIGO.md`](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/MAPA_DEL_SISTEMA_Y_FLUJO_DE_CODIGO.md)).  
-> **Estado Global:** 🎉 **FASE 8 COMPLETADA AL 100% (Hitos 8.1 [CH-11], 8.2 [CH-12], 8.3 [CH-13], 8.4 [CH-14], 8.5 [CH-15], 8.6 [CH-16], 8.7 [CH-17], 8.8 [CH-18] y 8.9 [CH-19] — Defensa Universal de Iframes en Document_Start y Normalización de Orígenes — 167 Tests Passing — 0 Archivos Kotlin > 300L)**
+> **Estado Global:** 🎉 **FASE 8 COMPLETADA AL 100% (Hitos 8.1 [CH-11] al 8.10 [CH-20] — Poda de Código Inútil e Interceptación Desacoplada Anti-Embed a Nivel de Red — 167 Tests Passing — 0 Archivos Kotlin > 300L)**
 
 ---
 
-## 🎮 FASE 8 — Experiencia de Control Remoto D-Pad Avanzada y Resiliencia de Reproductores TV (`[x]` — 9 / 9 completados — 100%)
+## 🎮 FASE 8 — Experiencia de Control Remoto D-Pad Avanzada y Resiliencia de Reproductores TV (`[x]` — 10 / 10 completados — 100%)
 
 - `[x]` **Hito 8.1 [CH-11] — Foco D-Pad en Controles TV y Protección de Reproductores (`app-receiver/src/main/kotlin/com/omnicast/receiver/ui/TvRemoteKeyHandler.kt`, `app-receiver/src/main/kotlin/com/omnicast/receiver/ui/components/TvDirectControlsOverlay.kt`, `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/AdBlocker.kt`):**
   - **Objetivo:** Garantizar gestión reactiva de D-Pad en `TvRemoteKeyHandler.kt` (276L) mediante `hasActiveOverlay` y `notifyControlsVisibilityChanged`, cediendo flechas D-Pad y ENTER al OSD/Compose TV para permitir seleccionar botones interactivos (Ajustes, Subtítulos, etc.), preservando atajos de salto +/-10s en pantalla limpia. Inyección inmediata de `FocusRequester` en el botón central de `TvDirectControlsOverlay.kt` (256L) y blindaje de reproductores web legítimos (`isLegitimate`) en `AdBlocker.kt` (252L) para SoloLatino (`player.pelisserieshoy.com`) e inmunidad a clics de inicio de video.
@@ -77,6 +77,14 @@
   - **Archivos Objetivo Exactos:**
     - `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/WvcShieldSecurityEngine.kt` (277 líneas)
     - `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/BrowserWebView.kt` (290 líneas)
+  - **Agentes Involucrados:** `planner-architect` (`Argon`) ➔ `specialist-stream-extraction` (`flash`) ➔ `surgical-developer` (`flash`) ➔ `qa-oracle-tester` (`flash`) ➔ `sync-documenter` (`flash`) ➔ `git-ota-releaser` (`flash_lite`).
+ 
+- `[x]` **Hito 8.10 [CH-20] — Poda de Código Inútil y Vía 1: Interceptación Desacoplada Anti-Embed a Nivel de Red (`app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/WvcShieldSecurityEngine.kt`, `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/interceptor/PlayerAntiEmbedNetworkInterceptor.kt`, `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/BrowserWebView.kt`):**
+  - **Objetivo:** Poda rigurosa de los hooks ineficaces en JavaScript de `window.URL` y `Element.prototype.innerHTML` en `WvcShieldSecurityEngine.kt` (reducido a 241L). Creación e integración del interceptor desacoplado `PlayerAntiEmbedNetworkInterceptor.kt` (62L) en `BrowserWebView.kt` (292L), actuando directamente en la capa de transporte de red (`shouldInterceptRequest` para subframes `Sec-Fetch-Dest: iframe` / `text/html`) con cookies y cabeceras completas para neutralizar la condición `isAllowedHost` (forzando retorno `true`) y neutralizar `window.stop()`. Permite que el reproductor Plyr/HLS cargue al 100% de forma nativa sin manipulación frágil del DOM y con 0% código en duro.
+  - **Archivos Objetivo Exactos:**
+    - `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/WvcShieldSecurityEngine.kt` (241 líneas)
+    - `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/interceptor/PlayerAntiEmbedNetworkInterceptor.kt` (62 líneas)
+    - `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/BrowserWebView.kt` (292 líneas)
   - **Agentes Involucrados:** `planner-architect` (`Argon`) ➔ `specialist-stream-extraction` (`flash`) ➔ `surgical-developer` (`flash`) ➔ `qa-oracle-tester` (`flash`) ➔ `sync-documenter` (`flash`) ➔ `git-ota-releaser` (`flash_lite`).
 
 ---

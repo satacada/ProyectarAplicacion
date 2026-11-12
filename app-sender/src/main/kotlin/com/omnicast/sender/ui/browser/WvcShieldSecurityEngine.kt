@@ -14,9 +14,7 @@ import androidx.webkit.WebViewFeature
  * 2. Protección contra secuestro del botón atrás (throttling de `history.pushState`).
  * 3. Neutralización de WebSockets publicitarios (ws:// y wss://).
  * 4. Normalización Universal de AJAX Anti-WebView Wrapper (X-Requested-With).
- * 5. Normalización Universal de URL para neutralizar huellas android-app://.
- * 6. Neutralización de autodestrucción DOM en subframes.
- * 7. Camuflaje Stealth Anti-Detección de WebView.
+ * 5. Camuflaje Stealth Anti-Detección de WebView.
  */
 object WvcShieldSecurityEngine {
 
@@ -139,41 +137,7 @@ object WvcShieldSecurityEngine {
                 }
             } catch(_) {}
 
-            // 5. Normalización universal de URL para neutralizar huellas android-app://
-            try {
-                var _OrigURL = window.URL;
-                window.URL = function(url, base) {
-                    if (typeof url === 'string' && url.indexOf('android-app://') === 0) {
-                        try {
-                            var ref = document.referrer;
-                            if (ref && ref.indexOf('http') === 0) {
-                                url = new _OrigURL(ref).origin;
-                            } else if (window.location && window.location.origin && window.location.origin.indexOf('http') === 0) {
-                                url = window.location.origin;
-                            }
-                        } catch(_) {}
-                    }
-                    return (base !== undefined) ? new _OrigURL(url, base) : new _OrigURL(url);
-                };
-                window.URL.prototype = _OrigURL.prototype;
-                Object.setPrototypeOf(window.URL, _OrigURL);
-            } catch(_) {}
-
-            // 6. Neutralización de autodestrucción DOM en subframes
-            try {
-                var _origSetInnerHTML = Object.getOwnPropertyDescriptor(Element.prototype, 'innerHTML').set;
-                Object.defineProperty(Element.prototype, 'innerHTML', {
-                    set: function(val) {
-                        if (typeof val === 'string' && val.indexOf('<!DOCTYPE html>') !== -1 && (val.indexOf('target=\"_top\"') !== -1 || val.indexOf('class=\"card\"') !== -1)) {
-                            return;
-                        }
-                        return _origSetInnerHTML.call(this, val);
-                    },
-                    configurable: true
-                });
-            } catch(_) {}
-
-            // 7. Camuflaje Stealth Anti-Detección de WebView (Brave/Chrome Nativo)
+            // 5. Camuflaje Stealth Anti-Detección de WebView (Brave/Chrome Nativo)
             try {
                 if (!window.chrome) { window.chrome = { app: { isInstalled: false }, runtime: {} }; }
                 try { Object.defineProperty(navigator, 'webdriver', { get: function() { return false; }, configurable: true }); } catch(_) {}

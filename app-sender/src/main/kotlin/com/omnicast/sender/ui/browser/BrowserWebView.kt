@@ -217,6 +217,8 @@ fun BrowserWebView(
                                 android.util.Log.i("OMNICAST_NET", "🌐 Red: $reqUrl (Ref: $docUrl)")
                             }
                             com.omnicast.sender.ui.browser.sentinel.WebPlayerDiagnosticSentinel.inspectApiRequest(reqUrl, r.requestHeaders)
+                            val antiEmbed = com.omnicast.sender.ui.browser.interceptor.PlayerAntiEmbedNetworkInterceptor.shouldIntercept(r, docUrl)
+                            if (antiEmbed != null) return antiEmbed
                             if (com.omnicast.sender.nativeclassifier.NativeStreamClassifier.shouldDiscard(reqUrl) || AdBlocker.isVideoAd(reqUrl)) {
                                 return super.shouldInterceptRequest(v, r)
                             }

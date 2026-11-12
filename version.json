@@ -1,12 +1,12 @@
 {
-  "versionName": "3.7.9",
-  "versionCodeSender": 379,
-  "versionCodeReceiver": 360,
-  "releaseTag": "v3.7.9",
-  "senderApk": "omnicast-sender-v3.7.9.apk",
-  "receiverApk": "omnicast-receiver-v3.7.9.apk",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.9/omnicast-sender-v3.7.9.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.9/omnicast-receiver-v3.7.9.apk",
-  "releaseNotes": "v3.7.9: Cierre de Hito 8.3 [CH-13]. Blindaje anti-popups de iframes y watchdog adaptativo de buffer.",
-  "changelog": "v3.7.9: Cierre de Hito 8.3 [CH-13]. Blindaje anti-popups de iframes y watchdog adaptativo de buffer."
+  "versionName": "3.7.10",
+  "versionCodeSender": 380,
+  "versionCodeReceiver": 361,
+  "releaseTag": "v3.7.10",
+  "senderApk": "omnicast-sender-v3.7.10.apk",
+  "receiverApk": "omnicast-receiver-v3.7.10.apk",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.10/omnicast-sender-v3.7.10.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.10/omnicast-receiver-v3.7.10.apk",
+  "releaseNotes": "v3.7.10: Cierre de Hito 8.4 [CH-14]. Erradicacion de recargas forzadas en window.open y camuflaje universal webdriver.",
+  "changelog": "v3.7.10: Cierre de Hito 8.4 [CH-14]. Erradicacion de recargas forzadas en window.open y camuflaje universal webdriver."
 }

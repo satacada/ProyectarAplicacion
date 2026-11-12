@@ -12,8 +12,8 @@ android {
         applicationId = "com.omnicast.sender"
         minSdk = 26 // Android 8.0+ y Android 9 (Pie) compatible; AudioPlaybackCapture se activa dinámicamente en Android 10+
         targetSdk = 33 // Evita el modo de acceso parcial READ_MEDIA_VISUAL_USER_SELECTED de Android 14 que oculta fotos en Xiaomi/HyperOS
-        versionCode = 379
-        versionName = "3.7.9"
+        versionCode = 380
+        versionName = "3.7.10"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {

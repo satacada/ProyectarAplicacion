@@ -1,12 +1,12 @@
 {
-  "versionName": "3.7.20",
-  "versionCodeSender": 390,
-  "versionCodeReceiver": 371,
-  "releaseTag": "v3.7.20",
-  "senderApk": "omnicast-sender-v3.7.20.apk",
-  "receiverApk": "omnicast-receiver-v3.7.20.apk",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.20/omnicast-sender-v3.7.20.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.20/omnicast-receiver-v3.7.20.apk",
-  "releaseNotes": "v3.7.20: Cierre de Hito 8.14 [CH-24]. Soporte universal de Base64 en pasarelas de redireccion y telemetria enriquecida.",
-  "changelog": "v3.7.20: Cierre de Hito 8.14 [CH-24]. Soporte universal de Base64 en pasarelas de redireccion y telemetria enriquecida."
+  "versionName": "3.7.21",
+  "versionCodeSender": 391,
+  "versionCodeReceiver": 372,
+  "releaseTag": "v3.7.21",
+  "senderApk": "omnicast-sender-v3.7.21.apk",
+  "receiverApk": "omnicast-receiver-v3.7.21.apk",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.21/omnicast-sender-v3.7.21.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.21/omnicast-receiver-v3.7.21.apk",
+  "releaseNotes": "v3.7.21: Cierre de Hito 8.15 [CH-25]. Desintoxicacion del receiver como caja tonta y blindaje dinamico anti-cors en emisor.",
+  "changelog": "v3.7.21: Cierre de Hito 8.15 [CH-25]. Desintoxicacion del receiver como caja tonta y blindaje dinamico anti-cors en emisor."
 }

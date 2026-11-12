@@ -19,7 +19,8 @@ import com.omnicast.core.protocol.SignalingMessage
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 
-private const val WATCHDOG_TIMEOUT_MS = 22_000L
+private const val WATCHDOG_INACTIVITY_TIMEOUT_MS = 22_000L
+private const val WATCHDOG_MAX_STARTUP_TIMEOUT_MS = 60_000L
 
 /**
  * Reproductor Web HTML5 / Chromium para TV Box.
@@ -41,14 +42,10 @@ fun TvWebStreamScreen(
     var showRecordDialog by remember { mutableStateOf(false) }
     var showStopConfirm by remember { mutableStateOf(false) }
     var isVideoReady by remember(streamUrl, timestamp) { mutableStateOf(false) }
+    var lastActivityTimeMs by remember(streamUrl, timestamp) { mutableLongStateOf(System.currentTimeMillis()) }
     var fatalErrorReason by remember(streamUrl, timestamp) { mutableStateOf<String?>(null) }
     var playerState by remember(streamUrl, timestamp) {
-        mutableStateOf(
-            TvWebPlayerState(
-                currentPositionMs = startPositionMs,
-                isControlsVisible = true
-            )
-        )
+        mutableStateOf(TvWebPlayerState(currentPositionMs = startPositionMs, isControlsVisible = true))
     }
     var customView by remember(streamUrl, timestamp) { mutableStateOf<View?>(null) }
     var webViewRef by remember(streamUrl, timestamp) { mutableStateOf<WebView?>(null) }
@@ -59,10 +56,13 @@ fun TvWebStreamScreen(
             onPlaybackFailed?.invoke(fatalErrorReason ?: "FATAL_ERROR")
             return@LaunchedEffect
         }
-        if (!isVideoReady) {
-            delay(WATCHDOG_TIMEOUT_MS)
-            if (!isVideoReady && fatalErrorReason == null) {
+        val sessionStartMs = System.currentTimeMillis()
+        while (!isVideoReady && fatalErrorReason == null) {
+            delay(1000L)
+            val now = System.currentTimeMillis()
+            if (now - lastActivityTimeMs >= WATCHDOG_INACTIVITY_TIMEOUT_MS || now - sessionStartMs >= WATCHDOG_MAX_STARTUP_TIMEOUT_MS) {
                 fatalErrorReason = "WATCHDOG_TIMEOUT"
+                break
             }
         }
     }
@@ -144,6 +144,10 @@ fun TvWebStreamScreen(
                                     }
                                 }
                                 @JavascriptInterface
+                                fun onStreamHeartbeat(ev: String) {
+                                    lastActivityTimeMs = System.currentTimeMillis()
+                                }
+                                @JavascriptInterface
                                 fun onFatalError(reason: String) {
                                     mainHandler.post {
                                         if (!isVideoReady && fatalErrorReason == null) fatalErrorReason = reason
@@ -201,13 +205,7 @@ fun TvWebStreamScreen(
             badgeText = "🌐 OmniCast HTML5",
             state = playerState,
             isRecording = pvrProgress.isRecording,
-            onRecordClick = {
-                if (pvrProgress.isRecording) {
-                    showStopConfirm = true
-                } else {
-                    showRecordDialog = true
-                }
-            },
+            onRecordClick = { if (pvrProgress.isRecording) showStopConfirm = true else showRecordDialog = true },
             onTogglePlay = { webViewRef?.evaluateJavascript("togglePlay();", null) },
             onSeekRelative = { deltaMs -> webViewRef?.evaluateJavascript("seekRel(${deltaMs / 1000.0});", null) },
             onToggleSettings = { playerState = playerState.copy(isSettingsOpen = !playerState.isSettingsOpen) },
@@ -250,11 +248,7 @@ fun TvWebStreamScreen(
             onClose = { playerState = playerState.copy(isSettingsOpen = false) },
             onToggleRecord = {
                 playerState = playerState.copy(isSettingsOpen = false)
-                if (pvrProgress.isRecording) {
-                    showStopConfirm = true
-                } else {
-                    showRecordDialog = true
-                }
+                if (pvrProgress.isRecording) showStopConfirm = true else showRecordDialog = true
             }
         )
 
@@ -283,9 +277,7 @@ fun TvWebStreamScreen(
                 com.omnicast.receiver.directstream.PvrStreamRecorder.stopAndDiscardRecording("🗑️ Grabación descartada y eliminada")
                 android.widget.Toast.makeText(webViewRef?.context ?: return@TvConfirmStopRecordDialog, "🗑️ Grabación descartada y eliminada", android.widget.Toast.LENGTH_SHORT).show()
             },
-            onContinue = {
-                showStopConfirm = false
-            }
+            onContinue = { showStopConfirm = false }
         )
     }
 }

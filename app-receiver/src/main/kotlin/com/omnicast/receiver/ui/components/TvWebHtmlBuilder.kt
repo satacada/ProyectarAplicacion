@@ -54,11 +54,18 @@ object TvWebHtmlBuilder {
                   }
                 }
 
+                function sendHeartbeat(ev) {
+                  try {
+                    if (window.AndroidBridge && window.AndroidBridge.onStreamHeartbeat) window.AndroidBridge.onStreamHeartbeat(ev);
+                  } catch(_) {}
+                }
+
                 vid.addEventListener('play', reportStatus);
                 vid.addEventListener('pause', reportStatus);
                 vid.addEventListener('ended', reportStatus);
                 vid.addEventListener('timeupdate', reportStatus);
                 vid.addEventListener('durationchange', reportStatus);
+                vid.addEventListener('progress', function() { sendHeartbeat('PROGRESS'); });
                 vid.addEventListener('error', function() {
                   if (window.AndroidBridge && window.AndroidBridge.onFatalError) {
                     var code = vid.error ? vid.error.code : 0;
@@ -85,10 +92,14 @@ object TvWebHtmlBuilder {
                     hls.loadSource(streamUrl);
                     hls.attachMedia(vid);
                     hls.on(Hls.Events.MANIFEST_PARSED, function() {
+                      sendHeartbeat('MANIFEST_PARSED');
                       console.log('TvWebStreamJS [MANIFEST_PARSED]', streamUrl);
                       vid.play().catch(function(){});
                       reportMetadata();
                     });
+                    hls.on(Hls.Events.LEVEL_LOADED, function() { sendHeartbeat('LEVEL_LOADED'); });
+                    hls.on(Hls.Events.FRAG_LOADING, function() { sendHeartbeat('FRAG_LOADING'); });
+                    hls.on(Hls.Events.FRAG_LOADED, function() { sendHeartbeat('FRAG_LOADED'); });
                     hls.on(Hls.Events.ERROR, function(ev, data) {
                       console.error('TvWebStreamJS [HLS_ERROR] ' + data.type + ' ' + data.details + ' code=' + (data.response ? data.response.code : 'none'));
                       if (data.fatal) {

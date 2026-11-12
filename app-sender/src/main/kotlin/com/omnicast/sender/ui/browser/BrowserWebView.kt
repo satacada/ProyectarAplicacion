@@ -45,6 +45,7 @@ fun BrowserWebView(
             NativeAdBlockEngine.init(ctx)
             AdBlockRuleSyncManager.syncIfNeeded(ctx)
             AdBlockWhitelistManager.init(ctx)
+            val popupInterceptor = BrowserPopupInterceptor(ctx)
             var currentKnownTitle: String? = null
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
@@ -120,7 +121,7 @@ fun BrowserWebView(
                 settings.setSupportZoom(true); settings.builtInZoomControls = true; settings.displayZoomControls = false
                 settings.textZoom = 100; settings.layoutAlgorithm = WebSettings.LayoutAlgorithm.NORMAL
                 settings.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW; settings.mediaPlaybackRequiresUserGesture = false
-                settings.setSupportMultipleWindows(false); settings.javaScriptCanOpenWindowsAutomatically = false
+                settings.setSupportMultipleWindows(true); settings.javaScriptCanOpenWindowsAutomatically = false
                 settings.userAgentString = UA_MOBILE
                 if (androidx.webkit.WebViewFeature.isFeatureSupported(androidx.webkit.WebViewFeature.REQUESTED_WITH_HEADER_ALLOW_LIST)) {
                     androidx.webkit.WebSettingsCompat.setRequestedWithHeaderOriginAllowList(settings, emptySet())
@@ -242,7 +243,7 @@ fun BrowserWebView(
 
                 webChromeClient = object : WebChromeClient() {
                     override fun onCreateWindow(view: WebView?, isDialog: Boolean, isUserGesture: Boolean, resultMsg: android.os.Message?): Boolean {
-                        return false
+                        return popupInterceptor.handleCreateWindow(view, isUserGesture, resultMsg)
                     }
 
                     override fun onProgressChanged(v: WebView?, p: Int) {

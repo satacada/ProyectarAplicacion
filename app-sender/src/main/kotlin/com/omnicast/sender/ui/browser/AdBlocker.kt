@@ -38,7 +38,8 @@ object AdBlocker {
         val h = urlOrHost.lowercase()
         return h.contains("cloudflare") || h.contains("turnstile") ||
                h.contains("challenges") || h.contains("hcaptcha") ||
-               h.contains("recaptcha") || h.contains("captcha")
+               h.contains("recaptcha") || h.contains("captcha") ||
+               h.contains("geetest") || h.contains("arkose")
     }
 
     fun isVideoAd(url: String): Boolean {

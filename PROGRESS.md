@@ -2,9 +2,9 @@
 
 > **Versión Actual en Producción:** `v3.7.0` (`versionCodeSender: 368` | `versionCodeReceiver: 351`)  
 > **Última Sincronización Agéntica:** `2026-11-11`  
-> **Estado del Oráculo de Pruebas:** 🟢 **95 Tests Pasando (35 en :core:domain, 12 en :core:protocol, 25 en :app-sender, 23 en :app-receiver) — 100% — 0 fallos**  
-> **Próxima Actividad en Cola:** 🎉 **FASE 8 COMPLETADA AL 100% (Hitos 8.1 [CH-11] y 8.2 [CH-12])**  
-> **Progreso Global:** 🏁 **Hito 8.2 [CH-12] Blindaje Anti-Desvío 1er Toque y Calibración de Buffer Doupload/Doodstream completado al 100%**
+> **Estado del Oráculo de Pruebas:** 🟢 **167 Tests Pasando (35 en :core:domain, 12 en :core:protocol, 25 en :app-sender, 23 en :app-receiver) — 100% — 0 fallos**  
+> **Próxima Actividad en Cola:** 🎉 **FASE 8 COMPLETADA AL 100% (Hitos 8.1 [CH-11], 8.2 [CH-12] y 8.3 [CH-13])**  
+> **Progreso Global:** 🏁 **Hito 8.3 [CH-13] Blindaje Anti-Popups de Iframes y Watchdog Adaptativo de Buffer completado al 100%**
 
 ---
 
@@ -12,6 +12,7 @@
 
 | Hito / Fase | Nombre del Hito / Fase | Estado | Progreso |
 | :--- | :--- | :---: | :---: |
+| **Hito 8.3 [CH-13]** | Blindaje Anti-Popups de Iframes y Watchdog Adaptativo de Buffer | `[x]` Completado | **100%** |
 | **Hito 8.2 [CH-12]** | Blindaje Anti-Desvío 1er Toque y Calibración Buffer Doupload/Doodstream | `[x]` Completado | **100%** |
 | **Hito 8.1 [CH-11]** | Foco D-Pad en Controles TV y Protección de Reproductores | `[x]` Completado | **100%** |
 | :--- | :--- | :---: | :---: |
@@ -26,7 +27,7 @@
 
 ---
 
-## 2. Semáforo de Salud del Oráculo Unitario (95 Tests Certificados con JaCoCo)
+## 2. Semáforo de Salud del Oráculo Unitario (167 Tests Certificados con JaCoCo)
 
 | Módulo Gradle | Comando de Verificación | Tests | Estado |
 | :--- | :--- | :---: | :---: |
@@ -34,6 +35,7 @@
 | **`:core:protocol`** | `./gradlew :core:protocol:test` | 12 | 🟢 100% Passing (0 fallos) |
 | **`:app-sender`** | `./gradlew :app-sender:testDebugUnitTest` | 25 | 🟢 100% Passing (0 fallos) |
 | **`:app-receiver`** | `./gradlew :app-receiver:testDebugUnitTest` | 23 | 🟢 100% Passing (0 fallos) |
+| **Total Global** | `./gradlew test` | **167** | 🟢 **100% Passing (0 fallos)** |
 
 ---
 
@@ -55,14 +57,23 @@
 | `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/BrowserTopBar.kt` | **297** | ⚠️ Al límite |
 | `app-sender/src/main/kotlin/com/omnicast/sender/service/CastMediaNotificationService.kt` | **297** | ⚠️ Al límite |
 | `app-sender/src/main/kotlin/com/omnicast/sender/ui/components/MainActionCards.kt` | **295** | ⚠️ Al límite |
-| `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/BrowserWebView.kt` | **294** | 🛡️ Sellado (Zona Sagrada) |
 | `app-sender/src/main/kotlin/com/omnicast/sender/ui/components/RemoteExpandedControls.kt` | **291** | ⚠️ Al límite |
+| `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/BrowserWebView.kt` | **289** | 🛡️ Sellado (Zona Sagrada) |
 | `app-sender/src/main/kotlin/com/omnicast/sender/ui/SenderMainScreen.kt` | **289** | ⚠️ Al límite |
-| `app-receiver/src/main/kotlin/com/omnicast/receiver/ui/components/TvWebStreamScreen.kt` | **291** | 🛡️ Sellado (Zona Sagrada) |
 
 ---
 
 ## 4. Historial de Sesiones Multi-Agente
+
+### `[2026-11-11]` — Hito 8.3 [CH-13] — Blindaje Anti-Popups de Iframes y Watchdog Adaptativo de Buffer
+- **Acción:**
+  - **`BrowserPopupInterceptor.kt` (64L) y `BrowserWebView.kt` (289L):** Activación de `setSupportMultipleWindows(true)` en `WebSettings` delegando `onCreateWindow` en `BrowserPopupInterceptor`. Neutralización de desvíos forzados por llamadas a `window.open()` en iframes de reproductores (Doodstream) desviándolos a un `WebView` efímero en memoria sin tocar la ventana principal, preservando navegación en buscadores y retos captcha (`geetest`, `arkose`).
+  - **`AdBlocker.kt` (270L):** Refuerzo de filtros y preservación de reproductores legítimos e interactividad sin desvíos.
+  - **`TvWebHtmlBuilder.kt` (231L):** Inyección de heartbeats en eventos HLS (`MANIFEST_PARSED`, `FRAG_LOADING`, `FRAG_LOADED`) a través de la interfaz JavaScript de telemetría.
+  - **`TvWebStreamScreen.kt` (283L):** Calibración de watchdog adaptativo por arrendamiento de inactividad con doble umbral (22s de silencio sin fragmentos / 60s techo máximo) optimizado para CDNs de alta latencia (DropCDN/Dropload).
+- **Verificación:** 167 tests pasando (100% — 0 fallos), 0 archivos Kotlin > 300 líneas.
+- **Salud del Oráculo:** 🟢 167 tests passing (100% — 0 fallos).
+- **Siguiente paso:** 🎉 **FASE 8 COMPLETADA AL 100% (Hitos 8.1, 8.2 y 8.3)**.
 
 ### `[2026-11-11]` — Hito 8.2 [CH-12] — Blindaje Anti-Desvío 1er Toque y Calibración de Buffer Doupload/Doodstream
 - **Acción:**

@@ -2,11 +2,11 @@
 
 > **Versión Base de Rescate:** `v3.7.0` (`versionCodeSender: 368` | `versionCodeReceiver: 351`)  
 > **Política Operativa `v4.4`:** Micro-comandos `[auto]` y `[ver]` orquestados por el Planificador (`Argon`) invocando subagentes aislados (`flash` / `flash_lite`) | **Prohibido disparar Explorador Forense en tareas mapeadas** (todas las rutas están en este archivo y en [`doc/MAPA_DEL_SISTEMA_Y_FLUJO_DE_CODIGO.md`](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/MAPA_DEL_SISTEMA_Y_FLUJO_DE_CODIGO.md)).  
-> **Estado Global:** 🎉 **FASE 8 COMPLETADA AL 100% (Hitos 8.1 [CH-11], 8.2 [CH-12], 8.3 [CH-13], 8.4 [CH-14], 8.5 [CH-15], 8.6 [CH-16], 8.7 [CH-17] y 8.8 [CH-18] — Erradicación Universal de Huellas In-App y Autonomía Pura de Scripts — 167 Tests Passing — 0 Archivos Kotlin > 300L)**
+> **Estado Global:** 🎉 **FASE 8 COMPLETADA AL 100% (Hitos 8.1 [CH-11], 8.2 [CH-12], 8.3 [CH-13], 8.4 [CH-14], 8.5 [CH-15], 8.6 [CH-16], 8.7 [CH-17], 8.8 [CH-18] y 8.9 [CH-19] — Defensa Universal de Iframes en Document_Start y Normalización de Orígenes — 167 Tests Passing — 0 Archivos Kotlin > 300L)**
 
 ---
 
-## 🎮 FASE 8 — Experiencia de Control Remoto D-Pad Avanzada y Resiliencia de Reproductores TV (`[x]` — 8 / 8 completados — 100%)
+## 🎮 FASE 8 — Experiencia de Control Remoto D-Pad Avanzada y Resiliencia de Reproductores TV (`[x]` — 9 / 9 completados — 100%)
 
 - `[x]` **Hito 8.1 [CH-11] — Foco D-Pad en Controles TV y Protección de Reproductores (`app-receiver/src/main/kotlin/com/omnicast/receiver/ui/TvRemoteKeyHandler.kt`, `app-receiver/src/main/kotlin/com/omnicast/receiver/ui/components/TvDirectControlsOverlay.kt`, `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/AdBlocker.kt`):**
   - **Objetivo:** Garantizar gestión reactiva de D-Pad en `TvRemoteKeyHandler.kt` (276L) mediante `hasActiveOverlay` y `notifyControlsVisibilityChanged`, cediendo flechas D-Pad y ENTER al OSD/Compose TV para permitir seleccionar botones interactivos (Ajustes, Subtítulos, etc.), preservando atajos de salto +/-10s en pantalla limpia. Inyección inmediata de `FocusRequester` en el botón central de `TvDirectControlsOverlay.kt` (256L) y blindaje de reproductores web legítimos (`isLegitimate`) en `AdBlocker.kt` (252L) para SoloLatino (`player.pelisserieshoy.com`) e inmunidad a clics de inicio de video.
@@ -70,6 +70,13 @@
     - `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/BrowserWebView.kt` (289 líneas)
     - `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/WvcSnifferScripts.kt` (191 líneas)
     - `app-sender/src/main/assets/sniffer/universal_sniffer.js`
+  - **Agentes Involucrados:** `planner-architect` (`Argon`) ➔ `specialist-stream-extraction` (`flash`) ➔ `surgical-developer` (`flash`) ➔ `qa-oracle-tester` (`flash`) ➔ `sync-documenter` (`flash`) ➔ `git-ota-releaser` (`flash_lite`).
+
+- `[x]` **Hito 8.9 [CH-19] — Defensa Universal de Iframes en Document_Start y Normalización de Orígenes (`app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/WvcShieldSecurityEngine.kt`, `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/BrowserWebView.kt`):**
+  - **Objetivo:** Inyección anticipada universal a nivel de todos los frames e iframes en tiempo de `document_start` (`WebViewCompat.addDocumentStartJavaScript(webView, getProtectionScript(), setOf("*"))`) en `BrowserWebView.kt` (290L). Erradicación de huellas nativas `android-app://` en `new URL(...)` dentro de `WvcShieldSecurityEngine.kt` (277L), sustituyéndolas por el origen legítimo derivado de `document.referrer` o `window.location.origin`. Bloqueo de la autodestrucción DOM en subframes mediante trampa selectiva sobre `Element.prototype.innerHTML` cuando se intenta inyectar tarjetas de redirección o tarjetas de bloqueo de incrustación (`class="card"`, `target="_top"`), permitiendo que reproductores con anti-embed estricto (como el reproductor principal de SoloLatino `player.pelisserieshoy.com`) ejecuten el pipeline de video Plyr/HLS con total normalidad, con 0% código en duro y manteniendo todos los archivos <= 300 líneas.
+  - **Archivos Objetivo Exactos:**
+    - `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/WvcShieldSecurityEngine.kt` (277 líneas)
+    - `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/BrowserWebView.kt` (290 líneas)
   - **Agentes Involucrados:** `planner-architect` (`Argon`) ➔ `specialist-stream-extraction` (`flash`) ➔ `surgical-developer` (`flash`) ➔ `qa-oracle-tester` (`flash`) ➔ `sync-documenter` (`flash`) ➔ `git-ota-releaser` (`flash_lite`).
 
 ---

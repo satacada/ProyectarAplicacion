@@ -1,6 +1,9 @@
 package com.omnicast.sender.ui.browser
 
 import android.net.Uri
+import android.webkit.WebView
+import androidx.webkit.WebViewCompat
+import androidx.webkit.WebViewFeature
 
 /**
  * Motor modular de blindaje y seguridad inspirado en Web Video Caster.
@@ -10,7 +13,10 @@ import android.net.Uri
  * 1. Anulación preventiva de popups por `window.open` a nivel de JavaScript.
  * 2. Protección contra secuestro del botón atrás (throttling de `history.pushState`).
  * 3. Neutralización de WebSockets publicitarios (ws:// y wss://).
- * 4. Supresión de redirecciones retardadas sin gesto de usuario (setTimeout + location.href).
+ * 4. Normalización Universal de AJAX Anti-WebView Wrapper (X-Requested-With).
+ * 5. Normalización Universal de URL para neutralizar huellas android-app://.
+ * 6. Neutralización de autodestrucción DOM en subframes.
+ * 7. Camuflaje Stealth Anti-Detección de WebView.
  */
 object WvcShieldSecurityEngine {
 
@@ -38,16 +44,12 @@ object WvcShieldSecurityEngine {
                                        u.indexOf('/ad.php') !== -1 || u.indexOf('/redirect.php') !== -1 ||
                                        u.indexOf('/click.php') !== -1 || u.indexOf('/delivery/') !== -1);
                     var isInsideIframe = (window.self !== window.top);
-
-                    // Si es pasarela o se invoca desde un iframe reproductor, absorbe el popup sin cambiar de ventana
                     if (isAdGateway || isInsideIframe) {
                         return {
                             closed: false, name: target || '', location: { href: url },
                             focus: function() {}, blur: function() {}, close: function() { this.closed = true; }
                         };
                     }
-
-                    // Ventana principal: delegar limpiamente en _realOpen para gestión nativa
                     return _realOpen ? _realOpen.apply(this, arguments) : null;
                 };
             } catch(_) {}
@@ -60,8 +62,7 @@ object WvcShieldSecurityEngine {
                 window.history.pushState = function(state, title, url) {
                     var now = Date.now();
                     if (now - _lastPush < 3000) {
-                        _burstCount++;
-                        if (_burstCount > 3) {
+                        if (++_burstCount > 3) {
                             console.log('🛡️ [WVC Shield] Throttling de pushState abusivo');
                             return;
                         }
@@ -84,12 +85,7 @@ object WvcShieldSecurityEngine {
                             u.indexOf('exoclick') !== -1 || u.indexOf('clickadu') !== -1 ||
                             u.indexOf('banner') !== -1 || u.indexOf('syndication') !== -1) {
                             console.log('🛡️ [WVC Shield] WebSocket publicitario neutralizado:', url);
-                            return {
-                                send: function() {},
-                                close: function() {},
-                                addEventListener: function() {},
-                                removeEventListener: function() {}
-                            };
+                            return { send: function() {}, close: function() {}, addEventListener: function() {}, removeEventListener: function() {} };
                         }
                         return new _realWS(url, protocols);
                     };
@@ -99,12 +95,8 @@ object WvcShieldSecurityEngine {
             // 4. Normalización Universal de AJAX Anti-WebView Wrapper (X-Requested-With en Same-Origin)
             try {
                 var _isSameOrigin = function(u) {
-                    if (!u || typeof u !== 'string') return true;
-                    if (u.indexOf('/') === 0 && u.indexOf('//') !== 0) return true;
-                    try {
-                        var parsed = new URL(u, window.location.href);
-                        return parsed.origin === window.location.origin;
-                    } catch(_) { return false; }
+                    if (!u || typeof u !== 'string' || (u.indexOf('/') === 0 && u.indexOf('//') !== 0)) return true;
+                    try { return new URL(u, window.location.href).origin === window.location.origin; } catch(_) { return false; }
                 };
                 if (window.fetch) {
                     var _realFetch = window.fetch;
@@ -124,11 +116,9 @@ object WvcShieldSecurityEngine {
                     };
                 }
                 if (window.XMLHttpRequest) {
-                    var _origOpen = XMLHttpRequest.prototype.open;
-                    var _origSend = XMLHttpRequest.prototype.send;
+                    var _origOpen = XMLHttpRequest.prototype.open, _origSend = XMLHttpRequest.prototype.send;
                     var _origSetReqHeader = XMLHttpRequest.prototype.setRequestHeader;
-                    var _xhrUrls = new WeakMap();
-                    var _xhrHeaders = new WeakMap();
+                    var _xhrUrls = new WeakMap(), _xhrHeaders = new WeakMap();
                     XMLHttpRequest.prototype.open = function(method, url) {
                         try { _xhrUrls.set(this, url); } catch(_) {}
                         return _origOpen.apply(this, arguments);
@@ -142,24 +132,51 @@ object WvcShieldSecurityEngine {
                     XMLHttpRequest.prototype.send = function() {
                         try {
                             var targetUrl = _xhrUrls.get(this);
-                            if (_isSameOrigin(targetUrl) && !_xhrHeaders.get(this)) {
-                                this.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-                            }
+                            if (_isSameOrigin(targetUrl) && !_xhrHeaders.get(this)) this.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
                         } catch(_) {}
                         return _origSend.apply(this, arguments);
                     };
                 }
             } catch(_) {}
 
-            // 5. Camuflaje Stealth Anti-Detección de WebView (Brave/Chrome Nativo)
+            // 5. Normalización universal de URL para neutralizar huellas android-app://
+            try {
+                var _OrigURL = window.URL;
+                window.URL = function(url, base) {
+                    if (typeof url === 'string' && url.indexOf('android-app://') === 0) {
+                        try {
+                            var ref = document.referrer;
+                            if (ref && ref.indexOf('http') === 0) {
+                                url = new _OrigURL(ref).origin;
+                            } else if (window.location && window.location.origin && window.location.origin.indexOf('http') === 0) {
+                                url = window.location.origin;
+                            }
+                        } catch(_) {}
+                    }
+                    return (base !== undefined) ? new _OrigURL(url, base) : new _OrigURL(url);
+                };
+                window.URL.prototype = _OrigURL.prototype;
+                Object.setPrototypeOf(window.URL, _OrigURL);
+            } catch(_) {}
+
+            // 6. Neutralización de autodestrucción DOM en subframes
+            try {
+                var _origSetInnerHTML = Object.getOwnPropertyDescriptor(Element.prototype, 'innerHTML').set;
+                Object.defineProperty(Element.prototype, 'innerHTML', {
+                    set: function(val) {
+                        if (typeof val === 'string' && val.indexOf('<!DOCTYPE html>') !== -1 && (val.indexOf('target=\"_top\"') !== -1 || val.indexOf('class=\"card\"') !== -1)) {
+                            return;
+                        }
+                        return _origSetInnerHTML.call(this, val);
+                    },
+                    configurable: true
+                });
+            } catch(_) {}
+
+            // 7. Camuflaje Stealth Anti-Detección de WebView (Brave/Chrome Nativo)
             try {
                 if (!window.chrome) { window.chrome = { app: { isInstalled: false }, runtime: {} }; }
-                try {
-                    Object.defineProperty(navigator, 'webdriver', {
-                        get: function() { return false; },
-                        configurable: true
-                    });
-                } catch(_) {}
+                try { Object.defineProperty(navigator, 'webdriver', { get: function() { return false; }, configurable: true }); } catch(_) {}
             } catch(_) {}
         })();
     """.trimIndent()
@@ -169,6 +186,14 @@ object WvcShieldSecurityEngine {
      */
     fun getProtectionScript(): String = if (isEnabled) SHIELD_SCRIPT else ""
 
+    fun installDocumentStartScript(webView: WebView) {
+        if (WebViewFeature.isFeatureSupported(WebViewFeature.DOCUMENT_START_SCRIPT)) {
+            try {
+                WebViewCompat.addDocumentStartJavaScript(webView, getProtectionScript(), setOf("*"))
+            } catch (_: Throwable) {}
+        }
+    }
+
     /**
      * Evalúa si una navegación en `shouldOverrideUrlLoading` es una redirección retardada abusiva
      * iniciada por `setTimeout` o scripts sin interacción táctil real del usuario.
@@ -177,8 +202,7 @@ object WvcShieldSecurityEngine {
         if (!isEnabled || hasGesture) return false
         if (targetUrl.isBlank() || targetUrl.startsWith("about:")) return false
         if (targetUrl.lowercase().contains("/out.php") || targetUrl.lowercase().contains("/pop.php")) return true
-        if (AdBlocker.isVerificationOrCaptcha(targetUrl)) return false
-        if (AdBlockWhitelistManager.isWhitelisted(targetUrl)) return false
+        if (AdBlocker.isVerificationOrCaptcha(targetUrl) || AdBlockWhitelistManager.isWhitelisted(targetUrl)) return false
 
         val curHost = extractHost(currentUrl)
         val targetHost = extractHost(targetUrl)
@@ -187,11 +211,8 @@ object WvcShieldSecurityEngine {
         if (targetHost != null && (AdBlocker.isSearchEngine(targetHost) || AdBlocker.isKnownMediaHost(targetHost) || AdBlockWhitelistManager.isWhitelistedHost(targetHost))) {
             return false
         }
-
-        if (curHost != null && targetHost != null) {
-            if (targetHost == curHost || targetHost.endsWith(".$curHost") || curHost.endsWith(".$targetHost")) {
-                return false
-            }
+        if (curHost != null && targetHost != null && (targetHost == curHost || targetHost.endsWith(".$curHost") || curHost.endsWith(".$targetHost"))) {
+            return false
         }
 
         val isAd = AdBlocker.isAd(targetUrl) ||
@@ -207,12 +228,10 @@ object WvcShieldSecurityEngine {
         return false
     }
 
-    private fun extractHost(url: String): String? {
-        return try {
-            java.net.URI(url).host?.lowercase()
-        } catch (_: Throwable) {
-            try { Uri.parse(url).host?.lowercase() } catch (_: Throwable) { null }
-        }
+    private fun extractHost(url: String): String? = try {
+        java.net.URI(url).host?.lowercase()
+    } catch (_: Throwable) {
+        try { Uri.parse(url).host?.lowercase() } catch (_: Throwable) { null }
     }
 
     private fun extractBrand(host: String): String {
@@ -222,9 +241,7 @@ object WvcShieldSecurityEngine {
     }
 
     /**
-     * Evalúa si una navegación en `shouldOverrideUrlLoading` es un secuestro de clic (click-jacking)
-     * que intenta desviar al usuario hacia páginas publicitarias, buscadores o dominios externos
-     * no autorizados desde un sitio web de streaming o películas.
+     * Evalúa si una navegación en `shouldOverrideUrlLoading` es un secuestro de clic (click-jacking).
      */
     @Suppress("UNUSED_PARAMETER")
     fun shouldBlockClickHijack(hasGesture: Boolean, targetUrl: String, currentUrl: String, isMediaPresent: Boolean = false): Boolean {
@@ -242,12 +259,9 @@ object WvcShieldSecurityEngine {
         val curBrand = extractBrand(curHost); val targetBrand = extractBrand(targetHost)
         if (curBrand.length >= 4 && curBrand == targetBrand) return false
         if (AdBlocker.isVerificationOrCaptcha(targetUrl) || AdBlockWhitelistManager.isWhitelistedHost(targetHost)) return false
+        if (AdBlocker.isSearchEngine(curHost)) return false
 
-        val isTargetSearchEngine = AdBlocker.isSearchEngine(targetHost)
-        val isSourceSearchEngine = AdBlocker.isSearchEngine(curHost)
-        if (isSourceSearchEngine) return false
-
-        if (isTargetSearchEngine) {
+        if (AdBlocker.isSearchEngine(targetHost)) {
             com.omnicast.sender.log.SenderLogger.w("CLICK_HIJACK_BLOCKED", "🛑 Clic a buscador bloqueado: $targetHost desde $curHost", details = mapOf("target_host" to targetHost, "cur_host" to curHost, "target_url" to targetUrl))
             return true
         }

@@ -3,8 +3,8 @@
 > **Versión Actual en Producción:** `v3.7.0` (`versionCodeSender: 368` | `versionCodeReceiver: 351`)  
 > **Última Sincronización Agéntica:** `2026-11-12`  
 > **Estado del Oráculo de Pruebas:** 🟢 **167 Tests Pasando (35 en :core:domain, 12 en :core:protocol, 25 en :app-sender, 23 en :app-receiver) — 100% — 0 fallos**  
-> **Próxima Actividad en Cola:** 🎉 **FASE 8 COMPLETADA AL 100% (Hitos 8.1 [CH-11], 8.2 [CH-12], 8.3 [CH-13], 8.4 [CH-14], 8.5 [CH-15], 8.6 [CH-16], 8.7 [CH-17] y 8.8 [CH-18])**  
-> **Progreso Global:** 🏁 **Hito 8.8 [CH-18] Erradicación Universal de Huellas In-App y Autonomía Pura de Scripts completado al 100%**
+> **Próxima Actividad en Cola:** 🎉 **FASE 8 COMPLETADA AL 100% (Hitos 8.1 [CH-11], 8.2 [CH-12], 8.3 [CH-13], 8.4 [CH-14], 8.5 [CH-15], 8.6 [CH-16], 8.7 [CH-17], 8.8 [CH-18] y 8.9 [CH-19])**  
+> **Progreso Global:** 🏁 **Hito 8.9 [CH-19] Defensa Universal de Iframes en Document_Start y Normalización de Orígenes completado al 100%**
 
 ---
 
@@ -12,6 +12,7 @@
 
 | Hito / Fase | Nombre del Hito / Fase | Estado | Progreso |
 | :--- | :--- | :---: | :---: |
+| **Hito 8.9 [CH-19]** | Defensa Universal de Iframes en Document_Start y Normalización de Orígenes | `[x]` Completado | **100%** |
 | **Hito 8.8 [CH-18]** | Erradicación Universal de Huellas In-App y Autonomía Pura de Scripts | `[x]` Completado | **100%** |
 | **Hito 8.7 [CH-17]** | Sincronización Canónica de UserAgentMetadata y Client Hints Oficiales | `[x]` Completado | **100%** |
 | **Hito 8.6 [CH-16]** | User-Agent Canónico Dinámico y Sincronización Nativa de Client Hints | `[x]` Completado | **100%** |
@@ -65,12 +66,20 @@
 | `app-sender/src/main/kotlin/com/omnicast/sender/ui/components/RemoteExpandedControls.kt` | **291** | ⚠️ Al límite |
 | `app-receiver/src/main/kotlin/com/omnicast/receiver/directstream/TvStorageSafetyManager.kt` | **290** | ⚠️ Al límite |
 | `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/BrowserUrlHelper.kt` | **290** | ⚠️ Al límite |
-| `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/BrowserWebView.kt` | **289** | 🛡️ Sellado (Zona Sagrada) |
+| `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/BrowserWebView.kt` | **290** | 🛡️ Sellado (Zona Sagrada) |
 | `app-sender/src/main/kotlin/com/omnicast/sender/ui/SenderMainScreen.kt` | **289** | ⚠️ Al límite |
 
 ---
 
 ## 4. Historial de Sesiones Multi-Agente
+
+### `[2026-11-12]` — Hito 8.9 [CH-19] — Defensa Universal de Iframes en Document_Start y Normalización de Orígenes
+- **Acción:**
+  - **`BrowserWebView.kt` (290L):** Inyección anticipada universal a nivel de todos los frames e iframes en tiempo de `document_start` (`WebViewCompat.addDocumentStartJavaScript(webView, getProtectionScript(), setOf("*"))`), garantizando que la defensa se aplique antes de que cualquier script del iframe se ejecute.
+  - **`WvcShieldSecurityEngine.kt` (277L):** Erradicación de huellas nativas `android-app://` en `new URL(...)`, sustituyéndolas por el origen legítimo derivado de `document.referrer` o `window.location.origin`. Bloqueo de la autodestrucción DOM en subframes mediante trampa selectiva sobre `Element.prototype.innerHTML` cuando se intenta inyectar tarjetas de redirección o tarjetas de bloqueo de incrustación (`class="card"`, `target="_top"`), permitiendo que reproductores con anti-embed estricto (como el reproductor principal de SoloLatino `player.pelisserieshoy.com`) ejecuten el pipeline de video Plyr/HLS con total normalidad, con 0% código en duro y manteniendo todos los archivos <= 300 líneas.
+- **Verificación:** 167 tests pasando (100% — 0 fallos), 0 archivos Kotlin > 300 líneas (`BrowserWebView.kt` en 290L, `WvcShieldSecurityEngine.kt` en 277L).
+- **Salud del Oráculo:** 🟢 167 tests passing (100% — 0 fallos).
+- **Siguiente paso:** 🎉 **FASE 8 COMPLETADA AL 100% (Hitos 8.1, 8.2, 8.3, 8.4, 8.5, 8.6, 8.7, 8.8 y 8.9)**.
 
 ### `[2026-11-12]` — Hito 8.8 [CH-18] — Erradicación Universal de Huellas In-App y Autonomía Pura de Scripts
 - **Acción:**

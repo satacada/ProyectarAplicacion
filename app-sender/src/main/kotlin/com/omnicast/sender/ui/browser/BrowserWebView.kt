@@ -118,6 +118,7 @@ fun BrowserWebView(
                 settings.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW; settings.mediaPlaybackRequiresUserGesture = false
                 settings.setSupportMultipleWindows(true); settings.javaScriptCanOpenWindowsAutomatically = false
                 BrowserUrlHelper.applyCanonicalUserAgent(settings, ctx)
+                WvcShieldSecurityEngine.installDocumentStartScript(this)
 
                 webViewClient = object : WebViewClient() {
                     override fun onRenderProcessGone(view: WebView?, detail: RenderProcessGoneDetail?): Boolean {

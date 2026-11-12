@@ -15,6 +15,7 @@ import com.omnicast.sender.log.SenderLogger
 class BrowserPopupInterceptor(private val context: Context) {
     private var interceptorView: WebView? = null
 
+    @Suppress("UNUSED_PARAMETER")
     @SuppressLint("SetJavaScriptEnabled")
     fun handleCreateWindow(parentView: WebView?, isUserGesture: Boolean, resultMsg: Message?): Boolean {
         if (resultMsg == null) return false
@@ -36,11 +37,13 @@ class BrowserPopupInterceptor(private val context: Context) {
                     parentView?.loadUrl(targetUrl)
                     return true
                 }
-                if (curHost != null && AdBlocker.isSearchEngine(curHost)) {
-                    if (targetHost != null && !AdBlocker.isAd(targetUrl) && !AdBlockDatabase.isAdDomain(targetHost)) {
-                        parentView?.loadUrl(targetUrl)
-                        return true
-                    }
+                val isNotAd = targetHost != null && !AdBlocker.isAd(targetUrl) && !AdBlockDatabase.isAdDomain(targetHost)
+                val isSameHost = curHost != null && targetHost != null && isSameMainHost(curHost, targetHost)
+                val isFromSearch = curHost != null && AdBlocker.isSearchEngine(curHost)
+
+                if (isNotAd && (isSameHost || isFromSearch)) {
+                    parentView?.loadUrl(targetUrl)
+                    return true
                 }
                 SenderLogger.w("POPUP_BLOCKED", "🛡️ Popup de iframe/ventana bloqueado: $targetHost (desde $curHost)")
                 targetHost?.let { AdBlocker.learnAndBlockAdHost(it, curHost) }
@@ -53,6 +56,19 @@ class BrowserPopupInterceptor(private val context: Context) {
         transport.webView = tempView
         resultMsg.sendToTarget()
         return true
+    }
+
+    private fun isSameMainHost(h1: String, h2: String): Boolean {
+        if (h1 == h2 || h1.endsWith(".$h2") || h2.endsWith(".$h1")) return true
+        val b1 = extractBrand(h1)
+        val b2 = extractBrand(h2)
+        return b1.length >= 4 && b1 == b2
+    }
+
+    private fun extractBrand(host: String): String {
+        val clean = host.removePrefix("www.").substringBefore(':')
+        val parts = clean.split('.')
+        return if (parts.size >= 2) parts[parts.size - 2] else clean
     }
 
     fun destroy() {

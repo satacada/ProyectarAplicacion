@@ -2,11 +2,11 @@
 
 > **Versión Base de Rescate:** `v3.7.0` (`versionCodeSender: 368` | `versionCodeReceiver: 351`)  
 > **Política Operativa `v4.4`:** Micro-comandos `[auto]` y `[ver]` orquestados por el Planificador (`Argon`) invocando subagentes aislados (`flash` / `flash_lite`) | **Prohibido disparar Explorador Forense en tareas mapeadas** (todas las rutas están en este archivo y en [`doc/MAPA_DEL_SISTEMA_Y_FLUJO_DE_CODIGO.md`](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/MAPA_DEL_SISTEMA_Y_FLUJO_DE_CODIGO.md)).  
-> **Estado Global:** 🎉 **FASE 8 COMPLETADA AL 100% (Hitos 8.1 [CH-11], 8.2 [CH-12] y 8.3 [CH-13] — Blindaje Anti-Popups de Iframes y Watchdog Adaptativo de Buffer — 167 Tests Passing — 0 Archivos Kotlin > 300L)**
+> **Estado Global:** 🎉 **FASE 8 COMPLETADA AL 100% (Hitos 8.1 [CH-11], 8.2 [CH-12], 8.3 [CH-13] y 8.4 [CH-14] — Erradicación de Recargas Forzadas por Popups y Camuflaje Universal Anti-Detección — 167 Tests Passing — 0 Archivos Kotlin > 300L)**
 
 ---
 
-## 🎮 FASE 8 — Experiencia de Control Remoto D-Pad Avanzada y Resiliencia de Reproductores TV (`[x]` — 3 / 3 completados — 100%)
+## 🎮 FASE 8 — Experiencia de Control Remoto D-Pad Avanzada y Resiliencia de Reproductores TV (`[x]` — 4 / 4 completados — 100%)
 
 - `[x]` **Hito 8.1 [CH-11] — Foco D-Pad en Controles TV y Protección de Reproductores (`app-receiver/src/main/kotlin/com/omnicast/receiver/ui/TvRemoteKeyHandler.kt`, `app-receiver/src/main/kotlin/com/omnicast/receiver/ui/components/TvDirectControlsOverlay.kt`, `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/AdBlocker.kt`):**
   - **Objetivo:** Garantizar gestión reactiva de D-Pad en `TvRemoteKeyHandler.kt` (276L) mediante `hasActiveOverlay` y `notifyControlsVisibilityChanged`, cediendo flechas D-Pad y ENTER al OSD/Compose TV para permitir seleccionar botones interactivos (Ajustes, Subtítulos, etc.), preservando atajos de salto +/-10s en pantalla limpia. Inyección inmediata de `FocusRequester` en el botón central de `TvDirectControlsOverlay.kt` (256L) y blindaje de reproductores web legítimos (`isLegitimate`) en `AdBlocker.kt` (252L) para SoloLatino (`player.pelisserieshoy.com`) e inmunidad a clics de inicio de video.
@@ -33,6 +33,13 @@
     - `app-receiver/src/main/kotlin/com/omnicast/receiver/ui/components/TvWebHtmlBuilder.kt` (231 líneas)
     - `app-receiver/src/main/kotlin/com/omnicast/receiver/ui/components/TvWebStreamScreen.kt` (283 líneas)
   - **Agentes Involucrados:** `planner-architect` (`Argon`) ➔ `specialist-tv-player-pvr` (`flash`) ➔ `surgical-developer` (`flash`) ➔ `qa-oracle-tester` (`flash`) ➔ `sync-documenter` (`flash`) ➔ `git-ota-releaser` (`flash_lite`).
+
+- `[x]` **Hito 8.4 [CH-14] — Erradicación de Recargas Forzadas por Popups y Camuflaje Universal Anti-Detección (`app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/WvcShieldSecurityEngine.kt`, `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/BrowserPopupInterceptor.kt`):**
+  - **Objetivo:** Erradicar la instrucción destructiva `window.location.href = url` dentro de `window.open` en `WvcShieldSecurityEngine.kt` (235L) que forzaba recargas de página al interactuar con selectores/botones de reproducción, delegando la gestión nativa de ventanas al interceptor `BrowserPopupInterceptor.kt` (80L) para permitir navegación interna limpia de mismo origen sin tocar la ventana principal ante anuncios. Inyección universal estándar de `navigator.webdriver = false` en el prototipo Chromium para evadir falsos positivos de automatización en portales protegidos (SoloLatino, Cloudflare) con 0% código en duro.
+  - **Archivos Objetivo Exactos:**
+    - `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/WvcShieldSecurityEngine.kt` (235 líneas)
+    - `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/BrowserPopupInterceptor.kt` (80 líneas)
+  - **Agentes Involucrados:** `planner-architect` (`Argon`) ➔ `surgical-developer` (`flash`) ➔ `qa-oracle-tester` (`flash`) ➔ `sync-documenter` (`flash`) ➔ `git-ota-releaser` (`flash_lite`).
 
 ---
 

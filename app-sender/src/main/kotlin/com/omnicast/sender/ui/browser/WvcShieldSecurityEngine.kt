@@ -47,28 +47,8 @@ object WvcShieldSecurityEngine {
                         };
                     }
 
-                    // Si es ventana principal legítima del usuario, permite enlaces del mismo sitio o relativos
-                    try {
-                        var curH = (window.location.hostname || '').toLowerCase();
-                        var isRelative = (url.charAt(0) === '/' || url.indexOf('://') === -1);
-                        var targetH = isRelative ? curH : (new URL(url, window.location.href).hostname || '').toLowerCase();
-                        var isSameHost = (targetH === curH || targetH.endsWith('.' + curH) || curH.endsWith('.' + targetH));
-
-                        if (isRelative || isSameHost) {
-                            console.log('OMNICAST_NAV_SAME_ORIGIN: ' + url);
-                            window.location.href = url;
-                            return null;
-                        }
-                    } catch(_) {}
-
-                    return {
-                        closed: false,
-                        name: target || '',
-                        location: { href: url },
-                        focus: function() {},
-                        blur: function() {},
-                        close: function() { this.closed = true; }
-                    };
+                    // Ventana principal: delegar limpiamente en _realOpen para gestión nativa
+                    return _realOpen ? _realOpen.apply(this, arguments) : null;
                 };
             } catch(_) {}
 
@@ -119,6 +99,12 @@ object WvcShieldSecurityEngine {
             // 5. Camuflaje Stealth Anti-Detección de WebView (Brave/Chrome Nativo)
             try {
                 if (!window.chrome) { window.chrome = { app: { isInstalled: false }, runtime: {} }; }
+                try {
+                    Object.defineProperty(navigator, 'webdriver', {
+                        get: function() { return false; },
+                        configurable: true
+                    });
+                } catch(_) {}
                 if (navigator.userAgentData) {
                     var _realBrands = [
                         { brand: 'Google Chrome', version: '124' },

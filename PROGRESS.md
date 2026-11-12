@@ -1,10 +1,10 @@
 # 📊 PROGRESS & BITÁCORA OPERATIVA — OmniCast Pro
 
 > **Versión Actual en Producción:** `v3.7.0` (`versionCodeSender: 368` | `versionCodeReceiver: 351`)  
-> **Última Sincronización Agéntica:** `2026-11-11`  
+> **Última Sincronización Agéntica:** `2026-11-12`  
 > **Estado del Oráculo de Pruebas:** 🟢 **167 Tests Pasando (35 en :core:domain, 12 en :core:protocol, 25 en :app-sender, 23 en :app-receiver) — 100% — 0 fallos**  
-> **Próxima Actividad en Cola:** 🎉 **FASE 8 COMPLETADA AL 100% (Hitos 8.1 [CH-11], 8.2 [CH-12] y 8.3 [CH-13])**  
-> **Progreso Global:** 🏁 **Hito 8.3 [CH-13] Blindaje Anti-Popups de Iframes y Watchdog Adaptativo de Buffer completado al 100%**
+> **Próxima Actividad en Cola:** 🎉 **FASE 8 COMPLETADA AL 100% (Hitos 8.1 [CH-11], 8.2 [CH-12], 8.3 [CH-13] y 8.4 [CH-14])**  
+> **Progreso Global:** 🏁 **Hito 8.4 [CH-14] Erradicación de Recargas Forzadas por Popups y Camuflaje Universal Anti-Detección completado al 100%**
 
 ---
 
@@ -12,6 +12,7 @@
 
 | Hito / Fase | Nombre del Hito / Fase | Estado | Progreso |
 | :--- | :--- | :---: | :---: |
+| **Hito 8.4 [CH-14]** | Erradicación de Recargas Forzadas por Popups y Camuflaje Universal Anti-Detección | `[x]` Completado | **100%** |
 | **Hito 8.3 [CH-13]** | Blindaje Anti-Popups de Iframes y Watchdog Adaptativo de Buffer | `[x]` Completado | **100%** |
 | **Hito 8.2 [CH-12]** | Blindaje Anti-Desvío 1er Toque y Calibración Buffer Doupload/Doodstream | `[x]` Completado | **100%** |
 | **Hito 8.1 [CH-11]** | Foco D-Pad en Controles TV y Protección de Reproductores | `[x]` Completado | **100%** |
@@ -64,6 +65,15 @@
 ---
 
 ## 4. Historial de Sesiones Multi-Agente
+
+### `[2026-11-12]` — Hito 8.4 [CH-14] — Erradicación de Recargas Forzadas por Popups y Camuflaje Universal Anti-Detección
+- **Acción:**
+  - **`WvcShieldSecurityEngine.kt` (235L):** Erradicación de la asignación destructiva `window.location.href = url` dentro del hook de `window.open` en la ventana principal, que forzaba recargas de página completas al interactuar con selectores de calidad o botones de inicio de reproducción. Ahora delega limpiamente en `_realOpen` para gestión nativa.
+  - **`BrowserPopupInterceptor.kt` (80L):** Delegación nativa en `handleCreateWindow` permitiendo la apertura de URLs de mismo origen o navegación legítima sin anuncios (`isSameHost || isFromSearch`), mientras los anuncios y popups de iframes continúan siendo neutralizados silenciosamente en un `WebView` efímero en memoria sin tocar la ventana principal.
+  - **Camuflaje Universal Anti-Detección:** Inyección en `WvcShieldSecurityEngine.kt` de `Object.defineProperty(navigator, 'webdriver', { get: () => false })` en el prototipo de Chromium, neutralizando la detección de automatización de WebView en Cloudflare, SoloLatino y portales protegidos con 0% código en duro.
+- **Verificación:** 167 tests pasando (100% — 0 fallos), 0 archivos Kotlin > 300 líneas.
+- **Salud del Oráculo:** 🟢 167 tests passing (100% — 0 fallos).
+- **Siguiente paso:** 🎉 **FASE 8 COMPLETADA AL 100% (Hitos 8.1, 8.2, 8.3 y 8.4)**.
 
 ### `[2026-11-11]` — Hito 8.3 [CH-13] — Blindaje Anti-Popups de Iframes y Watchdog Adaptativo de Buffer
 - **Acción:**

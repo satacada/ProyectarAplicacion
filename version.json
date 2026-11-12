@@ -1,12 +1,12 @@
 {
-  "versionName": "3.7.17",
-  "versionCodeSender": 387,
-  "versionCodeReceiver": 368,
-  "releaseTag": "v3.7.17",
-  "senderApk": "omnicast-sender-v3.7.17.apk",
-  "receiverApk": "omnicast-receiver-v3.7.17.apk",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.17/omnicast-sender-v3.7.17.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.17/omnicast-receiver-v3.7.17.apk",
-  "releaseNotes": "v3.7.17: Cierre de Hito 8.11 [CH-21]. Reinicio automatico de videos concluidos y diferenciacion de capitulos SPA.",
-  "changelog": "v3.7.17: Cierre de Hito 8.11 [CH-21]. Reinicio automatico de videos concluidos y diferenciacion de capitulos SPA."
+  "versionName": "3.7.18",
+  "versionCodeSender": 388,
+  "versionCodeReceiver": 369,
+  "releaseTag": "v3.7.18",
+  "senderApk": "omnicast-sender-v3.7.18.apk",
+  "receiverApk": "omnicast-receiver-v3.7.18.apk",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.18/omnicast-sender-v3.7.18.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.18/omnicast-receiver-v3.7.18.apk",
+  "releaseNotes": "v3.7.18: Cierre de Hito 8.12 [CH-22]. Algoritmo heuristico universal de afinidad de marca y navegacion por gesto legitimo.",
+  "changelog": "v3.7.18: Cierre de Hito 8.12 [CH-22]. Algoritmo heuristico universal de afinidad de marca y navegacion por gesto legitimo."
 }

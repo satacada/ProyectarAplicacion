@@ -3,8 +3,8 @@
 > **Versión Actual en Producción:** `v3.7.0` (`versionCodeSender: 368` | `versionCodeReceiver: 351`)  
 > **Última Sincronización Agéntica:** `2026-11-12`  
 > **Estado del Oráculo de Pruebas:** 🟢 **167 Tests Pasando (35 en :core:domain, 12 en :core:protocol, 25 en :app-sender, 23 en :app-receiver) — 100% — 0 fallos**  
-> **Próxima Actividad en Cola:** 🎉 **FASE 8 COMPLETADA AL 100% (Hitos 8.1 [CH-11], 8.2 [CH-12], 8.3 [CH-13] y 8.4 [CH-14])**  
-> **Progreso Global:** 🏁 **Hito 8.4 [CH-14] Erradicación de Recargas Forzadas por Popups y Camuflaje Universal Anti-Detección completado al 100%**
+> **Próxima Actividad en Cola:** 🎉 **FASE 8 COMPLETADA AL 100% (Hitos 8.1 [CH-11], 8.2 [CH-12], 8.3 [CH-13], 8.4 [CH-14] y 8.5 [CH-15])**  
+> **Progreso Global:** 🏁 **Hito 8.5 [CH-15] Sonda Transparente de Diagnóstico HTTP/JS y Chrome DevTools Remoto completado al 100%**
 
 ---
 
@@ -12,6 +12,7 @@
 
 | Hito / Fase | Nombre del Hito / Fase | Estado | Progreso |
 | :--- | :--- | :---: | :---: |
+| **Hito 8.5 [CH-15]** | Sonda Transparente de Diagnóstico HTTP/JS y Chrome DevTools Remoto | `[x]` Completado | **100%** |
 | **Hito 8.4 [CH-14]** | Erradicación de Recargas Forzadas por Popups y Camuflaje Universal Anti-Detección | `[x]` Completado | **100%** |
 | **Hito 8.3 [CH-13]** | Blindaje Anti-Popups de Iframes y Watchdog Adaptativo de Buffer | `[x]` Completado | **100%** |
 | **Hito 8.2 [CH-12]** | Blindaje Anti-Desvío 1er Toque y Calibración Buffer Doupload/Doodstream | `[x]` Completado | **100%** |
@@ -59,12 +60,20 @@
 | `app-sender/src/main/kotlin/com/omnicast/sender/service/CastMediaNotificationService.kt` | **297** | ⚠️ Al límite |
 | `app-sender/src/main/kotlin/com/omnicast/sender/ui/components/MainActionCards.kt` | **295** | ⚠️ Al límite |
 | `app-sender/src/main/kotlin/com/omnicast/sender/ui/components/RemoteExpandedControls.kt` | **291** | ⚠️ Al límite |
-| `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/BrowserWebView.kt` | **289** | 🛡️ Sellado (Zona Sagrada) |
+| `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/BrowserWebView.kt` | **292** | 🛡️ Sellado (Zona Sagrada) |
 | `app-sender/src/main/kotlin/com/omnicast/sender/ui/SenderMainScreen.kt` | **289** | ⚠️ Al límite |
 
 ---
 
 ## 4. Historial de Sesiones Multi-Agente
+
+### `[2026-11-12]` — Hito 8.5 [CH-15] — Sonda Transparente de Diagnóstico HTTP/JS y Chrome DevTools Remoto
+- **Acción:**
+  - **`BrowserWebView.kt` (292L):** Activación de depuración remota de Chromium WebView mediante `WebView.setWebContentsDebuggingEnabled(true)` para diagnóstico profundo vía `chrome://inspect`, e integración desacoplada del centinela de telemetría y diagnóstico web sin inflar la lógica del navegador principal.
+  - **`WebPlayerDiagnosticSentinel.kt` (89L):** Integración de sonda de inspección de peticiones a endpoints de API internos (`/api/` con volcado estructurado de headers HTTP de petición), captura de errores de estado HTTP (`onReceivedHttpError`) con reporte a `SenderLogger`, y registro reactivo de advertencias y errores en consola JavaScript (`BROWSER_JS_DIAG`) con 0% código en duro.
+- **Verificación:** 167 tests pasando (100% — 0 fallos), 0 archivos Kotlin > 300 líneas (`BrowserWebView.kt` en 292L, `WebPlayerDiagnosticSentinel.kt` en 89L).
+- **Salud del Oráculo:** 🟢 167 tests passing (100% — 0 fallos).
+- **Siguiente paso:** 🎉 **FASE 8 COMPLETADA AL 100% (Hitos 8.1, 8.2, 8.3, 8.4 y 8.5)**.
 
 ### `[2026-11-12]` — Hito 8.4 [CH-14] — Erradicación de Recargas Forzadas por Popups y Camuflaje Universal Anti-Detección
 - **Acción:**

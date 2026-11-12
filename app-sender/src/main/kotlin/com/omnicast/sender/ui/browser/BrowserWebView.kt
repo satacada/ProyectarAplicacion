@@ -76,12 +76,8 @@ fun BrowserWebView(
             val webView = WebView(ctx)
             val swipeRefresh = SwipeRefreshLayout(ctx).apply {
                 setColorSchemeColors(0xFF38BDF8.toInt())
-                setOnRefreshListener {
-                    webView.reload()
-                }
-                setOnChildScrollUpCallback { _, _ ->
-                    webView.canScrollVertically(-1)
-                }
+                setOnRefreshListener { webView.reload() }
+                setOnChildScrollUpCallback { _, _ -> webView.canScrollVertically(-1) }
             }
 
             val inputViewportScript = """
@@ -111,11 +107,10 @@ fun BrowserWebView(
             """.trimIndent()
 
             webView.apply {
-                isFocusable = true
-                isFocusableInTouchMode = true
-                isClickable = true
+                isFocusable = true; isFocusableInTouchMode = true; isClickable = true
                 CookieManager.getInstance().setAcceptCookie(true)
                 CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
+                com.omnicast.sender.ui.browser.sentinel.WebPlayerDiagnosticSentinel.initWebDebugging()
                 settings.javaScriptEnabled = true; settings.domStorageEnabled = true; settings.databaseEnabled = true
                 settings.allowFileAccess = true; settings.useWideViewPort = true; settings.loadWithOverviewMode = true
                 settings.setSupportZoom(true); settings.builtInZoomControls = true; settings.displayZoomControls = false
@@ -199,6 +194,15 @@ fun BrowserWebView(
                         super.onReceivedError(v, req, err)
                     }
 
+                    override fun onReceivedHttpError(v: WebView?, r: WebResourceRequest?, err: WebResourceResponse?) {
+                        super.onReceivedHttpError(v, r, err)
+                        val u = r?.url?.toString() ?: return
+                        val code = err?.statusCode ?: return
+                        val reason = err.reasonPhrase ?: ""
+                        val ref = r.requestHeaders?.get("Referer") ?: currentUrl
+                        com.omnicast.sender.ui.browser.sentinel.WebPlayerDiagnosticSentinel.handleHttpError(u, code, reason, ref)
+                    }
+
                     override fun shouldInterceptRequest(v: WebView?, r: WebResourceRequest?): WebResourceResponse? {
                         return try {
                             if (r?.isForMainFrame == true) return super.shouldInterceptRequest(v, r)
@@ -214,6 +218,7 @@ fun BrowserWebView(
                             if (!isGenericAsset) {
                                 android.util.Log.i("OMNICAST_NET", "🌐 Red: $reqUrl (Ref: $docUrl)")
                             }
+                            com.omnicast.sender.ui.browser.sentinel.WebPlayerDiagnosticSentinel.inspectApiRequest(reqUrl, r.requestHeaders)
                             if (com.omnicast.sender.nativeclassifier.NativeStreamClassifier.shouldDiscard(reqUrl) || AdBlocker.isVideoAd(reqUrl)) {
                                 return super.shouldInterceptRequest(v, r)
                             }
@@ -281,9 +286,7 @@ fun BrowserWebView(
             swipeRefresh.visibility = if (isHome) android.view.View.INVISIBLE else android.view.View.VISIBLE
             swipeRefresh
         },
-        update = { v ->
-            v.visibility = if (isHome) android.view.View.INVISIBLE else android.view.View.VISIBLE
-        },
+        update = { v -> v.visibility = if (isHome) android.view.View.INVISIBLE else android.view.View.VISIBLE },
         modifier = Modifier.fillMaxSize().alpha(if (isHome) 0f else 1f)
     )
 }

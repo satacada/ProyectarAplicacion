@@ -233,7 +233,7 @@ object WvcShieldSecurityEngine {
         if (AdBlockWhitelistManager.isWhitelistedHost(curHost)) return false
 
         try {
-            com.omnicast.sender.log.SenderLogger.w("CLICK_HIJACK_BLOCKED", "🛑 Secuestro de clic bloqueado hacia: $targetHost desde $curHost", details = mapOf("target_host" to targetHost, "cur_host" to curHost, "target_url" to targetUrl))
+            com.omnicast.sender.log.SenderLogger.w("CLICK_HIJACK_BLOCKED", "🛑 Secuestro de clic bloqueado hacia: $targetHost (URL: $targetUrl) desde $curHost", details = mapOf("target_host" to targetHost, "cur_host" to curHost, "target_url" to targetUrl))
             AdBlocker.learnAndBlockAdHost(targetHost, curHost)
         } catch (_: Throwable) {}
         return true
@@ -253,10 +253,16 @@ object WvcShieldSecurityEngine {
             val candidate = if (rawValue.startsWith("http://") || rawValue.startsWith("https://")) {
                 rawValue
             } else {
-                try {
-                    val decoded = java.net.URLDecoder.decode(rawValue, "UTF-8")
-                    if (decoded.startsWith("http://") || decoded.startsWith("https://")) decoded else null
-                } catch (_: Throwable) { null }
+                val decoded = try { java.net.URLDecoder.decode(rawValue, "UTF-8") } catch (_: Throwable) { null }
+                if (decoded?.startsWith("http://") == true || decoded?.startsWith("https://") == true) {
+                    decoded
+                } else {
+                    try {
+                        val bytes = android.util.Base64.decode(rawValue, android.util.Base64.DEFAULT)
+                        val str = String(bytes, Charsets.UTF_8)
+                        if (str.startsWith("http://") || str.startsWith("https://")) str else null
+                    } catch (_: Throwable) { null }
+                }
             }
             if (candidate != null && !AdBlocker.isAd(candidate)) {
                 val candHost = try { Uri.parse(candidate).host?.lowercase() } catch (_: Throwable) { null }

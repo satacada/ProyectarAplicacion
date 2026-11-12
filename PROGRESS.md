@@ -3,8 +3,8 @@
 > **Versión Actual en Producción:** `v3.7.0` (`versionCodeSender: 368` | `versionCodeReceiver: 351`)  
 > **Última Sincronización Agéntica:** `2026-11-12`  
 > **Estado del Oráculo de Pruebas:** 🟢 **167 Tests Pasando (35 en :core:domain, 12 en :core:protocol, 25 en :app-sender, 23 en :app-receiver) — 100% — 0 fallos**  
-> **Próxima Actividad en Cola:** 🎉 **FASE 8 COMPLETADA AL 100% (Hitos 8.1 [CH-11] al 8.13 [CH-23] — Desempaquetador Universal de Pasarelas de Redirección y Evasión de Trackers)**  
-> **Progreso Global:** 🏁 **Hito 8.13 [CH-23] Desempaquetador Universal de Pasarelas de Redirección y Evasión de Trackers completado al 100%**
+> **Próxima Actividad en Cola:** 🎉 **FASE 8 COMPLETADA AL 100% (Hitos 8.1 [CH-11] al 8.14 [CH-24] — Soporte Universal de Cifrado Base64 en Pasarelas de Redirección y Telemetría Enriquecida)**  
+> **Progreso Global:** 🏁 **Hito 8.14 [CH-24] Soporte Universal de Cifrado Base64 en Pasarelas de Redirección y Telemetría Enriquecida completado al 100%**
 
 ---
 
@@ -12,6 +12,7 @@
 
 | Hito / Fase | Nombre del Hito / Fase | Estado | Progreso |
 | :--- | :--- | :---: | :---: |
+| **Hito 8.14 [CH-24]** | Soporte Universal de Cifrado Base64 en Pasarelas de Redirección y Telemetría Enriquecida | `[x]` Completado | **100%** |
 | **Hito 8.13 [CH-23]** | Desempaquetador Universal de Pasarelas de Redirección y Evasión de Trackers | `[x]` Completado | **100%** |
 | **Hito 8.12 [CH-22]** | Algoritmo Heurístico Universal de Afinidad de Marca y Navegación por Gesto Legítimo | `[x]` Completado | **100%** |
 | **Hito 8.11 [CH-21]** | Reinicio Automático de Videos Concluidos y Diferenciación de Capítulos SPA | `[x]` Completado | **100%** |
@@ -52,7 +53,7 @@
 ## 3. Monitor de Límite de 300 Líneas (`AGENTS.md` Regla 3)
 
 ### 🔴 Archivos por encima de 300 líneas
-> *(Cero archivos Kotlin por encima de 300 líneas tras saneamiento)*
+> *(Cero archivos Kotlin por encima de 300 líneas tras saneamiento — WvcShieldSecurityEngine.kt preservado en 276L)*
 - `app-sender/src/main/assets/sniffer/universal_sniffer.js`: **383 líneas** *(Asset JS DOM sellado e inmutable)*
 
 ### 🟡 Archivos en Zona de Vigilancia (289 – 300 líneas)
@@ -76,6 +77,14 @@
 ---
 
 ## 4. Historial de Sesiones Multi-Agente
+
+### `[2026-11-12]` — Hito 8.14 [CH-24] — Soporte Universal de Cifrado Base64 en Pasarelas de Redirección y Telemetría Enriquecida
+- **Acción:**
+  - **`WvcShieldSecurityEngine.kt` (276L):** Incorporación de la decodificación reactiva `android.util.Base64.decode` como fallback en `extractCleanTargetFromRedirect` cuando el parámetro de destino (`_u`, `url`, `target`, etc.) no responde a decodificación URL estándar UTF-8. Permite al navegador desensamblar instantáneamente destinos empaquetados en esquemas Base64 (`rdr2.../rdr-stats/?_u=aHR0cHM6Ly9...`), resolviendo el destino real (`https://www.808ball16.com/...`) y navegando directo a la web limpia en la misma pestaña con 0% código en duro.
+  - **Telemetría Enriquecida:** Enriquecimiento simultáneo del log de advertencia en `CLICK_HIJACK_BLOCKED` incluyendo la URL completa en el mensaje principal (`🛑 Secuestro de clic bloqueado hacia: $targetHost (URL: $targetUrl) desde $curHost`) para diagnóstico inmediato mediante micro-comandos de Linux de 0 tokens.
+- **Verificación:** 167 tests pasando (100% — 0 fallos), 0 archivos Kotlin > 300 líneas (`WvcShieldSecurityEngine.kt`: 276L).
+- **Salud del Oráculo:** 🟢 167 tests passing (100% — 0 fallos).
+- **Siguiente paso:** 🎉 **FASE 8 COMPLETADA AL 100% (Hitos 8.1 al 8.14)**.
 
 ### `[2026-11-12]` — Hito 8.13 [CH-23] — Desempaquetador Universal de Pasarelas de Redirección y Evasión de Trackers
 - **Acción:**

@@ -2,11 +2,11 @@
 
 > **Versión Base de Rescate:** `v3.7.0` (`versionCodeSender: 368` | `versionCodeReceiver: 351`)  
 > **Política Operativa `v4.4`:** Micro-comandos `[auto]` y `[ver]` orquestados por el Planificador (`Argon`) invocando subagentes aislados (`flash` / `flash_lite`) | **Prohibido disparar Explorador Forense en tareas mapeadas** (todas las rutas están en este archivo y en [`doc/MAPA_DEL_SISTEMA_Y_FLUJO_DE_CODIGO.md`](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/MAPA_DEL_SISTEMA_Y_FLUJO_DE_CODIGO.md)).  
-> **Estado Global:** 🎉 **FASE 8 COMPLETADA AL 100% (Hitos 8.1 [CH-11] al 8.13 [CH-23] — Desempaquetador Universal de Pasarelas de Redirección y Evasión de Trackers — 167 Tests Passing — 0 Archivos Kotlin > 300L)**
+> **Estado Global:** 🎉 **FASE 8 COMPLETADA AL 100% (Hitos 8.1 [CH-11] al 8.14 [CH-24] — Soporte Universal de Cifrado Base64 en Pasarelas de Redirección y Telemetría Enriquecida — 167 Tests Passing — 0 Archivos Kotlin > 300L)**
 
 ---
 
-## 🎮 FASE 8 — Experiencia de Control Remoto D-Pad Avanzada y Resiliencia de Reproductores TV (`[x]` — 13 / 13 completados — 100%)
+## 🎮 FASE 8 — Experiencia de Control Remoto D-Pad Avanzada y Resiliencia de Reproductores TV (`[x]` — 14 / 14 completados — 100%)
 
 - `[x]` **Hito 8.1 [CH-11] — Foco D-Pad en Controles TV y Protección de Reproductores (`app-receiver/src/main/kotlin/com/omnicast/receiver/ui/TvRemoteKeyHandler.kt`, `app-receiver/src/main/kotlin/com/omnicast/receiver/ui/components/TvDirectControlsOverlay.kt`, `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/AdBlocker.kt`):**
   - **Objetivo:** Garantizar gestión reactiva de D-Pad en `TvRemoteKeyHandler.kt` (276L) mediante `hasActiveOverlay` y `notifyControlsVisibilityChanged`, cediendo flechas D-Pad y ENTER al OSD/Compose TV para permitir seleccionar botones interactivos (Ajustes, Subtítulos, etc.), preservando atajos de salto +/-10s en pantalla limpia. Inyección inmediata de `FocusRequester` en el botón central de `TvDirectControlsOverlay.kt` (256L) y blindaje de reproductores web legítimos (`isLegitimate`) en `AdBlocker.kt` (252L) para SoloLatino (`player.pelisserieshoy.com`) e inmunidad a clics de inicio de video.
@@ -107,6 +107,12 @@
   - **Archivos Objetivo Exactos:**
     - `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/WvcShieldSecurityEngine.kt` (270 líneas)
     - `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/BrowserWebView.kt` (295 líneas)
+  - **Agentes Involucrados:** `planner-architect` (`Argon`) ➔ `specialist-stream-extraction` (`flash`) ➔ `surgical-developer` (`flash`) ➔ `qa-oracle-tester` (`flash`) ➔ `sync-documenter` (`flash`) ➔ `git-ota-releaser` (`flash_lite`).
+
+- `[x]` **Hito 8.14 [CH-24] — Soporte Universal de Cifrado Base64 en Pasarelas de Redirección y Telemetría Enriquecida (`app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/WvcShieldSecurityEngine.kt`):**
+  - **Objetivo:** Erradicación del secuestro de clics en portales que ofuscan el destino de sus enlaces mediante esquemas criptográficos o serialización Base64 (`rdr2.../rdr-stats/?_u=aHR0cHM6Ly9...`). Incorporación de la decodificación reactiva `android.util.Base64.decode` como fallback en `extractCleanTargetFromRedirect` dentro de `WvcShieldSecurityEngine.kt` (276L) cuando el parámetro no responde a decodificación URL estándar. Permite al navegador resolver instantáneamente destinos empaquetados en Base64 navegando directo a la web limpia (como `https://www.808ball16.com/...`). Enriquecimiento simultáneo del log de advertencia en `CLICK_HIJACK_BLOCKED` incluyendo la URL completa en el mensaje principal para diagnóstico inmediato con micro-comandos de Linux de 0 tokens y manteniendo el archivo en 276 líneas (<= 300).
+  - **Archivos Objetivo Exactos:**
+    - `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/WvcShieldSecurityEngine.kt` (276 líneas)
   - **Agentes Involucrados:** `planner-architect` (`Argon`) ➔ `specialist-stream-extraction` (`flash`) ➔ `surgical-developer` (`flash`) ➔ `qa-oracle-tester` (`flash`) ➔ `sync-documenter` (`flash`) ➔ `git-ota-releaser` (`flash_lite`).
 
 ---

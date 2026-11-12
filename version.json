@@ -1,12 +1,12 @@
 {
-  "versionName": "3.7.15",
-  "versionCodeSender": 385,
-  "versionCodeReceiver": 366,
-  "releaseTag": "v3.7.15",
-  "senderApk": "omnicast-sender-v3.7.15.apk",
-  "receiverApk": "omnicast-receiver-v3.7.15.apk",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.15/omnicast-sender-v3.7.15.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.15/omnicast-receiver-v3.7.15.apk",
-  "releaseNotes": "v3.7.15: Cierre de Hito 8.9 [CH-19]. Defensa universal de iframes en document_start y normalizacion de origenes.",
-  "changelog": "v3.7.15: Cierre de Hito 8.9 [CH-19]. Defensa universal de iframes en document_start y normalizacion de origenes."
+  "versionName": "3.7.16",
+  "versionCodeSender": 386,
+  "versionCodeReceiver": 367,
+  "releaseTag": "v3.7.16",
+  "senderApk": "omnicast-sender-v3.7.16.apk",
+  "receiverApk": "omnicast-receiver-v3.7.16.apk",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.16/omnicast-sender-v3.7.16.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.16/omnicast-receiver-v3.7.16.apk",
+  "releaseNotes": "v3.7.16: Cierre de Hito 8.10 [CH-20]. Poda de codigo inutil e interceptacion desacoplada anti-embed a nivel de red.",
+  "changelog": "v3.7.16: Cierre de Hito 8.10 [CH-20]. Poda de codigo inutil e interceptacion desacoplada anti-embed a nivel de red."
 }

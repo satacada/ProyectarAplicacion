@@ -2,11 +2,11 @@
 
 > **Versión Base de Rescate:** `v3.7.0` (`versionCodeSender: 368` | `versionCodeReceiver: 351`)  
 > **Política Operativa `v4.4`:** Micro-comandos `[auto]` y `[ver]` orquestados por el Planificador (`Argon`) invocando subagentes aislados (`flash` / `flash_lite`) | **Prohibido disparar Explorador Forense en tareas mapeadas** (todas las rutas están en este archivo y en [`doc/MAPA_DEL_SISTEMA_Y_FLUJO_DE_CODIGO.md`](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/MAPA_DEL_SISTEMA_Y_FLUJO_DE_CODIGO.md)).  
-> **Estado Global:** 🎉 **FASE 8 COMPLETADA AL 100% (Hitos 8.1 [CH-11], 8.2 [CH-12], 8.3 [CH-13], 8.4 [CH-14] y 8.5 [CH-15] — Sonda Transparente de Diagnóstico HTTP/JS y Chrome DevTools Remoto — 167 Tests Passing — 0 Archivos Kotlin > 300L)**
+> **Estado Global:** 🎉 **FASE 8 COMPLETADA AL 100% (Hitos 8.1 [CH-11], 8.2 [CH-12], 8.3 [CH-13], 8.4 [CH-14], 8.5 [CH-15] y 8.6 [CH-16] — User-Agent Canónico Dinámico y Client Hints Nativos — 167 Tests Passing — 0 Archivos Kotlin > 300L)**
 
 ---
 
-## 🎮 FASE 8 — Experiencia de Control Remoto D-Pad Avanzada y Resiliencia de Reproductores TV (`[x]` — 5 / 5 completados — 100%)
+## 🎮 FASE 8 — Experiencia de Control Remoto D-Pad Avanzada y Resiliencia de Reproductores TV (`[x]` — 6 / 6 completados — 100%)
 
 - `[x]` **Hito 8.1 [CH-11] — Foco D-Pad en Controles TV y Protección de Reproductores (`app-receiver/src/main/kotlin/com/omnicast/receiver/ui/TvRemoteKeyHandler.kt`, `app-receiver/src/main/kotlin/com/omnicast/receiver/ui/components/TvDirectControlsOverlay.kt`, `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/AdBlocker.kt`):**
   - **Objetivo:** Garantizar gestión reactiva de D-Pad en `TvRemoteKeyHandler.kt` (276L) mediante `hasActiveOverlay` y `notifyControlsVisibilityChanged`, cediendo flechas D-Pad y ENTER al OSD/Compose TV para permitir seleccionar botones interactivos (Ajustes, Subtítulos, etc.), preservando atajos de salto +/-10s en pantalla limpia. Inyección inmediata de `FocusRequester` en el botón central de `TvDirectControlsOverlay.kt` (256L) y blindaje de reproductores web legítimos (`isLegitimate`) en `AdBlocker.kt` (252L) para SoloLatino (`player.pelisserieshoy.com`) e inmunidad a clics de inicio de video.
@@ -46,6 +46,14 @@
   - **Archivos Objetivo Exactos:**
     - `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/BrowserWebView.kt` (292 líneas)
     - `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/sentinel/WebPlayerDiagnosticSentinel.kt` (89 líneas)
+  - **Agentes Involucrados:** `planner-architect` (`Argon`) ➔ `specialist-stream-extraction` (`flash`) ➔ `surgical-developer` (`flash`) ➔ `qa-oracle-tester` (`flash`) ➔ `sync-documenter` (`flash`) ➔ `git-ota-releaser` (`flash_lite`).
+
+- `[x]` **Hito 8.6 [CH-16] — User-Agent Canónico Dinámico y Sincronización Nativa de Client Hints (`app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/BrowserUrlHelper.kt`, `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/BrowserWebView.kt`, `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/WvcShieldSecurityEngine.kt`):**
+  - **Objetivo:** Erradicación del User-Agent hardcodeado en Chrome 124 mediante derivación canónica dinámica en `BrowserUrlHelper.kt` (260L) a partir de `WebSettings.getDefaultUserAgent(ctx)` (limpiando tokens de webview incrustado para paridad 1:1 con Google Chrome oficial). Poda del bloque artificial en JavaScript de `navigator.userAgentData` en `WvcShieldSecurityEngine.kt` (208L), permitiendo que la pila C++ de Chromium emita cabeceras `sec-ch-ua` legítimas con versiones completas y sin campos vacíos, eliminando la causa raíz del bloqueo HTTP 403 de Cloudflare WAF en llamadas a endpoints `/api/` con 0% código en duro y manteniendo `BrowserWebView.kt` en 292L.
+  - **Archivos Objetivo Exactos:**
+    - `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/BrowserUrlHelper.kt` (260 líneas)
+    - `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/BrowserWebView.kt` (292 líneas)
+    - `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/WvcShieldSecurityEngine.kt` (208 líneas)
   - **Agentes Involucrados:** `planner-architect` (`Argon`) ➔ `specialist-stream-extraction` (`flash`) ➔ `surgical-developer` (`flash`) ➔ `qa-oracle-tester` (`flash`) ➔ `sync-documenter` (`flash`) ➔ `git-ota-releaser` (`flash_lite`).
 
 ---

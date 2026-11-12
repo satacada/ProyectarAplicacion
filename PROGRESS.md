@@ -3,8 +3,8 @@
 > **Versión Actual en Producción:** `v3.7.0` (`versionCodeSender: 368` | `versionCodeReceiver: 351`)  
 > **Última Sincronización Agéntica:** `2026-11-12`  
 > **Estado del Oráculo de Pruebas:** 🟢 **167 Tests Pasando (35 en :core:domain, 12 en :core:protocol, 25 en :app-sender, 23 en :app-receiver) — 100% — 0 fallos**  
-> **Próxima Actividad en Cola:** 🎉 **FASE 8 COMPLETADA AL 100% (Hitos 8.1 [CH-11], 8.2 [CH-12], 8.3 [CH-13], 8.4 [CH-14] y 8.5 [CH-15])**  
-> **Progreso Global:** 🏁 **Hito 8.5 [CH-15] Sonda Transparente de Diagnóstico HTTP/JS y Chrome DevTools Remoto completado al 100%**
+> **Próxima Actividad en Cola:** 🎉 **FASE 8 COMPLETADA AL 100% (Hitos 8.1 [CH-11], 8.2 [CH-12], 8.3 [CH-13], 8.4 [CH-14], 8.5 [CH-15] y 8.6 [CH-16])**  
+> **Progreso Global:** 🏁 **Hito 8.6 [CH-16] User-Agent Canónico Dinámico y Sincronización Nativa de Client Hints completado al 100%**
 
 ---
 
@@ -12,6 +12,7 @@
 
 | Hito / Fase | Nombre del Hito / Fase | Estado | Progreso |
 | :--- | :--- | :---: | :---: |
+| **Hito 8.6 [CH-16]** | User-Agent Canónico Dinámico y Sincronización Nativa de Client Hints | `[x]` Completado | **100%** |
 | **Hito 8.5 [CH-15]** | Sonda Transparente de Diagnóstico HTTP/JS y Chrome DevTools Remoto | `[x]` Completado | **100%** |
 | **Hito 8.4 [CH-14]** | Erradicación de Recargas Forzadas por Popups y Camuflaje Universal Anti-Detección | `[x]` Completado | **100%** |
 | **Hito 8.3 [CH-13]** | Blindaje Anti-Popups de Iframes y Watchdog Adaptativo de Buffer | `[x]` Completado | **100%** |
@@ -52,20 +53,30 @@
 | :--- | :---: | :--- |
 | `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/InAppBrowserScreen.kt` | **300** | 🛡️ Sellado (Zona Sagrada) |
 | `app-sender/src/main/kotlin/com/omnicast/sender/ui/SenderMainActivity.kt` | **299** | ⚠️ Al límite |
-| `app-receiver/src/main/kotlin/com/omnicast/receiver/ui/TvReceiverActivity.kt` | **299** | ⚠️ Al límite |
 | `app-receiver/src/main/kotlin/com/omnicast/receiver/ui/components/TvStandbyCleanScreen.kt` | **299** | 🛡️ Sellado |
 | `app-sender/src/main/kotlin/com/omnicast/sender/ui/components/SideMediaDrawerSections.kt` | **298** | ⚠️ Al límite |
 | `app-receiver/src/main/kotlin/com/omnicast/receiver/ui/components/TvCleanComponents.kt` | **298** | ⚠️ Al límite |
 | `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/BrowserTopBar.kt` | **297** | ⚠️ Al límite |
 | `app-sender/src/main/kotlin/com/omnicast/sender/service/CastMediaNotificationService.kt` | **297** | ⚠️ Al límite |
+| `app-receiver/src/main/kotlin/com/omnicast/receiver/ui/TvReceiverActivity.kt` | **296** | ⚠️ Al límite |
 | `app-sender/src/main/kotlin/com/omnicast/sender/ui/components/MainActionCards.kt` | **295** | ⚠️ Al límite |
-| `app-sender/src/main/kotlin/com/omnicast/sender/ui/components/RemoteExpandedControls.kt` | **291** | ⚠️ Al límite |
 | `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/BrowserWebView.kt` | **292** | 🛡️ Sellado (Zona Sagrada) |
+| `app-sender/src/main/kotlin/com/omnicast/sender/ui/components/RemoteExpandedControls.kt` | **291** | ⚠️ Al límite |
+| `app-receiver/src/main/kotlin/com/omnicast/receiver/directstream/TvStorageSafetyManager.kt` | **290** | ⚠️ Al límite |
 | `app-sender/src/main/kotlin/com/omnicast/sender/ui/SenderMainScreen.kt` | **289** | ⚠️ Al límite |
 
 ---
 
 ## 4. Historial de Sesiones Multi-Agente
+
+### `[2026-11-12]` — Hito 8.6 [CH-16] — User-Agent Canónico Dinámico y Sincronización Nativa de Client Hints
+- **Acción:**
+  - **`BrowserUrlHelper.kt` (260L):** Erradicación del User-Agent estático obsoleto hardcodeado en Chrome 124 mediante la función `getCanonicalUserAgent(context)` que deriva dinámicamente el User-Agent oficial a partir de `WebSettings.getDefaultUserAgent(ctx)`. Se remueven selectivamente los tokens discriminadores de webview incrustado (`Version/4.0` y `; wv`) preservando la versión real instalada de Chromium/Android, garantizando paridad 1:1 con el navegador Google Chrome oficial.
+  - **`WvcShieldSecurityEngine.kt` (208L):** Poda de la manipulación artificial de `navigator.userAgentData` en JavaScript. Al cesar la intervención artificial sobre el prototipo JS, se permite que la pila nativa C++ de Chromium emita cabeceras de Client Hints (`sec-ch-ua`, `sec-ch-ua-mobile`, `sec-ch-ua-platform`) 100% coherentes y completas con el User-Agent canónico, erradicando los bloqueos HTTP 403 de Cloudflare WAF en llamadas internas `/api/` con 0% código en duro.
+  - **`BrowserWebView.kt` (292L):** Configuración del User-Agent canónico dinámico en los `WebSettings` del navegador al inicializar (`BrowserUrlHelper.getCanonicalUserAgent(context)`), blindando la navegación web y la extracción de streams sin inflar el tamaño del archivo (`<= 300L`).
+- **Verificación:** 167 tests pasando (100% — 0 fallos), 0 archivos Kotlin > 300 líneas (`BrowserUrlHelper.kt` en 260L, `WvcShieldSecurityEngine.kt` en 208L, `BrowserWebView.kt` en 292L).
+- **Salud del Oráculo:** 🟢 167 tests passing (100% — 0 fallos).
+- **Siguiente paso:** 🎉 **FASE 8 COMPLETADA AL 100% (Hitos 8.1, 8.2, 8.3, 8.4, 8.5 y 8.6)**.
 
 ### `[2026-11-12]` — Hito 8.5 [CH-15] — Sonda Transparente de Diagnóstico HTTP/JS y Chrome DevTools Remoto
 - **Acción:**
@@ -73,7 +84,7 @@
   - **`WebPlayerDiagnosticSentinel.kt` (89L):** Integración de sonda de inspección de peticiones a endpoints de API internos (`/api/` con volcado estructurado de headers HTTP de petición), captura de errores de estado HTTP (`onReceivedHttpError`) con reporte a `SenderLogger`, y registro reactivo de advertencias y errores en consola JavaScript (`BROWSER_JS_DIAG`) con 0% código en duro.
 - **Verificación:** 167 tests pasando (100% — 0 fallos), 0 archivos Kotlin > 300 líneas (`BrowserWebView.kt` en 292L, `WebPlayerDiagnosticSentinel.kt` en 89L).
 - **Salud del Oráculo:** 🟢 167 tests passing (100% — 0 fallos).
-- **Siguiente paso:** 🎉 **FASE 8 COMPLETADA AL 100% (Hitos 8.1, 8.2, 8.3, 8.4 y 8.5)**.
+- **Siguiente paso:** Hito 8.6 [CH-16] — User-Agent Canónico Dinámico y Sincronización Nativa de Client Hints.
 
 ### `[2026-11-12]` — Hito 8.4 [CH-14] — Erradicación de Recargas Forzadas por Popups y Camuflaje Universal Anti-Detección
 - **Acción:**

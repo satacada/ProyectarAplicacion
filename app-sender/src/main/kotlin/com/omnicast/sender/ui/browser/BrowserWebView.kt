@@ -117,7 +117,7 @@ fun BrowserWebView(
                 settings.textZoom = 100; settings.layoutAlgorithm = WebSettings.LayoutAlgorithm.NORMAL
                 settings.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW; settings.mediaPlaybackRequiresUserGesture = false
                 settings.setSupportMultipleWindows(true); settings.javaScriptCanOpenWindowsAutomatically = false
-                settings.userAgentString = UA_MOBILE
+                val canonicalUa = BrowserUrlHelper.getCanonicalUserAgent(ctx); settings.userAgentString = canonicalUa
                 if (androidx.webkit.WebViewFeature.isFeatureSupported(androidx.webkit.WebViewFeature.REQUESTED_WITH_HEADER_ALLOW_LIST)) {
                     androidx.webkit.WebSettingsCompat.setRequestedWithHeaderOriginAllowList(settings, emptySet())
                 }

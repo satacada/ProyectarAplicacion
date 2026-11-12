@@ -251,5 +251,10 @@ object BrowserUrlHelper {
             else -> try { java.net.URI(url).host?.removePrefix("www.")?.take(16) } catch (_: Throwable) { null } ?: "Servidor Web"
         }
     }
+
+    fun getCanonicalUserAgent(context: android.content.Context): String {
+        val defaultUa = try { android.webkit.WebSettings.getDefaultUserAgent(context) } catch (_: Throwable) { UA_MOBILE }
+        return defaultUa.replace("; wv", "").replace(Regex("Version/\\d+\\.\\d+\\s*"), "")
+    }
 }
 

@@ -3,8 +3,8 @@
 > **Versión Actual en Producción:** `v3.7.0` (`versionCodeSender: 368` | `versionCodeReceiver: 351`)  
 > **Última Sincronización Agéntica:** `2026-11-12`  
 > **Estado del Oráculo de Pruebas:** 🟢 **167 Tests Pasando (35 en :core:domain, 12 en :core:protocol, 25 en :app-sender, 23 en :app-receiver) — 100% — 0 fallos**  
-> **Próxima Actividad en Cola:** 🎉 **FASE 8 COMPLETADA AL 100% (Hitos 8.1 [CH-11] al 8.12 [CH-22] — Algoritmo Heurístico Universal de Afinidad de Marca y Navegación por Gesto Legítimo)**  
-> **Progreso Global:** 🏁 **Hito 8.12 [CH-22] Algoritmo Heurístico Universal de Afinidad de Marca y Navegación por Gesto Legítimo completado al 100%**
+> **Próxima Actividad en Cola:** 🎉 **FASE 8 COMPLETADA AL 100% (Hitos 8.1 [CH-11] al 8.13 [CH-23] — Desempaquetador Universal de Pasarelas de Redirección y Evasión de Trackers)**  
+> **Progreso Global:** 🏁 **Hito 8.13 [CH-23] Desempaquetador Universal de Pasarelas de Redirección y Evasión de Trackers completado al 100%**
 
 ---
 
@@ -12,6 +12,7 @@
 
 | Hito / Fase | Nombre del Hito / Fase | Estado | Progreso |
 | :--- | :--- | :---: | :---: |
+| **Hito 8.13 [CH-23]** | Desempaquetador Universal de Pasarelas de Redirección y Evasión de Trackers | `[x]` Completado | **100%** |
 | **Hito 8.12 [CH-22]** | Algoritmo Heurístico Universal de Afinidad de Marca y Navegación por Gesto Legítimo | `[x]` Completado | **100%** |
 | **Hito 8.11 [CH-21]** | Reinicio Automático de Videos Concluidos y Diferenciación de Capítulos SPA | `[x]` Completado | **100%** |
 | **Hito 8.10 [CH-20]** | Poda de Código Inútil y Vía 1: Interceptación Desacoplada Anti-Embed a Nivel de Red | `[x]` Completado | **100%** |
@@ -66,7 +67,7 @@
 | `app-receiver/src/main/kotlin/com/omnicast/receiver/ui/TvReceiverActivity.kt` | **296** | ⚠️ Al límite |
 | `app-sender/src/main/kotlin/com/omnicast/sender/ui/SenderMainActivity.kt` | **295** | ⚠️ Al límite |
 | `app-sender/src/main/kotlin/com/omnicast/sender/ui/components/MainActionCards.kt` | **295** | ⚠️ Al límite |
-| `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/BrowserWebView.kt` | **292** | 🛡️ Sellado (Zona Sagrada) |
+| `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/BrowserWebView.kt` | **295** | 🛡️ Sellado (Zona Sagrada) |
 | `app-sender/src/main/kotlin/com/omnicast/sender/ui/components/RemoteExpandedControls.kt` | **291** | ⚠️ Al límite |
 | `app-receiver/src/main/kotlin/com/omnicast/receiver/directstream/TvStorageSafetyManager.kt` | **290** | ⚠️ Al límite |
 | `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/BrowserUrlHelper.kt` | **289** | ⚠️ Al límite |
@@ -75,6 +76,14 @@
 ---
 
 ## 4. Historial de Sesiones Multi-Agente
+
+### `[2026-11-12]` — Hito 8.13 [CH-23] — Desempaquetador Universal de Pasarelas de Redirección y Evasión de Trackers
+- **Acción:**
+  - **`WvcShieldSecurityEngine.kt` (270L):** Implementación de la función heurística universal `extractCleanTargetFromRedirect(url)` para desensamblar URLs de pasarelas de afiliados y trackers publicitarios, extrayendo los parámetros estándar de destino (`_u`, `url`, `target`, `dest`, `destination`, `redirect`, `link`, `r`, `to`, `goto`), decodificando URLs escapadas y validando mediante `AdBlocker.isAdUrl` y `AdBlockDatabase` que la dirección de destino no sea publicitaria.
+  - **`BrowserWebView.kt` (295L):** Conexión directa en `shouldOverrideUrlLoading`: al interceptar un secuestro de clic hacia pasarelas de afiliados o trackers publicitarios (como `rdr2.todotttdk576.cfd/rdr-stats/?_u=...` en `livesports808.st`), si contiene un destino limpio válido, el WebView navega de inmediato a la dirección real (`v?.loadUrl(cleanDest)`) en la misma pestaña, puenteando el tracker publicitario y erradicando el congelamiento de pantalla sin tocar el DOM y con 0% código en duro.
+- **Verificación:** 167 tests pasando (100% — 0 fallos), 0 archivos Kotlin > 300 líneas (`WvcShieldSecurityEngine.kt`: 270L, `BrowserWebView.kt`: 295L).
+- **Salud del Oráculo:** 🟢 167 tests passing (100% — 0 fallos).
+- **Siguiente paso:** 🎉 **FASE 8 COMPLETADA AL 100% (Hitos 8.1 al 8.13)**.
 
 ### `[2026-11-12]` — Hito 8.12 [CH-22] — Algoritmo Heurístico Universal de Afinidad de Marca y Navegación por Gesto Legítimo
 - **Acción:**

@@ -14,9 +14,7 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 const val UA_MOBILE = "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36"
 const val UA_DESKTOP = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/124.0.0.0 Safari/537.36"
 
-private fun showBlockedToast(@Suppress("UNUSED_PARAMETER") ctx: android.content.Context) {
-    // Silencioso estilo Web Video Caster: bloquear sin interrumpir al usuario con Toasts
-}
+private fun showBlockedToast(@Suppress("UNUSED_PARAMETER") ctx: android.content.Context) {}
 
 /**
  * Componente AndroidView con SwipeRefreshLayout y WebView blindado contra cierres por fallos de renderizado.
@@ -163,6 +161,11 @@ fun BrowserWebView(
                         if (isAdBlockEnabled && WvcShieldSecurityEngine.isEnabled &&
                             (WvcShieldSecurityEngine.shouldBlockDelayedRedirect(r.hasGesture(), reqUrl, liveUrl) ||
                              WvcShieldSecurityEngine.shouldBlockClickHijack(r.hasGesture(), reqUrl, liveUrl, hasStreams))) {
+                            val cleanDest = WvcShieldSecurityEngine.extractCleanTargetFromRedirect(reqUrl)
+                            if (cleanDest != null && cleanDest != liveUrl) {
+                                v?.loadUrl(cleanDest)
+                                return true
+                            }
                             showBlockedToast(ctx)
                             return true
                         }

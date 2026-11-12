@@ -238,4 +238,33 @@ object WvcShieldSecurityEngine {
         } catch (_: Throwable) {}
         return true
     }
+
+    /**
+     * Extrae de forma universal la URL de destino limpia contenida en un parámetro de pasarela de redirección.
+     * Si el destino no es publicidad ni dominio bloqueado, permite la navegación directa en la misma pestaña.
+     */
+    fun extractCleanTargetFromRedirect(url: String): String? {
+        if (url.isBlank()) return null
+        val redirectParamKeys = listOf("_u", "url", "target", "dest", "destination", "redirect", "link", "r", "to", "goto")
+        val uri = try { Uri.parse(url) } catch (_: Throwable) { null } ?: return null
+        for (key in redirectParamKeys) {
+            val rawValue = uri.getQueryParameter(key) ?: continue
+            if (rawValue.isBlank()) continue
+            val candidate = if (rawValue.startsWith("http://") || rawValue.startsWith("https://")) {
+                rawValue
+            } else {
+                try {
+                    val decoded = java.net.URLDecoder.decode(rawValue, "UTF-8")
+                    if (decoded.startsWith("http://") || decoded.startsWith("https://")) decoded else null
+                } catch (_: Throwable) { null }
+            }
+            if (candidate != null && !AdBlocker.isAd(candidate)) {
+                val candHost = try { Uri.parse(candidate).host?.lowercase() } catch (_: Throwable) { null }
+                if (candHost != null && !AdBlockDatabase.isAdDomain(candHost)) {
+                    return candidate
+                }
+            }
+        }
+        return null
+    }
 }

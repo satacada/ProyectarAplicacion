@@ -1,12 +1,12 @@
 {
-  "versionName": "3.7.14",
-  "versionCodeSender": 384,
-  "versionCodeReceiver": 365,
-  "releaseTag": "v3.7.14",
-  "senderApk": "omnicast-sender-v3.7.14.apk",
-  "receiverApk": "omnicast-receiver-v3.7.14.apk",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.14/omnicast-sender-v3.7.14.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.14/omnicast-receiver-v3.7.14.apk",
-  "releaseNotes": "v3.7.14: Cierre de Hito 8.8 [CH-18]. Erradicacion universal de huellas In-App y autonomia pura de scripts.",
-  "changelog": "v3.7.14: Cierre de Hito 8.8 [CH-18]. Erradicacion universal de huellas In-App y autonomia pura de scripts."
+  "versionName": "3.7.15",
+  "versionCodeSender": 385,
+  "versionCodeReceiver": 366,
+  "releaseTag": "v3.7.15",
+  "senderApk": "omnicast-sender-v3.7.15.apk",
+  "receiverApk": "omnicast-receiver-v3.7.15.apk",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.15/omnicast-sender-v3.7.15.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.15/omnicast-receiver-v3.7.15.apk",
+  "releaseNotes": "v3.7.15: Cierre de Hito 8.9 [CH-19]. Defensa universal de iframes en document_start y normalizacion de origenes.",
+  "changelog": "v3.7.15: Cierre de Hito 8.9 [CH-19]. Defensa universal de iframes en document_start y normalizacion de origenes."
 }

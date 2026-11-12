@@ -2,11 +2,11 @@
 
 > **Versión Base de Rescate:** `v3.7.0` (`versionCodeSender: 368` | `versionCodeReceiver: 351`)  
 > **Política Operativa `v4.4`:** Micro-comandos `[auto]` y `[ver]` orquestados por el Planificador (`Argon`) invocando subagentes aislados (`flash` / `flash_lite`) | **Prohibido disparar Explorador Forense en tareas mapeadas** (todas las rutas están en este archivo y en [`doc/MAPA_DEL_SISTEMA_Y_FLUJO_DE_CODIGO.md`](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/MAPA_DEL_SISTEMA_Y_FLUJO_DE_CODIGO.md)).  
-> **Estado Global:** 🎉 **FASE 8 COMPLETADA AL 100% (Hitos 8.1 [CH-11] al 8.11 [CH-21] — Reinicio Automático de Videos Concluidos y Diferenciación de Capítulos SPA — 167 Tests Passing — 0 Archivos Kotlin > 300L)**
+> **Estado Global:** 🎉 **FASE 8 COMPLETADA AL 100% (Hitos 8.1 [CH-11] al 8.12 [CH-22] — Algoritmo Heurístico Universal de Afinidad de Marca y Navegación por Gesto Legítimo — 167 Tests Passing — 0 Archivos Kotlin > 300L)**
 
 ---
 
-## 🎮 FASE 8 — Experiencia de Control Remoto D-Pad Avanzada y Resiliencia de Reproductores TV (`[x]` — 11 / 11 completados — 100%)
+## 🎮 FASE 8 — Experiencia de Control Remoto D-Pad Avanzada y Resiliencia de Reproductores TV (`[x]` — 12 / 12 completados — 100%)
 
 - `[x]` **Hito 8.1 [CH-11] — Foco D-Pad en Controles TV y Protección de Reproductores (`app-receiver/src/main/kotlin/com/omnicast/receiver/ui/TvRemoteKeyHandler.kt`, `app-receiver/src/main/kotlin/com/omnicast/receiver/ui/components/TvDirectControlsOverlay.kt`, `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/AdBlocker.kt`):**
   - **Objetivo:** Garantizar gestión reactiva de D-Pad en `TvRemoteKeyHandler.kt` (276L) mediante `hasActiveOverlay` y `notifyControlsVisibilityChanged`, cediendo flechas D-Pad y ENTER al OSD/Compose TV para permitir seleccionar botones interactivos (Ajustes, Subtítulos, etc.), preservando atajos de salto +/-10s en pantalla limpia. Inyección inmediata de `FocusRequester` en el botón central de `TvDirectControlsOverlay.kt` (256L) y blindaje de reproductores web legítimos (`isLegitimate`) en `AdBlocker.kt` (252L) para SoloLatino (`player.pelisserieshoy.com`) e inmunidad a clics de inicio de video.
@@ -94,6 +94,12 @@
     - `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/BrowserUrlHelper.kt` (289 líneas)
     - `app-sender/src/main/kotlin/com/omnicast/sender/ui/SenderMainActivity.kt` (295 líneas)
     - `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/InAppBrowserScreen.kt` (296 líneas)
+  - **Agentes Involucrados:** `planner-architect` (`Argon`) ➔ `specialist-stream-extraction` (`flash`) ➔ `surgical-developer` (`flash`) ➔ `qa-oracle-tester` (`flash`) ➔ `sync-documenter` (`flash`) ➔ `git-ota-releaser` (`flash_lite`).
+
+- `[x]` **Hito 8.12 [CH-22] — Algoritmo Heurístico Universal de Afinidad de Marca y Navegación por Gesto Legítimo (`app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/BrowserPopupInterceptor.kt`):**
+  - **Objetivo:** Erradicación del bloqueo indebido de enlaces de navegación legítimos que abren en nuevas pestañas (`target="_blank"`) hacia dominios hermanos o espejos de redes deportivas y cine (como `livesports808.st` hacia `808ball16.com`). Implementación del algoritmo heurístico de afinidad alfanumérica pura `hasSharedBrandAffinity` y descomposición matemática en tokens de longitud >= 3 caracteres (`extractTokens`), identificando automáticamente redes de espejos con 0% código en duro y sin listas de dominios hardcodeadas. Habilitación del principio canónico de navegación por gesto físico del usuario (`isUserGesture == true`) hacia enlaces web legítimos no catalogados como publicidad en SQLite (`AdBlockDatabase`), permitiendo que el navegador cargue el partido o video directamente en la pantalla principal con paridad 1:1 frente a Google Chrome y manteniendo `BrowserPopupInterceptor.kt` en 107 líneas.
+  - **Archivos Objetivo Exactos:**
+    - `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/BrowserPopupInterceptor.kt` (107 líneas)
   - **Agentes Involucrados:** `planner-architect` (`Argon`) ➔ `specialist-stream-extraction` (`flash`) ➔ `surgical-developer` (`flash`) ➔ `qa-oracle-tester` (`flash`) ➔ `sync-documenter` (`flash`) ➔ `git-ota-releaser` (`flash_lite`).
 
 ---

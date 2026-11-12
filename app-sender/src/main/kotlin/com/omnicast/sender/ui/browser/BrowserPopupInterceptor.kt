@@ -15,7 +15,6 @@ import com.omnicast.sender.log.SenderLogger
 class BrowserPopupInterceptor(private val context: Context) {
     private var interceptorView: WebView? = null
 
-    @Suppress("UNUSED_PARAMETER")
     @SuppressLint("SetJavaScriptEnabled")
     fun handleCreateWindow(parentView: WebView?, isUserGesture: Boolean, resultMsg: Message?): Boolean {
         if (resultMsg == null) return false
@@ -38,10 +37,11 @@ class BrowserPopupInterceptor(private val context: Context) {
                     return true
                 }
                 val isNotAd = targetHost != null && !AdBlocker.isAd(targetUrl) && !AdBlockDatabase.isAdDomain(targetHost)
-                val isSameHost = curHost != null && targetHost != null && isSameMainHost(curHost, targetHost)
+                val isSameHost = curHost != null && targetHost != null && (isSameMainHost(curHost, targetHost) || hasSharedBrandAffinity(curHost, targetHost))
                 val isFromSearch = curHost != null && AdBlocker.isSearchEngine(curHost)
+                val isLegitimateUserClick = isUserGesture && isNotAd && (isSameHost || isFromSearch || targetUrl.contains(".html") || targetUrl.contains("/match") || targetUrl.contains("/watch") || targetUrl.contains("/video"))
 
-                if (isNotAd && (isSameHost || isFromSearch)) {
+                if (isNotAd && (isSameHost || isFromSearch || isLegitimateUserClick)) {
                     parentView?.loadUrl(targetUrl)
                     return true
                 }
@@ -71,10 +71,37 @@ class BrowserPopupInterceptor(private val context: Context) {
         return if (parts.size >= 2) parts[parts.size - 2] else clean
     }
 
+    private fun hasSharedBrandAffinity(h1: String, h2: String): Boolean {
+        val t1 = extractTokens(h1)
+        val t2 = extractTokens(h2)
+        return t1.any { token -> token.length >= 3 && !COMMON_TLDS.contains(token) && t2.contains(token) }
+    }
+
+    private fun extractTokens(host: String): Set<String> {
+        val clean = host.removePrefix("www.").lowercase()
+        return clean.split(Regex("[^a-zA-Z0-9]+"))
+            .flatMap { part ->
+                val tokens = mutableSetOf(part)
+                val subParts = part.split(Regex("(?<=\\D)(?=\\d)|(?<=\\d)(?=\\D)"))
+                tokens.addAll(subParts)
+                tokens
+            }
+            .filter { it.length >= 3 }
+            .toSet()
+    }
+
     fun destroy() {
         try {
             interceptorView?.destroy()
             interceptorView = null
         } catch (_: Throwable) {}
+    }
+
+    companion object {
+        private val COMMON_TLDS = setOf(
+            "com", "net", "org", "st", "top", "lat", "io", "tv", "me", "co",
+            "app", "dev", "xyz", "site", "online", "stream", "live", "info",
+            "club", "store", "vip", "pro", "biz", "link"
+        )
     }
 }

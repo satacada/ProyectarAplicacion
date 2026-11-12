@@ -3,8 +3,8 @@
 > **Versión Actual en Producción:** `v3.7.0` (`versionCodeSender: 368` | `versionCodeReceiver: 351`)  
 > **Última Sincronización Agéntica:** `2026-11-12`  
 > **Estado del Oráculo de Pruebas:** 🟢 **167 Tests Pasando (35 en :core:domain, 12 en :core:protocol, 25 en :app-sender, 23 en :app-receiver) — 100% — 0 fallos**  
-> **Próxima Actividad en Cola:** 🎉 **FASE 8 COMPLETADA AL 100% (Hitos 8.1 [CH-11] al 8.11 [CH-21] — Reinicio Automático de Videos Concluidos y Diferenciación de Capítulos SPA)**  
-> **Progreso Global:** 🏁 **Hito 8.11 [CH-21] Reinicio Automático de Videos Concluidos y Diferenciación de Capítulos SPA completado al 100%**
+> **Próxima Actividad en Cola:** 🎉 **FASE 8 COMPLETADA AL 100% (Hitos 8.1 [CH-11] al 8.12 [CH-22] — Algoritmo Heurístico Universal de Afinidad de Marca y Navegación por Gesto Legítimo)**  
+> **Progreso Global:** 🏁 **Hito 8.12 [CH-22] Algoritmo Heurístico Universal de Afinidad de Marca y Navegación por Gesto Legítimo completado al 100%**
 
 ---
 
@@ -12,6 +12,7 @@
 
 | Hito / Fase | Nombre del Hito / Fase | Estado | Progreso |
 | :--- | :--- | :---: | :---: |
+| **Hito 8.12 [CH-22]** | Algoritmo Heurístico Universal de Afinidad de Marca y Navegación por Gesto Legítimo | `[x]` Completado | **100%** |
 | **Hito 8.11 [CH-21]** | Reinicio Automático de Videos Concluidos y Diferenciación de Capítulos SPA | `[x]` Completado | **100%** |
 | **Hito 8.10 [CH-20]** | Poda de Código Inútil y Vía 1: Interceptación Desacoplada Anti-Embed a Nivel de Red | `[x]` Completado | **100%** |
 | **Hito 8.9 [CH-19]** | Defensa Universal de Iframes en Document_Start y Normalización de Orígenes | `[x]` Completado | **100%** |
@@ -74,6 +75,15 @@
 ---
 
 ## 4. Historial de Sesiones Multi-Agente
+
+### `[2026-11-12]` — Hito 8.12 [CH-22] — Algoritmo Heurístico Universal de Afinidad de Marca y Navegación por Gesto Legítimo
+- **Acción:**
+  - **`BrowserPopupInterceptor.kt` (107L):** Erradicación del bloqueo indebido de enlaces de navegación legítimos que abren en nuevas pestañas (`target="_blank"`) hacia dominios hermanos o espejos de redes deportivas y cine (como `livesports808.st` hacia `808ball16.com`).
+  - **Algoritmo Heurístico de Afinidad de Marca (`hasSharedBrandAffinity` / `extractTokens`):** Descomposición matemática de dominios en tokens alfanuméricos de longitud >= 3 caracteres para identificar parentesco semántico y afinidad de marca entre el origen y el destino (ej. `808`, `sport`), identificando automáticamente redes de espejos con 0% código en duro y sin listas estáticas.
+  - **Navegación por Gesto Físico Legítimo (`isUserGesture == true`):** Habilitación del principio canónico según el cual una navegación originada por un gesto táctil explícito del usuario hacia una URL legítima no catalogada como publicidad en SQLite (`AdBlockDatabase`) se procesa cargando el destino en la ventana principal del navegador, garantizando paridad 1:1 frente a Google Chrome y reproduciendo el partido o video de inmediato.
+- **Verificación:** 167 tests pasando (100% — 0 fallos), 0 archivos Kotlin > 300 líneas (`BrowserPopupInterceptor.kt`: 107L).
+- **Salud del Oráculo:** 🟢 167 tests passing (100% — 0 fallos).
+- **Siguiente paso:** 🎉 **FASE 8 COMPLETADA AL 100% (Hitos 8.1 al 8.12)**.
 
 ### `[2026-11-12]` — Hito 8.11 [CH-21] — Reinicio Automático de Videos Concluidos y Diferenciación de Capítulos SPA
 - **Acción:**

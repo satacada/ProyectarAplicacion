@@ -1,12 +1,12 @@
 {
-  "versionName": "3.7.12",
-  "versionCodeSender": 382,
-  "versionCodeReceiver": 363,
-  "releaseTag": "v3.7.12",
-  "senderApk": "omnicast-sender-v3.7.12.apk",
-  "receiverApk": "omnicast-receiver-v3.7.12.apk",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.12/omnicast-sender-v3.7.12.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.12/omnicast-receiver-v3.7.12.apk",
-  "releaseNotes": "v3.7.12: Cierre de Hito 8.6 [CH-16]. User-Agent canonico dinamico y sincronizacion nativa de client hints.",
-  "changelog": "v3.7.12: Cierre de Hito 8.6 [CH-16]. User-Agent canonico dinamico y sincronizacion nativa de client hints."
+  "versionName": "3.7.13",
+  "versionCodeSender": 383,
+  "versionCodeReceiver": 364,
+  "releaseTag": "v3.7.13",
+  "senderApk": "omnicast-sender-v3.7.13.apk",
+  "receiverApk": "omnicast-receiver-v3.7.13.apk",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.13/omnicast-sender-v3.7.13.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.13/omnicast-receiver-v3.7.13.apk",
+  "releaseNotes": "v3.7.13: Cierre de Hito 8.7 [CH-17]. Sincronizacion canonica de UserAgentMetadata y Client Hints oficiales.",
+  "changelog": "v3.7.13: Cierre de Hito 8.7 [CH-17]. Sincronizacion canonica de UserAgentMetadata y Client Hints oficiales."
 }

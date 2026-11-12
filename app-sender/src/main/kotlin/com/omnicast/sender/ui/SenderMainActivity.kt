@@ -200,12 +200,12 @@ class SenderMainActivity : ComponentActivity() {
                             com.omnicast.sender.service.CastMediaNotificationService.start(this@SenderMainActivity)
                         }
                     } else if (msg.state in listOf("STOPPED", "ENDED", "IDLE")) {
-                        if (msg.state == "ENDED") ActiveStreamHolder.streamUrl?.let { sUrl -> com.omnicast.sender.stream.StreamResumeManager.clearPosition(this@SenderMainActivity, sUrl) }
+                        if (msg.state == "ENDED") ActiveStreamHolder.streamUrl?.let { sUrl -> com.omnicast.sender.stream.StreamResumeManager.clearPosition(this@SenderMainActivity, sUrl, ActiveStreamHolder.headers["Referer"]) }
                         if ((System.currentTimeMillis() - lastHandoffTime) >= 3500L) { ActiveStreamHolder.stopCasting(notifyTv = false); com.omnicast.sender.service.CastMediaNotificationService.stop(this@SenderMainActivity); checkInactivityAutoExit() }
                     }
                     ActiveStreamHolder.updatePlayback(msg.state == "PLAYING", msg.positionMs, msg.durationMs)
                     if (msg.positionMs > 5000L) {
-                        com.omnicast.sender.stream.StreamResumeManager.savePosition(this@SenderMainActivity, ActiveStreamHolder.streamUrl, msg.positionMs, msg.durationMs)
+                        com.omnicast.sender.stream.StreamResumeManager.savePosition(this@SenderMainActivity, ActiveStreamHolder.streamUrl, msg.positionMs, msg.durationMs, ActiveStreamHolder.headers["Referer"])
                         ActiveStreamHolder.streamUrl?.let { sUrl ->
                             com.omnicast.sender.history.PlayHistoryManager(this@SenderMainActivity).updateProgress(sUrl, msg.positionMs, msg.durationMs)
                             playlistManager.updateProgress(sUrl, msg.positionMs, msg.durationMs)
@@ -255,7 +255,7 @@ class SenderMainActivity : ComponentActivity() {
         val (cleanUrl, preparedHeaders) = com.omnicast.sender.ui.browser.MediaPlatformResolver.prepareStreamForPlayback(url, headers["Referer"] ?: "", headers)
         val br = com.omnicast.sender.nativeclassifier.NativeStreamClassifier.classify(cleanUrl).name
         val isLive = br == com.omnicast.core.domain.models.MediaBranch.LIVE_HLS.name || br == com.omnicast.core.domain.models.MediaBranch.IPTV_STREAM.name
-        val savedPos = if (isLive) 0L else (resumePositionMs ?: com.omnicast.sender.stream.StreamResumeManager.getPosition(this, cleanUrl).takeIf { it > 0 } ?: playlistManager.getLastPosition(cleanUrl))
+        val savedPos = if (isLive) 0L else (resumePositionMs ?: com.omnicast.sender.stream.StreamResumeManager.getPosition(this, cleanUrl, headers["Referer"]).takeIf { it > 0 } ?: playlistManager.getLastPosition(cleanUrl))
         historyManager.addOrUpdate(cleanUrl, safeTitle, headers = preparedHeaders, requiresProxy = false)
         val effSubs = if (subtitles.isNotEmpty()) subtitles else ActiveStreamHolder.subtitles
         ActiveStreamHolder.startCasting(cleanUrl, safeTitle, preparedHeaders, effSubs); com.omnicast.sender.service.CastMediaNotificationService.start(this)

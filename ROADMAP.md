@@ -2,11 +2,11 @@
 
 > **Versión Base de Rescate:** `v3.7.0` (`versionCodeSender: 368` | `versionCodeReceiver: 351`)  
 > **Política Operativa `v4.4`:** Micro-comandos `[auto]` y `[ver]` orquestados por el Planificador (`Argon`) invocando subagentes aislados (`flash` / `flash_lite`) | **Prohibido disparar Explorador Forense en tareas mapeadas** (todas las rutas están en este archivo y en [`doc/MAPA_DEL_SISTEMA_Y_FLUJO_DE_CODIGO.md`](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/MAPA_DEL_SISTEMA_Y_FLUJO_DE_CODIGO.md)).  
-> **Estado Global:** 🎉 **FASE 8 COMPLETADA AL 100% (Hitos 8.1 [CH-11] al 8.15 [CH-25] — Desintoxicación Arquitectónica del Receiver y Blindaje Dinámico Anti-CORS — 167 Tests Passing — 0 Archivos Kotlin > 300L)**
+> **Estado Global:** 🎉 **FASE 8 COMPLETADA AL 100% (Hitos 8.1 [CH-11] al 8.16 [CH-26] — Saneamiento Dinámico de Referer y Diferenciación de Capítulos de Series — 167 Tests Passing — 0 Archivos Kotlin > 300L)**
 
 ---
 
-## 🎮 FASE 8 — Experiencia de Control Remoto D-Pad Avanzada y Resiliencia de Reproductores TV (`[x]` — 15 / 15 completados — 100%)
+## 🎮 FASE 8 — Experiencia de Control Remoto D-Pad Avanzada y Resiliencia de Reproductores TV (`[x]` — 16 / 16 completados — 100%)
 
 - `[x]` **Hito 8.1 [CH-11] — Foco D-Pad en Controles TV y Protección de Reproductores (`app-receiver/src/main/kotlin/com/omnicast/receiver/ui/TvRemoteKeyHandler.kt`, `app-receiver/src/main/kotlin/com/omnicast/receiver/ui/components/TvDirectControlsOverlay.kt`, `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/AdBlocker.kt`):**
   - **Objetivo:** Garantizar gestión reactiva de D-Pad en `TvRemoteKeyHandler.kt` (276L) mediante `hasActiveOverlay` y `notifyControlsVisibilityChanged`, cediendo flechas D-Pad y ENTER al OSD/Compose TV para permitir seleccionar botones interactivos (Ajustes, Subtítulos, etc.), preservando atajos de salto +/-10s en pantalla limpia. Inyección inmediata de `FocusRequester` en el botón central de `TvDirectControlsOverlay.kt` (256L) y blindaje de reproductores web legítimos (`isLegitimate`) en `AdBlocker.kt` (252L) para SoloLatino (`player.pelisserieshoy.com`) e inmunidad a clics de inicio de video.
@@ -123,6 +123,15 @@
     - `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/InAppBrowserScreen.kt` (296 líneas)
     - `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/BrowserUrlHelper.kt` (297 líneas)
   - **Agentes Involucrados:** `planner-architect` (`Argon`) ➔ `specialist-tv-player-pvr` (`flash`) ➔ `surgical-developer` (`flash`) ➔ `qa-oracle-tester` (`flash`) ➔ `sync-documenter` (`flash`) ➔ `git-ota-releaser` (`flash_lite`).
+
+- `[x]` **Hito 8.16 [CH-26] — Saneamiento Dinámico de Referer y Diferenciación de Capítulos de Series (`app-sender/src/main/kotlin/com/omnicast/sender/stream/StreamResumeManager.kt`, `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/BrowserWebView.kt`, `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/InAppBrowserScreen.kt`, `app-sender/src/main/kotlin/com/omnicast/sender/ui/SenderMainActivity.kt`):**
+  - **Objetivo:** Erradicación del error `HTTP 403 Forbidden` en CDNs deportivas y de streaming (como StreamEast24) provocado por cabeceras `Referer` contaminadas con dominios de portales visitados anteriormente. Implementación de resolución dinámica de `docUrl` y `ref` en `BrowserWebView.kt` (293L) priorizando en tiempo real la URL viva del motor Chromium (`v?.url`) sobre la captura estática del estado. Resolución del incidente de colisión de marcas temporales y títulos entre capítulos de series (como en SoloLatino): extensión de `cleanKey` en `StreamResumeManager.kt` (66L) incorporando de forma agnóstica el slug de la ruta de la página (`pageUrl` con tokens `@episod/@capitul/@season/@temporad`), asegurando que cada episodio tenga una identidad de reanudación independiente e inicie desde `00:00` sin arrastrar el progreso de episodios previos. Blindaje en `InAppBrowserScreen.kt` (298L) y `SenderMainActivity.kt` (295L) reseteando detecciones y títulos de capítulos en navegaciones SPA y propagando la URL de referencia, con 0% código en duro y manteniendo todos los archivos <= 300 líneas.
+  - **Archivos Objetivo Exactos:**
+    - `app-sender/src/main/kotlin/com/omnicast/sender/stream/StreamResumeManager.kt` (66 líneas)
+    - `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/BrowserWebView.kt` (293 líneas)
+    - `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/InAppBrowserScreen.kt` (298 líneas)
+    - `app-sender/src/main/kotlin/com/omnicast/sender/ui/SenderMainActivity.kt` (295 líneas)
+  - **Agentes Involucrados:** `planner-architect` (`Argon`) ➔ `specialist-stream-extraction` (`flash`) ➔ `surgical-developer` (`flash`) ➔ `qa-oracle-tester` (`flash`) ➔ `sync-documenter` (`flash`) ➔ `git-ota-releaser` (`flash_lite`).
 
 ---
 

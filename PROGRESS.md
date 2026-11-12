@@ -3,8 +3,8 @@
 > **Versión Actual en Producción:** `v3.7.0` (`versionCodeSender: 368` | `versionCodeReceiver: 351`)  
 > **Última Sincronización Agéntica:** `2026-11-12`  
 > **Estado del Oráculo de Pruebas:** 🟢 **167 Tests Pasando (35 en :core:domain, 12 en :core:protocol, 25 en :app-sender, 23 en :app-receiver) — 100% — 0 fallos**  
-> **Próxima Actividad en Cola:** 🎉 **FASE 8 COMPLETADA AL 100% (Hitos 8.1 [CH-11] al 8.15 [CH-25] — Desintoxicación Arquitectónica del Receiver y Blindaje Dinámico Anti-CORS)**  
-> **Progreso Global:** 🏁 **Hito 8.15 [CH-25] Desintoxicación Arquitectónica del Receiver y Blindaje Dinámico Anti-CORS completado al 100%**
+> **Próxima Actividad en Cola:** 🎉 **FASE 8 COMPLETADA AL 100% (Hitos 8.1 [CH-11] al 8.16 [CH-26] — Saneamiento Dinámico de Referer y Diferenciación de Capítulos de Series)**  
+> **Progreso Global:** 🏁 **Hito 8.16 [CH-26] Saneamiento Dinámico de Referer y Diferenciación de Capítulos de Series completado al 100%**
 
 ---
 
@@ -12,6 +12,7 @@
 
 | Hito / Fase | Nombre del Hito / Fase | Estado | Progreso |
 | :--- | :--- | :---: | :---: |
+| **Hito 8.16 [CH-26]** | Saneamiento Dinámico de Referer y Diferenciación de Capítulos de Series | `[x]` Completado | **100%** |
 | **Hito 8.15 [CH-25]** | Desintoxicación Arquitectónica del Receiver y Blindaje Dinámico Anti-CORS | `[x]` Completado | **100%** |
 | **Hito 8.14 [CH-24]** | Soporte Universal de Cifrado Base64 en Pasarelas de Redirección y Telemetría Enriquecida | `[x]` Completado | **100%** |
 | **Hito 8.13 [CH-23]** | Desempaquetador Universal de Pasarelas de Redirección y Evasión de Trackers | `[x]` Completado | **100%** |
@@ -54,7 +55,7 @@
 ## 3. Monitor de Límite de 300 Líneas (`AGENTS.md` Regla 3)
 
 ### 🔴 Archivos por encima de 300 líneas
-> *(Cero archivos Kotlin por encima de 300 líneas tras saneamiento — TvWebResourceInterceptor.kt: 139L, TvReceiverHelper.kt: 247L, InAppBrowserScreen.kt: 296L, BrowserUrlHelper.kt: 297L)*
+> *(Cero archivos Kotlin por encima de 300 líneas tras saneamiento — StreamResumeManager.kt: 66L, BrowserWebView.kt: 293L, InAppBrowserScreen.kt: 298L, SenderMainActivity.kt: 295L)*
 - `app-sender/src/main/assets/sniffer/universal_sniffer.js`: **383 líneas** *(Asset JS DOM sellado e inmutable)*
 
 ### 🟡 Archivos en Zona de Vigilancia (289 – 300 líneas)
@@ -63,14 +64,14 @@
 | `app-receiver/src/main/kotlin/com/omnicast/receiver/ui/components/TvStandbyCleanScreen.kt` | **299** | 🛡️ Sellado |
 | `app-sender/src/main/kotlin/com/omnicast/sender/ui/components/SideMediaDrawerSections.kt` | **298** | ⚠️ Al límite |
 | `app-receiver/src/main/kotlin/com/omnicast/receiver/ui/components/TvCleanComponents.kt` | **298** | ⚠️ Al límite |
+| `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/InAppBrowserScreen.kt` | **298** | 🛡️ Sellado (Zona Sagrada) |
 | `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/BrowserTopBar.kt` | **297** | ⚠️ Al límite |
 | `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/BrowserUrlHelper.kt` | **297** | ⚠️ Al límite |
 | `app-sender/src/main/kotlin/com/omnicast/sender/service/CastMediaNotificationService.kt` | **297** | ⚠️ Al límite |
-| `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/InAppBrowserScreen.kt` | **296** | 🛡️ Sellado (Zona Sagrada) |
 | `app-receiver/src/main/kotlin/com/omnicast/receiver/ui/TvReceiverActivity.kt` | **296** | ⚠️ Al límite |
 | `app-sender/src/main/kotlin/com/omnicast/sender/ui/SenderMainActivity.kt` | **295** | ⚠️ Al límite |
 | `app-sender/src/main/kotlin/com/omnicast/sender/ui/components/MainActionCards.kt` | **295** | ⚠️ Al límite |
-| `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/BrowserWebView.kt` | **295** | 🛡️ Sellado (Zona Sagrada) |
+| `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/BrowserWebView.kt` | **293** | 🛡️ Sellado (Zona Sagrada) |
 | `app-sender/src/main/kotlin/com/omnicast/sender/ui/components/RemoteExpandedControls.kt` | **291** | ⚠️ Al límite |
 | `app-receiver/src/main/kotlin/com/omnicast/receiver/directstream/TvStorageSafetyManager.kt` | **290** | ⚠️ Al límite |
 | `app-sender/src/main/kotlin/com/omnicast/sender/ui/SenderMainScreen.kt` | **289** | ⚠️ Al límite |
@@ -78,6 +79,15 @@
 ---
 
 ## 4. Historial de Sesiones Multi-Agente
+
+### `[2026-11-12]` — Hito 8.16 [CH-26] — Saneamiento Dinámico de Referer y Diferenciación de Capítulos de Series
+- **Acción:**
+  - **`BrowserWebView.kt` (293L):** Erradicación del error `HTTP 403 Forbidden` en CDNs deportivas y de streaming (como StreamEast24) provocado por cabeceras `Referer` contaminadas con dominios de portales visitados anteriormente. Implementación de resolución dinámica de `docUrl` y `ref` priorizando en tiempo real la URL viva del motor Chromium (`v?.url`) sobre la captura estática del estado.
+  - **`StreamResumeManager.kt` (66L):** Resolución de colisión de marcas temporales y títulos entre capítulos de series (como en SoloLatino): extensión de `cleanKey` incorporando de forma agnóstica el slug de la ruta de la página (`pageUrl` con tokens `@episod/@capitul/@season/@temporad`), asegurando que cada episodio tenga una identidad de reanudación independiente e inicie desde `00:00` sin arrastrar el progreso de episodios previos.
+  - **`InAppBrowserScreen.kt` (298L) & `SenderMainActivity.kt` (295L):** Blindaje reseteando detecciones y títulos de capítulos en navegaciones SPA y propagando la URL de referencia, con 0% código en duro y manteniendo todos los archivos <= 300 líneas.
+- **Verificación:** 167 tests pasando (100% — 0 fallos), 0 archivos Kotlin > 300 líneas (`StreamResumeManager.kt`: 66L, `BrowserWebView.kt`: 293L, `InAppBrowserScreen.kt`: 298L, `SenderMainActivity.kt`: 295L).
+- **Salud del Oráculo:** 🟢 167 tests passing (100% — 0 fallos).
+- **Siguiente paso:** 🎉 **FASE 8 COMPLETADA AL 100% (Hitos 8.1 al 8.16)**.
 
 ### `[2026-11-12]` — Hito 8.15 [CH-25] — Desintoxicación Arquitectónica del Receiver (Caja Tonta Pura) y Blindaje Dinámico Anti-CORS en Emisor
 - **Acción:**

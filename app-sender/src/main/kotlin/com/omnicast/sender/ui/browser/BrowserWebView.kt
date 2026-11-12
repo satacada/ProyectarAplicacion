@@ -200,7 +200,7 @@ fun BrowserWebView(
                         val u = r?.url?.toString() ?: return
                         val code = err?.statusCode ?: return
                         val reason = err.reasonPhrase ?: ""
-                        val ref = r.requestHeaders?.get("Referer") ?: currentUrl
+                        val ref = r.requestHeaders?.get("Referer") ?: (v?.url?.takeIf { it.isNotBlank() && !it.startsWith("about:") } ?: currentUrl)
                         com.omnicast.sender.ui.browser.sentinel.WebPlayerDiagnosticSentinel.handleHttpError(u, code, reason, ref)
                     }
 
@@ -208,14 +208,12 @@ fun BrowserWebView(
                         return try {
                             if (r?.isForMainFrame == true) return super.shouldInterceptRequest(v, r)
                             val reqUrl = r?.url?.toString() ?: return super.shouldInterceptRequest(v, r)
-                            val docUrl = r.requestHeaders?.get("Referer") ?: currentUrl
+                            val docUrl = r.requestHeaders?.get("Referer") ?: (v?.url?.takeIf { it.isNotBlank() && !it.startsWith("about:") } ?: currentUrl)
                             if (isAdBlockEnabled && (AdBlocker.isAd(reqUrl) || AdBlocker.isVideoAd(reqUrl) || NativeAdBlockEngine.shouldBlock(reqUrl, docUrl))) {
                                 return AdBlocker.createEmptyResponse()
                             }
                             val cleanPath = reqUrl.substringBefore('?').lowercase()
-                            val isGenericAsset = cleanPath.endsWith(".css") || cleanPath.endsWith(".js") || cleanPath.endsWith(".png") ||
-                                                 cleanPath.endsWith(".jpg") || cleanPath.endsWith(".woff") || cleanPath.endsWith(".woff2") ||
-                                                 cleanPath.endsWith(".svg") || cleanPath.endsWith(".ico")
+                            val isGenericAsset = cleanPath.endsWith(".css") || cleanPath.endsWith(".js") || cleanPath.endsWith(".png") || cleanPath.endsWith(".jpg") || cleanPath.endsWith(".woff") || cleanPath.endsWith(".woff2") || cleanPath.endsWith(".svg") || cleanPath.endsWith(".ico")
                             if (!isGenericAsset) {
                                 android.util.Log.i("OMNICAST_NET", "🌐 Red: $reqUrl (Ref: $docUrl)")
                             }

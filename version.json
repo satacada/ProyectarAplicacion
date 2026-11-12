@@ -1,12 +1,12 @@
 {
-  "versionName": "3.7.11",
-  "versionCodeSender": 381,
-  "versionCodeReceiver": 362,
-  "releaseTag": "v3.7.11",
-  "senderApk": "omnicast-sender-v3.7.11.apk",
-  "receiverApk": "omnicast-receiver-v3.7.11.apk",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.11/omnicast-sender-v3.7.11.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.11/omnicast-receiver-v3.7.11.apk",
-  "releaseNotes": "v3.7.11: Cierre de Hito 8.5 [CH-15]. Sonda transparente de diagnostico HTTP y Chrome DevTools remoto.",
-  "changelog": "v3.7.11: Cierre de Hito 8.5 [CH-15]. Sonda transparente de diagnostico HTTP y Chrome DevTools remoto."
+  "versionName": "3.7.12",
+  "versionCodeSender": 382,
+  "versionCodeReceiver": 363,
+  "releaseTag": "v3.7.12",
+  "senderApk": "omnicast-sender-v3.7.12.apk",
+  "receiverApk": "omnicast-receiver-v3.7.12.apk",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.12/omnicast-sender-v3.7.12.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.12/omnicast-receiver-v3.7.12.apk",
+  "releaseNotes": "v3.7.12: Cierre de Hito 8.6 [CH-16]. User-Agent canonico dinamico y sincronizacion nativa de client hints.",
+  "changelog": "v3.7.12: Cierre de Hito 8.6 [CH-16]. User-Agent canonico dinamico y sincronizacion nativa de client hints."
 }

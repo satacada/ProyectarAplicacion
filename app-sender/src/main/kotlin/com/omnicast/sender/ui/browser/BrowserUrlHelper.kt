@@ -256,5 +256,35 @@ object BrowserUrlHelper {
         val defaultUa = try { android.webkit.WebSettings.getDefaultUserAgent(context) } catch (_: Throwable) { UA_MOBILE }
         return defaultUa.replace("; wv", "").replace(Regex("Version/\\d+\\.\\d+\\s*"), "")
     }
+
+    fun applyCanonicalUserAgent(settings: android.webkit.WebSettings, context: android.content.Context) {
+        val canonicalUa = getCanonicalUserAgent(context)
+        settings.userAgentString = canonicalUa
+        if (androidx.webkit.WebViewFeature.isFeatureSupported(androidx.webkit.WebViewFeature.USER_AGENT_METADATA)) {
+            try {
+                val chromeMatch = Regex("Chrome/(\\d+)\\.([0-9.]+)").find(canonicalUa)
+                val major = chromeMatch?.groupValues?.get(1) ?: "131"
+                val full = chromeMatch?.groupValues?.get(2)?.let { "$major.$it" } ?: "$major.0.0.0"
+                val brands = listOf(
+                    androidx.webkit.UserAgentMetadata.BrandVersion.Builder().setBrand("Not_A Brand").setMajorVersion("24").setFullVersion("24.0.0.0").build(),
+                    androidx.webkit.UserAgentMetadata.BrandVersion.Builder().setBrand("Chromium").setMajorVersion(major).setFullVersion(full).build(),
+                    androidx.webkit.UserAgentMetadata.BrandVersion.Builder().setBrand("Google Chrome").setMajorVersion(major).setFullVersion(full).build()
+                )
+                val is64 = android.os.Build.SUPPORTED_ABIS.any { it.contains("64") }
+                val meta = androidx.webkit.UserAgentMetadata.Builder()
+                    .setBrandVersionList(brands)
+                    .setFullVersion(full)
+                    .setPlatform("Android")
+                    .setPlatformVersion(android.os.Build.VERSION.RELEASE)
+                    .setArchitecture(if (is64) "arm64" else "arm")
+                    .setModel(android.os.Build.MODEL)
+                    .setMobile(true)
+                    .setBitness(if (is64) 64 else 32)
+                    .setWow64(false)
+                    .build()
+                androidx.webkit.WebSettingsCompat.setUserAgentMetadata(settings, meta)
+            } catch (_: Throwable) {}
+        }
+    }
 }
 

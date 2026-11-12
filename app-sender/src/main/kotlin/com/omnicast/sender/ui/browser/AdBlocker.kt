@@ -166,7 +166,7 @@ object AdBlocker {
                 function cleanDoc(doc) {
                     if (!doc) return;
                     try {
-                        var css = 'div[class*="popunder"], div[id*="popunder"], .ad-overlay, #ad-overlay, div[class*="click-shield"], div[id*="ad_wrapper"], div[class*="vast-"], div[class*="banner-ads"], div[id*="banner-ads"] { display: none !important; pointer-events: none !important; }';
+                        var css = 'div[class*="popunder"], div[id*="popunder"], .ad-overlay, #ad-overlay, div[class*="click-shield"], div[class*="video-click-shield"], [class*="fake-player"], [id*="fake-player"], div[id*="ad_wrapper"], div[class*="vast-"], div[class*="banner-ads"], div[id*="banner-ads"] { display: none !important; pointer-events: none !important; }';
                         var st = doc.createElement('style');
                         st.textContent = css;
                         (doc.head || doc.documentElement).appendChild(st);
@@ -216,10 +216,27 @@ object AdBlocker {
                 window.__omniAdBlockInjected = true;
 
                 // Neutralización reactiva en fase de captura del evento click:
-                // Solo neutraliza velos transparentes que no sean botones ni enlaces ni controles legítimos
                 document.addEventListener('click', function(e) {
                     var el = e.target;
                     if (!el) return;
+                    var trapA = (el.tagName === 'A') ? el : (el.closest ? el.closest('a') : null);
+                    if (trapA) {
+                        var aRect = trapA.getBoundingClientRect();
+                        var aCs = window.getComputedStyle(trapA);
+                        var aOp = parseFloat(aCs.opacity);
+                        var aBg = aCs.backgroundColor;
+                        var aIsTrans = (aBg === 'transparent' || aBg === 'rgba(0, 0, 0, 0)' || aBg === 'rgba(255, 255, 255, 0)');
+                        var aNoText = !trapA.innerText || trapA.innerText.trim().length === 0;
+                        if (aRect.width >= 150 && aRect.height >= 100 && (aOp <= 0.08 || (aIsTrans && aNoText)) &&
+                            !trapA.querySelector('video, button, input, [class*="play"], [id*="play"]')) {
+                            e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
+                            trapA.style.pointerEvents = 'none';
+                            trapA.remove();
+                            var underA = document.elementFromPoint(e.clientX, e.clientY);
+                            if (underA && underA !== trapA && underA !== el) underA.click();
+                            return false;
+                        }
+                    }
                     if (el.closest && el.closest('input, textarea, select, button, form, a, svg, [role="button"], [contenteditable="true"], [role="search"], [role="textbox"], [role="combobox"], [class*="play"], [id*="play"], [class*="player"], [id*="player"]')) return;
                     if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT' || el.tagName === 'FORM' || el.tagName === 'BUTTON' || el.tagName === 'A' || el.tagName === 'SVG') return;
                     if (el !== document.body && el !== document.documentElement) {

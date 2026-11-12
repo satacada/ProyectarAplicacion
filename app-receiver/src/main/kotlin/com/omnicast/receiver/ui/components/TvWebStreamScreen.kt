@@ -19,7 +19,7 @@ import com.omnicast.core.protocol.SignalingMessage
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 
-private const val WATCHDOG_TIMEOUT_MS = 10_000L
+private const val WATCHDOG_TIMEOUT_MS = 22_000L
 
 /**
  * Reproductor Web HTML5 / Chromium para TV Box.

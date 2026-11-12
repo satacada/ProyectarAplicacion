@@ -2,9 +2,9 @@
 
 > **Versión Actual en Producción:** `v3.7.0` (`versionCodeSender: 368` | `versionCodeReceiver: 351`)  
 > **Última Sincronización Agéntica:** `2026-11-11`  
-> **Estado del Oráculo de Pruebas:** 🟢 **58 Tests Pasando (35 en :core:domain, 23 en :app-receiver) — 100% — 0 fallos**  
-> **Próxima Actividad en Cola:** `🎉 HITO 5.2 [CH-02] COMPLETADO AL 100%`  
-> **Progreso Global:** 🏁 **Hito 5.2 [CH-02] Fast-Start ABR, Low-RAM LoadControl y Optimización UX en Android TV completado al 100%**
+> **Estado del Oráculo de Pruebas:** 🟢 **95 Tests Pasando (35 en :core:domain, 12 en :core:protocol, 25 en :app-sender, 23 en :app-receiver) — 100% — 0 fallos**  
+> **Próxima Actividad en Cola:** 🎉 **FASE 8 COMPLETADA AL 100% (Hitos 8.1 [CH-11] y 8.2 [CH-12])**  
+> **Progreso Global:** 🏁 **Hito 8.2 [CH-12] Blindaje Anti-Desvío 1er Toque y Calibración de Buffer Doupload/Doodstream completado al 100%**
 
 ---
 
@@ -12,6 +12,7 @@
 
 | Hito / Fase | Nombre del Hito / Fase | Estado | Progreso |
 | :--- | :--- | :---: | :---: |
+| **Hito 8.2 [CH-12]** | Blindaje Anti-Desvío 1er Toque y Calibración Buffer Doupload/Doodstream | `[x]` Completado | **100%** |
 | **Hito 8.1 [CH-11]** | Foco D-Pad en Controles TV y Protección de Reproductores | `[x]` Completado | **100%** |
 | :--- | :--- | :---: | :---: |
 | **Fase 0** | Base Heredada e Inmutable (20 HUs + 4 Pilares + Motor PVR `v3.6.08`) | `[x]` Sellada | **4 / 4 (100%)** |
@@ -57,11 +58,20 @@
 | `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/BrowserWebView.kt` | **294** | 🛡️ Sellado (Zona Sagrada) |
 | `app-sender/src/main/kotlin/com/omnicast/sender/ui/components/RemoteExpandedControls.kt` | **291** | ⚠️ Al límite |
 | `app-sender/src/main/kotlin/com/omnicast/sender/ui/SenderMainScreen.kt` | **289** | ⚠️ Al límite |
-| `app-receiver/src/main/kotlin/com/omnicast/receiver/ui/components/TvWebStreamScreen.kt` | **289** | 🛡️ Sellado (Zona Sagrada) |
+| `app-receiver/src/main/kotlin/com/omnicast/receiver/ui/components/TvWebStreamScreen.kt` | **291** | 🛡️ Sellado (Zona Sagrada) |
 
 ---
 
 ## 4. Historial de Sesiones Multi-Agente
+
+### `[2026-11-11]` — Hito 8.2 [CH-12] — Blindaje Anti-Desvío 1er Toque y Calibración de Buffer Doupload/Doodstream
+- **Acción:**
+  - **`AdBlocker.kt` (269L):** Neutralización de velos transparentes y enlaces trampa sobre el reproductor en el 1er toque reenviando el clic al elemento subyacente para reproducir inmediatamente sin desvíos.
+  - **`TvWebStreamScreen.kt` (291L):** Watchdog calibrado a 22s para inicio de reproducción en CDNs de alta latencia/handshake lento (Doupload, Dropupload, Doodstream).
+  - **`ExoPlayerTvManager.kt` (285L):** Timeouts de conexión y lectura HTTP ampliados a 15s en `DefaultHttpDataSource.Factory`, tolerando latencia y negociación SSL lenta.
+- **Verificación:** 95/95 tests pasando (35 en `:core:domain`, 12 en `:core:protocol`, 25 en `:app-sender`, 23 en `:app-receiver`), 0 fallos, 0 archivos Kotlin > 300 líneas.
+- **Salud del Oráculo:** 🟢 95 tests passing (100% — 0 fallos).
+- **Siguiente paso:** 🎉 **FASE 8 COMPLETADA AL 100% (Hitos 8.1 y 8.2)**.
 
 ### `[2026-11-11]` — Hito 8.1 [CH-11] — Foco D-Pad en Controles TV y Protección de Reproductores
 - **Acción:**

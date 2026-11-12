@@ -65,7 +65,7 @@ class ExoPlayerTvManager(private val context: Context) {
             trackManager = tm
 
             val httpFactory = DefaultHttpDataSource.Factory()
-                .setUserAgent(TvMediaItemBuilder.DEFAULT_UA).setAllowCrossProtocolRedirects(true).setConnectTimeoutMs(8000).setReadTimeoutMs(8000)
+                .setUserAgent(TvMediaItemBuilder.DEFAULT_UA).setAllowCrossProtocolRedirects(true).setConnectTimeoutMs(15000).setReadTimeoutMs(15000)
             val dsFactory = androidx.media3.datasource.DefaultDataSource.Factory(context, httpFactory)
             val mediaSourceFactory = DefaultMediaSourceFactory(context).setDataSourceFactory(dsFactory)
 
@@ -186,8 +186,8 @@ class ExoPlayerTvManager(private val context: Context) {
             val httpFactory = DefaultHttpDataSource.Factory()
                 .setUserAgent(safeHeaders["User-Agent"] ?: TvMediaItemBuilder.DEFAULT_UA)
                 .setAllowCrossProtocolRedirects(true)
-                .setConnectTimeoutMs(8000)
-                .setReadTimeoutMs(8000)
+                .setConnectTimeoutMs(15000)
+                .setReadTimeoutMs(15000)
                 .setDefaultRequestProperties(safeHeaders)
 
             val dsFactory = androidx.media3.datasource.DefaultDataSource.Factory(context, httpFactory)
@@ -225,8 +225,8 @@ class ExoPlayerTvManager(private val context: Context) {
             val httpFactory = DefaultHttpDataSource.Factory()
                 .setUserAgent(safe["User-Agent"] ?: TvMediaItemBuilder.DEFAULT_UA)
                 .setAllowCrossProtocolRedirects(true)
-                .setConnectTimeoutMs(8000)
-                .setReadTimeoutMs(8000)
+                .setConnectTimeoutMs(15000)
+                .setReadTimeoutMs(15000)
             if (safe.isNotEmpty()) httpFactory.setDefaultRequestProperties(safe)
             val dsFactory = androidx.media3.datasource.DefaultDataSource.Factory(context, httpFactory)
             val mediaSource = DefaultMediaSourceFactory(context).setDataSourceFactory(dsFactory).createMediaSource(mediaItem)

@@ -1,7 +1,12 @@
 (function() {
     'use strict';
-    if (window.__omniSnifferInjected) return;
-    window.__omniSnifferInjected = true;
+    var _sniffKey = typeof Symbol !== 'undefined' ? Symbol.for('_media_sensor_') : null;
+    if (_sniffKey) {
+        if (window[_sniffKey]) return;
+        try {
+            Object.defineProperty(window, _sniffKey, { value: true, enumerable: false, configurable: false, writable: false });
+        } catch(_) { window[_sniffKey] = true; }
+    }
 
     var PREFIX = 'OMNICAST_STREAM:';
     window.__blobStore = window.__blobStore || {};
@@ -195,21 +200,21 @@
     } catch(e) {}
 
     // 5. Intercepción de Fetch y XHR con registro de Token Fresco en Tiempo Real
-    window.__omniActiveLiveStream = window.__omniActiveLiveStream || null;
-    window.__omniCapturedMedia = window.__omniCapturedMedia || [];
+    var activeLiveStream = null;
+    var capturedMedia = [];
     function recordCapturedMedia(u) {
         if (!u || typeof u !== 'string') return;
         if (!isMediaUrl(u)) return;
-        if (window.__omniCapturedMedia.indexOf(u) === -1) {
-            window.__omniCapturedMedia.unshift(u);
-            if (window.__omniCapturedMedia.length > 25) window.__omniCapturedMedia.pop();
+        if (capturedMedia.indexOf(u) === -1) {
+            capturedMedia.unshift(u);
+            if (capturedMedia.length > 25) capturedMedia.pop();
         }
     }
     function updateLiveStreamIfFresher(u) {
         if (!u || typeof u !== 'string') return;
         recordCapturedMedia(u);
         if (u.indexOf('.m3u8') !== -1 || u.indexOf('/hls') !== -1 || u.indexOf('.mpd') !== -1 || u.indexOf('p.php?url=') !== -1) {
-            window.__omniActiveLiveStream = { url: u, timestamp: Date.now() };
+            activeLiveStream = { url: u, timestamp: Date.now() };
         }
     }
 
@@ -240,26 +245,6 @@
             };
         }
     } catch(e) {}
-
-    // Función global invocable antes de transmitir para obtener el stream activo con token vivo (0s de retraso)
-    window.__omniGetLiveStream = function() {
-        try {
-            var vids = document.getElementsByTagName('video');
-            for (var vi = 0; vi < vids.length; vi++) {
-                var v = vids[vi];
-                if (v && v.currentSrc && isMediaUrl(v.currentSrc)) {
-                    return v.currentSrc;
-                }
-            }
-            if (window.__omniActiveLiveStream && (Date.now() - window.__omniActiveLiveStream.timestamp < 180000)) {
-                return window.__omniActiveLiveStream.url;
-            }
-            if (window.__omniCapturedMedia && window.__omniCapturedMedia.length > 0) {
-                return window.__omniCapturedMedia[0];
-            }
-        } catch(e) {}
-        return null;
-    };
 
     // 6. Extractor DOM específico para OK.ru (Metadata JSON en elemento reproductor)
     function sniffOkRuDom() {
@@ -336,11 +321,12 @@
     }, 3000);
 
     // 7b. Observación reactiva limpia de Cloudflare Turnstile (Cero clicks sintéticos que activen bot heuristics)
+    var turnstileSubmitted = false;
     function checkTurnstileCompleted() {
         try {
             var cfInp = document.querySelector('input[name="cf-turnstile-response"]');
-            if (cfInp && cfInp.value && !window.__omniTurnstileSubmitted) {
-                window.__omniTurnstileSubmitted = true;
+            if (cfInp && cfInp.value && !turnstileSubmitted) {
+                turnstileSubmitted = true;
                 if (typeof window.imNotARobot === 'function') {
                     window.imNotARobot();
                 } else if (typeof window.onSubmit === 'function') {
@@ -356,33 +342,7 @@
     window.addEventListener('load', checkTurnstileCompleted);
     setInterval(checkTurnstileCompleted, 1000);
 
-    // 8. Función global de reset y rescaneo profundo para el botón del trueno
-    window.__omniResetAndRescan = function() {
-        try {
-            var vids = document.getElementsByTagName('video');
-            for (var k = 0; k < vids.length; k++) {
-                var v = vids[k];
-                v.__omniMonitored = false;
-                v.__omni = false;
-                monitorVideo(v);
-                var s = v.currentSrc || v.src;
-                if (s && isMediaUrl(s)) {
-                    reportMedia(v, s, document.title, !v.paused);
-                }
-            }
-            if (window.__omniCapturedMedia && window.__omniCapturedMedia.length > 0) {
-                for (var ci = 0; ci < window.__omniCapturedMedia.length; ci++) {
-                    reportMedia(window.__omniCapturedMedia[ci], document.title, 0, false);
-                }
-            }
-            if (typeof window.ibFindAllVideos === 'function') {
-                window.ibFindAllVideos();
-            }
-            sniffOkRuDom();
-        } catch(e) {}
-    };
-
-    // 9. Intercepción reactiva de navegación SPA (YouTube Polymer, pushState, popstate, yt-navigate-finish)
+    // 8. Intercepción reactiva de navegación SPA (YouTube Polymer, pushState, popstate, yt-navigate-finish)
     function checkSpaNavigation() {
         try {
             var href = window.location.href;

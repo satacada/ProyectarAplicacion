@@ -126,15 +126,6 @@ object WvcSnifferScripts {
         (function() {
             try {
                 var fUrl = window.location.href || '';
-                if (typeof window.__omniResetAndRescan === 'function') {
-                    window.__omniResetAndRescan();
-                }
-                if (window.__omniCapturedMedia && window.__omniCapturedMedia.length > 0) {
-                    for (var m = 0; m < window.__omniCapturedMedia.length; m++) {
-                        var cu = window.__omniCapturedMedia[m];
-                        console.log('$consolePrefix' + JSON.stringify({type: 'video', video: cu, src: cu, title: document.title, frameUrl: fUrl}));
-                    }
-                }
                 try {
                     if (window.performance && typeof window.performance.getEntriesByType === 'function') {
                         var res = window.performance.getEntriesByType('resource');

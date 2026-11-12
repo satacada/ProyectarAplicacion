@@ -3,8 +3,8 @@
 > **Versión Actual en Producción:** `v3.7.0` (`versionCodeSender: 368` | `versionCodeReceiver: 351`)  
 > **Última Sincronización Agéntica:** `2026-11-12`  
 > **Estado del Oráculo de Pruebas:** 🟢 **167 Tests Pasando (35 en :core:domain, 12 en :core:protocol, 25 en :app-sender, 23 en :app-receiver) — 100% — 0 fallos**  
-> **Próxima Actividad en Cola:** 🎉 **FASE 8 COMPLETADA AL 100% (Hitos 8.1 [CH-11], 8.2 [CH-12], 8.3 [CH-13], 8.4 [CH-14], 8.5 [CH-15], 8.6 [CH-16] y 8.7 [CH-17])**  
-> **Progreso Global:** 🏁 **Hito 8.7 [CH-17] Sincronización Canónica de UserAgentMetadata y Client Hints Oficiales completado al 100%**
+> **Próxima Actividad en Cola:** 🎉 **FASE 8 COMPLETADA AL 100% (Hitos 8.1 [CH-11], 8.2 [CH-12], 8.3 [CH-13], 8.4 [CH-14], 8.5 [CH-15], 8.6 [CH-16], 8.7 [CH-17] y 8.8 [CH-18])**  
+> **Progreso Global:** 🏁 **Hito 8.8 [CH-18] Erradicación Universal de Huellas In-App y Autonomía Pura de Scripts completado al 100%**
 
 ---
 
@@ -12,6 +12,7 @@
 
 | Hito / Fase | Nombre del Hito / Fase | Estado | Progreso |
 | :--- | :--- | :---: | :---: |
+| **Hito 8.8 [CH-18]** | Erradicación Universal de Huellas In-App y Autonomía Pura de Scripts | `[x]` Completado | **100%** |
 | **Hito 8.7 [CH-17]** | Sincronización Canónica de UserAgentMetadata y Client Hints Oficiales | `[x]` Completado | **100%** |
 | **Hito 8.6 [CH-16]** | User-Agent Canónico Dinámico y Sincronización Nativa de Client Hints | `[x]` Completado | **100%** |
 | **Hito 8.5 [CH-15]** | Sonda Transparente de Diagnóstico HTTP/JS y Chrome DevTools Remoto | `[x]` Completado | **100%** |
@@ -47,7 +48,7 @@
 
 ### 🔴 Archivos por encima de 300 líneas
 > *(Cero archivos Kotlin por encima de 300 líneas tras saneamiento)*
-- `app-sender/src/main/assets/sniffer/universal_sniffer.js`: **403 líneas** *(Asset JS DOM sellado e inmutable)*
+- `app-sender/src/main/assets/sniffer/universal_sniffer.js`: **383 líneas** *(Asset JS DOM sellado e inmutable)*
 
 ### 🟡 Archivos en Zona de Vigilancia (289 – 300 líneas)
 | Archivo | Líneas Actuales | Estado |
@@ -61,15 +62,25 @@
 | `app-sender/src/main/kotlin/com/omnicast/sender/service/CastMediaNotificationService.kt` | **297** | ⚠️ Al límite |
 | `app-receiver/src/main/kotlin/com/omnicast/receiver/ui/TvReceiverActivity.kt` | **296** | ⚠️ Al límite |
 | `app-sender/src/main/kotlin/com/omnicast/sender/ui/components/MainActionCards.kt` | **295** | ⚠️ Al límite |
-| `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/BrowserWebView.kt` | **292** | 🛡️ Sellado (Zona Sagrada) |
 | `app-sender/src/main/kotlin/com/omnicast/sender/ui/components/RemoteExpandedControls.kt` | **291** | ⚠️ Al límite |
 | `app-receiver/src/main/kotlin/com/omnicast/receiver/directstream/TvStorageSafetyManager.kt` | **290** | ⚠️ Al límite |
 | `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/BrowserUrlHelper.kt` | **290** | ⚠️ Al límite |
+| `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/BrowserWebView.kt` | **289** | 🛡️ Sellado (Zona Sagrada) |
 | `app-sender/src/main/kotlin/com/omnicast/sender/ui/SenderMainScreen.kt` | **289** | ⚠️ Al límite |
 
 ---
 
 ## 4. Historial de Sesiones Multi-Agente
+
+### `[2026-11-12]` — Hito 8.8 [CH-18] — Erradicación Universal de Huellas In-App y Autonomía Pura de Scripts
+- **Acción:**
+  - **`WvcShieldSecurityEngine.kt` (263L):** Neutralización universal de la cabecera delatora `X-Requested-With` asignando `XMLHttpRequest` para peticiones AJAX same-origin mediante hooks de `window.fetch` y `XMLHttpRequest` con `WeakMap` privado. Erradicación de la inyección nativa de `com.omnicast.sender` de la pila Chromium C++ que activaba el rechazo HTTP 403 `incompatible_browser` en servidores protegidos.
+  - **`BrowserWebView.kt` (289L):** Poda de la directiva estéril `setRequestedWithHeaderOriginAllowList`, delegando la neutralización en JavaScript limpio sin riesgo de desalineación en el motor Chromium.
+  - **`universal_sniffer.js` (383L):** Erradicación total de propiedades globales `window.__omni*` (`__omniSnifferInstalled`, `__omniPendingStream`, etc.), encapsulando el estado en closures IIFE privados y aislando por completo el contexto de ejecución.
+  - **`WvcSnifferScripts.kt` (191L):** Dotación a `buildAggressiveRescanScript` de autonomía de rescaneo directa sobre el DOM sin llamadas acopladas a propiedades de `window`, manteniendo el objeto `window` 100% virgen e indistinguible de Google Chrome oficial con 0% código en duro.
+- **Verificación:** 167 tests pasando (100% — 0 fallos), 0 archivos Kotlin > 300 líneas (`BrowserWebView.kt` en 289L, `WvcShieldSecurityEngine.kt` en 263L, `WvcSnifferScripts.kt` en 191L).
+- **Salud del Oráculo:** 🟢 167 tests passing (100% — 0 fallos).
+- **Siguiente paso:** 🎉 **FASE 8 COMPLETADA AL 100% (Hitos 8.1, 8.2, 8.3, 8.4, 8.5, 8.6, 8.7 y 8.8)**.
 
 ### `[2026-11-12]` — Hito 8.7 [CH-17] — Sincronización Canónica de UserAgentMetadata y Client Hints Oficiales
 - **Acción:**
@@ -78,7 +89,7 @@
   - **Erradicación de HTTP 403 en Cloudflare WAF:** Eliminación de la emisión mutilada de cabeceras `sec-ch-ua` con versión vacía (`v=""`), permitiendo que Chromium emita marcas completas y consistentes tanto a nivel HTTP como en JavaScript, superando la inspección de Cloudflare en endpoints de API interna (`/api/`) con 0% código en duro.
 - **Verificación:** 167 tests pasando (100% — 0 fallos), 0 archivos Kotlin > 300 líneas (`BrowserUrlHelper.kt` en 290L, `BrowserWebView.kt` en 292L).
 - **Salud del Oráculo:** 🟢 167 tests passing (100% — 0 fallos).
-- **Siguiente paso:** 🎉 **FASE 8 COMPLETADA AL 100% (Hitos 8.1, 8.2, 8.3, 8.4, 8.5, 8.6 y 8.7)**.
+- **Siguiente paso:** Hito 8.8 [CH-18] — Erradicación Universal de Huellas In-App y Autonomía Pura de Scripts.
 
 ### `[2026-11-12]` — Hito 8.6 [CH-16] — User-Agent Canónico Dinámico y Sincronización Nativa de Client Hints
 - **Acción:**

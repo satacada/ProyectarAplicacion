@@ -96,6 +96,61 @@ object WvcShieldSecurityEngine {
                 }
             } catch(_) {}
 
+            // 4. Normalización Universal de AJAX Anti-WebView Wrapper (X-Requested-With en Same-Origin)
+            try {
+                var _isSameOrigin = function(u) {
+                    if (!u || typeof u !== 'string') return true;
+                    if (u.indexOf('/') === 0 && u.indexOf('//') !== 0) return true;
+                    try {
+                        var parsed = new URL(u, window.location.href);
+                        return parsed.origin === window.location.origin;
+                    } catch(_) { return false; }
+                };
+                if (window.fetch) {
+                    var _realFetch = window.fetch;
+                    window.fetch = function(resource, init) {
+                        try {
+                            var u = (typeof resource === 'string') ? resource : (resource && resource.url ? resource.url : '');
+                            if (_isSameOrigin(u)) {
+                                init = init || {};
+                                var h = new Headers(init.headers || (typeof resource === 'object' && resource.headers ? resource.headers : {}));
+                                if (!h.has('X-Requested-With')) {
+                                    h.set('X-Requested-With', 'XMLHttpRequest');
+                                    init.headers = h;
+                                }
+                            }
+                        } catch(_) {}
+                        return _realFetch.call(this, resource, init);
+                    };
+                }
+                if (window.XMLHttpRequest) {
+                    var _origOpen = XMLHttpRequest.prototype.open;
+                    var _origSend = XMLHttpRequest.prototype.send;
+                    var _origSetReqHeader = XMLHttpRequest.prototype.setRequestHeader;
+                    var _xhrUrls = new WeakMap();
+                    var _xhrHeaders = new WeakMap();
+                    XMLHttpRequest.prototype.open = function(method, url) {
+                        try { _xhrUrls.set(this, url); } catch(_) {}
+                        return _origOpen.apply(this, arguments);
+                    };
+                    XMLHttpRequest.prototype.setRequestHeader = function(header) {
+                        if (header && header.toLowerCase() === 'x-requested-with') {
+                            try { _xhrHeaders.set(this, true); } catch(_) {}
+                        }
+                        return _origSetReqHeader.apply(this, arguments);
+                    };
+                    XMLHttpRequest.prototype.send = function() {
+                        try {
+                            var targetUrl = _xhrUrls.get(this);
+                            if (_isSameOrigin(targetUrl) && !_xhrHeaders.get(this)) {
+                                this.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+                            }
+                        } catch(_) {}
+                        return _origSend.apply(this, arguments);
+                    };
+                }
+            } catch(_) {}
+
             // 5. Camuflaje Stealth Anti-Detección de WebView (Brave/Chrome Nativo)
             try {
                 if (!window.chrome) { window.chrome = { app: { isInstalled: false }, runtime: {} }; }

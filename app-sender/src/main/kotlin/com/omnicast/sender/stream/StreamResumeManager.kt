@@ -10,8 +10,13 @@ object StreamResumeManager {
     private const val PREFS_NAME = "omnicast_playback_resume"
     private const val MIN_RESUME_MS = 5000L
 
-    fun savePosition(context: Context, url: String?, posMs: Long) {
-        if (url.isNullOrBlank() || posMs < MIN_RESUME_MS) return
+    fun savePosition(context: Context, url: String?, posMs: Long, durationMs: Long = 0L) {
+        if (url.isNullOrBlank()) return
+        if (durationMs > 0L && (posMs >= durationMs - 45_000L || (posMs.toDouble() / durationMs) >= 0.95)) {
+            clearPosition(context, url)
+            return
+        }
+        if (posMs < MIN_RESUME_MS) return
         val key = cleanKey(url)
         context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             .edit()

@@ -146,10 +146,7 @@ object BrowserUrlHelper {
         return headers
     }
 
-    fun sanitizeMediaUrl(url: String): String {
-        return url.trim()
-    }
-
+    fun sanitizeMediaUrl(url: String): String = url.trim()
 
     fun normalizeUrl(input: String): String {
         val trimmed = input.trim()
@@ -178,6 +175,8 @@ object BrowserUrlHelper {
         MediaPlatformResolver.extractFastreamId(url)?.let { return "fastream_$it" }
         val frMatch = Regex("[?&]fr=([a-zA-Z0-9_-]+)").find(url)
         if (frMatch != null) return "media_${frMatch.groupValues[1]}"
+        val vMatch = Regex("[?&]v=([a-zA-Z0-9_-]+)").find(url)
+        if (vMatch != null && !lower.contains("youtube.com") && !lower.contains("youtu.be")) return "media_v_${vMatch.groupValues[1]}"
         val urlsetMatch = Regex(",([a-zA-Z0-9]{8,16})_").find(url) ?: Regex("/([a-zA-Z0-9]{8,16})_").find(url)
         if (urlsetMatch != null && url.contains(".urlset", true)) return "media_${urlsetMatch.groupValues[1]}"
         val clean = url.substringBefore('?')

@@ -39,8 +39,7 @@ fun InAppBrowserScreen(
     var qualityOptions by remember { mutableStateOf<List<StreamQualityOption>>(emptyList()) }; var showOptionsSheet by remember { mutableStateOf(false) }; var showSideDrawer by remember { mutableStateOf(false) }; var showWhitelistDialog by remember { mutableStateOf(false) }; var showBottomControls by rememberSaveable { mutableStateOf(ActiveStreamHolder.isCasting.value && ActiveStreamHolder.isPlaying.value) }
     var videoToSave by remember { mutableStateOf<HistoryItem?>(null) }; var webViewInstance by remember { mutableStateOf<WebView?>(null) }; var popupWebView by remember { mutableStateOf<WebView?>(null) }
     var playlistsVersion by remember { mutableIntStateOf(0) }; val scope = rememberCoroutineScope(); var userDismissedSheetForUrl by rememberSaveable { mutableStateOf("") }; var autoOpenJob by remember { mutableStateOf<kotlinx.coroutines.Job?>(null) }; var castingPageUrl by rememberSaveable { mutableStateOf("") }
-    val isCasting by ActiveStreamHolder.isCasting.collectAsState(); val isPlaying by ActiveStreamHolder.isPlaying.collectAsState()
-    val posMs by ActiveStreamHolder.positionMs.collectAsState(); val durMs by ActiveStreamHolder.durationMs.collectAsState(); val volume by ActiveStreamHolder.volume.collectAsState(); val castTitle by ActiveStreamHolder.currentMediaTitle.collectAsState()
+    val isCasting by ActiveStreamHolder.isCasting.collectAsState(); val isPlaying by ActiveStreamHolder.isPlaying.collectAsState(); val posMs by ActiveStreamHolder.positionMs.collectAsState(); val durMs by ActiveStreamHolder.durationMs.collectAsState(); val volume by ActiveStreamHolder.volume.collectAsState(); val castTitle by ActiveStreamHolder.currentMediaTitle.collectAsState()
 
     fun isRealMedia(s: String) = BrowserUrlHelper.isRealMedia(s, streamDurations[s] ?: 0f)
 
@@ -65,12 +64,8 @@ fun InAppBrowserScreen(
     }
 
     fun openOptionsSheet() {
-        val currentStreams = detectedStreams.filter { isRealMedia(it) }
-        val cleanTitle = pageTitle.replace(" - YouTube", "").replace(" | OK", "").trim().take(22)
-        if (currentStreams.isEmpty()) {
-            qualityOptions = emptyList(); showOptionsSheet = true
-            webViewInstance?.evaluateJavascript(WvcSnifferScripts.buildAggressiveRescanScript(WvcDomSniffer.CONSOLE_PREFIX), null); return
-        }
+        val currentStreams = detectedStreams.filter { isRealMedia(it) }; val cleanTitle = pageTitle.replace(" - YouTube", "").replace(" | OK", "").trim().take(22)
+        if (currentStreams.isEmpty()) { qualityOptions = emptyList(); showOptionsSheet = true; webViewInstance?.evaluateJavascript(WvcSnifferScripts.buildAggressiveRescanScript(WvcDomSniffer.CONSOLE_PREFIX), null); return }
         qualityOptions = currentStreams.flatMap { u ->
             val ytId = BrowserUrlHelper.extractYouTubeId(u)
             if (ytId != null) BrowserUrlHelper.createYouTubeQualityOptions(ytId, cleanTitle) else {
@@ -97,8 +92,7 @@ fun InAppBrowserScreen(
     }
 
     fun resetStreamDetections() {
-        detectedStreams.clear(); streamHeaders.clear(); streamLabels.clear(); streamDurations.clear(); qualityOptions = emptyList()
-        userDismissedSheetForUrl = ""; autoOpenJob?.cancel(); ActiveStreamHolder.clearDetectedStream()
+        detectedStreams.clear(); streamHeaders.clear(); streamLabels.clear(); streamDurations.clear(); qualityOptions = emptyList(); userDismissedSheetForUrl = ""; autoOpenJob?.cancel(); ActiveStreamHolder.clearDetectedStream()
     }
 
     fun registerStream(url: String, hdrs: Map<String, String>, isPrimary: Boolean = false, label: String? = null) {
@@ -112,17 +106,18 @@ fun InAppBrowserScreen(
         val targetUrl = derivedMaster ?: cleanUrl
         val isSubVar = com.omnicast.core.domain.usecases.HlsMasterResolver.isLikelySubVariantUrl(targetUrl)
         val isM = !isSubVar && (com.omnicast.core.domain.usecases.HlsMasterResolver.isMasterPlaylistUrl(targetUrl) || targetUrl.contains(".mpd", true))
-        val key = BrowserUrlHelper.extractMediaIdentityKey(targetUrl)
+        val key = BrowserUrlHelper.extractMediaIdentityKey(targetUrl); val activeUrl = ActiveStreamHolder.streamUrl
+        val isDifferentFromActive = !activeUrl.isNullOrBlank() && key.isNotBlank() && key != BrowserUrlHelper.extractMediaIdentityKey(activeUrl)
+        val isDifferentStream = isDifferentFromActive || (!activeUrl.isNullOrBlank() && targetUrl != activeUrl)
         val existingIndex = detectedStreams.indexOfFirst { it == targetUrl || (key.isNotBlank() && BrowserUrlHelper.extractMediaIdentityKey(it) == key && (it.contains(".urlset") == targetUrl.contains(".urlset"))) }
         if (existingIndex >= 0) {
-            val existingUrl = detectedStreams[existingIndex]
-            val existingIsSub = com.omnicast.core.domain.usecases.HlsMasterResolver.isLikelySubVariantUrl(existingUrl)
+            val existingUrl = detectedStreams[existingIndex]; val existingIsSub = com.omnicast.core.domain.usecases.HlsMasterResolver.isLikelySubVariantUrl(existingUrl)
             val existingIsM = !existingIsSub && (com.omnicast.core.domain.usecases.HlsMasterResolver.isMasterPlaylistUrl(existingUrl) || existingUrl.contains(".mpd", true))
             if (existingIsM && !isM) return
             detectedStreams.removeAt(existingIndex); streamHeaders.remove(existingUrl); streamLabels.remove(existingUrl)
         }
         val nonM = detectedStreams.indexOfFirst { !com.omnicast.core.domain.usecases.HlsMasterResolver.isMasterPlaylistUrl(it) && !it.contains(".mpd", true) }
-        if (isM) detectedStreams.add(0, targetUrl) else if (nonM >= 0) detectedStreams.add(nonM, targetUrl) else detectedStreams.add(targetUrl)
+        if (isDifferentFromActive || isM) detectedStreams.add(0, targetUrl) else if (nonM >= 0) detectedStreams.add(nonM, targetUrl) else detectedStreams.add(targetUrl)
         if (hdrs.isNotEmpty()) streamHeaders[targetUrl] = hdrs; if (!label.isNullOrBlank()) streamLabels[targetUrl] = label
         val primaryUrl = detectedStreams.firstOrNull { com.omnicast.core.domain.usecases.HlsMasterResolver.isMasterPlaylistUrl(it) } ?: detectedStreams.firstOrNull { isRealMedia(it) } ?: targetUrl
         val cleanT = if (pageTitle.isNotBlank() && pageTitle != "Cargando..." && pageTitle != "Transmisión") pageTitle else "Video Web"
@@ -130,8 +125,9 @@ fun InAppBrowserScreen(
         com.omnicast.sender.log.SenderLogger.i("STREAM_CAPTURE_SESSION", "🎬 Stream: $cleanT", mapOf("page_url" to currentUrl, "stream_url" to targetUrl, "is_master" to isM, "count" to detectedStreams.size))
         if (isPrimary) userDismissedSheetForUrl = ""
         val isNewPage = currentUrl.isNotBlank() && currentUrl != castingPageUrl
-        if (!showOptionsSheet && (!isCasting || isPrimary || isNewPage) && userDismissedSheetForUrl != currentUrl && autoOpenJob?.isActive != true) {
-            autoOpenJob = scope.launch { kotlinx.coroutines.delay(250); if (!showOptionsSheet && (!isCasting || isPrimary || isNewPage) && detectedStreams.any { isRealMedia(it) }) openOptionsSheet() }
+        val canAutoOpen = !isCasting || isPrimary || isNewPage || isDifferentStream
+        if (!showOptionsSheet && canAutoOpen && userDismissedSheetForUrl != currentUrl && autoOpenJob?.isActive != true) {
+            autoOpenJob = scope.launch { kotlinx.coroutines.delay(250); if (!showOptionsSheet && canAutoOpen && detectedStreams.any { isRealMedia(it) }) openOptionsSheet() }
         }
     }
 

@@ -200,13 +200,12 @@ class SenderMainActivity : ComponentActivity() {
                             com.omnicast.sender.service.CastMediaNotificationService.start(this@SenderMainActivity)
                         }
                     } else if (msg.state in listOf("STOPPED", "ENDED", "IDLE")) {
-                        if ((System.currentTimeMillis() - lastHandoffTime) >= 3500L) {
-                            ActiveStreamHolder.stopCasting(notifyTv = false); com.omnicast.sender.service.CastMediaNotificationService.stop(this@SenderMainActivity); checkInactivityAutoExit()
-                        }
+                        if (msg.state == "ENDED") ActiveStreamHolder.streamUrl?.let { sUrl -> com.omnicast.sender.stream.StreamResumeManager.clearPosition(this@SenderMainActivity, sUrl) }
+                        if ((System.currentTimeMillis() - lastHandoffTime) >= 3500L) { ActiveStreamHolder.stopCasting(notifyTv = false); com.omnicast.sender.service.CastMediaNotificationService.stop(this@SenderMainActivity); checkInactivityAutoExit() }
                     }
                     ActiveStreamHolder.updatePlayback(msg.state == "PLAYING", msg.positionMs, msg.durationMs)
                     if (msg.positionMs > 5000L) {
-                        com.omnicast.sender.stream.StreamResumeManager.savePosition(this@SenderMainActivity, ActiveStreamHolder.streamUrl, msg.positionMs)
+                        com.omnicast.sender.stream.StreamResumeManager.savePosition(this@SenderMainActivity, ActiveStreamHolder.streamUrl, msg.positionMs, msg.durationMs)
                         ActiveStreamHolder.streamUrl?.let { sUrl ->
                             com.omnicast.sender.history.PlayHistoryManager(this@SenderMainActivity).updateProgress(sUrl, msg.positionMs, msg.durationMs)
                             playlistManager.updateProgress(sUrl, msg.positionMs, msg.durationMs)
@@ -268,13 +267,10 @@ class SenderMainActivity : ComponentActivity() {
     }
 
     fun sendPlayControl(action: String, positionMs: Long = 0L, volume: Float = 1.0f, param: String? = null) {
-        val msg = SignalingMessage.PlayControl(action, positionMs, volume, param); sendSignalingMessage(msg)
-        com.omnicast.sender.discovery.MultiReceiverManager.broadcastToSecondary(msg, nsdScanner.discoveredDevices.value)
+        val msg = SignalingMessage.PlayControl(action, positionMs, volume, param); sendSignalingMessage(msg); com.omnicast.sender.discovery.MultiReceiverManager.broadcastToSecondary(msg, nsdScanner.discoveredDevices.value)
     }
     fun sendImageToTv(url: String, title: String? = null) {
-        val msg = SignalingMessage.ShowImage(imageUrl = url, title = title); sendSignalingMessage(msg)
-        com.omnicast.sender.discovery.MultiReceiverManager.broadcastToSecondary(msg, nsdScanner.discoveredDevices.value)
-        Toast.makeText(this, "Foto proyectada en la TV Box", Toast.LENGTH_SHORT).show()
+        val msg = SignalingMessage.ShowImage(imageUrl = url, title = title); sendSignalingMessage(msg); com.omnicast.sender.discovery.MultiReceiverManager.broadcastToSecondary(msg, nsdScanner.discoveredDevices.value); Toast.makeText(this, "Foto proyectada en la TV Box", Toast.LENGTH_SHORT).show()
     }
 
     private fun sendSignalingMessage(msg: SignalingMessage) {

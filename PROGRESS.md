@@ -3,8 +3,8 @@
 > **Versión Actual en Producción:** `v3.7.0` (`versionCodeSender: 368` | `versionCodeReceiver: 351`)  
 > **Última Sincronización Agéntica:** `2026-11-12`  
 > **Estado del Oráculo de Pruebas:** 🟢 **167 Tests Pasando (35 en :core:domain, 12 en :core:protocol, 25 en :app-sender, 23 en :app-receiver) — 100% — 0 fallos**  
-> **Próxima Actividad en Cola:** 🎉 **FASE 8 COMPLETADA AL 100% (Hitos 8.1 [CH-11] al 8.10 [CH-20] — Poda de Código Inútil e Interceptación Desacoplada Anti-Embed a Nivel de Red)**  
-> **Progreso Global:** 🏁 **Hito 8.10 [CH-20] Poda de Código Inútil y Vía 1: Interceptación Desacoplada Anti-Embed a Nivel de Red completado al 100%**
+> **Próxima Actividad en Cola:** 🎉 **FASE 8 COMPLETADA AL 100% (Hitos 8.1 [CH-11] al 8.11 [CH-21] — Reinicio Automático de Videos Concluidos y Diferenciación de Capítulos SPA)**  
+> **Progreso Global:** 🏁 **Hito 8.11 [CH-21] Reinicio Automático de Videos Concluidos y Diferenciación de Capítulos SPA completado al 100%**
 
 ---
 
@@ -12,6 +12,7 @@
 
 | Hito / Fase | Nombre del Hito / Fase | Estado | Progreso |
 | :--- | :--- | :---: | :---: |
+| **Hito 8.11 [CH-21]** | Reinicio Automático de Videos Concluidos y Diferenciación de Capítulos SPA | `[x]` Completado | **100%** |
 | **Hito 8.10 [CH-20]** | Poda de Código Inútil y Vía 1: Interceptación Desacoplada Anti-Embed a Nivel de Red | `[x]` Completado | **100%** |
 | **Hito 8.9 [CH-19]** | Defensa Universal de Iframes en Document_Start y Normalización de Orígenes | `[x]` Completado | **100%** |
 | **Hito 8.8 [CH-18]** | Erradicación Universal de Huellas In-App y Autonomía Pura de Scripts | `[x]` Completado | **100%** |
@@ -55,24 +56,33 @@
 ### 🟡 Archivos en Zona de Vigilancia (289 – 300 líneas)
 | Archivo | Líneas Actuales | Estado |
 | :--- | :---: | :--- |
-| `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/InAppBrowserScreen.kt` | **300** | 🛡️ Sellado (Zona Sagrada) |
-| `app-sender/src/main/kotlin/com/omnicast/sender/ui/SenderMainActivity.kt` | **299** | ⚠️ Al límite |
 | `app-receiver/src/main/kotlin/com/omnicast/receiver/ui/components/TvStandbyCleanScreen.kt` | **299** | 🛡️ Sellado |
 | `app-sender/src/main/kotlin/com/omnicast/sender/ui/components/SideMediaDrawerSections.kt` | **298** | ⚠️ Al límite |
 | `app-receiver/src/main/kotlin/com/omnicast/receiver/ui/components/TvCleanComponents.kt` | **298** | ⚠️ Al límite |
 | `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/BrowserTopBar.kt` | **297** | ⚠️ Al límite |
 | `app-sender/src/main/kotlin/com/omnicast/sender/service/CastMediaNotificationService.kt` | **297** | ⚠️ Al límite |
+| `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/InAppBrowserScreen.kt` | **296** | 🛡️ Sellado (Zona Sagrada) |
 | `app-receiver/src/main/kotlin/com/omnicast/receiver/ui/TvReceiverActivity.kt` | **296** | ⚠️ Al límite |
+| `app-sender/src/main/kotlin/com/omnicast/sender/ui/SenderMainActivity.kt` | **295** | ⚠️ Al límite |
 | `app-sender/src/main/kotlin/com/omnicast/sender/ui/components/MainActionCards.kt` | **295** | ⚠️ Al límite |
 | `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/BrowserWebView.kt` | **292** | 🛡️ Sellado (Zona Sagrada) |
 | `app-sender/src/main/kotlin/com/omnicast/sender/ui/components/RemoteExpandedControls.kt` | **291** | ⚠️ Al límite |
 | `app-receiver/src/main/kotlin/com/omnicast/receiver/directstream/TvStorageSafetyManager.kt` | **290** | ⚠️ Al límite |
-| `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/BrowserUrlHelper.kt` | **290** | ⚠️ Al límite |
+| `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/BrowserUrlHelper.kt` | **289** | ⚠️ Al límite |
 | `app-sender/src/main/kotlin/com/omnicast/sender/ui/SenderMainScreen.kt` | **289** | ⚠️ Al límite |
 
 ---
 
 ## 4. Historial de Sesiones Multi-Agente
+
+### `[2026-11-12]` — Hito 8.11 [CH-21] — Reinicio Automático de Videos Concluidos y Diferenciación de Capítulos SPA
+- **Acción:**
+  - **`StreamResumeManager.kt` (60L) y `SenderMainActivity.kt` (295L):** Erradicación del reinicio forzado en los créditos finales ("Reanudando en el minuto 58") mediante purga automática de marcas temporales (`clearPosition`) cuando la reproducción alcanza >= 95% de duración, los últimos 45 segundos o el estado `ENDED`, asegurando que cualquier video o episodio completado recomience siempre en `00:00`.
+  - **`BrowserUrlHelper.kt` (289L):** Incorporación del token de parámetro `v=([a-zA-Z0-9_-]+)` en `extractMediaIdentityKey` para dotar a los capítulos de servidores basados en `p.php?v=` (como SoloLatino) de identidades multimedia únicas e independientes, impidiendo colisiones o sobreescritura de streams entre episodios.
+  - **`InAppBrowserScreen.kt` (296L):** Priorización inmediata en el índice 0 y activación del auto-apertura del selector de casteo ante la detección de un nuevo stream con identidad distinta al actualmente proyectado en la TV, permitiendo conmutar episodios en portales SPA con un solo toque y 0% código en duro.
+- **Verificación:** 167 tests pasando (100% — 0 fallos), 0 archivos Kotlin > 300 líneas (`StreamResumeManager.kt`: 60L, `BrowserUrlHelper.kt`: 289L, `SenderMainActivity.kt`: 295L, `InAppBrowserScreen.kt`: 296L).
+- **Salud del Oráculo:** 🟢 167 tests passing (100% — 0 fallos).
+- **Siguiente paso:** 🎉 **FASE 8 COMPLETADA AL 100% (Hitos 8.1 al 8.11)**.
 
 ### `[2026-11-12]` — Hito 8.10 [CH-20] — Poda de Código Inútil y Vía 1: Interceptación Desacoplada Anti-Embed a Nivel de Red
 - **Acción:**

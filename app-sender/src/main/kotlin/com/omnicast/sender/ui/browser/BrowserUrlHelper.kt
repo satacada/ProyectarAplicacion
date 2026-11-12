@@ -142,6 +142,14 @@ object BrowserUrlHelper {
             if (!headers.containsKey("X-With-Credentials")) {
                 headers["X-With-Credentials"] = com.omnicast.sender.stream.StreamProfileDatabase.requiresCredentials(streamUrl, headers).toString()
             }
+            val streamHost = try { android.net.Uri.parse(streamUrl).host?.lowercase() } catch (_: Throwable) { null }
+            val refHost = try { headers["Referer"]?.let { android.net.Uri.parse(it).host?.lowercase() } } catch (_: Throwable) { null }
+            val target = headers["X-Target-Player"]?.uppercase()
+            if (!streamHost.isNullOrBlank() && !refHost.isNullOrBlank() && streamHost != refHost) {
+                if (target == "WEBVIEW" || target == "CHROMIUM_PURE" || target == "CHROMIUM_ANTI_CORS") {
+                    headers["X-Base-Url-Policy"] = "STREAM_HOST"
+                }
+            }
         } catch (_: Throwable) {}
         return headers
     }

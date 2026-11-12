@@ -48,8 +48,7 @@ object TvReceiverHelper {
         if (target == "EXOPLAYER") return false
 
         val lowerUrl = url.lowercase()
-        val isDash = lowerUrl.contains(".mpd") || lowerUrl.contains("format=dash") ||
-                     ((lowerUrl.contains("okcdn.ru") || lowerUrl.contains("mycdn.me")) && (lowerUrl.contains("ct=6") || !lowerUrl.contains(".m3u8")))
+        val isDash = lowerUrl.contains(".mpd") || lowerUrl.contains("format=dash")
         if (isDash) return false
 
         val seed = com.omnicast.core.domain.usecases.StreamManifestProbe.lookupSeedProfile(url)
@@ -89,6 +88,9 @@ object TvReceiverHelper {
             val uri = android.net.Uri.parse(streamUrl)
             "${uri.scheme}://${uri.host}/"
         } catch (_: Throwable) { null }
+        if (headers["X-Base-Url-Policy"] == "STREAM_HOST" || headers["X-Target-Player"] == "CHROMIUM_ANTI_CORS") {
+            if (streamHostOrigin != null) return streamHostOrigin
+        }
         return headers["Referer"]?.takeIf { it.isNotBlank() } ?: streamHostOrigin ?: "https://omnicast.tv"
     }
 

@@ -3,8 +3,8 @@
 > **Versión Actual en Producción:** `v3.7.0` (`versionCodeSender: 368` | `versionCodeReceiver: 351`)  
 > **Última Sincronización Agéntica:** `2026-11-12`  
 > **Estado del Oráculo de Pruebas:** 🟢 **167 Tests Pasando (35 en :core:domain, 12 en :core:protocol, 25 en :app-sender, 23 en :app-receiver) — 100% — 0 fallos**  
-> **Próxima Actividad en Cola:** 🎉 **FASE 8 COMPLETADA AL 100% (Hitos 8.1 [CH-11] al 8.14 [CH-24] — Soporte Universal de Cifrado Base64 en Pasarelas de Redirección y Telemetría Enriquecida)**  
-> **Progreso Global:** 🏁 **Hito 8.14 [CH-24] Soporte Universal de Cifrado Base64 en Pasarelas de Redirección y Telemetría Enriquecida completado al 100%**
+> **Próxima Actividad en Cola:** 🎉 **FASE 8 COMPLETADA AL 100% (Hitos 8.1 [CH-11] al 8.15 [CH-25] — Desintoxicación Arquitectónica del Receiver y Blindaje Dinámico Anti-CORS)**  
+> **Progreso Global:** 🏁 **Hito 8.15 [CH-25] Desintoxicación Arquitectónica del Receiver y Blindaje Dinámico Anti-CORS completado al 100%**
 
 ---
 
@@ -12,6 +12,7 @@
 
 | Hito / Fase | Nombre del Hito / Fase | Estado | Progreso |
 | :--- | :--- | :---: | :---: |
+| **Hito 8.15 [CH-25]** | Desintoxicación Arquitectónica del Receiver y Blindaje Dinámico Anti-CORS | `[x]` Completado | **100%** |
 | **Hito 8.14 [CH-24]** | Soporte Universal de Cifrado Base64 en Pasarelas de Redirección y Telemetría Enriquecida | `[x]` Completado | **100%** |
 | **Hito 8.13 [CH-23]** | Desempaquetador Universal de Pasarelas de Redirección y Evasión de Trackers | `[x]` Completado | **100%** |
 | **Hito 8.12 [CH-22]** | Algoritmo Heurístico Universal de Afinidad de Marca y Navegación por Gesto Legítimo | `[x]` Completado | **100%** |
@@ -53,7 +54,7 @@
 ## 3. Monitor de Límite de 300 Líneas (`AGENTS.md` Regla 3)
 
 ### 🔴 Archivos por encima de 300 líneas
-> *(Cero archivos Kotlin por encima de 300 líneas tras saneamiento — WvcShieldSecurityEngine.kt preservado en 276L)*
+> *(Cero archivos Kotlin por encima de 300 líneas tras saneamiento — TvWebResourceInterceptor.kt: 139L, TvReceiverHelper.kt: 247L, InAppBrowserScreen.kt: 296L, BrowserUrlHelper.kt: 297L)*
 - `app-sender/src/main/assets/sniffer/universal_sniffer.js`: **383 líneas** *(Asset JS DOM sellado e inmutable)*
 
 ### 🟡 Archivos en Zona de Vigilancia (289 – 300 líneas)
@@ -63,6 +64,7 @@
 | `app-sender/src/main/kotlin/com/omnicast/sender/ui/components/SideMediaDrawerSections.kt` | **298** | ⚠️ Al límite |
 | `app-receiver/src/main/kotlin/com/omnicast/receiver/ui/components/TvCleanComponents.kt` | **298** | ⚠️ Al límite |
 | `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/BrowserTopBar.kt` | **297** | ⚠️ Al límite |
+| `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/BrowserUrlHelper.kt` | **297** | ⚠️ Al límite |
 | `app-sender/src/main/kotlin/com/omnicast/sender/service/CastMediaNotificationService.kt` | **297** | ⚠️ Al límite |
 | `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/InAppBrowserScreen.kt` | **296** | 🛡️ Sellado (Zona Sagrada) |
 | `app-receiver/src/main/kotlin/com/omnicast/receiver/ui/TvReceiverActivity.kt` | **296** | ⚠️ Al límite |
@@ -71,12 +73,20 @@
 | `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/BrowserWebView.kt` | **295** | 🛡️ Sellado (Zona Sagrada) |
 | `app-sender/src/main/kotlin/com/omnicast/sender/ui/components/RemoteExpandedControls.kt` | **291** | ⚠️ Al límite |
 | `app-receiver/src/main/kotlin/com/omnicast/receiver/directstream/TvStorageSafetyManager.kt` | **290** | ⚠️ Al límite |
-| `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/BrowserUrlHelper.kt` | **289** | ⚠️ Al límite |
 | `app-sender/src/main/kotlin/com/omnicast/sender/ui/SenderMainScreen.kt` | **289** | ⚠️ Al límite |
 
 ---
 
 ## 4. Historial de Sesiones Multi-Agente
+
+### `[2026-11-12]` — Hito 8.15 [CH-25] — Desintoxicación Arquitectónica del Receiver (Caja Tonta Pura) y Blindaje Dinámico Anti-CORS en Emisor
+- **Acción:**
+  - **`TvWebResourceInterceptor.kt` (139L) & `TvReceiverHelper.kt` (247L):** Erradicación total de listas negras internas (`nativeChromiumHosts`) y dominios hardcodeados (`dropcdn.io`, `okcdn.ru`, `mycdn.me`) en `:app-receiver`, devolviendo a la TV Box su rol sagrado de "caja tonta" pasiva y agnóstica (ADR-016 / HU-018) que inyecta incondicionalmente `Access-Control-Allow-Origin: *` sin vetar servidores. Delegación en la directiva `X-Base-Url-Policy: STREAM_HOST` para resolver el reproductor en Same-Origin absoluto sin colisión CORS.
+  - **`BrowserUrlHelper.kt` (297L):** Inyección dinámica de la directiva `X-Base-Url-Policy: STREAM_HOST` en `:app-sender` cuando la CDN opera en origen cruzado frente al Referer, permitiendo a la TV resolver el reproductor sin bloqueos de red.
+  - **`InAppBrowserScreen.kt` (296L):** Blindaje estricto impidiendo que URLs HTML de páginas web se despachen a la TV Box, con 0% código en duro y manteniendo todos los archivos <= 300 líneas.
+- **Verificación:** 167 tests pasando (100% — 0 fallos), 0 archivos Kotlin > 300 líneas (`TvWebResourceInterceptor.kt`: 139L, `TvReceiverHelper.kt`: 247L, `InAppBrowserScreen.kt`: 296L, `BrowserUrlHelper.kt`: 297L).
+- **Salud del Oráculo:** 🟢 167 tests passing (100% — 0 fallos).
+- **Siguiente paso:** 🎉 **FASE 8 COMPLETADA AL 100% (Hitos 8.1 al 8.15)**.
 
 ### `[2026-11-12]` — Hito 8.14 [CH-24] — Soporte Universal de Cifrado Base64 en Pasarelas de Redirección y Telemetría Enriquecida
 - **Acción:**

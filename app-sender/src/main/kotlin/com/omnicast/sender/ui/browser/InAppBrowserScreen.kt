@@ -56,7 +56,7 @@ fun InAppBrowserScreen(
 
     fun toggleBookmark() {
         if (isMovieSaved) { deleteMovieFromSaved(); return }
-        val primary = (ActiveStreamHolder.streamUrl?.takeIf { it.isNotBlank() } ?: detectedStreams.firstOrNull { isRealMedia(it) } ?: "").ifBlank { if (currentUrl.startsWith("http")) currentUrl else "" }
+        val primary = (ActiveStreamHolder.streamUrl?.takeIf { it.isNotBlank() } ?: detectedStreams.firstOrNull { isRealMedia(it) } ?: "").ifBlank { if (currentUrl.startsWith("http") && BrowserUrlHelper.isRealMedia(currentUrl)) currentUrl else "" }
         if (primary.isBlank()) { Toast.makeText(context, "No hay video para guardar en esta página", Toast.LENGTH_SHORT).show(); return }
         val t = if (castTitle.isNotBlank()) castTitle else if (pageTitle.isNotBlank() && pageTitle != "Cargando...") pageTitle else "Película / Video"
         val item = HistoryItem(primary, t, currentUrl, streamHeaders[primary] ?: emptyMap(), requiresProxy = ActiveStreamHolder.isProxied.value)

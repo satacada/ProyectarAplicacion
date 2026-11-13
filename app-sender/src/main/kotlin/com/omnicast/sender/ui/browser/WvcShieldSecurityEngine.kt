@@ -86,7 +86,7 @@ object WvcShieldSecurityEngine {
             try {
                 if (window.WebSocket) {
                     var _realWS = window.WebSocket;
-                    window.WebSocket = function(url, protocols) {
+                    var _wsProxy = function(url, protocols) {
                         var u = (url || '').toLowerCase();
                         if (u.indexOf('adsterra') !== -1 || u.indexOf('propeller') !== -1 ||
                             u.indexOf('popads') !== -1 || u.indexOf('trafficjunky') !== -1 ||
@@ -95,8 +95,11 @@ object WvcShieldSecurityEngine {
                             console.log('🛡️ [WVC Shield] WebSocket publicitario neutralizado:', url);
                             return { send: function() {}, close: function() {}, addEventListener: function() {}, removeEventListener: function() {} };
                         }
-                        return new _realWS(url, protocols);
+                        return (protocols !== undefined) ? new _realWS(url, protocols) : new _realWS(url);
                     };
+                    _wsProxy.prototype = _realWS.prototype;
+                    _wsProxy.CONNECTING = 0; _wsProxy.OPEN = 1; _wsProxy.CLOSING = 2; _wsProxy.CLOSED = 3;
+                    window.WebSocket = _wsProxy;
                 }
             } catch(_) {}
 
@@ -148,9 +151,8 @@ object WvcShieldSecurityEngine {
                 }
             } catch(_) {}
 
-            // 5. Camuflaje Stealth Anti-Detección de WebView (Brave/Chrome Nativo)
+            // 5. Camuflaje Stealth Anti-Detección de WebView
             try {
-                if (!window.chrome) { window.chrome = { app: { isInstalled: false }, runtime: {} }; }
                 if (navigator.webdriver === true) {
                     try { Object.defineProperty(navigator, 'webdriver', { get: function() { return false; }, configurable: true }); } catch(_) {}
                 }

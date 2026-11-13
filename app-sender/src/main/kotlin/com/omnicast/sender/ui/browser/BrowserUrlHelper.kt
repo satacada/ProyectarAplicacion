@@ -129,7 +129,7 @@ object BrowserUrlHelper {
             if (learned != null) {
                 learned.headers.forEach { (k, v) -> if (headers[k].isNullOrBlank()) headers[k] = v }
             }
-            if (!headers.containsKey("Referer") && currentUrl.isNotBlank()) {
+            if (!headers.containsKey("Referer") && !headers.containsKey("Origin") && currentUrl.isNotBlank()) {
                 headers["Referer"] = currentUrl
             }
             val ref = headers["Referer"]
@@ -148,7 +148,7 @@ object BrowserUrlHelper {
             if (!headers.containsKey("X-Single-Use-Token")) headers["X-Single-Use-Token"] = com.omnicast.sender.stream.StreamProfileDatabase.isSingleUseTokenHost(streamUrl, headers).toString()
             if (!headers.containsKey("X-With-Credentials")) headers["X-With-Credentials"] = com.omnicast.sender.stream.StreamProfileDatabase.requiresCredentials(streamUrl, headers).toString()
             val streamHost = try { android.net.Uri.parse(streamUrl).host?.lowercase() } catch (_: Throwable) { null }
-            val refHost = try { headers["Referer"]?.let { android.net.Uri.parse(it).host?.lowercase() } } catch (_: Throwable) { null }
+            val refHost = try { (headers["Referer"] ?: headers["Origin"])?.let { android.net.Uri.parse(it).host?.lowercase() } } catch (_: Throwable) { null }
             val target = headers["X-Target-Player"]?.uppercase()
             if (!streamHost.isNullOrBlank() && !refHost.isNullOrBlank() && streamHost != refHost) {
                 if (target == "WEBVIEW" || target == "CHROMIUM_PURE" || target == "CHROMIUM_ANTI_CORS") {

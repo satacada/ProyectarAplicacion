@@ -71,7 +71,7 @@ object StreamManifestProbe {
         }
         val isSingleUse = initialHeaders["X-Single-Use-Token"] == "true" ||
             (initialHeaders["X-Single-Use-Token"] != "false" && hasSignedSecurityToken(cleanUrl))
-        if (isSingleUse) {
+        if (isSingleUse && !isHealingAttempt) {
             val isLive = !cleanUrl.contains(".m3u8") || cleanUrl.contains("live", true)
             val isMaster = cleanUrl.contains("master", true) || cleanUrl.contains("playlist", true)
             return ProbeResult(isPlayable = true, resolvedUrl = cleanUrl, healedHeaders = initialHeaders, isLiveStream = isLive, isMasterPlaylist = isMaster, durationSeconds = 7200f)

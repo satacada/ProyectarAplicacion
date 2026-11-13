@@ -37,7 +37,8 @@ object AdBlocker {
         if (urlOrHost.isNullOrBlank()) return false
         val h = urlOrHost.lowercase()
         return h.contains("cloudflare") || h.contains("turnstile") ||
-               h.contains("challenges") || h.contains("hcaptcha") ||
+               h.contains("challenges") || h.contains("/cdn-cgi/challenge-platform") ||
+               h.contains("__cf_chl_") || h.contains("hcaptcha") ||
                h.contains("recaptcha") || h.contains("captcha") ||
                h.contains("geetest") || h.contains("arkose")
     }

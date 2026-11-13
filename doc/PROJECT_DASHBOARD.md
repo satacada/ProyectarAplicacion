@@ -1,7 +1,7 @@
 # 📊 PROJECT DASHBOARD — OmniCast Pro
 
-**Última actualización:** 2026-11-12 (Hito 8.18 [CH-28] Completado: Preservación de Origin y Propagación de Cabeceras CORS para CDNs Anti-Scrape)  
-**Versión de producción actual:** v3.7.0 (Sender: 368) / v3.7.0 (Receiver: 351)  
+**Última actualización:** 2026-11-12 (v3.7.26: Bypass Turnstile en `PlayerAntiEmbedNetworkInterceptor`, aislamiento en `onProgressChanged`, preservación `Origin-only` y `StreamManifestProbe` healing)  
+**Versión de producción actual:** v3.7.26 (Sender: 396) / v3.7.26 (Receiver: 377)  
 **Estándar de calidad:** AGENTS.md (Archivos <= 300 líneas, Clean Architecture, 100% Offline/Local, C++20 Zero-Allocation, Poda Obligatoria de Código Inútil ante Hipótesis Fallidas)
 
 ---

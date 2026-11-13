@@ -11,6 +11,10 @@ object PlayerAntiEmbedNetworkInterceptor {
     fun shouldIntercept(request: WebResourceRequest?, refererUrl: String?): WebResourceResponse? {
         if (request == null || request.isForMainFrame) return null
         val url = request.url?.toString() ?: return null
+        if (com.omnicast.sender.ui.browser.AdBlocker.isVerificationOrCaptcha(url) ||
+            (!refererUrl.isNullOrBlank() && com.omnicast.sender.ui.browser.AdBlocker.isVerificationOrCaptcha(refererUrl))) {
+            return null
+        }
         val dest = request.requestHeaders?.get("Sec-Fetch-Dest")?.lowercase()
         val accept = request.requestHeaders?.get("Accept")?.lowercase()
         val isSubframeDoc = dest == "iframe" || (accept != null && accept.contains("text/html"))

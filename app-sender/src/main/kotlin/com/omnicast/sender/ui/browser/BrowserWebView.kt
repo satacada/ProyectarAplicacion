@@ -195,7 +195,10 @@ fun BrowserWebView(
                         return try {
                             if (r?.isForMainFrame == true) return super.shouldInterceptRequest(v, r)
                             val reqUrl = r?.url?.toString() ?: return super.shouldInterceptRequest(v, r)
-                            val docUrl = r.requestHeaders?.get("Referer") ?: activeLiveUrl.get().ifBlank { currentUrl }
+                            val reqReferer = r.requestHeaders?.entries?.firstOrNull { it.key.equals("Referer", true) }?.value
+                            val reqOrigin = r.requestHeaders?.entries?.firstOrNull { it.key.equals("Origin", true) }?.value
+                            val docUrl = reqReferer ?: reqOrigin ?: activeLiveUrl.get().ifBlank { currentUrl }
+                            val reqUa = r.requestHeaders?.entries?.firstOrNull { it.key.equals("User-Agent", true) }?.value?.takeIf { it.isNotBlank() } ?: UA_MOBILE
                             if (isAdBlockEnabled && (AdBlocker.isAd(reqUrl) || AdBlocker.isVideoAd(reqUrl) || NativeAdBlockEngine.shouldBlock(reqUrl, docUrl))) {
                                 return AdBlocker.createEmptyResponse()
                             }
@@ -213,12 +216,12 @@ fun BrowserWebView(
                             val candidate = com.omnicast.core.domain.models.StreamCandidate(
                                 url = reqUrl, pageUrl = docUrl,
                                 headers = r.requestHeaders ?: emptyMap(),
-                                userAgent = UA_MOBILE, pageTitle = currentKnownTitle
+                                userAgent = reqUa, pageTitle = currentKnownTitle
                             )
                             val detectedStream = com.omnicast.sender.ui.browser.extractors.StreamExtractorRegistry.useCase.execute(candidate)
                             if (detectedStream != null) {
                                 android.util.Log.i("OMNICAST_NET", "🎯 ¡Stream Detectado!: ${detectedStream.url}")
-                                val hdrs = BrowserUrlHelper.buildSafeHeaders(detectedStream.url, docUrl, UA_MOBILE, detectedStream.headers)
+                                val hdrs = BrowserUrlHelper.buildSafeHeaders(detectedStream.url, docUrl, reqUa, detectedStream.headers)
                                 try { java.net.URI(docUrl).host?.let { MediaPlayerSyncManager.learnAndSavePlayer(it, ctx) } } catch (_: Throwable) {}
                                 post {
                                     if (!docUrl.contains("youtube.com") && !docUrl.contains("youtu.be")) {
@@ -242,8 +245,12 @@ fun BrowserWebView(
                     override fun onProgressChanged(v: WebView?, p: Int) {
                         onProgress(p)
                         if (p >= 80) swipeRefresh.isRefreshing = false
-                        if (isAdBlockEnabled && (p == 30 || p == 60 || p == 100)) v?.evaluateJavascript(AdBlocker.getAdHidingScript(), null)
-                        if (p == 25 || p == 50 || p == 100) v?.evaluateJavascript(WvcDomSniffer.getInjectionScript(ctx), null)
+                        val u = v?.url; val t = v?.title ?: ""
+                        val isChallenge = AdBlocker.isVerificationOrCaptcha(u) || u?.contains("__cf_chl_", true) == true || t.contains("Just a moment", true) || t.contains("Un momento", true)
+                        if (!isChallenge) {
+                            if (isAdBlockEnabled && (p == 30 || p == 60 || p == 100)) v?.evaluateJavascript(AdBlocker.getAdHidingScript(), null)
+                            if (p == 25 || p == 50 || p == 100) v?.evaluateJavascript(WvcDomSniffer.getInjectionScript(ctx), null)
+                        }
                     }
 
                     override fun onReceivedTitle(v: WebView?, title: String?) {
@@ -262,7 +269,7 @@ fun BrowserWebView(
                             post { sniffedList.forEach { onSniffedVideo(it) } }
                             return true
                         }
-                        if (com.omnicast.sender.ui.browser.sentinel.WebPlayerDiagnosticSentinel.handleDiagnosticConsoleMessage(msg, currentUrl)) return true
+                        if (com.omnicast.sender.ui.browser.sentinel.WebPlayerDiagnosticSentinel.handleDiagnosticConsoleMessage(msg, activeLiveUrl.get().ifBlank { currentUrl })) return true
                         return super.onConsoleMessage(cm)
                     }
                 }

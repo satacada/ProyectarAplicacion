@@ -37,12 +37,13 @@ object StreamIntelligenceEngine {
             }
         }
 
-        // Preservar siempre el Referer real detectado de la petición. Solo usar sourceFrameOrPageUrl si no hay Referer o si sourceFrame es un iframe embed explícito
+        // Preservar Referer o Origin reales de la petición. Solo usar sourceFrameOrPageUrl si faltan ambos o si sourceFrame es un embed explícito
         val curRef = result["Referer"]
+        val hasOrigin = !result["Origin"].isNullOrBlank()
         if (sourceFrameOrPageUrl.startsWith("http")) {
             val isSourceEmbed = sourceFrameOrPageUrl.contains("/e/") || sourceFrameOrPageUrl.contains("embed")
             val isCurEmbed = curRef?.let { it.contains("/e/") || it.contains("embed") } ?: false
-            if (curRef.isNullOrBlank() || (isSourceEmbed && !isCurEmbed)) {
+            if ((curRef.isNullOrBlank() && !hasOrigin) || (isSourceEmbed && !isCurEmbed)) {
                 result["Referer"] = sourceFrameOrPageUrl
             }
         }

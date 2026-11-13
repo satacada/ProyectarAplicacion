@@ -93,6 +93,9 @@ fun BrowserWebView(
                 settings.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW; settings.mediaPlaybackRequiresUserGesture = false
                 settings.setSupportMultipleWindows(true); settings.javaScriptCanOpenWindowsAutomatically = false
                 BrowserUrlHelper.applyCanonicalUserAgent(settings, ctx)
+                if (androidx.webkit.WebViewFeature.isFeatureSupported(androidx.webkit.WebViewFeature.REQUESTED_WITH_HEADER_ALLOW_LIST)) {
+                    try { androidx.webkit.WebSettingsCompat.setRequestedWithHeaderOriginAllowList(settings, emptySet()) } catch (_: Throwable) {}
+                }
                 WvcShieldSecurityEngine.installDocumentStartScript(this)
 
                 webViewClient = object : WebViewClient() {
@@ -107,11 +110,12 @@ fun BrowserWebView(
                         CookieManager.getInstance().flush()
                         u?.takeIf { !it.startsWith("about:") }?.let { activeLiveUrl.set(it) }
                         u?.let { if (!it.startsWith("about:") && !it.contains("favicon")) onPageStarted(it) }
-                        if (isAdBlockEnabled) {
+                        val isChallenge = AdBlocker.isVerificationOrCaptcha(u) || u?.contains("__cf_chl_", true) == true
+                        if (isAdBlockEnabled && !isChallenge) {
                             v?.evaluateJavascript(AdBlocker.getAdHidingScript(), null)
                             if (WvcShieldSecurityEngine.isEnabled) v?.evaluateJavascript(WvcShieldSecurityEngine.getProtectionScript(), null)
                         }
-                        v?.evaluateJavascript(inputViewportScript, null)
+                        if (!isChallenge) v?.evaluateJavascript(inputViewportScript, null)
                     }
 
                     override fun onPageFinished(v: WebView?, u: String?) {
@@ -121,12 +125,15 @@ fun BrowserWebView(
                         val title = v?.title ?: "Transmisión"
                         currentKnownTitle = title
                         onPageFinished(title, u)
-                        if (isAdBlockEnabled) {
+                        val isChallenge = AdBlocker.isVerificationOrCaptcha(u) || u?.contains("__cf_chl_", true) == true || title.contains("Just a moment", true) || title.contains("Un momento", true)
+                        if (isAdBlockEnabled && !isChallenge) {
                             v?.evaluateJavascript(AdBlocker.getAdHidingScript(), null)
                             if (WvcShieldSecurityEngine.isEnabled) v?.evaluateJavascript(WvcShieldSecurityEngine.getProtectionScript(), null)
                         }
-                        v?.evaluateJavascript(inputViewportScript, null)
-                        v?.evaluateJavascript(WvcDomSniffer.getInjectionScript(ctx), null)
+                        if (!isChallenge) {
+                            v?.evaluateJavascript(inputViewportScript, null)
+                            v?.evaluateJavascript(WvcDomSniffer.getInjectionScript(ctx), null)
+                        }
                     }
 
                     override fun doUpdateVisitedHistory(v: WebView?, u: String?, isR: Boolean) {

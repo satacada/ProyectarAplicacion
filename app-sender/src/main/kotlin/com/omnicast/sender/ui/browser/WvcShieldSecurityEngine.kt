@@ -26,6 +26,16 @@ object WvcShieldSecurityEngine {
 
     private val SHIELD_SCRIPT: String = """
         (function() {
+            var _h = (window.location.hostname || '').toLowerCase();
+            var _u = (window.location.href || '').toLowerCase();
+            if (_h.indexOf('challenges.cloudflare.com') !== -1 ||
+                _h.indexOf('turnstile') !== -1 ||
+                _h.indexOf('hcaptcha.com') !== -1 ||
+                _h.indexOf('recaptcha.net') !== -1 ||
+                _u.indexOf('__cf_chl_') !== -1 ||
+                _u.indexOf('/cdn-cgi/challenge-platform') !== -1) {
+                return;
+            }
             if (window.__omniWvcShieldActive) return;
             window.__omniWvcShieldActive = true;
 
@@ -93,6 +103,7 @@ object WvcShieldSecurityEngine {
             // 4. Normalización Universal de AJAX Anti-WebView Wrapper (X-Requested-With en Same-Origin)
             try {
                 var _isSameOrigin = function(u) {
+                    if (u && typeof u === 'string' && u.toLowerCase().indexOf('/cdn-cgi/') !== -1) return false;
                     if (!u || typeof u !== 'string' || (u.indexOf('/') === 0 && u.indexOf('//') !== 0)) return true;
                     try { return new URL(u, window.location.href).origin === window.location.origin; } catch(_) { return false; }
                 };
@@ -140,7 +151,9 @@ object WvcShieldSecurityEngine {
             // 5. Camuflaje Stealth Anti-Detección de WebView (Brave/Chrome Nativo)
             try {
                 if (!window.chrome) { window.chrome = { app: { isInstalled: false }, runtime: {} }; }
-                try { Object.defineProperty(navigator, 'webdriver', { get: function() { return false; }, configurable: true }); } catch(_) {}
+                if (navigator.webdriver === true) {
+                    try { Object.defineProperty(navigator, 'webdriver', { get: function() { return false; }, configurable: true }); } catch(_) {}
+                }
             } catch(_) {}
         })();
     """.trimIndent()

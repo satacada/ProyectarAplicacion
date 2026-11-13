@@ -90,6 +90,7 @@ object TvMediaItemBuilder {
             if (v.isNotBlank()) {
                 when {
                     k.equals("referer", true) -> allowed["Referer"] = v
+                    k.equals("origin", true) -> allowed["Origin"] = v
                     k.equals("user-agent", true) -> allowed["User-Agent"] = v
                     k.equals("cookie", true) -> allowed["Cookie"] = v
                     k.equals("authorization", true) -> allowed["Authorization"] = v

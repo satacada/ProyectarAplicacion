@@ -2,11 +2,11 @@
 
 > **Versión Base de Rescate:** `v3.7.0` (`versionCodeSender: 368` | `versionCodeReceiver: 351`)  
 > **Política Operativa `v4.4`:** Micro-comandos `[auto]` y `[ver]` orquestados por el Planificador (`Argon`) invocando subagentes aislados (`flash` / `flash_lite`) | **Prohibido disparar Explorador Forense en tareas mapeadas** (todas las rutas están en este archivo y en [`doc/MAPA_DEL_SISTEMA_Y_FLUJO_DE_CODIGO.md`](file:///home/sataca/Descargas/APLICACIONES/proyectarAplicacion/doc/MAPA_DEL_SISTEMA_Y_FLUJO_DE_CODIGO.md)).  
-> **Estado Global:** 🎉 **FASE 8 COMPLETADA AL 100% (Hitos 8.1 [CH-11] al 8.17 [CH-27] — Discriminación Estricta de Páginas de Partidos y Firmas Reales HLS — 167 Tests Passing — 0 Archivos Kotlin > 300L)**
+> **Estado Global:** 🎉 **FASE 8 COMPLETADA AL 100% (Hitos 8.1 [CH-11] al 8.18 [CH-28] — Preservación de Origin y Propagación de Cabeceras CORS para CDNs Anti-Scrape — 167 Tests Passing — 0 Archivos Kotlin > 300L)**
 
 ---
 
-## 🎮 FASE 8 — Experiencia de Control Remoto D-Pad Avanzada y Resiliencia de Reproductores TV (`[x]` — 17 / 17 completados — 100%)
+## 🎮 FASE 8 — Experiencia de Control Remoto D-Pad Avanzada y Resiliencia de Reproductores TV (`[x]` — 18 / 18 completados — 100%)
 
 - `[x]` **Hito 8.1 [CH-11] — Foco D-Pad en Controles TV y Protección de Reproductores (`app-receiver/src/main/kotlin/com/omnicast/receiver/ui/TvRemoteKeyHandler.kt`, `app-receiver/src/main/kotlin/com/omnicast/receiver/ui/components/TvDirectControlsOverlay.kt`, `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/AdBlocker.kt`):**
   - **Objetivo:** Garantizar gestión reactiva de D-Pad en `TvRemoteKeyHandler.kt` (276L) mediante `hasActiveOverlay` y `notifyControlsVisibilityChanged`, cediendo flechas D-Pad y ENTER al OSD/Compose TV para permitir seleccionar botones interactivos (Ajustes, Subtítulos, etc.), preservando atajos de salto +/-10s en pantalla limpia. Inyección inmediata de `FocusRequester` en el botón central de `TvDirectControlsOverlay.kt` (256L) y blindaje de reproductores web legítimos (`isLegitimate`) en `AdBlocker.kt` (252L) para SoloLatino (`player.pelisserieshoy.com`) e inmunidad a clics de inicio de video.
@@ -139,6 +139,14 @@
     - `core/domain/src/main/kotlin/com/omnicast/core/domain/usecases/StreamCandidateValidator.kt` (202 líneas)
     - `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/extractors/UniversalHlsExtractorAdapter.kt` (63 líneas)
     - `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/BrowserWebView.kt` (273 líneas)
+  - **Agentes Involucrados:** `planner-architect` (`Argon`) ➔ `specialist-stream-extraction` (`flash`) ➔ `surgical-developer` (`flash`) ➔ `qa-oracle-tester` (`flash`) ➔ `sync-documenter` (`flash`) ➔ `git-ota-releaser` (`flash_lite`).
+
+- `[x]` **Hito 8.18 [CH-28] — Preservación de Origin y Propagación de Cabeceras CORS para CDNs Anti-Scrape (`app-receiver/src/main/kotlin/com/omnicast/receiver/directstream/TvMediaItemBuilder.kt`, `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/BrowserUrlHelper.kt`, `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/StreamIntelligenceEngine.kt`):**
+  - **Objetivo:** Erradicación del error `HTTP 403 Forbidden` en ExoPlayer y Chromium en la TV Box provocado por CDNs deportivas y de cine protegidas por Cloudflare o inspección TLS (como `indianservers.st` en StreamEast24). Inclusión de la cabecera `Origin` dentro de la lista blanca de cabeceras seguras en `TvMediaItemBuilder.kt` (107L) en `:app-receiver`, impidiendo que ExoPlayer descarte el origen del handshake. Enriquecimiento automático en `BrowserUrlHelper.kt` (291L) y `StreamIntelligenceEngine.kt` (63L) en `:app-sender` para derivar dinámicamente `Origin` a partir del `Referer` legítimo e inyectar cabeceras estándar de navegación cruzada (`Sec-Fetch-Mode: cors` y `Sec-Fetch-Site: cross-site`), garantizando que la TV Box despache solicitudes idénticas a un navegador web Chromium real sin tocar dominios en duro y manteniendo todos los archivos <= 300 líneas.
+  - **Archivos Objetivo Exactos:**
+    - `app-receiver/src/main/kotlin/com/omnicast/receiver/directstream/TvMediaItemBuilder.kt` (107 líneas)
+    - `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/BrowserUrlHelper.kt` (291 líneas)
+    - `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/StreamIntelligenceEngine.kt` (63 líneas)
   - **Agentes Involucrados:** `planner-architect` (`Argon`) ➔ `specialist-stream-extraction` (`flash`) ➔ `surgical-developer` (`flash`) ➔ `qa-oracle-tester` (`flash`) ➔ `sync-documenter` (`flash`) ➔ `git-ota-releaser` (`flash_lite`).
 
 ---

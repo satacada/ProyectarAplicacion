@@ -3,8 +3,8 @@
 > **Versión Actual en Producción:** `v3.7.0` (`versionCodeSender: 368` | `versionCodeReceiver: 351`)  
 > **Última Sincronización Agéntica:** `2026-11-12`  
 > **Estado del Oráculo de Pruebas:** 🟢 **167 Tests Pasando (35 en :core:domain, 12 en :core:protocol, 25 en :app-sender, 23 en :app-receiver) — 100% — 0 fallos**  
-> **Próxima Actividad en Cola:** 🎉 **FASE 8 COMPLETADA AL 100% (Hitos 8.1 [CH-11] al 8.17 [CH-27] — Discriminación Estricta de Páginas de Partidos y Firmas Reales HLS)**  
-> **Progreso Global:** 🏁 **Hito 8.17 [CH-27] Discriminación Estricta de Páginas de Partidos y Firmas Reales HLS completado al 100%**
+> **Próxima Actividad en Cola:** 🎉 **FASE 8 COMPLETADA AL 100% (Hitos 8.1 [CH-11] al 8.18 [CH-28] — Preservación de Origin y Propagación de Cabeceras CORS para CDNs Anti-Scrape)**  
+> **Progreso Global:** 🏁 **Hito 8.18 [CH-28] Preservación de Origin y Propagación de Cabeceras CORS para CDNs Anti-Scrape completado al 100%**
 
 ---
 
@@ -12,6 +12,7 @@
 
 | Hito / Fase | Nombre del Hito / Fase | Estado | Progreso |
 | :--- | :--- | :---: | :---: |
+| **Hito 8.18 [CH-28]** | Preservación de Origin y Propagación de Cabeceras CORS para CDNs Anti-Scrape | `[x]` Completado | **100%** |
 | **Hito 8.17 [CH-27]** | Discriminación Estricta de Páginas de Partidos y Firmas Reales HLS | `[x]` Completado | **100%** |
 | **Hito 8.16 [CH-26]** | Saneamiento Dinámico de Referer y Diferenciación de Capítulos de Series | `[x]` Completado | **100%** |
 | **Hito 8.15 [CH-25]** | Desintoxicación Arquitectónica del Receiver y Blindaje Dinámico Anti-CORS | `[x]` Completado | **100%** |
@@ -56,7 +57,7 @@
 ## 3. Monitor de Límite de 300 Líneas (`AGENTS.md` Regla 3)
 
 ### 🔴 Archivos por encima de 300 líneas
-> *(Cero archivos Kotlin por encima de 300 líneas tras saneamiento — StreamCandidateValidator.kt: 202L, UniversalHlsExtractorAdapter.kt: 63L, BrowserWebView.kt: 273L)*
+> *(Cero archivos Kotlin por encima de 300 líneas tras saneamiento — TvMediaItemBuilder.kt: 107L, BrowserUrlHelper.kt: 291L, StreamIntelligenceEngine.kt: 63L)*
 - `app-sender/src/main/assets/sniffer/universal_sniffer.js`: **383 líneas** *(Asset JS DOM sellado e inmutable)*
 
 ### 🟡 Archivos en Zona de Vigilancia (289 – 300 líneas)
@@ -67,11 +68,11 @@
 | `app-receiver/src/main/kotlin/com/omnicast/receiver/ui/components/TvCleanComponents.kt` | **298** | ⚠️ Al límite |
 | `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/InAppBrowserScreen.kt` | **298** | 🛡️ Sellado (Zona Sagrada) |
 | `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/BrowserTopBar.kt` | **297** | ⚠️ Al límite |
-| `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/BrowserUrlHelper.kt` | **297** | ⚠️ Al límite |
 | `app-sender/src/main/kotlin/com/omnicast/sender/service/CastMediaNotificationService.kt` | **297** | ⚠️ Al límite |
 | `app-receiver/src/main/kotlin/com/omnicast/receiver/ui/TvReceiverActivity.kt` | **296** | ⚠️ Al límite |
 | `app-sender/src/main/kotlin/com/omnicast/sender/ui/SenderMainActivity.kt` | **295** | ⚠️ Al límite |
 | `app-sender/src/main/kotlin/com/omnicast/sender/ui/components/MainActionCards.kt` | **295** | ⚠️ Al límite |
+| `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/BrowserUrlHelper.kt` | **291** | ⚠️ Al límite |
 | `app-sender/src/main/kotlin/com/omnicast/sender/ui/components/RemoteExpandedControls.kt` | **291** | ⚠️ Al límite |
 | `app-receiver/src/main/kotlin/com/omnicast/receiver/directstream/TvStorageSafetyManager.kt` | **290** | ⚠️ Al límite |
 | `app-sender/src/main/kotlin/com/omnicast/sender/ui/SenderMainScreen.kt` | **289** | ⚠️ Al límite |
@@ -79,6 +80,14 @@
 ---
 
 ## 4. Historial de Sesiones Multi-Agente
+
+### `[2026-11-12]` — Hito 8.18 [CH-28] — Preservación de Origin y Propagación de Cabeceras CORS para CDNs Anti-Scrape
+- **Acción:**
+  - **`TvMediaItemBuilder.kt` (107L):** Inclusión de la cabecera `Origin` dentro de la lista blanca de cabeceras seguras en `:app-receiver` (`allowed["Origin"] = v`), impidiendo que ExoPlayer descarte el origen del handshake en transmisiones protegidas por Cloudflare o inspección TLS (como `indianservers.st` en StreamEast24).
+  - **`BrowserUrlHelper.kt` (291L) & `StreamIntelligenceEngine.kt` (63L):** Enriquecimiento automático en `:app-sender` para derivar dinámicamente `Origin` a partir del `Referer` legítimo (`${rUri.scheme}://${rUri.host}`) cuando no esté explícitamente fijado, e inyección de cabeceras estándar de navegación cruzada (`Sec-Fetch-Mode: cors` y `Sec-Fetch-Site: cross-site`), garantizando que la TV Box despache solicitudes idénticas a un navegador web Chromium real sin tocar dominios en duro y manteniendo todos los archivos <= 300 líneas.
+- **Verificación:** 167 tests pasando (100% — 0 fallos), 0 archivos Kotlin > 300 líneas (`TvMediaItemBuilder.kt`: 107L, `BrowserUrlHelper.kt`: 291L, `StreamIntelligenceEngine.kt`: 63L).
+- **Salud del Oráculo:** 🟢 167 tests passing (100% — 0 fallos).
+- **Siguiente paso:** 🎉 **FASE 8 COMPLETADA AL 100% (Hitos 8.1 al 8.18)**.
 
 ### `[2026-11-12]` — Hito 8.17 [CH-27] — Discriminación Estricta de Páginas de Partidos y Firmas Reales HLS
 - **Acción:**

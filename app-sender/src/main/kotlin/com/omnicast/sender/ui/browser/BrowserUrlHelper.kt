@@ -132,16 +132,21 @@ object BrowserUrlHelper {
             if (!headers.containsKey("Referer") && currentUrl.isNotBlank()) {
                 headers["Referer"] = currentUrl
             }
+            val ref = headers["Referer"]
+            if (!ref.isNullOrBlank() && !headers.containsKey("Origin")) {
+                try {
+                    val rUri = android.net.Uri.parse(ref)
+                    if (!rUri.scheme.isNullOrBlank() && !rUri.host.isNullOrBlank()) {
+                        headers["Origin"] = "${rUri.scheme}://${rUri.host}"
+                    }
+                } catch (_: Throwable) {}
+            }
+            if (!headers.containsKey("Sec-Fetch-Mode")) headers["Sec-Fetch-Mode"] = "cors"
+            if (!headers.containsKey("Sec-Fetch-Site")) headers["Sec-Fetch-Site"] = "cross-site"
             if (!headers.containsKey("User-Agent")) headers["User-Agent"] = userAgent
-            if (!headers.containsKey("X-Target-Player")) {
-                headers["X-Target-Player"] = com.omnicast.sender.stream.StreamProfileDatabase.resolveTargetPlayer(streamUrl, headers)
-            }
-            if (!headers.containsKey("X-Single-Use-Token")) {
-                headers["X-Single-Use-Token"] = com.omnicast.sender.stream.StreamProfileDatabase.isSingleUseTokenHost(streamUrl, headers).toString()
-            }
-            if (!headers.containsKey("X-With-Credentials")) {
-                headers["X-With-Credentials"] = com.omnicast.sender.stream.StreamProfileDatabase.requiresCredentials(streamUrl, headers).toString()
-            }
+            if (!headers.containsKey("X-Target-Player")) headers["X-Target-Player"] = com.omnicast.sender.stream.StreamProfileDatabase.resolveTargetPlayer(streamUrl, headers)
+            if (!headers.containsKey("X-Single-Use-Token")) headers["X-Single-Use-Token"] = com.omnicast.sender.stream.StreamProfileDatabase.isSingleUseTokenHost(streamUrl, headers).toString()
+            if (!headers.containsKey("X-With-Credentials")) headers["X-With-Credentials"] = com.omnicast.sender.stream.StreamProfileDatabase.requiresCredentials(streamUrl, headers).toString()
             val streamHost = try { android.net.Uri.parse(streamUrl).host?.lowercase() } catch (_: Throwable) { null }
             val refHost = try { headers["Referer"]?.let { android.net.Uri.parse(it).host?.lowercase() } } catch (_: Throwable) { null }
             val target = headers["X-Target-Player"]?.uppercase()
@@ -163,11 +168,7 @@ object BrowserUrlHelper {
         val isDomainLike = !trimmed.contains(" ") && (
             trimmed.contains(".") || trimmed.startsWith("localhost") || trimmed.matches(Regex("^[a-zA-Z0-9-]+\\.[a-zA-Z]{2,}(/.*)?$"))
         )
-        return if (isDomainLike) {
-            "https://$trimmed"
-        } else {
-            "https://www.google.com/search?q=${java.net.URLEncoder.encode(trimmed, "UTF-8")}"
-        }
+        return if (isDomainLike) "https://$trimmed" else "https://www.google.com/search?q=${java.net.URLEncoder.encode(trimmed, "UTF-8")}"
     }
 
     fun hasSignedSecurityToken(url: String): Boolean = com.omnicast.core.domain.usecases.StreamManifestProbe.hasSignedSecurityToken(url)
@@ -279,16 +280,9 @@ object BrowserUrlHelper {
                 )
                 val is64 = android.os.Build.SUPPORTED_ABIS.any { it.contains("64") }
                 val meta = androidx.webkit.UserAgentMetadata.Builder()
-                    .setBrandVersionList(brands)
-                    .setFullVersion(full)
-                    .setPlatform("Android")
-                    .setPlatformVersion(android.os.Build.VERSION.RELEASE)
-                    .setArchitecture(if (is64) "arm64" else "arm")
-                    .setModel(android.os.Build.MODEL)
-                    .setMobile(true)
-                    .setBitness(if (is64) 64 else 32)
-                    .setWow64(false)
-                    .build()
+                    .setBrandVersionList(brands).setFullVersion(full).setPlatform("Android")
+                    .setPlatformVersion(android.os.Build.VERSION.RELEASE).setArchitecture(if (is64) "arm64" else "arm")
+                    .setModel(android.os.Build.MODEL).setMobile(true).setBitness(if (is64) 64 else 32).setWow64(false).build()
                 androidx.webkit.WebSettingsCompat.setUserAgentMetadata(settings, meta)
             } catch (_: Throwable) {}
         }

@@ -1,10 +1,10 @@
 # 📊 PROGRESS & BITÁCORA OPERATIVA — OmniCast Pro
 
-> **Versión Actual en Producción:** `v3.7.26` (`versionCodeSender: 396` | `versionCodeReceiver: 377`)  
-> **Última Sincronización Agéntica:** `2026-11-12`  
+> **Versión Actual en Producción:** `v3.7.27` (`versionCodeSender: 397` | `versionCodeReceiver: 378`)  
+> **Última Sincronización Agéntica:** `2026-11-13`  
 > **Estado del Oráculo de Pruebas:** 🟢 **100% Pasando (`:core:domain:test` y `:app-sender:testDebugUnitTest`) — 0 fallos**  
-> **Próxima Actividad en Cola:** 🎉 **FASE 8 COMPLETADA + Hotfix v3.7.26 (Turnstile Captcha Bypass + Origin-Only No-Referrer + HeaderSelfHealer)**  
-> **Progreso Global:** 🏁 **v3.7.26 Lista para Release OTA**
+> **Próxima Actividad en Cola:** 🎉 **FASE 8 COMPLETADA + Hotfix v3.7.27 (Preservación estricta Origin-Only en `InAppBrowserScreen.transmitWithHistory`)**  
+> **Progreso Global:** 🏁 **v3.7.27 Lista para Release OTA**
 
 ---
 

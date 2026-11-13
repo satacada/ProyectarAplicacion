@@ -1,7 +1,7 @@
 # 📊 PROJECT DASHBOARD — OmniCast Pro
 
-**Última actualización:** 2026-11-12 (v3.7.26: Bypass Turnstile en `PlayerAntiEmbedNetworkInterceptor`, aislamiento en `onProgressChanged`, preservación `Origin-only` y `StreamManifestProbe` healing)  
-**Versión de producción actual:** v3.7.26 (Sender: 396) / v3.7.26 (Receiver: 377)  
+**Última actualización:** 2026-11-13 (v3.7.27: Preservación estricta `Origin-only` en `InAppBrowserScreen.transmitWithHistory`)  
+**Versión de producción actual:** v3.7.27 (Sender: 397) / v3.7.27 (Receiver: 378)  
 **Estándar de calidad:** AGENTS.md (Archivos <= 300 líneas, Clean Architecture, 100% Offline/Local, C++20 Zero-Allocation, Poda Obligatoria de Código Inútil ante Hipótesis Fallidas)
 
 ---

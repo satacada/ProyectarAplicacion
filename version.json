@@ -1,12 +1,12 @@
 {
-  "versionName": "3.7.26",
-  "versionCodeSender": 396,
-  "versionCodeReceiver": 377,
-  "releaseTag": "v3.7.26",
-  "senderApk": "omnicast-sender-v3.7.26.apk",
-  "receiverApk": "omnicast-receiver-v3.7.26.apk",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.26/omnicast-sender-v3.7.26.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.26/omnicast-receiver-v3.7.26.apk",
-  "releaseNotes": "v3.7.26: Bypass de PlayerAntiEmbedNetworkInterceptor para iframes Turnstile/Captcha, aislamiento en onProgressChanged sin falsificacion window.chrome, preservacion de Origin-only (no-referrer), fix de WebSocket proxy y reparacion de StreamManifestProbe en isHealingAttempt.",
-  "changelog": "v3.7.26: Bypass de PlayerAntiEmbedNetworkInterceptor para iframes Turnstile/Captcha, aislamiento en onProgressChanged sin falsificacion window.chrome, preservacion de Origin-only (no-referrer), fix de WebSocket proxy y reparacion de StreamManifestProbe en isHealingAttempt."
+  "versionName": "3.7.27",
+  "versionCodeSender": 397,
+  "versionCodeReceiver": 378,
+  "releaseTag": "v3.7.27",
+  "senderApk": "omnicast-sender-v3.7.27.apk",
+  "receiverApk": "omnicast-receiver-v3.7.27.apk",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.27/omnicast-sender-v3.7.27.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.27/omnicast-receiver-v3.7.27.apk",
+  "releaseNotes": "v3.7.27: Preservación estricta de cabeceras Origin-only (no-referrer) en InAppBrowserScreen.transmitWithHistory sin inyectar Referer artificial de refPage.",
+  "changelog": "v3.7.27: Preservación estricta de cabeceras Origin-only (no-referrer) en InAppBrowserScreen.transmitWithHistory sin inyectar Referer artificial de refPage."
 }

@@ -1,12 +1,12 @@
 {
-  "versionName": "3.7.23",
-  "versionCodeSender": 393,
-  "versionCodeReceiver": 374,
-  "releaseTag": "v3.7.23",
-  "senderApk": "omnicast-sender-v3.7.23.apk",
-  "receiverApk": "omnicast-receiver-v3.7.23.apk",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.23/omnicast-sender-v3.7.23.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.23/omnicast-receiver-v3.7.23.apk",
-  "releaseNotes": "v3.7.23: Cierre de Hito 8.17 [CH-27]. Discriminacion estricta de paginas de partidos y firmas reales HLS.",
-  "changelog": "v3.7.23: Cierre de Hito 8.17 [CH-27]. Discriminacion estricta de paginas de partidos y firmas reales HLS."
+  "versionName": "3.7.24",
+  "versionCodeSender": 394,
+  "versionCodeReceiver": 375,
+  "releaseTag": "v3.7.24",
+  "senderApk": "omnicast-sender-v3.7.24.apk",
+  "receiverApk": "omnicast-receiver-v3.7.24.apk",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.24/omnicast-sender-v3.7.24.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.24/omnicast-receiver-v3.7.24.apk",
+  "releaseNotes": "v3.7.24: Cierre de Hito 8.18 [CH-28]. Preservacion de Origin y propagacion de cabeceras CORS para CDNs anti-scrape.",
+  "changelog": "v3.7.24: Cierre de Hito 8.18 [CH-28]. Preservacion de Origin y propagacion de cabeceras CORS para CDNs anti-scrape."
 }

@@ -1,12 +1,12 @@
 {
-  "versionName": "3.7.22",
-  "versionCodeSender": 392,
-  "versionCodeReceiver": 373,
-  "releaseTag": "v3.7.22",
-  "senderApk": "omnicast-sender-v3.7.22.apk",
-  "receiverApk": "omnicast-receiver-v3.7.22.apk",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.22/omnicast-sender-v3.7.22.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.22/omnicast-receiver-v3.7.22.apk",
-  "releaseNotes": "v3.7.22: Cierre de Hito 8.16 [CH-26]. Saneamiento dinamico de Referer (anti-403) y diferenciacion agnostica de capitulos de series.",
-  "changelog": "v3.7.22: Cierre de Hito 8.16 [CH-26]. Saneamiento dinamico de Referer (anti-403) y diferenciacion agnostica de capitulos de series."
+  "versionName": "3.7.23",
+  "versionCodeSender": 393,
+  "versionCodeReceiver": 374,
+  "releaseTag": "v3.7.23",
+  "senderApk": "omnicast-sender-v3.7.23.apk",
+  "receiverApk": "omnicast-receiver-v3.7.23.apk",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.23/omnicast-sender-v3.7.23.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.23/omnicast-receiver-v3.7.23.apk",
+  "releaseNotes": "v3.7.23: Cierre de Hito 8.17 [CH-27]. Discriminacion estricta de paginas de partidos y firmas reales HLS.",
+  "changelog": "v3.7.23: Cierre de Hito 8.17 [CH-27]. Discriminacion estricta de paginas de partidos y firmas reales HLS."
 }

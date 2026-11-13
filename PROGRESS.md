@@ -3,8 +3,8 @@
 > **Versión Actual en Producción:** `v3.7.0` (`versionCodeSender: 368` | `versionCodeReceiver: 351`)  
 > **Última Sincronización Agéntica:** `2026-11-12`  
 > **Estado del Oráculo de Pruebas:** 🟢 **167 Tests Pasando (35 en :core:domain, 12 en :core:protocol, 25 en :app-sender, 23 en :app-receiver) — 100% — 0 fallos**  
-> **Próxima Actividad en Cola:** 🎉 **FASE 8 COMPLETADA AL 100% (Hitos 8.1 [CH-11] al 8.16 [CH-26] — Saneamiento Dinámico de Referer y Diferenciación de Capítulos de Series)**  
-> **Progreso Global:** 🏁 **Hito 8.16 [CH-26] Saneamiento Dinámico de Referer y Diferenciación de Capítulos de Series completado al 100%**
+> **Próxima Actividad en Cola:** 🎉 **FASE 8 COMPLETADA AL 100% (Hitos 8.1 [CH-11] al 8.17 [CH-27] — Discriminación Estricta de Páginas de Partidos y Firmas Reales HLS)**  
+> **Progreso Global:** 🏁 **Hito 8.17 [CH-27] Discriminación Estricta de Páginas de Partidos y Firmas Reales HLS completado al 100%**
 
 ---
 
@@ -12,6 +12,7 @@
 
 | Hito / Fase | Nombre del Hito / Fase | Estado | Progreso |
 | :--- | :--- | :---: | :---: |
+| **Hito 8.17 [CH-27]** | Discriminación Estricta de Páginas de Partidos y Firmas Reales HLS | `[x]` Completado | **100%** |
 | **Hito 8.16 [CH-26]** | Saneamiento Dinámico de Referer y Diferenciación de Capítulos de Series | `[x]` Completado | **100%** |
 | **Hito 8.15 [CH-25]** | Desintoxicación Arquitectónica del Receiver y Blindaje Dinámico Anti-CORS | `[x]` Completado | **100%** |
 | **Hito 8.14 [CH-24]** | Soporte Universal de Cifrado Base64 en Pasarelas de Redirección y Telemetría Enriquecida | `[x]` Completado | **100%** |
@@ -55,7 +56,7 @@
 ## 3. Monitor de Límite de 300 Líneas (`AGENTS.md` Regla 3)
 
 ### 🔴 Archivos por encima de 300 líneas
-> *(Cero archivos Kotlin por encima de 300 líneas tras saneamiento — StreamResumeManager.kt: 66L, BrowserWebView.kt: 293L, InAppBrowserScreen.kt: 298L, SenderMainActivity.kt: 295L)*
+> *(Cero archivos Kotlin por encima de 300 líneas tras saneamiento — StreamCandidateValidator.kt: 202L, UniversalHlsExtractorAdapter.kt: 63L, BrowserWebView.kt: 273L)*
 - `app-sender/src/main/assets/sniffer/universal_sniffer.js`: **383 líneas** *(Asset JS DOM sellado e inmutable)*
 
 ### 🟡 Archivos en Zona de Vigilancia (289 – 300 líneas)
@@ -71,7 +72,6 @@
 | `app-receiver/src/main/kotlin/com/omnicast/receiver/ui/TvReceiverActivity.kt` | **296** | ⚠️ Al límite |
 | `app-sender/src/main/kotlin/com/omnicast/sender/ui/SenderMainActivity.kt` | **295** | ⚠️ Al límite |
 | `app-sender/src/main/kotlin/com/omnicast/sender/ui/components/MainActionCards.kt` | **295** | ⚠️ Al límite |
-| `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/BrowserWebView.kt` | **293** | 🛡️ Sellado (Zona Sagrada) |
 | `app-sender/src/main/kotlin/com/omnicast/sender/ui/components/RemoteExpandedControls.kt` | **291** | ⚠️ Al límite |
 | `app-receiver/src/main/kotlin/com/omnicast/receiver/directstream/TvStorageSafetyManager.kt` | **290** | ⚠️ Al límite |
 | `app-sender/src/main/kotlin/com/omnicast/sender/ui/SenderMainScreen.kt` | **289** | ⚠️ Al límite |
@@ -79,6 +79,15 @@
 ---
 
 ## 4. Historial de Sesiones Multi-Agente
+
+### `[2026-11-12]` — Hito 8.17 [CH-27] — Discriminación Estricta de Páginas de Partidos y Firmas Reales HLS
+- **Acción:**
+  - **`StreamCandidateValidator.kt` (202L):** Extensión del validador de dominio centralizado para descartar incondicionalmente peticiones de Server Components (`_rsc=`) y rutas de navegación de eventos deportivos (`/match/`, `/fixture/`, `/partido/`) que carezcan de extensión multimedia directa (`.m3u8`, `.mp4`, `.mpd`, `.ts`), erradicando que URLs de páginas web de partidos sean capturadas falsamente como streams de video.
+  - **`UniversalHlsExtractorAdapter.kt` (63L):** Robustecimiento del extractor universal acotando la regla heurística `/live` para exigir obligatoriamente firmas o extensiones HLS legítimas (`.m3u8`, `.ts`, `/hls`, `chunklist`, `/stream/`), previniendo que rutas web con `/live/` sean despachadas erróneamente a ExoPlayer en la TV Box.
+  - **`BrowserWebView.kt` (273L):** Resolución definitiva de la advertencia de concurrencia de Chromium implementando `activeLiveUrl` como variable atómica y thread-safe (`AtomicReference<String>`), alimentando `shouldInterceptRequest` sin invocar `v?.url` en el worker thread de Chromium, con 0% código en duro y manteniendo todos los archivos <= 300 líneas.
+- **Verificación:** 167 tests pasando (100% — 0 fallos), 0 archivos Kotlin > 300 líneas (`StreamCandidateValidator.kt`: 202L, `UniversalHlsExtractorAdapter.kt`: 63L, `BrowserWebView.kt`: 273L).
+- **Salud del Oráculo:** 🟢 167 tests passing (100% — 0 fallos).
+- **Siguiente paso:** 🎉 **FASE 8 COMPLETADA AL 100% (Hitos 8.1 al 8.17)**.
 
 ### `[2026-11-12]` — Hito 8.16 [CH-26] — Saneamiento Dinámico de Referer y Diferenciación de Capítulos de Series
 - **Acción:**

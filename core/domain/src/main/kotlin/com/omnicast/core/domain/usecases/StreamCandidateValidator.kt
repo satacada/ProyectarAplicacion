@@ -69,6 +69,11 @@ object StreamCandidateValidator {
             if (lower.contains(route)) return true
         }
 
+        if (lower.contains("_rsc=")) return true
+        if ((lower.contains("/match/") || lower.contains("/fixture/") || lower.contains("/partido/")) &&
+            !cleanPath.endsWith(".m3u8") && !cleanPath.endsWith(".mp4") && !cleanPath.endsWith(".mpd")
+        ) return true
+
         return false
     }
 

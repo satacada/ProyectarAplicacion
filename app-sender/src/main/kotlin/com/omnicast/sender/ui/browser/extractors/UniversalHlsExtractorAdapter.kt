@@ -33,7 +33,7 @@ class UniversalHlsExtractorAdapter : IMediaStreamExtractorPort {
                (lower.contains("/hls") && !cleanPath.endsWith(".ts")) ||
                ((cleanPath.endsWith(".txt") || lower.contains(".txt?")) && (lower.contains("master") || lower.contains("index") || lower.contains("/hls"))) ||
                lower.contains("/stream/") || lower.contains("/manifest") ||
-               lower.contains("/live") || lower.contains("live.m3u8") ||
+               (lower.contains("/live") && (lower.contains(".m3u8") || lower.contains(".ts") || lower.contains("/hls") || lower.contains("chunklist") || lower.contains("/stream/"))) || lower.contains("live.m3u8") ||
                lower.contains("p.php?url=") || (lower.contains("/p.php") && lower.contains("sig=")) ||
                lower.contains("pelisserieshoy.com/p.php") || lower.contains("embed69.org/p.php")
     }

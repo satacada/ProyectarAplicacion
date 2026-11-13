@@ -45,13 +45,14 @@ fun BrowserWebView(
             AdBlockWhitelistManager.init(ctx)
             val popupInterceptor = BrowserPopupInterceptor(ctx)
             var currentKnownTitle: String? = null
+            val activeLiveUrl = java.util.concurrent.atomic.AtomicReference(currentUrl)
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                 try {
                     ServiceWorkerController.getInstance().setServiceWorkerClient(object : ServiceWorkerClient() {
                         override fun shouldInterceptRequest(request: WebResourceRequest): WebResourceResponse? {
                             val reqUrl = request.url.toString()
-                            val docUrl = request.requestHeaders?.get("Referer") ?: currentUrl
+                            val docUrl = request.requestHeaders?.get("Referer") ?: activeLiveUrl.get().ifBlank { currentUrl }
                             if (isAdBlockEnabled && (AdBlocker.isAd(reqUrl) || NativeAdBlockEngine.shouldBlock(reqUrl, docUrl))) {
                                 return AdBlocker.createEmptyResponse()
                             }
@@ -78,31 +79,7 @@ fun BrowserWebView(
                 setOnChildScrollUpCallback { _, _ -> webView.canScrollVertically(-1) }
             }
 
-            val inputViewportScript = """
-                (function() {
-                    if (window.__omniInputFixInjected) return;
-                    window.__omniInputFixInjected = true;
-                    function fixCaret(el) {
-                        if (!el || (el.tagName !== 'INPUT' && el.tagName !== 'TEXTAREA')) return;
-                        if (!el.getAttribute('dir')) el.setAttribute('dir', 'ltr');
-                        if (el.selectionStart === 0 && el.value && el.value.length > 0) {
-                            try { var len = el.value.length; el.setSelectionRange(len, len); } catch(_) {}
-                        }
-                    }
-                    document.addEventListener('input', function(e) { fixCaret(e.target); }, true);
-                    document.addEventListener('focusin', function(e) {
-                        var el = e.target;
-                        if (!el) return;
-                        fixCaret(el);
-                        if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable) {
-                            setTimeout(function() {
-                                try { el.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'smooth' }); }
-                                catch(_) { try { el.scrollIntoView(); } catch(__) {} }
-                            }, 50);
-                        }
-                    }, true);
-                })();
-            """.trimIndent()
+            val inputViewportScript = "(function(){if(window.__omniInputFixInjected)return;window.__omniInputFixInjected=true;function fixCaret(el){if(!el||(el.tagName!=='INPUT'&&el.tagName!=='TEXTAREA'))return;if(!el.getAttribute('dir'))el.setAttribute('dir','ltr');if(el.selectionStart===0&&el.value&&el.value.length>0){try{var len=el.value.length;el.setSelectionRange(len,len);}catch(_){}}}document.addEventListener('input',function(e){fixCaret(e.target);},true);document.addEventListener('focusin',function(e){var el=e.target;if(!el)return;fixCaret(el);if(el.tagName==='INPUT'||el.tagName==='TEXTAREA'||el.isContentEditable){setTimeout(function(){try{el.scrollIntoView({block:'center',inline:'nearest',behavior:'smooth'});}catch(_){try{el.scrollIntoView();}catch(__){}}},50);}},true);})();"
 
             webView.apply {
                 isFocusable = true; isFocusableInTouchMode = true; isClickable = true
@@ -128,6 +105,7 @@ fun BrowserWebView(
 
                     override fun onPageStarted(v: WebView?, u: String?, f: Bitmap?) {
                         CookieManager.getInstance().flush()
+                        u?.takeIf { !it.startsWith("about:") }?.let { activeLiveUrl.set(it) }
                         u?.let { if (!it.startsWith("about:") && !it.contains("favicon")) onPageStarted(it) }
                         if (isAdBlockEnabled) {
                             v?.evaluateJavascript(AdBlocker.getAdHidingScript(), null)
@@ -139,6 +117,7 @@ fun BrowserWebView(
                     override fun onPageFinished(v: WebView?, u: String?) {
                         swipeRefresh.isRefreshing = false
                         CookieManager.getInstance().flush()
+                        u?.takeIf { !it.startsWith("about:") }?.let { activeLiveUrl.set(it) }
                         val title = v?.title ?: "Transmisión"
                         currentKnownTitle = title
                         onPageFinished(title, u)
@@ -151,13 +130,14 @@ fun BrowserWebView(
                     }
 
                     override fun doUpdateVisitedHistory(v: WebView?, u: String?, isR: Boolean) {
+                        u?.takeIf { !it.startsWith("about:") }?.let { activeLiveUrl.set(it) }
                         u?.let { onHistoryUpdated(it, v?.title) }
                     }
 
                     override fun shouldOverrideUrlLoading(v: WebView?, r: WebResourceRequest?): Boolean {
                         val reqUrl = r?.url?.toString() ?: return false
                         if (AdBlocker.isExternalRedirect(reqUrl)) return true
-                        val liveUrl = v?.url ?: currentUrl
+                        val liveUrl = activeLiveUrl.get().ifBlank { currentUrl }
                         if (isAdBlockEnabled && WvcShieldSecurityEngine.isEnabled &&
                             (WvcShieldSecurityEngine.shouldBlockDelayedRedirect(r.hasGesture(), reqUrl, liveUrl) ||
                              WvcShieldSecurityEngine.shouldBlockClickHijack(r.hasGesture(), reqUrl, liveUrl, hasStreams))) {
@@ -200,7 +180,7 @@ fun BrowserWebView(
                         val u = r?.url?.toString() ?: return
                         val code = err?.statusCode ?: return
                         val reason = err.reasonPhrase ?: ""
-                        val ref = r.requestHeaders?.get("Referer") ?: (v?.url?.takeIf { it.isNotBlank() && !it.startsWith("about:") } ?: currentUrl)
+                        val ref = r.requestHeaders?.get("Referer") ?: activeLiveUrl.get().ifBlank { currentUrl }
                         com.omnicast.sender.ui.browser.sentinel.WebPlayerDiagnosticSentinel.handleHttpError(u, code, reason, ref)
                     }
 
@@ -208,7 +188,7 @@ fun BrowserWebView(
                         return try {
                             if (r?.isForMainFrame == true) return super.shouldInterceptRequest(v, r)
                             val reqUrl = r?.url?.toString() ?: return super.shouldInterceptRequest(v, r)
-                            val docUrl = r.requestHeaders?.get("Referer") ?: (v?.url?.takeIf { it.isNotBlank() && !it.startsWith("about:") } ?: currentUrl)
+                            val docUrl = r.requestHeaders?.get("Referer") ?: activeLiveUrl.get().ifBlank { currentUrl }
                             if (isAdBlockEnabled && (AdBlocker.isAd(reqUrl) || AdBlocker.isVideoAd(reqUrl) || NativeAdBlockEngine.shouldBlock(reqUrl, docUrl))) {
                                 return AdBlocker.createEmptyResponse()
                             }

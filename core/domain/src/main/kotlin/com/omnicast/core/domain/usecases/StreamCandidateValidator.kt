@@ -115,6 +115,20 @@ object StreamCandidateValidator {
         return false
     }
 
+    val STREAM_PLAYLIST_PROXY_REGEX = Regex(
+        """/playlist/([a-zA-Z0-9_-]+)/([a-zA-Z0-9.-]+\.[a-zA-Z0-9.-]+)/([a-zA-Z0-9_.-]+)""",
+        RegexOption.IGNORE_CASE
+    )
+
+    fun isPlaylistProxyStream(url: String): Boolean {
+        if (url.isBlank()) return false
+        val lower = url.lowercase()
+        if (lower.contains("youtube.com") || lower.contains("youtu.be")) return false
+        if (isWebDocumentOrPlayerRoute(url)) return false
+        val cleanPath = lower.substringBefore('?').substringBefore('#')
+        return STREAM_PLAYLIST_PROXY_REGEX.containsMatchIn(cleanPath)
+    }
+
     private val offlineCdnHosts = java.util.concurrent.ConcurrentHashMap.newKeySet<String>()
 
     /**

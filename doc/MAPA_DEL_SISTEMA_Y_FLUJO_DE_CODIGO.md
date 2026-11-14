@@ -1,7 +1,7 @@
 # 🗺️ MAPA MAESTRO DEL SISTEMA Y GUÍA DE FLUJO DE CÓDIGO (CALL GRAPH)
 
 > **Documento Canónico para Desarrolladores Humanos y Agentes de IA**  
-> **Versión del Sistema:** `v3.6.08` | **Estado:** Producción Activa (20 HUs + 19 ADRs Sellados)  
+> **Versión del Sistema:** `v3.7.31` | **Estado:** Producción Activa (20 HUs + 19 ADRs Sellados)  
 > **Propósito:** Proporcionar una visión integral de 360 grados de todo el código fuente: árbol de directorios, roles de cada módulo, pantallas/páginas, funciones clave y trazabilidad exacta de llamadas archivo por archivo (call graph) para la reproducción de películas, grabación PVR, proyección de pantalla y fotos.
 
 ---
@@ -42,7 +42,7 @@ proyectarAplicacion/
 │           ├── stream/                 # ActiveStreamHolder, StreamProfileDatabase.kt (247L), StreamProfileDbSchema.kt (79L) y CloudStreamRuleSyncManager.kt (Supabase)
 │           ├── ui/
 │           │   ├── browser/            # NAVEGADOR WEB, ADBLOCKER Y DETECCIÓN DE MEDIOS
-│           │   │   ├── extractors/     # Adaptadores hexagonales 'Poner y Sacar': OkRu, Fastream, Doodstream, LuluStream, Streamwish, HLS, DASH, MP4, YouTube
+│           │   │   ├── extractors/     # Adaptadores hexagonales 'Poner y Sacar': SportsLiveStream, OkRu, Fastream, Doodstream, LuluStream, Streamwish, HLS, DASH, MP4, YouTube
 │           │   │   ├── AdBlocker.kt & AdBlockDatabase.kt # Interceptor de red HTTP + SQLite + sincronización Supabase
 │           │   │   ├── BrowserWebView.kt # Chromium WebView con brazo de red shouldInterceptRequest y supresión de popups
 │           │   │   ├── InAppBrowserScreen.kt # Pantalla completa del navegador web (ciclo de captura SELLADO)
@@ -187,11 +187,14 @@ Desde que el usuario navega a un portal (ej. `cinecalidad.men`, `pelisplus.hair`
         │
         ├─► Delegación obligatoria en [StreamCandidateValidator.kt]:
         │     ├─► isWebDocumentOrPlayerRoute(): Descarta .html, .js, .css, /embed/, /e/, /cdn-cgi/
-        │     └─► isBinaryMediaStream(): Certifica .m3u8, .mp4, .mpd, /hls/, /pass/,
-        │                                y patrón estructural: (~ + token= + expiry=)
+        │     ├─► isBinaryMediaStream(): Certifica .m3u8, .mp4, .mpd, /hls/, /pass/,
+        │     │                          y patrón estructural: (~ + token= + expiry=)
+        │     └─► isPlaylistProxyStream(): Certifica /playlist/{id}/{host}/{hash}
         │
         ▼
 [Adaptadores Modulares Especializados ('Poner y Sacar')]
+  ├─► SportsLiveStreamExtractorAdapter: Reconoce proxies de playlists deportivas (/playlist/...)
+  │                                     e inyecta Referer/Origin y CHROMIUM_ANTI_CORS (prioridad 24)
   ├─► UniversalMp4ExtractorAdapter: Extrae MP4, WEBM, MKV
   ├─► UniversalHlsExtractorAdapter: Extrae listas HLS .m3u8 y chunklists
   ├─► UniversalDashExtractorAdapter: Extrae manifiestos .mpd
@@ -238,7 +241,7 @@ Desde que el usuario navega a un portal (ej. `cinecalidad.men`, `pelisplus.hair`
   │     ├─► Aplica filterSafeHeaders(headers) preservando Referer
   │     └─► Transiciona estado a ReceiverUiState.ExoPlaying (Decodificación MediaCodec HW a 60 fps)
   │
-  └─► CASO 2: Si es DropCDN (PelisPlus), Fastream o token HMAC protegido:
+  └─► CASO 2: Si es DropCDN (PelisPlus), Fastream, proxy deportivo o token HMAC protegido:
         │
         ▼
       [TvReceiverHelper.kt]
@@ -248,11 +251,11 @@ Desde que el usuario navega a un portal (ej. `cinecalidad.men`, `pelisplus.hair`
       [TvWebStreamScreen.kt]
         ├─► Transiciona estado a ReceiverUiState.WebStreamPlaying
         ├─► Inyecta settings.userAgentString = headers["User-Agent"] ?: UA_MOBILE
-        ├─► Inicializa WebView con hls.light.min.js y baseUrl canónico
+        ├─► Inicializa WebView con TvWebHtmlBuilder.kt (initHls() para todo stream no-mp4/webm)
         │
         ▼
       [TvWebResourceInterceptor.kt]
-        ├─► Intercepta shouldInterceptRequest de manifiestos y fragmentos .ts
+        ├─► Intercepta shouldInterceptRequest de manifiestos (.m3u8, /playlist/), .txt y fragmentos .ts
         ├─► Inyecta cabecera HTTP "Access-Control-Allow-Origin: *" (Anti-CORS)
         └─► Descarga los bytes con socket nativo y alimenta a Hls.js sin error 403
 ```

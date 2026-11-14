@@ -106,5 +106,16 @@ class StreamCandidateValidatorTest {
         assertFalse(StreamCandidateValidator.isWebDocumentOrPlayerRoute("https://cdn.example.com/hls/index.txt"))
         assertTrue(StreamCandidateValidator.isWebDocumentOrPlayerRoute("https://example.com/robots.txt"))
     }
+
+    @Test
+    fun testIsPlaylistProxyStream() {
+        val positive = "https://pl.wearestrong1.space/playlist/55418/a.newvegan35.space/caxi"
+        assertTrue(StreamCandidateValidator.isPlaylistProxyStream(positive))
+
+        assertFalse(StreamCandidateValidator.isPlaylistProxyStream("https://www.youtube.com/playlist?list=PL123"))
+        assertFalse(StreamCandidateValidator.isPlaylistProxyStream("https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M"))
+        assertFalse(StreamCandidateValidator.isPlaylistProxyStream("https://a.newvegan35.space/scripts/NTU0MTg=/p1794657602614393454_83090.txt"))
+        assertFalse(StreamCandidateValidator.isPlaylistProxyStream("https://pl.wearestrong1.space/playlist/55418/a.newvegan35.space/caxi.html"))
+    }
 }
 

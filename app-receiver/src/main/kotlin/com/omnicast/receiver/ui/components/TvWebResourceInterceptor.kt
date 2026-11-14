@@ -48,7 +48,8 @@ object TvWebResourceInterceptor {
         val lower = urlStr.lowercase()
         val isMedia = lower.contains(".m3u8") || lower.contains(".ts") || lower.contains(".m4s") ||
                 lower.contains(".mp4") || lower.contains(".vtt") || lower.contains("/hls") ||
-                lower.contains(".image") || lower.contains(".png") || lower.contains(".webp")
+                lower.contains(".image") || lower.contains(".png") || lower.contains(".webp") ||
+                lower.contains("/playlist/") || lower.contains(".txt")
         if (!isMedia) return null
 
         // 2. Interceptar y descargar inyectando Access-Control-Allow-Origin: *

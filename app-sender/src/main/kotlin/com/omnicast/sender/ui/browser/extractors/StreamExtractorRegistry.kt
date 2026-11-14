@@ -18,6 +18,7 @@ object StreamExtractorRegistry {
                 UniversalDashExtractorAdapter(),
 
                 // Extractores modulares por sitio ("poner y sacar")
+                SportsLiveStreamExtractorAdapter(),
                 FastreamExtractorAdapter(),
                 DoodstreamExtractorAdapter(),
                 LuluStreamExtractorAdapter(),

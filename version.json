@@ -1,12 +1,12 @@
 {
-  "versionName": "3.7.31",
-  "versionCodeSender": 401,
-  "versionCodeReceiver": 382,
-  "releaseTag": "v3.7.31",
-  "senderApk": "omnicast-sender-v3.7.31.apk",
-  "receiverApk": "omnicast-receiver-v3.7.31.apk",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.31/omnicast-sender-v3.7.31.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.31/omnicast-receiver-v3.7.31.apk",
-  "releaseNotes": "v3.7.31: Soporte hexagonal para playlists deportivos sin extension y segmentos txt en el adaptador de streaming.",
-  "changelog": "v3.7.31: Soporte hexagonal para playlists deportivos sin extension y segmentos txt en el adaptador de streaming."
+  "versionName": "3.7.32",
+  "versionCodeSender": 402,
+  "versionCodeReceiver": 383,
+  "releaseTag": "v3.7.32",
+  "senderApk": "omnicast-sender-v3.7.32.apk",
+  "receiverApk": "omnicast-receiver-v3.7.32.apk",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.32/omnicast-sender-v3.7.32.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.32/omnicast-receiver-v3.7.32.apk",
+  "releaseNotes": "v3.7.32: Preservación de directivas internas X-* tras probeAndHealStream y robustecimiento de headers en streaming.",
+  "changelog": "v3.7.32: Preservación de directivas internas X-* tras probeAndHealStream y robustecimiento de headers en streaming."
 }

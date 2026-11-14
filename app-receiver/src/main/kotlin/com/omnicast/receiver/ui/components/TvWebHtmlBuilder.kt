@@ -161,7 +161,9 @@ object TvWebHtmlBuilder {
                   } catch(_) {}
                 }
 
-                if (streamUrl.indexOf('.m3u8') !== -1) initHls(); else { vid.src = streamUrl; vid.play().catch(function(){}); }
+                var cleanPath = (streamUrl.split('?')[0] || '').split('#')[0].toLowerCase();
+                var isDirectVideo = cleanPath.endsWith('.mp4') || cleanPath.endsWith('.webm');
+                if (!isDirectVideo) initHls(); else { vid.src = streamUrl; vid.play().catch(function(){}); }
 
                 function playStream() { if (vid) vid.play().catch(function(){}); }
                 function pauseStream() { if (vid) vid.pause(); }

@@ -1,10 +1,10 @@
 # 📊 PROGRESS & BITÁCORA OPERATIVA — OmniCast Pro
 
-> **Versión Actual en Producción:** `v3.7.30` (`versionCodeSender: 400` | `versionCodeReceiver: 381`)  
+> **Versión Actual en Producción:** `v3.7.32` (`versionCodeSender: 402` | `versionCodeReceiver: 383`)  
 > **Última Sincronización Agéntica:** `2026-11-14`  
 > **Estado del Oráculo de Pruebas:** 🟢 **100% Pasando (`:core:domain:test` y `:app-receiver:testDebugUnitTest`) — 0 fallos**  
-> **Próxima Actividad en Cola:** 🎉 **FASE 8 COMPLETADA + Hotfix v3.7.30 (Resolutor DoH Prioritario en TvSecureDnsResolver con Cloudflare/Google para TV Box)**  
-> **Progreso Global:** 🏁 **v3.7.30 Publicada en GitHub Releases e Instalada en Teléfono**
+> **Próxima Actividad en Cola:** 🎉 **Hito 8.22 Completado (Preservación de Directivas Internas X-* en StreamQualityDetector.probeAndHealStream y Suite StreamQualityDetectorTest)**  
+> **Progreso Global:** 🏁 **v3.7.32 Sincronizada y Lista para Release OTA**
 
 ---
 
@@ -12,6 +12,8 @@
 
 | Hito / Fase | Nombre del Hito / Fase | Estado | Progreso |
 | :--- | :--- | :---: | :---: |
+| **Hito 8.22 [CH-32]** | Preservación de Directivas Internas X-* en StreamQualityDetector y Suite Unitaria | `[x]` Completado | **100%** |
+| **Hito 8.21 [CH-31]** | Adaptador SportsLiveStreamExtractorAdapter, Proxies HLS (/playlist/...) y Segmentos .txt | `[x]` Completado | **100%** |
 | **Hito 8.20 [CH-30]** | Resolutor DoH Prioritario (Cloudflare/Google) en TvSecureDnsResolver y Enrutamiento Inmune a Bloqueo de ISP | `[x]` Completado | **100%** |
 | **Hito 8.19 [CH-29]** | Desempaquetador KWM de Fragmentos PNG/WebP en TvWebHtmlBuilder y Soporte TikTok CDN | `[x]` Completado | **100%** |
 | **Hito 8.18 [CH-28]** | Preservación de Origin y Propagación de Cabeceras CORS para CDNs Anti-Scrape | `[x]` Completado | **100%** |
@@ -44,25 +46,25 @@
 
 ---
 
-## 2. Semáforo de Salud del Oráculo Unitario (167 Tests Certificados con JaCoCo)
+## 2. Semáforo de Salud del Oráculo Unitario (172 Tests Certificados con JaCoCo)
 
 | Módulo Gradle | Comando de Verificación | Tests | Estado |
 | :--- | :--- | :---: | :---: |
-| **`:core:domain`** | `./gradlew :core:domain:test` (`jacocoTestReport`) | 35 | 🟢 100% Passing (0 fallos) |
+| **`:core:domain`** | `./gradlew :core:domain:test` (`jacocoTestReport`) | 38 | 🟢 100% Passing (0 fallos) |
 | **`:core:protocol`** | `./gradlew :core:protocol:test` | 12 | 🟢 100% Passing (0 fallos) |
-| **`:app-sender`** | `./gradlew :app-sender:testDebugUnitTest` | 25 | 🟢 100% Passing (0 fallos) |
+| **`:app-sender`** | `./gradlew :app-sender:testDebugUnitTest` | 27 | 🟢 100% Passing (0 fallos) |
 | **`:app-receiver`** | `./gradlew :app-receiver:testDebugUnitTest` | 23 | 🟢 100% Passing (0 fallos) |
-| **Total Global** | `./gradlew test` | **167** | 🟢 **100% Passing (0 fallos)** |
+| **Total Global** | `./gradlew test` | **172** | 🟢 **100% Passing (0 fallos)** |
 
 ---
 
 ## 3. Monitor de Límite de 300 Líneas (`AGENTS.md` Regla 3)
 
 ### 🔴 Archivos por encima de 300 líneas
-> *(Cero archivos Kotlin por encima de 300 líneas tras saneamiento — TvMediaItemBuilder.kt: 107L, BrowserUrlHelper.kt: 291L, StreamIntelligenceEngine.kt: 63L)*
+> *(Cero archivos Kotlin por encima de 300 líneas tras saneamiento — StreamQualityDetector.kt: 287L, StreamQualityDetectorTest.kt: 113L, SportsLiveStreamExtractorAdapter.kt: 64L, TvWebResourceInterceptor.kt: 153L, StreamCandidateValidator.kt: 216L, TvWebHtmlBuilder.kt: 246L)*
 - `app-sender/src/main/assets/sniffer/universal_sniffer.js`: **383 líneas** *(Asset JS DOM sellado e inmutable)*
 
-### 🟡 Archivos en Zona de Vigilancia (289 – 300 líneas)
+### 🟡 Archivos en Zona de Vigilancia (287 – 300 líneas)
 | Archivo | Líneas Actuales | Estado |
 | :--- | :---: | :--- |
 | `app-receiver/src/main/kotlin/com/omnicast/receiver/ui/components/TvStandbyCleanScreen.kt` | **299** | 🛡️ Sellado |
@@ -78,10 +80,29 @@
 | `app-sender/src/main/kotlin/com/omnicast/sender/ui/components/RemoteExpandedControls.kt` | **291** | ⚠️ Al límite |
 | `app-receiver/src/main/kotlin/com/omnicast/receiver/directstream/TvStorageSafetyManager.kt` | **290** | ⚠️ Al límite |
 | `app-sender/src/main/kotlin/com/omnicast/sender/ui/SenderMainScreen.kt` | **289** | ⚠️ Al límite |
+| `app-sender/src/main/kotlin/com/omnicast/sender/ui/browser/StreamQualityDetector.kt` | **287** | ⚠️ Al límite |
 
 ---
 
 ## 4. Historial de Sesiones Multi-Agente
+
+### `[2026-11-14]` — Hito 8.22 [CH-32] — Preservación de Directivas Internas X-* en StreamQualityDetector y Suite Unitaria
+- **Acción:**
+  - **`StreamQualityDetector.kt` (287L):** Corrección quirúrgica en `probeAndHealStream` para fusionar y preservar directivas internas `X-*` (`X-Target-Player: CHROMIUM_ANTI_CORS`, `X-Single-Use-Token`, `X-With-Credentials`, `X-Base-Url-Policy`, `X-Force-Proxy`) que acompañan al stream tras el sondeo HTTP 200/playable exitoso, impidiendo que el probe descarte directivas inyectadas por adaptadores modulares.
+  - **`StreamQualityDetectorTest.kt` (113L):** Nueva suite de pruebas unitarias con mock de servidor HTTP integrado (`ServerSocket`) validando la retención íntegra de cabeceras `X-*` tanto en fallback HTTP 403 como en stream reproducible HTTP 200.
+- **Verificación:** 172 tests passing (100% — 0 fallos), 0 archivos Kotlin > 300 líneas (`StreamQualityDetector.kt`: 287L, `StreamQualityDetectorTest.kt`: 113L).
+- **Salud del Oráculo:** 🟢 172 tests passing (100% — 0 fallos).
+- **Siguiente paso:** 🎉 **v3.7.32 Sincronizada y Lista para Release OTA**.
+
+### `[2026-11-14]` — Hito 8.21 [CH-31] — Adaptador SportsLiveStreamExtractorAdapter, Proxies HLS (/playlist/...) y Segmentos .txt en Receptor Web TV
+- **Acción:**
+  - **`SportsLiveStreamExtractorAdapter.kt` (64L):** Creación del nuevo extractor modular hexagonal ("poner y sacar", `priority = 24`) en `com.omnicast.sender.ui.browser.extractors` registrado en `StreamExtractorRegistry.kt`. Reconoce proxies de playlists deportivas (`/playlist/...`), inyecta `Referer`, `Origin`, User-Agent móvil y fuerza `X-Target-Player: CHROMIUM_ANTI_CORS`.
+  - **`StreamCandidateValidator.kt` (216L):** Incorporación de la regla de dominio puro `isPlaylistProxyStream(url)` con el patrón canónico `STREAM_PLAYLIST_PROXY_REGEX` (`/playlist/{id}/{host}/{hash}`), descartando YouTube, Spotify y documentos HTML. Suite ampliada en `StreamCandidateValidatorTest.kt` (38 tests pasando en `:core:domain`).
+  - **`TvWebHtmlBuilder.kt` (246L):** Generalización de inicialización HLS en `TvWebHtmlBuilder.kt`: todo stream que no sea video directo (`.mp4`, `.webm`) se canaliza obligatoriamente hacia `initHls()`, soportando manifiestos HLS sin extensión `.m3u8` (como `/playlist/...`).
+  - **`TvWebResourceInterceptor.kt` (153L):** Ampliación del interceptor Anti-CORS de Chromium en Android TV para reconocer e interceptar rutas de playlists sin extensión `.m3u8` (`/playlist/`) y fragmentos con extensión `.txt`, descargándolos con socket nativo e inyectando `Access-Control-Allow-Origin: *`.
+- **Verificación:** 170 tests passing (100% — 0 fallos), 0 archivos Kotlin > 300 líneas (`SportsLiveStreamExtractorAdapter.kt`: 64L, `TvWebResourceInterceptor.kt`: 153L, `StreamCandidateValidator.kt`: 216L, `TvWebHtmlBuilder.kt`: 246L).
+- **Salud del Oráculo:** 🟢 170 tests passing (100% — 0 fallos).
+- **Siguiente paso:** 🎉 **Hito 8.21 [CH-31] Completado y Sincronizado**.
 
 ### `[2026-11-12]` — Hito 8.18 [CH-28] — Preservación de Origin y Propagación de Cabeceras CORS para CDNs Anti-Scrape
 - **Acción:**

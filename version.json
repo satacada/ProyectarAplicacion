@@ -1,12 +1,12 @@
 {
-  "versionName": "3.7.30",
-  "versionCodeSender": 400,
-  "versionCodeReceiver": 381,
-  "releaseTag": "v3.7.30",
-  "senderApk": "omnicast-sender-v3.7.30.apk",
-  "receiverApk": "omnicast-receiver-v3.7.30.apk",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.30/omnicast-sender-v3.7.30.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.30/omnicast-receiver-v3.7.30.apk",
-  "releaseNotes": "v3.7.30: Resolutor DNS-over-HTTPS (DoH) prioritario en TvSecureDnsResolver con Cloudflare/Google para evitar bloqueos y DNS poisoning de ISP en la TV Box, con cache RAM O(1) y fallback a DNS de dispositivo.",
-  "changelog": "v3.7.30: Resolutor DNS-over-HTTPS (DoH) prioritario en TvSecureDnsResolver con Cloudflare/Google para evitar bloqueos y DNS poisoning de ISP en la TV Box, con cache RAM O(1) y fallback a DNS de dispositivo."
+  "versionName": "3.7.31",
+  "versionCodeSender": 401,
+  "versionCodeReceiver": 382,
+  "releaseTag": "v3.7.31",
+  "senderApk": "omnicast-sender-v3.7.31.apk",
+  "receiverApk": "omnicast-receiver-v3.7.31.apk",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.31/omnicast-sender-v3.7.31.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.31/omnicast-receiver-v3.7.31.apk",
+  "releaseNotes": "v3.7.31: Soporte hexagonal para playlists deportivos sin extension y segmentos txt en el adaptador de streaming.",
+  "changelog": "v3.7.31: Soporte hexagonal para playlists deportivos sin extension y segmentos txt en el adaptador de streaming."
 }

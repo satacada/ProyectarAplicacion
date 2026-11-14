@@ -35,6 +35,7 @@ object StreamManifestProbe {
         "fastream.to" to ("CHROMIUM_ANTI_CORS" to true), "luluvdo.com" to ("WEBVIEW" to true), "lulustream.com" to ("WEBVIEW" to true),
         "pelisgo.online" to ("WEBVIEW" to true), "pelisgo" to ("WEBVIEW" to true), "tnmr.org" to ("EXOPLAYER" to true),
         "tonzoidio" to ("WEBVIEW" to true), "embdlol" to ("WEBVIEW" to true),
+        "ftlly.com" to ("CHROMIUM_ANTI_CORS" to true), "tvf90.com" to ("CHROMIUM_ANTI_CORS" to true),
         "boltdns.net" to ("EXOPLAYER" to false), "canela.tv" to ("EXOPLAYER" to false), "okcdn.ru" to ("EXOPLAYER" to false),
         "mycdn.me" to ("EXOPLAYER" to false), "ok.ru" to ("EXOPLAYER" to false), "spark.9bg.net" to ("EXOPLAYER" to false),
         "dailymotion.com" to ("EXOPLAYER" to false), "dmcdn.net" to ("EXOPLAYER" to false),

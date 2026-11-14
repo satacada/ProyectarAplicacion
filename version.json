@@ -1,12 +1,12 @@
 {
-  "versionName": "3.7.29",
-  "versionCodeSender": 399,
-  "versionCodeReceiver": 380,
-  "releaseTag": "v3.7.29",
-  "senderApk": "omnicast-sender-v3.7.29.apk",
-  "receiverApk": "omnicast-receiver-v3.7.29.apk",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.29/omnicast-sender-v3.7.29.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.29/omnicast-receiver-v3.7.29.apk",
-  "releaseNotes": "v3.7.29: Desempaquetador KWM de segmentos PNG/WebP en TvWebHtmlBuilder para reproduccion HLS de TikTok CDN en Android TV con OSD nativo, soporte de expires en StreamManifestProbe y extensiones de imagen en TvWebResourceInterceptor.",
-  "changelog": "v3.7.29: Desempaquetador KWM de segmentos PNG/WebP en TvWebHtmlBuilder para reproduccion HLS de TikTok CDN en Android TV con OSD nativo, soporte de expires en StreamManifestProbe y extensiones de imagen en TvWebResourceInterceptor."
+  "versionName": "3.7.30",
+  "versionCodeSender": 400,
+  "versionCodeReceiver": 381,
+  "releaseTag": "v3.7.30",
+  "senderApk": "omnicast-sender-v3.7.30.apk",
+  "receiverApk": "omnicast-receiver-v3.7.30.apk",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.30/omnicast-sender-v3.7.30.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.30/omnicast-receiver-v3.7.30.apk",
+  "releaseNotes": "v3.7.30: Resolutor DNS-over-HTTPS (DoH) prioritario en TvSecureDnsResolver con Cloudflare/Google para evitar bloqueos y DNS poisoning de ISP en la TV Box, con cache RAM O(1) y fallback a DNS de dispositivo.",
+  "changelog": "v3.7.30: Resolutor DNS-over-HTTPS (DoH) prioritario en TvSecureDnsResolver con Cloudflare/Google para evitar bloqueos y DNS poisoning de ISP en la TV Box, con cache RAM O(1) y fallback a DNS de dispositivo."
 }

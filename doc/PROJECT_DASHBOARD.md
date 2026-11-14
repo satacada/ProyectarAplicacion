@@ -1,7 +1,7 @@
 # 📊 PROJECT DASHBOARD — OmniCast Pro
 
-**Última actualización:** 2026-11-14 (v3.7.29: Desempaquetador KWM de segmentos PNG/WebP en `TvWebHtmlBuilder` para reproducción HLS de TikTok CDN en Android TV con OSD nativo, soporte de `expires` en `StreamManifestProbe` y extensiones de imagen en `TvWebResourceInterceptor`)  
-**Versión de producción actual:** v3.7.29 (Sender: 399) / v3.7.29 (Receiver: 380)  
+**Última actualización:** 2026-11-14 (v3.7.30: Resolutor DNS-over-HTTPS prioritario en `TvSecureDnsResolver` con Cloudflare/Google para TV Box, inmune a bloqueos y envenenamiento de ISP, con caché RAM O(1) y fallback seguro)  
+**Versión de producción actual:** v3.7.30 (Sender: 400) / v3.7.30 (Receiver: 381)  
 **Estándar de calidad:** AGENTS.md (Archivos <= 300 líneas, Clean Architecture, 100% Offline/Local, C++20 Zero-Allocation, Poda Obligatoria de Código Inútil ante Hipótesis Fallidas)
 
 ---

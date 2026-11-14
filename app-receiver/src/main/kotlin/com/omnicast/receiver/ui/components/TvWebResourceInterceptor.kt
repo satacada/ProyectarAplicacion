@@ -53,7 +53,13 @@ object TvWebResourceInterceptor {
 
         // 2. Interceptar y descargar inyectando Access-Control-Allow-Origin: *
         return try {
-            val conn = (URL(urlStr).openConnection() as HttpURLConnection).apply {
+            val host = req.url?.host
+            val resolvedIp = if (!host.isNullOrBlank()) com.omnicast.receiver.directstream.TvSecureDnsResolver.resolveHost(host) else null
+            val effectiveUrl = if (resolvedIp != null && resolvedIp != host && !host.isNullOrBlank()) {
+                urlStr.replaceFirst("://$host", "://$resolvedIp")
+            } else urlStr
+
+            val conn = (URL(effectiveUrl).openConnection() as HttpURLConnection).apply {
                 if (this is javax.net.ssl.HttpsURLConnection) {
                     sslSocketFactory = TRUST_ALL_SSL_FACTORY
                     hostnameVerifier = javax.net.ssl.HostnameVerifier { _, _ -> true }
@@ -62,6 +68,10 @@ object TvWebResourceInterceptor {
                 readTimeout = 15000
                 instanceFollowRedirects = true
                 requestMethod = method
+
+                if (resolvedIp != null && resolvedIp != host && !host.isNullOrBlank()) {
+                    setRequestProperty("Host", host)
+                }
 
                 // User-Agent: usar el provisto por el emisor/reproductor o Desktop por defecto
                 val ua = defaultHeaders["User-Agent"]?.takeIf { it.isNotBlank() } ?: UA_DESKTOP

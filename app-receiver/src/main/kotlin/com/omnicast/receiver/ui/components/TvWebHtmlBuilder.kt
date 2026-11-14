@@ -9,16 +9,22 @@ import android.content.Context
 object TvWebHtmlBuilder {
 
     private var cachedHlsJs: String? = null
+    private var cachedKwmDecoderJs: String? = null
 
     fun getHlsJs(context: Context): String = cachedHlsJs ?: try {
         context.assets.open("hls.light.min.js").bufferedReader().use { it.readText() }.also { cachedHlsJs = it }
+    } catch (_: Throwable) { "" }
+
+    fun getKwmDecoderJs(context: Context): String = cachedKwmDecoderJs ?: try {
+        context.assets.open("kwm.image.decoder.js").bufferedReader().use { it.readText() }.also { cachedKwmDecoderJs = it }
     } catch (_: Throwable) { "" }
 
     fun buildPlayerHtml(
         safeUrl: String,
         startSec: Double,
         hlsCode: String,
-        headers: Map<String, String>
+        headers: Map<String, String>,
+        kwmDecoderCode: String = ""
     ): String {
         val requireCreds = headers["X-With-Credentials"] == "true"
         return """
@@ -33,6 +39,7 @@ object TvWebHtmlBuilder {
               video::-webkit-media-controls { display:none !important; }
             </style>
             <script>$hlsCode</script>
+            <script>$kwmDecoderCode</script>
             </head>
             <body>
               <video id="vplayer" autoplay playsinline></video>
@@ -89,6 +96,9 @@ object TvWebHtmlBuilder {
                     var cfg = { enableWorker: true, lowLatencyMode: false, backBufferLength: 10, maxBufferLength: 20, maxMaxBufferLength: 30, maxBufferSize: 25 * 1024 * 1024, maxBufferHole: 0.5 };
                     if ($requireCreds) { cfg.xhrSetup = function(xhr) { try { xhr.withCredentials = true; } catch(_) {} }; }
                     hls = new Hls(cfg);
+                    if (typeof window.attachKwmImageDecoder === 'function') {
+                      try { window.attachKwmImageDecoder(hls); } catch(_) {}
+                    }
                     hls.loadSource(streamUrl);
                     hls.attachMedia(vid);
                     hls.on(Hls.Events.MANIFEST_PARSED, function() {
@@ -109,6 +119,9 @@ object TvWebHtmlBuilder {
                             delete cfg.xhrSetup;
                             try { hls.destroy(); } catch(_) {}
                             hls = new Hls(cfg);
+                            if (typeof window.attachKwmImageDecoder === 'function') {
+                              try { window.attachKwmImageDecoder(hls); } catch(_) {}
+                            }
                             hls.loadSource(streamUrl);
                             hls.attachMedia(vid);
                           } else {

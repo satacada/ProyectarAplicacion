@@ -1,7 +1,7 @@
 # 📊 PROJECT DASHBOARD — OmniCast Pro
 
-**Última actualización:** 2026-11-13 (v3.7.28: Telemetría de cabeceras de medios en `BrowserWebView` y soporte de `Origin` en `TvReceiverHelper.resolveBaseUrl`)  
-**Versión de producción actual:** v3.7.28 (Sender: 398) / v3.7.28 (Receiver: 379)  
+**Última actualización:** 2026-11-14 (v3.7.29: Desempaquetador KWM de segmentos PNG/WebP en `TvWebHtmlBuilder` para reproducción HLS de TikTok CDN en Android TV con OSD nativo, soporte de `expires` en `StreamManifestProbe` y extensiones de imagen en `TvWebResourceInterceptor`)  
+**Versión de producción actual:** v3.7.29 (Sender: 399) / v3.7.29 (Receiver: 380)  
 **Estándar de calidad:** AGENTS.md (Archivos <= 300 líneas, Clean Architecture, 100% Offline/Local, C++20 Zero-Allocation, Poda Obligatoria de Código Inútil ante Hipótesis Fallidas)
 
 ---

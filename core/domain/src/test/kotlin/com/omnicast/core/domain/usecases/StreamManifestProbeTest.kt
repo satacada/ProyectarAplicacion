@@ -63,4 +63,25 @@ class StreamManifestProbeTest {
         assertEquals("https://dr0pstream.com/e/loaxg3kae97x", first.second["Referer"])
         assertEquals("https://dr0pstream.com", first.second["Origin"])
     }
+
+    @Test
+    fun `hasSignedSecurityToken detects token with expires and expiry parameters`() {
+        val urlWithExpires = "https://prod-e2.tonzoidio.st/origin200/prod-e2.tonzoidio.st/mono.m3u8?token=8aeb1d716eef1e6b8c&expires=1731557000"
+        assertTrue(StreamManifestProbe.hasSignedSecurityToken(urlWithExpires))
+
+        val urlWithExp = "https://cdn.example.com/live/master.m3u8?token=abcdef123456&exp=1731557000"
+        assertTrue(StreamManifestProbe.hasSignedSecurityToken(urlWithExp))
+    }
+
+    @Test
+    fun `lookupSeedProfile routes tonzoidio and embdlol to WEBVIEW`() {
+        val profileTonzoidio = StreamManifestProbe.lookupSeedProfile("https://prod-e5.tonzoidio.st/origin200/mono.m3u8")
+        assertEquals("WEBVIEW", profileTonzoidio?.first)
+        assertTrue(profileTonzoidio?.second == true)
+
+        val profileEmbdlol = StreamManifestProbe.lookupSeedProfile("https://embdlol.st/")
+        assertEquals("WEBVIEW", profileEmbdlol?.first)
+        assertTrue(profileEmbdlol?.second == true)
+    }
 }
+

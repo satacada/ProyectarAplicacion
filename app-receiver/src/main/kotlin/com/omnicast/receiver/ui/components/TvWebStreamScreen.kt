@@ -173,10 +173,11 @@ fun TvWebStreamScreen(
                             }
 
                             val hlsCode = TvWebHtmlBuilder.getHlsJs(ctx)
+                            val kwmCode = TvWebHtmlBuilder.getKwmDecoderJs(ctx)
                             val safeUrl = streamUrl.replace("\\", "\\\\").replace("\"", "\\\"")
                             val startSec = (startPositionMs / 1000.0).coerceAtLeast(0.0)
                             val baseUrl = com.omnicast.receiver.ui.TvReceiverHelper.resolveBaseUrl(streamUrl, headers)
-                            val html = TvWebHtmlBuilder.buildPlayerHtml(safeUrl, startSec, hlsCode, headers)
+                            val html = TvWebHtmlBuilder.buildPlayerHtml(safeUrl, startSec, hlsCode, headers, kwmCode)
                             loadDataWithBaseURL(baseUrl, html, "text/html", "UTF-8", null)
                         }
                     },

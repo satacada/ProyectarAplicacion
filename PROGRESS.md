@@ -1,10 +1,10 @@
 # 📊 PROGRESS & BITÁCORA OPERATIVA — OmniCast Pro
 
-> **Versión Actual en Producción:** `v3.7.28` (`versionCodeSender: 398` | `versionCodeReceiver: 379`)  
-> **Última Sincronización Agéntica:** `2026-11-13`  
-> **Estado del Oráculo de Pruebas:** 🟢 **100% Pasando (`:core:domain:test` y `:app-sender:testDebugUnitTest`) — 0 fallos**  
-> **Próxima Actividad en Cola:** 🎉 **FASE 8 COMPLETADA + Hotfix v3.7.28 (Telemetría de cabeceras de medios + Origin en TvReceiverHelper.resolveBaseUrl)**  
-> **Progreso Global:** 🏁 **v3.7.28 Lista para Release OTA**
+> **Versión Actual en Producción:** `v3.7.29` (`versionCodeSender: 399` | `versionCodeReceiver: 380`)  
+> **Última Sincronización Agéntica:** `2026-11-14`  
+> **Estado del Oráculo de Pruebas:** 🟢 **100% Pasando (`:core:domain:test` y `:app-receiver:testDebugUnitTest`) — 0 fallos**  
+> **Próxima Actividad en Cola:** 🎉 **FASE 8 COMPLETADA + Hotfix v3.7.29 (Desempaquetador KWM de segmentos PNG/WebP en TvWebHtmlBuilder para TikTok CDN en TV Box)**  
+> **Progreso Global:** 🏁 **v3.7.29 Publicada en GitHub Releases e Instalada en Teléfono**
 
 ---
 
@@ -12,6 +12,7 @@
 
 | Hito / Fase | Nombre del Hito / Fase | Estado | Progreso |
 | :--- | :--- | :---: | :---: |
+| **Hito 8.19 [CH-29]** | Desempaquetador KWM de Fragmentos PNG/WebP en TvWebHtmlBuilder y Soporte TikTok CDN | `[x]` Completado | **100%** |
 | **Hito 8.18 [CH-28]** | Preservación de Origin y Propagación de Cabeceras CORS para CDNs Anti-Scrape | `[x]` Completado | **100%** |
 | **Hito 8.17 [CH-27]** | Discriminación Estricta de Páginas de Partidos y Firmas Reales HLS | `[x]` Completado | **100%** |
 | **Hito 8.16 [CH-26]** | Saneamiento Dinámico de Referer y Diferenciación de Capítulos de Series | `[x]` Completado | **100%** |

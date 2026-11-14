@@ -1,12 +1,12 @@
 {
-  "versionName": "3.7.28",
-  "versionCodeSender": 398,
-  "versionCodeReceiver": 379,
-  "releaseTag": "v3.7.28",
-  "senderApk": "omnicast-sender-v3.7.28.apk",
-  "receiverApk": "omnicast-receiver-v3.7.28.apk",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.28/omnicast-sender-v3.7.28.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.28/omnicast-receiver-v3.7.28.apk",
-  "releaseNotes": "v3.7.28: Telemetria de cabeceras de medios en BrowserWebView, soporte de Origin en TvReceiverHelper.resolveBaseUrl y preservacion de Origin frente a X-Base-Url-Policy.",
-  "changelog": "v3.7.28: Telemetria de cabeceras de medios en BrowserWebView, soporte de Origin en TvReceiverHelper.resolveBaseUrl y preservacion de Origin frente a X-Base-Url-Policy."
+  "versionName": "3.7.29",
+  "versionCodeSender": 399,
+  "versionCodeReceiver": 380,
+  "releaseTag": "v3.7.29",
+  "senderApk": "omnicast-sender-v3.7.29.apk",
+  "receiverApk": "omnicast-receiver-v3.7.29.apk",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.29/omnicast-sender-v3.7.29.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.29/omnicast-receiver-v3.7.29.apk",
+  "releaseNotes": "v3.7.29: Desempaquetador KWM de segmentos PNG/WebP en TvWebHtmlBuilder para reproduccion HLS de TikTok CDN en Android TV con OSD nativo, soporte de expires en StreamManifestProbe y extensiones de imagen en TvWebResourceInterceptor.",
+  "changelog": "v3.7.29: Desempaquetador KWM de segmentos PNG/WebP en TvWebHtmlBuilder para reproduccion HLS de TikTok CDN en Android TV con OSD nativo, soporte de expires en StreamManifestProbe y extensiones de imagen en TvWebResourceInterceptor."
 }

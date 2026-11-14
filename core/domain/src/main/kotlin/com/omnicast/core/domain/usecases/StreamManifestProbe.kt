@@ -34,6 +34,7 @@ object StreamManifestProbe {
         "dropcdn.io" to ("CHROMIUM_ANTI_CORS" to true), "dr0pstream.com" to ("CHROMIUM_ANTI_CORS" to true), "pelisplus.hair" to ("WEBVIEW" to true),
         "fastream.to" to ("CHROMIUM_ANTI_CORS" to true), "luluvdo.com" to ("WEBVIEW" to true), "lulustream.com" to ("WEBVIEW" to true),
         "pelisgo.online" to ("WEBVIEW" to true), "pelisgo" to ("WEBVIEW" to true), "tnmr.org" to ("EXOPLAYER" to true),
+        "tonzoidio" to ("WEBVIEW" to true), "embdlol" to ("WEBVIEW" to true),
         "boltdns.net" to ("EXOPLAYER" to false), "canela.tv" to ("EXOPLAYER" to false), "okcdn.ru" to ("EXOPLAYER" to false),
         "mycdn.me" to ("EXOPLAYER" to false), "ok.ru" to ("EXOPLAYER" to false), "spark.9bg.net" to ("EXOPLAYER" to false),
         "dailymotion.com" to ("EXOPLAYER" to false), "dmcdn.net" to ("EXOPLAYER" to false),
@@ -52,7 +53,7 @@ object StreamManifestProbe {
         if (query.isBlank()) return false
         val params = query.split('&').map { it.substringBefore('=').lowercase() to it.substringAfter('=', "") }
         val hasToken = params.any { (k, v) -> k in setOf("t", "token", "st", "md5", "hmac", "auth_key") && v.length >= 8 }
-        val hasTime = params.any { (k, v) -> k in setOf("s", "e", "t_expire", "sp") && v.isNotEmpty() && v.all { it.isDigit() } }
+        val hasTime = params.any { (k, v) -> k in setOf("s", "e", "t_expire", "sp", "expires", "expiry", "exp") && v.isNotEmpty() && v.all { it.isDigit() } }
         return hasToken && hasTime
     }
 

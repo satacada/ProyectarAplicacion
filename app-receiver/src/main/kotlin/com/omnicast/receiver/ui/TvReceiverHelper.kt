@@ -88,10 +88,11 @@ object TvReceiverHelper {
             val uri = android.net.Uri.parse(streamUrl)
             "${uri.scheme}://${uri.host}/"
         } catch (_: Throwable) { null }
-        if (headers["X-Base-Url-Policy"] == "STREAM_HOST" || headers["X-Target-Player"] == "CHROMIUM_ANTI_CORS") {
+        val originUrl = headers["Origin"]?.takeIf { it.isNotBlank() }?.let { if (it.endsWith("/")) it else "$it/" }
+        if (headers["X-Base-Url-Policy"] == "STREAM_HOST" && originUrl == null) {
             if (streamHostOrigin != null) return streamHostOrigin
         }
-        return headers["Referer"]?.takeIf { it.isNotBlank() } ?: streamHostOrigin ?: "https://omnicast.tv"
+        return headers["Referer"]?.takeIf { it.isNotBlank() } ?: originUrl ?: streamHostOrigin ?: "https://omnicast.tv"
     }
 
     suspend fun buildRecordTelemetry(

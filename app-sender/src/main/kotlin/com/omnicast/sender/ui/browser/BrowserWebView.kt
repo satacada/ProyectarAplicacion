@@ -205,7 +205,9 @@ fun BrowserWebView(
                             val cleanPath = reqUrl.substringBefore('?').lowercase()
                             val isGenericAsset = cleanPath.endsWith(".css") || cleanPath.endsWith(".js") || cleanPath.endsWith(".png") || cleanPath.endsWith(".jpg") || cleanPath.endsWith(".woff") || cleanPath.endsWith(".woff2") || cleanPath.endsWith(".svg") || cleanPath.endsWith(".ico")
                             if (!isGenericAsset) {
-                                android.util.Log.i("OMNICAST_NET", "🌐 Red: $reqUrl (Ref: $docUrl)")
+                                val isMedia = cleanPath.endsWith(".m3u8") || cleanPath.endsWith(".ts") || cleanPath.contains("/hls")
+                                val hdrsLog = if (isMedia) " | Hdrs: ${r.requestHeaders}" else ""
+                                android.util.Log.i("OMNICAST_NET", "🌐 Red: $reqUrl (Ref: $docUrl)$hdrsLog")
                             }
                             com.omnicast.sender.ui.browser.sentinel.WebPlayerDiagnosticSentinel.inspectApiRequest(reqUrl, r.requestHeaders)
                             val antiEmbed = com.omnicast.sender.ui.browser.interceptor.PlayerAntiEmbedNetworkInterceptor.shouldIntercept(r, docUrl)
@@ -220,7 +222,7 @@ fun BrowserWebView(
                             )
                             val detectedStream = com.omnicast.sender.ui.browser.extractors.StreamExtractorRegistry.useCase.execute(candidate)
                             if (detectedStream != null) {
-                                android.util.Log.i("OMNICAST_NET", "🎯 ¡Stream Detectado!: ${detectedStream.url}")
+                                android.util.Log.i("OMNICAST_NET", "🎯 ¡Stream Detectado!: ${detectedStream.url} | Raw=${r.requestHeaders}")
                                 val hdrs = BrowserUrlHelper.buildSafeHeaders(detectedStream.url, docUrl, reqUa, detectedStream.headers)
                                 try { java.net.URI(docUrl).host?.let { MediaPlayerSyncManager.learnAndSavePlayer(it, ctx) } } catch (_: Throwable) {}
                                 post {

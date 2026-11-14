@@ -1,7 +1,7 @@
 # 📊 PROJECT DASHBOARD — OmniCast Pro
 
-**Última actualización:** 2026-11-13 (v3.7.27: Preservación estricta `Origin-only` en `InAppBrowserScreen.transmitWithHistory`)  
-**Versión de producción actual:** v3.7.27 (Sender: 397) / v3.7.27 (Receiver: 378)  
+**Última actualización:** 2026-11-13 (v3.7.28: Telemetría de cabeceras de medios en `BrowserWebView` y soporte de `Origin` en `TvReceiverHelper.resolveBaseUrl`)  
+**Versión de producción actual:** v3.7.28 (Sender: 398) / v3.7.28 (Receiver: 379)  
 **Estándar de calidad:** AGENTS.md (Archivos <= 300 líneas, Clean Architecture, 100% Offline/Local, C++20 Zero-Allocation, Poda Obligatoria de Código Inútil ante Hipótesis Fallidas)
 
 ---

@@ -150,7 +150,7 @@ object BrowserUrlHelper {
             val streamHost = try { android.net.Uri.parse(streamUrl).host?.lowercase() } catch (_: Throwable) { null }
             val refHost = try { (headers["Referer"] ?: headers["Origin"])?.let { android.net.Uri.parse(it).host?.lowercase() } } catch (_: Throwable) { null }
             val target = headers["X-Target-Player"]?.uppercase()
-            if (!streamHost.isNullOrBlank() && !refHost.isNullOrBlank() && streamHost != refHost) {
+            if (!streamHost.isNullOrBlank() && !refHost.isNullOrBlank() && streamHost != refHost && !headers.containsKey("Origin")) {
                 if (target == "WEBVIEW" || target == "CHROMIUM_PURE" || target == "CHROMIUM_ANTI_CORS") {
                     headers["X-Base-Url-Policy"] = "STREAM_HOST"
                 }

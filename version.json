@@ -1,12 +1,12 @@
 {
-  "versionName": "3.7.27",
-  "versionCodeSender": 397,
-  "versionCodeReceiver": 378,
-  "releaseTag": "v3.7.27",
-  "senderApk": "omnicast-sender-v3.7.27.apk",
-  "receiverApk": "omnicast-receiver-v3.7.27.apk",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.27/omnicast-sender-v3.7.27.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.27/omnicast-receiver-v3.7.27.apk",
-  "releaseNotes": "v3.7.27: Preservación estricta de cabeceras Origin-only (no-referrer) en InAppBrowserScreen.transmitWithHistory sin inyectar Referer artificial de refPage.",
-  "changelog": "v3.7.27: Preservación estricta de cabeceras Origin-only (no-referrer) en InAppBrowserScreen.transmitWithHistory sin inyectar Referer artificial de refPage."
+  "versionName": "3.7.28",
+  "versionCodeSender": 398,
+  "versionCodeReceiver": 379,
+  "releaseTag": "v3.7.28",
+  "senderApk": "omnicast-sender-v3.7.28.apk",
+  "receiverApk": "omnicast-receiver-v3.7.28.apk",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.28/omnicast-sender-v3.7.28.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.28/omnicast-receiver-v3.7.28.apk",
+  "releaseNotes": "v3.7.28: Telemetria de cabeceras de medios en BrowserWebView, soporte de Origin en TvReceiverHelper.resolveBaseUrl y preservacion de Origin frente a X-Base-Url-Policy.",
+  "changelog": "v3.7.28: Telemetria de cabeceras de medios en BrowserWebView, soporte de Origin en TvReceiverHelper.resolveBaseUrl y preservacion de Origin frente a X-Base-Url-Policy."
 }

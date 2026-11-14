@@ -99,7 +99,7 @@ object StreamQualityDetector {
         }
 
         // Sonda Pre-Cast + Auto-Reparador de Cabeceras (4 permutaciones deterministas)
-        val probe = StreamManifestProbe.probeAndHeal(currentMediaUrl, safeHeaders, pageUrl)
+        val probe = probeAndHealStream(currentMediaUrl, safeHeaders, pageUrl)
         val rawManifest = probe.manifestContent
 
         if (!probe.isPlayable && rawManifest.isBlank()) {

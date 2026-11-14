@@ -1,10 +1,10 @@
 # 📊 PROGRESS & BITÁCORA OPERATIVA — OmniCast Pro
 
-> **Versión Actual en Producción:** `v3.7.32` (`versionCodeSender: 402` | `versionCodeReceiver: 383`)  
+> **Versión Actual en Producción:** `v3.7.33` (`versionCodeSender: 403` | `versionCodeReceiver: 384`)  
 > **Última Sincronización Agéntica:** `2026-11-14`  
 > **Estado del Oráculo de Pruebas:** 🟢 **100% Pasando (`:core:domain:test` y `:app-receiver:testDebugUnitTest`) — 0 fallos**  
-> **Próxima Actividad en Cola:** 🎉 **Hito 8.22 Completado (Preservación de Directivas Internas X-* en StreamQualityDetector.probeAndHealStream y Suite StreamQualityDetectorTest)**  
-> **Progreso Global:** 🏁 **v3.7.32 Sincronizada y Lista para Release OTA**
+> **Próxima Actividad en Cola:** 🎉 **v3.7.33 Lista para Compilación y Release OTA**  
+> **Progreso Global:** 🏁 **v3.7.33 Sincronizada y Lista para Release OTA**
 
 ---
 
@@ -85,6 +85,13 @@
 ---
 
 ## 4. Historial de Sesiones Multi-Agente
+
+### `[2026-11-14]` — v3.7.33 — Preservación de Directivas X-* en StreamQualityDetector.detectQualities
+- **Acción:**
+  - **`StreamQualityDetector.kt` (287L):** Corrección quirúrgica en `detectQualities` reutilizando `probeAndHealStream()` en lugar de invocar `StreamManifestProbe.probeAndHeal()` directamente. Esto asegura que la detección y parseo de calidades preserve `X-Target-Player: CHROMIUM_ANTI_CORS` y demás directivas internas `X-*` (`X-Single-Use-Token`, `X-With-Credentials`, `X-Base-Url-Policy`, `X-Force-Proxy`) al seleccionar una variante de calidad desde el selector para emitir hacia la TV Box.
+- **Verificación:** 172 tests passing (100% — 0 fallos), 0 archivos Kotlin > 300 líneas (`StreamQualityDetector.kt`: 287L, `StreamQualityDetectorTest.kt`: 113L).
+- **Salud del Oráculo:** 🟢 172 tests passing (100% — 0 fallos).
+- **Siguiente paso:** 🎉 **v3.7.33 Sincronizada y Lista para Release OTA**.
 
 ### `[2026-11-14]` — Hito 8.22 [CH-32] — Preservación de Directivas Internas X-* en StreamQualityDetector y Suite Unitaria
 - **Acción:**

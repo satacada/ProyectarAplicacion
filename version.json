@@ -1,12 +1,12 @@
 {
-  "versionName": "3.7.32",
-  "versionCodeSender": 402,
-  "versionCodeReceiver": 383,
-  "releaseTag": "v3.7.32",
-  "senderApk": "omnicast-sender-v3.7.32.apk",
-  "receiverApk": "omnicast-receiver-v3.7.32.apk",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.32/omnicast-sender-v3.7.32.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.32/omnicast-receiver-v3.7.32.apk",
-  "releaseNotes": "v3.7.32: Preservación de directivas internas X-* tras probeAndHealStream y robustecimiento de headers en streaming.",
-  "changelog": "v3.7.32: Preservación de directivas internas X-* tras probeAndHealStream y robustecimiento de headers en streaming."
+  "versionName": "3.7.33",
+  "versionCodeSender": 403,
+  "versionCodeReceiver": 384,
+  "releaseTag": "v3.7.33",
+  "senderApk": "omnicast-sender-v3.7.33.apk",
+  "receiverApk": "omnicast-receiver-v3.7.33.apk",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.33/omnicast-sender-v3.7.33.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.33/omnicast-receiver-v3.7.33.apk",
+  "releaseNotes": "v3.7.33: Reutilizar probeAndHealStream en detectQualities para preservar X-Target-Player.",
+  "changelog": "v3.7.33: Reutilizar probeAndHealStream en detectQualities para preservar X-Target-Player."
 }

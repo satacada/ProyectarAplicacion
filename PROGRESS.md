@@ -1,10 +1,10 @@
 # 📊 PROGRESS & BITÁCORA OPERATIVA — OmniCast Pro
 
-> **Versión Actual en Producción:** `v3.7.33` (`versionCodeSender: 403` | `versionCodeReceiver: 384`)  
-> **Última Sincronización Agéntica:** `2026-11-14`  
+> **Versión Actual en Producción:** `v3.7.34` (`versionCodeSender: 404` | `versionCodeReceiver: 385`)  
+> **Última Sincronización Agéntica:** `2026-11-15`  
 > **Estado del Oráculo de Pruebas:** 🟢 **100% Pasando (`:core:domain:test` y `:app-receiver:testDebugUnitTest`) — 0 fallos**  
-> **Próxima Actividad en Cola:** 🎉 **v3.7.33 Lista para Compilación y Release OTA**  
-> **Progreso Global:** 🏁 **v3.7.33 Sincronizada y Lista para Release OTA**
+> **Próxima Actividad en Cola:** 🎉 **v3.7.34 Lista para Compilación y Release OTA**  
+> **Progreso Global:** 🏁 **v3.7.34 Sincronizada y Lista para Release OTA**
 
 ---
 
@@ -61,7 +61,7 @@
 ## 3. Monitor de Límite de 300 Líneas (`AGENTS.md` Regla 3)
 
 ### 🔴 Archivos por encima de 300 líneas
-> *(Cero archivos Kotlin por encima de 300 líneas tras saneamiento — StreamQualityDetector.kt: 287L, StreamQualityDetectorTest.kt: 113L, SportsLiveStreamExtractorAdapter.kt: 64L, TvWebResourceInterceptor.kt: 153L, StreamCandidateValidator.kt: 216L, TvWebHtmlBuilder.kt: 246L)*
+> *(Cero archivos Kotlin por encima de 300 líneas tras saneamiento — StreamQualityDetector.kt: 287L, StreamQualityDetectorTest.kt: 113L, SportsLiveStreamExtractorAdapter.kt: 64L, TvWebResourceInterceptor.kt: 193L, StreamCandidateValidator.kt: 216L, TvWebHtmlBuilder.kt: 265L)*
 - `app-sender/src/main/assets/sniffer/universal_sniffer.js`: **383 líneas** *(Asset JS DOM sellado e inmutable)*
 
 ### 🟡 Archivos en Zona de Vigilancia (287 – 300 líneas)
@@ -85,6 +85,14 @@
 ---
 
 ## 4. Historial de Sesiones Multi-Agente
+
+### `[2026-11-15]` — v3.7.34 — Resiliencia contra Micro-cortes SSL/TLS y Auto-recuperación en Vivo
+- **Acción:**
+  - **`TvWebResourceInterceptor.kt` (193L):** Incorporación de resiliencia general contra micro-cortes de red y caídas de sesión SSL/TLS en descargas de manifiestos y fragmentos HLS/DASH/VTT (`executeWithRetry`), inyectando encabezado `Connection: close` para evitar reutilización de sockets corruptos y ejecutando 1 reintento inmediato transparente ante excepciones de E/S (`IOException`).
+  - **`TvWebHtmlBuilder.kt` (265L):** Implementación de auto-recuperación en vivo en el reproductor web Hls.js (`hls.startLoad()`) ante errores transitorios de parsing o carga de nivel (`levelParsingError`, `levelLoadError`, `levelLoadTimeOut`), congelamiento de búfer (`bufferStalledError`) y errores de red (`NETWORK_ERROR`) una vez iniciada la reproducción activa (`hasStarted = true`), con cooldown de 1500 ms y hasta 3 reintentos antes de delegar en el watchdog fatal.
+- **Verificación:** 172 tests passing (100% — 0 fallos), 0 archivos Kotlin > 300 líneas (`TvWebResourceInterceptor.kt`: 193L, `TvWebHtmlBuilder.kt`: 265L).
+- **Salud del Oráculo:** 🟢 172 tests passing (100% — 0 fallos).
+- **Siguiente paso:** 🎉 **v3.7.34 Sincronizada y Lista para Release OTA**.
 
 ### `[2026-11-14]` — v3.7.33 — Preservación de Directivas X-* en StreamQualityDetector.detectQualities
 - **Acción:**

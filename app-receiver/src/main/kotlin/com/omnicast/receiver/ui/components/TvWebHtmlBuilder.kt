@@ -93,6 +93,7 @@ object TvWebHtmlBuilder {
                 function initHls() {
                   if (window.Hls && Hls.isSupported()) {
                     if (hls) { try { hls.destroy(); } catch(_) {} hls = null; }
+                    var hasStarted = false; var liveRetries = 0; var lastRetryAt = 0;
                     var cfg = { enableWorker: true, lowLatencyMode: false, backBufferLength: 10, maxBufferLength: 20, maxMaxBufferLength: 30, maxBufferSize: 25 * 1024 * 1024, maxBufferHole: 0.5 };
                     if ($requireCreds) { cfg.xhrSetup = function(xhr) { try { xhr.withCredentials = true; } catch(_) {} }; }
                     hls = new Hls(cfg);
@@ -109,9 +110,27 @@ object TvWebHtmlBuilder {
                     });
                     hls.on(Hls.Events.LEVEL_LOADED, function() { sendHeartbeat('LEVEL_LOADED'); });
                     hls.on(Hls.Events.FRAG_LOADING, function() { sendHeartbeat('FRAG_LOADING'); });
-                    hls.on(Hls.Events.FRAG_LOADED, function() { sendHeartbeat('FRAG_LOADED'); });
+                    hls.on(Hls.Events.FRAG_LOADED, function() {
+                      hasStarted = true;
+                      liveRetries = 0;
+                      sendHeartbeat('FRAG_LOADED');
+                    });
                     hls.on(Hls.Events.ERROR, function(ev, data) {
                       console.error('TvWebStreamJS [HLS_ERROR] ' + data.type + ' ' + data.details + ' code=' + (data.response ? data.response.code : 'none'));
+                      var isLiveError = data.details === 'levelParsingError' ||
+                                        data.details === 'levelLoadError' ||
+                                        data.details === 'levelLoadTimeOut' ||
+                                        data.details === 'bufferStalledError' ||
+                                        data.type === Hls.ErrorTypes.NETWORK_ERROR;
+                      if (hasStarted && isLiveError && liveRetries < 3) {
+                        var now = Date.now();
+                        if (now - lastRetryAt >= 1500) {
+                          lastRetryAt = now;
+                          liveRetries++;
+                          setTimeout(function() { if (hls) hls.startLoad(); }, 1500);
+                        }
+                        return;
+                      }
                       if (data.fatal) {
                         if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
                           if (cfg.xhrSetup) {

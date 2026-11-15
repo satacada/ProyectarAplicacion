@@ -1,12 +1,12 @@
 {
-  "versionName": "3.7.33",
-  "versionCodeSender": 403,
-  "versionCodeReceiver": 384,
-  "releaseTag": "v3.7.33",
-  "senderApk": "omnicast-sender-v3.7.33.apk",
-  "receiverApk": "omnicast-receiver-v3.7.33.apk",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.33/omnicast-sender-v3.7.33.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.33/omnicast-receiver-v3.7.33.apk",
-  "releaseNotes": "v3.7.33: Reutilizar probeAndHealStream en detectQualities para preservar X-Target-Player.",
-  "changelog": "v3.7.33: Reutilizar probeAndHealStream en detectQualities para preservar X-Target-Player."
+  "versionName": "3.7.34",
+  "versionCodeSender": 404,
+  "versionCodeReceiver": 385,
+  "releaseTag": "v3.7.34",
+  "senderApk": "omnicast-sender-v3.7.34.apk",
+  "receiverApk": "omnicast-receiver-v3.7.34.apk",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.34/omnicast-sender-v3.7.34.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.34/omnicast-receiver-v3.7.34.apk",
+  "releaseNotes": "v3.7.34: Resiliencia anti-corte SSL y auto-recuperacion HLS en vivo.",
+  "changelog": "v3.7.34: Resiliencia anti-corte SSL y auto-recuperacion HLS en vivo."
 }

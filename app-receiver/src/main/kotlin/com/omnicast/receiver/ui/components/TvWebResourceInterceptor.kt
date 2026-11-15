@@ -3,6 +3,7 @@ package com.omnicast.receiver.ui.components
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
 import java.io.ByteArrayInputStream
+import java.io.IOException
 import java.io.InputStream
 import java.net.HttpURLConnection
 import java.net.URL
@@ -53,101 +54,140 @@ object TvWebResourceInterceptor {
         if (!isMedia) return null
 
         // 2. Interceptar y descargar inyectando Access-Control-Allow-Origin: *
-        return try {
-            val host = req.url?.host
-            val resolvedIp = if (!host.isNullOrBlank()) com.omnicast.receiver.directstream.TvSecureDnsResolver.resolveHost(host) else null
-            val effectiveUrl = if (resolvedIp != null && resolvedIp != host && !host.isNullOrBlank()) {
-                urlStr.replaceFirst("://$host", "://$resolvedIp")
-            } else urlStr
+        return executeWithRetry(urlStr, method, reqOrigin, defaultHeaders, req.url?.host)
+    }
 
-            val conn = (URL(effectiveUrl).openConnection() as HttpURLConnection).apply {
-                if (this is javax.net.ssl.HttpsURLConnection) {
-                    sslSocketFactory = TRUST_ALL_SSL_FACTORY
-                    hostnameVerifier = javax.net.ssl.HostnameVerifier { _, _ -> true }
+    private fun executeWithRetry(
+        urlStr: String,
+        method: String,
+        reqOrigin: String,
+        defaultHeaders: Map<String, String>,
+        host: String?
+    ): WebResourceResponse? {
+        for (attempt in 0..1) {
+            try {
+                return executeSingleRequest(urlStr, method, reqOrigin, defaultHeaders, host)
+            } catch (e: IOException) {
+                if (attempt == 1) {
+                    com.omnicast.receiver.log.ReceiverLogger.log(
+                        "TvWebResourceInterceptor",
+                        "Excepción en recurso web: ${e.message}",
+                        e,
+                        mapOf(
+                            "stream_url" to urlStr,
+                            "target_player" to "TvWebStreamScreen",
+                            "error_reason" to (e.javaClass.simpleName)
+                        )
+                    )
+                    return null
                 }
-                connectTimeout = 10000
-                readTimeout = 15000
-                instanceFollowRedirects = true
-                requestMethod = method
-
-                if (resolvedIp != null && resolvedIp != host && !host.isNullOrBlank()) {
-                    setRequestProperty("Host", host)
-                }
-
-                // User-Agent: usar el provisto por el emisor/reproductor o Desktop por defecto
-                val ua = defaultHeaders["User-Agent"]?.takeIf { it.isNotBlank() } ?: UA_DESKTOP
-                setRequestProperty("User-Agent", ua)
-
-                // Referer: obligatorio para autorizar la descarga (Fastream, OK.ru, DropCDN)
-                val ref = defaultHeaders["Referer"]
-                if (!ref.isNullOrBlank()) {
-                    setRequestProperty("Referer", ref)
-                }
-
-                // Origin: solo si fue provisto explícitamente
-                val origin = defaultHeaders["Origin"]
-                if (!origin.isNullOrBlank()) {
-                    setRequestProperty("Origin", origin)
-                }
-
-                // Cookie de sesión si está presente
-                val cookie = defaultHeaders["Cookie"]
-                if (!cookie.isNullOrBlank()) {
-                    setRequestProperty("Cookie", cookie)
-                }
-
-                setRequestProperty("Accept", "*/*")
-            }
-
-            val code = conn.responseCode
-            if (code !in 200..299) {
-                com.omnicast.receiver.log.ReceiverLogger.log("TvWebResourceInterceptor", "⚠️ Error HTTP $code en: $urlStr")
-                conn.disconnect()
-                return null
-            }
-
-            if (com.omnicast.receiver.ui.components.sentinel.CdnHoneypotSentinel.isHoneypotHtml(conn, urlStr)) {
-                conn.disconnect()
-                return null
-            }
-
-            val inStream: InputStream = conn.inputStream
-            val mime = when {
-                lower.contains(".m3u8") -> "application/vnd.apple.mpegurl"
-                lower.contains(".ts") -> "video/mp2t"
-                lower.contains(".vtt") -> "text/vtt"
-                lower.contains(".mp4") -> "video/mp4"
-                lower.contains(".image") || lower.contains(".png") -> "image/png"
-                lower.contains(".webp") -> "image/webp"
-                else -> conn.contentType?.substringBefore(';') ?: "application/octet-stream"
-            }
-            val encoding = if (lower.contains(".m3u8") || lower.contains(".vtt")) "UTF-8" else null
-
-            val respHeaders = mutableMapOf(
-                "Access-Control-Allow-Origin" to reqOrigin,
-                "Access-Control-Allow-Methods" to "GET, POST, OPTIONS, HEAD",
-                "Access-Control-Allow-Headers" to "*",
-                "Access-Control-Allow-Credentials" to "true"
-            )
-            conn.headerFields.forEach { (k, list) ->
-                if (k != null && !respHeaders.containsKey(k) && !k.equals("Content-Encoding", true) && !k.equals("Access-Control-Allow-Origin", true) && !k.equals("Access-Control-Allow-Credentials", true)) {
-                    respHeaders[k] = list.joinToString(", ")
-                }
-            }
-
-            WebResourceResponse(mime, encoding, 200, "OK", respHeaders, inStream)
-        } catch (e: Throwable) {
-            com.omnicast.receiver.log.ReceiverLogger.log(
-                "TvWebResourceInterceptor",
-                "Excepción en recurso web: ${e.message}",
-                e,
-                mapOf(
-                    "stream_url" to urlStr,
-                    "target_player" to "TvWebStreamScreen",
-                    "error_reason" to (e.javaClass.simpleName)
+            } catch (e: Throwable) {
+                com.omnicast.receiver.log.ReceiverLogger.log(
+                    "TvWebResourceInterceptor",
+                    "Excepción en recurso web: ${e.message}",
+                    e,
+                    mapOf(
+                        "stream_url" to urlStr,
+                        "target_player" to "TvWebStreamScreen",
+                        "error_reason" to (e.javaClass.simpleName)
+                    )
                 )
-            )
-            null
+                return null
+            }
         }
+        return null
+    }
+
+    private fun executeSingleRequest(
+        urlStr: String,
+        method: String,
+        reqOrigin: String,
+        defaultHeaders: Map<String, String>,
+        host: String?
+    ): WebResourceResponse? {
+        val resolvedIp = if (!host.isNullOrBlank()) com.omnicast.receiver.directstream.TvSecureDnsResolver.resolveHost(host) else null
+        val effectiveUrl = if (resolvedIp != null && resolvedIp != host && !host.isNullOrBlank()) {
+            urlStr.replaceFirst("://$host", "://$resolvedIp")
+        } else urlStr
+
+        val conn = (URL(effectiveUrl).openConnection() as HttpURLConnection).apply {
+            if (this is javax.net.ssl.HttpsURLConnection) {
+                sslSocketFactory = TRUST_ALL_SSL_FACTORY
+                hostnameVerifier = javax.net.ssl.HostnameVerifier { _, _ -> true }
+            }
+            connectTimeout = 10000
+            readTimeout = 15000
+            instanceFollowRedirects = true
+            requestMethod = method
+
+            if (resolvedIp != null && resolvedIp != host && !host.isNullOrBlank()) {
+                setRequestProperty("Host", host)
+            }
+
+            setRequestProperty("Connection", "close")
+
+            // User-Agent: usar el provisto por el emisor/reproductor o Desktop por defecto
+            val ua = defaultHeaders["User-Agent"]?.takeIf { it.isNotBlank() } ?: UA_DESKTOP
+            setRequestProperty("User-Agent", ua)
+
+            // Referer: obligatorio para autorizar la descarga (Fastream, OK.ru, DropCDN)
+            val ref = defaultHeaders["Referer"]
+            if (!ref.isNullOrBlank()) {
+                setRequestProperty("Referer", ref)
+            }
+
+            // Origin: solo si fue provisto explícitamente
+            val origin = defaultHeaders["Origin"]
+            if (!origin.isNullOrBlank()) {
+                setRequestProperty("Origin", origin)
+            }
+
+            // Cookie de sesión si está presente
+            val cookie = defaultHeaders["Cookie"]
+            if (!cookie.isNullOrBlank()) {
+                setRequestProperty("Cookie", cookie)
+            }
+
+            setRequestProperty("Accept", "*/*")
+        }
+
+        val code = conn.responseCode
+        if (code !in 200..299) {
+            com.omnicast.receiver.log.ReceiverLogger.log("TvWebResourceInterceptor", "⚠️ Error HTTP $code en: $urlStr")
+            conn.disconnect()
+            return null
+        }
+
+        if (com.omnicast.receiver.ui.components.sentinel.CdnHoneypotSentinel.isHoneypotHtml(conn, urlStr)) {
+            conn.disconnect()
+            return null
+        }
+
+        val inStream: InputStream = conn.inputStream
+        val lower = urlStr.lowercase()
+        val mime = when {
+            lower.contains(".m3u8") -> "application/vnd.apple.mpegurl"
+            lower.contains(".ts") -> "video/mp2t"
+            lower.contains(".vtt") -> "text/vtt"
+            lower.contains(".mp4") -> "video/mp4"
+            lower.contains(".image") || lower.contains(".png") -> "image/png"
+            lower.contains(".webp") -> "image/webp"
+            else -> conn.contentType?.substringBefore(';') ?: "application/octet-stream"
+        }
+        val encoding = if (lower.contains(".m3u8") || lower.contains(".vtt")) "UTF-8" else null
+
+        val respHeaders = mutableMapOf(
+            "Access-Control-Allow-Origin" to reqOrigin,
+            "Access-Control-Allow-Methods" to "GET, POST, OPTIONS, HEAD",
+            "Access-Control-Allow-Headers" to "*",
+            "Access-Control-Allow-Credentials" to "true"
+        )
+        conn.headerFields.forEach { (k, list) ->
+            if (k != null && !respHeaders.containsKey(k) && !k.equals("Content-Encoding", true) && !k.equals("Access-Control-Allow-Origin", true) && !k.equals("Access-Control-Allow-Credentials", true)) {
+                respHeaders[k] = list.joinToString(", ")
+            }
+        }
+
+        return WebResourceResponse(mime, encoding, 200, "OK", respHeaders, inStream)
     }
 }

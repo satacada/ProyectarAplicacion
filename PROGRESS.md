@@ -1,10 +1,10 @@
 # 📊 PROGRESS & BITÁCORA OPERATIVA — OmniCast Pro
 
-> **Versión Actual en Producción:** `v3.7.34` (`versionCodeSender: 404` | `versionCodeReceiver: 385`)  
+> **Versión Actual en Producción:** `v3.7.35` (`versionCodeSender: 405` | `versionCodeReceiver: 386`)  
 > **Última Sincronización Agéntica:** `2026-11-15`  
 > **Estado del Oráculo de Pruebas:** 🟢 **100% Pasando (`:core:domain:test` y `:app-receiver:testDebugUnitTest`) — 0 fallos**  
-> **Próxima Actividad en Cola:** 🎉 **v3.7.34 Lista para Compilación y Release OTA**  
-> **Progreso Global:** 🏁 **v3.7.34 Sincronizada y Lista para Release OTA**
+> **Próxima Actividad en Cola:** 🎉 **v3.7.35 Lista para Compilación y Release OTA**  
+> **Progreso Global:** 🏁 **v3.7.35 Sincronizada y Lista para Release OTA**
 
 ---
 
@@ -61,7 +61,7 @@
 ## 3. Monitor de Límite de 300 Líneas (`AGENTS.md` Regla 3)
 
 ### 🔴 Archivos por encima de 300 líneas
-> *(Cero archivos Kotlin por encima de 300 líneas tras saneamiento — StreamQualityDetector.kt: 287L, StreamQualityDetectorTest.kt: 113L, SportsLiveStreamExtractorAdapter.kt: 64L, TvWebResourceInterceptor.kt: 193L, StreamCandidateValidator.kt: 216L, TvWebHtmlBuilder.kt: 265L)*
+> *(Cero archivos Kotlin por encima de 300 líneas tras saneamiento — StreamQualityDetector.kt: 287L, StreamQualityDetectorTest.kt: 113L, SportsLiveStreamExtractorAdapter.kt: 64L, TvWebResourceInterceptor.kt: 193L, StreamCandidateValidator.kt: 216L, TvWebHtmlBuilder.kt: 266L)*
 - `app-sender/src/main/assets/sniffer/universal_sniffer.js`: **383 líneas** *(Asset JS DOM sellado e inmutable)*
 
 ### 🟡 Archivos en Zona de Vigilancia (287 – 300 líneas)
@@ -85,6 +85,13 @@
 ---
 
 ## 4. Historial de Sesiones Multi-Agente
+ 
+### `[2026-11-15]` — v3.7.35 — Calibración de Auto-recuperación HLS en Vivo en TvWebHtmlBuilder
+- **Acción:**
+  - **`TvWebHtmlBuilder.kt` (266L):** Exclusión de `bufferStalledError` y `aborted` del disparo de `hls.startLoad()`. Evita abortar prematuramente descargas de fragmentos en curso ante demoras transitorias de búfer y reserva la auto-recuperación exclusivamente para fallos reales de carga o parseo de playlist (`levelParsingError`, `levelLoadError`, `levelLoadTimeOut`) y errores fatales de red (`NETWORK_ERROR`), manteniendo hasta 3 reintentos con cooldown de 1500 ms tras el inicio de reproducción activa (`hasStarted = true`).
+- **Verificación:** 172 tests passing (100% — 0 fallos), 0 archivos Kotlin > 300 líneas (`TvWebHtmlBuilder.kt`: 266L).
+- **Salud del Oráculo:** 🟢 172 tests passing (100% — 0 fallos).
+- **Siguiente paso:** 🎉 **v3.7.35 Sincronizada y Lista para Release OTA**.
 
 ### `[2026-11-15]` — v3.7.34 — Resiliencia contra Micro-cortes SSL/TLS y Auto-recuperación en Vivo
 - **Acción:**

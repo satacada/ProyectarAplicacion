@@ -117,11 +117,11 @@ object TvWebHtmlBuilder {
                     });
                     hls.on(Hls.Events.ERROR, function(ev, data) {
                       console.error('TvWebStreamJS [HLS_ERROR] ' + data.type + ' ' + data.details + ' code=' + (data.response ? data.response.code : 'none'));
-                      var isLiveError = data.details === 'levelParsingError' ||
+                      var isLiveError = data.details !== 'aborted' && (
+                                        data.details === 'levelParsingError' ||
                                         data.details === 'levelLoadError' ||
                                         data.details === 'levelLoadTimeOut' ||
-                                        data.details === 'bufferStalledError' ||
-                                        data.type === Hls.ErrorTypes.NETWORK_ERROR;
+                                        (data.fatal && data.type === Hls.ErrorTypes.NETWORK_ERROR));
                       if (hasStarted && isLiveError && liveRetries < 3) {
                         var now = Date.now();
                         if (now - lastRetryAt >= 1500) {

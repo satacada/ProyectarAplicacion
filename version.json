@@ -1,12 +1,12 @@
 {
-  "versionName": "3.7.34",
-  "versionCodeSender": 404,
-  "versionCodeReceiver": 385,
-  "releaseTag": "v3.7.34",
-  "senderApk": "omnicast-sender-v3.7.34.apk",
-  "receiverApk": "omnicast-receiver-v3.7.34.apk",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.34/omnicast-sender-v3.7.34.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.34/omnicast-receiver-v3.7.34.apk",
-  "releaseNotes": "v3.7.34: Resiliencia anti-corte SSL y auto-recuperacion HLS en vivo.",
-  "changelog": "v3.7.34: Resiliencia anti-corte SSL y auto-recuperacion HLS en vivo."
+  "versionName": "3.7.35",
+  "versionCodeSender": 405,
+  "versionCodeReceiver": 386,
+  "releaseTag": "v3.7.35",
+  "senderApk": "omnicast-sender-v3.7.35.apk",
+  "receiverApk": "omnicast-receiver-v3.7.35.apk",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.35/omnicast-sender-v3.7.35.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.35/omnicast-receiver-v3.7.35.apk",
+  "releaseNotes": "v3.7.35: Excluir bufferStalledError y aborted del auto-reintento HLS.",
+  "changelog": "v3.7.35: Excluir bufferStalledError y aborted del auto-reintento HLS."
 }

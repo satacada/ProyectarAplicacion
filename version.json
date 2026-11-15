@@ -1,12 +1,12 @@
 {
-  "versionName": "3.7.35",
-  "versionCodeSender": 405,
-  "versionCodeReceiver": 386,
-  "releaseTag": "v3.7.35",
-  "senderApk": "omnicast-sender-v3.7.35.apk",
-  "receiverApk": "omnicast-receiver-v3.7.35.apk",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.35/omnicast-sender-v3.7.35.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.35/omnicast-receiver-v3.7.35.apk",
-  "releaseNotes": "v3.7.35: Excluir bufferStalledError y aborted del auto-reintento HLS.",
-  "changelog": "v3.7.35: Excluir bufferStalledError y aborted del auto-reintento HLS."
+  "versionName": "3.7.36",
+  "versionCodeSender": 406,
+  "versionCodeReceiver": 387,
+  "releaseTag": "v3.7.36",
+  "senderApk": "omnicast-sender-v3.7.36.apk",
+  "receiverApk": "omnicast-receiver-v3.7.36.apk",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.36/omnicast-sender-v3.7.36.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.36/omnicast-receiver-v3.7.36.apk",
+  "releaseNotes": "v3.7.36: Sincronización de visibilidad OSD D-Pad en reproductor Web/YouTube para reactivar controles con el mando.",
+  "changelog": "v3.7.36: Sincronización de visibilidad OSD D-Pad en reproductor Web/YouTube para reactivar controles con el mando."
 }

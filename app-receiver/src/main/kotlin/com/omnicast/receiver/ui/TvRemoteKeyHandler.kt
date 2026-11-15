@@ -170,16 +170,22 @@ object TvRemoteKeyHandler {
                 when (keyCode) {
                     KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE, KeyEvent.KEYCODE_MEDIA_PLAY, KeyEvent.KEYCODE_MEDIA_PAUSE -> {
                         youTubeControlFlow.tryEmit(SignalingMessage.PlayControl("TOGGLE_PLAY"))
+                        notifyControlsVisibilityChanged(true)
+                        youTubeControlFlow.tryEmit(SignalingMessage.PlayControl("SHOW_CONTROLS"))
                         return true
                     }
                     KeyEvent.KEYCODE_MEDIA_FAST_FORWARD -> {
                         youTubeControlFlow.tryEmit(SignalingMessage.PlayControl("SEEK_REL", 10_000L))
                         Toast.makeText(context, "⏩ +10s", Toast.LENGTH_SHORT).show()
+                        notifyControlsVisibilityChanged(true)
+                        youTubeControlFlow.tryEmit(SignalingMessage.PlayControl("SHOW_CONTROLS"))
                         return true
                     }
                     KeyEvent.KEYCODE_MEDIA_REWIND -> {
                         youTubeControlFlow.tryEmit(SignalingMessage.PlayControl("SEEK_REL", -10_000L))
                         Toast.makeText(context, "⏪ -10s", Toast.LENGTH_SHORT).show()
+                        notifyControlsVisibilityChanged(true)
+                        youTubeControlFlow.tryEmit(SignalingMessage.PlayControl("SHOW_CONTROLS"))
                         return true
                     }
                     KeyEvent.KEYCODE_MENU -> {

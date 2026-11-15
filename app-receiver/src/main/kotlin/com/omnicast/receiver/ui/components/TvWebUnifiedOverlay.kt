@@ -26,6 +26,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.omnicast.receiver.ui.TvRemoteKeyHandler
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -70,10 +71,19 @@ fun TvWebUnifiedOverlay(
         }
     }
 
-    // Foco inicial únicamente al abrir los controles desde estado oculto
+    // Sincronización con TvRemoteKeyHandler y foco inicial únicamente al abrir los controles
     LaunchedEffect(state.isControlsVisible) {
+        TvRemoteKeyHandler.notifyControlsVisibilityChanged(state.isControlsVisible)
         if (state.isControlsVisible) {
             runCatching { playFocusRequester.requestFocus() }
+            delay(80L)
+            runCatching { playFocusRequester.requestFocus() }
+        }
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            TvRemoteKeyHandler.notifyControlsVisibilityChanged(false)
         }
     }
 
@@ -86,7 +96,15 @@ fun TvWebUnifiedOverlay(
     }
 
     AnimatedVisibility(visible = state.isControlsVisible, enter = fadeIn(), exit = fadeOut(), modifier = modifier.fillMaxSize()) {
-        Box(modifier = Modifier.fillMaxSize().background(Brush.verticalGradient(0.0f to Color(0xCC000000), 0.25f to Color.Transparent, 0.60f to Color.Transparent, 1.0f to Color(0xEE000000)))) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .onPreviewKeyEvent { ev ->
+                    if (ev.type == KeyEventType.KeyDown) hideTimerKey++
+                    false
+                }
+                .background(Brush.verticalGradient(0.0f to Color(0xCC000000), 0.25f to Color.Transparent, 0.60f to Color.Transparent, 1.0f to Color(0xEE000000)))
+        ) {
             Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp, vertical = 24.dp).align(Alignment.TopStart), verticalAlignment = Alignment.CenterVertically) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(text = badgeText, color = Color(0xFF38BDF8), fontSize = 12.sp, fontWeight = FontWeight.Bold)

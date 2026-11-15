@@ -19,6 +19,9 @@ object PlayerAntiEmbedNetworkInterceptor {
         val accept = request.requestHeaders?.get("Accept")?.lowercase()
         val isSubframeDoc = dest == "iframe" || (accept != null && accept.contains("text/html"))
         if (!isSubframeDoc && !url.contains("/f/") && !url.contains("/embed/")) return null
+        val urlHost = try { java.net.URI(url).host?.lowercase() } catch (_: Throwable) { null }
+        val refHost = try { if (!refererUrl.isNullOrBlank()) java.net.URI(refererUrl).host?.lowercase() else null } catch (_: Throwable) { null }
+        if (urlHost != null && urlHost == refHost && !url.contains("/f/") && !url.contains("/embed/")) return null
 
         val cleanPath = url.substringBefore('?').lowercase()
         if (cleanPath.endsWith(".js") || cleanPath.endsWith(".css") || cleanPath.endsWith(".png") ||

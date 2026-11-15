@@ -1,12 +1,12 @@
 {
-  "versionName": "3.7.38",
-  "versionCodeSender": 408,
-  "versionCodeReceiver": 389,
-  "releaseTag": "v3.7.38",
-  "senderApk": "omnicast-sender-v3.7.38.apk",
-  "receiverApk": "omnicast-receiver-v3.7.38.apk",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.38/omnicast-sender-v3.7.38.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.38/omnicast-receiver-v3.7.38.apk",
-  "releaseNotes": "v3.7.38: Respeto efectivo de la Lista Blanca en BrowserWebView para permitir carga de recursos y menús dinámicos en sitios autorizados.",
-  "changelog": "v3.7.38: Respeto efectivo de la Lista Blanca en BrowserWebView para permitir carga de recursos y menús dinámicos en sitios autorizados."
+  "versionName": "3.7.39",
+  "versionCodeSender": 409,
+  "versionCodeReceiver": 390,
+  "releaseTag": "v3.7.39",
+  "senderApk": "omnicast-sender-v3.7.39.apk",
+  "receiverApk": "omnicast-receiver-v3.7.39.apk",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.39/omnicast-sender-v3.7.39.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.39/omnicast-receiver-v3.7.39.apk",
+  "releaseNotes": "v3.7.39: Lista Blanca completa en ServiceWorker/onProgressChanged, persistencia fiable en SharedPreferences y bypass anti-embed para iframes same-origin.",
+  "changelog": "v3.7.39: Lista Blanca completa en ServiceWorker/onProgressChanged, persistencia fiable en SharedPreferences y bypass anti-embed para iframes same-origin."
 }

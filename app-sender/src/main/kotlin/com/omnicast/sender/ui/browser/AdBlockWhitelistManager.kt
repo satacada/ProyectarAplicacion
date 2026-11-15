@@ -56,7 +56,7 @@ object AdBlockWhitelistManager {
         synchronized(cachedDomains) {
             cachedDomains.add(cleanDomain)
             val prefs = context.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-            prefs.edit().putStringSet(KEY_WHITELIST_SET, cachedDomains).apply()
+            prefs.edit().putStringSet(KEY_WHITELIST_SET, HashSet(cachedDomains)).apply()
         }
         return true
     }
@@ -67,7 +67,7 @@ object AdBlockWhitelistManager {
             val removed = cachedDomains.remove(cleanDomain)
             if (removed) {
                 val prefs = context.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-                prefs.edit().putStringSet(KEY_WHITELIST_SET, cachedDomains).apply()
+                prefs.edit().putStringSet(KEY_WHITELIST_SET, HashSet(cachedDomains)).apply()
             }
             return removed
         }

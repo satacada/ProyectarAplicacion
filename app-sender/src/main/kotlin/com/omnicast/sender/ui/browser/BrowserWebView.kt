@@ -53,7 +53,8 @@ fun BrowserWebView(
                         override fun shouldInterceptRequest(request: WebResourceRequest): WebResourceResponse? {
                             val reqUrl = request.url.toString()
                             val docUrl = request.requestHeaders?.get("Referer") ?: activeLiveUrl.get().ifBlank { currentUrl }
-                            if (isAdBlockEnabled && (AdBlocker.isAd(reqUrl) || NativeAdBlockEngine.shouldBlock(reqUrl, docUrl))) {
+                            val isDocWhitelisted = AdBlockWhitelistManager.isWhitelisted(docUrl)
+                            if (isAdBlockEnabled && !isDocWhitelisted && (AdBlocker.isAd(reqUrl) || NativeAdBlockEngine.shouldBlock(reqUrl, docUrl))) {
                                 return AdBlocker.createEmptyResponse()
                             }
                             val candidate = com.omnicast.core.domain.models.StreamCandidate(
@@ -252,8 +253,9 @@ fun BrowserWebView(
                         if (p >= 80) swipeRefresh.isRefreshing = false
                         val u = v?.url; val t = v?.title ?: ""
                         val isChallenge = AdBlocker.isVerificationOrCaptcha(u) || u?.contains("__cf_chl_", true) == true || t.contains("Just a moment", true) || t.contains("Un momento", true)
+                        val isWhitelisted = u != null && AdBlockWhitelistManager.isWhitelisted(u)
                         if (!isChallenge) {
-                            if (isAdBlockEnabled && (p == 30 || p == 60 || p == 100)) v?.evaluateJavascript(AdBlocker.getAdHidingScript(), null)
+                            if (isAdBlockEnabled && !isWhitelisted && (p == 30 || p == 60 || p == 100)) v?.evaluateJavascript(AdBlocker.getAdHidingScript(), null)
                             if (p == 25 || p == 50 || p == 100) v?.evaluateJavascript(WvcDomSniffer.getInjectionScript(ctx), null)
                         }
                     }

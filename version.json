@@ -1,12 +1,12 @@
 {
-  "versionName": "3.7.37",
-  "versionCodeSender": 407,
-  "versionCodeReceiver": 388,
-  "releaseTag": "v3.7.37",
-  "senderApk": "omnicast-sender-v3.7.37.apk",
-  "receiverApk": "omnicast-receiver-v3.7.37.apk",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.37/omnicast-sender-v3.7.37.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.37/omnicast-receiver-v3.7.37.apk",
-  "releaseNotes": "v3.7.37: Guardado dual de páginas web y videos desde la estrella, administración en panel lateral y escáner QR offline en el menú de tres puntos.",
-  "changelog": "v3.7.37: Guardado dual de páginas web y videos desde la estrella, administración en panel lateral y escáner QR offline en el menú de tres puntos."
+  "versionName": "3.7.38",
+  "versionCodeSender": 408,
+  "versionCodeReceiver": 389,
+  "releaseTag": "v3.7.38",
+  "senderApk": "omnicast-sender-v3.7.38.apk",
+  "receiverApk": "omnicast-receiver-v3.7.38.apk",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.38/omnicast-sender-v3.7.38.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.38/omnicast-receiver-v3.7.38.apk",
+  "releaseNotes": "v3.7.38: Respeto efectivo de la Lista Blanca en BrowserWebView para permitir carga de recursos y menús dinámicos en sitios autorizados.",
+  "changelog": "v3.7.38: Respeto efectivo de la Lista Blanca en BrowserWebView para permitir carga de recursos y menús dinámicos en sitios autorizados."
 }

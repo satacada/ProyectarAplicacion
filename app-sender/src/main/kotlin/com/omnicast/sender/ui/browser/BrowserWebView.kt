@@ -111,7 +111,8 @@ fun BrowserWebView(
                         u?.takeIf { !it.startsWith("about:") }?.let { activeLiveUrl.set(it) }
                         u?.let { if (!it.startsWith("about:") && !it.contains("favicon")) onPageStarted(it) }
                         val isChallenge = AdBlocker.isVerificationOrCaptcha(u) || u?.contains("__cf_chl_", true) == true
-                        if (isAdBlockEnabled && !isChallenge) {
+                        val isWhitelisted = u != null && AdBlockWhitelistManager.isWhitelisted(u)
+                        if (isAdBlockEnabled && !isChallenge && !isWhitelisted) {
                             v?.evaluateJavascript(AdBlocker.getAdHidingScript(), null)
                             if (WvcShieldSecurityEngine.isEnabled) v?.evaluateJavascript(WvcShieldSecurityEngine.getProtectionScript(), null)
                         }
@@ -126,7 +127,8 @@ fun BrowserWebView(
                         currentKnownTitle = title
                         onPageFinished(title, u)
                         val isChallenge = AdBlocker.isVerificationOrCaptcha(u) || u?.contains("__cf_chl_", true) == true || title.contains("Just a moment", true) || title.contains("Un momento", true)
-                        if (isAdBlockEnabled && !isChallenge) {
+                        val isWhitelisted = u != null && AdBlockWhitelistManager.isWhitelisted(u)
+                        if (isAdBlockEnabled && !isChallenge && !isWhitelisted) {
                             v?.evaluateJavascript(AdBlocker.getAdHidingScript(), null)
                             if (WvcShieldSecurityEngine.isEnabled) v?.evaluateJavascript(WvcShieldSecurityEngine.getProtectionScript(), null)
                         }
@@ -199,7 +201,8 @@ fun BrowserWebView(
                             val reqOrigin = r.requestHeaders?.entries?.firstOrNull { it.key.equals("Origin", true) }?.value
                             val docUrl = reqReferer ?: reqOrigin ?: activeLiveUrl.get().ifBlank { currentUrl }
                             val reqUa = r.requestHeaders?.entries?.firstOrNull { it.key.equals("User-Agent", true) }?.value?.takeIf { it.isNotBlank() } ?: UA_MOBILE
-                            if (isAdBlockEnabled && (AdBlocker.isAd(reqUrl) || AdBlocker.isVideoAd(reqUrl) || NativeAdBlockEngine.shouldBlock(reqUrl, docUrl))) {
+                            val isDocWhitelisted = AdBlockWhitelistManager.isWhitelisted(docUrl)
+                            if (isAdBlockEnabled && !isDocWhitelisted && (AdBlocker.isAd(reqUrl) || AdBlocker.isVideoAd(reqUrl) || NativeAdBlockEngine.shouldBlock(reqUrl, docUrl))) {
                                 return AdBlocker.createEmptyResponse()
                             }
                             val cleanPath = reqUrl.substringBefore('?').lowercase()

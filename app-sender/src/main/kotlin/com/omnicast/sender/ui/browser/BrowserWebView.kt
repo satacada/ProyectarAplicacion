@@ -84,6 +84,7 @@ fun BrowserWebView(
 
             webView.apply {
                 isFocusable = true; isFocusableInTouchMode = true; isClickable = true
+                setBackgroundColor(android.graphics.Color.WHITE)
                 CookieManager.getInstance().setAcceptCookie(true)
                 CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
                 com.omnicast.sender.ui.browser.sentinel.WebPlayerDiagnosticSentinel.initWebDebugging()
@@ -136,6 +137,7 @@ fun BrowserWebView(
                         if (!isChallenge) {
                             v?.evaluateJavascript(inputViewportScript, null)
                             v?.evaluateJavascript(WvcDomSniffer.getInjectionScript(ctx), null)
+                            v?.evaluateJavascript("try{var ifr=document.getElementById('agenda');if(ifr)ifr.style.backgroundColor='#ffffff';}catch(_){}", null)
                         }
                     }
 

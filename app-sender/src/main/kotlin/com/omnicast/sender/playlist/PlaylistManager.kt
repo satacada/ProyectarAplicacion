@@ -17,6 +17,7 @@ class PlaylistManager(context: Context) {
         private const val KEY_PLAYLISTS = "playlists_json"
         const val DEFAULT_FAVORITES_ID = "default_favorites"
         const val DEFAULT_WATCH_LATER_ID = "default_watch_later"
+        const val DEFAULT_PAGES_ID = "default_pages"
     }
 
     private val json = Json { ignoreUnknownKeys = true }
@@ -27,21 +28,17 @@ class PlaylistManager(context: Context) {
     }
 
     private fun ensureDefaultPlaylists() {
-        val existing = getPlaylistsRaw()
+        val existing = getPlaylistsRaw().toMutableList()
         if (existing.isEmpty()) {
             val defaults = listOf(
-                Playlist(
-                    id = DEFAULT_FAVORITES_ID,
-                    name = "⭐ Favoritos",
-                    isDefault = true
-                ),
-                Playlist(
-                    id = DEFAULT_WATCH_LATER_ID,
-                    name = "🕒 Ver más tarde",
-                    isDefault = true
-                )
+                Playlist(id = DEFAULT_FAVORITES_ID, name = "⭐ Favoritos", isDefault = true),
+                Playlist(id = DEFAULT_WATCH_LATER_ID, name = "🕒 Ver más tarde", isDefault = true),
+                Playlist(id = DEFAULT_PAGES_ID, name = "🌐 Páginas Web", isDefault = true)
             )
             savePlaylists(defaults)
+        } else if (existing.none { it.id == DEFAULT_PAGES_ID }) {
+            existing.add(Playlist(id = DEFAULT_PAGES_ID, name = "🌐 Páginas Web", isDefault = true))
+            savePlaylists(existing)
         }
     }
 

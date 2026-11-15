@@ -1,12 +1,12 @@
 {
-  "versionName": "3.7.36",
-  "versionCodeSender": 406,
-  "versionCodeReceiver": 387,
-  "releaseTag": "v3.7.36",
-  "senderApk": "omnicast-sender-v3.7.36.apk",
-  "receiverApk": "omnicast-receiver-v3.7.36.apk",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.36/omnicast-sender-v3.7.36.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.36/omnicast-receiver-v3.7.36.apk",
-  "releaseNotes": "v3.7.36: Sincronización de visibilidad OSD D-Pad en reproductor Web/YouTube para reactivar controles con el mando.",
-  "changelog": "v3.7.36: Sincronización de visibilidad OSD D-Pad en reproductor Web/YouTube para reactivar controles con el mando."
+  "versionName": "3.7.37",
+  "versionCodeSender": 407,
+  "versionCodeReceiver": 388,
+  "releaseTag": "v3.7.37",
+  "senderApk": "omnicast-sender-v3.7.37.apk",
+  "receiverApk": "omnicast-receiver-v3.7.37.apk",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.37/omnicast-sender-v3.7.37.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.37/omnicast-receiver-v3.7.37.apk",
+  "releaseNotes": "v3.7.37: Guardado dual de páginas web y videos desde la estrella, administración en panel lateral y escáner QR offline en el menú de tres puntos.",
+  "changelog": "v3.7.37: Guardado dual de páginas web y videos desde la estrella, administración en panel lateral y escáner QR offline en el menú de tres puntos."
 }

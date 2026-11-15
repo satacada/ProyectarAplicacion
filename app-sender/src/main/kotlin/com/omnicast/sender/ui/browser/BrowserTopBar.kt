@@ -73,7 +73,7 @@ fun BrowserTopBar(
     onOpenPlaylists: () -> Unit = {},
     onOpenDrawer: () -> Unit = {},
     onOpenWhitelist: () -> Unit = {},
-    onExitApp: () -> Unit = {}
+    onScanQr: () -> Unit = {}, onManageSaved: () -> Unit = {}, onExitApp: () -> Unit = {}
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
     val focusManager = LocalFocusManager.current
@@ -207,35 +207,16 @@ fun BrowserTopBar(
                             onClick = { showHelpDialog = true; showMenu = false }
                         )
                         HorizontalDivider(color = Color(0xFF334155))
-                        DropdownMenuItem(
-                            text = { Text(com.omnicast.sender.language.AppLanguageManager.t(context, "menu_adblock"), color = Color.White) },
-                            onClick = { onToggleAdBlock(); showMenu = false }
-                        )
-                        DropdownMenuItem(
-                            text = { Text(com.omnicast.sender.language.AppLanguageManager.t(context, "menu_whitelist"), color = Color(0xFF10B981)) },
-                            onClick = { onOpenWhitelist(); showMenu = false }
-                        )
-                        DropdownMenuItem(
-                            text = { Text(if (isDesktopMode) com.omnicast.sender.language.AppLanguageManager.t(context, "menu_mobile") else com.omnicast.sender.language.AppLanguageManager.t(context, "menu_desktop"), color = Color.White) },
-                            onClick = { onToggleDesktopMode(); showMenu = false }
-                        )
-                        DropdownMenuItem(
-                            text = { Text(com.omnicast.sender.language.AppLanguageManager.t(context, "menu_rescan"), color = Color(0xFF38BDF8)) },
-                            onClick = { onForceRescan(); showMenu = false }
-                        )
-                        DropdownMenuItem(
-                            text = { Text(com.omnicast.sender.language.AppLanguageManager.t(context, "menu_language"), color = Color(0xFF38BDF8)) },
-                            onClick = { showLangDialog = true; showMenu = false }
-                        )
+                        DropdownMenuItem(text = { Text("📷 Escanear QR de TV", color = Color(0xFF38BDF8), fontWeight = FontWeight.SemiBold) }, onClick = { showMenu = false; onScanQr() })
+                        DropdownMenuItem(text = { Text("🔖 Administrar guardados", color = Color(0xFFFBBF24), fontWeight = FontWeight.SemiBold) }, onClick = { showMenu = false; onManageSaved() })
+                        DropdownMenuItem(text = { Text(com.omnicast.sender.language.AppLanguageManager.t(context, "menu_adblock"), color = Color.White) }, onClick = { onToggleAdBlock(); showMenu = false })
+                        DropdownMenuItem(text = { Text(com.omnicast.sender.language.AppLanguageManager.t(context, "menu_whitelist"), color = Color(0xFF10B981)) }, onClick = { onOpenWhitelist(); showMenu = false })
+                        DropdownMenuItem(text = { Text(if (isDesktopMode) com.omnicast.sender.language.AppLanguageManager.t(context, "menu_mobile") else com.omnicast.sender.language.AppLanguageManager.t(context, "menu_desktop"), color = Color.White) }, onClick = { onToggleDesktopMode(); showMenu = false })
+                        DropdownMenuItem(text = { Text(com.omnicast.sender.language.AppLanguageManager.t(context, "menu_rescan"), color = Color(0xFF38BDF8)) }, onClick = { onForceRescan(); showMenu = false })
+                        DropdownMenuItem(text = { Text(com.omnicast.sender.language.AppLanguageManager.t(context, "menu_language"), color = Color(0xFF38BDF8)) }, onClick = { showLangDialog = true; showMenu = false })
                         HorizontalDivider(color = Color(0xFF334155))
-                        DropdownMenuItem(
-                            text = { Text(com.omnicast.sender.language.AppLanguageManager.t(context, "menu_exit"), color = Color(0xFFF87171), fontWeight = FontWeight.Bold) },
-                            onClick = { onExitApp(); showMenu = false }
-                        )
-                        DropdownMenuItem(
-                            text = { Text(com.omnicast.sender.language.AppLanguageManager.t(context, "menu_clear_data"), color = Color(0xFFF87171)) },
-                            onClick = { onClearData(); showMenu = false }
-                        )
+                        DropdownMenuItem(text = { Text(com.omnicast.sender.language.AppLanguageManager.t(context, "menu_exit"), color = Color(0xFFF87171), fontWeight = FontWeight.Bold) }, onClick = { onExitApp(); showMenu = false })
+                        DropdownMenuItem(text = { Text(com.omnicast.sender.language.AppLanguageManager.t(context, "menu_clear_data"), color = Color(0xFFF87171)) }, onClick = { onClearData(); showMenu = false })
                     }
                 }
             }

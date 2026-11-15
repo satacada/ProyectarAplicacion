@@ -29,6 +29,7 @@ androidx-media = { group = "androidx.media", name = "media", version = "1.7.0" }
 androidx-swiperefreshlayout = { group = "androidx.swiperefreshlayout", name = "swiperefreshlayout", version = "1.1.0" }
 androidx-webkit = { group = "androidx.webkit", name = "webkit", version.ref = "webkit" }
 adblock-filter = { group = "com.github.Edsuns.AdblockAndroid", name = "adblock-client", version = "0.9.1" }
+zxing-android-embedded = { group = "com.journeyapps", name = "zxing-android-embedded", version = "4.3.0" }
 
 # Compose UI (Mobile)
 androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }

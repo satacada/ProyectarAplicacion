@@ -194,10 +194,12 @@ fun DrawerSavedPlaylistsList(
         Row(modifier = Modifier.fillMaxSize()) {
             LazyColumn(state = listState, verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.weight(1f).padding(end = 4.dp)) {
                 filteredPlaylists.forEach { pl ->
+                    val isPagesFolder = pl.id == com.omnicast.sender.playlist.PlaylistManager.DEFAULT_PAGES_ID
+                    val countUnit = if (isPagesFolder) "enlaces" else "películas"
                     item {
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                             Icon(Icons.Rounded.Folder, contentDescription = null, tint = Color(0xFF38BDF8), modifier = Modifier.size(16.dp))
-                            Text("${pl.name} (${pl.items.size} películas)", color = Color(0xFF38BDF8), fontWeight = FontWeight.Bold, fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                            Text("${pl.name} (${pl.items.size} $countUnit)", color = Color(0xFF38BDF8), fontWeight = FontWeight.Bold, fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         }
                     }
                     items(pl.items, key = { pl.id + "_" + it.url }) { video ->
@@ -226,54 +228,28 @@ fun DrawerSavedPlaylistsList(
                                     Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                                         Text(video.title, color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis)
                                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                                            Icon(Icons.Rounded.PlayArrow, contentDescription = null, tint = Color(0xFF10B981), modifier = Modifier.size(11.dp))
-                                            val posText = if (video.lastPositionMs > 0L) ShareUtils.formatTime(video.lastPositionMs) else "0:00"
-                                            Text(posText, color = Color(0xFF10B981), fontSize = 10.sp)
+                                            Icon(if (isPagesFolder) Icons.Rounded.Language else Icons.Rounded.PlayArrow, contentDescription = null, tint = if (isPagesFolder) Color(0xFF38BDF8) else Color(0xFF10B981), modifier = Modifier.size(11.dp))
+                                            val subText = if (isPagesFolder) video.url.removePrefix("https://").removePrefix("http://").take(38) else if (video.lastPositionMs > 0L) ShareUtils.formatTime(video.lastPositionMs) else "0:00"
+                                            Text(subText, color = if (isPagesFolder) Color(0xFF94A3B8) else Color(0xFF10B981), fontSize = 10.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
                                         }
                                     }
                                     Box {
                                         IconButton(onClick = { showSavedMenu = true }, modifier = Modifier.size(30.dp)) {
                                             Icon(Icons.Rounded.MoreVert, contentDescription = "Opciones", tint = Color(0xFF94A3B8), modifier = Modifier.size(17.dp))
                                         }
-                                        DropdownMenu(
-                                            expanded = showSavedMenu,
-                                            onDismissRequest = { showSavedMenu = false },
-                                            modifier = Modifier.background(Color(0xFF1E293B))
-                                        ) {
-                                            DropdownMenuItem(
-                                                leadingIcon = { Icon(Icons.Rounded.Tv, contentDescription = null, tint = Color(0xFF6366F1), modifier = Modifier.size(17.dp)) },
-                                                text = { Text("Proyectar en TV", color = Color.White, fontSize = 13.sp) },
-                                                onClick = { showSavedMenu = false; onPlay(video.url, video.title, video.headers ?: emptyMap(), video.lastPositionMs) }
-                                            )
-                                            DropdownMenuItem(
-                                                leadingIcon = { Icon(Icons.Rounded.Language, contentDescription = null, tint = Color(0xFF38BDF8), modifier = Modifier.size(17.dp)) },
-                                                text = { Text("Abrir en Web", color = Color.White, fontSize = 13.sp) },
-                                                onClick = { showSavedMenu = false; onOpenWeb(video.pageUrl ?: video.url) }
-                                            )
-                                            if (ShareUtils.canShare(video.url, video.pageUrl)) {
-                                                DropdownMenuItem(
-                                                    leadingIcon = { Icon(Icons.Rounded.Share, contentDescription = null, tint = Color(0xFF0284C7), modifier = Modifier.size(17.dp)) },
-                                                    text = { Text("Compartir enlace", color = Color.White, fontSize = 13.sp) },
-                                                    onClick = {
-                                                        showSavedMenu = false
-                                                        ShareUtils.shareVideo(context, video.title, video.url, video.pageUrl)
-                                                    }
-                                                )
+                                        DropdownMenu(expanded = showSavedMenu, onDismissRequest = { showSavedMenu = false }, modifier = Modifier.background(Color(0xFF1E293B))) {
+                                            if (!isPagesFolder) {
+                                                DropdownMenuItem(leadingIcon = { Icon(Icons.Rounded.Tv, null, tint = Color(0xFF6366F1), modifier = Modifier.size(17.dp)) }, text = { Text("Proyectar en TV", color = Color.White, fontSize = 13.sp) }, onClick = { showSavedMenu = false; onPlay(video.url, video.title, video.headers ?: emptyMap(), video.lastPositionMs) })
                                             }
-                                            DropdownMenuItem(
-                                                leadingIcon = { Icon(Icons.Rounded.FileDownload, contentDescription = null, tint = Color(0xFF10B981), modifier = Modifier.size(17.dp)) },
-                                                text = { Text("Descargar película", color = Color(0xFF10B981), fontSize = 13.sp) },
-                                                onClick = {
-                                                    showSavedMenu = false
-                                                    MediaDownloadHelper.downloadMedia(context, video.url, video.title, video.headers ?: emptyMap())
-                                                }
-                                            )
+                                            DropdownMenuItem(leadingIcon = { Icon(Icons.Rounded.Language, null, tint = Color(0xFF38BDF8), modifier = Modifier.size(17.dp)) }, text = { Text("Abrir en Web", color = Color.White, fontSize = 13.sp) }, onClick = { showSavedMenu = false; onOpenWeb(video.pageUrl ?: video.url) })
+                                            if (ShareUtils.canShare(video.url, video.pageUrl)) {
+                                                DropdownMenuItem(leadingIcon = { Icon(Icons.Rounded.Share, null, tint = Color(0xFF0284C7), modifier = Modifier.size(17.dp)) }, text = { Text("Compartir enlace", color = Color.White, fontSize = 13.sp) }, onClick = { showSavedMenu = false; ShareUtils.shareVideo(context, video.title, video.url, video.pageUrl) })
+                                            }
+                                            if (!isPagesFolder) {
+                                                DropdownMenuItem(leadingIcon = { Icon(Icons.Rounded.FileDownload, null, tint = Color(0xFF10B981), modifier = Modifier.size(17.dp)) }, text = { Text("Descargar película", color = Color(0xFF10B981), fontSize = 13.sp) }, onClick = { showSavedMenu = false; MediaDownloadHelper.downloadMedia(context, video.url, video.title, video.headers ?: emptyMap()) })
+                                            }
                                             HorizontalDivider(color = Color(0xFF334155), modifier = Modifier.padding(vertical = 4.dp))
-                                            DropdownMenuItem(
-                                                leadingIcon = { Icon(Icons.Rounded.Delete, contentDescription = null, tint = Color(0xFFEF4444), modifier = Modifier.size(17.dp)) },
-                                                text = { Text("Eliminar de guardados", color = Color(0xFFEF4444), fontSize = 13.sp) },
-                                                onClick = { showSavedMenu = false; onRemoveItem(pl.id, video.url) }
-                                            )
+                                            DropdownMenuItem(leadingIcon = { Icon(Icons.Rounded.Delete, null, tint = Color(0xFFEF4444), modifier = Modifier.size(17.dp)) }, text = { Text("Eliminar de guardados", color = Color(0xFFEF4444), fontSize = 13.sp) }, onClick = { showSavedMenu = false; onRemoveItem(pl.id, video.url) })
                                         }
                                     }
                                 }

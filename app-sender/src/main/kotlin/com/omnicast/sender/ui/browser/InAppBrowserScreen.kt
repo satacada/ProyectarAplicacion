@@ -36,31 +36,27 @@ fun InAppBrowserScreen(
     var inputUrl by rememberSaveable { mutableStateOf(if (initialIsHome) "" else startUrl) }; var currentUrl by rememberSaveable { mutableStateOf(if (initialIsHome) "" else startUrl) }
     var isHome by rememberSaveable { mutableStateOf(initialIsHome) }; var pageTitle by rememberSaveable { mutableStateOf("OmniCast Browser") }; var progress by remember { mutableIntStateOf(0) }; var isDesktopMode by remember { mutableStateOf(false) }; var isAdBlockEnabled by remember { mutableStateOf(true) }
     val detectedStreams = remember { mutableStateListOf<String>() }; val streamHeaders = remember { mutableStateMapOf<String, Map<String, String>>() }; val streamLabels = remember { mutableStateMapOf<String, String>() }; val streamDurations = remember { mutableStateMapOf<String, Float>() }
-    var qualityOptions by remember { mutableStateOf<List<StreamQualityOption>>(emptyList()) }; var showOptionsSheet by remember { mutableStateOf(false) }; var showSideDrawer by remember { mutableStateOf(false) }; var showWhitelistDialog by remember { mutableStateOf(false) }; var showBottomControls by rememberSaveable { mutableStateOf(ActiveStreamHolder.isCasting.value && ActiveStreamHolder.isPlaying.value) }
+    var qualityOptions by remember { mutableStateOf<List<StreamQualityOption>>(emptyList()) }; var showOptionsSheet by remember { mutableStateOf(false) }; var showSideDrawer by remember { mutableStateOf(false) }; var drawerInitialTab by remember { mutableIntStateOf(0) }; var showWhitelistDialog by remember { mutableStateOf(false) }; var showBottomControls by rememberSaveable { mutableStateOf(ActiveStreamHolder.isCasting.value && ActiveStreamHolder.isPlaying.value) }
     var videoToSave by remember { mutableStateOf<HistoryItem?>(null) }; var webViewInstance by remember { mutableStateOf<WebView?>(null) }; var popupWebView by remember { mutableStateOf<WebView?>(null) }
     var playlistsVersion by remember { mutableIntStateOf(0) }; val scope = rememberCoroutineScope(); var userDismissedSheetForUrl by rememberSaveable { mutableStateOf("") }; var autoOpenJob by remember { mutableStateOf<kotlinx.coroutines.Job?>(null) }; var castingPageUrl by rememberSaveable { mutableStateOf("") }
     val isCasting by ActiveStreamHolder.isCasting.collectAsState(); val isPlaying by ActiveStreamHolder.isPlaying.collectAsState(); val posMs by ActiveStreamHolder.positionMs.collectAsState(); val durMs by ActiveStreamHolder.durationMs.collectAsState(); val volume by ActiveStreamHolder.volume.collectAsState(); val castTitle by ActiveStreamHolder.currentMediaTitle.collectAsState()
 
     fun isRealMedia(s: String) = BrowserUrlHelper.isRealMedia(s, streamDurations[s] ?: 0f)
 
-    val isMovieSaved = remember(detectedStreams.size, playlistsVersion, castTitle, pageTitle) {
-        val primary = (ActiveStreamHolder.streamUrl?.takeIf { it.isNotBlank() } ?: detectedStreams.firstOrNull { isRealMedia(it) } ?: "").ifBlank { return@remember false }
+    val isMovieSaved = remember(detectedStreams.size, playlistsVersion, castTitle, pageTitle, currentUrl) {
+        val primary = ActiveStreamHolder.streamUrl?.takeIf { it.isNotBlank() } ?: detectedStreams.firstOrNull { isRealMedia(it) } ?: ""
         val t = if (castTitle.isNotBlank()) castTitle else if (pageTitle.isNotBlank() && pageTitle != "Cargando...") pageTitle else ""
-        playlistManager.isVideoSaved(primary, t)
+        BrowserBookmarkQrHelper.isCurrentSaved(playlistManager, primary, t, currentUrl)
     }
 
     fun deleteMovieFromSaved() {
-        val primary = ActiveStreamHolder.streamUrl?.takeIf { it.isNotBlank() } ?: detectedStreams.firstOrNull() ?: ""
-        if (primary.isNotBlank()) { historyManager.remove(primary); playlistManager.getPlaylists().forEach { pl -> playlistManager.removeItemFromPlaylist(pl.id, primary) }; playlistsVersion++; Toast.makeText(context, "🗑️ Video eliminado de guardados", Toast.LENGTH_SHORT).show() }
+        val primary = ActiveStreamHolder.streamUrl?.takeIf { it.isNotBlank() } ?: detectedStreams.firstOrNull { isRealMedia(it) } ?: ""
+        BrowserBookmarkQrHelper.deleteCurrentSaved(context, playlistManager, historyManager, primary, currentUrl); playlistsVersion++
     }
 
     fun toggleBookmark() {
-        if (isMovieSaved) { deleteMovieFromSaved(); return }
         val primary = (ActiveStreamHolder.streamUrl?.takeIf { it.isNotBlank() } ?: detectedStreams.firstOrNull { isRealMedia(it) } ?: "").ifBlank { if (currentUrl.startsWith("http") && BrowserUrlHelper.isRealMedia(currentUrl)) currentUrl else "" }
-        if (primary.isBlank()) { Toast.makeText(context, "No hay video para guardar en esta página", Toast.LENGTH_SHORT).show(); return }
-        val t = if (castTitle.isNotBlank()) castTitle else if (pageTitle.isNotBlank() && pageTitle != "Cargando...") pageTitle else "Película / Video"
-        val item = HistoryItem(primary, t, currentUrl, streamHeaders[primary] ?: emptyMap(), requiresProxy = ActiveStreamHolder.isProxied.value)
-        playlistManager.addItemToPlaylist(com.omnicast.sender.playlist.PlaylistManager.DEFAULT_WATCH_LATER_ID, item); historyManager.addOrUpdate(item.url, item.title, pageUrl = item.pageUrl, headers = item.headers, requiresProxy = item.requiresProxy); playlistsVersion++; Toast.makeText(context, "⭐ Guardado en Ver más tarde", Toast.LENGTH_SHORT).show()
+        BrowserBookmarkQrHelper.toggleBookmark(context, playlistManager, historyManager, primary, currentUrl, pageTitle, castTitle, streamHeaders[primary] ?: emptyMap(), ActiveStreamHolder.isProxied.value); playlistsVersion++
     }
 
     fun openOptionsSheet() {
@@ -196,8 +192,10 @@ fun InAppBrowserScreen(
         onDispose { SenderMainActivity.onBrowserRescanRequested = null; com.omnicast.sender.overlay.FloatingIndicatorService.setBrowserActive(false) }
     }
 
+    val launchQrScanner = BrowserBookmarkQrHelper.rememberQrScannerLauncher(context) { scannedUrl -> navigateTo(scannedUrl) }
+
     SideMediaDrawer(
-        isOpen = showSideDrawer, onClose = { showSideDrawer = false },
+        isOpen = showSideDrawer, initialTab = drawerInitialTab, onClose = { showSideDrawer = false },
         onPlayOnTv = { url, title, hdrs, _ -> val savedPage = playlistManager.getPlaylists().flatMap { it.items }.firstOrNull { it.url == url }?.pageUrl ?: historyManager.getHistory().firstOrNull { it.url == url }?.pageUrl ?: hdrs["Referer"]; transmitWithHistory(url, title, hdrs, savedPage) },
         onOpenInBrowser = { navigateTo(it) }
     ) {
@@ -211,8 +209,9 @@ fun InAppBrowserScreen(
                 onClearData = { webViewInstance?.clearCache(true); webViewInstance?.clearHistory(); detectedStreams.clear(); qualityOptions = emptyList(); isHome = true; inputUrl = ""; currentUrl = ""; ActiveStreamHolder.clear(); prefs.edit().remove("saved_browser_last_url").apply() },
                 detectedStreamsCount = detectedStreams.count { isRealMedia(it) }, onToggleBottomControls = { showBottomControls = !showBottomControls },
                 onOpenDetectedVideos = { openOptionsSheet() }, isCasting = isCasting, isPlaying = isPlaying, showBottomControls = showBottomControls,
-                isBookmarked = isMovieSaved, onToggleBookmark = { toggleBookmark() }, onOpenHistory = { showSideDrawer = true }, onOpenPlaylists = { showSideDrawer = true },
-                onOpenDrawer = { showSideDrawer = true }, onOpenWhitelist = { showWhitelistDialog = true }, onExitApp = { SenderMainActivity.exitCompletely(context) }
+                isBookmarked = isMovieSaved, onToggleBookmark = { toggleBookmark() }, onOpenHistory = { drawerInitialTab = 0; showSideDrawer = true }, onOpenPlaylists = { drawerInitialTab = 1; showSideDrawer = true },
+                onOpenDrawer = { drawerInitialTab = 1; showSideDrawer = true }, onOpenWhitelist = { showWhitelistDialog = true },
+                onScanQr = { launchQrScanner() }, onManageSaved = { drawerInitialTab = 1; showSideDrawer = true }, onExitApp = { SenderMainActivity.exitCompletely(context) }
             )
 
             if (progress in 1..99) LinearProgressIndicator(progress = { progress / 100f }, modifier = Modifier.fillMaxWidth().height(3.dp), color = Color(0xFF38BDF8))

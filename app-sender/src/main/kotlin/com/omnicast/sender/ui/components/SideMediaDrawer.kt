@@ -40,6 +40,7 @@ import androidx.compose.animation.slideOutHorizontally
 @Composable
 fun SideMediaDrawer(
     isOpen: Boolean,
+    initialTab: Int = 0,
     onClose: () -> Unit,
     onPlayOnTv: (url: String, title: String, headers: Map<String, String>, positionMs: Long) -> Unit,
     onOpenInBrowser: (url: String) -> Unit,
@@ -66,6 +67,8 @@ fun SideMediaDrawer(
                 modifier = Modifier.fillMaxSize()
             ) {
                 DrawerSheetContent(
+                    isOpen = isOpen,
+                    initialTab = initialTab,
                     historyManager = historyManager,
                     playlistManager = playlistManager,
                     onClose = onClose,
@@ -79,17 +82,27 @@ fun SideMediaDrawer(
 
 @Composable
 private fun DrawerSheetContent(
+    isOpen: Boolean,
+    initialTab: Int,
     historyManager: PlayHistoryManager,
     playlistManager: PlaylistManager,
     onClose: () -> Unit,
     onPlayOnTv: (String, String, Map<String, String>, Long) -> Unit,
     onOpenInBrowser: (String) -> Unit
 ) {
-    var selectedTab by remember { mutableIntStateOf(0) }
+    var selectedTab by remember { mutableIntStateOf(initialTab) }
     var historyList by remember { mutableStateOf(historyManager.getHistory()) }
     var playlists by remember { mutableStateOf(playlistManager.getPlaylists()) }
     var searchQuery by remember { mutableStateOf("") }
     var selectedSort by remember { mutableStateOf(VideoSortOrder.NEWEST) }
+
+    LaunchedEffect(isOpen, initialTab) {
+        if (isOpen) {
+            selectedTab = initialTab
+            historyList = historyManager.getHistory()
+            playlists = playlistManager.getPlaylists()
+        }
+    }
 
     Column(modifier = Modifier.fillMaxSize().padding(14.dp)) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {

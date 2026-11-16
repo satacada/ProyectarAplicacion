@@ -117,5 +117,11 @@ class StreamCandidateValidatorTest {
         assertFalse(StreamCandidateValidator.isPlaylistProxyStream("https://a.newvegan35.space/scripts/NTU0MTg=/p1794657602614393454_83090.txt"))
         assertFalse(StreamCandidateValidator.isPlaylistProxyStream("https://pl.wearestrong1.space/playlist/55418/a.newvegan35.space/caxi.html"))
     }
+
+    @Test
+    fun testDiscardsExtensionProbeEndpoints() {
+        assertTrue(StreamCandidateValidator.isWebDocumentOrPlayerRoute("https://example.com/isInstalled.mpd"))
+        assertFalse(StreamCandidateValidator.isValidCdnStream("https://example.com/isInstalled.mpd", domainMatches = true))
+    }
 }
 

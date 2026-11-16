@@ -1,12 +1,12 @@
 {
-  "versionName": "3.7.45",
-  "versionCodeSender": 415,
-  "versionCodeReceiver": 396,
-  "releaseTag": "v3.7.45",
-  "senderApk": "omnicast-sender-v3.7.45.apk",
-  "receiverApk": "omnicast-receiver-v3.7.45.apk",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.45/omnicast-sender-v3.7.45.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.45/omnicast-receiver-v3.7.45.apk",
-  "releaseNotes": "v3.7.45: LayoutParams MATCH_PARENT explícitos en SwipeRefreshLayout/WebView, desactivación de AlgorithmicDarkening y eliminación de capa alpha innecesaria.",
-  "changelog": "v3.7.45: LayoutParams MATCH_PARENT explícitos en SwipeRefreshLayout/WebView, desactivación de AlgorithmicDarkening y eliminación de capa alpha innecesaria."
+  "versionName": "3.7.46",
+  "versionCodeSender": 416,
+  "versionCodeReceiver": 397,
+  "releaseTag": "v3.7.46",
+  "senderApk": "omnicast-sender-v3.7.46.apk",
+  "receiverApk": "omnicast-receiver-v3.7.46.apk",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.46/omnicast-sender-v3.7.46.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.46/omnicast-receiver-v3.7.46.apk",
+  "releaseNotes": "v3.7.46: Descarte genérico de sondas /isinstalled. en StreamCandidateValidator (:core:domain).",
+  "changelog": "v3.7.46: Descarte genérico de sondas /isinstalled. en StreamCandidateValidator (:core:domain)."
 }

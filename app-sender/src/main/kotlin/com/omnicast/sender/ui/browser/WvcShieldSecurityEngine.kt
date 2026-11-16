@@ -36,7 +36,7 @@ object WvcShieldSecurityEngine {
                 _u.indexOf('/cdn-cgi/challenge-platform') !== -1) {
                 return;
             }
-            if (window.__omniWvcShieldActive) return;
+            if (window.__omniShieldDisabled === true || window.__omniWvcShieldActive) return;
             window.__omniWvcShieldActive = true;
 
             // 1. Anulación preventiva de popups automáticos por window.open

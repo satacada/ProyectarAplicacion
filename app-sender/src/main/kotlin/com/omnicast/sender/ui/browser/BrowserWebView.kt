@@ -117,7 +117,7 @@ fun BrowserWebView(
                         if (isAdBlockEnabled && !isChallenge && !isWhitelisted) {
                             v?.evaluateJavascript(AdBlocker.getAdHidingScript(), null)
                             if (WvcShieldSecurityEngine.isEnabled) v?.evaluateJavascript(WvcShieldSecurityEngine.getProtectionScript(), null)
-                        }
+                        } else if (isWhitelisted) v?.evaluateJavascript("window.__omniShieldDisabled=true;", null)
                         if (!isChallenge) v?.evaluateJavascript(inputViewportScript, null)
                     }
 
@@ -133,7 +133,7 @@ fun BrowserWebView(
                         if (isAdBlockEnabled && !isChallenge && !isWhitelisted) {
                             v?.evaluateJavascript(AdBlocker.getAdHidingScript(), null)
                             if (WvcShieldSecurityEngine.isEnabled) v?.evaluateJavascript(WvcShieldSecurityEngine.getProtectionScript(), null)
-                        }
+                        } else if (isWhitelisted) v?.evaluateJavascript("window.__omniShieldDisabled=true;", null)
                         if (!isChallenge) {
                             v?.evaluateJavascript(inputViewportScript, null)
                             v?.evaluateJavascript(WvcDomSniffer.getInjectionScript(ctx), null)

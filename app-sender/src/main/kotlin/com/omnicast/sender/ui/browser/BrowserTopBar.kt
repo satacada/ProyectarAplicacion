@@ -19,6 +19,7 @@ import androidx.compose.material.icons.rounded.Menu
 import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.Refresh
+import androidx.compose.material.icons.rounded.Shield
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material.icons.rounded.StarBorder
 import androidx.compose.material.icons.rounded.Tv
@@ -59,6 +60,8 @@ fun BrowserTopBar(
     onToggleDesktopMode: () -> Unit,
     isAdBlockEnabled: Boolean,
     onToggleAdBlock: () -> Unit,
+    isSiteProtected: Boolean = true,
+    onToggleSiteProtection: () -> Unit = {},
     onForceRescan: () -> Unit,
     onClearData: () -> Unit,
     detectedStreamsCount: Int = 0,
@@ -209,7 +212,7 @@ fun BrowserTopBar(
                         HorizontalDivider(color = Color(0xFF334155))
                         DropdownMenuItem(text = { Text("📷 Escanear QR de TV", color = Color(0xFF38BDF8), fontWeight = FontWeight.SemiBold) }, onClick = { showMenu = false; onScanQr() })
                         DropdownMenuItem(text = { Text("🔖 Administrar guardados", color = Color(0xFFFBBF24), fontWeight = FontWeight.SemiBold) }, onClick = { showMenu = false; onManageSaved() })
-                        DropdownMenuItem(text = { Text(com.omnicast.sender.language.AppLanguageManager.t(context, "menu_adblock"), color = Color.White) }, onClick = { onToggleAdBlock(); showMenu = false })
+                        DropdownMenuItem(text = { Text(if (isSiteProtected) "🛡️ Bloqueador: Activo" else "🛡️ Bloqueador: Desactivado", color = if (isSiteProtected) Color(0xFF10B981) else Color(0xFF94A3B8)) }, onClick = { onToggleSiteProtection(); showMenu = false })
                         DropdownMenuItem(text = { Text(com.omnicast.sender.language.AppLanguageManager.t(context, "menu_whitelist"), color = Color(0xFF10B981)) }, onClick = { onOpenWhitelist(); showMenu = false })
                         DropdownMenuItem(text = { Text(if (isDesktopMode) com.omnicast.sender.language.AppLanguageManager.t(context, "menu_mobile") else com.omnicast.sender.language.AppLanguageManager.t(context, "menu_desktop"), color = Color.White) }, onClick = { onToggleDesktopMode(); showMenu = false })
                         DropdownMenuItem(text = { Text(com.omnicast.sender.language.AppLanguageManager.t(context, "menu_rescan"), color = Color(0xFF38BDF8)) }, onClick = { onForceRescan(); showMenu = false })
@@ -240,6 +243,9 @@ fun BrowserTopBar(
                 }
                 IconButton(onClick = onToggleBookmark, modifier = Modifier.size(28.dp)) {
                     Icon(if (isBookmarked) Icons.Rounded.Star else Icons.Rounded.StarBorder, contentDescription = "Favoritos", tint = if (isBookmarked) Color(0xFFFFC107) else Color(0xFF94A3B8), modifier = Modifier.size(18.dp))
+                }
+                IconButton(onClick = onToggleSiteProtection, modifier = Modifier.size(28.dp)) {
+                    Icon(Icons.Rounded.Shield, contentDescription = "Bloqueador", tint = if (isSiteProtected) Color(0xFF10B981) else Color(0xFF94A3B8), modifier = Modifier.size(18.dp))
                 }
                 IconButton(onClick = onOpenDrawer, modifier = Modifier.size(28.dp)) {
                     Icon(Icons.Rounded.Menu, contentDescription = "Historial y Guardados", tint = Color(0xFFCBD5E1), modifier = Modifier.size(18.dp))

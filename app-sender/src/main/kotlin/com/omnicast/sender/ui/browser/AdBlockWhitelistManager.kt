@@ -84,6 +84,23 @@ object AdBlockWhitelistManager {
         return host?.let { isWhitelistedHost(it) } ?: false
     }
 
+    fun isSiteProtected(url: String): Boolean {
+        if (url.isBlank() || url.startsWith("about:")) return true
+        return !isWhitelisted(url)
+    }
+
+    fun toggleSiteProtection(context: Context, url: String): Boolean {
+        val domain = extractDomain(url) ?: return true
+        val currentlyWhitelisted = isWhitelisted(domain)
+        return if (currentlyWhitelisted) {
+            removeDomain(context, domain)
+            true // Ahora está protegido (verde)
+        } else {
+            addDomain(context, domain)
+            false // Ahora está desprotegido / en lista blanca (gris)
+        }
+    }
+
     fun isWhitelistedHost(host: String): Boolean {
         val clean = host.trim().lowercase()
         synchronized(cachedDomains) {

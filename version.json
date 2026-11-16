@@ -1,12 +1,12 @@
 {
-  "versionName": "3.7.40",
-  "versionCodeSender": 410,
-  "versionCodeReceiver": 391,
-  "releaseTag": "v3.7.40",
-  "senderApk": "omnicast-sender-v3.7.40.apk",
-  "receiverApk": "omnicast-receiver-v3.7.40.apk",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.40/omnicast-sender-v3.7.40.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.40/omnicast-receiver-v3.7.40.apk",
-  "releaseNotes": "v3.7.40: Fondo blanco base en BrowserWebView y garantía de contraste en iframes transparentes (agenda deportiva).",
-  "changelog": "v3.7.40: Fondo blanco base en BrowserWebView y garantía de contraste en iframes transparentes (agenda deportiva)."
+  "versionName": "3.7.41",
+  "versionCodeSender": 411,
+  "versionCodeReceiver": 392,
+  "releaseTag": "v3.7.41",
+  "senderApk": "omnicast-sender-v3.7.41.apk",
+  "receiverApk": "omnicast-receiver-v3.7.41.apk",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.41/omnicast-sender-v3.7.41.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.41/omnicast-receiver-v3.7.41.apk",
+  "releaseNotes": "v3.7.41: Escudo AdBlock por sitio en barra de navegación: Casita -> Estrella -> Escudo -> Tres Rayas -> Proyección con control de un solo toque y memoria persistente por dominio.",
+  "changelog": "v3.7.41: Escudo AdBlock por sitio en barra de navegación: Casita -> Estrella -> Escudo -> Tres Rayas -> Proyección con control de un solo toque y memoria persistente por dominio."
 }

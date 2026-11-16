@@ -98,6 +98,9 @@ fun BrowserWebView(
                 if (androidx.webkit.WebViewFeature.isFeatureSupported(androidx.webkit.WebViewFeature.REQUESTED_WITH_HEADER_ALLOW_LIST)) {
                     try { androidx.webkit.WebSettingsCompat.setRequestedWithHeaderOriginAllowList(settings, emptySet()) } catch (_: Throwable) {}
                 }
+                if (androidx.webkit.WebViewFeature.isFeatureSupported(androidx.webkit.WebViewFeature.ALGORITHMIC_DARKENING)) {
+                    try { androidx.webkit.WebSettingsCompat.setAlgorithmicDarkeningAllowed(settings, false) } catch (_: Throwable) {}
+                }
                 WvcShieldSecurityEngine.installDocumentStartScript(this)
 
                 webViewClient = object : WebViewClient() {
@@ -285,11 +288,11 @@ fun BrowserWebView(
                 onWebViewCreated(this)
             }
 
-            swipeRefresh.addView(webView)
+            swipeRefresh.addView(webView, android.view.ViewGroup.LayoutParams(android.view.ViewGroup.LayoutParams.MATCH_PARENT, android.view.ViewGroup.LayoutParams.MATCH_PARENT))
             swipeRefresh.visibility = if (isHome) android.view.View.INVISIBLE else android.view.View.VISIBLE
             swipeRefresh
         },
         update = { v -> v.visibility = if (isHome) android.view.View.INVISIBLE else android.view.View.VISIBLE },
-        modifier = Modifier.fillMaxSize().alpha(if (isHome) 0f else 1f)
+        modifier = if (isHome) Modifier.fillMaxSize().alpha(0f) else Modifier.fillMaxSize()
     )
 }

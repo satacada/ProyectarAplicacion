@@ -1,12 +1,12 @@
 {
-  "versionName": "3.7.44",
-  "versionCodeSender": 414,
-  "versionCodeReceiver": 395,
-  "releaseTag": "v3.7.44",
-  "senderApk": "omnicast-sender-v3.7.44.apk",
-  "receiverApk": "omnicast-receiver-v3.7.44.apk",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.44/omnicast-sender-v3.7.44.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.44/omnicast-receiver-v3.7.44.apk",
-  "releaseNotes": "v3.7.44: Diagnóstico enriquecido de consola JS (sourceId:lineNumber) en WebPlayerDiagnosticSentinel.",
-  "changelog": "v3.7.44: Diagnóstico enriquecido de consola JS (sourceId:lineNumber) en WebPlayerDiagnosticSentinel."
+  "versionName": "3.7.45",
+  "versionCodeSender": 415,
+  "versionCodeReceiver": 396,
+  "releaseTag": "v3.7.45",
+  "senderApk": "omnicast-sender-v3.7.45.apk",
+  "receiverApk": "omnicast-receiver-v3.7.45.apk",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.45/omnicast-sender-v3.7.45.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.45/omnicast-receiver-v3.7.45.apk",
+  "releaseNotes": "v3.7.45: LayoutParams MATCH_PARENT explícitos en SwipeRefreshLayout/WebView, desactivación de AlgorithmicDarkening y eliminación de capa alpha innecesaria.",
+  "changelog": "v3.7.45: LayoutParams MATCH_PARENT explícitos en SwipeRefreshLayout/WebView, desactivación de AlgorithmicDarkening y eliminación de capa alpha innecesaria."
 }

@@ -1,12 +1,12 @@
 {
-  "versionName": "3.7.43",
-  "versionCodeSender": 413,
-  "versionCodeReceiver": 394,
-  "releaseTag": "v3.7.43",
-  "senderApk": "omnicast-sender-v3.7.43.apk",
-  "receiverApk": "omnicast-receiver-v3.7.43.apk",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.43/omnicast-sender-v3.7.43.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.43/omnicast-receiver-v3.7.43.apk",
-  "releaseNotes": "v3.7.43: Poda de archivo particularizado TelevisionLibreHelper según AGENTS.md, preservando arquitectura limpia sin código en duro.",
-  "changelog": "v3.7.43: Poda de archivo particularizado TelevisionLibreHelper según AGENTS.md, preservando arquitectura limpia sin código en duro."
+  "versionName": "3.7.44",
+  "versionCodeSender": 414,
+  "versionCodeReceiver": 395,
+  "releaseTag": "v3.7.44",
+  "senderApk": "omnicast-sender-v3.7.44.apk",
+  "receiverApk": "omnicast-receiver-v3.7.44.apk",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.44/omnicast-sender-v3.7.44.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.44/omnicast-receiver-v3.7.44.apk",
+  "releaseNotes": "v3.7.44: Diagnóstico enriquecido de consola JS (sourceId:lineNumber) en WebPlayerDiagnosticSentinel.",
+  "changelog": "v3.7.44: Diagnóstico enriquecido de consola JS (sourceId:lineNumber) en WebPlayerDiagnosticSentinel."
 }

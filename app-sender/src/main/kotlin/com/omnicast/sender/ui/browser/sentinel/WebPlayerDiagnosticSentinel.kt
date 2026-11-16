@@ -35,7 +35,12 @@ object WebPlayerDiagnosticSentinel {
         )
     }
 
-    fun handleDiagnosticConsoleMessage(message: String, currentUrl: String): Boolean {
+    fun handleDiagnosticConsoleMessage(
+        message: String,
+        currentUrl: String,
+        sourceId: String? = null,
+        lineNumber: Int = -1
+    ): Boolean {
         if (message.startsWith(PREFIX_VIDEO_ERROR)) {
             val payload = message.removePrefix(PREFIX_VIDEO_ERROR).trim()
             val activeUrl = com.omnicast.sender.stream.ActiveStreamHolder.streamUrl.orEmpty()
@@ -81,7 +86,8 @@ object WebPlayerDiagnosticSentinel {
         }
 
         if (lower.contains("error") || lower.contains("uncaught") || lower.contains("failed to load") || lower.contains("403") || lower.contains("turnstile")) {
-            Log.w("BROWSER_JS_DIAG", "🔍 [Console] $message (en $currentUrl)")
+            val srcInfo = if (!sourceId.isNullOrBlank()) " [$sourceId:$lineNumber]" else ""
+            Log.w("BROWSER_JS_DIAG", "🔍 [Console] $message$srcInfo (en $currentUrl)")
         }
 
         return false

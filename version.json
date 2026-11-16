@@ -1,12 +1,12 @@
 {
-  "versionName": "3.7.41",
-  "versionCodeSender": 411,
-  "versionCodeReceiver": 392,
-  "releaseTag": "v3.7.41",
-  "senderApk": "omnicast-sender-v3.7.41.apk",
-  "receiverApk": "omnicast-receiver-v3.7.41.apk",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.41/omnicast-sender-v3.7.41.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.41/omnicast-receiver-v3.7.41.apk",
-  "releaseNotes": "v3.7.41: Escudo AdBlock por sitio en barra de navegación: Casita -> Estrella -> Escudo -> Tres Rayas -> Proyección con control de un solo toque y memoria persistente por dominio.",
-  "changelog": "v3.7.41: Escudo AdBlock por sitio en barra de navegación: Casita -> Estrella -> Escudo -> Tres Rayas -> Proyección con control de un solo toque y memoria persistente por dominio."
+  "versionName": "3.7.42",
+  "versionCodeSender": 412,
+  "versionCodeReceiver": 393,
+  "releaseTag": "v3.7.42",
+  "senderApk": "omnicast-sender-v3.7.42.apk",
+  "receiverApk": "omnicast-receiver-v3.7.42.apk",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.42/omnicast-sender-v3.7.42.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.42/omnicast-receiver-v3.7.42.apk",
+  "releaseNotes": "v3.7.42: Desacoplamiento de controles OSD en HTML5 para auto-ocultamiento a 4.5s en TV, soporte de granularidad por ruta para canales y satélite TelevisionLibreHelper.",
+  "changelog": "v3.7.42: Desacoplamiento de controles OSD en HTML5 para auto-ocultamiento a 4.5s en TV, soporte de granularidad por ruta para canales y satélite TelevisionLibreHelper."
 }

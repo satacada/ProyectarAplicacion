@@ -100,7 +100,10 @@ fun TvWebUnifiedOverlay(
             modifier = Modifier
                 .fillMaxSize()
                 .onPreviewKeyEvent { ev ->
-                    if (ev.type == KeyEventType.KeyDown) hideTimerKey++
+                    if (ev.type == KeyEventType.KeyDown) {
+                        hideTimerKey++
+                        onShowControls()
+                    }
                     false
                 }
                 .background(Brush.verticalGradient(0.0f to Color(0xCC000000), 0.25f to Color.Transparent, 0.60f to Color.Transparent, 1.0f to Color(0xEE000000)))

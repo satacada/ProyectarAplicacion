@@ -137,7 +137,7 @@ fun BrowserWebView(
                         if (!isChallenge) {
                             v?.evaluateJavascript(inputViewportScript, null)
                             v?.evaluateJavascript(WvcDomSniffer.getInjectionScript(ctx), null)
-                            v?.evaluateJavascript("try{var ifr=document.getElementById('agenda');if(ifr)ifr.style.backgroundColor='#ffffff';}catch(_){}", null)
+                            TelevisionLibreHelper.injectIfMatches(v, u)
                         }
                     }
 

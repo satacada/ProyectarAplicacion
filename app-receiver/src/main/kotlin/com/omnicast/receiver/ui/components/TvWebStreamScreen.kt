@@ -47,22 +47,28 @@ fun TvWebStreamScreen(
     var playerState by remember(streamUrl, timestamp) {
         mutableStateOf(TvWebPlayerState(currentPositionMs = startPositionMs, isControlsVisible = true))
     }
+    var isControlsVisible by remember(streamUrl, timestamp) { mutableStateOf(true) }
+    var userInteractionCount by remember { mutableIntStateOf(0) }
     var customView by remember(streamUrl, timestamp) { mutableStateOf<View?>(null) }
     var webViewRef by remember(streamUrl, timestamp) { mutableStateOf<WebView?>(null) }
 
+    LaunchedEffect(isControlsVisible, isVideoReady, userInteractionCount) {
+        if (isControlsVisible && isVideoReady && !playerState.isSettingsOpen && !showRecordDialog && !showStopConfirm) {
+            delay(4500L); isControlsVisible = false
+            com.omnicast.receiver.ui.TvRemoteKeyHandler.notifyControlsVisibilityChanged(false)
+        }
+    }
+
     LaunchedEffect(streamUrl, timestamp, isVideoReady, fatalErrorReason) {
         if (fatalErrorReason != null) {
-            delay(3000L)
-            onPlaybackFailed?.invoke(fatalErrorReason ?: "FATAL_ERROR")
+            delay(3000L); onPlaybackFailed?.invoke(fatalErrorReason ?: "FATAL_ERROR")
             return@LaunchedEffect
         }
         val sessionStartMs = System.currentTimeMillis()
         while (!isVideoReady && fatalErrorReason == null) {
-            delay(1000L)
-            val now = System.currentTimeMillis()
+            delay(1000L); val now = System.currentTimeMillis()
             if (now - lastActivityTimeMs >= WATCHDOG_INACTIVITY_TIMEOUT_MS || now - sessionStartMs >= WATCHDOG_MAX_STARTUP_TIMEOUT_MS) {
-                fatalErrorReason = "WATCHDOG_TIMEOUT"
-                break
+                fatalErrorReason = "WATCHDOG_TIMEOUT"; break
             }
         }
     }
@@ -83,7 +89,10 @@ fun TvWebStreamScreen(
                 "SEEK_REL" -> wv.evaluateJavascript("seekRel(${msg.positionMs / 1000.0});", null)
                 "VOLUME" -> wv.evaluateJavascript("setVolume(${msg.volume.coerceIn(0f, 1f)});", null)
                 "STOP" -> wv.evaluateJavascript("stopStream();", null)
-                "SHOW_CONTROLS" -> playerState = playerState.copy(isControlsVisible = true)
+                "SHOW_CONTROLS" -> {
+                    isControlsVisible = true; userInteractionCount++
+                    com.omnicast.receiver.ui.TvRemoteKeyHandler.notifyControlsVisibilityChanged(true)
+                }
                 "CYCLE_QUALITY" -> wv.evaluateJavascript("cycleQuality();") { r ->
                     val q = r?.replace("\"", "")?.takeIf { it != "null" } ?: "Auto"
                     playerState = playerState.copy(currentQuality = q)
@@ -204,14 +213,14 @@ fun TvWebStreamScreen(
         TvWebUnifiedOverlay(
             title = title,
             badgeText = "🌐 OmniCast HTML5",
-            state = playerState,
+            state = playerState.copy(isControlsVisible = isControlsVisible),
             isRecording = pvrProgress.isRecording,
             onRecordClick = { if (pvrProgress.isRecording) showStopConfirm = true else showRecordDialog = true },
             onTogglePlay = { webViewRef?.evaluateJavascript("togglePlay();", null) },
             onSeekRelative = { deltaMs -> webViewRef?.evaluateJavascript("seekRel(${deltaMs / 1000.0});", null) },
             onToggleSettings = { playerState = playerState.copy(isSettingsOpen = !playerState.isSettingsOpen) },
-            onShowControls = { playerState = playerState.copy(isControlsVisible = true) },
-            onHideControls = { playerState = playerState.copy(isControlsVisible = false) }
+            onShowControls = { isControlsVisible = true; userInteractionCount++ },
+            onHideControls = { isControlsVisible = false; com.omnicast.receiver.ui.TvRemoteKeyHandler.notifyControlsVisibilityChanged(false) }
         )
 
         // Insignia flotante de grabación OSD

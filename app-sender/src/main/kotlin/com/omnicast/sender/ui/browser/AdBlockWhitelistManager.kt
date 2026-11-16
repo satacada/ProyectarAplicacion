@@ -73,15 +73,44 @@ object AdBlockWhitelistManager {
         }
     }
 
+    fun extractSiteKey(rawUrl: String): String {
+        val trimmed = rawUrl.trim().lowercase()
+        if (trimmed.isBlank()) return ""
+        return try {
+            val formatted = if (!trimmed.startsWith("http://") && !trimmed.startsWith("https://")) "https://$trimmed" else trimmed
+            val uri = URI(formatted)
+            val host = (uri.host ?: Uri.parse(formatted).host)?.removePrefix("www.")?.lowercase() ?: return trimmed
+            val path = (uri.path ?: Uri.parse(formatted).path ?: "").trimEnd('/')
+            if (path.contains("/en-vivo") || path.contains("/canal") || path.contains("/watch") || path.contains("/live")) {
+                "$host$path"
+            } else {
+                host
+            }
+        } catch (_: Throwable) {
+            extractDomain(trimmed) ?: trimmed
+        }
+    }
+
+    private fun isDefaultPlatform(host: String): Boolean =
+        host.contains("yandex.") || host.contains("dailymotion.") || host.contains("youtube.") || host.contains("google.")
+
     fun isWhitelisted(url: String): Boolean {
         val host = try {
             val uri = URI(url)
             uri.host?.lowercase() ?: Uri.parse(url).host?.lowercase()
         } catch (_: Throwable) {
             null
-        } ?: extractDomain(url)
+        } ?: extractDomain(url) ?: return false
 
-        return host?.let { isWhitelistedHost(it) } ?: false
+        val siteKey = extractSiteKey(url)
+        val path = try { URI(url).path?.lowercase() } catch (_: Throwable) { null } ?: ""
+        val isPlaybackChannel = path.contains("/en-vivo") || path.contains("/canal") || path.contains("/watch") || path.contains("/live")
+
+        synchronized(cachedDomains) {
+            if (cachedDomains.contains(siteKey)) return true
+            if (isPlaybackChannel && !isDefaultPlatform(host)) return false
+            return isWhitelistedHost(host)
+        }
     }
 
     fun isSiteProtected(url: String): Boolean {
@@ -90,13 +119,15 @@ object AdBlockWhitelistManager {
     }
 
     fun toggleSiteProtection(context: Context, url: String): Boolean {
-        val domain = extractDomain(url) ?: return true
-        val currentlyWhitelisted = isWhitelisted(domain)
+        val key = extractSiteKey(url).ifBlank { extractDomain(url) } ?: return true
+        val currentlyWhitelisted = isWhitelisted(url)
         return if (currentlyWhitelisted) {
-            removeDomain(context, domain)
+            removeDomain(context, key)
+            val host = extractDomain(url)
+            if (host != null && host != key) removeDomain(context, host)
             true // Ahora está protegido (verde)
         } else {
-            addDomain(context, domain)
+            addDomain(context, key)
             false // Ahora está desprotegido / en lista blanca (gris)
         }
     }

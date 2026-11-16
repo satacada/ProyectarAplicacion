@@ -137,7 +137,6 @@ fun BrowserWebView(
                         if (!isChallenge) {
                             v?.evaluateJavascript(inputViewportScript, null)
                             v?.evaluateJavascript(WvcDomSniffer.getInjectionScript(ctx), null)
-                            TelevisionLibreHelper.injectIfMatches(v, u)
                         }
                     }
 

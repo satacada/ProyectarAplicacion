@@ -1,12 +1,12 @@
 {
-  "versionName": "3.7.42",
-  "versionCodeSender": 412,
-  "versionCodeReceiver": 393,
-  "releaseTag": "v3.7.42",
-  "senderApk": "omnicast-sender-v3.7.42.apk",
-  "receiverApk": "omnicast-receiver-v3.7.42.apk",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.42/omnicast-sender-v3.7.42.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.42/omnicast-receiver-v3.7.42.apk",
-  "releaseNotes": "v3.7.42: Desacoplamiento de controles OSD en HTML5 para auto-ocultamiento a 4.5s en TV, soporte de granularidad por ruta para canales y satélite TelevisionLibreHelper.",
-  "changelog": "v3.7.42: Desacoplamiento de controles OSD en HTML5 para auto-ocultamiento a 4.5s en TV, soporte de granularidad por ruta para canales y satélite TelevisionLibreHelper."
+  "versionName": "3.7.43",
+  "versionCodeSender": 413,
+  "versionCodeReceiver": 394,
+  "releaseTag": "v3.7.43",
+  "senderApk": "omnicast-sender-v3.7.43.apk",
+  "receiverApk": "omnicast-receiver-v3.7.43.apk",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.43/omnicast-sender-v3.7.43.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.43/omnicast-receiver-v3.7.43.apk",
+  "releaseNotes": "v3.7.43: Poda de archivo particularizado TelevisionLibreHelper según AGENTS.md, preservando arquitectura limpia sin código en duro.",
+  "changelog": "v3.7.43: Poda de archivo particularizado TelevisionLibreHelper según AGENTS.md, preservando arquitectura limpia sin código en duro."
 }

@@ -81,6 +81,7 @@ object BrowserUrlHelper {
             clean.endsWith(".css") || clean.endsWith(".json") || clean.endsWith(".webmanifest")) return false
         val isPhpStream = clean.endsWith(".php") && (s.contains(".m3u8", true) || s.contains(".mp4", true) || s.contains("p.php?", true) || s.contains("url=", true) || s.contains("stream", true) || s.contains("hls", true))
         if (clean.endsWith(".php") && !isPhpStream) return false
+        if (extractYouTubeId(s) == null && com.omnicast.core.domain.usecases.StreamCandidateValidator.isWebDocumentOrPlayerRoute(s)) return false
         val isWeb = (s.contains("dailymotion.com/video/") || s.contains("ok.ru/video/")) &&
                     !s.contains(".m3u8") && !s.contains(".mpd") && !s.contains(".mp4") && !s.contains("cmd=video")
         val isTxtHls = (clean.endsWith(".txt") || s.contains(".txt?", true)) && (s.contains("/hls", true) || s.contains("master", true) || s.contains("index", true))

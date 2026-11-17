@@ -1,12 +1,12 @@
 {
-  "versionName": "3.7.46",
-  "versionCodeSender": 416,
-  "versionCodeReceiver": 397,
-  "releaseTag": "v3.7.46",
-  "senderApk": "omnicast-sender-v3.7.46.apk",
-  "receiverApk": "omnicast-receiver-v3.7.46.apk",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.46/omnicast-sender-v3.7.46.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.46/omnicast-receiver-v3.7.46.apk",
-  "releaseNotes": "v3.7.46: Descarte genérico de sondas /isinstalled. en StreamCandidateValidator (:core:domain).",
-  "changelog": "v3.7.46: Descarte genérico de sondas /isinstalled. en StreamCandidateValidator (:core:domain)."
+  "versionName": "3.7.47",
+  "versionCodeSender": 417,
+  "versionCodeReceiver": 398,
+  "releaseTag": "v3.7.47",
+  "senderApk": "omnicast-sender-v3.7.47.apk",
+  "receiverApk": "omnicast-receiver-v3.7.47.apk",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.47/omnicast-sender-v3.7.47.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.47/omnicast-receiver-v3.7.47.apk",
+  "releaseNotes": "v3.7.47: Conexión de StreamCandidateValidator en UniversalDashExtractorAdapter y BrowserUrlHelper.isRealMedia (blindando YouTube).",
+  "changelog": "v3.7.47: Conexión de StreamCandidateValidator en UniversalDashExtractorAdapter y BrowserUrlHelper.isRealMedia (blindando YouTube)."
 }

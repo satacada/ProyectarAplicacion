@@ -12,6 +12,7 @@ class UniversalDashExtractorAdapter : IMediaStreamExtractorPort {
     override val priority: Int = 10
 
     override fun canHandle(candidate: StreamCandidate): Boolean {
+        if (com.omnicast.core.domain.usecases.StreamCandidateValidator.isWebDocumentOrPlayerRoute(candidate.url)) return false
         val cleanPath = candidate.url.substringBefore('?').lowercase()
         if (cleanPath.contains(".m3u8") || cleanPath.contains("/hls")) return false
         return cleanPath.endsWith(".mpd") || candidate.url.contains("format=dash", ignoreCase = true)

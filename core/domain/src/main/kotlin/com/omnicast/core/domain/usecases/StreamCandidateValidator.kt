@@ -21,7 +21,6 @@ object StreamCandidateValidator {
     private val NON_MEDIA_ROUTES = listOf(
         "/cdn-cgi/",
         "/pass_md5/",
-        "/isinstalled.",
         "op=watch",
         "op=download",
         "/dood?",

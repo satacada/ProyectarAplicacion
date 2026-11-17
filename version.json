@@ -1,12 +1,12 @@
 {
-  "versionName": "3.7.47",
-  "versionCodeSender": 417,
-  "versionCodeReceiver": 398,
-  "releaseTag": "v3.7.47",
-  "senderApk": "omnicast-sender-v3.7.47.apk",
-  "receiverApk": "omnicast-receiver-v3.7.47.apk",
-  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.47/omnicast-sender-v3.7.47.apk",
-  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.47/omnicast-receiver-v3.7.47.apk",
-  "releaseNotes": "v3.7.47: Conexión de StreamCandidateValidator en UniversalDashExtractorAdapter y BrowserUrlHelper.isRealMedia (blindando YouTube).",
-  "changelog": "v3.7.47: Conexión de StreamCandidateValidator en UniversalDashExtractorAdapter y BrowserUrlHelper.isRealMedia (blindando YouTube)."
+  "versionName": "3.7.48",
+  "versionCodeSender": 418,
+  "versionCodeReceiver": 399,
+  "releaseTag": "v3.7.48",
+  "senderApk": "omnicast-sender-v3.7.48.apk",
+  "receiverApk": "omnicast-receiver-v3.7.48.apk",
+  "senderApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.48/omnicast-sender-v3.7.48.apk",
+  "receiverApkUrl": "https://github.com/satacada/ProyectarAplicacion/releases/download/v3.7.48/omnicast-receiver-v3.7.48.apk",
+  "releaseNotes": "v3.7.48: Poda de /isinstalled. en StreamCandidateValidator manteniendo la arquitectura limpia en DASH y BrowserUrlHelper.",
+  "changelog": "v3.7.48: Poda de /isinstalled. en StreamCandidateValidator manteniendo la arquitectura limpia en DASH y BrowserUrlHelper."
 }
